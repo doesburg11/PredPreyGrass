@@ -1,4 +1,0 @@
-pettingzoo[classic]
-langchain
-openai
-tenacity
