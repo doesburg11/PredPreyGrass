@@ -1,8 +1,6 @@
 """
 TODO Later
 Major:
--upload files to dropbox
--upload to github
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Death of Predator (and Prey) by starvation (implement minimum energy levels
 -Birth of agents Predators, Prey and Grass
@@ -783,7 +781,7 @@ class PredPrey:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predprey_28",
+        "name": "predprey_29",
         "is_parallelizable": True,
         "render_fps": 5,
     }
