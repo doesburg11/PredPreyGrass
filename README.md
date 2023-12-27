@@ -1,9 +1,9 @@
 
 ### Predator, Prey, Grass PettingZoo environment
  
+![](https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif)
 
 
- 
  This model simulates a predator-prey relationship in a grid (intially bounded) environment. The population consists of wolf packs (predators) and sheep herds (prey). The predators gain energy from consuming prey, and the sheep gain energy from consuming grass (a primary producer). The environment is initially inspired by Netlogo's PredatorPreyGame (https://ccl.northwestern.edu/netlogo/models/PredatorPreyGameHubNet) and implemented in Python 3.11.5 using the PettingZoo verzon 1.24.2 Multi Agent Reinforcement Learning (MARL) library. Full rquirements used can be found in the Wiki pages.
 
  The PredPreyGrass envrionment has been initially modified from PettingZoo's the (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
