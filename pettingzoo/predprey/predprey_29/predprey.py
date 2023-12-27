@@ -1,6 +1,7 @@
 """
 TODO Later
 Major:
+-make grid class with each cel a list of agent_instances to efficently search agents
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Death of Predator (and Prey) by starvation (implement minimum energy levels
 -Birth of agents Predators, Prey and Grass
