@@ -738,7 +738,7 @@ class PredPrey:
                 self.screen = pygame.display.set_mode(
                     (self.pixel_scale * self.x_grid_size, self.pixel_scale * self.y_grid_size)
                 )
-                pygame.display.set_caption("PreyGrass")
+                pygame.display.set_caption("PredPreyGrass")
             else:
                 self.screen = pygame.Surface(
                     (self.pixel_scale * self.x_grid_size, self.pixel_scale * self.y_grid_size)
