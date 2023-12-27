@@ -32,8 +32,8 @@ If obs_range < max_observation_range then 'outer layers' of the observations are
 
 ### The reward structure
 homeostatic_energy_per_aec_cycle = -0.1 # for both predator and prey
-catch_grass_reward=5.0 # for prey
-catch_prey_reward=5.0 # for predator
+catch_grass_reward = 5.0 # for prey
+catch_prey_reward = 5.0 # for predator
 
 ### Learning algorithm 
 The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
