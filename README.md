@@ -8,10 +8,33 @@
  2. The Pursuers have been converted to a Prey learning agent,
  3. Evaders have been converted to grass and are permanently 'freezed' and do not move.
 
- Similar to the PettingZoo' Pursuit envrionment, grass agent are left out of the 'self.agents' array. Including resulted into signifcant computing efficency without obvious advantages.
- 
+ Similar to the PettingZoo' Pursuit envrionment, grass agent are left out of the 'self.agents' array. Including them would result into signifcant loss of computing efficency without obvious advantages, hence this design.
+
+ ### Optionalities of the PredPreyGrass environment
+    render_mode="human", 
+    max_cycles=10000, 
+    x_grid_size=16, 
+    y_grid_size=16, 
+    n_predator=4,
+    n_prey=8,
+    n_grass=30,
+    max_observation_range=7,     
+    obs_range_predator=3, # must be odd and not greater than 'max_observation_range'*  
+    obs_range_prey=7, # must be odd
+    action_range=7, # must be odd
+    moore_neighborhood_actions=False,
+    pixel_scale=40
+
+* this implementation facilitates different observations ranges per agent:
+If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
+
+### The reward system
+
+
 ### Learning algorithm 
 The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
+
+
 
 
 

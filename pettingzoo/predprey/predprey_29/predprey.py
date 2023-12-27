@@ -135,7 +135,7 @@ class PredPrey:
         freeze_grass: bool = False,
         render_mode = None,
         action_range: int = 5,
-        moore_neighborhood: bool = False,        
+        moore_neighborhood_actions: bool = False,        
         pixel_scale: int = 40
 
     ):
@@ -152,7 +152,7 @@ class PredPrey:
         self.freeze_grass = freeze_grass
         self.render_mode = render_mode
         self.action_range = action_range
-        self.moore_neighborhood = moore_neighborhood
+        self.moore_neighborhood_actions = moore_neighborhood_actions
         self.pixel_scale = pixel_scale
 
         self._seed()
@@ -209,7 +209,7 @@ class PredPrey:
         self.motion_range = []
         for i in action_range_array:
             for j in action_range_array:
-                if moore_neighborhood:
+                if moore_neighborhood_actions:
                     self.motion_range.append([j,i]) 
                 elif abs(j) + abs(i) <= action_offset:
                     self.motion_range.append([j,i])        
