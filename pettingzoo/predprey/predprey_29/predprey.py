@@ -41,7 +41,7 @@ class DiscreteAgent():
         agent_id_nr,
         agent_name,
         observation_range=7,
-        n_channels=3, # n channels is the number of observation channels
+        n_channels=4, # n channels is the number of observation channels
         flatten=False,
         motion_range = [
                 [-1, 0], # move left

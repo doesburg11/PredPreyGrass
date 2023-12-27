@@ -14,7 +14,7 @@ env_kwargs = dict(
     max_observation_range=7,     
     obs_range_predator=3,     
     obs_range_prey=7, # must be odd
-    action_range=3, # must be odd
+    action_range=7, # must be odd
     moore_neighborhood=False,
     pixel_scale=40
 )
