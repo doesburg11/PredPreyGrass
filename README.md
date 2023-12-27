@@ -1,13 +1,7 @@
 
+### Predator, Prey, Grass PettingZoo environment
+ 
+ This model simulates a predator-prey relationship in a grid (intially bounded) environment. The population consists of wolf packs (predators) and sheep herds (prey). The predators gain energy from consuming prey, and the sheep gain energy from consuming grass (a primary producer). The Multi Agent Reinforcement Learning algorithm to control the environment is PPO from stable baselines3.
 
- ### Design restrictions
- 1. All Observation ranges must be equal (PPO)
- 2. All Observation spaces must be equal
- 3. All action spaces must be equal
-
- #### workarounds:
- ad 1. Implement an overall maximum observation range and a specific (smaller) observation range per agent by zero-ing all non-observable cells.
- ad 2. Implement an overall maximum observation space. In this case a specific observation channel can have at the mo
- ad 3. Implement an overall max_n_possible_actions.
 
 
