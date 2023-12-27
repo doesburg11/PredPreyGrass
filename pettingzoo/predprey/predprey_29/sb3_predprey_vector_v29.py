@@ -129,12 +129,12 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
-    eval_model = True
+    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
+    eval_model = False
     eval_and_watch_model = True
     training_steps_string = "100_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/50_000_000_v29/predprey_steps_50_000_000"
+    loaded_policy = "./trained_models/100_000_000_v29/predprey_steps_100_000_000"
     env_kwargs = dict(
         max_cycles=100000, 
         x_grid_size=16, 
