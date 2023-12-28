@@ -238,6 +238,7 @@ class PredPrey:
         # end removal agents
 
         self.screen = None
+        self.file_name = 0
         self.n_aec_cycles = 0
 
     def create_agent_instance_list(
@@ -761,23 +762,33 @@ class PredPrey:
         if self.render_mode == "human":
             pygame.event.pump()
             pygame.display.update()
+            
+            self.file_name+=1
+            print(self.file_name)
+            directory= "/home/doesburg/marl/PredPreyGrass/assets/images/"
+            pygame.image.save(self.screen, directory+str(self.file_name)+".png")
+            
+
+
         return (
             np.transpose(new_observation, axes=(1, 0, 2))
             if self.render_mode == "rgb_array"
             else None
         )
-
+    """
     def save_image(self, file_name):
+        pygame.image.save(Surface, filename)
         self.render()
-        capture = pygame.surfarray.array3d(self.screen) # type: ignore
+        capture = pygame.surfarray.array3d(self.screen)
 
         xl, xh = -self.max_obs_offset - 1, self.x_grid_size + self.max_obs_offset + 1
         yl, yh = -self.max_obs_offset - 1, self.y_grid_size + self.max_obs_offset + 1
 
         window = pygame.Rect(xl, yl, xh, yh)
-        subcapture = capture.subsurface(window) # type: ignore
+        subcapture = capture.subsurface(window)
 
         pygame.image.save(subcapture, file_name)
+    """
 
 class raw_env(AECEnv, EzPickle):
     metadata = {
