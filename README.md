@@ -1,7 +1,7 @@
 
 ### Predator, Prey, Grass PettingZoo environment
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="250" height="250"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="300" height="300"/>
 </p>
 
  
