@@ -762,11 +762,12 @@ class PredPrey:
         if self.render_mode == "human":
             pygame.event.pump()
             pygame.display.update()
-            
+            """
             self.file_name+=1
             print(self.file_name)
             directory= "/home/doesburg/marl/PredPreyGrass/assets/images/"
             pygame.image.save(self.screen, directory+str(self.file_name)+".png")
+            """
             
 
 
