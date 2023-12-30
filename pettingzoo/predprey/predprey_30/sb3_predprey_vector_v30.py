@@ -3,6 +3,7 @@ import predprey
 import glob
 import os
 import time
+import numpy as np
 
 import supersuit as ss
 from stable_baselines3 import PPO
@@ -92,6 +93,9 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 
         for agent in raw_env.agent_iter():
             observation, reward, termination, truncation, info = raw_env.last()
+            if agent=="predator_0" or agent=="predator_1" or agent=="predator_2" or agent=="predator_3":
+                print(agent)
+                print(np.transpose(np.transpose(observation)[2]))
 
             cumulative_rewards[agent] += reward
             if agent in possible_predator_name_list:
@@ -129,12 +133,12 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
-    eval_model = True
+    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
+    eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "1_000_000"
+    training_steps_string = "100_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/100_000_000_v29/predprey_steps_100_000_000"
+    loaded_policy = "./trained_models/100_000_000_v30/predprey_steps_100_000_000"
     env_kwargs = dict(
         max_cycles=100000, 
         x_grid_size=16, 
@@ -142,9 +146,9 @@ if __name__ == "__main__":
         n_predator=4,
         n_prey=8,
         n_grass=30,
-        max_observation_range=9, # influences number of calculations; make as small as possible
+        max_observation_range=15, # influences number of calculations; make as small as possible
         obs_range_predator=3,   
-        obs_range_prey=7, # must be odd
+        obs_range_prey=15, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
         pixel_scale=40
@@ -181,4 +185,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=10, render_mode="human", **env_kwargs)
