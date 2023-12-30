@@ -380,11 +380,13 @@ class PredPrey:
         self.grass_name_list =  self.create_agent_name_list_from_instance_list(
             self.grass_instance_list
         )
+        """
         print("predators",self.grid_location_to_predator_dict)
         print()
         print("prey",self.grid_location_to_prey_dict)
         print()
         print("grass",self.grid_location_to_grass_dict)
+        """
 
         # removal agents
         self.prey_who_remove_grass_dict = dict(zip(self.possible_prey_name_list, [False for _ in self.possible_prey_name_list]))
