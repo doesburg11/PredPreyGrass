@@ -822,11 +822,11 @@ class PredPrey:
             pygame.event.pump()
             pygame.display.update()
             if self.save_image_steps:
-                # saving every step in a file
-                self.file_name+=1
+                    self.file_name+=1
                 print(self.file_name)
                 directory= "./assets/images/"
                 pygame.image.save(self.screen, directory+str(self.file_name)+".png")
+        
         return (
             np.transpose(new_observation, axes=(1, 0, 2))
             if self.render_mode == "rgb_array"
