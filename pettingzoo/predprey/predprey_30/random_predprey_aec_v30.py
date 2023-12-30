@@ -11,10 +11,10 @@ env_kwargs = dict(
     n_predator=4,
     n_prey=8,
     n_grass=30,
-    max_observation_range=7,     
+    max_observation_range=15,     
     obs_range_predator=3,     
-    obs_range_prey=7, # must be odd
-    action_range=7, # must be odd
+    obs_range_prey=15, # must be odd
+    action_range=3, # must be odd
     moore_neighborhood_actions=False,
     pixel_scale=40
 )
@@ -53,6 +53,11 @@ for i in range(num_games):
     for agent in raw_env.agent_iter():
         
         observation, reward, termination, truncation, info = raw_env.last()
+        if agent=="predator_0" or agent=="predator_1" or agent=="predator_2" or agent=="predator_3":
+            print("observation in AEC loop")
+            print(agent)
+            print(np.transpose(np.transpose(observation)[2]))
+            print()
        
         cumulative_rewards[agent] += reward
         if termination or truncation:

@@ -7,6 +7,7 @@
 
 
 TODO Later
+-observation space predators does not work properly
 -make a a dict per agent of the grid which maps the position to an agent_instance 
 -make a dict (instead of action_range_array) whichs maps actions to movement
 -mask actions: no agents of same type in one cell
@@ -316,7 +317,7 @@ class PredPrey:
                 catch_prey_reward=5.0,
                 homeostatic_energy_per_aec_cycle=-0.1
             )
-            print(agent_name," created at [",xinit,",",yinit,"]")
+            #print(agent_name," created at [",xinit,",",yinit,"]")
             #  updates lists en records
             match agent_id_nr:
                 case self.predator_type_nr:
@@ -325,8 +326,8 @@ class PredPrey:
                     self.grid_location_to_prey_dict[xinit,yinit].append(agent_name)
                 case self.grass_type_nr: 
                     self.grid_location_to_grass_dict[xinit,yinit].append(agent_name)
-            print("agent_id_nr ",agent_id_nr)
-            print()
+            #print("agent_id_nr ",agent_id_nr)
+            #print()
  
             self.agent_name_to_instance_dict[agent_name] = agent_instance
             agent_instance.position = (xinit, yinit)
@@ -565,7 +566,7 @@ class PredPrey:
                     observation[i][max-1-j,0:max] = 0
                     observation[i][0:max,j] = 0
                     observation[i][0:max,max-1-j] = 0
-                return observation
+            return observation
         elif mask == 0:
             return observation
         else:
