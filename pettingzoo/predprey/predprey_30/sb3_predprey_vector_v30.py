@@ -159,7 +159,9 @@ if __name__ == "__main__":
         start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
         environment_name = "predprey"
         file_name = f"{environment_name}_steps_{training_steps_string}"
-        directory = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
+        directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
+        directory_JO24 = "/home/doesburg/Insync/petervandoesburg11@gmail.com/Dropbox/02. MARL code backup/archive/predpreygras_results"+f"{environment_name}_{start_time}"
+        directory = directory_JO24
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
