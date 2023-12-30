@@ -2,13 +2,23 @@
 [v29]
 -save every step to file in order to produce gif
 [v30]
+-delete method save_image
+-implement self.save_image_steps = False
 
 
 TODO Later
-Major:
+-make a a dict per agent of the grid which maps the position to an agent_instance 
+-make a dict (instead of action_range_array) whichs maps actions to movement
+-mask actions: no agents of same type in one cell
+-implement data type:
+self.model_state_test = np.zeros((self.nr_observation_channels, self.x_grid_size, self.y_grid_size), dtype=DiscreteAgent)
+
+
+
 -inmplement cell class with all agent instance lists this can help but not  
 replace the model_state since it cannot be a numpy type.
 -make grid class with each cel a list of agent_instances to efficently search agents
+
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Death of Predator (and Prey) by starvation (implement minimum energy levels
 -Birth of agents Predators, Prey and Grass
@@ -22,6 +32,10 @@ for i in [-1, 0, 1]:
         y_target = (self.y_position + j) % matrix.yDim
 ------------------------------------------------------
 -specify (not)Moore per agent by masking?
+
+-reward structure: action stay less energy than moving
+-energy loss depending on distance moved?
+
 
 """
 
@@ -165,9 +179,6 @@ class PredPrey:
         self._seed()
         self.agent_id_counter = 0
 
-        # grid
-        self.grid = []
-
         # agent types
         self.agent_type_names = ["wall", "predator", "prey", "grass"]  # different types of agents 
         self.predator_type_nr = self.agent_type_names.index("predator") #1
@@ -198,6 +209,18 @@ class PredPrey:
         self.possible_agent_name_list = self.agent_name_list
         #self.possible_possible_prey_name_list = self.possible_prey_name_list
         #self.possible_predator_name_lis = self.possible_predator_name_list
+
+        self.grid_location_to_predator_dict = {}
+        self.grid_location_to_prey_dict = {}
+        self.grid_location_to_grass_dict = {}
+        # initialization
+        for i in range(self.x_grid_size):
+            for j in range(self.y_grid_size):
+                self.grid_location_to_predator_dict[j,i] = []
+                self.grid_location_to_prey_dict[j,i] = []
+                self.grid_location_to_grass_dict[j,i] = []
+
+
 
         # observations
         max_agents_overlap = max(self.n_prey, self.n_predator, self.n_grass)
@@ -247,9 +270,13 @@ class PredPrey:
 
         # end removal agents
 
+
+        # visualization
         self.screen = None
+        self.save_image_steps = False
         self.file_name = 0
         self.n_aec_cycles = 0
+        # end visualization
 
     def get_agent_instance_from_grid_cell(self,x_position,y_position, agent_type_nr ):
         agent_instance_list = self.agents_by_location[x_position,y_position][agent_type_nr]
@@ -289,7 +316,18 @@ class PredPrey:
                 catch_prey_reward=5.0,
                 homeostatic_energy_per_aec_cycle=-0.1
             )
+            print(agent_name," created at [",xinit,",",yinit,"]")
             #  updates lists en records
+            match agent_id_nr:
+                case self.predator_type_nr:
+                    self.grid_location_to_predator_dict[xinit,yinit].append(agent_name)
+                case self.prey_type_nr: 
+                    self.grid_location_to_prey_dict[xinit,yinit].append(agent_name)
+                case self.grass_type_nr: 
+                    self.grid_location_to_grass_dict[xinit,yinit].append(agent_name)
+            print("agent_id_nr ",agent_id_nr)
+            print()
+ 
             self.agent_name_to_instance_dict[agent_name] = agent_instance
             agent_instance.position = (xinit, yinit)
             _agent_instance_list.append(agent_instance)
@@ -341,6 +379,11 @@ class PredPrey:
         self.grass_name_list =  self.create_agent_name_list_from_instance_list(
             self.grass_instance_list
         )
+        print("predators",self.grid_location_to_predator_dict)
+        print()
+        print("prey",self.grid_location_to_prey_dict)
+        print()
+        print("grass",self.grid_location_to_grass_dict)
 
         # removal agents
         self.prey_who_remove_grass_dict = dict(zip(self.possible_prey_name_list, [False for _ in self.possible_prey_name_list]))
@@ -778,32 +821,18 @@ class PredPrey:
         if self.render_mode == "human":
             pygame.event.pump()
             pygame.display.update()
-            """
-            # saving every step in a file
-            self.file_name+=1
-            print(self.file_name)
-            directory= "/home/doesburg/marl/PredPreyGrass/assets/images/"
-            pygame.image.save(self.screen, directory+str(self.file_name)+".png")
-            """
+            if self.save_image_steps:
+                # saving every step in a file
+                self.file_name+=1
+                print(self.file_name)
+                directory= "./assets/images/"
+                pygame.image.save(self.screen, directory+str(self.file_name)+".png")
         return (
             np.transpose(new_observation, axes=(1, 0, 2))
             if self.render_mode == "rgb_array"
             else None
         )
-    """
-    def save_image(self, file_name):
-        pygame.image.save(Surface, filename)
-        self.render()
-        capture = pygame.surfarray.array3d(self.screen)
 
-        xl, xh = -self.max_obs_offset - 1, self.x_grid_size + self.max_obs_offset + 1
-        yl, yh = -self.max_obs_offset - 1, self.y_grid_size + self.max_obs_offset + 1
-
-        window = pygame.Rect(xl, yl, xh, yh)
-        subcapture = capture.subsurface(window)
-
-        pygame.image.save(subcapture, file_name)
-    """
 
 class raw_env(AECEnv, EzPickle):
     metadata = {

@@ -1,0 +1,1 @@
+These files can be copied and pasted into the site-packages of the conda interpreter if everything else fails.
