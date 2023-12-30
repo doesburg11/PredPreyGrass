@@ -93,9 +93,6 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 
         for agent in raw_env.agent_iter():
             observation, reward, termination, truncation, info = raw_env.last()
-            if agent=="predator_0" or agent=="predator_1" or agent=="predator_2" or agent=="predator_3":
-                print(agent)
-                print(np.transpose(np.transpose(observation)[2]))
 
             cumulative_rewards[agent] += reward
             if agent in possible_predator_name_list:
@@ -136,7 +133,7 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = True
     eval_and_watch_model = True
-    training_steps_string = "10_000_000"
+    training_steps_string = "1_000_000"
     training_steps = int(training_steps_string)
     loaded_policy = "./trained_models/100_000_000_v30/predprey_steps_100_000_000"
     env_kwargs = dict(
@@ -161,7 +158,7 @@ if __name__ == "__main__":
         file_name = f"{environment_name}_steps_{training_steps_string}"
         directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
         directory_JO24 = "/home/doesburg/Insync/petervandoesburg11@gmail.com/Dropbox/02. MARL code backup/archive/predpreygras_results"+f"{environment_name}_{start_time}"
-        directory = directory_JO24
+        directory = directory_project
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
