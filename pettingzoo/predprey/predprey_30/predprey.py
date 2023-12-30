@@ -790,20 +790,6 @@ class PredPrey:
             if self.render_mode == "rgb_array"
             else None
         )
-    """
-    def save_image(self, file_name):
-        pygame.image.save(Surface, filename)
-        self.render()
-        capture = pygame.surfarray.array3d(self.screen)
-
-        xl, xh = -self.max_obs_offset - 1, self.x_grid_size + self.max_obs_offset + 1
-        yl, yh = -self.max_obs_offset - 1, self.y_grid_size + self.max_obs_offset + 1
-
-        window = pygame.Rect(xl, yl, xh, yh)
-        subcapture = capture.subsurface(window)
-
-        pygame.image.save(subcapture, file_name)
-    """
 
 class raw_env(AECEnv, EzPickle):
     metadata = {
