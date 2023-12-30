@@ -77,3 +77,4 @@ for i in range(num_games):
 raw_env.close()
 print(f"Average of Avg = {round(average(avg_rewards),1)}")
 print(f"Average of Cycles = {round(average(avg_cycles),1)}")
+  
