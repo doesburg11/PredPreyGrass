@@ -1,0 +1,68 @@
+Hyperparameter tuning:
+directory:
+
+[1] [moore][time_step_variation]: (moore_neighborhood=True, Surround=True, n_catch=2) give much slower (50_000_000) positive rewards 
+than a Newton neighborhood (5_000_000 steps) 
+
+[2] [freeze_evaders][time_step_variation]: (moore_neighborhood=False], xb=1.0, yb=1.0, surround=False, n_catch=1) 
+after 1_000_000 steps only marginal average reward improvement with 5_000_000 and 10_000_000 steps
+
+
+ad [1] [moore][time_step_variation]: 50_000_0000 time_steps
+
+Finished training on predprey_v0.
+Cycles = 202 Avg = 108.2 Std = 13.3 
+Cycles = 289 Avg = 90.3 Std = 12.9 
+Cycles = 307 Avg = 78.1 Std = 20.6 
+Cycles = 213 Avg = 95.1 Std = 10.7 
+Cycles = 265 Avg = 99.8 Std = 6.5 
+Cycles = 197 Avg = 95.2 Std = 5.9 
+Cycles = 246 Avg = 55.2 Std = 14.4 
+Cycles = 342 Avg = 98.1 Std = 7.8 
+Cycles = 282 Avg = 99.5 Std = 12.3 
+Cycles = 365 Avg = 92.8 Std = 8.1 
+Cycles = 303 Avg = 92.1 Std = 11.3 
+
+ad [2] [freeze_evaders][time_step_variation]
+
+steps=1_000_000
+Finished training on predprey_v1.
+Cycles = 33 Avg = 18.1 Std = 11.3 
+Cycles = 20 Avg = 16.9 Std = 7.5 
+Cycles = 38 Avg = 15.7 Std = 9.8 
+Cycles = 42 Avg = 14.7 Std = 10.3 
+Cycles = 25 Avg = 16.4 Std = 5.8 
+Cycles = 30 Avg = 15.9 Std = 9.2 
+Cycles = 30 Avg = 18.4 Std = 8.8 
+Cycles = 28 Avg = 16.1 Std = 11.9 
+Cycles = 27 Avg = 16.8 Std = 4.2 
+Cycles = 46 Avg = 14.3 Std = 7.9 
+Cycles = 27 Avg = 16.2 Std = 9.2 
+
+steps=5_000_000
+Finished training on predprey_v1.
+Cycles = 27 Avg = 16.8 Std = 9.8 
+Cycles = 18 Avg = 17.7 Std = 8.2 
+Cycles = 28 Avg = 18.0 Std = 11.2 
+Cycles = 34 Avg = 18.6 Std = 8.4 
+Cycles = 19 Avg = 17.0 Std = 7.5 
+Cycles = 22 Avg = 18.6 Std = 6.2 
+Cycles = 22 Avg = 18.0 Std = 8.5 
+Cycles = 26 Avg = 20.7 Std = 13.4 
+Cycles = 19 Avg = 17.6 Std = 5.6 
+Cycles = 22 Avg = 16.7 Std = 10.6 
+Cycles = 26 Avg = 18.2 Std = 6.8 
+
+steps=10_000_000
+Finished training on predprey_v1.
+Cycles = 16 Avg = 18.5 Std = 5.4 
+Cycles = 32 Avg = 15.7 Std = 10.3 
+Cycles = 27 Avg = 16.8 Std = 10.2 
+Cycles = 36 Avg = 17.2 Std = 9.1 
+Cycles = 24 Avg = 16.5 Std = 5.8 
+Cycles = 22 Avg = 20.5 Std = 8.9 
+Cycles = 21 Avg = 21.2 Std = 10.4 
+Cycles = 28 Avg = 16.1 Std = 11.6 
+Cycles = 26 Avg = 16.3 Std = 6.4 
+Cycles = 29 Avg = 17.9 Std = 11.8 
+Cycles = 22 Avg = 18.6 Std = 5.0 
