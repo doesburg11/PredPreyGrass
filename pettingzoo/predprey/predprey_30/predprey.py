@@ -4,13 +4,15 @@
 [v30]
 -delete method save_image
 -implement self.save_image_steps = False
+-fixed observation range error
+-implement array (shape: 1xn_observation_channels) of dicts with keys as coordinates 
+and values an array of agent_names. Gives per coordinate teh specific agent_names in it.
+For more efficient searching.
 
 
 TODO Later
--observation space predators does not work properly
 -make a a dict per agent of the grid which maps the position to an agent_instance 
 -make a dict (instead of action_range_array) whichs maps actions to movement
--mask actions: no agents of same type in one cell
 -implement data type:
 self.model_state_test = np.zeros((self.nr_observation_channels, self.x_grid_size, self.y_grid_size), dtype=DiscreteAgent)
 
@@ -208,19 +210,6 @@ class PredPrey:
         # 'possible_agent_name_list' is the PredPrey equivalent of PettingZoo 
         # 'possible_agents' in raw_env
         self.possible_agent_name_list = self.agent_name_list
-        #self.possible_possible_prey_name_list = self.possible_prey_name_list
-        #self.possible_predator_name_lis = self.possible_predator_name_list
-
-        self.grid_location_to_predator_dict = {}
-        self.grid_location_to_prey_dict = {}
-        self.grid_location_to_grass_dict = {}
-        # initialization
-        for i in range(self.x_grid_size):
-            for j in range(self.y_grid_size):
-                self.grid_location_to_predator_dict[j,i] = []
-                self.grid_location_to_prey_dict[j,i] = []
-                self.grid_location_to_grass_dict[j,i] = []
-
 
 
         # observations
@@ -248,20 +237,24 @@ class PredPrey:
                 elif abs(j) + abs(i) <= action_offset:
                     self.motion_range.append([j,i])        
      
-        #print("---------------------------------------------------------------------------------------------")
-        #print("self.motion_range ", self.motion_range)   
-        
         self.n_actions_agent=len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)  
         self.action_space = [action_space_agent for _ in range(self.n_agents)] # type: ignore
-
-        #print("self.action_space ",self.action_space)
-        #print("self.motion_range ",self.motion_range)
-        
-        #print("n_actions_agent ",self.n_actions_agent)
-        #print("---------------------------------------------------------------------------------------------")
                   
         # end actions
+
+        # agent_names in grid location
+        self.agents_in_grid_location = []
+
+        for obs_channel in range(self.nr_observation_channels):
+            self.agents_in_grid_location.append({})
+        # initialization
+        
+        for obs_channel in range(self.nr_observation_channels):
+            for x in range(self.x_grid_size):
+                for y in range(self.y_grid_size):
+                    self.agents_in_grid_location[obs_channel][x,y] = []
+        # end agent_name in grid location
 
         # removal agents
         self.prey_who_remove_grass_dict = dict(zip(self.possible_prey_name_list, [False for _ in self.possible_prey_name_list]))
@@ -278,12 +271,6 @@ class PredPrey:
         self.file_name = 0
         self.n_aec_cycles = 0
         # end visualization
-
-    def get_agent_instance_from_grid_cell(self,x_position,y_position, agent_type_nr ):
-        agent_instance_list = self.agents_by_location[x_position,y_position][agent_type_nr]
-        random_agent = 1
-        return random_agent
-
 
     def create_agent_instance_list(
             self, 
@@ -319,15 +306,8 @@ class PredPrey:
             )
             #print(agent_name," created at [",xinit,",",yinit,"]")
             #  updates lists en records
-            match agent_id_nr:
-                case self.predator_type_nr:
-                    self.grid_location_to_predator_dict[xinit,yinit].append(agent_name)
-                case self.prey_type_nr: 
-                    self.grid_location_to_prey_dict[xinit,yinit].append(agent_name)
-                case self.grass_type_nr: 
-                    self.grid_location_to_grass_dict[xinit,yinit].append(agent_name)
-            #print("agent_id_nr ",agent_id_nr)
-            #print()
+ 
+            self.agents_in_grid_location[agent_type_nr][xinit,yinit].append(agent_name)
  
             self.agent_name_to_instance_dict[agent_name] = agent_instance
             agent_instance.position = (xinit, yinit)
@@ -380,14 +360,7 @@ class PredPrey:
         self.grass_name_list =  self.create_agent_name_list_from_instance_list(
             self.grass_instance_list
         )
-        """
-        print("predators",self.grid_location_to_predator_dict)
-        print()
-        print("prey",self.grid_location_to_prey_dict)
-        print()
-        print("grass",self.grid_location_to_grass_dict)
-        """
-
+ 
         # removal agents
         self.prey_who_remove_grass_dict = dict(zip(self.possible_prey_name_list, [False for _ in self.possible_prey_name_list]))
         self.grass_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))

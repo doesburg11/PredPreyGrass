@@ -53,12 +53,7 @@ for i in range(num_games):
     for agent in raw_env.agent_iter():
         
         observation, reward, termination, truncation, info = raw_env.last()
-        if agent=="predator_0" or agent=="predator_1" or agent=="predator_2" or agent=="predator_3":
-            print("observation in AEC loop")
-            print(agent)
-            print(np.transpose(np.transpose(observation)[2]))
-            print()
-       
+     
         cumulative_rewards[agent] += reward
         if termination or truncation:
             action = None
