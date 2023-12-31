@@ -15,10 +15,10 @@
  ### Optionalities of the PredPreyGrass environment
     render_mode="human", 
     max_cycles=10000, 
-    x_grid_size=16, 
-    y_grid_size=16, 
+    x_grid_size=10, 
+    y_grid_size=10, 
     n_predator=4,
-    n_prey=8,
+    n_prey=6,
     n_grass=30,
     max_observation_range=7,     
     obs_range_predator=3, # must be odd and not greater than 'max_observation_range'*  
