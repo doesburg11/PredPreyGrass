@@ -6,8 +6,8 @@ import numpy as np
 env_kwargs = dict(
     render_mode="human", 
     max_cycles=10000, 
-    x_grid_size=40, 
-    y_grid_size=40, 
+    x_grid_size=16, 
+    y_grid_size=16, 
     n_predator=4,
     n_prey=8,
     n_grass=30,
