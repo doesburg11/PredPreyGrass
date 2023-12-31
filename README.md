@@ -4,7 +4,7 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="300" height="300"/>
 </p>
 
- 
+ Prey agents (blue) try to eat grass agents (green). Predators (red) try to capture prey.
  The PredPreyGrass envrionment has been modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
  1. The envrionment is added with an addtional Predator learning agent. 
  2. The Pursuers have been converted to a Prey learning agent,
