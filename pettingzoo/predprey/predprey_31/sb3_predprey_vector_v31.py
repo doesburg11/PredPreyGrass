@@ -130,16 +130,16 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
-    eval_model = False
+    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
+    eval_model = True
     eval_and_watch_model = True
-    training_steps_string = "100_000_000"
+    training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/100_000_000_v31/predprey_steps_100_000_000"
+    loaded_policy = "./trained_models/predprey/predprey_2023-12-31_15:12/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=100000, 
-        x_grid_size=10, 
-        y_grid_size=10, 
+        x_grid_size=16, 
+        y_grid_size=16, 
         n_predator=4,
         n_prey=6,
         n_grass=30,
@@ -166,6 +166,7 @@ if __name__ == "__main__":
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
         file.write("parameters:\n")
+        file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
         for item in env_kwargs:
             file.write(str(item)+" = "+str(env_kwargs[item])+"\n")
@@ -191,4 +192,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)

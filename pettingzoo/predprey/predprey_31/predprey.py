@@ -9,13 +9,14 @@
 and values an array of agent_names. Gives per coordinate teh specific agent_names in it.
 For more efficient searching.
 [v32]
+-make a dict (instead of action_range_iterator) whichs maps actions to movement fails. likely
+because of discrepancies between numpy arrays and dicts, so motion_range remains in
+its existing from
+
 
 
 
 TODO Later
--make a dict (instead of action_range_iterator) whichs maps actions to movement
-
-
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Death of Predator (and Prey) by starvation (implement minimum energy levels
 -Birth of agents Predators, Prey and Grass
@@ -61,7 +62,7 @@ class DiscreteAgent():
         agent_name,
         observation_range=7,
         n_channels=4, # n channels is the number of observation channels
-        flatten=False,
+        flatten=False,  
         motion_range = [
                 [-1, 0], # move left
                 [0, -1], # move up
@@ -90,7 +91,6 @@ class DiscreteAgent():
         self.n_actions_agent=len(self.motion_range)   
         self.action_space_agent = spaces.Discrete(self.n_actions_agent) 
         self.position = np.zeros(2, dtype=np.int32)  # x and y position
-        self.grass = False # alive at creation
         self.energy = initial_energy  # still to implement
         self.homeostatic_energy_per_aec_cycle = homeostatic_energy_per_aec_cycle
         self.catch_grass_reward = catch_grass_reward
@@ -100,12 +100,11 @@ class DiscreteAgent():
         # returns new position of agent "self" given action "action"
         next_position = np.zeros(2, dtype=np.int32) 
         next_position[0], next_position[1] = self.position[0], self.position[1]
-        #print("self.motion_range ",self.motion_range)
-        #print("action ",action)
         next_position += self.motion_range[action]
-        if self.grass or not (0 <= next_position[0] < self.x_grid_size and 
-                                 0 <= next_position[1] < self.y_grid_size):
-            return self.position   # if dead or reached goal or if moved out of borders: dont move
+        # masking
+        if not (0 <= next_position[0] < self.x_grid_size and 
+                            0 <= next_position[1] < self.y_grid_size):
+            return self.position   # if moved out of borders: dont move
         else:
             self.position = next_position
             return self.position
@@ -121,6 +120,7 @@ class AgentLayer:
         return self.n_ally_agents
 
     def move_agent_instance(self, agent_instance, action):
+        
         return agent_instance.step(action)
 
     def get_position_agent_instance(self, agent_instance):
@@ -224,20 +224,15 @@ class PredPrey:
         action_offset = int((self.action_range - 1) / 2) 
         action_range_iterator = list(range(-action_offset, action_offset+1))
         self.motion_range = []
-        self.motion_range_dict = {}
         action_nr = 0
         for d_x in action_range_iterator:
             for d_y in action_range_iterator:
                 if moore_neighborhood_actions:
                     self.motion_range.append([d_x,d_y]) 
-                    self.motion_range_dict[action_nr] = (d_x,d_y)
                     action_nr += 1
                 elif abs(d_x) + abs(d_y) <= action_offset:
                     self.motion_range.append([d_x,d_y])        
-                    self.motion_range_dict[action_nr] = (d_x,d_y)
                     action_nr += 1
-        print("self.motion_range ", self.motion_range)
-        print("self.motion_range_dict ", self.motion_range_dict)
      
         self.n_actions_agent=len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)  
@@ -245,17 +240,17 @@ class PredPrey:
                   
         # end actions
 
-        # agent_names in grid location
-        self.agents_in_grid_location = []
+        # grid list: agent_instances in grid location
+        self.agents_instances_in_grid_location = []
 
         for obs_channel in range(self.nr_observation_channels):
-            self.agents_in_grid_location.append({})
+            self.agents_instances_in_grid_location.append({})
         # initialization
         
         for obs_channel in range(self.nr_observation_channels):
             for x in range(self.x_grid_size):
                 for y in range(self.y_grid_size):
-                    self.agents_in_grid_location[obs_channel][x,y] = []
+                    self.agents_instances_in_grid_location[obs_channel][x,y] = []
         # end agent_name in grid location
 
         # removal agents
@@ -280,7 +275,8 @@ class PredPrey:
             agent_type_nr,
             observation_range, 
             randomizer, 
-            flatten=False, 
+            flatten=False,
+            homeostatic_energy_per_aec_cycle = -0.1
             ):
 
         _agent_instance_list = []
@@ -304,12 +300,12 @@ class PredPrey:
                 initial_energy=100,
                 catch_grass_reward=5.0,
                 catch_prey_reward=5.0,
-                homeostatic_energy_per_aec_cycle=-0.1
+                homeostatic_energy_per_aec_cycle=homeostatic_energy_per_aec_cycle
             )
             #print(agent_name," created at [",xinit,",",yinit,"]")
             #  updates lists en records
  
-            self.agents_in_grid_location[agent_type_nr][xinit,yinit].append(agent_name)
+            self.agents_instances_in_grid_location[agent_type_nr][xinit,yinit].append(agent_instance)
  
             self.agent_name_to_instance_dict[agent_name] = agent_instance
             agent_instance.position = (xinit, yinit)
@@ -337,7 +333,8 @@ class PredPrey:
             self.n_predator, 
             self.predator_type_nr, 
             self.obs_range_predator,
-            self.np_random, 
+            self.np_random,
+            homeostatic_energy_per_aec_cycle=-0.5 
         )
         self.possible_predator_name_list =  self.create_agent_name_list_from_instance_list(
             self.predator_instance_list
@@ -348,6 +345,7 @@ class PredPrey:
             self.prey_type_nr, 
             self.obs_range_prey, 
             self.np_random, 
+            homeostatic_energy_per_aec_cycle = -0.1
         )
         self.possible_prey_name_list =  self.create_agent_name_list_from_instance_list(
             self.prey_instance_list
@@ -410,7 +408,6 @@ class PredPrey:
                 # check if new position has prey and if so store and eat in the last round
                 x_new_position_predator = agent_instance.position[0]
                 y_new_position_predator = agent_instance.position[1]
-                #self.agent_reward_dict[predator_name] += agent_instance.homeostatic_energy_per_aec_cycle
                 # if predator steps into a cell with at least one prey agent
                 if self.model_state[self.prey_type_nr, x_new_position_predator, y_new_position_predator] > 0:
                     prey_instance_list_in_cell_predator = []
