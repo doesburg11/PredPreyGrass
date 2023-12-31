@@ -135,20 +135,20 @@ if __name__ == "__main__":
     eval_and_watch_model = True
     training_steps_string = "100_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_steps_100_000_000"
+    loaded_policy = "./trained_models/predprey/100_000_000_v31/predprey_steps_100_000_000"
     env_kwargs = dict(
         max_cycles=100000, 
-        x_grid_size=16, 
-        y_grid_size=16, 
+        x_grid_size=10, 
+        y_grid_size=10, 
         n_predator=4,
-        n_prey=8,
+        n_prey=6,
         n_grass=30,
         max_observation_range=7, # influences number of calculations; make as small as possible
         obs_range_predator=3,   
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        pixel_scale=20
+        pixel_scale=40
         )
 
     if train_model:
@@ -191,4 +191,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=10, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
