@@ -13,27 +13,28 @@
  Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'self.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
 
  ### Optionalities of the PredPreyGrass environment
-    render_mode="human", 
-    max_cycles=10000, 
-    x_grid_size=10, 
-    y_grid_size=10, 
-    n_predator=4,
-    n_prey=6,
-    n_grass=30,
-    max_observation_range=7,     
-    obs_range_predator=3, # must be odd and not greater than 'max_observation_range'*  
-    obs_range_prey=7, # must be odd
-    action_range=7, # must be odd
-    moore_neighborhood_actions=False,
-    pixel_scale=40
+        max_cycles=100000, 
+        x_grid_size=16, 
+        y_grid_size=16, 
+        n_predator=4,
+        n_prey=4,
+        n_grass=30,
+        max_observation_range=7, # influences number of calculations; make as small as possible
+        obs_range_predator=3,   
+        obs_range_prey=7, # must be odd
+        action_range=3, # must be odd
+        moore_neighborhood_actions=False,
+        energy_loss_per_step_predator = -0.4,
+        energy_loss_per_step_prey = -0.1,     
+        pixel_scale=40
+        catch_grass_reward = 5.0 # for prey
+        catch_prey_reward = 5.0 # for predator
 
 *this implementation facilitates different observations ranges per agent:
 If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
 
-### The reward structure
-homeostatic_energy_per_aec_cycle = -0.1 # for both predator and prey
-catch_grass_reward = 5.0 # for prey
-catch_prey_reward = 5.0 # for predator
+### Emergent behavior
+Whith this configuration predators try to hoover around the grass agents in order to capture prey. Prey try to flee predators despite that this is not explicitly defined in the reward structure.
 
 ### Learning algorithm 
 The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
