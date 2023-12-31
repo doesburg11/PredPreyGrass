@@ -82,22 +82,22 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
         n_aec_cycles = 0
         raw_env.reset(seed=i)
         raw_env._agent_selector.reset()
-        possible_predator_name_list = raw_env.pred_prey_env.possible_predator_name_list
-        possible_prey_name_list = raw_env.pred_prey_env.possible_prey_name_list
+        predator_name_list = raw_env.pred_prey_env.predator_name_list
+        prey_name_list = raw_env.pred_prey_env.prey_name_list
         agent_name_list = raw_env.pred_prey_env.agent_name_list
         agent_selector.reset()
 
         cumulative_rewards = {agent: 0 for agent in agent_name_list}
-        cumulative_rewards_predator = {agent: 0 for agent in possible_predator_name_list}
-        cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
+        cumulative_rewards_predator = {agent: 0 for agent in predator_name_list}
+        cumulative_rewards_prey = {agent: 0 for agent in prey_name_list}
 
         for agent in raw_env.agent_iter():
             observation, reward, termination, truncation, info = raw_env.last()
 
             cumulative_rewards[agent] += reward
-            if agent in possible_predator_name_list:
+            if agent in predator_name_list:
                 cumulative_rewards_predator[agent] += reward
-            elif agent in possible_prey_name_list:
+            elif agent in prey_name_list:
                 cumulative_rewards_prey[agent] += reward
 
             if termination or truncation:
@@ -130,12 +130,12 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
-    eval_model = True
+    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
+    eval_model = False
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2023-12-31_16:21/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_2023-12-31_19:10/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=100000, 
         x_grid_size=16, 
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.2,
+        energy_loss_per_step_predator = -0.4,
         energy_loss_per_step_prey = -0.1,     
         pixel_scale=40
         )
@@ -167,6 +167,7 @@ if __name__ == "__main__":
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
+        file.write("version: "+  +"\n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
@@ -194,4 +195,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
