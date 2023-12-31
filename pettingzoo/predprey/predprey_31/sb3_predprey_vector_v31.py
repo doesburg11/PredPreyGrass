@@ -141,7 +141,7 @@ if __name__ == "__main__":
         x_grid_size=16, 
         y_grid_size=16, 
         n_predator=4,
-        n_prey=6,
+        n_prey=4,
         n_grass=30,
         max_observation_range=7, # influences number of calculations; make as small as possible
         obs_range_predator=3,   
