@@ -135,7 +135,7 @@ if __name__ == "__main__":
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2023-12-31_19:10/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_v31_readme/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=100000, 
         x_grid_size=16, 
