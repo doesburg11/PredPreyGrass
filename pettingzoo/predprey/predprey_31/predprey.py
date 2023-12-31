@@ -13,7 +13,7 @@ For more efficient searching.
 
 
 TODO Later
--make a dict (instead of action_range_array) whichs maps actions to movement
+-make a dict (instead of action_range_iterator) whichs maps actions to movement
 
 
 -if masking actions does not work, maybe penalizing actions do work via rewards.
@@ -64,10 +64,10 @@ class DiscreteAgent():
         flatten=False,
         motion_range = [
                 [-1, 0], # move left
-                [1, 0], # move right
-                [0, 1], # move down
                 [0, -1], # move up
-                [0, 0] # stay
+                [0, 0], # stay
+                [0, 1], # move down
+                [1, 0], # move right
                 ],
         initial_energy=100,
         catch_grass_reward=5.0,
@@ -222,19 +222,19 @@ class PredPrey:
 
         # actions
         action_offset = int((self.action_range - 1) / 2) 
-        action_range_array = list(range(-action_offset, action_offset+1))
+        action_range_iterator = list(range(-action_offset, action_offset+1))
         self.motion_range = []
         self.motion_range_dict = {}
         action_nr = 0
-        for i in action_range_array:
-            for j in action_range_array:
+        for d_x in action_range_iterator:
+            for d_y in action_range_iterator:
                 if moore_neighborhood_actions:
-                    self.motion_range.append([j,i]) 
-                    self.motion_range_dict[action_nr] = (j,i)
+                    self.motion_range.append([d_x,d_y]) 
+                    self.motion_range_dict[action_nr] = (d_x,d_y)
                     action_nr += 1
-                elif abs(j) + abs(i) <= action_offset:
-                    self.motion_range.append([j,i])        
-                    self.motion_range_dict[action_nr] = (j,i)
+                elif abs(d_x) + abs(d_y) <= action_offset:
+                    self.motion_range.append([d_x,d_y])        
+                    self.motion_range_dict[action_nr] = (d_x,d_y)
                     action_nr += 1
         print("self.motion_range ", self.motion_range)
         print("self.motion_range_dict ", self.motion_range_dict)
@@ -269,7 +269,7 @@ class PredPrey:
 
         # visualization
         self.screen = None
-        self.save_image_steps = True
+        self.save_image_steps = False
         self.file_name = 0
         self.n_aec_cycles = 0
         # end visualization
