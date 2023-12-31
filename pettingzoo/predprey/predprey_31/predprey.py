@@ -268,7 +268,7 @@ class PredPrey:
 
         # visualization
         self.screen = None
-        self.save_image_steps = False
+        self.save_image_steps = True
         self.file_name = 0
         self.n_aec_cycles = 0
         # end visualization
