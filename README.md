@@ -1,5 +1,5 @@
 
-### Predator, Prey, Grass PettingZoo environment
+### A Predator, Prey, Grass multiagent learning environment
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="300" height="300"/>
 </p>
