@@ -34,7 +34,7 @@
 If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
 
 ### Emergent behavior
-Whith this configuration predators try to hoover around the grass agents in order to capture prey. Prey try to flee predators despite that this is not explicitly defined in the reward structure.
+With this configuration predators try to hoover around the grass agents in order to capture prey. Prey try to flee predators despite that this is not explicitly defined in the reward structure.
 
 ### Learning algorithm 
 The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
