@@ -1,23 +1,11 @@
 """
-[v29]
--save every step to file in order to produce gif
-[v30]
--delete method save_image
--implement self.save_image_steps = False
--fixed observation range error
--implement array (shape: 1xn_observation_channels) of dicts with keys as coordinates 
-and values an array of agent_names. Gives per coordinate teh specific agent_names in it.
-For more efficient searching.
-[v31]
--make a dict (instead of action_range_iterator) whichs maps actions to movement fails. likely
-because of discrepancies between numpy arrays and dicts, so motion_range remains in
-its existing from
 [v32]
 -implement energy loss per predator
 -implement starvation predator
 
 
 TODO Later
+-implement bar chart which tracks energy levels per agent?
 -death of Predator (and Prey) by starvation (implement minimum energy levels
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Birth of agents Predators, Prey and Grass
