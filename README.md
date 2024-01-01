@@ -61,11 +61,12 @@ If obs_range < max_observation_range then 'outer layers' of the observations are
 With this configuration predators, after training, try to hoover around the grass agents in order to capture prey. However, this strategy is less frequent when the 'energy_loss_per_step_predator'gets more negative and predators are incentivized to abonden the 'wait-and-see' approach.
 
  
-
-@article{PredPreyGrass,
+```
+@readme{PredPreyGrass,
   Title = {A Predator, Prey, Grass multiagent learning environment},
   Author = {Van Doesburg, P.},
   year={2024}
 }
+```
 
 
