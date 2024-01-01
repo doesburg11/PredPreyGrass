@@ -62,6 +62,10 @@ With this configuration predators, after training, try to hoover around the gras
 
  
 
-
+@article{PredPreyGrass,
+  Title = {A Predator, Prey, Grass multiagent learning environment},
+  Author = {Van Doesburg, P.},
+  year={2024}
+}
 
 
