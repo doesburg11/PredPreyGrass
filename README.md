@@ -4,72 +4,84 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="300" height="300"/>
 </p>
 
- Prey agents (blue) learn to eat grass agents (green). Predators (red) learn to capture prey.
 
-### Installation instructions
+Blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey.
 
-Editor used: Visual Studio Code 1.85.1
+### Installation Instructions
 
-1. ```git clone https://github.com/doesburg11/PredPreyGrass.git```
-2. ctrl+shift+p, type and choose: "Python: Create Environment..."
+**Editor used:** Visual Studio Code 1.85.1
+
+1. Clone the repository: 
+   ```bash
+   git clone https://github.com/doesburg11/PredPreyGrass.git
+   ```
+2. Open Visual Studio Code and execute:
+   - Press `ctrl+shift+p`
+   - Type and choose: "Python: Create Environment..."
 3. Choose environment: Conda 
 4. Choose interpreter: Python 3.11.5
-5. Open New Terminal
-5. ```pip install -r requirements.txt```
-7. IF "ERROR: Failed building wheel for box2d-py" DO: ```conda install swig``` in VS Code terminal
-8. If that does not work try first to find other solutions online.
-9. Ultimately one can copy and past the Box2d files from the 'assets/box2d' directory (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) into the site-packages directory. Not very elegant but it might work.
-10. IF: "libGL error: failed to load driver: swrast" DO: ```conda install -c conda-forge gcc=12.1.0```
+5. Open a new terminal
+6. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+7. If encountering "ERROR: Failed building wheel for box2d-py," run:
+   ```bash
+   conda install swig
+   ```
+   in the VS Code terminal.
+8. If the issue persists, explore alternative solutions online.
+9. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
+10. If facing "libGL error: failed to load driver: swrast," execute:
+    ```bash
+    conda install -c conda-forge gcc=12.1.0
+    ```
 
-### PettingZoo modification
+### PettingZoo Modification
 
- The PredPreyGrass envrionment has been substantially modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
- 1. The envrionment is added with an addtional 'predator' agent, which can die of starvation. 
- 2. The Pursuer agent has been converted to a 'prey' agent and can be eaten by a predator agent.
- 3. The Evaders agent has been converted to a 'grass' agent and are permanently 'freezed' and are unmovable. The gras agent can be eaten by a prey agent.
+The PredPreyGrass environment is a significant modification of PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
+1. Added an additional 'predator' agent that can die of starvation.
+2. Converted the Pursuer agent to a 'prey' agent, susceptible to being eaten by a predator.
+3. Transformed the Evaders agent into a 'grass' agent, permanently 'frozen' and immovable, consumable by prey.
 
- Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'AECEnv.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
+Similar to PettingZoo Pursuit, grass agents are excluded from the 'AECEnv.agents' array for computational efficiency.
 
- ### The AEC environment architecture
-Since the creation and particulary the termination of agents during a simulation leads to unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged after death of agents during simulation. Therefore, in PettingZoo's API terminology 'AECEnv.agents' remains equal to 'AECEnv.possible_agents' during training as well as evaluation.
+### The AEC Environment Architecture
 
-The handling of dying predators and prey is effected by the removal of agents in the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list' respectively. Wether or not a predator or prey is allive can be additionaly checked by the 'PredPrey.predator_not_alive_dict' and the 'PredPrey.prey_not_alive_dict. Agents not being alive have 'observations' and 'rewards' only existing of zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
+Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The alive status of agents is furthermore tracked by 'PredPrey.predator_alive_dict' and 'PredPrey.prey_alive_dict.'
 
-This architecture does not only give an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires an unchanged number of agents during training.
+This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
 
- ### Optionalities of the PredPreyGrass environment
-        max_cycles=10000 
-        x_grid_size=16
-        y_grid_size=16
-        n_predator=4
-        n_prey=8
-        n_grass=30
-        max_observation_range=7 # must be odd
-        obs_range_predator=5 # must be odd    
-        obs_range_prey=7 # must be odd
-        action_range=3 # must be odd
-        moore_neighborhood_actions=False
-        energy_loss_per_step_predator = -0.4
-        energy_loss_per_step_prey = -0.1    
-        initial_energy_predator = 14.0
-        initial_energy_prey = 8.0        
-        catch_grass_reward = 5.0 # for prey
-        catch_prey_reward = 5.0 # for predator
-        pixel_scale=40
+### Optionalities of the PredPreyGrass Environment
+- `max_cycles=10000`
+- `x_grid_size=16`
+- `y_grid_size=16`
+- `n_predator=4`
+- `n_prey=8`
+- `n_grass=30`
+- `max_observation_range=7` (must be odd)
+- `obs_range_predator=5` (must be odd)  
+- `obs_range_prey=7` (must be odd)
+- `action_range=3` (must be odd)
+- `moore_neighborhood_actions=False`
+- `energy_loss_per_step_predator=-0.4`
+- `energy_loss_per_step_prey=-0.1`
+- `initial_energy_predator=14.0`
+- `initial_energy_prey=8.0`
+- `catch_grass_reward=5.0` (for prey)
+- `catch_prey_reward=5.0` (for predator)
+- `pixel_scale=40`
 
-*this implementation facilitates different observations ranges per agent:
-If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
+This implementation supports different observation ranges per agent: If `obs_range < max_observation_range`, the 'outer layers' of observations are set to zero.
 
-### Emergent behavior
-With this configuration predators, after training, try to hoover around the grass agents in order to capture prey. However, this strategy is less frequent when the 'energy_loss_per_step_predator'gets more negative and predators are incentivized to abonden the 'wait-and-see' approach.
+### Emergent Behavior
 
- 
+In this configuration, predators, after training, tend to hover around grass agents to capture prey. However, this strategy is less frequent when 'energy_loss_per_step_predator' becomes more negative, incentivizing predators to abandon the 'wait-and-see' approach.
+
 ```
 @readme{PredPreyGrass,
-  Title = {A Predator, Prey, Grass multiagent learning environment},
-  Author = {Van Doesburg, P.},
-  year={2024}
+  Title={A Predator, Prey, Grass Multiagent Learning Environment},
+  Author={Van Doesburg, P.},
+  Year={2024}
 }
 ```
-
-
