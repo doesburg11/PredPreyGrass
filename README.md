@@ -9,16 +9,17 @@
 ### Installation instructions
 
 Editor used: Visual Studio Code 1.85.1
-1. git clone https://github.com/doesburg11/PredPreyGrass.git
+
+1. ```git clone https://github.com/doesburg11/PredPreyGrass.git```
 2. ctrl+shift+p, type and choose: "Python: Create Environment..."
 3. Choose environment: Conda 
 4. Choose interpreter: Python 3.11.5
 5. Open New Terminal
-5. $pip install -r requirements.txt
-7. IF "ERROR: Failed building wheel for box2d-py" DO: '$conda install swig' in VS Code terminal
+5. ```pip install -r requirements.txt```
+7. IF "ERROR: Failed building wheel for box2d-py" DO: ```conda install swig``` in VS Code terminal
 8. If that does not work try first to find other solutions online.
 9. Ultimately one can copy and past the Box2d files from the 'assets/box2d' directory (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) into the site-packages directory. Not very elegant but it might work.
-10. IF: "libGL error: failed to load driver: swrast" DO: $conda install -c conda-forge gcc=12.1.0
+10. IF: "libGL error: failed to load driver: swrast" DO: ```conda install -c conda-forge gcc=12.1.0```
 
 ### PettingZoo modification
 
