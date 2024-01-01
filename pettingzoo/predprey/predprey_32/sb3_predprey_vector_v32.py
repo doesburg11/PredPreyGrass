@@ -133,22 +133,22 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = True
     eval_and_watch_model = True
-    training_steps_string = "1_000_000"
+    training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_v31_readme/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_2024-01-01_01:58/predprey_steps_100_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
         x_grid_size=16, 
         y_grid_size=16, 
         n_predator=6,
-        n_prey=10,
+        n_prey=12,
         n_grass=30,
         max_observation_range=7, # must be odd
         obs_range_predator=5, # must be odd    
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.1,
+        energy_loss_per_step_predator = -0.3,
         energy_loss_per_step_prey = -0.1,     
         pixel_scale=40,
         initial_energy_predator = 14.0,
@@ -197,4 +197,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)

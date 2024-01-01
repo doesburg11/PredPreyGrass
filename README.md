@@ -39,6 +39,12 @@ With this configuration predators try to hoover around the grass agents in order
 ### Learning algorithm 
 The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
 
+### The environment architcture
+Since the creation and particulary the termination of agents during a simulation is very difficult and fraught with unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged during creation and termination of agents during simulation. Therefore, in PettingZoo's terminology 'agents' remains equal to 'AECEnv.possible_agents' during traiing and evaluation.
+
+The handling of creation and termination of predators and prey is handeled bywether or not agents created at the start being part of the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list'. Wether or not a predator or pry is allive can beadditionaly checked by the 'PredPrey.predator_not_alive_dict' 'PredPrey.prey_not_alive_dict. Agent not being alive have 'observations' and 'rewards' complety existing zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
+
+This architecture does not only give a solution tot the unexpected behavior of individual agents terminating or created during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires a fixed number of agents during traing.
 
 
 
