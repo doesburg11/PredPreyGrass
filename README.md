@@ -5,12 +5,12 @@
 </p>
 
  Prey agents (blue) try to eat grass agents (green). Predators (red) try to capture prey.
- The PredPreyGrass envrionment has been modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
+ The PredPreyGrass envrionment has been substantially modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
  1. The envrionment is added with an addtional Predator learning agent. 
  2. The Pursuers have been converted to a Prey learning agent,
- 3. Evaders have been converted to grass and are permanently 'freezed' and do not move.
+ 3. Evaders have been converted to grass and are permanently 'freezed' and are unmovable.
 
- Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'self.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
+ Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'AECEnv.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
 
  ### Optionalities of the PredPreyGrass environment
         max_cycles=100000, 
