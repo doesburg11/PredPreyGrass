@@ -38,22 +38,24 @@ The handling of dying predators and prey is effected by the removal of agents in
 This architecture does not only give an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires an unchanged number of agents during training.
 
  ### Optionalities of the PredPreyGrass environment
-        max_cycles=100000, 
-        x_grid_size=16, 
-        y_grid_size=16, 
-        n_predator=4,
-        n_prey=4,
-        n_grass=30,
-        max_observation_range=7, # influences number of calculations; make as small as possible
-        obs_range_predator=3,   
-        obs_range_prey=7, # must be odd
-        action_range=3, # must be odd
-        moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.4,
-        energy_loss_per_step_prey = -0.1,     
-        pixel_scale=40
+        max_cycles=10000 
+        x_grid_size=16
+        y_grid_size=16
+        n_predator=4
+        n_prey=8
+        n_grass=30
+        max_observation_range=7 # must be odd
+        obs_range_predator=5 # must be odd    
+        obs_range_prey=7 # must be odd
+        action_range=3 # must be odd
+        moore_neighborhood_actions=False
+        energy_loss_per_step_predator = -0.4
+        energy_loss_per_step_prey = -0.1    
+        initial_energy_predator = 14.0
+        initial_energy_prey = 8.0        
         catch_grass_reward = 5.0 # for prey
         catch_prey_reward = 5.0 # for predator
+        pixel_scale=40
 
 *this implementation facilitates different observations ranges per agent:
 If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
