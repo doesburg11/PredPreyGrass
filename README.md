@@ -23,18 +23,18 @@ Editor used: Visual Studio Code 1.85.1
 ### PettingZoo modification
 
  The PredPreyGrass envrionment has been substantially modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
- 1. The envrionment is added with an addtional Predator learning agent, which can die of starvation. 
- 2. The Pursuer agent has been converted to a Prey learning agent and can be eaten by a predator learning agents.
- 3. Evaders have been converted to grass and are permanently 'freezed' and are unmovable. The Gras agent can be eaten by the Prey agent.
+ 1. The envrionment is added with an addtional 'predator' agent, which can die of starvation. 
+ 2. The Pursuer agent has been converted to a 'prey' agent and can be eaten by a predator agent.
+ 3. The Evaders agent has been converted to a 'grass' agent and are permanently 'freezed' and are unmovable. The gras agent can be eaten by a prey agent.
 
  Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'AECEnv.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
 
  ### The AEC environment architecture
-Since the creation and particulary the termination of agents during a simulation leads to unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged during creation and termination of agents during simulation. Therefore, in PettingZoo's term API 'AECEnv.agents' remains equal to 'AECEnv.possible_agents' during training as well as evaluation.
+Since the creation and particulary the termination of agents during a simulation leads to unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged after death of agents during simulation. Therefore, in PettingZoo's API terminology 'AECEnv.agents' remains equal to 'AECEnv.possible_agents' during training as well as evaluation.
 
-The handling termination of predators and prey is effected by wether or not agents created at the start are being part of the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list' respectively. Wether or not a predator or prey is allive can be additionaly checked by the 'PredPrey.predator_not_alive_dict' and the 'PredPrey.prey_not_alive_dict. Agents not being alive have 'observations' and 'rewards' only existing of zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
+The handling of dying predators and prey is effected by the removal of agents in the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list' respectively. Wether or not a predator or prey is allive can be additionaly checked by the 'PredPrey.predator_not_alive_dict' and the 'PredPrey.prey_not_alive_dict. Agents not being alive have 'observations' and 'rewards' only existing of zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
 
-This architecture does not only give an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires a fixed number of agents during traing.
+This architecture does not only give an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires an unchanged number of agents during training.
 
  ### Optionalities of the PredPreyGrass environment
         max_cycles=100000, 
