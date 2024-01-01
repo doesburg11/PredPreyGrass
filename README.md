@@ -4,13 +4,37 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="300" height="300"/>
 </p>
 
- Prey agents (blue) try to eat grass agents (green). Predators (red) try to capture prey.
+ Prey agents (blue) learn to eat grass agents (green). Predators (red) learn to capture prey.
+
+### Installation instructions
+
+Editor used: Visual Studio Code 1.85.1
+1. git clone https://github.com/doesburg11/PredPreyGrass.git
+2. ctrl+shift+p, type and choose: "Python: Create Environment..."
+3. Choose environment: Conda 
+4. Choose interpreter: Python 3.11.5
+5. Open New Terminal
+5. $pip install -r requirements.txt
+7. IF "ERROR: Failed building wheel for box2d-py" DO: '$conda install swig' in VS Code terminal
+8. If that does not work try first to find other solutions online.
+9. Ultimately one can copy and past the Box2d files from the 'assets/box2d' directory (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) into the site-packages directory. Not very elegant but it might work.
+10. IF: "libGL error: failed to load driver: swrast" DO: $conda install -c conda-forge gcc=12.1.0
+
+### PettingZoo modification
+
  The PredPreyGrass envrionment has been substantially modified from PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
  1. The envrionment is added with an addtional Predator learning agent. 
  2. The Pursuers have been converted to a Prey learning agent,
  3. Evaders have been converted to grass and are permanently 'freezed' and are unmovable.
 
  Similar to the PettingZoo Pursuit environment, grass agents are left out of the 'AECEnv.agents' array. Including them results into signifcant loss of computing efficency without obvious advantages, hence the original Pursuit design has been kept in this respect.
+
+ ### The AEC environment architecture
+Since the creation and particulary the termination of agents during a simulation is difficult and fraught with unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged during creation and termination of agents during simulation. Therefore, in PettingZoo's term API 'AECEnv.agents' remains equal to 'AECEnv.possible_agents' during training and evaluation.
+
+The handling of creation and termination of predators and prey is handeled bywether or not agents created at the start being part of the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list'. Wether or not a predator or pry is allive can beadditionaly checked by the 'PredPrey.predator_not_alive_dict' 'PredPrey.prey_not_alive_dict. Agent not being alive have 'observations' and 'rewards' complety existing zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
+
+This architecture does not only give an alternative to the unexpected behavior of individual agents terminating or created during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires a fixed number of agents during traing.
 
  ### Optionalities of the PredPreyGrass environment
         max_cycles=100000, 
@@ -34,17 +58,13 @@
 If obs_range < max_observation_range then 'outer layers' of the observations are set to zero.
 
 ### Emergent behavior
-With this configuration predators try to hoover around the grass agents in order to capture prey. Prey try to flee predators despite that this is not explicitly defined in the reward structure.
-
-### Learning algorithm 
-The Multi Agent Reinforcement Learning algorithm to control the PredPreyGrass environment is PPO from stable baselines3.
-
-### The environment architcture
+With this configuration after training predators try to hoover around the grass agents in order to capture prey. This strategy is less frequent when the 'energy_loss_per_step_predator'
++lo2'### The environment architcture
 Since the creation and particulary the termination of agents during a simulation is very difficult and fraught with unexpected behavior during a PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we have modified the architecture of the original PettingZoo in that respect. The PettingZoo 'AECEnv.agents', the array [predator_0, predator_1,..,predator_n, prey_n+1,..,prey_n+m], remains unchanged during creation and termination of agents during simulation. Therefore, in PettingZoo's terminology 'agents' remains equal to 'AECEnv.possible_agents' during traiing and evaluation.
 
 The handling of creation and termination of predators and prey is handeled bywether or not agents created at the start being part of the 'PredPrey.predator_instance_list' and the 'PredPrey.prey_instance_list'. Wether or not a predator or pry is allive can beadditionaly checked by the 'PredPrey.predator_not_alive_dict' 'PredPrey.prey_not_alive_dict. Agent not being alive have 'observations' and 'rewards' complety existing zeros, somewhat resembling SuperSuit's 'Black Death' wrapper.
 
-This architecture does not only give a solution tot the unexpected behavior of individual agents terminating or created during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires a fixed number of agents during traing.
+This architecture does not only give a solution to the unexpected behavior of individual agents terminating or created during simulation in the standard PettingZoo API. It does also circumvents the restriction of the PPO-algorithm, which requires a fixed number of agents during traing.
 
 
 

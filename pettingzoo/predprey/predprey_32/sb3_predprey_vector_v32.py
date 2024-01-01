@@ -135,12 +135,12 @@ if __name__ == "__main__":
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2024-01-01_01:58/predprey_steps_100_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_2024-01-01_10:45/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
-        x_grid_size=16, 
-        y_grid_size=16, 
-        n_predator=6,
+        x_grid_size=20,
+        y_grid_size=20, 
+        n_predator=3,
         n_prey=12,
         n_grass=30,
         max_observation_range=7, # must be odd
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.3,
+        energy_loss_per_step_predator = -0.4,
         energy_loss_per_step_prey = -0.1,     
         pixel_scale=40,
         initial_energy_predator = 14.0,
