@@ -1,12 +1,11 @@
 """
-[v32]
+[v33]
 -implement energy loss per predator an prey
 -implement starvation predator
 -implement starvation prey
 
 
 TODO Later
--raise error if max_obs_range < obs_range
 -implement bar chart which tracks energy levels per agent?
 -death of Predator (and Prey) by starvation (implement minimum energy levels
 -if masking actions does not work, maybe penalizing actions do work via rewards.
@@ -24,8 +23,7 @@ for i in [-1, 0, 1]:
 -visualize energy levels per agent
 -reward structure: action stay less energy than moving
 -energy loss depending on distance moved?
--continuous observation (and action) space, like waterworld
-(not discrete agents anymore? or leave the grid environment as is?)
+-continuous observation space
 """
 
 # noqa: D212, D415
@@ -153,6 +151,8 @@ class PredPrey:
 
     ):
         #parameter init
+        if max_observation_range < obs_range_predator or max_observation_range < obs_range_prey:
+            raise ValueError("obs_range_agent cannot be larger than max_observation_range.")
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
         self.max_cycles = max_cycles
@@ -255,9 +255,9 @@ class PredPrey:
         self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
         self.grass_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
         self.predator_who_remove_prey_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
-        self.prey_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        self.predator_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
-        self.prey_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+        self.prey_to_be_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+        self.predator_to_be_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
+        self.prey_to_be_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
 
         # end removal agents
 
@@ -407,6 +407,7 @@ class PredPrey:
             case self.predator_type_nr:
                 predator_name = agent_instance.agent_name
                 if self.predator_alive_dict[predator_name]:
+                    # if predator has energy > 0, move and eat prey if available in new position 
                     if agent_instance.energy > 0: 
                         predator_name = agent_instance.agent_name
                         self.predator_layer.move_agent_instance(agent_instance, action)
@@ -417,7 +418,7 @@ class PredPrey:
                         # if predator steps into a cell with at least one prey agent
                         if self.model_state[self.prey_type_nr, x_new_position_predator, y_new_position_predator] > 0:
                             prey_instance_list_in_cell_predator = []
-                            #check all prey instances if they are in the predator spot
+                            # check all prey instances if they are in the predator spot
                             for prey_instance in self.prey_instance_list:
                                 x_position_prey, y_position_prey = self.prey_layer.get_position_agent_instance(prey_instance)
                                 if x_position_prey == x_new_position_predator and y_position_prey == y_new_position_predator:
@@ -428,17 +429,14 @@ class PredPrey:
                                     prey_name_removed = prey_instance_removed.agent_name                   
                                     # one predator cannot eat multiple prey in single cycle (so value only True or False)
                                     self.predator_who_remove_prey_dict[predator_name] = True # temporary/cycle list
-                                    self.prey_removed_by_predator_dict[prey_name_removed] = True  # temporary/cycle list
-                                    self.prey_alive_dict[prey_name_removed] = False # overall list
-                                    #print("self.prey_removed_by_predator_dict", self.prey_removed_by_predator_dict)
-                                    #print("self.prey_alive_dict", self.prey_alive_dict)
+                                    self.prey_to_be_removed_by_predator_dict[prey_name_removed] = True  # temporary/cycle list
                     else:
-                        # remove agent if energy of predator is zero or below zero
-                        self.predator_removed_by_starvation_dict[predator_name] = True
-                        self.predator_alive_dict[predator_name] = False # overall list
+                        # predator to be removed in last step of cycle because odf no energy left
+                        self.predator_to_be_removed_by_starvation_dict[predator_name] = True
             case self.prey_type_nr:
                 prey_name = agent_instance.agent_name
                 if self.prey_alive_dict[prey_name]:
+                    # if prey has energy, move and eat grass if available in new position 
                     if agent_instance.energy > 0: 
                         self.prey_layer.move_agent_instance(agent_instance, action)
                         self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents()
@@ -462,67 +460,78 @@ class PredPrey:
                                     self.prey_who_remove_grass_dict[prey_name] = True  
                                     self.grass_removed_by_prey_dict[grass_name_removed] = True
                     else:
-                        # remove agent if energy of prey is zero or below zero
-                        self.prey_removed_by_starvation_dict[prey_name] = True
-                        self.prey_alive_dict[prey_name] = False # overall list
-                        #print("self.prey_removed_by_starvation_dict", self.prey_removed_by_starvation_dict)
+                        # prey to be removed in last step of cycle because of no energy left
+                        self.prey_to_be_removed_by_starvation_dict[prey_name] = True
 
 
         # reset rewards to zero during every step
         self.agent_reward_dict = dict(zip(self.agent_name_list, 
                                           [0.0 for _ in self.agent_name_list]))
 
-        if is_last:
+        if is_last: # removes agents and reap rewards at the end of the cycle
             for predator_name in self.predator_name_list:
-                predator_instance = self.agent_name_to_instance_dict[predator_name]
-                if self.predator_removed_by_starvation_dict[predator_name]:
-                    self.predator_layer.remove_agent_instance(predator_instance)
-                    self.model_state[self.predator_type_nr] = self.predator_layer.get_global_state_ally_agents()
-                    predator_instance.energy = 0.0
-                elif self.predator_alive_dict[predator_name]:
-                    catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
-                    step_reward_predator = predator_instance.energy_loss_per_step
-                    self.agent_reward_dict[predator_name] += step_reward_predator
-                    self.agent_reward_dict[predator_name] += catch_reward_predator
-                    # energy and rewards integrated in future?
-                    predator_instance.energy += step_reward_predator 
-                    predator_instance.energy += catch_reward_predator
-                    #print(predator_name," has energy: ",round(predator_instance.energy,1))
+                if self.predator_alive_dict[predator_name]:
+                    predator_instance = self.agent_name_to_instance_dict[predator_name]
+                    # remove predator which starves to death
+                    if self.predator_to_be_removed_by_starvation_dict[predator_name]:
+                        self.predator_layer.remove_agent_instance(predator_instance)
+                        self.model_state[self.predator_type_nr] = self.predator_layer.get_global_state_ally_agents()
+                        self.predator_alive_dict[predator_name] = False
+                        predator_instance.energy = 0.0
+                    else: # reap rewards for predator which removes prey
+                        catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
+                        step_reward_predator = predator_instance.energy_loss_per_step
+                        self.agent_reward_dict[predator_name] += step_reward_predator
+                        self.agent_reward_dict[predator_name] += catch_reward_predator
+                        # TODO: energy and rewards integrated in future?
+                        predator_instance.energy += step_reward_predator 
+                        predator_instance.energy += catch_reward_predator
+                        #print(predator_name," has energy: ",round(predator_instance.energy,1))
             for prey_name in self.prey_name_list:
-                prey_instance = self.agent_name_to_instance_dict[prey_name]
-                #print("self.prey_removed_by_predator_dict ", self.prey_removed_by_predator_dict)
-                # remove prey which gets eaten by a predator or starves to death
-                if self.prey_removed_by_predator_dict[prey_name] or self.prey_removed_by_starvation_dict[prey_name]:
-                    self.prey_layer.remove_agent_instance(prey_instance)
-                    self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents() #
-                    prey_instance.energy = 0.0
-                    #print(prey_instance.agent_name, " is removed")
-                    #print("self.prey_alive_dict ",self.prey_alive_dict)
-                    #print()
-                elif self.prey_alive_dict[prey_name]:
-                    #self.agent_reward_dict[prey_name] += -number_of_predators_in_observation
-                    catch_reward_prey = prey_instance.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name] 
-                    step_reward_prey = prey_instance.energy_loss_per_step
-                    # this is not cumulative reward, agent_reward_dict is set to zero before 'last' step
-                    self.agent_reward_dict[prey_name] += step_reward_prey
-                    self.agent_reward_dict[prey_name] += catch_reward_prey
-                    prey_instance.energy += step_reward_prey
-                    prey_instance.energy += catch_reward_prey
-                    #print(prey_name," has energy: ",round(prey_instance.energy,1))
+                if self.prey_alive_dict[prey_name]:
+                    prey_instance = self.agent_name_to_instance_dict[prey_name]
+                    # remove prey which gets eaten by a predator or starves to death
+                    if self.prey_to_be_removed_by_predator_dict[prey_name] or self.prey_to_be_removed_by_starvation_dict[prey_name]:
+                        if prey_instance not in self.prey_layer.ally_agents_instance_list:
+                            print("Error: prey_instance not in self.prey_layer.ally_agents_instance_list")
+                            print("self.prey_name_list: ", self.prey_name_list)
+                            print("prey_instance.agent_name: ", prey_instance.agent_name)
+                            print("self.prey_layer.ally_agents_instance_list: ", self.create_agent_name_list_from_instance_list(self.prey_layer.ally_agents_instance_list))
+                            print("self.prey_to_be_removed_by_predator_dict[prey_name] ", self.prey_to_be_removed_by_predator_dict[prey_name])
+                            print("self.prey_to_be_removed_by_starvation_dict[prey_name] ", self.prey_to_be_removed_by_starvation_dict[prey_name])
+                        self.prey_layer.remove_agent_instance(prey_instance)
+                        #print(prey_name," is removed")
+                        #print("prey_instance_list: ", self.create_agent_name_list_from_instance_list(self.prey_layer.ally_agents_instance_list))
+                        self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents() #
+                        self.prey_alive_dict[prey_name] = False
+                        prey_instance.energy = 0.0
+                        #print(prey_instance.agent_name, " is removed")
+                        #print("self.prey_alive_dict ",self.prey_alive_dict)
+                        #print()
+                    else: # reap rewards for prey which removes grass
+                        #self.agent_reward_dict[prey_name] += -number_of_predators_in_observation
+                        catch_reward_prey = prey_instance.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name] 
+                        step_reward_prey = prey_instance.energy_loss_per_step
+                        # this is not cumulative reward, agent_reward_dict is set to zero before 'last' step
+                        self.agent_reward_dict[prey_name] += step_reward_prey
+                        self.agent_reward_dict[prey_name] += catch_reward_prey
+                        prey_instance.energy += step_reward_prey
+                        prey_instance.energy += catch_reward_prey
+                        #print(prey_name," has energy: ",round(prey_instance.energy,1))
             for grass_name in self.grass_name_list:
                 grass_instance = self.agent_name_to_instance_dict[grass_name]
                 if self.grass_removed_by_prey_dict[grass_name]:
+                    #removes grass_name from 'grass_name_list'
                     self.grass_layer.remove_agent_instance(grass_instance)
                     self.model_state[self.grass_type_nr] = self.grass_layer.get_global_state_ally_agents()
-                    #removes grass_name from 'grass_name_list'
-                    #self.grass_name_list.remove(grass_instance.agent_name)           
+
             self.n_aec_cycles = self.n_aec_cycles + 1
             #reinit agents records to default at the end of the cycle
             self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
             self.grass_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
             self.predator_who_remove_prey_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
-            self.prey_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-            self.predator_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
+            self.prey_to_be_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+            self.predator_to_be_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
             # end reinit agents records to default at the end of the cycle
 
         if self.render_mode == "human":
@@ -848,7 +857,7 @@ class PredPrey:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predprey_32",
+        "name": "predprey_34",
         "is_parallelizable": True,
         "render_fps": 5,
     }
