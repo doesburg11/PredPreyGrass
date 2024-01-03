@@ -6,11 +6,13 @@
 
 
 TODO Later
--implement bar chart which tracks energy levels per agent?
+
+-implement bar chart which tracks energy levels per agent/type of agent
 -death of Predator (and Prey) by starvation (implement minimum energy levels
 -if masking actions does not work, maybe penalizing actions do work via rewards.
 -Birth of agents Predators, Prey and Grass
 -personalize reward per agent/type
+-when annimals startve no directly vanish but remains there for scavenget agents
 -introduce altruistic agents as in the NetLogo
 -implement Torus grid:
 ------------------------------------------------------
@@ -39,6 +41,10 @@ from gymnasium.utils import seeding, EzPickle
 
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
+import os
+# position of the pygame window on the screen
+x_pygame_window = 0
+y_pygame_window = 0
 
 
 class DiscreteAgent():
@@ -145,11 +151,12 @@ class PredPrey:
         moore_neighborhood_actions: bool = False,   
         energy_loss_per_step_predator = -0.2,
         energy_loss_per_step_prey = -0.1,     
-        pixel_scale: int = 40,
         initial_energy_predator = 10.0,
-        initial_energy_prey = 8.0
-
-    ):
+        initial_energy_prey = 8.0,
+        cell_scale: int = 40,
+        x_pygame_window : int = 0,
+        y_pygame_window : int = 0,
+        ):
         #parameter init
         if max_observation_range < obs_range_predator or max_observation_range < obs_range_prey:
             raise ValueError("obs_range_agent cannot be larger than max_observation_range.")
@@ -168,9 +175,14 @@ class PredPrey:
         self.moore_neighborhood_actions = moore_neighborhood_actions
         self.energy_loss_per_step_predator = energy_loss_per_step_predator
         self.energy_loss_per_step_prey = energy_loss_per_step_prey
-        self.pixel_scale = pixel_scale
+        self.cell_scale = cell_scale
         self.initial_energy_predator = initial_energy_predator
         self.initial_energy_prey = initial_energy_prey
+        self.x_pygame_window = x_pygame_window
+        self.y_pygame_window = y_pygame_window
+
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
+                                                        self.y_pygame_window)
 
         self._seed()
         self.agent_id_counter = 0
@@ -265,6 +277,9 @@ class PredPrey:
         # visualization
         self.screen = None
         self.save_image_steps = False
+        self.width_energy_chart = 800
+        self.height_energy_chart = self.cell_scale * self.y_grid_size
+        # end visualization
         self.file_name = 0
         self.n_aec_cycles = 0
         # end visualization
@@ -611,20 +626,39 @@ class PredPrey:
         xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
 
-    def draw_model_state(self):
-        # -1 is building pixel flag
+    def draw_grid_model(self):
         x_len, y_len = (self.x_grid_size, self.y_grid_size)
         for x in range(x_len):
             for y in range(y_len):
-                pos = pygame.Rect(
-                    self.pixel_scale * x,
-                    self.pixel_scale * y,
-                    self.pixel_scale,
-                    self.pixel_scale,
+                # Draw white cell
+                cell_pos = pygame.Rect(
+                    self.cell_scale * x,
+                    self.cell_scale * y,
+                    self.cell_scale,
+                    self.cell_scale,
                 )
-                color = (255, 255, 255) # white background                
+                cell_color = (255, 255, 255)  # white background
+                pygame.draw.rect(self.screen, cell_color, cell_pos)
 
-                pygame.draw.rect(self.screen, color, pos) # type: ignore
+                # Draw black border around cells
+                border_pos = pygame.Rect(
+                    self.cell_scale * x,
+                    self.cell_scale * y,
+                    self.cell_scale,
+                    self.cell_scale,
+                )
+                border_color = (192, 192, 192)  # light grey border around cells
+                pygame.draw.rect(self.screen, border_color, border_pos, 1)
+
+        # Draw red border around total grid
+        border_pos = pygame.Rect(
+            0,
+            0,
+            self.cell_scale * x_len,
+            self.cell_scale * y_len,
+        )
+        border_color = (255, 0, 0) # red
+        pygame.draw.rect(self.screen, border_color, border_pos, 5) # type: ignore
 
     def draw_predator_observations(self):
         for predator_instance in self.predator_instance_list:
@@ -634,7 +668,7 @@ class PredPrey:
             mask = int((self.max_observation_range - predator_instance.observation_range)/2)
             if mask == 0:
                 patch = pygame.Surface(
-                    (self.pixel_scale * self.max_observation_range, self.pixel_scale * self.max_observation_range)
+                    (self.cell_scale * self.max_observation_range, self.cell_scale * self.max_observation_range)
                 )
                 patch.set_alpha(128)
                 patch.fill((255, 152, 72))
@@ -642,13 +676,13 @@ class PredPrey:
                 self.screen.blit(
                     patch,
                     (
-                        self.pixel_scale * (x - ofst + 1 / 2),
-                        self.pixel_scale * (y - ofst + 1 / 2),
+                        self.cell_scale * (x - ofst + 1 / 2),
+                        self.cell_scale * (y - ofst + 1 / 2),
                     ),
                 )
             else:
                 patch = pygame.Surface(
-                    (self.pixel_scale * predator_instance.observation_range, self.pixel_scale * predator_instance.observation_range)
+                    (self.cell_scale * predator_instance.observation_range, self.cell_scale * predator_instance.observation_range)
                 )
                 patch.set_alpha(128)
                 patch.fill((255, 152, 72))
@@ -656,8 +690,8 @@ class PredPrey:
                 self.screen.blit(
                     patch,
                     (
-                        self.pixel_scale * (x - ofst + 1 / 2),
-                        self.pixel_scale * (y - ofst + 1 / 2),
+                        self.cell_scale * (x - ofst + 1 / 2),
+                        self.cell_scale * (y - ofst + 1 / 2),
                     ),
                 )
 
@@ -669,7 +703,7 @@ class PredPrey:
             mask = int((self.max_observation_range - prey_instance.observation_range)/2)
             if mask == 0:
                 patch = pygame.Surface(
-                    (self.pixel_scale * self.max_observation_range, self.pixel_scale * self.max_observation_range)
+                    (self.cell_scale * self.max_observation_range, self.cell_scale * self.max_observation_range)
                 )
                 patch.set_alpha(128)
                 patch.fill((72, 152, 255))
@@ -677,13 +711,13 @@ class PredPrey:
                 self.screen.blit(
                     patch,
                     (
-                        self.pixel_scale * (x - ofst + 1 / 2),
-                        self.pixel_scale * (y - ofst + 1 / 2),
+                        self.cell_scale * (x - ofst + 1 / 2),
+                        self.cell_scale * (y - ofst + 1 / 2),
                     ),
                 )
             else:
                 patch = pygame.Surface(
-                    (self.pixel_scale * prey_instance.observation_range, self.pixel_scale * prey_instance.observation_range)
+                    (self.cell_scale * prey_instance.observation_range, self.cell_scale * prey_instance.observation_range)
                 )
                 patch.set_alpha(128)
                 patch.fill((72, 152, 255))
@@ -691,8 +725,8 @@ class PredPrey:
                 self.screen.blit(
                     patch,
                     (
-                        self.pixel_scale * (x - ofst + 1 / 2),
-                        self.pixel_scale * (y - ofst + 1 / 2),
+                        self.cell_scale * (x - ofst + 1 / 2),
+                        self.cell_scale * (y - ofst + 1 / 2),
                     ),
                 )
 
@@ -703,13 +737,13 @@ class PredPrey:
             y = position[1]
 
             center = (
-                int(self.pixel_scale * x + self.pixel_scale / 2),
-                int(self.pixel_scale * y + self.pixel_scale / 2),
+                int(self.cell_scale * x + self.cell_scale / 2),
+                int(self.cell_scale * y + self.cell_scale / 2),
             )
 
             col = (255, 0, 0) # red
 
-            pygame.draw.circle(self.screen, col, center, int(self.pixel_scale / 3)) # type: ignore
+            pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
 
     def draw_prey_instances(self):
         for prey_instance in self.prey_instance_list:
@@ -718,13 +752,13 @@ class PredPrey:
             y = position[1]
 
             center = (
-                int(self.pixel_scale * x + self.pixel_scale / 2),
-                int(self.pixel_scale * y + self.pixel_scale / 2),
+                int(self.cell_scale * x + self.cell_scale / 2),
+                int(self.cell_scale * y + self.cell_scale / 2),
             )
 
             col = (0, 0, 255) # blue
 
-            pygame.draw.circle(self.screen, col, center, int(self.pixel_scale / 3)) # type: ignore
+            pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
 
     def draw_grass_instances(self):
         for grass_instance in self.grass_instance_list:
@@ -735,18 +769,18 @@ class PredPrey:
             y = position[1]
 
             center = (
-                int(self.pixel_scale * x + self.pixel_scale / 2),
-                int(self.pixel_scale * y + self.pixel_scale / 2),
+                int(self.cell_scale * x + self.cell_scale / 2),
+                int(self.cell_scale * y + self.cell_scale / 2),
             )
 
             col = (0, 128, 0) # green
 
             #col = (0, 0, 255) # blue
 
-            pygame.draw.circle(self.screen, col, center, int(self.pixel_scale / 3)) # type: ignore
+            pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
 
     def draw_agent_instance_id_nrs(self):
-        font = pygame.font.SysFont("Comic Sans MS", self.pixel_scale * 2 // 3)
+        font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)
 
         predator_positions = defaultdict(int)
         prey_positions = defaultdict(int)
@@ -756,7 +790,7 @@ class PredPrey:
             prey_position =  predator_instance.position 
             x = prey_position[0]
             y = prey_position[1]
-            prey_positions[(x, y)] = predator_instance.agent_id_nr
+            predator_positions[(x, y)] = predator_instance.agent_id_nr
 
         for prey_instance in self.prey_instance_list:
             prey_position =  prey_instance.position 
@@ -772,39 +806,163 @@ class PredPrey:
 
         for x, y in predator_positions:
             (pos_x, pos_y) = (
-                self.pixel_scale * x + self.pixel_scale // 3.4,
-                self.pixel_scale * y + self.pixel_scale // 1.2,
+                self.cell_scale * x + self.cell_scale // 3.4,
+                self.cell_scale * y + self.cell_scale // 1.2,
             )
 
             predator_id_nr__text =str(predator_positions[(x, y)])
 
             predator_text = font.render(predator_id_nr__text, False, (255, 255, 0))
 
-            self.screen.blit(predator_text, (pos_x, pos_y - self.pixel_scale // 2))
+            self.screen.blit(predator_text, (pos_x, pos_y - self.cell_scale // 2))
 
         for x, y in prey_positions:
             (pos_x, pos_y) = (
-                self.pixel_scale * x + self.pixel_scale // 3.4,
-                self.pixel_scale * y + self.pixel_scale // 1.2,
+                self.cell_scale * x + self.cell_scale // 3.4,
+                self.cell_scale * y + self.cell_scale // 1.2,
             )
 
             prey_id_nr__text =str(prey_positions[(x, y)])
 
             prey_text = font.render(prey_id_nr__text, False, (255, 255, 0))
 
-            self.screen.blit(prey_text, (pos_x, pos_y - self.pixel_scale // 2))
+            self.screen.blit(prey_text, (pos_x, pos_y - self.cell_scale // 2))
 
         for x, y in grass_positions:
             (pos_x, pos_y) = (
-                self.pixel_scale * x + self.pixel_scale // 3.4,
-                self.pixel_scale * y + self.pixel_scale // 1.2,
+                self.cell_scale * x + self.cell_scale // 3.4,
+                self.cell_scale * y + self.cell_scale // 1.2,
             )
 
             grass_id_nr__text =str(grass_positions[(x, y)])
 
             grass_text = font.render(grass_id_nr__text, False, (255, 255, 0))
 
-            self.screen.blit(grass_text, (pos_x, pos_y - self.pixel_scale // 2))
+            self.screen.blit(grass_text, (pos_x, pos_y - self.cell_scale // 2))
+
+    def draw_white_canvas_energy_chart(self):
+        # relative position of energy chart within pygame window
+        x_position_energy_chart = self.cell_scale*self.x_grid_size
+        y_position_energy_chart = 0 #self.y_pygame_window
+        pos = pygame.Rect(
+            x_position_energy_chart,
+            y_position_energy_chart,
+            self.width_energy_chart,
+            self.height_energy_chart,
+        )
+        color = (255, 255, 255) # white background                
+        pygame.draw.rect(self.screen, color, pos) # type: ignore
+
+    def draw_bar_chart_energy(self):
+        chart_title = "Energy levels agents"
+        # Draw chart title
+        title_x = 1000
+        title_y = 30
+        title_color = (0, 0, 0)  # black
+        font = pygame.font.Font(None, 30)
+        title_text = font.render(chart_title, True, title_color)
+        self.screen.blit(title_text, (title_x, title_y))
+        # Draw predator bars
+        data_predators = []
+        for predator_name in self.predator_name_list:
+            predator_instance = self.agent_name_to_instance_dict[predator_name]
+            predator_energy = predator_instance.energy
+            data_predators.append(predator_energy)
+            print(predator_name," has energy", round(predator_energy,1))
+        x_screenposition = 400   
+        y_screenposition = 50
+        bar_width = 20
+        offset_bars = 20
+        height = 500
+        max_energy_value_chart = 20
+        for i, value in enumerate(data_predators):
+            bar_height = (value / max_energy_value_chart) * height
+            bar_x = x_screenposition + (self.width_energy_chart - (bar_width * len(data_predators))) // 2 + i * (bar_width+offset_bars)
+            bar_y = y_screenposition + height - bar_height
+
+            color = (255, 0, 0)  # blue
+
+            pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
+
+        # Draw y-axis
+        y_axis_x = x_screenposition + (self.width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
+        y_axis_y = y_screenposition
+        y_axis_height = height + 10
+        y_axis_color = (0, 0, 0)  # black
+        pygame.draw.rect(self.screen, y_axis_color, (y_axis_x, y_axis_y, 5, y_axis_height))
+
+        # Draw x-axis
+        x_axis_x = x_screenposition + 15 + (self.width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
+        x_axis_y = y_screenposition + height
+        x_axis_width = self.width_energy_chart - 120
+        x_axis_color = (0, 0, 0)  # black
+        pygame.draw.rect(self.screen, x_axis_color, (x_axis_x, x_axis_y, x_axis_width, 5))
+
+        # Draw tick labels predators on x-axis
+        for i, predator_name in enumerate(self.predator_name_list):
+            predator_instance = self.agent_name_to_instance_dict[predator_name]
+            label = str(predator_instance.agent_id_nr)
+            label_x = x_axis_x + i * (bar_width + offset_bars)
+            label_y = x_axis_y + 10
+            label_color = (255, 0, 0)  # red
+            font = pygame.font.Font(None, 30)
+            text = font.render(label, True, label_color)
+            self.screen.blit(text, (label_x, label_y))
+       # Draw tick labels prey on x-axis
+        for i, prey_name in enumerate(self.prey_name_list):
+            prey_instance = self.agent_name_to_instance_dict[prey_name]
+            label = str(prey_instance.agent_id_nr)
+            label_x = 400 + x_axis_x + i * (bar_width + offset_bars)
+            label_y = x_axis_y + 10
+            label_color = (0, 0, 255)  # blue
+            font = pygame.font.Font(None, 30)
+            text = font.render(label, True, label_color)
+            self.screen.blit(text, (label_x, label_y))
+
+
+
+        # Draw tick points on y-axis
+        num_ticks = max_energy_value_chart + 1 
+        tick_spacing = height // (num_ticks - 1)
+        for i in range(num_ticks):
+            tick_x = y_axis_x - 5
+            tick_y = y_screenposition + height - i * tick_spacing
+            tick_width = 10
+            tick_height = 2
+            tick_color = (0, 0, 0)  # black
+            pygame.draw.rect(self.screen, tick_color, (tick_x, tick_y, tick_width, tick_height))
+
+            # Draw tick labels every 5 ticks
+            if i % 5 == 0:
+                label = str(i)
+                label_x = tick_x - 30
+                label_y = tick_y - 5
+                label_color = (0, 0, 0)  # black
+                font = pygame.font.Font(None, 30)
+                text = font.render(label, True, label_color)
+                self.screen.blit(text, (label_x, label_y))
+
+        # Draw prey bars
+        data_prey = []
+        for prey_name in self.prey_name_list:
+            prey_instance = self.agent_name_to_instance_dict[prey_name]
+            prey_energy = prey_instance.energy
+            data_prey.append(prey_energy)
+            print(prey_name," has energy", round(prey_energy,1))
+        x_screenposition = 800   
+        y_screenposition = 50
+        bar_width = 20
+        offset_bars = 20
+        height = 500
+        max_energy_value_chart = 20
+        for i, value in enumerate(data_prey):
+            bar_height = (value / max_energy_value_chart) * height
+            bar_x = x_screenposition + (self.width_energy_chart - (bar_width * len(data_prey))) // 2 + i * (bar_width+offset_bars)
+            bar_y = y_screenposition + height - bar_height
+
+            color = (0, 0, 255)  # blue
+
+            pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
 
     def render(self):
         if self.render_mode is None:
@@ -817,15 +975,16 @@ class PredPrey:
             if self.render_mode == "human":
                 pygame.display.init()
                 self.screen = pygame.display.set_mode(
-                    (self.pixel_scale * self.x_grid_size, self.pixel_scale * self.y_grid_size)
+                    (self.cell_scale * self.x_grid_size +self.width_energy_chart, 
+                     self.cell_scale * self.y_grid_size)
                 )
                 pygame.display.set_caption("PredPreyGrass")
             else:
                 self.screen = pygame.Surface(
-                    (self.pixel_scale * self.x_grid_size, self.pixel_scale * self.y_grid_size)
+                    (self.cell_scale * self.x_grid_size, self.cell_scale * self.y_grid_size)
                 )
 
-        self.draw_model_state()
+        self.draw_grid_model()
 
         self.draw_prey_observations()
         self.draw_predator_observations()
@@ -835,6 +994,11 @@ class PredPrey:
         self.draw_predator_instances()
 
         self.draw_agent_instance_id_nrs()
+
+        self.draw_white_canvas_energy_chart()
+
+        self.draw_bar_chart_energy()
+
 
         observation = pygame.surfarray.pixels3d(self.screen)
         new_observation = np.copy(observation)
@@ -853,6 +1017,7 @@ class PredPrey:
             if self.render_mode == "rgb_array"
             else None
         )
+
 
 class raw_env(AECEnv, EzPickle):
     metadata = {
@@ -928,8 +1093,8 @@ class raw_env(AECEnv, EzPickle):
             else:
                 self.terminations[k] = \
                     self.pred_prey_env.is_no_grass or \
-                    self.pred_prey_env.is_no_prey or \
-                    self.pred_prey_env.is_no_predator
+                    (self.pred_prey_env.is_no_prey and \
+                    self.pred_prey_env.is_no_predator)
                 
         for agent_name in self.agents:
         #for agent_name in self.pred_prey_env.agent_name_list:
