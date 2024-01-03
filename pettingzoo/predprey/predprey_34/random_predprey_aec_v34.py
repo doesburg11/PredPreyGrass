@@ -2,9 +2,7 @@ from predprey import raw_env
 from pettingzoo.utils import agent_selector
 import numpy as np
 
-
 env_kwargs = dict(
-    render_mode="human", 
     max_cycles=10000, 
     x_grid_size=16, 
     y_grid_size=16, 
@@ -16,11 +14,16 @@ env_kwargs = dict(
     obs_range_prey=7, # must be odd
     action_range=3, # must be odd
     moore_neighborhood_actions=False,
-    energy_loss_per_step_predator = 0,
+    energy_loss_per_step_predator = -0.1,
     energy_loss_per_step_prey = -0.1,     
-    pixel_scale=40,
-    initial_energy_predator = 12.0,
-    initial_energy_prey = 8.0
+    initial_energy_predator = 10.0,
+    initial_energy_prey = 8.0,
+    # visualization parameters
+    render_mode="human", 
+    cell_scale=40, #size of each pixel in the window
+    x_pygame_window=0,
+    y_pygame_window=0,
+
 )
 
 num_games = 1

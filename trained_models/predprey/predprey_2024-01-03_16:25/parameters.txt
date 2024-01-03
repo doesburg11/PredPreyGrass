@@ -1,10 +1,10 @@
-version: predprey_v32_not_working 
+version: predprey_v33 
 parameters:
 training steps: 30_000_000
 =========================
 max_cycles = 10000
-x_grid_size = 30
-y_grid_size = 20
+x_grid_size = 16
+y_grid_size = 16
 n_predator = 4
 n_prey = 8
 n_grass = 30
@@ -13,10 +13,12 @@ obs_range_predator = 5
 obs_range_prey = 9
 action_range = 3
 moore_neighborhood_actions = False
-energy_loss_per_step_predator = -0.4
+energy_loss_per_step_predator = -0.1
 energy_loss_per_step_prey = -0.1
-pixel_scale = 40
 initial_energy_predator = 14.0
 initial_energy_prey = 8.0
+cell_scale = 40
+x_pygame_window = 0
+y_pygame_window = 0
 =========================
-training time (hours): 1.8
+training time (hours): 1.9

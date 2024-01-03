@@ -131,15 +131,15 @@ if __name__ == "__main__":
     env_fn = predprey
 
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
-    eval_model = True
+    eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "10_000_000"
+    training_steps_string = "30_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2024-01-02_17:09/predprey_steps_30_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_2024-01-02_19:37/predprey_steps_5_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
-        x_grid_size=20,
-        y_grid_size=20, 
+        x_grid_size=16,
+        y_grid_size=16, 
         n_predator=4,
         n_prey=8,
         n_grass=30,
@@ -150,9 +150,12 @@ if __name__ == "__main__":
         moore_neighborhood_actions=False,
         energy_loss_per_step_predator = -0.1,
         energy_loss_per_step_prey = -0.1,     
-        pixel_scale=40,
         initial_energy_predator = 14.0,
-        initial_energy_prey = 8.0        
+        initial_energy_prey = 8.0,        
+        # visualization parameters
+        cell_scale=40,
+        x_pygame_window=0,
+        y_pygame_window=0,
     )
 
     if train_model:
