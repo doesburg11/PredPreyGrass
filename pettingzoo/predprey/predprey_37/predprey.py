@@ -6,10 +6,12 @@
 [v35]
 -implement self.grass_position_dict and self.prey_instance_in_grid_location_dict for more 
 efficient removal of grass and prey
--stop when all prey are eaten OR all predators are dead
+-s_layertop when all prey are eaten OR all predators are dead
 [v36]
 -integrate draw functions in render function
 -integrate position dicts 
+[v37]
+-remove agent_layer.move 
 
 TODO Later
 -get rid of agent_layer class
@@ -100,8 +102,10 @@ class DiscreteAgent():
 
     def step(self, action):
         # returns new position of agent "self" given action "action"
+        
         next_position = np.zeros(2, dtype=np.int32) 
         next_position[0], next_position[1] = self.position[0], self.position[1]
+
         next_position += self.motion_range[action]
         # masking
         if not (0 <= next_position[0] < self.x_grid_size and 
@@ -115,23 +119,7 @@ class AgentLayer:
     def __init__(self, xs, ys, ally_agents_instance_list):
 
         self.ally_agents_instance_list = ally_agents_instance_list
-        self.n_ally_agents = len(ally_agents_instance_list)
         self.global_state_ally_agents = np.zeros((xs, ys), dtype=np.int32)
-
-    def n_ally_layer_agents(self):
-        return self.n_ally_agents
-
-    def move_agent_instance(self, agent_instance, action):       
-        return agent_instance.step(action)
-
-  
-    def remove_agent_instance(self, agent_instance):
-        if agent_instance not in self.ally_agents_instance_list:
-            #print(agent_instance.agent_name, " not in ally_agents_instance_list")
-            #print("ally_agents_instance_list = ", self.ally_agents_instance_list)
-            raise ValueError("agent_instance not in ally_agents_instance_list")
-        self.ally_agents_instance_list.remove(agent_instance)
-        self.n_ally_agents -= 1              
 
     def get_global_state_ally_agents(self):
         global_state_ally_agents = self.global_state_ally_agents
@@ -298,7 +286,7 @@ class PredPrey:
 
         # visualization
         self.screen = None
-        self.save_image_steps = True
+        self.save_image_steps = False
         self.width_energy_chart = 800
         self.height_energy_chart = self.cell_scale * self.y_grid_size
         # end visualization
@@ -493,7 +481,7 @@ class PredPrey:
         if agent_type_nr == self.predator_type_nr and self.predator_alive_dict[agent_name]: 
             if agent_energy > 0: # If predator has energy
                 # Move the predator and update the model state
-                self.predator_layer.move_agent_instance(agent_instance, action)
+                agent_instance.step(action)
                 self.model_state[self.predator_type_nr] = self.predator_layer.get_global_state_ally_agents()
         
                 # If there's prey at the new position, remove (eat) one at random
@@ -511,7 +499,7 @@ class PredPrey:
             if agent_energy > 0:  # If prey has energy
                 # Move the prey and update the model state
                 self.remove_agent_from_position_dict(agent_instance)
-                self.prey_layer.move_agent_instance(agent_instance, action)
+                agent_instance.step(action)
                 self.add_agent_instance_to_position_dict(agent_instance)
                 self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents()
                 x_new_position_prey, y_new_position_prey = agent_position
@@ -543,7 +531,8 @@ class PredPrey:
                     predator_instance = self.agent_name_to_instance_dict[predator_name]
                     # remove predator which starves to death
                     if self.predator_to_be_removed_by_starvation_dict[predator_name]:
-                        self.predator_layer.remove_agent_instance(predator_instance)
+                        self.predator_instance_list.remove(predator_instance)
+                        self.n_predator -= 1
                         self.model_state[self.predator_type_nr] = self.predator_layer.get_global_state_ally_agents()
                         self.predator_alive_dict[predator_name] = False
                         predator_instance.energy = 0.0
@@ -561,7 +550,8 @@ class PredPrey:
                     prey_instance = self.agent_name_to_instance_dict[prey_name]
                     # remove prey which gets eaten by a predator or starves to death
                     if self.prey_to_be_removed_by_predator_dict[prey_name] or self.prey_to_be_removed_by_starvation_dict[prey_name]:
-                        self.prey_layer.remove_agent_instance(prey_instance)
+                        self.prey_instance_list.remove(prey_instance)
+                        self.n_prey -= 1
                         self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents() #
                         self.prey_alive_dict[prey_name] = False
                         prey_instance.energy = 0.0
@@ -584,7 +574,8 @@ class PredPrey:
                     #removes grass_name from 'grass_name_list'
                     #print("grass_name = ", grass_name, " is removed from position ",grass_instance.position)
                     #print()
-                    self.grass_layer.remove_agent_instance(grass_instance)
+                    self.grass_instance_list.remove(grass_instance)
+                    self.n_grass -= 1
                     self.model_state[self.grass_type_nr] = self.grass_layer.get_global_state_ally_agents()
 
             self.n_aec_cycles = self.n_aec_cycles + 1
@@ -607,19 +598,19 @@ class PredPrey:
             
     @property
     def is_no_grass(self):
-        if self.grass_layer.n_ally_layer_agents() == 0:
+        if self.n_grass == 0:
             return True
         return False
 
     @property
     def is_no_prey(self):
-        if self.prey_layer.n_ally_layer_agents() == 0:
+        if self.n_prey == 0:
             return True
         return False
 
     @property
     def is_no_predator(self):
-        if self.predator_layer.n_ally_layer_agents() == 0:
+        if self.n_predator == 0:
             return True
         return False
 
@@ -1057,7 +1048,7 @@ class PredPrey:
             pygame.display.update()
             if self.save_image_steps:
                 self.file_name+=1
-                #print(self.file_name,".png saved")
+                print(self.file_name+".png saved")
                 directory= "./assets/images/"
                 pygame.image.save(self.screen, directory+str(self.file_name)+".png")
         
@@ -1071,7 +1062,7 @@ class PredPrey:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predprey_36",
+        "name": "predprey_37",
         "is_parallelizable": True,
         "render_fps": 5,
     }
