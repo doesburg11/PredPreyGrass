@@ -80,7 +80,7 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 
     for i in range(num_games):
         n_aec_cycles = 0
-        raw_env.reset(seed=i)
+        raw_env.reset()
         raw_env._agent_selector.reset()
         predator_name_list = raw_env.pred_prey_env.predator_name_list
         prey_name_list = raw_env.pred_prey_env.prey_name_list
@@ -130,32 +130,35 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-<<<<<<< HEAD
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
-=======
-    train_model = False   # True evaluates latest policy, False evaluates a predefined loaded policy
->>>>>>> 7a68a95904c95e15fcce67031042169994975e77
     eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "100_000_000"
+    training_steps_string = "30_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_v31/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_v34.1/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
-        max_cycles=100000, 
-        x_grid_size=16, 
+        max_cycles=10000, 
+        x_grid_size=16,
         y_grid_size=16, 
         n_predator=4,
-        n_prey=4,
+        n_prey=8,
         n_grass=30,
-        max_observation_range=7, # influences number of calculations; make as small as possible
-        obs_range_predator=5,   
+        max_observation_range=7, # must be odd and not smaller than any obs_range
+        obs_range_predator=5, # must be odd    
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.4,
-        energy_loss_per_step_prey = -0.1,     
-        pixel_scale=40
-        )
+        energy_loss_per_step_predator = -0.15,
+        energy_loss_per_step_prey = -0.05,     
+        initial_energy_predator = 10.0,
+        initial_energy_prey = 10.0,  
+        catch_grass_reward = 5.0,
+        catch_prey_reward = 5.0,      
+        # visualization parameters
+        cell_scale=40,
+        x_pygame_window=0,
+        y_pygame_window=0,
+    )
 
     if train_model:
         # Save the trained model in specified directory
@@ -163,19 +166,14 @@ if __name__ == "__main__":
         environment_name = "predprey"
         file_name = f"{environment_name}_steps_{training_steps_string}"
         directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
-        directory_JO24 = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/v31"
-        directory = directory_JO24
+        directory = directory_project
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-<<<<<<< HEAD
-        file.write("version: v31 in JO24\n")
-=======
-        file.write("version: predprey_v31 \n")
->>>>>>> 7a68a95904c95e15fcce67031042169994975e77
+        file.write("version: predprey_v34.2 \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
