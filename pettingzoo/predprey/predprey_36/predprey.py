@@ -2,7 +2,7 @@
 [v34]
 -implement bar chart which tracks energy levels per agent/type of agent
 -death of Predator (and Prey) by starvation (implement minimum energy levels
--tried A2C with 4 predators and 8 prey. it worked, but it did not learn well
+-tried A2C with 4 predators and 8 prey, but it did not learn well
 [v35]
 -implement self.grass_position_dict and self.prey_position_dict for more 
 efficient removal of grass and prey
@@ -1076,7 +1076,7 @@ class PredPrey:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predprey_35",
+        "name": "predprey_36",
         "is_parallelizable": True,
         "render_fps": 5,
     }
