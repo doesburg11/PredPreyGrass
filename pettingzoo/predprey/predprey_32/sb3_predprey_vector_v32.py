@@ -133,13 +133,13 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = True
     eval_and_watch_model = True
-    training_steps_string = "100_000_000"
+    training_steps_string = "200_000"
     training_steps = int(training_steps_string)
     loaded_policy = "./trained_models/predprey/predprey_2024-01-01_10:45/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
-        x_grid_size=16,
-        y_grid_size=16, 
+        x_grid_size=20,
+        y_grid_size=20, 
         n_predator=4,
         n_prey=8,
         n_grass=30,
@@ -148,7 +148,7 @@ if __name__ == "__main__":
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.4,
+        energy_loss_per_step_predator = -0.5,
         energy_loss_per_step_prey = -0.1,     
         pixel_scale=40,
         initial_energy_predator = 14.0,
@@ -161,8 +161,8 @@ if __name__ == "__main__":
         environment_name = "predprey"
         file_name = f"{environment_name}_steps_{training_steps_string}"
         directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
-        directory_JO24 = "/home/doesburg/Insync/petervandoesburg11@gmail.com/Dropbox/02. MARL code backup/predpreygras_results/predprey_2023-12-30_13:16"
-        directory = directory_project
+        directory_JO24 = "/home/doesburg/Dropbox/02. MARL code backup/predpreygras_results"
+        directory = directory_JO24
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
