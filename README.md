@@ -57,10 +57,10 @@ This architecture provides an alternative to the unexpected behavior of individu
 - `x_grid_size=16`
 - `y_grid_size=16`
 - `n_predator=4`
-- `n_prey=8`
+- `n_prey=4`
 - `n_grass=30`
 - `max_observation_range=7` (must be odd)
-- `obs_range_predator=5` (must be odd)  
+- `obs_range_predator=3` (must be odd)  
 - `obs_range_prey=7` (must be odd)
 - `action_range=3` (must be odd)
 - `moore_neighborhood_actions=False`

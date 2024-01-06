@@ -2,28 +2,23 @@ from predprey import raw_env
 from pettingzoo.utils import agent_selector
 import numpy as np
 
+
 env_kwargs = dict(
+    render_mode="human", 
     max_cycles=10000, 
     x_grid_size=16, 
     y_grid_size=16, 
     n_predator=4,
     n_prey=8,
     n_grass=30,
-    max_observation_range=7, # must be odd
-    obs_range_predator=5, # must be odd    
+    max_observation_range=7,     
+    obs_range_predator=3,     
     obs_range_prey=7, # must be odd
     action_range=3, # must be odd
     moore_neighborhood_actions=False,
-    energy_loss_per_step_predator = -0.05,
-    energy_loss_per_step_prey = -0.05,     
-    initial_energy_predator = 10.0,
-    initial_energy_prey = 10.0,
-    # visualization parameters
-    render_mode="human", 
-    cell_scale=60, #size of each pixel in the window
-    x_pygame_window=0,
-    y_pygame_window=0,
-
+    energy_loss_per_step_predator = -0.2,
+    energy_loss_per_step_prey = -0.1,     
+    pixel_scale=40
 )
 
 num_games = 1
@@ -58,8 +53,9 @@ for i in range(num_games):
     cumulative_rewards = {agent: 0.0 for agent in raw_env.possible_agents}
     n_aec_cycles = 0
     for agent in raw_env.agent_iter():
-
+        
         observation, reward, termination, truncation, info = raw_env.last()
+     
         cumulative_rewards[agent] += reward
         if termination or truncation:
             action = None

@@ -80,7 +80,7 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 
     for i in range(num_games):
         n_aec_cycles = 0
-        raw_env.reset(seed=i)
+        raw_env.reset()
         raw_env._agent_selector.reset()
         predator_name_list = raw_env.pred_prey_env.predator_name_list
         prey_name_list = raw_env.pred_prey_env.prey_name_list
@@ -130,12 +130,12 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = False   # True evaluates latest policy, False evaluates a predefined loaded policy
+    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_v31/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_v31_b/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=100000, 
         x_grid_size=16, 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         n_prey=4,
         n_grass=30,
         max_observation_range=7, # influences number of calculations; make as small as possible
-        obs_range_predator=3,   
+        obs_range_predator=5,   
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_v31 \n")
+        file.write("version: predprey_v31_b \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")

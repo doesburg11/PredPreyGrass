@@ -20,7 +20,7 @@ env_kwargs = dict(
     initial_energy_prey = 10.0,
     # visualization parameters
     render_mode="human", 
-    cell_scale=60, #size of each pixel in the window
+    cell_scale=40, #size of each pixel in the window
     x_pygame_window=0,
     y_pygame_window=0,
 
