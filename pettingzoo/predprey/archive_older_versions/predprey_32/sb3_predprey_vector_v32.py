@@ -138,14 +138,14 @@ if __name__ == "__main__":
     loaded_policy = "./trained_models/predprey/predprey_v31_readme/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=100000, 
-        x_grid_size=30, 
-        y_grid_size=20, 
+        x_grid_size=16, 
+        y_grid_size=16, 
         n_predator=4,
-        n_prey=8,
+        n_prey=4,
         n_grass=30,
-        max_observation_range=9, # influences number of calculations; make as small as possible
-        obs_range_predator=5,   
-        obs_range_prey=9, # must be odd
+        max_observation_range=7, # influences number of calculations; make as small as possible
+        obs_range_predator=3,   
+        obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
         energy_loss_per_step_predator = -0.4,
@@ -159,7 +159,7 @@ if __name__ == "__main__":
         environment_name = "predprey"
         file_name = f"{environment_name}_steps_{training_steps_string}"
         directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
-        directory_JO24 = "/home/doesburg/Insync/petervandoesburg11@gmail.com/Dropbox/02. MARL code backup/predpreygras_results/predprey_2023-12-30_13:16"
+        directory_cloud ="/home/doesburg/Dropbox/02_marl_results/predprey"
         directory = directory_project
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_31_copy\n")
+        file.write("version: predprey_v32 \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")

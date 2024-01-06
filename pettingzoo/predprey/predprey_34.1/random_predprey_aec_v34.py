@@ -4,10 +4,10 @@ import numpy as np
 
 env_kwargs = dict(
     max_cycles=10000, 
-    x_grid_size=16, 
-    y_grid_size=16, 
+    x_grid_size=10, 
+    y_grid_size=10, 
     n_predator=4,
-    n_prey=8,
+    n_prey=4,
     n_grass=30,
     max_observation_range=7, # must be odd
     obs_range_predator=5, # must be odd    
