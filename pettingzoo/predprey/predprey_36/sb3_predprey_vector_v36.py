@@ -173,7 +173,7 @@ if __name__ == "__main__":
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_v34.2 \n")
+        file.write("version: predprey_v36 \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
