@@ -13,6 +13,9 @@ efficient removal of grass and prey
 [v37]
 -remove as much as possible from AgentLayer class
 -change n_predator etc to n_initial_predator etc, to use in reset
+
+
+
 TODO Later
 -get rid of agent_layer class
 -directly remove grass from grass_instance_list when eaten by prey and not via 
