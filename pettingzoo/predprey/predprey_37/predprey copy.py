@@ -11,8 +11,8 @@ efficient removal of grass and prey
 -integrate draw functions in render function
 -integrate position dicts 
 [v37]
--remove as much as possible from AgentLayer class
--change n_predator etc to n_initial_predator etc, to use in reset
+-remove agent_layer.move 
+
 TODO Later
 -get rid of agent_layer class
 -directly remove grass from grass_instance_list when eaten by prey and not via 
@@ -119,9 +119,12 @@ class AgentLayer:
     def __init__(self, xs, ys, ally_agents_instance_list):
 
         self.ally_agents_instance_list = ally_agents_instance_list
+        self.n_ally_agents = len(ally_agents_instance_list)
         self.global_state_ally_agents = np.zeros((xs, ys), dtype=np.int32)
 
- 
+    def n_ally_layer_agents(self):
+        return self.n_ally_agents
+
     def get_global_state_ally_agents(self):
         global_state_ally_agents = self.global_state_ally_agents
         global_state_ally_agents.fill(0)
@@ -136,9 +139,9 @@ class PredPrey:
         x_grid_size: int = 16,
         y_grid_size: int = 16,
         max_cycles: int = 500,
-        n_initial_predator: int = 4,
-        n_initial_prey: int = 8,
-        n_initial_grass: int = 30,
+        n_predator: int = 4,
+        n_prey: int = 8,
+        n_grass: int = 30,
         max_observation_range: int = 7,
         obs_range_predator: int = 5,
         obs_range_prey: int = 7,
@@ -159,9 +162,9 @@ class PredPrey:
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
         self.max_cycles = max_cycles
-        self.n_initial_predator = n_initial_predator
-        self.n_initial_prey = n_initial_prey
-        self.n_initial_grass = n_initial_grass
+        self.n_predator = n_predator
+        self.n_prey = n_prey
+        self.n_grass = n_grass
         self.max_observation_range = max_observation_range
         self.obs_range_predator = obs_range_predator        
         self.obs_range_prey = obs_range_prey
@@ -194,9 +197,6 @@ class PredPrey:
         
         # lists of agents
         # initialization
-        self.n_predator = self.n_initial_predator
-        self.n_prey = self.n_initial_prey  
-        self.n_grass = self.n_initial_grass
         self.predator_instance_list = [] # list of all living predator
         self.prey_instance_list = [] # list of all living prey
         self.grass_instance_list = [] # list of all living grass
@@ -383,12 +383,6 @@ class PredPrey:
         self.grass_name_list = []
         self.agent_name_list = []
 
-        # initialization
-        self.n_predator = self.n_initial_predator
-        self.n_prey = self.n_initial_prey  
-        self.n_grass = self.n_initial_grass
-
-
         # Iterate over each agent type
         for agent_type in self.agent_instance_in_grid_location_dict: 
             for i in range(self.x_grid_size):
@@ -546,8 +540,6 @@ class PredPrey:
                         self.model_state[self.predator_type_nr] = self.predator_layer.get_global_state_ally_agents()
                         self.predator_alive_dict[predator_name] = False
                         predator_instance.energy = 0.0
-                        # not yet implemented
-                        #self.remove_agent_from_position_dict(predator_instance)
                     else: # reap rewards for predator which removes prey
                         catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
                         step_reward_predator = predator_instance.energy_loss_per_step
@@ -562,7 +554,6 @@ class PredPrey:
                     prey_instance = self.agent_name_to_instance_dict[prey_name]
                     # remove prey which gets eaten by a predator or starves to death
                     if self.prey_to_be_removed_by_predator_dict[prey_name] or self.prey_to_be_removed_by_starvation_dict[prey_name]:
-                        # to be implemented: put in exit strategy function for all agents
                         self.prey_instance_list.remove(prey_instance)
                         self.n_prey -= 1
                         self.model_state[self.prey_type_nr] = self.prey_layer.get_global_state_ally_agents() #
@@ -589,12 +580,10 @@ class PredPrey:
                     #print()
                     self.grass_instance_list.remove(grass_instance)
                     self.n_grass -= 1
+
                     self.model_state[self.grass_type_nr] = self.grass_layer.get_global_state_ally_agents()
-                    #self.remove_agent_from_position_dict(grass_instance)
 
             self.n_aec_cycles = self.n_aec_cycles + 1
-            
-            
             #reinit agents records to default at the end of the cycle
             self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
             self.grass_to_be_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
@@ -614,19 +603,19 @@ class PredPrey:
             
     @property
     def is_no_grass(self):
-        if self.n_grass == 0:
+        if self.grass_layer.n_ally_layer_agents() == 0:
             return True
         return False
 
     @property
     def is_no_prey(self):
-        if self.n_prey == 0:
+        if self.prey_layer.n_ally_layer_agents() == 0:
             return True
         return False
 
     @property
     def is_no_predator(self):
-        if self.n_predator == 0:
+        if self.predator_layer.n_ally_layer_agents() == 0:
             return True
         return False
 
