@@ -30,7 +30,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         raw_parallel_env,
         verbose=0, # 0 for no output, 1 for info messages, 2 for debug messages, 3 deafult
         batch_size=256,
-        #tensorboard_log=directory+"/ppo_predprey_tensorboard/"
+        tensorboard_log=directory+"/ppo_predprey_tensorboard/"
     )
 
     model.learn(total_timesteps=steps,progress_bar=True)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "10_000_000"
+    training_steps_string = "100_000_000"
     training_steps = int(training_steps_string)
     loaded_policy = "./trained_models/predprey/predprey_v35/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
@@ -165,15 +165,16 @@ if __name__ == "__main__":
         start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
         environment_name = "predprey"
         file_name = f"{environment_name}_steps_{training_steps_string}"
+        directory_cloud ="//home/doesburg/Dropbox/02_marl_results/predpreygras_results/v35"
         directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
-        directory = directory_project
+        directory = directory_cloud
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_v34.2 \n")
+        file.write("version: predprey_v35 \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
@@ -201,4 +202,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
