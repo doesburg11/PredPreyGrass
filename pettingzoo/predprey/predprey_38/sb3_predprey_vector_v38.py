@@ -140,15 +140,15 @@ if __name__ == "__main__":
         max_cycles=10000, 
         x_grid_size=16,
         y_grid_size=16, 
-        n_predator=4,
-        n_prey=8,
-        n_grass=30,
+        n_initial_predator=6,
+        n_initial_prey=8,
+        n_initial_grass=30,
         max_observation_range=7, # must be odd and not smaller than any obs_range
         obs_range_predator=5, # must be odd    
         obs_range_prey=7, # must be odd
         action_range=3, # must be odd
         moore_neighborhood_actions=False,
-        energy_loss_per_step_predator = -0.05,
+        energy_loss_per_step_predator = -0.1,
         energy_loss_per_step_prey = -0.05,     
         initial_energy_predator = 10.0,
         initial_energy_prey = 10.0,  
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_v34.2 \n")
+        file.write("version: predprey_v37 \n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
