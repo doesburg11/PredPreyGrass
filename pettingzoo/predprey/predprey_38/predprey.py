@@ -20,7 +20,6 @@ IMPACT ON LEARNING]
 
 
 TODO Later
--get rid of agent_layer class
 -directly remove grass from grass_instance_list when eaten by prey and not via 
 grass_to_be_removed_by_prey_dict in the last step of the cycle
 -if masking actions does not work, maybe penalizing actions do work via rewards.
@@ -465,6 +464,7 @@ class PredPrey:
         return [seed_]
 
     def step(self, action, agent_instance, is_last):
+
         # Extract agent details
         agent_type_nr = agent_instance.agent_type_nr
         agent_name = agent_instance.agent_name
@@ -1086,7 +1086,6 @@ class PredPrey:
             if self.render_mode == "rgb_array"
             else None
         )
-
 
 class raw_env(AECEnv, EzPickle):
     metadata = {
