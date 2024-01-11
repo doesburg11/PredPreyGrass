@@ -133,7 +133,7 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "10_000_000"
+    training_steps_string = "150_000_000"
     training_steps = int(training_steps_string)
     loaded_policy = "./trained_models/predprey/predprey_v35/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
