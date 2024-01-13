@@ -63,22 +63,23 @@ Due to unexpected behavior when agents terminate during a simulation in PettingZ
 This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
 
 ### Optionalities of the PredPreyGrass Environment
+The configuration used in the gif-video:
 - `max_cycles=10000`
 - `x_grid_size=16`
 - `y_grid_size=16`
 - `n_predator=4`
-- `n_prey=4`
+- `n_prey=6`
 - `n_grass=30`
 - `max_observation_range=7` (must be odd)
 - `obs_range_predator=3` (must be odd)  
 - `obs_range_prey=7` (must be odd)
 - `action_range=3` (must be odd)
 - `moore_neighborhood_actions=False`
-- `energy_loss_per_step_predator=-0.4`
-- `energy_loss_per_step_prey=-0.1`
-- `initial_energy_predator=14.0`
-- `initial_energy_prey=8.0`
-- `catch_grass_reward=5.0` (for prey)
+- `energy_loss_per_step_predator=-0.1`
+- `energy_loss_per_step_prey=-0.05`
+- `initial_energy_predator=10.0`
+- `initial_energy_prey=10.0`
+- `catch_grass_reward=2.0` (for prey)
 - `catch_prey_reward=5.0` (for predator)
 - `pixel_scale=40`
 
