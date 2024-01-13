@@ -457,6 +457,10 @@ class PredPrey:
         self.active_prey_name_list = self.possible_prey_name_list[:self.n_active_prey]
         self.active_grass_name_list = self.possible_grass_name_list[:self.n_active_grass]
 
+        # remove predator_7 from the activelist
+        # get the removed list 
+        # n_initial_predator =7, n_possible_predator = 8
+        not_active_index_start = self.n_initial_predator
 
         self.possible_agent_instance_list = self.possible_predator_instance_list + self.possible_prey_instance_list        
         self.possible_agent_name_list = self.possible_predator_name_list + self.possible_prey_name_list
@@ -985,7 +989,7 @@ class PredPrey:
             # Draw x-axis
             x_axis_x = x_screenposition + 15 + (self.width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
             x_axis_y = y_screenposition + height
-            x_axis_width = self.width_energy_chart - 120
+            x_axis_width = self.width_energy_chart - 90
             x_axis_color = (0, 0, 0)  # black
             pygame.draw.rect(self.screen, x_axis_color, (x_axis_x, x_axis_y, x_axis_width, 5))
 
@@ -1003,14 +1007,12 @@ class PredPrey:
             for i, prey_name in enumerate(self.possible_prey_name_list):
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
                 label = str(prey_instance.agent_id_nr)
-                label_x = 330 + x_axis_x + i * (bar_width + offset_bars)
+                label_x = 350 + x_axis_x + i * (bar_width + offset_bars)
                 label_y = x_axis_y + 10
                 label_color = (0, 0, 255)  # blue
                 font = pygame.font.Font(None, 30)
                 text = font.render(label, True, label_color)
                 self.screen.blit(text, (label_x, label_y))
-
-
 
             # Draw tick points on y-axis
             num_ticks = max_energy_value_chart + 1 
@@ -1053,7 +1055,6 @@ class PredPrey:
                 color = (0, 0, 255)  # blue
 
                 pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
-
 
         
         if self.render_mode is None:
