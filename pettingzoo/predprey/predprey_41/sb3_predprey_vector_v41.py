@@ -130,12 +130,12 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
+    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2024-01-13_00:23/predprey_steps_10_000_000.zip"
+    loaded_policy = "./trained_models/predprey/predprey_2024-01-13_16:45/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
         x_grid_size=16,
@@ -153,8 +153,8 @@ if __name__ == "__main__":
         moore_neighborhood_actions=False,
         energy_loss_per_step_predator = -0.1,
         energy_loss_per_step_prey = -0.05,     
-        initial_energy_predator = 10.0,
-        initial_energy_prey = 10.0,  
+        initial_energy_predator = 5.0,
+        initial_energy_prey = 5.0,  
         catch_grass_reward = 2.0,
         catch_prey_reward = 5.0,      
         # visualization parameters
@@ -200,11 +200,12 @@ if __name__ == "__main__":
             glob.glob(os.path.join(directory,f"{environment_name}*.zip")), key=os.path.getctime
             )
             
-    env_kwargs["is_training"]=False # if True, the environment will be in training mode, else in test mode:
+    # for printing/debugging purposes in predprey.py
+    env_kwargs["is_training"]=True # if True, the environment will be in training mode, else in test mode:
     if eval_model:
         # Evaluate games 
         eval(env_fn, num_games=10, render_mode=None, **env_kwargs)
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
