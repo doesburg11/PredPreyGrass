@@ -133,18 +133,18 @@ if __name__ == "__main__":
     train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
-    training_steps_string = "2_000_000"
+    training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
     loaded_policy = "./trained_models/predprey/predprey_2024-01-13_00:23/predprey_steps_10_000_000.zip"
     env_kwargs = dict(
         max_cycles=10000, 
         x_grid_size=16,
         y_grid_size=16, 
-        n_initial_predator=9,
-        n_initial_prey=9,
+        n_initial_predator=4,
+        n_initial_prey=6,
         n_initial_grass=30,
-        n_possible_predator=9,
-        n_possible_prey=9,
+        n_possible_predator=4,
+        n_possible_prey=6,
         n_possible_grass=30,
         max_observation_range=7, # must be odd and not smaller than any obs_range
         obs_range_predator=5, # must be odd    
@@ -155,7 +155,7 @@ if __name__ == "__main__":
         energy_loss_per_step_prey = -0.05,     
         initial_energy_predator = 10.0,
         initial_energy_prey = 10.0,  
-        catch_grass_reward = 5.0,
+        catch_grass_reward = 2.0,
         catch_prey_reward = 5.0,      
         # visualization parameters
         cell_scale=40,
