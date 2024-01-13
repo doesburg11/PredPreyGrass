@@ -5,18 +5,17 @@
 </p>
 
 ### Explanation of the algorithm
-Blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey.It's a simulation for a predator-prey-grass ecosystem and used in a reinforcement learning context, where agents (predators and preys) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
+Blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
 
-High-level breakdown of what the algorithm does:
+High-level breakdown of the algorithm's ```step``` function:
 
-1. **Predator Actions**: If the agent is a predator and it's alive, it checks if the predator has energy. If it does, the predator moves and the model state is updated. If the predator lands on a cell with a prey, it selects a prey to eat. If the predator has no energy, it starves to death.
+1. **Predator Actions**: If the agent is a predator and it's alive, it checks if the predator has energy. If it does, the predator moves and the model state is updated. If the predator lands on a cell with [at least one] prey, it selects a [random] prey to eat. If the predator has no energy left, it is being selected to become inactive at the end of the cycle.
 
-2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass, it selects a grass to eat. If the prey has no energy, it starves to death.
+2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with [at least one] grass [agent] it selects a [random] grass [agent] to eat. If the prey has no energy left, it is being selected to become inactive at the end of the cycle.
 
 3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles.
 
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (predator, prey, grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
-
 
 ### Installation Instructions
 
