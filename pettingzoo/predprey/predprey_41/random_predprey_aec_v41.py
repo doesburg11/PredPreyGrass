@@ -17,10 +17,12 @@ env_kwargs = dict(
     obs_range_prey=7, # must be odd
     action_range=3, # must be odd
     moore_neighborhood_actions=False,
+    catch_grass_reward=3.0,
+    catch_prey_reward=3.0,
     energy_loss_per_step_predator = -0.05,
     energy_loss_per_step_prey = -0.05,     
-    initial_energy_predator = 10.0,
-    initial_energy_prey = 10.0,
+    initial_energy_predator = 5.0,
+    initial_energy_prey = 5.0,
     # visualization parameters
     render_mode="human", 
     cell_scale=40, #size of each pixel in the window
