@@ -109,7 +109,7 @@ class PredPrey:
         cell_scale: int = 40,
         x_pygame_window : int = 0,
         y_pygame_window : int = 0,
-        catch_grass_reward=5.0,
+        catch_grass_reward=3.0,
         catch_prey_reward=5.0,
         is_training=True,
         ):
