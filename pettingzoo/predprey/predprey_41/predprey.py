@@ -259,7 +259,7 @@ class PredPrey:
 
         # visualization
         self.screen = None
-        self.save_image_steps = False
+        self.save_image_steps = True
         self.width_energy_chart = 800
         self.height_energy_chart = self.cell_scale * self.y_grid_size
         # end visualization
@@ -999,7 +999,7 @@ class PredPrey:
             for i, prey_name in enumerate(self.possible_prey_name_list):
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
                 label = str(prey_instance.agent_id_nr)
-                label_x = 350 + x_axis_x + i * (bar_width + offset_bars)
+                label_x = 330 + x_axis_x + i * (bar_width + offset_bars)
                 label_y = x_axis_y + 10
                 label_color = (0, 0, 255)  # blue
                 font = pygame.font.Font(None, 30)
@@ -1095,7 +1095,7 @@ class PredPrey:
             pygame.display.update()
             if self.save_image_steps:
                 self.file_name+=1
-                print(self.file_name+".png saved")
+                print(str(self.file_name)+".png saved")
                 directory= "./assets/images/"
                 pygame.image.save(self.screen, directory+str(self.file_name)+".png")
         
