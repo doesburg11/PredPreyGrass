@@ -3,12 +3,14 @@ import predprey
 import glob
 import os
 import time
-import numpy as np
+#import numpy as np
+import sys
+import shutil
+from datetime import datetime
 
 import supersuit as ss
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
-
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 
@@ -30,7 +32,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         raw_parallel_env,
         verbose=0, # 0 for no output, 1 for info messages, 2 for debug messages, 3 deafult
         batch_size=256,
-        #tensorboard_log=directory+"/ppo_predprey_tensorboard/"
+        tensorboard_log=directory+"/ppo_predprey_tensorboard/"
     )
 
     model.learn(total_timesteps=steps,progress_bar=True)
@@ -82,9 +84,9 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
         n_aec_cycles = 0
         raw_env.reset()
         raw_env._agent_selector.reset()
-        predator_name_list = raw_env.pred_prey_env.possible_predator_name_list
-        prey_name_list = raw_env.pred_prey_env.possible_prey_name_list
-        agent_name_list = raw_env.pred_prey_env.possible_agent_name_list
+        predator_name_list = raw_env.pred_prey_env.predator_name_list
+        prey_name_list = raw_env.pred_prey_env.prey_name_list
+        agent_name_list = raw_env.pred_prey_env.agent_name_list
         agent_selector.reset()
 
         cumulative_rewards = {agent: 0 for agent in agent_name_list}
@@ -130,22 +132,29 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 if __name__ == "__main__":
     env_fn = predprey
 
-    train_model = False  # True evaluates latest policy, False evaluates a predefined loaded policy
+    train_model = True  # True evaluates latest policy, False evaluates a predefined loaded policy
     eval_model = False
     eval_and_watch_model = True
     training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    loaded_policy = "./trained_models/predprey/predprey_2024-01-13_21:54/predprey_steps_10_000_000.zip"
+
+    # output file name
+    start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
+    environment_name = "predprey"
+    file_name = f"{environment_name}_steps_{training_steps_string}"
+
+    # Define the destination directory for the sourse code
+    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results', start_time)
+    output_project = destination_directory_source_code+"/output/"
+    loaded_policy = "./output/"+file_name+".zip"
+
     env_kwargs = dict(
         max_cycles=10000, 
         x_grid_size=16,
         y_grid_size=16, 
-        n_initial_predator=4,
-        n_initial_prey=6,
+        n_initial_predator=6,
+        n_initial_prey=8,
         n_initial_grass=30,
-        n_possible_predator=8,
-        n_possible_prey=8,
-        n_possible_grass=30,
         max_observation_range=7, # must be odd and not smaller than any obs_range
         obs_range_predator=5, # must be odd    
         obs_range_prey=7, # must be odd
@@ -156,29 +165,45 @@ if __name__ == "__main__":
         initial_energy_predator = 5.0,
         initial_energy_prey = 5.0,  
         catch_grass_reward = 3.0,
-        catch_prey_reward = 5.0,      
+        catch_prey_reward = 3.0,      
         # visualization parameters
         cell_scale=40,
         x_pygame_window=0,
         y_pygame_window=0,
-        is_training=True, # if True, the environment will be in training mode, else in test mode:
-
     )
+
+    # save the source code
+    python_file_name = os.path.basename(sys.argv[0])
+    python_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_names_in_directory = os.listdir(python_directory)
+
+
+    # Create the destination directory for the soursce code
+    os.makedirs(destination_directory_source_code, exist_ok=True)
+
+    # Copy all files and directories in the current directory to the new directory
+    for item_name in file_names_in_directory:
+        source_item = os.path.join(python_directory, item_name)
+        destination_item = os.path.join(destination_directory_source_code, item_name)
+        
+        if os.path.isfile(source_item):
+            shutil.copy2(source_item, destination_item)
+        elif os.path.isdir(source_item):
+            shutil.copytree(source_item, destination_item)
+
+
 
     if train_model:
         # Save the trained model in specified directory
-        start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
-        environment_name = "predprey"
-        file_name = f"{environment_name}_steps_{training_steps_string}"
-        directory_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
-        directory = directory_project
+        #output_project = "./trained_models/predprey/"+f"{environment_name}_{start_time}"
+        directory = output_project
         os.makedirs(directory, exist_ok=True)
         saved_directory_and_model_file_name = os.path.join(directory, file_name)
 
         #save parameters to file
         saved_directory_and_parameter_file_name = os.path.join(directory, "parameters.txt")
         file = open(saved_directory_and_parameter_file_name, "w")
-        file.write("version: predprey_v41 \n")
+        file.write("model: PredPreyGrass\n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
         file.write("=========================\n")
@@ -200,12 +225,10 @@ if __name__ == "__main__":
             glob.glob(os.path.join(directory,f"{environment_name}*.zip")), key=os.path.getctime
             )
             
-    # for printing/debugging purposes in predprey.py
-    env_kwargs["is_training"]=True # if True, the environment will be in training mode, else in test mode:
     if eval_model:
         # Evaluate games 
         eval(env_fn, num_games=10, render_mode=None, **env_kwargs)
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)
