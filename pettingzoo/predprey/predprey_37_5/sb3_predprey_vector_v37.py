@@ -1,4 +1,5 @@
 import predprey
+from parameters import env_kwargs, training_steps_string 
 
 import glob
 import os
@@ -119,12 +120,6 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
     Average_of_Avg_predators = round(average(average_rewards_predator),1)
     Average_of_Avg_prey = round(average(average_rewards_prey),1)
     Average_of_Cycles = round(average(avg_cycles),1)
-    """
-    print(f"Average of Avg = {round(average(avg_rewards),1)}")
-    print(f"Average of Avg_predators = {round(average(average_rewards_predator),1)}")
-    print(f"Average of Avg_prey = {round(average(average_rewards_prey),1)}")
-    print(f"Average of Cycles = {round(average(avg_cycles),1)}")
-    """
     return Average_of_Avg, Average_of_Avg_predators, Average_of_Avg_prey, Average_of_Cycles
     # end evaluation
 
@@ -132,9 +127,9 @@ if __name__ == "__main__":
     env_fn = predprey
     save_model = True # True saves the model and output externally
     watch_model = False
-    training_steps_string = "10_000_000"
+    #training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    num_games = 3
+    num_games = 100
     avg_rewards = [0 for _ in range(num_games)]
     avg_cycles = [0 for _ in range(num_games)]
     std_rewards = [0 for _ in range(num_games)]
@@ -168,9 +163,9 @@ if __name__ == "__main__":
         n_initial_grass=30,
         max_observation_range=7, # must be odd and not smaller than any obs_range
         obs_range_predator=7, # must be odd    
-        obs_range_prey=5, # must be odd
+        obs_range_prey=3, # must be odd
         action_range=3, # must be odd
-        moore_neighborhood_actions=False,
+        moore_neighborhood_actions=True,
         energy_loss_per_step_predator = -0.1,
         energy_loss_per_step_prey = -0.05,     
         initial_energy_predator = 5.0,

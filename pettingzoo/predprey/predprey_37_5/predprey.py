@@ -234,6 +234,7 @@ class PredPrey:
                 elif abs(d_x) + abs(d_y) <= action_offset:
                     self.motion_range.append([d_x,d_y])        
                     action_nr += 1
+        print("motion_range = ", self.motion_range)
      
         self.n_actions_agent=len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)  
@@ -440,7 +441,6 @@ class PredPrey:
         self.model_state[self.prey_type_nr] = self.get_model_state_agent_type(self.prey_type_nr)
         self.model_state[self.grass_type_nr] = self.get_model_state_agent_type(self.grass_type_nr)
         self.n_aec_cycles = 0
-
 
     def step(self, action, agent_instance, is_last):
         # Extract agent details
