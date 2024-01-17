@@ -129,7 +129,7 @@ if __name__ == "__main__":
     watch_model = False
     #training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
-    num_games = 100
+    num_games = 10
     avg_rewards = [0 for _ in range(num_games)]
     avg_cycles = [0 for _ in range(num_games)]
     std_rewards = [0 for _ in range(num_games)]
@@ -154,37 +154,13 @@ if __name__ == "__main__":
     output_project = destination_directory_source_code+"/output/"
     loaded_policy = destination_directory_source_code+"/output/"+file_name
 
-    env_kwargs = dict(
-        max_cycles=10000, 
-        x_grid_size=16,
-        y_grid_size=16, 
-        n_initial_predator=6,
-        n_initial_prey=8,
-        n_initial_grass=30,
-        max_observation_range=7, # must be odd and not smaller than any obs_range
-        obs_range_predator=7, # must be odd    
-        obs_range_prey=3, # must be odd
-        action_range=3, # must be odd
-        moore_neighborhood_actions=True,
-        energy_loss_per_step_predator = -0.1,
-        energy_loss_per_step_prey = -0.05,     
-        initial_energy_predator = 5.0,
-        initial_energy_prey = 5.0,  
-        catch_grass_reward = 3.0,
-        catch_prey_reward = 3.0,      
-        # visualization parameters
-        cell_scale=40,
-        x_pygame_window=0,
-        y_pygame_window=0,
-    )
-
     if save_model:
         # save the source code
         python_file_name = os.path.basename(sys.argv[0])
         python_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         file_names_in_directory = os.listdir(python_directory)
 
-        # Create the destination directory for the soursce code
+        # Create the destination directory for the source code
         os.makedirs(destination_directory_source_code, exist_ok=True)
 
         # Copy all files and directories in the current directory to the new directory
