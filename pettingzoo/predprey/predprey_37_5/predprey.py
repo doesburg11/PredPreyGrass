@@ -10,6 +10,7 @@
 
 
 TODO Later
+-add attribute alive to agents
 -Birth of agents Predators, Prey and Grass
 -when annimals startve no directly vanish but remains there for scavenget agents
 -introduce altruistic agents as in the NetLogo
@@ -234,7 +235,7 @@ class PredPrey:
                 elif abs(d_x) + abs(d_y) <= action_offset:
                     self.motion_range.append([d_x,d_y])        
                     action_nr += 1
-        print("motion_range = ", self.motion_range)
+        #print("motion_range = ", self.motion_range)
      
         self.n_actions_agent=len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)  
@@ -447,7 +448,6 @@ class PredPrey:
         agent_type_nr = agent_instance.agent_type_nr
         agent_name = agent_instance.agent_name
         agent_energy = agent_instance.energy
-        agent_position = agent_instance.position
 
         # If the agent is a predator and it's alive
         if agent_type_nr == self.predator_type_nr and self.predator_alive_dict[agent_name]: 
@@ -457,7 +457,7 @@ class PredPrey:
                 agent_instance.step(action)
                 self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
                 # If there's prey at the new position, remove (eat) one at random
-                x_new_position_predator, y_new_position_predator = agent_position
+                x_new_position_predator, y_new_position_predator = agent_instance.position
                 if self.model_state[self.prey_type_nr, x_new_position_predator, y_new_position_predator] > 0:
                     prey_instance_list_in_cell_predator = self.agent_instance_in_grid_location_dict[self.agent_type_names[self.prey_type_nr]][(x_new_position_predator, y_new_position_predator)]
                     prey_instance_removed = random.choice(prey_instance_list_in_cell_predator)
@@ -475,7 +475,7 @@ class PredPrey:
                 agent_instance.step(action)
                 self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
                 self.add_agent_instance_to_position_dict(agent_instance)
-                x_new_position_prey, y_new_position_prey = agent_position
+                x_new_position_prey, y_new_position_prey = agent_instance.position
 
                 # If there's grass at the new position, remove (eat) one at random
                 # second conditons is to prevent searching an empty list when another prey in the same cycle

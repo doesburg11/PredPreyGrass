@@ -1,3 +1,7 @@
+"""
+FILE HAS TO BE RUN FROM LOCAL DIRECTORY
+"""
+
 import predprey
 from parameters import env_kwargs, training_steps_string 
 
@@ -95,21 +99,18 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
 
 if __name__ == "__main__":
     env_fn = predprey
+    model_file_name = "predprey_steps_"+training_steps_string
+    script_directory = os.path.dirname(os.path.abspath(__file__))
+    loaded_policy = script_directory+"/output/"+model_file_name
+    print("loaded_policy:",loaded_policy)
+    print()
+
 
     eval_model = False
     eval_and_watch_model = True
-    #training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
 
-    # output file name
-    start_time = "2024-01-15_17:37"
-    environment_name = "predprey"
-    file_name = f"{environment_name}_steps_{training_steps_string}"
-
-    # Define the destination directory for the sourse code
-    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results', start_time)
-    loaded_policy = destination_directory_source_code +"/output/"+file_name
-       
+      
     if eval_model:
         # Evaluate games 
         eval(env_fn, num_games=10, render_mode=None, **env_kwargs)
