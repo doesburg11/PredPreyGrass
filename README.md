@@ -37,7 +37,8 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
    ```
 7. If encountering "ERROR: Failed building wheel for box2d-py," run:
    ```bash
-   conda install swig
+   apt install swig
+   pip install box2d box2d-kengz
    ```
    in the VS Code terminal.
 8. If the issue persists, explore alternative solutions online.
