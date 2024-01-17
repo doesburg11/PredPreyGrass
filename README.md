@@ -37,12 +37,14 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
    ```
 7. If encountering "ERROR: Failed building wheel for box2d-py," run:
    ```bash
-   conda install swig
+   apt install swig
    ```
-   in the VS Code terminal.
-8. If the issue persists, explore alternative solutions online.
-9. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
-10. If facing "libGL error: failed to load driver: swrast," execute:
+   and
+   ```bash
+   pip install box2d box2d-kengz
+   ```
+8. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
+9. If facing "libGL error: failed to load driver: swrast," execute:
     ```bash
     conda install -c conda-forge gcc=12.1.0
     ```
