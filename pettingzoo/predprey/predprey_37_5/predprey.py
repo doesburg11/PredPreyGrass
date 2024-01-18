@@ -10,6 +10,8 @@
 
 
 TODO Later
+-change agent_observation with number of prey in observation range into energy of 
+prey in observation range
 -add attribute alive to agents
 -Birth of agents Predators, Prey and Grass
 -when annimals startve no directly vanish but remains there for scavenget agents
@@ -1039,7 +1041,7 @@ class PredPrey:
             pygame.display.update()
             if self.save_image_steps:
                 self.file_name+=1
-                print(self.file_name+".png saved")
+                print(str(self.file_name)+".png saved")
                 directory= "./assets/images/"
                 pygame.image.save(self.screen, directory+str(self.file_name)+".png")
         
