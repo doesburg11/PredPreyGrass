@@ -142,7 +142,7 @@ if __name__ == "__main__":
     Average_of_Avg = 0
     Average_of_Avg_predators = 0
     Average_of_Avg_prey = 0
-    Average_of_Cycles = 0
+    Average_of_Cycles = 0 
 
     # output file name
     start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     file_name = f"{environment_name}_steps_{training_steps_string}"
 
     # Define the destination directory for the sourse code
-    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results/n_grass/20', start_time)
+    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results/n_grass/50', start_time)
     output_project = destination_directory_source_code+"/output/"
     loaded_policy = destination_directory_source_code+"/output/"+file_name
 
@@ -187,18 +187,18 @@ if __name__ == "__main__":
         file.write("model: PredPreyGrass\n")
         file.write("parameters:\n")
         file.write("training steps: "+training_steps_string+"\n")
-        file.write("=========================\n")
+        file.write("------------------------\n")
         for item in env_kwargs:
             file.write(str(item)+" = "+str(env_kwargs[item])+"\n")
-        file.write("=========================\n")
+        file.write("------------------------\n")
         start_training_time = time.time()
         train(env_fn, steps=training_steps, seed=0, **env_kwargs)
         end_training_time = time.time()
         training_time = end_training_time - start_training_time
         if training_time<3600:
-            file.write("training time (min): " + str(round(training_time/60,1))+"\n")
+            file.write("training time (min)= " + str(round(training_time/60,1))+"\n")
         else:
-            file.write("training time (hours): " + str(round(training_time/3600,1))+"\n")
+            file.write("training time (hours)= " + str(round(training_time/3600,1))+"\n")
 
     # load latest policy
     if not save_model:
@@ -226,7 +226,7 @@ if __name__ == "__main__":
     
 
     if save_model:
-        file.write("=========================\n")
+        file.write("--------------------------\n")
         file.write(f"Number of games = {num_games}"+"\n")
         file.write(f"Average of Avg = {Average_of_Avg}"+"\n")
         file.write(f"Average of Avg_predators = {Average_of_Avg_predators}"+"\n")
