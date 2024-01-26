@@ -79,7 +79,7 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
         raw_env._agent_selector.reset()
         predator_name_list = raw_env.pred_prey_env.predator_name_list
         prey_name_list = raw_env.pred_prey_env.prey_name_list
-        agent_name_list = raw_env.pred_prey_env.agent_name_list
+        agent_name_list = raw_env.pred_prey_env.agents
         agent_selector.reset()
 
         cumulative_rewards = {agent: 0 for agent in agent_name_list}
@@ -150,7 +150,7 @@ if __name__ == "__main__":
     file_name = f"{environment_name}_steps_{training_steps_string}"
 
     # Define the destination directory for the sourse code
-    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results/n_predator/14', start_time)
+    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results', start_time)
     output_project = destination_directory_source_code+"/output/"
     loaded_policy = destination_directory_source_code+"/output/"+file_name
 
