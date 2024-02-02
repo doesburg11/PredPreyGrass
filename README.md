@@ -19,6 +19,8 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 
 ### Installation Instructions
 
+If encountering problems or discuss reach out to vandoesburgpeter1 (g m a i l)
+
 **Editor used:** Visual Studio Code 1.85.1
 
 1. Clone the repository: 
