@@ -5,6 +5,9 @@
 </p>
 
 ### Explanation of the algorithm
+
+ g m a i l: vandoesburgpeter1
+
 A multi-agent reinforcement learning environment implemented with Proximal Policy Optimization. In the simulation blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
 
 High-level breakdown of the algorithm's ```step``` function:
@@ -19,7 +22,6 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 
 ### Installation Instructions
 
-If encountering problems or discuss reach out to vandoesburgpeter1 (g m a i l)
 
 **Editor used:** Visual Studio Code 1.85.1
 
