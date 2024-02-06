@@ -8,7 +8,7 @@
 
  g m a i l: vandoesburgpeter1
 
-A multi-agent reinforcement learning environment implemented with Proximal Policy Optimization. In the simulation blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
+A multi-agent reinforcement learning environment trained with Proximal Policy Optimization. In the simulation blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
 
 High-level breakdown of the algorithm's ```step``` function:
 
@@ -64,7 +64,7 @@ Similar to PettingZoo Pursuit, grass agents are excluded from the 'AECEnv.agents
 
 ### The AEC Environment Architecture
 
-Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The alive status of agents is furthermore tracked by the booelan attribute ```alive``` of the agents.'
+Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The alive status of agents is furthermore tracked by the boolean attribute ```alive``` of the agents.
 
 This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
 
