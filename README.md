@@ -12,9 +12,9 @@ A multi-agent reinforcement learning environment implemented with Proximal Polic
 
 High-level breakdown of the algorithm's ```step``` function:
 
-1. **Predator Actions**: If the agent is a predator and it's alive, it checks if the predator has energy. If it does, the predator moves and the model state is updated. If the predator lands on a cell with [at least one] prey, it selects a [random] prey to eat. If the predator has no energy left, it is being selected to become inactive at the end of the cycle.
+1. **Predator Actions**: If the agent is a predator and it's alive, it checks if the predator has energy. If it does, the predator moves and the model state is updated. If the predator lands on a cell with prey, it selects the prey to eat and to be removed at the end of the cycle (AEC). If the predator has no energy left, it is being selected to become inactive at the end of the cycle.
 
-2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with [at least one] grass [agent] it selects a [random] grass [agent] to eat. If the prey has no energy left, it is being selected to become inactive at the end of the cycle.
+2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass it selects the grass to eat and to be removed ath the end of the cycle. If the prey has no energy left, it is being selected to become inactive at the end of the cycle (AEC).
 
 3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles.
 
