@@ -52,6 +52,11 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     ```bash
     conda install -c conda-forge gcc=12.1.0
     ```
+### Run online simulation
+In Visual Studio Code:
+```pettingzoo/predprey/predpreygrass_v0.py```
+Adjust parameters accordingly in:
+```pettingzoo/predprey/predpreygrass_v0/parameters.py```
 
 ### PettingZoo Modification
 
