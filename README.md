@@ -6,7 +6,7 @@
 
 ### Explanation of the algorithm
 
- g m a i l: vandoesburgpeter1
+ For questions or suggestions, gmail: vandoesburgpeter1
 
 A multi-agent reinforcement learning environment trained with Proximal Policy Optimization. In the simulation blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
 
@@ -52,6 +52,11 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     ```bash
     conda install -c conda-forge gcc=12.1.0
     ```
+### Training and visualize trained model
+In Visual Studio Code run:
+```pettingzoo/predprey/predpreygrass_v0.py```
+Adjust parameters accordingly in:
+```pettingzoo/predprey/predpreygrass_v0/parameters.py```
 
 ### PettingZoo Modification
 
