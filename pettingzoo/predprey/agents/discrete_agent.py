@@ -1,26 +1,3 @@
-"""
-Predeator, Prey, Grass discrete agent.
-"""
-
-
-"""
-# noqa: D212, D415
-from collections import defaultdict
-from typing import List
-import numpy as np
-import pygame
-import random
-
-import gymnasium
-from gymnasium.utils import seeding, EzPickle
-
-from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
-import os
-# position of the pygame window on the screen
-x_pygame_window = 0
-y_pygame_window = 0
-"""
 import numpy as np
 from gymnasium import spaces
 

@@ -1,8 +1,17 @@
 """
-FILE HAS TO BE RUN FROM LOCAL DIRECTORY
+FILE NEEDS TO RUN FROM LOCAL DIRECTORY
 """
-import environments.predpreygrass as predpreygrass
-from config.parameters import env_kwargs, training_steps_string 
+#choose the environment
+#environment_name = "predpreygrass_energy_transfer"
+environment_name = "predpreygrass_fixed_rewards"
+
+if environment_name == "predpreygrass_energy_transfer":
+    import environments.predpreygrass_energy_rewards as predpreygrass
+    from config.parameters_energy_rewards import env_kwargs, training_steps_string
+elif environment_name == "predpreygrass_fixed_rewards":
+    import environments.predpreygrass_fixed_rewards as predpreygrass
+    from config.parameters_fixed_rewards import env_kwargs, training_steps_string
+
 
 import os
 
