@@ -1,6 +1,13 @@
-import environments.predpreygrass as predpreygrass
-from config.parameters import env_kwargs, training_steps_string 
+#choose the environment
+#nvironmeny_name = "predpreygrass_energy_reward"
+environment_name = "predpreygrass_fixed_rewards"
 
+if environment_name == "predpreygrass_energy_reward":
+    import environments.predpreygrass_energy_rewards as predpreygrass_fixed_rewards
+    from config.parameters_energy_rewards import env_kwargs, training_steps_string
+elif environment_name == "predpreygrass_fixed_rewards":
+    import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
+    from config.parameters_fixed_rewards import env_kwargs, training_steps_string
 
 import glob
 import os
@@ -125,7 +132,7 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
     # end evaluation
 
 if __name__ == "__main__":
-    env_fn = predpreygrass
+    env_fn = predpreygrass_fixed_rewards
     save_model = True # True saves the model and output externally
     watch_model = False
     #training_steps_string = "10_000_000"

@@ -13,8 +13,8 @@ After training, you can view the logs in TensorBoard by running the following co
 
 """
 # Continue training for 100000 steps and log the results to TensorBoard
-import environments.predpreygrass as predpreygrass
-from config.parameters import env_kwargs, training_steps_string 
+import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
+from config.parameters_fixed_rewards import env_kwargs, training_steps_string 
 
 import os 
 
@@ -38,7 +38,7 @@ print()
 model = PPO.load(loaded_policy)
 
 
-env_fn = predpreygrass
+env_fn = predpreygrass_fixed_rewards
 parallel_env = parallel_wrapper_fn(env_fn.raw_env)
     
 # Train a single model to play as each agent in a parallel environment
