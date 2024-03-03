@@ -426,9 +426,6 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # end reinit agents records to default at the end of the cycle
 
 
-        # If the render mode is "human", render the current state of the simulation
-        if self.render_mode == 'human':
-            self.render()
 
         for agent_name in self.agents:
             self.observations[agent_name] = self.observe(agent_name)

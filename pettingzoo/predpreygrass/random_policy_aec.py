@@ -1,4 +1,5 @@
-#choose the environment
+# AEC pettingzoo predpreygrass environment using random policy
+
 #environment_name = "predpreygrass_energy_rewards"
 environment_name = "predpreygrass_fixed_rewards"
 
@@ -52,7 +53,6 @@ for i in range(num_games):
             action = None
         else:
             action = raw_env.action_space(agent).sample()
-            #print(agent," takes action ", action)
         raw_env.step(action)
         if agent_selector.is_last(): # called at end of cycle
             n_aec_cycles += 1

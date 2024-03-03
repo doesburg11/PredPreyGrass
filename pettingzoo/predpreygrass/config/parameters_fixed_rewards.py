@@ -1,4 +1,4 @@
-training_steps_string = "1_000_000"
+training_steps_string = "10_000_000"
 
 env_kwargs = dict(
     max_cycles=10000, 
