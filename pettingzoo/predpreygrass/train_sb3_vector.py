@@ -1,3 +1,11 @@
+# This file trains a single model to play as each agent in a parallel 
+# environment. Evaluation is done using the AEC API.
+# Also, the source code and the trained model is saved in a 
+# separate directory, for reuse and analysis.
+# Algorithm used is PPO from stable_baselines3.
+
+
+
 #choose the environment
 #nvironmeny_name = "predpreygrass_energy_reward"
 environment_name = "predpreygrass_fixed_rewards"
