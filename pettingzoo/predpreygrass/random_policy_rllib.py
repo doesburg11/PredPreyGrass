@@ -1,3 +1,5 @@
+# parallel predpreygrass environment using rllib configuration
+
 from typing import Dict
 
 from environments.predpreygrass_rllib import PredPreyGrassEnv as pred_prey_grass_env
@@ -53,19 +55,12 @@ for i in range(num_games):
     n_cycles = 0
     while not stop_loop:
         actions = {agent: pred_prey_grass_env.action_space(agent).sample() for agent in pred_prey_grass_env.agents}
-
-        n_cycles += 1
-        
-        #print(actions)
-
         observations, rewards, terminations, truncations, info = pred_prey_grass_env.step(actions)
-        #print(rewards)
-
         for agent in pred_prey_grass_env.agents:
             cumulative_rewards[agent] += rewards[agent]
-
-        # Usage:
+        pred_prey_grass_env.render()
         stop_loop = is_all_terminated(terminations)
+        n_cycles += 1
 
     avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_cycles
