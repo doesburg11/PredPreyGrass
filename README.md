@@ -56,7 +56,13 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy_aec.py```
 
+<<<<<<< HEAD
 ### Training and visualize trained model usiing PPO from stable baselines3
+=======
+### Training and visualize trained model using PPO from stable baselines3
+In Visual Studio Code run:
+```pettingzoo/predpreygrass/train_sb3_vector.py```
+>>>>>>> e48a94b2e09e6a9c0f72732adbb208e3ce8a6633
 Adjust parameters accordingly in:
 ```pettingzoo/predpreygrass/config/parameters_fixed_rewards.py
 ```
