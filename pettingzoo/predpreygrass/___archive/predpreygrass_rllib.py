@@ -23,28 +23,48 @@ class PredPreyGrassEnv(MultiAgentEnv):
         "is_parallelizable": True,
         "render_fps": 5,
     }    
-    #the environment parameters are set in the config dictionary
-    def __init__(self,env_config= None):
-        config = env_config or {}
-        self.x_grid_size = config.get("x_grid_size",16)
-        self.y_grid_size = config.get("y_grid_size",16)
-        self.max_cycles = config.get("max_cycles",500)
-        self.n_initial_predator = config.get("n_initial_predator",4)
-        self.n_initial_prey = config.get("n_initial_prey",8)
-        self.n_initial_grass = config.get("n_initial_grass",30)
-        self.max_observation_range = config.get("max_observation_range",7)
-        self.obs_range_predator = config.get("obs_range_predator",5)       
-        self.obs_range_prey = config.get("obs_range_prey",7)
-        self.render_mode = config.get("render_mode",None)
-        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator",-0.1)
-        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey",-0.1)
-        self.cell_scale = config.get("cell_scale",40)
-        self.initial_energy_predator = config.get("initial_energy_predator",10.0)
-        self.initial_energy_prey = config.get("initial_energy_prey",10.0)
-        self.x_pygame_window = config.get("x_pygame_window",0)
-        self.y_pygame_window = config.get("y_pygame_window",0)
-        self.catch_grass_reward = config.get("catch_grass_reward",5.0)
-        self.catch_prey_reward = config.get("catch_prey_reward",5.0)
+    def __init__(
+        self,
+        x_grid_size: int = 16,
+        y_grid_size: int = 16,
+        max_cycles: int = 500,
+        n_initial_predator: int = 4,
+        n_initial_prey: int = 8,
+        n_initial_grass: int = 30,
+        max_observation_range: int = 7,
+        obs_range_predator: int = 5,
+        obs_range_prey: int = 7,
+        render_mode = None,
+        energy_loss_per_step_predator = -0.1,
+        energy_loss_per_step_prey = -0.1,     
+        initial_energy_predator = 10.0,
+        initial_energy_prey = 10.0,
+        cell_scale: int = 40,
+        x_pygame_window : int = 0,
+        y_pygame_window : int = 0,
+        catch_grass_reward=5.0,
+        catch_prey_reward=5.0,
+        ):
+
+        self.x_grid_size = x_grid_size
+        self.y_grid_size = y_grid_size
+        self.max_cycles = max_cycles
+        self.n_initial_predator = n_initial_predator
+        self.n_initial_prey = n_initial_prey
+        self.n_initial_grass = n_initial_grass
+        self.max_observation_range = max_observation_range
+        self.obs_range_predator = obs_range_predator        
+        self.obs_range_prey = obs_range_prey
+        self.render_mode = render_mode
+        self.energy_loss_per_step_predator = energy_loss_per_step_predator
+        self.energy_loss_per_step_prey = energy_loss_per_step_prey
+        self.cell_scale = cell_scale
+        self.initial_energy_predator = initial_energy_predator
+        self.initial_energy_prey = initial_energy_prey
+        self.x_pygame_window = x_pygame_window
+        self.y_pygame_window = y_pygame_window
+        self.catch_grass_reward = catch_grass_reward
+        self.catch_prey_reward = catch_prey_reward
 
         # pygam position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
@@ -78,7 +98,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.prey_name_list = []
         self.grass_name_list = []
  
-        self.agent_instance_in_grid_location = np.empty((len(self.agent_type_name_list), self.x_grid_size, self.y_grid_size), dtype=object)
+        self.agent_instance_in_grid_location = np.empty((len(self.agent_type_name_list), x_grid_size, y_grid_size), dtype=object)
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
             self.agent_instance_in_grid_location[agent_type_nr] = np.full((self.x_grid_size, self.y_grid_size), None)
 
@@ -278,7 +298,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
 
 
-        return self.agent_observation_dict, self.infos
+        return self.agent_observation_dict
         
     def step(self, actions):
         for agent_instance in self.agent_instance_list:
@@ -411,7 +431,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self.observations[agent_name] = self.observe(agent_name)
             self.rewards[agent_name] = self.agent_reward_dict[agent_name]
             self.terminations[agent_name] = not self.agent_name_to_instance_dict[agent_name].is_alive
-            self.truncations[agent_name] = False if self.n_cycles < self.max_cycles else True
+            self.truncations[agent_name] = False
             self.infos[agent_name] = {}
 
 
