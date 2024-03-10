@@ -54,7 +54,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     
 ### Visualize a random policy
 In Visual Studio Code run:
-```[text](pettingzoo/predpreygrass/random_policy_aec.py)```
+```pettingzoo/predpreygrass/random_policy_aec.py```
 
 ### Training and visualize trained model usiing PPO from stable baselines3
 In Visual Studio Code run:
