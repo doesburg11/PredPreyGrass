@@ -23,9 +23,13 @@ class PredPreyGrassEnv(MultiAgentEnv):
         "is_parallelizable": True,
         "render_fps": 5,
     }    
-    #the environment parameters are set in the config dictionary
+    #the environment parameters are set in the env_config dictionary
     def __init__(self,env_config= None):
-        config = env_config or {}
+        # to ensure that the initiaization routines of MultiAgentEnv are called are properly run before the rest of the code
+        super(PredPreyGrassEnv, self).__init__() 
+        # if env_config is None, set it to an empty dictionary
+        config = env_config or {} 
+        # set defaults if no config["key"] is provided
         self.x_grid_size = config.get("x_grid_size",16)
         self.y_grid_size = config.get("y_grid_size",16)
         self.max_cycles = config.get("max_cycles",500)
@@ -90,7 +94,10 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.predator_name_list =  ["predator" + "_" + str(a) for a in range(self.n_active_predator)]
         self.prey_name_list =  ["prey" + "_" + str(a) for a in range(self.n_active_predator, self.n_active_prey+self.n_active_predator)]
         self.agent_name_list = self.predator_name_list + self.prey_name_list
-
+        self.agents = self.agent_name_list 
+        self.possible_agents = self.agents[:]
+        self.num_agents = len(self.agents)
+        # end creation agent type lists
 
         # observations
         max_agents_overlap = max(self.n_active_prey, self.n_active_predator, self.n_active_grass)
@@ -102,7 +109,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
             shape=(self.max_observation_range, self.max_observation_range, self.nr_observation_channels),
             dtype=np.float32,
         )
-        self.observation_space = [obs_space for _ in range(self.n_agents)]  # type: ignore
+        self._observation_space = [obs_space for _ in range(self.n_agents)]  # type: ignore
+        # transferred from raw_env
+        self.observations = dict(zip(self.agents, [None for _ in self.agents]))
         # end observations
 
 
@@ -139,19 +148,11 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.file_name = 0
         self.n_cycles = 0
 
-        # transferred from raw_env
-        self.agents = self.agent_name_list 
-
-        self.possible_agents = self.agents[:]
-
-        self.num_agents = len(self.agents)
-
-        self.observations = dict(zip(self.agents, [None for _ in self.agents]))
 
 
 
 
-    def reset(self, seed=None):
+    def reset(self, *, seed=None, options=None):
         if seed is not None:
             self._seed(seed=seed)
         # empty agent lists
@@ -192,6 +193,8 @@ class PredPreyGrassEnv(MultiAgentEnv):
             for _ in range(self.n_agent_instance_list[agent_type_nr]): 
                 agent_id_nr = self.agent_id_counter           
                 agent_name = agent_type_name + "_" + str(agent_id_nr)
+                # suggested by copilot to integrate working with rllib
+                self._agent_ids.add(agent_name)
                 self.agent_id_counter+=1
                 agent_instance = DiscreteAgent(
                     agent_type_nr, 
@@ -269,12 +272,14 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.action_spaces = dict(zip(self.agents, self._action_space)) # type: ignore
 
 
-        self.observation_spaces = dict(zip(self.agents, self.observation_space)) # type: ignore
+        self.observation_spaces = dict(zip(self.agents, self._observation_space)) # type: ignore
         self.steps = 0
         # this method "reset"
         self.rewards = dict(zip(self.agents, [(0) for _ in self.agents]))
-        self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
-        self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
+        self.terminateds = dict(zip(self.agents, [False for _ in self.agents]))
+        self.terminateds["__all__"] = False
+        self.truncateds = dict(zip(self.agents, [False for _ in self.agents]))
+        self.truncateds["__all__"] = False
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
 
 
@@ -293,7 +298,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
                         # Move the predator and update the model state
                         self.agent_instance_in_grid_location[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
                         self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] -= 1
-                        agent_instance.step(actions[agent_instance.agent_name])
+                        agent_instance.move(actions[agent_instance.agent_name])
                         self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
                         self.agent_instance_in_grid_location[agent_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
                         # If there's prey at the new position, remove (eat) one at random
@@ -312,7 +317,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
                         self.agent_instance_in_grid_location[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
                         #self.remove_agent_instance_from_position_dict(agent_instance)
                         self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] -= 1
-                        agent_instance.step(actions[agent_instance.agent_name])
+                        agent_instance.move(actions[agent_instance.agent_name])
                         self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
                         self.agent_instance_in_grid_location[agent_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
                         #self.add_agent_instance_to_position_dict(agent_instance)
@@ -410,15 +415,17 @@ class PredPreyGrassEnv(MultiAgentEnv):
         for agent_name in self.agents:
             self.observations[agent_name] = self.observe(agent_name)
             self.rewards[agent_name] = self.agent_reward_dict[agent_name]
-            self.terminations[agent_name] = not self.agent_name_to_instance_dict[agent_name].is_alive
-            self.truncations[agent_name] = False if self.n_cycles < self.max_cycles else True
+            self.terminateds[agent_name] = not self.agent_name_to_instance_dict[agent_name].is_alive
+            self.truncateds[agent_name] = False if self.n_cycles < self.max_cycles else True
             self.infos[agent_name] = {}
+        self.terminateds["__all__"] = self.is_no_grass or self.is_no_prey or self.is_no_predator 
+        self.truncateds["__all__"] = False if self.n_cycles < self.max_cycles else True
 
 
         self.steps += 1
         #self._accumulate_rewards()  # cannot be left out for proper rewards
 
-        return self.observations, self.rewards, self.terminations, self.truncations, self.infos
+        return self.observations, self.rewards, self.terminateds, self.truncateds, self.infos
 
 
 

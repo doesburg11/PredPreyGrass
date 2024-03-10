@@ -1,6 +1,6 @@
 training_steps_string = "5_000_000"
 
-env_kwargs = dict(
+config = dict(
     max_cycles=1000, 
     x_grid_size=16,
     y_grid_size=16, 

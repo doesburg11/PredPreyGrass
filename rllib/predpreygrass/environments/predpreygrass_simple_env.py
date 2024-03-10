@@ -1,4 +1,4 @@
-from gymnasium.spaces import Discrete, MultiDiscrete
+from gymnasium.spaces import Discrete, MultiDiscrete, Dict
 import numpy as np
 # from ipywidgets import Output
 from IPython import display
@@ -10,20 +10,32 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 class MultiAgentArena(MultiAgentEnv):  # MultiAgentEnv is a gym.Env sub-class
     
-    def __init__(self, config=None):
+    def __init__(self,config=None):
+        #https://discuss.ray.io/t/typeerror-envcontext-object-cannot-be-interpreted-as-an-integer/4083/2
+        #https://discuss.ray.io/t/error-typeerror-envcontext-object-cannot-be-interpreted-as-an-integer/897
+        #https://discuss.ray.io/t/im-confused-about-how-policy-mapping-works-in-configuration/7001
+        super().__init__()
         config = config or {}
         # Dimensions of the grid.
         self.width = config.get("width", 6)
-        self.height = config.get("height", 6)
-
+        self.height = config.get("height", 6)  
+        self.agents = ["agent1", "agent2"]
+        self._agent_ids = set(self.agents)
+        self._spaces_in_preferred_format = True
         # End an episode after this many timesteps.
         self.timestep_limit = config.get("ts", 50)
 
-        self.observation_space = MultiDiscrete([self.width * self.height,
-                                                self.width * self.height])
-        # old way: 0=up, 1=right, 2=down, 3=left.
-        # frozen lake compatible: 0=left, 1=down, 2=right, 3=up
-        self.action_space = Discrete(4)
+        self.observation_space = Dict({
+            "agent1": MultiDiscrete([self.width * self.height,self.width * self.height]), 
+            "agent2": MultiDiscrete([self.width * self.height,self.width * self.height])
+            })
+        self.action_space = Dict({
+            "agent1": Discrete(4), 
+            "agent2": Discrete(4)
+            })
+        #print("self.observation_space",self.observation_space)
+        #print("self.action_space",self.action_space)
+
 
         # Reset env.
         self.reset()
@@ -34,10 +46,9 @@ class MultiAgentArena(MultiAgentEnv):  # MultiAgentEnv is a gym.Env sub-class
         #     self.out = Output()
         #     display.display(self.out)
 
-        self._spaces_in_preferred_format = False
+        self._spaces_in_preferred_format = True
 
     def reset(self, *,seed=None, options=None):
-    #def reset(self):
         """Returns initial observation of next(!) episode."""
         # Row-major coords.
         self.agent1_pos = [0, 0]  # upper left corner
@@ -66,7 +77,7 @@ class MultiAgentArena(MultiAgentEnv):  # MultiAgentEnv is a gym.Env sub-class
 
     def step(self, action: dict):
         """
-        Returns (next observation, rewards, dones, infos) after having taken the given actions.
+        Returns (next observation, rewards, terminateds,truncateds, infos) after having taken the given actions.
         
         e.g.
         `action={"agent1": action_for_agent1, "agent2": action_for_agent2}`
@@ -75,7 +86,7 @@ class MultiAgentArena(MultiAgentEnv):  # MultiAgentEnv is a gym.Env sub-class
         # increase our time steps counter by 1.
         self.timesteps += 1
         # An episode is "done" when we reach the time step limit.
-        is_done = self.timesteps >= self.timestep_limit
+        is_truncated = self.timesteps >= self.timestep_limit
 
         # Agent2 always moves first.
         # events = [collision|agent1_new_field]
@@ -103,15 +114,15 @@ class MultiAgentArena(MultiAgentEnv):  # MultiAgentEnv is a gym.Env sub-class
         }
 
         # Generate a `done` dict (per-agent and total).
-        dones = {
-            "agent1": is_done,
-            "agent2": is_done,
+        truncateds = {
+            "agent1": is_truncated,
+            "agent2": is_truncated,
             # special `__all__` key indicates that the episode is done for all agents.
-            "__all__": is_done,
+            "__all__": is_truncated,
         }
-        truncateds = {"agent1": False, "agent2": False, "__all__": False}
+        terminateds = {"agent1": False, "agent2": False, "__all__": False}
 
-        return obs, rewards, dones, truncateds, {}  # <- info dict (not needed here).
+        return obs, rewards, terminateds, truncateds, {}  # <- info dict (not needed here).
 
     def _get_obs(self):
         """
