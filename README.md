@@ -51,12 +51,17 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 9. If facing "libGL error: failed to load driver: swrast," execute:
     ```bash
     conda install -c conda-forge gcc=12.1.0
-    ```
-### Training and visualize trained model
+    
+### Visualize a random policy
 In Visual Studio Code run:
-```pettingzoo/predprey/predpreygrass_v0.py```
+```[text](pettingzoo/predpreygrass/random_policy_aec.py)```
+
+### Training and visualize trained model usiing PPO from stable baselines3
+In Visual Studio Code run:
+```pettingzoo/predpreygrass/train_sb3_vector.py```
 Adjust parameters accordingly in:
-```pettingzoo/predprey/predpreygrass_v0/parameters.py```
+```pettingzoo/predpreygrass/config/parameters_fixed_rewards.py
+```
 
 ### PettingZoo Modification
 
