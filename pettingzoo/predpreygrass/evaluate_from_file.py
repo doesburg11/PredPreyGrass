@@ -1,16 +1,17 @@
 """
-FILE NEEDS TO RUN FROM LOCAL DIRECTORY
+To avoid command line running:
+- go with the file-explorer to your defined local directory in "parameters_fixed_rewards.py".
+- double mousclick the directory with the appropriate time stamp of training
+- right mouseclick "evaluate_from_file.py" and:
+- select "Run Python File in Terminal"
+- select "Open with"
+- select "Visual Studio Code"
+- select "Run" (in taskbar of Visual Studio Code)
+- select "Run without debugging"
 """
-#choose the environment
-#environment_name = "predpreygrass_energy_transfer"
-environment_name = "predpreygrass_fixed_rewards"
 
-if environment_name == "predpreygrass_energy_transfer":
-    import environments.predpreygrass_energy_rewards as predpreygrass
-    from config.parameters_energy_rewards import env_kwargs, training_steps_string
-elif environment_name == "predpreygrass_fixed_rewards":
-    import environments.predpreygrass_fixed_rewards as predpreygrass
-    from config.parameters_fixed_rewards import env_kwargs, training_steps_string
+import environments.predpreygrass_fixed_rewards as predpreygrass
+from config.parameters_fixed_rewards import env_kwargs, training_steps_string
 
 
 import os
