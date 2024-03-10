@@ -5,17 +5,8 @@
 # Algorithm used is PPO from stable_baselines3.
 
 
-
-#choose the environment
-#nvironmeny_name = "predpreygrass_energy_reward"
-environment_name = "predpreygrass_fixed_rewards"
-
-if environment_name == "predpreygrass_energy_reward":
-    import environments.predpreygrass_energy_rewards as predpreygrass_fixed_rewards
-    from config.parameters_energy_rewards import env_kwargs, training_steps_string
-elif environment_name == "predpreygrass_fixed_rewards":
-    import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
-    from config.parameters_fixed_rewards import env_kwargs, training_steps_string
+import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
+from config.parameters_fixed_rewards import env_kwargs, training_steps_string, local_output_directory
 
 import glob
 import os
@@ -166,7 +157,7 @@ if __name__ == "__main__":
     file_name = f"{environment_name}_steps_{training_steps_string}"
 
     # Define the destination directory for the sourse code
-    destination_directory_source_code = os.path.join('/home/doesburg/Dropbox/02_marl_results/predpreygras_results/', start_time)
+    destination_directory_source_code = os.path.join(local_output_directory, start_time)
     output_project = destination_directory_source_code+"/output/"
     loaded_policy = destination_directory_source_code+"/output/"+file_name
 
