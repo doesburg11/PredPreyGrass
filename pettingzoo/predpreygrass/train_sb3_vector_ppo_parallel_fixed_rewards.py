@@ -6,7 +6,7 @@
 
 
 import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
-from config.parameters_fixed_rewards import env_kwargs, training_steps_string, local_output_directory
+from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string, local_output_directory
 
 import glob
 import os

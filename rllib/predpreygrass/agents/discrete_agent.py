@@ -40,7 +40,7 @@ class DiscreteAgent():
         self.x_grid_dim = self.model_state_agent.shape[0]
         self.y_grid_dim = self.model_state_agent.shape[1]
 
-    def move(self, action):
+    def move(self, action : int):
         # returns new position of agent "self" given action "action"
 
         next_position = np.zeros(2, dtype=np.int32) 
