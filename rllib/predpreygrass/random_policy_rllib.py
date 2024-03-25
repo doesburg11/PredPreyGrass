@@ -2,20 +2,19 @@
 
 from typing import Dict
 
-from environments.predpreygrass_random_env import PredPreyGrassEnv
-from config.config_rllib import config
+from environments.predpreygrass_env import PredPreyGrassEnv
+from config.config_rllib import configuration
 
-#from agents.discrete_agent import DiscreteAgent
 import numpy as np
+import time
 
 num_games = 1
 if num_games > 1:
-    config["render_mode"]="None"
+    configuration["render_mode"]="None"
 else:
-    config["render_mode"]="human"
+    configuration["render_mode"]="human"
 
-PredPreyGrassEnv = PredPreyGrassEnv(env_config=config) 
-#PredPreyGrassEnv = PredPreyGrassEnv() 
+env = PredPreyGrassEnv(configuration=configuration) 
 
 def average(rewards):
     N = len(rewards)
@@ -46,24 +45,25 @@ avg_rewards = [0 for _ in range(num_games)]
 avg_cycles = [0 for _ in range(num_games)]
 std_rewards = [0 for _ in range(num_games)]
 
-agent_names = PredPreyGrassEnv.agents
+agent_names = env.agents
 
 
 for i in range(num_games):
-    PredPreyGrassEnv.reset(seed=i)
-    cumulative_rewards = {agent: 0.0 for agent in PredPreyGrassEnv.possible_agents}
+    obs, _ = env.reset(seed=i)
+    cumulative_rewards = {agent: 0.0 for agent in env.possible_agents}
     stop_loop = False
     n_cycles = 0
     while not stop_loop:
-        actions = {agent: PredPreyGrassEnv.action_space(agent).sample() for agent in PredPreyGrassEnv.agents}
-        observations, rewards, terminations, truncations, info = PredPreyGrassEnv.step(actions)
-        for agent in PredPreyGrassEnv.agents:
+        actions = {agent: env.action_space[agent].sample() for agent in env.agents}
+        observations, rewards, terminations, truncations, info = env.step(actions)
+        for agent in env.agents:
             cumulative_rewards[agent] += rewards[agent]
-        PredPreyGrassEnv.render()
-        terminated = is_all_terminated(terminations)
-        truncated = truncations[PredPreyGrassEnv.agents[0]]
+        env.render()
+        terminated = env.terminateds["__all__"]
+        truncated = truncations["__all__"]
         stop_loop = terminated or truncated
         n_cycles += 1
+        #time.sleep(0.5)
 
     avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_cycles
@@ -71,7 +71,7 @@ for i in range(num_games):
     print(f"Cycles = {n_cycles}", f"Avg = {round(avg_rewards[i],1)}", 
           f"Std = {round(std_rewards[i],1)}",end=" ")
     print()
-PredPreyGrassEnv.close()
+env.close()
 print(f"Average of Avg = {round(average(avg_rewards),1)}")
 print(f"Average of Cycles = {round(average(avg_cycles),1)}")
   

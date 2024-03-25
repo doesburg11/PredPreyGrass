@@ -54,13 +54,13 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     
 ### Visualize a random policy
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/random_policy_aec.py```
+```pettingzoo/predpreygrass/random_policy_aec_fixed_rewars.py```
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
-```pettingzoo/predpreygrass/config/parameters_fixed_rewards.py```
+```pettingzoo/predpreygrass/config/config_pettingzoo_fixed_rewards.py```
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/train_sb3_vector.py```
+```pettingzoo/predpreygrass/train_sb3_vector_ppo_parallel_fixed_rewards.py```
 To evaluate and visualize after training follow instructions in:
 ```pettingzoo/predpreygrass/evaluate_from_file.py```
 
@@ -75,23 +75,22 @@ Similar to PettingZoo Pursuit, grass agents are excluded from the 'AECEnv.agents
 
 ### The AEC Environment Architecture
 
-Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The alive status of agents is furthermore tracked by the boolean attribute ```alive``` of the agents.
+Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The active status of agents is furthermore tracked by the boolean attribute ```alive``` of the agents.
 
 This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
 
-### Optionalities of the PredPreyGrass Environment
+### Optionalities of the PredPreyGrass AEC Environment
 The configuration used in the gif-video:
 - `max_cycles=10000`
 - `x_grid_size=16`
 - `y_grid_size=16`
-- `n_predator=4`
-- `n_prey=6`
+- `n_predator=6`
+- `n_prey=8`
 - `n_grass=30`
 - `max_observation_range=7` (must be odd)
 - `obs_range_predator=3` (must be odd)  
 - `obs_range_prey=7` (must be odd)
 - `action_range=3` (must be odd)
-- `moore_neighborhood_actions=False`
 - `energy_loss_per_step_predator=-0.1`
 - `energy_loss_per_step_prey=-0.05`
 - `initial_energy_predator=10.0`

@@ -859,7 +859,7 @@ class PredPrey:
                     (self.cell_scale * self.x_grid_size +self.width_energy_chart, 
                      self.cell_scale * self.y_grid_size)
                 )
-                pygame.display.set_caption("PredPreyGrass")
+                pygame.display.set_caption("PredPreyGrass - agents rewards = energy levels captured agents")
             else:
                 self.screen = pygame.Surface(
                     (self.cell_scale * self.x_grid_size, self.cell_scale * self.y_grid_size)

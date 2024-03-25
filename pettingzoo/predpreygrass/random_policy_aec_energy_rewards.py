@@ -1,14 +1,6 @@
 # AEC pettingzoo predpreygrass environment using random policy
-
-#environment_name = "predpreygrass_energy_rewards"
-environment_name = "predpreygrass_fixed_rewards"
-
-if environment_name == "predpreygrass_energy_rewards":
-    from environments.predpreygrass_energy_rewards import raw_env
-    from config.parameters_energy_rewards import env_kwargs
-elif environment_name == "predpreygrass_fixed_rewards":
-    from environments.predpreygrass_fixed_rewards import raw_env
-    from config.parameters_fixed_rewards import env_kwargs
+from environments.predpreygrass_energy_rewards import raw_env
+from config.config_pettingzoo_energy_rewards import env_kwargs
 
 from pettingzoo.utils import agent_selector
 
