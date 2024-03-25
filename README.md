@@ -95,7 +95,7 @@ The configuration used in the gif-video:
 - `energy_loss_per_step_prey=-0.05`
 - `initial_energy_predator=10.0`
 - `initial_energy_prey=10.0`
-- `catch_grass_reward=2.0` (for prey)
+- `catch_grass_reward=3.0` (for prey)
 - `catch_prey_reward=5.0` (for predator)
 - `pixel_scale=40`
 
