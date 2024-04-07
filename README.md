@@ -107,7 +107,8 @@ In this configuration, predators, after training, tend to hover around grass age
 
 Since the prey and predators move within a Von Neumann neighborhood (left/right/up/down/stay), it is theoretically possible for a given prey to consistently outmaneuver a given predator, ensuring it is never caught, under two conditions: 1) the agents move in a turn-based fashion and 2) no other predators are involved in catching that specific prey. This is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it.
 
-However, this prey behavior goes unnoticed because the simulation is trained in a parallel environment where all agents decide simultaneously, rather than in a turn-based fashion. Despite this, the evaluation of the trained agents, as displayed above, is conducted in a turn-based (AEC) manner.
+However, this prey behavior goes unnoticed in the above display because the simulation is trained in a parallel environment where all agents decide simultaneously, rather than in a turn-based fashion. 
+
 ```
 @readme{PredPreyGrass,
   Title={A Predator, Prey, Grass Multiagent Learning Environment},
