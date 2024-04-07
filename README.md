@@ -8,7 +8,7 @@
 
  For questions or suggestions, gmail: vandoesburgpeter1
 
-A multi-agent reinforcement learning environment trained with Proximal Policy Optimization. In the simulation blue agents (prey) learn to consume green agents (grass), while red agents (predators) learn to capture prey; a simulation for a predator-prey-grass ecosystem used in a multi-agent reinforcement learning context. Agents (predators and prey) learn to take actions (like moving, eating) based on their current state to maximize cumulative reward.
+A multi-agent reinforcement learning environment trained using Proximal Policy Optimization is employed. In this simulation, blue agents (prey) are tasked with consuming green agents (grass), while red agents (predators) aim to capture prey. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents, including predators and prey, learn to execute actions such as moving and eating based on their current state to maximize cumulative reward. These agents inhabit a bounded grid world and move within a Von Neumann neighborhood.
 
 High-level breakdown of the algorithm's ```step``` function:
 
@@ -105,6 +105,9 @@ This implementation supports different observation ranges per agent: If `obs_ran
 
 In this configuration, predators, after training, tend to hover around grass agents to capture prey. However, this strategy is less frequent when 'energy_loss_per_step_predator' becomes more negative, incentivizing predators to abandon the 'wait-and-see' approach.
 
+Since the prey and predators move within a Von Neumann neighborhood (left/right/up/down/stay), it is theoretically possible for a given prey to consistently outmaneuver a given predator, ensuring it is never caught, under two conditions: 1) the agents move in a turn-based fashion and 2) no other predators are involved in catching that specific prey. This is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it.
+
+However, this prey behavior goes unnoticed because the simulation is trained in a parallel environment where all agents decide simultaneously, rather than in a turn-based fashion. Despite this, the evaluation of the trained agents, as displayed above, is conducted in a turn-based (AEC) manner.
 ```
 @readme{PredPreyGrass,
   Title={A Predator, Prey, Grass Multiagent Learning Environment},

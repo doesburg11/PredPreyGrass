@@ -1,16 +1,25 @@
-from environments.predpreygrass_env import PredPreyGrassEnv
+
+from environments.predpreygrass_env_actions import PredPreyGrassEnv
 from config.config_rllib import configuration
 
 from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.env.multi_agent_env_runner import MultiAgentEnvRunner  
 from ray.rllib.utils.pre_checks.env import  check_env
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune.registry import register_env
+from ray.tune.logger import pretty_print
+
+import ray
+from ray import train, tune
+
 import warnings
 import time
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 check_env(PredPreyGrassEnv(configuration))
+print("Environment checked")
+
 
 def env_creator(configuration):
     return PredPreyGrassEnv(configuration)  # return an env instance
@@ -25,7 +34,7 @@ policies = {
     "policy2": policy2
 }
 
-def policy_mapping_fn(agent_id, episode, worker, **kwargs):
+def policy_mapping_fn(agent_id, episode, worker=None, **kwargs):
     if agent_id.startswith("predator_"):
         return "policy1"
     if agent_id.startswith("prey_"):
@@ -36,56 +45,66 @@ def policy_mapping_fn(agent_id, episode, worker, **kwargs):
 config = (
     PPOConfig()
     .environment(env="pred_prey_grass")
-    .framework("torch")
+    .experimental(_enable_new_api_stack=True)
+    .rollouts(env_runner_cls=MultiAgentEnvRunner)
+    .resources(
+        num_learner_workers=1,
+        num_gpus_per_learner_worker=0,
+        num_cpus_for_local_worker=5,
+    )    .framework("torch")
     .rollouts(
         create_env_on_local_worker=True,
         batch_mode="complete_episodes", #"truncate_episodes",
-        num_rollout_workers=0,
+        num_rollout_workers=1,
         rollout_fragment_length= "auto",
     )
     .debugging(seed=0,log_level="ERROR")
     .training(model={
+        "uses_new_env_runners": True,
         "fcnet_hiddens" : [64, 64], 
         "_disable_preprocessor_api": False,
         "conv_filters": [[32, [8, 8], 4], [64, [4, 4], 2], [512, [1, 1], 1]] # Copilot
-        }
+        },
+        lr=tune.grid_search([0.0001, 0.00005, 0.00001])
+        #lr=0.00001,
     )
     .multi_agent(
         policies=policies,
         policy_mapping_fn=policy_mapping_fn
     )
-    #.build()
+    .evaluation(
+        evaluation_num_workers=1,
+        evaluation_interval=10,
+        enable_async_evaluation=True
+        )
+
 )
 
 
 if __name__ == "__main__":
+    
+    ray.init(num_cpus=8)
 
-    algo = config.build()
+    tuner = tune.Tuner(
+    "PPO",
+    run_config=train.RunConfig(
+        stop={
+            #"episode_reward_mean": 5,
+            "time_total_s": 40000, # Stop a trial after it's run for more than "time_total_s" seconds.
+            "training_iteration": 10000,
 
-    env = PredPreyGrassEnv(configuration=configuration)
-    obs, _ = env.reset()
-    stop_loop = False
+            },
+    ),
+    param_space=config,
+    )
+
+    tuner.fit()
+    
+    ray.shutdown()
 
 
 
-    while not stop_loop:
-        actions = {
-            "predator_0": algo.compute_single_action(obs["predator_0"], policy_id="policy1"),
-            "predator_1": algo.compute_single_action(obs["predator_1"], policy_id="policy1"),
-            "predator_2": algo.compute_single_action(obs["predator_2"], policy_id="policy1"),
-            "prey_3": algo.compute_single_action(obs["prey_3"], policy_id="policy2"),
-            "prey_4": algo.compute_single_action(obs["prey_4"], policy_id="policy2"),
-            "prey_5": algo.compute_single_action(obs["prey_5"], policy_id="policy2")    
-        }
 
-        obs, rewards, terminateds, truncateds, infos = env.step(actions)
-        
-        terminated = env.terminateds["__all__"]
-        truncated = truncateds["__all__"]
-        stop_loop = terminated or truncated
-        env.render()
-        
-    time.sleep(3)
-    env.close()
-    algo.stop()
 
+  
+    
