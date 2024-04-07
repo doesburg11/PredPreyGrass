@@ -11,7 +11,7 @@ To avoid command line running:
 """
 
 import environments.predpreygrass_fixed_rewards as predpreygrass
-from config.parameters_fixed_rewards import env_kwargs, training_steps_string
+from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string
 
 
 import os

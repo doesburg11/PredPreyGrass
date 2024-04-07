@@ -55,15 +55,21 @@ for i in range(num_games):
     n_cycles = 0
     while not stop_loop:
         actions = {agent: env.action_space[agent].sample() for agent in env.agents}
+        #print("Actions")
+        #print(actions)
         observations, rewards, terminations, truncations, info = env.step(actions)
         for agent in env.agents:
             cumulative_rewards[agent] += rewards[agent]
         env.render()
-        terminated = env.terminateds["__all__"]
+        #print("Observations")
+        #print(observations)
+        #print("Agents")
+        #print(env._agent_ids)
+        terminated = terminations["__all__"]
         truncated = truncations["__all__"]
         stop_loop = terminated or truncated
         n_cycles += 1
-        #time.sleep(0.5)
+    time.sleep(3)
 
     avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_cycles

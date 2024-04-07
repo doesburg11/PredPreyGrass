@@ -337,6 +337,8 @@ class PredPreyGrassEnv(MultiAgentEnv):
         """
 
         for agent_instance in self.agent_instance_list:
+            if self.terminateds[agent_instance.agent_name]:
+                continue
             if agent_instance.is_alive:
                 agent_type_nr = agent_instance.agent_type_nr
                 agent_name = agent_instance.agent_name
@@ -439,6 +441,8 @@ class PredPreyGrassEnv(MultiAgentEnv):
                         self._agent_ids.remove(agent_name)
                         self.terminateds[agent_name] = True
 
+
+
         self.n_cycles = self.n_cycles + 1
         
         #reinit agents records to default at the end of the cycle
@@ -455,6 +459,13 @@ class PredPreyGrassEnv(MultiAgentEnv):
 
 
         self.steps += 1
+        for agent_instance in self.agent_instance_list:
+            agent_name = agent_instance.agent_name
+            if self.terminateds[agent_name]:
+                self.observations[agent_name] = None
+                self.rewards[agent_name] = None
+                self.infos[agent_name] = None
+                
 
         return self.observations, self.rewards, self.terminateds, self.truncateds, self.infos
 
