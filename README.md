@@ -8,7 +8,14 @@
 
  For questions or suggestions, gmail: vandoesburgpeter1
 
-A multi-agent reinforcement learning environment trained using Proximal Policy Optimization is employed. In this simulation, blue agents (prey) are tasked with consuming green agents (grass), while red agents (predators) aim to capture prey. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents, including predators and prey, learn to execute actions such as moving and eating based on their current state to maximize cumulative reward. These agents inhabit a bounded grid world and move within a Von Neumann neighborhood.
+A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
+
+The model has been tested and demonstrates:
+- MultiGrid
+- Multiple agent types
+- Dynamically removing agents from the grid when eaten or starving to death
+- Learned behavior of Predators and Prey to avoid being eaten or starving to death
+
 
 High-level breakdown of the algorithm's ```step``` function:
 
@@ -23,7 +30,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 ### Installation Instructions
 
 
-**Editor used:** Visual Studio Code 1.85.1
+**Editor used:** Visual Studio Code 1.88.0
 
 1. Clone the repository: 
    ```bash
@@ -105,7 +112,7 @@ This implementation supports different observation ranges per agent: If `obs_ran
 
 In this configuration, predators, after training, tend to hover around grass agents to capture prey. However, this strategy is less frequent when 'energy_loss_per_step_predator' becomes more negative, incentivizing predators to abandon the 'wait-and-see' approach.
 
-Since the prey and predators move within a Von Neumann neighborhood (left/right/up/down/stay), it is theoretically possible for a given prey to consistently outmaneuver a given predator, ensuring it is never caught, under two conditions: 1) the agents move in a turn-based fashion and 2) no other predators are involved in catching that specific prey. This is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it.
+Since the prey and predators strictly move within a Von Neumann neighborhood (left/right/up/down/stay) rather than a Moore neighborhood, it is theoretically possible for a given prey to consistently outmaneuver a given predator, ensuring it is never caught. This under two conditions: 1) the agents move in a turn-based fashion and 2) no other predators are involved in catching that specific prey. This is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it.
 
 However, this prey behavior goes unnoticed in the above display because the simulation is trained in a parallel environment where all agents decide simultaneously, rather than in a turn-based fashion. To recap: the simulation is parallel trained but evaluated in a turn based fashion (as displayed above). 
 
