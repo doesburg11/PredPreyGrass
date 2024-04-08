@@ -4,7 +4,7 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
-### Explanation of the agents and the environment
+### Explanation of the agents, the environment and the learning algorithm
 
  For questions or suggestions, gmail: vandoesburgpeter1
 
