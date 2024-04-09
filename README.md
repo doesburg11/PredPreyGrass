@@ -14,6 +14,7 @@ The model has been tested and demonstrates:
 - Two learning agent types: Predator and Prey; leaning two move in a Von Neumann neighborhood
 - Learned behavior of Predators and Prey to avoid being eaten or starving to death
 - Dynamically removing agents from the grid when eaten (Prey and Gras) or starving to death (Predator and Prey)
+- Episode ends when either all Predators or all Prey are dead
 - Restricted to one Predator agent per cell
 - Restricted to one Prey agent per cell
 - Restricted to one Grass agent per cell
