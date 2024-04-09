@@ -10,11 +10,11 @@ A multi-agent reinforcement learning environment trained using Proximal Policy O
 
 The model demonstrates:
 - Bounded Grid environment
-- Three agent types: Predator, Predy and Gras
-- Two learning agent types: Predator and Prey; learning to move in a Von Neumann neighborhood
-- Agents have partially observations of the entire model state; Prey can see farther than Predators
-- Learned behavior of Predators and Prey to avoid being eaten or starving to death
-- Dynamically removing agents from the grid when eaten (Prey and Gras) or starving to death (Predator and Prey)
+- Three agent types: Predator, Prey and Grass
+- Two learning agent types: Predator and Prey, learning to move in a Von Neumann neighborhood
+- Learning agents have partially observations of the entire model state; Prey can see farther than Predators
+- Learned behavior of Predators and Prey as such to avoid being eaten or starving to death
+- Dynamically removing agents from the grid when eaten (Prey and Grass) or starving to death (Predator and Prey)
 - Episode ends when either all Predators or all Prey are dead
 - Restricted to one similar agent type per cell
 
