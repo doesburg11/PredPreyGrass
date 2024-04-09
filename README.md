@@ -8,10 +8,11 @@
 
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
 
-The demonstrates:
+The model demonstrates:
 - Bounded Grid environment
 - Three agent types: Predator, Predy and Gras
 - Two learning agent types: Predator and Prey; learning to move in a Von Neumann neighborhood
+- Agents have partially observations of the entire model state; Prey can see farther than Predators
 - Learned behavior of Predators and Prey to avoid being eaten or starving to death
 - Dynamically removing agents from the grid when eaten (Prey and Gras) or starving to death (Predator and Prey)
 - Episode ends when either all Predators or all Prey are dead
