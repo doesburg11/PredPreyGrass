@@ -1,5 +1,5 @@
 
-### A Predator, Prey, Grass multiagent learning environment
+### A Predator-Prey-Grass multiagent learning environment
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
