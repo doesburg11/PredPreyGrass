@@ -1,5 +1,5 @@
 
-### A Predator, Prey, Grass multiagent learning environment
+### A Predator-Prey-Grass multiagent learning environment
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
@@ -8,15 +8,15 @@
 
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
 
-The model has been tested and demonstrates:
+The model demonstrates:
 - Bounded Grid environment
-- Three agent types: Predator, Predy and Gras
-- Two learning agent types: Predator and Prey; leaning two move in a Von Neumann neighborhood
-- Learned behavior of Predators and Prey to avoid being eaten or starving to death
-- Dynamically removing agents from the grid when eaten (Prey and Gras) or starving to death (Predator and Prey)
-- Restricted to one Predator agent per cell
-- Restricted to one Prey agent per cell
-- Restricted to one Grass agent per cell
+- Three agent types: Predator, Prey and Grass
+- Two learning agent types: Predator and Prey, learning to move in a Von Neumann neighborhood
+- Learning agents have partially observations of the entire model state; Prey can see farther than Predators
+- Learned behavior of Predators and Prey as such to avoid being eaten or starving to death
+- Dynamically removing agents from the grid when eaten (Prey and Grass) or starving to death (Predator and Prey)
+- Episode ends when either all Predators or all Prey are dead
+- Restricted to one similar agent type per cell
 
 
 High-level breakdown of the algorithm's ```step``` function:
