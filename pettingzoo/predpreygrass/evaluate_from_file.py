@@ -1,6 +1,7 @@
 """
-To avoid command line running:
-- go with the file-explorer to your defined local directory in "parameters_fixed_rewards.py".
+To avoid command line typing for running:
+- go with the file-explorer to your defined local directory in 
+ "config/config_pettingzoo_create_fixed_agents.py".
 - double mousclick the directory with the appropriate time stamp of training
 - right mouseclick "evaluate_from_file.py" and:
 - select "Run Python File in Terminal"
@@ -10,8 +11,10 @@ To avoid command line running:
 - select "Run without debugging"
 """
 
-import environments.predpreygrass_fixed_rewards as predpreygrass
-from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string
+#import environments.predpreygrass_fixed_rewards as predpreygrass
+#from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string
+import environments.predpreygrass_create_agents as predpreygrass
+from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string
 
 
 import os
