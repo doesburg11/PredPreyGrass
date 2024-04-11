@@ -14,7 +14,10 @@ The model demonstrates:
 - Two learning agent types: Predator and Prey, learning to move in a Von Neumann neighborhood
 - Learning agents have partially observations of the entire model state; Prey can see farther than Predators
 - Learned behavior of Predators and Prey as such to avoid being eaten or starving to death
+- Predators and Prey loose energy due to movement and homeostasis
+- Grass gains energy due to photosynthesis
 - Dynamically removing agents from the grid when eaten (Prey and Grass) or starving to death (Predator and Prey)
+- Grass is removed from grid after being eaten by prey, but regrows at the same spot after a certain number of steps 
 - Episode ends when either all Predators or all Prey are dead
 - Restricted to one similar agent type per cell
 
