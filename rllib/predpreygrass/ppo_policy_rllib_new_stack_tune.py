@@ -48,10 +48,11 @@ config = (
     .experimental(_enable_new_api_stack=True)
     .rollouts(env_runner_cls=MultiAgentEnvRunner)
     .resources(
-        num_learner_workers=1,
+        num_learner_workers=0,
         num_gpus_per_learner_worker=0,
         num_cpus_for_local_worker=5,
-    )    .framework("torch")
+    )    
+    .framework("torch")
     .rollouts(
         create_env_on_local_worker=True,
         batch_mode="complete_episodes", #"truncate_episodes",

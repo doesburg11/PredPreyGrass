@@ -11,8 +11,6 @@ from ray.rllib.policy.policy import PolicySpec
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
 
-import ray
-from ray import train, tune
 
 import warnings
 import time
@@ -53,7 +51,7 @@ config = (
     .experimental(_enable_new_api_stack=True)
     .rollouts(
         env_runner_cls=MultiAgentEnvRunner,
-        num_envs_per_worker=2, 
+        num_envs_per_worker=1, 
         num_rollout_workers=1
     )
     .resources(
@@ -84,7 +82,7 @@ config = (
     .evaluation(
         evaluation_num_workers=1,
         evaluation_interval=1,
-        #enable_async_evaluation=True,
+        enable_async_evaluation=True,
         evaluation_config=PPOConfig.overrides(
             # Render the env while evaluating.
             # Note that this will always only render the 1st RolloutWorker's
@@ -103,7 +101,7 @@ if __name__ == "__main__":
     #trainer = PPO(config=config, env="pred_prey_grass")    
     
     print("Training started")
-    for i in range(1000):
+    for i in range(3):
         results = algo.train()
         print(f"R={results['episode_reward_mean']}")
 

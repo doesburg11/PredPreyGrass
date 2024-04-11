@@ -20,7 +20,7 @@ class DiscreteAgent():
         initial_energy=10,
         catch_grass_reward=5.0,
         catch_prey_reward=5.0,
-        energy_loss_per_step=-0.1
+        energy_gain_per_step=-0.1
 
     ):
         #identification agent
@@ -36,7 +36,7 @@ class DiscreteAgent():
         self.action_space_agent = spaces.Discrete(self.n_actions_agent) 
         self.position = np.zeros(2, dtype=np.int32)  # x and y position
         self.energy = initial_energy  # still to implement
-        self.energy_loss_per_step = energy_loss_per_step
+        self.energy_gain_per_step = energy_gain_per_step
         self.catch_grass_reward = catch_grass_reward
         self.catch_prey_reward = catch_prey_reward
 
