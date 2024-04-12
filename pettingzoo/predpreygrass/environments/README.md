@@ -14,5 +14,5 @@ Learning agents of observe energy level of possiblefood agents in their observat
 
     No actual learning agents are created yet so the environment name is a bit misleading.
 
-4. `predator_regrowth_grass.py`: Same as `3.` but `grass` agents regrow after a certain predefined number of steps a the same spot.
+4. `predator_regrowth_grass.py`: Same as `3.` but `grass` agents regrow after a certain predefined number of steps a the same spot. Prerequisite for implementing the creation of learning agents at run time.
 
