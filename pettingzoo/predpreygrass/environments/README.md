@@ -1,5 +1,5 @@
 ### Environments
-In order of devlopment
+In order of development
 1. `predpreygrass_fixed_rewards.py`:
 Learning agents (Predators and Prey) receive fixed pre determined rewards for caputuring food.
 
