@@ -2,8 +2,8 @@
 # implement the recreation of grass when eaten after certain time steps
 
 # AEC pettingzoo predpreygrass environment using random policy
-from environments.predpreygrass_create_agents import raw_env
-from config.config_pettingzoo_create_agents import env_kwargs
+from environments.predpreygrass_regrowth_grass import raw_env
+from config.config_pettingzoo_regrowth_grass import env_kwargs
 
 import numpy as np
 from pettingzoo.utils import agent_selector

@@ -1,6 +1,7 @@
 """
 pred, prey, grass PettingZoo environment. Instead of gaining the rewards of the energy of
-the prey or grass that is caught, this version equates fixed pre-defined rewards,
+the prey or grass that is caught, this version equates fixed pre-defined rewards.
+Additionally, the grass regrows after a certain number of AEC cycles.
 """
 import os
 import numpy as np
@@ -33,15 +34,18 @@ class PredPrey:
         obs_range_predator: int = 5,
         obs_range_prey: int = 7,
         render_mode = None,
-        energy_loss_per_step_predator = -0.1,
-        energy_loss_per_step_prey = -0.1,     
+        energy_gain_per_step_predator = -0.1,
+        energy_gain_per_step_prey = -0.1,  
+        energy_gain_per_step_grass = 1.0,   
         initial_energy_predator = 10.0,
         initial_energy_prey = 10.0,
+        initial_energy_grass = 5.0,
         cell_scale: int = 40,
         x_pygame_window : int = 0,
         y_pygame_window : int = 0,
         catch_grass_reward=5.0,
         catch_prey_reward=5.0,
+        regrowth_grass=True,
         ):
 
         self.x_grid_size = x_grid_size
@@ -56,18 +60,18 @@ class PredPrey:
         self.obs_range_predator = obs_range_predator        
         self.obs_range_prey = obs_range_prey
         self.render_mode = render_mode
-        self.energy_loss_per_step_predator = energy_loss_per_step_predator
-        self.energy_loss_per_step_prey = energy_loss_per_step_prey
+        self.energy_gain_per_step_predator = energy_gain_per_step_predator
+        self.energy_gain_per_step_prey = energy_gain_per_step_prey
+        self.energy_gain_per_step_grass = energy_gain_per_step_grass
         self.cell_scale = cell_scale
         self.initial_energy_predator = initial_energy_predator
         self.initial_energy_prey = initial_energy_prey
+        self.initial_energy_grass = initial_energy_grass
         self.x_pygame_window = x_pygame_window
         self.y_pygame_window = y_pygame_window
         self.catch_grass_reward = catch_grass_reward
         self.catch_prey_reward = catch_prey_reward
-
-        #self.n_initial_active_predator = 6
-        #self.n_initial_active_prey = 8
+        self.regrowth_grass = regrowth_grass
 
         # pygam position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
@@ -185,8 +189,8 @@ class PredPrey:
 
         self.n_agent_type_list = [0, self.n_possible_predator, self.n_possible_prey, self.n_possible_grass]
         self.obs_range_list = [0, self.obs_range_predator, self.obs_range_prey, 0]
-        self.initial_energy_list = [0, self.initial_energy_predator, self.initial_energy_prey, 2]
-        self.energy_loss_per_step_list = [0, self.energy_loss_per_step_predator, self.energy_loss_per_step_prey, 0]
+        self.initial_energy_list = [0, self.initial_energy_predator, self.initial_energy_prey, self.initial_energy_grass]
+        self.energy_gain_per_step_list = [0, self.energy_gain_per_step_predator, self.energy_gain_per_step_prey, self.energy_gain_per_step_grass]
 
         self.agent_id_counter = 0
         self.agent_name_to_instance_dict = {}        
@@ -213,7 +217,7 @@ class PredPrey:
                     initial_energy=self.initial_energy_list[agent_type_nr],
                     catch_grass_reward=self.catch_grass_reward,
                     catch_prey_reward=self.catch_prey_reward,
-                    energy_loss_per_step=self.energy_loss_per_step_list[agent_type_nr]
+                    energy_gain_per_step=self.energy_gain_per_step_list[agent_type_nr]
                 )
                 
                 #  updates lists en records
@@ -274,11 +278,11 @@ class PredPrey:
             if agent_type_nr == self.predator_type_nr: 
                 if agent_energy > 0: # If predator has energy
                     # Move the predator and update the model state
-                    self.agent_instance_in_grid_location[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
+                    self.agent_instance_in_grid_location[self.predator_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
                     self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] -= 1
                     agent_instance.step(action)
                     self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
-                    self.agent_instance_in_grid_location[agent_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
+                    self.agent_instance_in_grid_location[self.predator_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
                     # If there's prey at the new position, remove (eat) one at random
                     x_new_position_predator, y_new_position_predator = agent_instance.position
                     if self.model_state[self.prey_type_nr, x_new_position_predator, y_new_position_predator] > 0:
@@ -292,12 +296,12 @@ class PredPrey:
             elif agent_type_nr == self.prey_type_nr:
                 if agent_energy > 0:  # If prey has energy
                     # Move the prey and update the model state
-                    self.agent_instance_in_grid_location[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
+                    self.agent_instance_in_grid_location[self.prey_type_nr,agent_instance.position[0],agent_instance.position[1]] = None
                     #self.remove_agent_instance_from_position_dict(agent_instance)
                     self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] -= 1
                     agent_instance.step(action)
                     self.model_state[agent_type_nr,agent_instance.position[0],agent_instance.position[1]] += 1
-                    self.agent_instance_in_grid_location[agent_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
+                    self.agent_instance_in_grid_location[self.prey_type_nr, agent_instance.position[0], agent_instance.position[1]] = agent_instance
                     #self.add_agent_instance_to_position_dict(agent_instance)
                     x_new_position_prey, y_new_position_prey = agent_instance.position
 
@@ -313,14 +317,13 @@ class PredPrey:
                         # to prevent eating the same grass instance twice by different prey in the same cycle
                         # This way, the same grass agent cannot be selected for removal by another prey agent in the same cycle.
                         #self.remove_agent_instance_from_position_dict(grass_instance_removed)
-                        self.agent_instance_in_grid_location[self.grass_type_nr,x_new_position_prey,y_new_position_prey] = None
+                        #self.agent_instance_in_grid_location[self.grass_type_nr,x_new_position_prey,y_new_position_prey] = None
                 else: # prey starves to death
                     self.prey_to_be_removed_by_starvation_dict[agent_name] = True
 
         # reset rewards to zero in every step of an agent
         self.agent_reward_dict = dict(zip(self.agent_name_list, 
                                         [0.0 for _ in self.agent_name_list]))
-
 
         if is_last: # removes agents and reap rewards at the end of the cycle
             #print("last step of cycle: ", self.n_aec_cycles)
@@ -340,7 +343,7 @@ class PredPrey:
                         #self.remove_agent_instance_from_position_dict(predator_instance)
                     else: # reap rewards for predator which removes prey
                         catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
-                        step_reward_predator = predator_instance.energy_loss_per_step
+                        step_reward_predator = predator_instance.energy_gain_per_step
                         self.agent_reward_dict[predator_name] += step_reward_predator
                         self.agent_reward_dict[predator_name] += catch_reward_predator
                         # TODO: energy and rewards integrated in future?
@@ -363,7 +366,7 @@ class PredPrey:
                     else: # reap rewards for prey which removes grass
                         #self.agent_reward_dict[prey_name] += -number_of_predators_in_observation
                         catch_reward_prey = prey_instance.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name] 
-                        step_reward_prey = prey_instance.energy_loss_per_step
+                        step_reward_prey = prey_instance.energy_gain_per_step
                         # this is not cumulative reward, agent_reward_dict is set to zero before 'last' step
                         self.agent_reward_dict[prey_name] += step_reward_prey
                         self.agent_reward_dict[prey_name] += catch_reward_prey
@@ -372,14 +375,27 @@ class PredPrey:
             for grass_name in self.grass_name_list:
                 grass_instance = self.agent_name_to_instance_dict[grass_name]
                 # remove grass which gets eaten by a prey
+                grass_instance.energy += grass_instance.energy_gain_per_step
                 if self.grass_to_be_removed_by_prey_dict[grass_name]:
                     #removes grass_name from 'grass_name_list'
                     self.grass_instance_list.remove(grass_instance)
                     self.n_active_grass -= 1
-                    self.agent_instance_in_grid_location[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] = None
+                    #self.agent_instance_in_grid_location[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] = None
                     self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] -= 1
+                    grass_instance.energy = 0.0
+                    grass_instance.is_alive = False
                     #TODO next line crashes but is needed to remove grass from position dict
                     #self.remove_agent_instance_from_position_dict(grass_instance)
+
+                # whether or not grass can regrow
+                if self.regrowth_grass:
+                    # revive dead grass if energy regrows to self.initial_energy_grass, which effectively means that grass regrowths after 5 AEC cycles
+                    if not grass_instance.is_alive and grass_instance.energy > self.initial_energy_grass:
+                        self.n_active_grass += 1
+                        self.grass_instance_list.append(grass_instance)
+                        self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] += 1
+                        grass_instance.is_alive = True
+                             
 
             self.n_aec_cycles = self.n_aec_cycles + 1
             
@@ -712,84 +728,81 @@ class PredPrey:
             pygame.draw.rect(self.screen, color, pos) # type: ignore
 
         def draw_bar_chart_energy(self):
+            # Constants
+            BLACK = (0, 0, 0)
+            RED = (255, 0, 0)
+            BLUE = (0, 0, 255)
+
+            # Create data array predators and prey
+            data_predators = [self.agent_name_to_instance_dict[name].energy for name in self.predator_name_list]
+            data_prey = [self.agent_name_to_instance_dict[name].energy for name in self.prey_name_list]
+
             #postion and size parameters energy chart
             width_energy_chart = self.width_energy_chart #= 1800
 
+            max_energy_value_chart = 30
+            bar_width = 20
+            offset_bars = 20
             x_screenposition = 0   #x_axis screen position?
             y_screenposition = 50
             y_axis_height = 500
             x_axis_width = width_energy_chart - 120 # = 1680
+            x_screenposition_prey_bars = 1450   
             title_x = 1400
             title_y = 30
-            predator_legend_x = 1000
+
+            # Draw y-axis
+            y_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
+            y_axis_y = y_screenposition # 50
+            # x-axis
+            x_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2
+            x_axis_y = y_screenposition + y_axis_height # 50 + 500 = 550
+            x_start_prey_bars = x_screenposition_prey_bars + x_screenposition 
+            x_start_predator_bars = x_axis_x
+            predator_legend_x = x_start_predator_bars
             predator_legend_y = 600
-            prey_legend_x = 1900
+            prey_legend_x = x_screenposition_prey_bars
             prey_legend_y = 600
             title_font_size = 30
             predator_legend_font_size = 30
             prey_legend_font_size = 30
 
-            max_energy_value_chart = 30
-            bar_width = 20
-            offset_bars = 20
-
-            # create data array predators and prey
-            data_predators = []
-            for predator_name in self.predator_name_list:
-                predator_instance = self.agent_name_to_instance_dict[predator_name]
-                predator_energy = predator_instance.energy
-                data_predators.append(predator_energy)
-                #print(predator_name," has energy", round(predator_energy,1))
-            data_prey = []
-            for prey_name in self.prey_name_list:
-                prey_instance = self.agent_name_to_instance_dict[prey_name]
-                prey_energy = prey_instance.energy
-                data_prey.append(prey_energy)
-
-            # Draw y-axis
-            y_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
-            y_axis_y = y_screenposition
-            # Draw x-axis
-            x_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2
-            x_axis_y = y_screenposition + y_axis_height
-
-
             # Draw chart title
             chart_title = "Energy levels agents"
-            title_color = (0, 0, 0)  # black
+            title_color = BLACK  # black
             title_font= pygame.font.Font(None, title_font_size)
             title_text = title_font.render(chart_title, True, title_color)
             self.screen.blit(title_text, (title_x, title_y))
             # Draw legend title for predators
             predator_legend_title= "Predators"
-            predator_legend_color = (255, 0, 0)  # red
+            predator_legend_color = RED  
             predator_legend_font = pygame.font.Font(None, predator_legend_font_size)
             predator_legend_text = predator_legend_font.render(predator_legend_title, True, predator_legend_color)
             self.screen.blit(predator_legend_text, (predator_legend_x, predator_legend_y))
             # Draw legend title for prey
             prey_legend_title= "Prey"
-            prey_legend_color = (0, 0, 255)  # red
+            prey_legend_color = BLUE
             prey_legend_font = pygame.font.Font(None, prey_legend_font_size)
             prey_legend_text = prey_legend_font.render(prey_legend_title, True, prey_legend_color)
             self.screen.blit(prey_legend_text, (prey_legend_x, prey_legend_y))
 
             # Draw y-axis
-            y_axis_color = (0, 0, 0)  # black
+            y_axis_color = BLACK
             pygame.draw.rect(self.screen, y_axis_color, (y_axis_x, y_axis_y, 5, y_axis_height))
             # Draw x-axis
-            x_axis_color = (0, 0, 0)  # black
+            x_axis_color = BLACK
             pygame.draw.rect(self.screen, x_axis_color, (x_axis_x, x_axis_y, x_axis_width, 5))
 
             # Draw predator bars
             for i, value in enumerate(data_predators):
                 bar_height = (value / max_energy_value_chart) * y_axis_height
                 bar_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 + i * (bar_width+offset_bars)
+                bar_x = x_start_predator_bars + i * (bar_width+offset_bars)
                 bar_y = y_screenposition + y_axis_height - bar_height
 
                 color = (255, 0, 0)  # red
 
                 pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
-
 
             # Draw tick labels predators on x-axis
             for i, predator_name in enumerate(self.predator_name_list):
@@ -801,15 +814,24 @@ class PredPrey:
                 font = pygame.font.Font(None, 30)
                 text = font.render(label, True, label_color)
                 self.screen.blit(text, (label_x, label_y))
-            # Draw tick labels prey on x-axis
-            x_screenposition_prey_bars = 750   
 
+            # Draw prey bars
+            for i, value in enumerate(data_prey):
+                bar_height = (value / max_energy_value_chart) * y_axis_height
+                bar_x = x_start_prey_bars + i * (bar_width+offset_bars)
+                bar_y = y_screenposition + y_axis_height - bar_height
+
+                color = (0, 0, 255)  # blue
+
+                pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
+
+            # Draw tick labels prey on x-axis
             for i, prey_name in enumerate(self.prey_name_list):
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
                 label = str(prey_instance.agent_id_nr)
-                label_x = x_screenposition_prey_bars + x_axis_x + i * (bar_width + offset_bars)
+                label_x = x_start_prey_bars+ i * (bar_width+offset_bars)
                 label_y = x_axis_y + 10
-                label_color = (0, 0, 255)  # blue
+                label_color = BLUE
                 font = pygame.font.Font(None, 30)
                 text = font.render(label, True, label_color)
                 self.screen.blit(text, (label_x, label_y))
@@ -835,16 +857,6 @@ class PredPrey:
                     text = font.render(label, True, label_color)
                     self.screen.blit(text, (label_x, label_y))
 
-            # Draw prey bars
-
-            for i, value in enumerate(data_prey):
-                bar_height = (value / max_energy_value_chart) * y_axis_height
-                bar_x = x_screenposition_prey_bars + x_screenposition + 60 + (width_energy_chart - (bar_width * len(data_prey))) // 2 + i * (bar_width+offset_bars)
-                bar_y = y_screenposition + y_axis_height - bar_height
-
-                color = (0, 0, 255)  # blue
-
-                pygame.draw.rect(self.screen, color, (bar_x, bar_y, bar_width, bar_height))
 
 
         

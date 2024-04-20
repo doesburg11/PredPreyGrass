@@ -3,10 +3,10 @@
 # Also, the source code and the trained model is saved in a 
 # separate directory, for reuse and analysis.
 # Algorithm used is PPO from stable_baselines3.
-# The environment used is predpreygrass_create_agents
+# The environment used is predpreygrass_regrowth_grass
 
-import environments.predpreygrass_create_agents as predpreygrass_create_agents
-from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string, local_output_directory
+import environments.predpreygrass_regrowth_grass as predpreygrass_regrowth_grass
+from config.config_pettingzoo_regrowth_grass import env_kwargs, training_steps_string, local_output_directory
 
 import glob
 import os
@@ -131,9 +131,10 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
     # end evaluation
 
 if __name__ == "__main__":
-    env_fn = predpreygrass_create_agents
+    env_fn = predpreygrass_regrowth_grass
     save_model = True # True saves the model and output externally
     watch_model = False
+    #training_steps_string = "10_000_000"
     training_steps = int(training_steps_string)
     num_games = 10
     avg_rewards = [0 for _ in range(num_games)]

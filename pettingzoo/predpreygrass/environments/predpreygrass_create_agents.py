@@ -1,6 +1,10 @@
 """
-pred, prey, grass PettingZoo environment. Instead of gaining the rewards of the energy of
-the prey or grass that is caught, this version equates fixed pre-defined rewards,
+pred/prey/grass PettingZoo environment. Instead of gaining the rewards of the energy of
+the prey or grass that is caught, this version equates fixed pre-defined rewards.
+Additionally the grass regrows after a certain number of AEC cycles.
+Addtionally, the environment is adjusted to to give birth to a new prey agent, when the parent 
+has accumulated a certain amount of energy by eating grass and survived 
+(from starvation or being eaten by a predator).
 """
 import os
 import numpy as np
@@ -44,6 +48,7 @@ class PredPrey:
         y_pygame_window : int = 0,
         catch_grass_reward=5.0,
         catch_prey_reward=5.0,
+        regrowth_grass=True,
         ):
 
         self.x_grid_size = x_grid_size
@@ -69,9 +74,7 @@ class PredPrey:
         self.y_pygame_window = y_pygame_window
         self.catch_grass_reward = catch_grass_reward
         self.catch_prey_reward = catch_prey_reward
-
-        #self.n_initial_active_predator = 6
-        #self.n_initial_active_prey = 8
+        self.regrowth_grass = regrowth_grass
 
         # pygam position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
@@ -242,12 +245,13 @@ class PredPrey:
         self.prey_name_list =  self.create_agent_name_list_from_instance_list(
             self.prey_instance_list
         )
+
         self.grass_name_list =  self.create_agent_name_list_from_instance_list(
             self.grass_instance_list
         )
 
         # deactivate initial agents by setting energy to zero
-        # the ultimate deactivation is handled in the step function
+        # the ultimate deactivation (removal from instance lists) is handled in the step function
         for predator_instance in self.predator_instance_list:
             if predator_instance.agent_id_nr >= self.n_initial_active_predator: # number of initial active predators
                predator_instance.energy = 0.0
@@ -287,6 +291,17 @@ class PredPrey:
                     x_new_position_predator, y_new_position_predator = agent_instance.position
                     if self.model_state[self.prey_type_nr, x_new_position_predator, y_new_position_predator] > 0:
                         prey_instance_removed = self.agent_instance_in_grid_location[self.prey_type_nr][(x_new_position_predator, y_new_position_predator)]
+                        if prey_instance_removed is None:
+                            print("prey_instance_removed is None")
+                            """
+                            print("(x_new_position_predator, y_new_position_predator): ", x_new_position_predator, y_new_position_predator)
+                            print("self.model_state[self.prey_type_nr]: ")
+                            print(np.transpose(self.model_state[self.prey_type_nr]))
+                            print()
+                            print("self.agent_instance_in_grid_location[self.prey_type_nr]: ")
+                            print(np.transpose(self.agent_instance_in_grid_location[self.prey_type_nr]))
+                            """
+
                         self.predator_who_remove_prey_dict[agent_name] = True
                         self.prey_to_be_removed_by_predator_dict[prey_instance_removed.agent_name] = True
                 else:  # If predator has no energy, it starves to death
@@ -325,7 +340,7 @@ class PredPrey:
         self.agent_reward_dict = dict(zip(self.agent_name_list, 
                                         [0.0 for _ in self.agent_name_list]))
 
-        if is_last: # removes agents and reap rewards at the end of the cycle
+        if is_last: # removes agents, reap rewards, eventually regrows grass and create prey at the end of the cycle
             #print("last step of cycle: ", self.n_aec_cycles)
 
             for predator_name in self.predator_name_list:
@@ -356,6 +371,10 @@ class PredPrey:
                     # remove prey which gets eaten by a predator or starves to death
                     if self.prey_to_be_removed_by_predator_dict[prey_name] or self.prey_to_be_removed_by_starvation_dict[prey_name]:
                         # to be implemented: put in exit strategy function for all agents
+                        #print(prey_instance.agent_name, " is removed by predator or starves to death")
+                        #print("self.prey_to_be_removed_by_starvation_dict[prey_name]: ", self.prey_to_be_removed_by_starvation_dict[prey_name])
+                        #print("prey_instance.energy: ", prey_instance.energy)
+                        #print()
                         self.prey_instance_list.remove(prey_instance)
                         self.n_active_prey -= 1
                         self.agent_instance_in_grid_location[self.prey_type_nr,prey_instance.position[0],prey_instance.position[1]] = None
@@ -372,6 +391,44 @@ class PredPrey:
                         self.agent_reward_dict[prey_name] += catch_reward_prey
                         prey_instance.energy += step_reward_prey
                         prey_instance.energy += catch_reward_prey
+                        if prey_instance.energy > 15: #creates new agent when energy is above 15
+                            # later to be implemented in reset function, not iterate over entire prey_name_list
+                            non_active_prey_name_list = [prey_name for prey_name in self.prey_name_list if 
+                                                         not self.agent_name_to_instance_dict[prey_name].is_alive]
+                            #print("non_active_prey_name_list: ", non_active_prey_name_list)
+                            if len(non_active_prey_name_list) > 0:
+                                #print(prey_instance.agent_name, " gives birth to new prey")
+                                prey_instance.energy = 5
+                                #print("self.prey_name_list: ", self.prey_name_list)
+                                new_prey_name = non_active_prey_name_list[-1]
+                                #print("new_prey_name: ", new_prey_name)
+                                new_prey_instance = self.agent_name_to_instance_dict[new_prey_name]
+                                #print("new_prey_instance: ", new_prey_instance)
+                                new_prey_instance.energy = 10.0
+                                new_prey_instance.is_alive = True
+                                self.prey_to_be_removed_by_starvation_dict[new_prey_name] = False # to prevent removal within cycle?
+                                self.n_active_prey += 1
+                                #print("self.prey_instance_list before: ", self.prey_instance_list)
+                                #print("n_active_prey: ", len(self.prey_instance_list))
+                                #print()
+                                self.prey_instance_list.append(new_prey_instance)
+                                #print("self.prey_instance_list after: ", self.prey_instance_list)
+                                #print("n_active_prey: ", len(self.prey_instance_list))
+                                #print()
+                                # find a new random position for the new prey, which is not yet occupied by another prey
+                                # this can be refined to the nearest spot to the parent, which is not yet occupied
+                                # by another prey
+                                position_found = False
+                                while not position_found:
+                                    x_new_position_prey = random.randint(0, self.x_grid_size - 1)
+                                    y_new_position_prey = random.randint(0, self.y_grid_size - 1)
+                                    if self.model_state[self.prey_type_nr, x_new_position_prey, y_new_position_prey] == 0:
+                                        position_found = True
+
+                                new_prey_instance.position = x_new_position_prey, y_new_position_prey
+                                self.agent_instance_in_grid_location[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] = new_prey_instance
+                                self.model_state[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] += 1
+
             for grass_name in self.grass_name_list:
                 grass_instance = self.agent_name_to_instance_dict[grass_name]
                 # remove grass which gets eaten by a prey
@@ -386,15 +443,16 @@ class PredPrey:
                     grass_instance.is_alive = False
                     #TODO next line crashes but is needed to remove grass from position dict
                     #self.remove_agent_instance_from_position_dict(grass_instance)
- 
-                # revive dead grass if energy regrows to self.initial_energy_grass, which effectively means that grass regrowths after 5 AEC cycles
-                if not grass_instance.is_alive and grass_instance.energy > self.initial_energy_grass:
-                    self.n_active_grass += 1
-                    self.grass_instance_list.append(grass_instance)
-                    self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] += 1
-                    grass_instance.is_alive = True
-                             
 
+                # whether or not grass can regrow
+                if self.regrowth_grass:
+                    # revive dead grass if energy regrows to self.initial_energy_grass, which effectively means that grass regrowths after 5 AEC cycles
+                    if not grass_instance.is_alive and grass_instance.energy > self.initial_energy_grass:
+                        self.n_active_grass += 1
+                        self.grass_instance_list.append(grass_instance)
+                        self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] += 1
+                        grass_instance.is_alive = True
+                             
             self.n_aec_cycles = self.n_aec_cycles + 1
             
             
@@ -572,6 +630,7 @@ class PredPrey:
                 position =  prey_instance.position 
                 x = position[0]
                 y = position[1]
+                # this hopefully can be improved with rllib..
                 mask = int((self.max_observation_range - prey_instance.observation_range)/2)
                 if mask == 0:
                     patch = pygame.Surface(
@@ -764,10 +823,6 @@ class PredPrey:
             title_font_size = 30
             predator_legend_font_size = 30
             prey_legend_font_size = 30
-
-
-
-
 
             # Draw chart title
             chart_title = "Energy levels agents"
