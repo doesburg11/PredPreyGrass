@@ -4,7 +4,7 @@ In order of development
 Learning agents (Predators and Prey) receive fixed pre determined rewards for caputuring food.
 
 2. `predatorpreygrass_energy_rewards.py`:
-Learning agents of observe energy level of possiblefood agents in their observation range and receive reward depending on the accumulated energy  of the food agent (and the food agents dies). [note 2024-04-10: this environment is not able to learn very well with the StableBaseline3 PPO algorithm]
+Learning 'alive' agents observe energy level of possible food agents in their observation range and, by capturing, receive a reward depending on the accumulated energy of the caught food agent (the caught food agent dies thereafter). [note 2024-04-10: this environment is not able to learn very well with the StableBaseline3 PPO algorithm]
 
 3. `predatorpreygrass_create_agents.py`: Same as `1.` but `grass` agents regrow after a certain predefined number of steps a the same spot. Prerequisite for implementing the creation of learning agents at run time. Additionaly: `possible_agents` >= `intial_agents` created to give room for future creation of agents during run time. Intially created but inactive agents at first have:
 - attribute `energy` = 0,
