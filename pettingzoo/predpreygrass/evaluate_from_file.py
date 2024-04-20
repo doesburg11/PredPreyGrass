@@ -11,10 +11,14 @@ To avoid command line typing for running:
 - select "Run without debugging"
 """
 
+#depending on the environment used for training, the following imports must be adjusted
 #import environments.predpreygrass_fixed_rewards as predpreygrass
 #from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string
+#import environments.predpreygrass_regrowth_grass as predpreygrass
+#from config.config_pettingzoo_regrowth_grass import env_kwargs, training_steps_string
 import environments.predpreygrass_create_agents as predpreygrass
 from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string
+
 
 
 import os

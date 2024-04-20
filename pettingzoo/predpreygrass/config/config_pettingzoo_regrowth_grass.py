@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "10_000_000"
+training_steps_string = "8_000_000"
 
 env_kwargs = dict(
     # environment parameters
@@ -10,7 +10,7 @@ env_kwargs = dict(
     y_grid_size=16, 
     # agent parameters
     n_possible_predator=6,
-    n_possible_prey=16,
+    n_possible_prey=8,
     n_possible_grass=30,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
