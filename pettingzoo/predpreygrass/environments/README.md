@@ -13,6 +13,6 @@ Learning 'alive' agents observe energy level of possible food agents in their ob
 - attribute `energy` = 0,
 - attribute is_alive = False
 - are not observable for active learning agents (Predator and Prey)
-- are removed from the prey__instance_list
+- are removed from the prey_instance_list
 - are 'out of the game' and are not vizualised
 
