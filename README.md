@@ -114,6 +114,7 @@ The configuration used in the gif-video:
 This implementation supports different observation ranges per agent: If `obs_range < max_observation_range`, the 'outer layers' of observations are set to zero.
 
 ### Emergent Behavior
+See Wiki
 
 
 @readme{PredPreyGrass,
