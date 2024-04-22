@@ -35,7 +35,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 ### Installation Instructions
 
 
-**Editor used:** Visual Studio Code 1.88.0
+**Editor used:** Visual Studio Code 1.88.1
 
 1. Clone the repository: 
    ```bash
@@ -45,7 +45,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
 3. Choose environment: Conda 
-4. Choose interpreter: Python 3.11.5
+4. Choose interpreter: Python 3.11.7
 5. Open a new terminal
 6. Install dependencies:
    ```bash
@@ -66,7 +66,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     
 ### Visualize a random policy
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/random_policy_aec_fixed_rewars.py```
+```pettingzoo/predpreygrass/random_policy_aec_fixed_rewards.py```
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
@@ -92,7 +92,7 @@ Due to unexpected behavior when agents terminate during a simulation in PettingZ
 This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
 
 ### Optionalities of the PredPreyGrass AEC Environment
-The configuration used in the gif-video:
+The benchmark configuration used in the gif-video:
 - `max_cycles=10000`
 - `x_grid_size=16`
 - `y_grid_size=16`
@@ -105,8 +105,8 @@ The configuration used in the gif-video:
 - `action_range=3` (must be odd)
 - `energy_loss_per_step_predator=-0.1`
 - `energy_loss_per_step_prey=-0.05`
-- `initial_energy_predator=10.0`
-- `initial_energy_prey=10.0`
+- `initial_energy_predator=5.0`
+- `initial_energy_prey=5.0`
 - `catch_grass_reward=3.0` (for prey)
 - `catch_prey_reward=5.0` (for predator)
 - `pixel_scale=40`
