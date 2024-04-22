@@ -115,13 +115,7 @@ This implementation supports different observation ranges per agent: If `obs_ran
 
 ### Emergent Behavior
 
-In this configuration, predators, after training, tend to hover around grass agents to capture prey. However, this strategy is less frequent when 'energy_loss_per_step_predator' becomes more negative, incentivizing predators to abandon the 'wait-and-see' approach.
 
-Since the prey and predators strictly move within a Von Neumann neighborhood (left/right/up/down/stay) rather than a Moore neighborhood, it is theoretically possible for a given prey to consistently outmaneuver a given predator, ensuring it is never caught. This under two conditions: 1) the agents move in a turn-based fashion and 2) no other predators are involved in catching that specific prey. This is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it.
-
-However, this prey behavior goes unnoticed in the above display because the simulation is trained in a parallel environment where all agents decide simultaneously, rather than in a turn-based fashion. To recap: the simulation is parallel trained but evaluated in a turn based fashion (as displayed above). 
-
-```
 @readme{PredPreyGrass,
   Title={A Predator, Prey, Grass Multiagent Learning Environment},
   Author={Van Doesburg, P.},
