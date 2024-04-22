@@ -3,7 +3,7 @@
 # Also, the source code and the trained model is saved in a 
 # separate directory, for reuse and analysis.
 # Algorithm used is PPO from stable_baselines3.
-# The environment used is predpreygrass_create_prey c
+# The environment used is predpreygrass_create_prey
 
 import environments.predpreygrass_create_prey as predpreygrass_create_prey
 from config.config_pettingzoo_create_prey import env_kwargs, training_steps_string, local_output_directory

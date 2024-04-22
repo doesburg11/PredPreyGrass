@@ -1,27 +1,35 @@
 """
-To avoid command line typing for running:
-- go with the file-explorer to your defined local directory in 
- "config/config_pettingzoo_create_fixed_agents.py".
-- double mousclick the directory with the appropriate time stamp of training
-- right mouseclick "evaluate_from_file.py" and:
-- select "Run Python File in Terminal"
-- select "Open with"
-- select "Visual Studio Code"
-- select "Run" (in taskbar of Visual Studio Code)
-- select "Run without debugging"
+BENCHMARK CONFIGURATION of the predpreygrass_fixed_rewards.py environment:
+
+training_steps_string = "30_000_000"
+
+env_kwargs = dict(
+    max_cycles=10000, 
+    x_grid_size=16,
+    y_grid_size=16, 
+    n_initial_predator=6,
+    n_initial_prey=8,
+    n_initial_grass=30,
+    max_observation_range=7, # must be odd and not smaller than any obs_range
+    obs_range_predator=5, # must be odd    
+    obs_range_prey=7, # must be odd
+    action_range=3, # must be odd
+    moore_neighborhood_actions=False,
+    energy_loss_per_step_predator = -0.1,
+    energy_loss_per_step_prey = -0.05,     
+    initial_energy_predator = 5.0,
+    initial_energy_prey = 5.0,  
+    catch_grass_reward = 3.0,
+    catch_prey_reward = 3.0,      
+    # visualization parameters
+    cell_scale=40,
+    x_pygame_window=0,
+    y_pygame_window=0,
+)
 """
 
-#depending on the environment used for training, the following imports must be adjusted
-#import environments.predpreygrass_fixed_rewards as predpreygrass
-#from config.config_pettingzoo_fixed_rewards import env_kwargs, training_steps_string
-#import environments.predpreygrass_regrowth_grass as predpreygrass
-#from config.config_pettingzoo_regrowth_grass import env_kwargs, training_steps_string
-#import environments.predpreygrass_create_prey as predpreygrass
-#from config.config_pettingzoo_create_prey import env_kwargs, training_steps_string
-import environments.predpreygrass_create_agents as predpreygrass
-from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string
-
-
+import predprey
+from parameters import env_kwargs, training_steps_string 
 
 import os
 
@@ -116,7 +124,7 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
     # end evaluation
 
 if __name__ == "__main__":
-    env_fn = predpreygrass
+    env_fn = predprey
     model_file_name = "predprey_steps_"+training_steps_string
     script_directory = os.path.dirname(os.path.abspath(__file__))
     loaded_policy = script_directory+"/output/"+model_file_name
@@ -135,4 +143,4 @@ if __name__ == "__main__":
 
     if eval_and_watch_model:
         # Evaluate and watch games
-        eval(env_fn, num_games=5, render_mode="human", **env_kwargs)
+        eval(env_fn, num_games=1, render_mode="human", **env_kwargs)
