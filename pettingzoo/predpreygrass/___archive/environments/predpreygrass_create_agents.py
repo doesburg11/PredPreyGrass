@@ -809,13 +809,13 @@ class PredPreyGrass:
             max_energy_value_chart = 30
             bar_width = 20
             offset_bars = 20
-            x_screenposition = 0   #x_axis screen position?
-            y_screenposition = 50
+            x_screenposition = 350   #x_axis screen position?
+            y_screenposition = 230
             y_axis_height = 500
             x_axis_width = width_energy_chart - 120 # = 1680
             x_screenposition_prey_bars = 1450   
-            title_x = 1400
-            title_y = 20
+            title_x = 1700
+            title_y = 200
 
             # Draw y-axis
             y_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
