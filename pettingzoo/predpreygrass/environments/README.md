@@ -1,17 +1,20 @@
 ### Environments
-In order of development:
-1. `predpreygrass_fixed_rewards.py`:
-Learning agents (Predators and Prey) receive fixed pre determined rewards for capturing food.
+`predatorpreygrass_create_prey.py`:
+Learning agents (Predators and Prey) receive fixed pre determined rewards:
+1. Penalty per time step 
+2. Reward for capturing food 
+3. Penalty for dying (either by being caught or by starving to death)
 
-2. `predatorpreygrass_energy_rewards.py`:
-Learning 'alive' agents observe energy level of possible food agents in their observation range and, by capturing, receive a reward depending on the accumulated energy of the caught food agent (the caught food agent dies thereafter). [note 2024-04-10: this environment is not able to learn very well with the StableBaseline3 PPO algorithm]
+- Grass agents optionally regrow after a number of steps a the same spot. 
+- Predators can be removed or optionally created.
+- Prey can be removed or optionally created.
 
-3. `predatorpreygrass_create_prey.py`: Same as `1.` but Grass agents regrow after a certain predefined number of steps a the same spot. Additionaly: `n_possible_prey` (>= `n_initial_active_prey`) Prey agents are created at `reset`.
-   Additionally at `reset`, with `n_possible_prey` minus `n_initial_active_prey` Prey agents the `energy` is set to zero.
-   This result in removing the inactive Prey agents to be removed from the prey_instance_list at the end of the first cycle.
-   The inactive prey results can be 'created' during run time. Summarized, intially created but inactive Prey agents at the end of the first cycle:
+The removal or creation of Predators or Prey is handeld by the `is_alive` boolean of the agents.
+At `reset`,`n_possible_predator` and `n_possible_prey` are initialized. However, a portion of agents is intialized at `is_alive` = `False`, this will give room for future creation of agents during runtime. Conversely, removal of agents during runtime is handled by setting the attribute `is_alive` from `True` to `False`.
+
+Summarized, intially created but inactive Prey agents at the end of the first cycle:
     - have attribute `energy` = 0,
-    - have attribute is_alive = False
+    - have attribute `is_alive` = False
     - are not observable for active learning agents (Predator and Prey)
     - are removed from the prey_instance_list
     - are 'out of the game' and are not vizualised
