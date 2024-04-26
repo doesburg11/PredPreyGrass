@@ -100,7 +100,7 @@ The benchmark configuration used in the gif-video:
 - `n_prey=8`
 - `n_grass=30`
 - `max_observation_range=7` (must be odd)
-- `obs_range_predator=3` (must be odd)  
+- `obs_range_predator=5` (must be odd)  
 - `obs_range_prey=7` (must be odd)
 - `action_range=3` (must be odd)
 - `energy_loss_per_step_predator=-0.1`
