@@ -9,7 +9,7 @@
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
 
 The model demonstrates:
-- Bounded Grid environment
+- Bounded grid environment
 - Three agent types: Predator, Prey and Grass
 - Two learning agent types: Predator and Prey, learning to move in a Von Neumann neighborhood
 - Learning agents have partially observations of the entire model state; Prey can see farther than Predators
@@ -24,13 +24,13 @@ The model demonstrates:
 
 High-level breakdown of the algorithm's ```step``` function:
 
-1. **Predator Actions**: If the agent is a predator and it's alive, it checks if the predator has energy. If it does, the predator moves and the model state is updated. If the predator lands on a cell with prey, it selects the prey to eat and to be removed at the end of the cycle (AEC). If the predator has no energy left, it is being selected to become inactive at the end of the cycle.
+1. **Predator Actions**: If the agent is a Predator and it's alive, it checks if the Predator has positive energy. If it does, the Predator moves and the model state is updated. If the predator lands on a cell with prey, it selects the prey to eat and to be removed at the end of a cycle (AEC). Otherwise, if the Predator has no positive energy left, it is being selected to become inactive at the end of a cycle. 
 
-2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass it selects the grass to eat and to be removed ath the end of the cycle. If the prey has no energy left, it is being selected to become inactive at the end of the cycle (AEC).
+2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has positive energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass it selects the grass to eat and to be removed ath the end of a cycle. If the prey has no energy left, it is being selected to become inactive at the end of a cycle.
 
-3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles.
+3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles. If the energy of an agent (Predator or Prey) has reached a certain replication-treshold it reproduces a new agent at a random empty spot in the grid environment and the parent transfers a part of its energy to the child.
 
-This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (predator, prey, grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
+This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
 
 ### Installation Instructions
 
