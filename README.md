@@ -1,6 +1,8 @@
 
 ### A Predator-Prey-Grass multiagent learning environment
-<p align="center">The benchmark configuration (without the creation of offspring agents)
+
+<p align="center">The benchmark configuration (without offspring creation)</p>
+<p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
@@ -36,7 +38,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 The trained agents are displaying a classic Lotka–Volterra pattern over time. This pattern consistencay cannot be obtained with a random policy and the same starting population:
 
 <p align="center">The population dynamics of Predators and Prey</p>
-<p align="center">The population dynamics of Predators and Prey
+<p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
