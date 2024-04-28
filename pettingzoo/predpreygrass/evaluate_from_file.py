@@ -18,8 +18,14 @@ To avoid command line typing for running:
 #from config.config_pettingzoo_regrowth_grass import env_kwargs, training_steps_string
 #import environments.predpreygrass_create_prey as predpreygrass
 #from config.config_pettingzoo_create_prey import env_kwargs, training_steps_string
-import environments.predpreygrass_create_agents as predpreygrass
-from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string
+#import environments.predpreygrass_create_agents as predpreygrass
+#from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string
+import environments.predpreygrass_record_n_agents as predpreygrass
+from config.config_pettingzoo import env_kwargs, training_steps_string, local_output_directory
+# displaying the population of predators and prey
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
 
 
 
@@ -98,6 +104,38 @@ def eval(env_fn, num_games: int = 100, render_mode: str | None = None, **env_kwa
                 #print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
             agent_selector.next()   # called at end of cycle
 
+        plt.clf()
+        plt.plot(raw_env.pred_prey_env.n_active_predator_list, 'r')
+        plt.plot(raw_env.pred_prey_env.n_active_prey_list, 'b')
+        plt.title('Predator and Prey Population', weight='bold')
+        plt.xlabel('Time steps', weight='bold')
+
+        ax = plt.gca()
+
+        # Set x and y limits
+        ax.set_xlim([0, raw_env.pred_prey_env.n_aec_cycles])  
+        ax.set_ylim([0, max(raw_env.pred_prey_env.n_active_predator_list + raw_env.pred_prey_env.n_active_prey_list)])  
+
+
+        # Remove box/spines
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+
+        # Make axes thicker
+        plt.axhline(0, color='black', linewidth=4)
+        plt.axvline(0, color='black', linewidth=4)
+        # Make tick marks thicker
+        plt.tick_params(width=2)
+
+
+        population_dir = output_directory + 'population/'
+        os.makedirs(population_dir, exist_ok=True) 
+        file_name = population_dir+'/PredPreyPopulation_episode_'+str(i)+'.pdf'
+        plt.savefig(file_name)
+
+
         avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
         avg_cycles[i]= raw_env.pred_prey_env.n_aec_cycles
         std_rewards[i]= std_dev(cumulative_rewards, avg_rewards[i])
@@ -119,13 +157,14 @@ if __name__ == "__main__":
     env_fn = predpreygrass
     model_file_name = "predprey_steps_"+training_steps_string
     script_directory = os.path.dirname(os.path.abspath(__file__))
-    loaded_policy = script_directory+"/output/"+model_file_name
+    output_directory = script_directory+"/output/"
+    loaded_policy = output_directory + model_file_name
     print("loaded_policy:",loaded_policy)
     print()
 
 
-    eval_model = False
-    eval_and_watch_model = True
+    eval_model = True
+    eval_and_watch_model = False
     training_steps = int(training_steps_string)
 
       
