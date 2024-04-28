@@ -6,6 +6,17 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
+### Emerging Behavior
+The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This result cannot be obtained with a random policy in the same setting:
+
+<p align="center">The population dynamics of PPO trained Predators and Prey</p>
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
+</p>
+
+More emergening behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
+
+
 ### Explanation of the agents, the environment and the learning algorithm
 
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
@@ -34,18 +45,7 @@ High-level breakdown of the algorithm's ```step``` function:
 
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
 
-### Emergent Behavior
-The trained agents are displaying a classic Lotka–Volterra pattern over time. This pattern consistencay cannot be obtained with a random policy and the same starting population:
-
-<p align="center">The population dynamics of Predators and Prey</p>
-<p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
-</p>
-
-More emergent behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
-
 ### Installation Instructions
-
 
 **Editor used:** Visual Studio Code 1.88.1
 
