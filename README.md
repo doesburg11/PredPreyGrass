@@ -42,7 +42,7 @@ The trained agents are displaying a classic Lotka–Volterra pattern over time. 
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
-More emergent behavior and findings are described in the wiki.
+More emergent behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
 
 ### Installation Instructions
 
