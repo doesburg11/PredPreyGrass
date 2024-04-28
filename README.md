@@ -1,6 +1,6 @@
 
 ### A Predator-Prey-Grass multiagent learning environment
-<p align="center">
+<p align="center">The benchmark configuration (without the creation of offspring agents)
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
@@ -8,7 +8,7 @@
 
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Agents,  Predators and Prey, learn to execute movement actions based on their partially observable environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
 
-The model demonstrates:
+The model demonstrates for instance:
 - Bounded grid environment
 - Three agent types: Predator, Prey and Grass
 - Two learning agent types: Predator and Prey, learning to move in a Von Neumann neighborhood
@@ -31,6 +31,15 @@ High-level breakdown of the algorithm's ```step``` function:
 3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles. If the energy of an agent (Predator or Prey) has reached a certain replication-treshold it reproduces a new agent at a random empty spot in the grid environment and the parent transfers a part of its energy to the child.
 
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
+
+### Emergent Behavior
+The trained agents are displaying a classic Lotka–Volterra pattern over time:
+
+<p align="center">The population dynamics of Predators and Prey
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.pdf" width="700" height="300"/>
+</p>
+
+More emergent behavior and findings are described in the wiki.
 
 ### Installation Instructions
 
@@ -104,8 +113,6 @@ The benchmark configuration used in the gif-video :
 
 This implementation supports different observation ranges per agent: If `obs_range < max_observation_range`, the 'outer layers' of observations are set to zero.
 
-### Emergent Behavior
-See Wiki
 
 
 @readme{PredPreyGrass,
