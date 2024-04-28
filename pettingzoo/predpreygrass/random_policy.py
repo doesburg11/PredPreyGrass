@@ -2,16 +2,10 @@
 # implement the recreation of grass when eaten after certain time steps
 
 # AEC pettingzoo predpreygrass environment using random policy
-from environments.predpreygrass_record_n_agents import raw_env
+from environments.predpreygrass import raw_env
 from config.config_pettingzoo import env_kwargs
 
 from pettingzoo.utils import agent_selector
-
-import matplotlib
-matplotlib.use('Agg')
-
-from matplotlib import pyplot as plt
-
 
 num_games = 1
 if num_games > 1: 
@@ -65,16 +59,6 @@ for i in range(num_games):
         if agent_selector.is_last(): #
             n_aec_cycles += 1
         agent_selector.next()   
-
-    #print(f"Game {i+1} done")
-    #print("Active predators:")
-    #print(raw_env.pred_prey_env.n_active_predator_list)  
-    #print("Active prey:")
-    #print(raw_env.pred_prey_env.n_active_prey_list)  
-    plt.clf()
-    plt.plot(raw_env.pred_prey_env.n_active_predator_list, 'r')
-    plt.plot(raw_env.pred_prey_env.n_active_prey_list, 'b')
-    plt.savefig('PredPreyPopulation.pdf')
 
     avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_aec_cycles

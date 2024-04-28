@@ -66,33 +66,24 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
     
 ### Visualize a random policy
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/random_policy_aec_fixed_rewards.py```
+```pettingzoo/predpreygrass/random_policy.py```
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
-```pettingzoo/predpreygrass/config/config_pettingzoo_fixed_rewards.py```
+```pettingzoo/predpreygrass/config/config_pettingzoo.py```
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/train_sb3_vector_ppo_parallel_fixed_rewards.py```
+```pettingzoo/predpreygrass/train_sb3_vector_ppo_parallel.py```
 To evaluate and visualize after training follow instructions in:
 ```pettingzoo/predpreygrass/evaluate_from_file.py```
 
-### PettingZoo Modification
-
-The PredPreyGrass environment is a significant modification of PettingZoo's (SISL) Pursuit_v4 environment (https://pettingzoo.farama.org/environments/sisl/pursuit/):
-1. Added an additional 'predator' agent that can die of starvation.
-2. Converted the Pursuer agent to a 'prey' agent, susceptible to being eaten by a predator.
-3. Transformed the Evaders agent into a 'grass' agent, permanently 'frozen' and immovable, consumable by prey.
-
-Similar to PettingZoo Pursuit, grass agents are excluded from the 'AECEnv.agents' array for computational efficiency.
-
 ### The AEC Environment Architecture
 
-Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death. The removal of agents is managed by 'PredPrey.predator_instance_list' and 'PredPrey.prey_instance_list.' The active status of agents is furthermore tracked by the boolean attribute ```alive``` of the agents.
+Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death or creation. The removal of agents is managed by 'PredPrey.predator_instance_list' and `PredPreyGrass.[predator/prey]_instance_list`. The active status of agents is furthermore tracked by the boolean attribute `alive` of the agents. Optionally, a number of agents have this attribute `alive` set to `False` at `reset`, which gives room for creation of agents during run time. If so, the agents are (re)added to `PredPreyGrass.[predator/prey]_instance_list`.
 
-This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training.
+This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training. In that sense it is comparable to SuperSuit's "Black Death" wrapper.
 
 ### Optionalities of the PredPreyGrass AEC Environment
-The benchmark configuration used in the gif-video:
+The benchmark configuration used in the gif-video :
 - `max_cycles=10000`
 - `x_grid_size=16`
 - `y_grid_size=16`

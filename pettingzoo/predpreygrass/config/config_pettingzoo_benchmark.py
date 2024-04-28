@@ -1,5 +1,5 @@
 # this file is used to set the benchmark parameters for the PredPreyGrass environment
-# the benchamrk is used to test adjusments to the environment if it is still performing as expected
+# the benchamrk is used to test if it is still performing as expected when adjusted
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
 training_steps_string = "10_000_000"

@@ -9,8 +9,8 @@ env_kwargs = dict(
     x_grid_size=16,
     y_grid_size=16, 
     # agent parameters
-    n_possible_predator=40,
-    n_possible_prey=60,
+    n_possible_predator=18,
+    n_possible_prey=24,
     n_possible_grass=30,
     n_initial_active_predator=6,
     n_initial_active_prey=8,

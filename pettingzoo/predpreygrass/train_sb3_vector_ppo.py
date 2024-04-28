@@ -7,7 +7,7 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 
-import environments.predpreygrass_record_n_agents as predpreygrass
+import environments.predpreygrass as predpreygrass
 from config.config_pettingzoo import env_kwargs, training_steps_string, local_output_directory
 
 import glob
