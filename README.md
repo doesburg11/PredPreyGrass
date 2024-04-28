@@ -36,7 +36,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 The trained agents are displaying a classic Lotka–Volterra pattern over time:
 
 <p align="center">The population dynamics of Predators and Prey
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="5500" height="300"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="550" height="300"/>
 </p>
 
 More emergent behavior and findings are described in the wiki.
