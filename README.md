@@ -33,7 +33,7 @@ High-level breakdown of the algorithm's ```step``` function:
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level.
 
 ### Emergent Behavior
-The trained agents are displaying a classic Lotka–Volterra pattern over time. This pattern consistencay cannot be obtained with the same starting population adn a random policy:
+The trained agents are displaying a classic Lotka–Volterra pattern over time. This pattern consistencay cannot be obtained with the same starting population and a random policy:
 
 <p align="center">The population dynamics of Predators and Prey
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="550" height="300"/>
