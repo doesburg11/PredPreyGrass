@@ -13,10 +13,8 @@ After training, you can view the logs in TensorBoard by running the following co
 
 """
 # Continue training for X steps and log the results to TensorBoard
-#import environments.predpreygrass_fixed_rewards as predpreygrass_fixed_rewards
-#from config.parameters_fixed_rewards import env_kwargs, training_steps_string 
-import environments.predpreygrass_create_agents as predpreygrass_fixed_rewards
-from config.config_pettingzoo_create_agents import env_kwargs, training_steps_string 
+import environments.predpreygrass as predpreygrass_fixed_rewards
+from config.config_pettingzoo import env_kwargs, training_steps_string 
 
 import os 
 
