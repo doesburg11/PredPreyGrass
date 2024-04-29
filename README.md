@@ -33,7 +33,7 @@ More emergening behavior and findings are described in the [wiki](https://github
 
 ### Installation Instructions
 
-**Editor used:** Visual Studio Code 1.88.1
+**Editor used:** Visual Studio Code 1.88.1 on Linux Mint 21.3 Cinnamon
 
 1. Clone the repository: 
    ```bash
