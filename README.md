@@ -42,14 +42,14 @@ More emergening behavior and findings are described in the [wiki](https://github
 2. Open Visual Studio Code and execute:
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
-3. Choose environment: Conda 
-4. Choose interpreter: Python 3.11.7
-5. Open a new terminal
-6. Install dependencies:
+   - Choose environment: Conda 
+   - Choose interpreter: Python 3.11.7
+   - Open a new terminal
+   - Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-7. If encountering "ERROR: Failed building wheel for box2d-py," run:
+3. If encountering "ERROR: Failed building wheel for box2d-py," run:
    ```bash
    conda install swig
    ```
@@ -57,8 +57,8 @@ More emergening behavior and findings are described in the [wiki](https://github
    ```bash
    pip install box2d box2d-kengz
    ```
-8. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
-9. If facing "libGL error: failed to load driver: swrast," execute:
+4. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
+5. If facing "libGL error: failed to load driver: swrast," execute:
     ```bash
     conda install -c conda-forge gcc=12.1.0
     
