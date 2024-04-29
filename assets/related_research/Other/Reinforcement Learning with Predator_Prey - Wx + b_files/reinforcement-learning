@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="profile" href="http://gmpg.org/xfn/11">
+    <meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+
+	<!-- This site is optimized with the Yoast SEO Premium plugin v19.7 (Yoast SEO v21.9.1) - https://yoast.com/wordpress/plugins/seo/ -->
+	<title>Book Details - MIT Press</title>
+	<meta name="description" content="MIT Press - Book Details" />
+	<link rel="canonical" href="https://mitpress.mit.edu/book-details/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="Book Details" />
+	<meta property="og:description" content="MIT Press - Book Details" />
+	<meta property="og:url" content="https://mitpress.mit.edu/book-details/" />
+	<meta property="og:site_name" content="MIT Press" />
+	<meta property="article:publisher" content="https://www.facebook.com/mitpress" />
+	<meta property="article:modified_time" content="2024-01-12T16:07:29+00:00" />
+	<meta property="og:image" content="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2023/08/24110528/Screenshot-2023-08-24-at-11.04.35-AM.png" />
+	<meta property="og:image:width" content="2609" />
+	<meta property="og:image:height" content="1413" />
+	<meta property="og:image:type" content="image/png" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="@mitpress" />
+	<meta name="twitter:label1" content="Est. reading time" />
+	<meta name="twitter:data1" content="1 minute" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https://schema.org","@graph":[{"@type":["WebPage","ItemPage"],"@id":"https://mitpress.mit.edu/book-details/","url":"https://mitpress.mit.edu/book-details/","name":"Book Details - MIT Press","isPartOf":{"@id":"https://mitpress.mit.edu/#website"},"datePublished":"2021-12-01T14:22:19+00:00","dateModified":"2024-01-12T16:07:29+00:00","description":"MIT Press - Book Details","breadcrumb":{"@id":"https://mitpress.mit.edu/book-details/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https://mitpress.mit.edu/book-details/"]}]},{"@type":"BreadcrumbList","@id":"https://mitpress.mit.edu/book-details/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://mitpress.mit.edu/"},{"@type":"ListItem","position":2,"name":"Book Details"}]},{"@type":"WebSite","@id":"https://mitpress.mit.edu/#website","url":"https://mitpress.mit.edu/","name":"The MIT Press","description":"The MIT Press, scholarly publishing, located in Cambridge, MA USA","publisher":{"@id":"https://mitpress.mit.edu/#organization"},"alternateName":"MIT Press","potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://mitpress.mit.edu/?s={search_term_string}"},"query-input":"required name=search_term_string"}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https://mitpress.mit.edu/#organization","name":"The MIT Press, Massachusetts Institute of Technology","alternateName":"The MIT Press","url":"https://mitpress.mit.edu/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https://mitpress.mit.edu/#/schema/logo/image/","url":"https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/11/03104305/MITPcolophon_blog.jpg","contentUrl":"https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/11/03104305/MITPcolophon_blog.jpg","width":1050,"height":700,"caption":"The MIT Press, Massachusetts Institute of Technology"},"image":{"@id":"https://mitpress.mit.edu/#/schema/logo/image/"},"sameAs":["https://www.facebook.com/mitpress","https://twitter.com/mitpress","https://www.instagram.com/mitpress","https://youtube.com/c/TheMITPress"]}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel='dns-prefetch' href='//js.hs-scripts.com' />
+<link rel="alternate" type="application/rss+xml" title="MIT Press &raquo; Feed" href="https://mitpress.mit.edu/feed/" />
+<link rel="alternate" type="application/rss+xml" title="MIT Press &raquo; Comments Feed" href="https://mitpress.mit.edu/comments/feed/" />
+<link rel="alternate" type="text/calendar" title="MIT Press &raquo; iCal Feed" href="https://mitpress.mit.edu/events/?ical=1" />
+<script type="text/javascript">
+/* <![CDATA[ */
+window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/14.0.0\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/mitpress.mit.edu\/wp-includes\/js\/wp-emoji-release.min.js?ver=6.4.2"}};
+/*! This file is auto-generated */
+!function(i,n){var o,s,e;function c(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function p(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data),r=(e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0),new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data));return t.every(function(e,t){return e===r[t]})}function u(e,t,n){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\uddfa\ud83c\uddf3","\ud83c\uddfa\u200b\ud83c\uddf3")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!n(e,"\ud83e\udef1\ud83c\udffb\u200d\ud83e\udef2\ud83c\udfff","\ud83e\udef1\ud83c\udffb\u200b\ud83e\udef2\ud83c\udfff")}return!1}function f(e,t,n){var r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):i.createElement("canvas"),a=r.getContext("2d",{willReadFrequently:!0}),o=(a.textBaseline="top",a.font="600 32px Arial",{});return e.forEach(function(e){o[e]=t(a,e,n)}),o}function t(e){var t=i.createElement("script");t.src=e,t.defer=!0,i.head.appendChild(t)}"undefined"!=typeof Promise&&(o="wpEmojiSettingsSupports",s=["flag","emoji"],n.supports={everything:!0,everythingExceptFlag:!0},e=new Promise(function(e){i.addEventListener("DOMContentLoaded",e,{once:!0})}),new Promise(function(t){var n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"}),a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=function(e){c(n=e.data),a.terminate(),t(n)})}catch(e){}c(n=f(s,u,p))}t(n)}).then(function(e){for(var t in e)n.supports[t]=e[t],n.supports.everything=n.supports.everything&&n.supports[t],"flag"!==t&&(n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&n.supports[t]);n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&!n.supports.flag,n.DOMReady=!1,n.readyCallback=function(){n.DOMReady=!0}}).then(function(){return e}).then(function(){var e;n.supports.everything||(n.readyCallback(),(e=n.source||{}).concatemoji?t(e.concatemoji):e.wpemoji&&e.twemoji&&(t(e.twemoji),t(e.wpemoji)))}))}((window,document),window._wpemojiSettings);
+/* ]]> */
+</script>
+<link rel='stylesheet' id='sbi_styles-css' href='https://mitpress.mit.edu/wp-content/plugins/instagram-feed/css/sbi-styles.min.css?ver=6.2.10' type='text/css' media='all' />
+<style id='wp-emoji-styles-inline-css' type='text/css'>
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+</style>
+<link rel='stylesheet' id='wp-block-library-css' href='https://mitpress.mit.edu/wp-includes/css/dist/block-library/style.min.css?ver=6.4.2' type='text/css' media='all' />
+<style id='classic-theme-styles-inline-css' type='text/css'>
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+</style>
+<style id='global-styles-inline-css' type='text/css'>
+body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgba(6,147,227,1) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgba(252,185,0,1) 0%,rgba(255,105,0,1) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgba(255,105,0,1) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgba(255, 255, 255, 1), 6px 6px rgba(0, 0, 0, 1);--wp--preset--shadow--crisp: 6px 6px 0px rgba(0, 0, 0, 1);}:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flow > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-flow > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-flow > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignleft{float: left;margin-inline-start: 0;margin-inline-end: 2em;}body .is-layout-constrained > .alignright{float: right;margin-inline-start: 2em;margin-inline-end: 0;}body .is-layout-constrained > .aligncenter{margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > :where(:not(.alignleft):not(.alignright):not(.alignfull)){max-width: var(--wp--style--global--content-size);margin-left: auto !important;margin-right: auto !important;}body .is-layout-constrained > .alignwide{max-width: var(--wp--style--global--wide-size);}body .is-layout-flex{display: flex;}body .is-layout-flex{flex-wrap: wrap;align-items: center;}body .is-layout-flex > *{margin: 0;}body .is-layout-grid{display: grid;}body .is-layout-grid > *{margin: 0;}:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+.wp-block-navigation a:where(:not(.wp-element-button)){color: inherit;}
+:where(.wp-block-post-template.is-layout-flex){gap: 1.25em;}:where(.wp-block-post-template.is-layout-grid){gap: 1.25em;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+.wp-block-pullquote{font-size: 1.5em;line-height: 1.6;}
+</style>
+<link rel='stylesheet' id='supapress-css' href='https://mitpress.mit.edu/wp-content/plugins/supapress/includes/css/styles.min.css?ver=2.23.4' type='text/css' media='all' />
+<link rel='stylesheet' id='university-press-theme-style-css' href='https://mitpress.mit.edu/wp-content/themes/university_press_theme/style.css?ver=1.34.1' type='text/css' media='all' />
+<link rel='stylesheet' id='child-style-css' href='https://mitpress.mit.edu/wp-content/themes/mit-press/style.css?ver=1.0.5' type='text/css' media='all' />
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-includes/js/jquery/jquery.min.js?ver=3.7.1" id="jquery-core-js"></script>
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1" id="jquery-migrate-js"></script>
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-content/themes/mit-press/js/app.min.js?ver=1.0.5" id="child-scripts-js"></script>
+<link rel="https://api.w.org/" href="https://mitpress.mit.edu/wp-json/" /><link rel="alternate" type="application/json" href="https://mitpress.mit.edu/wp-json/wp/v2/pages/33" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://mitpress.mit.edu/xmlrpc.php?rsd" />
+<link rel='shortlink' href='https://mitpress.mit.edu/?p=33' />
+<link rel="alternate" type="application/json+oembed" href="https://mitpress.mit.edu/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmitpress.mit.edu%2Fbook-details%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://mitpress.mit.edu/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fmitpress.mit.edu%2Fbook-details%2F&#038;format=xml" />
+<meta name="generator" content="Site Kit by Google 1.123.1" />			<!-- DO NOT COPY THIS SNIPPET! Start of Page Analytics Tracking for HubSpot WordPress plugin v10.2.23-->
+			<script type="text/javascript" class="hsq-set-content-id" data-content-id="standard-page">
+				var _hsq = _hsq || [];
+				_hsq.push(["setContentType", "standard-page"]);
+			</script>
+			<!-- DO NOT COPY THIS SNIPPET! End of Page Analytics Tracking for HubSpot WordPress plugin -->
+			<meta name="tec-api-version" content="v1"><meta name="tec-api-origin" content="https://mitpress.mit.edu"><link rel="alternate" href="https://mitpress.mit.edu/wp-json/tribe/events/v1/" />    <script>
+        dataLayer = [{}];
+    </script>
+
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6QXGK7CKTT"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+
+        
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+
+        gtag('js', new Date());
+
+        gtag('config', 'G-6QXGK7CKTT');
+    </script>
+
+
+<script type='text/javascript' src='https://platform-api.sharethis.com/js/sharethis.js#property=646ce5bf40353a0019caeee8&product=inline-share-buttons' async='async'></script>
+<link rel="icon" href="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2021/11/26163528/cropped-mitp-colophon-white-black-bkg-32x32.gif" sizes="32x32" />
+<link rel="icon" href="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2021/11/26163528/cropped-mitp-colophon-white-black-bkg-192x192.gif" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2021/11/26163528/cropped-mitp-colophon-white-black-bkg-180x180.gif" />
+<meta name="msapplication-TileImage" content="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2021/11/26163528/cropped-mitp-colophon-white-black-bkg-270x270.gif" />
+    </head>
+<body class="page-template page-template-templates page-template-template-full-width page-template-templatestemplate-full-width-php page page-id-33 wp-custom-logo tribe-no-js book-details">
+<div id="page" class="site">
+        <a class="skip-link" href="#content">Skip to content</a>
+
+        <header role="banner" id="masthead" class="site-header js-site-header">
+                <div class="site-branding site-container">
+            
+        <div class="site-branding__logo">
+
+            <a href="https://mitpress.mit.edu/" class="custom-logo-link" rel="home"><img width="386" height="610" src="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo.png" class="custom-logo" alt="MIT Press" decoding="async" fetchpriority="high" srcset="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo.png 386w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-190x300.png 190w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-309x488.png 309w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-127x200.png 127w" sizes="(max-width: 386px) 100vw, 386px" /></a>
+        </div>
+
+        
+        <div class="site-navigation js-site-navigation site-navigation--w-fixed-nav-logo">
+            <div class="site-container site-navigation__container">
+
+                
+        <nav class="main-navigation js-main-navigation" role="navigation"
+             aria-label="main menu: press escape to close the menu">
+            <div class="menu-main-menu-container"><ul id="primary-menu" class="menu"><li class="site-navigation__fixed-nav-logo"><a href="https://mitpress.mit.edu" role="link"><img src="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2021/11/26163520/mitp-colophon-white-black-bkg.gif" alt="MIT Press"></a></li><li id="menu-item-10853" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10853"><a href="#" aria-haspopup="true" aria-expanded="false">Books</a>
+<ul class="sub-menu">
+	<li id="menu-item-77" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-77"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-121" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-121"><a href="https://mitpress.mit.edu/books/subjects/">View all subjects</a></li>
+		<li id="menu-item-11089" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11089"><a href="https://mitpress.mit.edu/new-releases/">New releases</a></li>
+		<li id="menu-item-85" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-85"><a href="https://mitpress.mit.edu/catalogs/">Catalogs</a></li>
+		<li id="menu-item-9600" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9600"><a href="https://mitpress.mit.edu/textbooks/">Textbooks</a></li>
+		<li id="menu-item-118" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-118"><a href="https://mitpress.mit.edu/books/series/">Series</a></li>
+		<li id="menu-item-13156" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-13156"><a href="https://mitpress.mit.edu/awards/">Awards</a></li>
+	</ul>
+</li>
+	<li id="menu-item-117" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-117"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-76" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-76"><a href="https://mitpress.mit.edu/authors/">Authors</a></li>
+		<li id="menu-item-9677" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9677"><a href="https://mitpress.mit.edu/publishers/">Distributed presses</a></li>
+		<li id="menu-item-3490" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3490"><a target="_blank" rel="noopener" href="https://thereader.mitpress.mit.edu/">The MIT Press Reader</a></li>
+		<li id="menu-item-3492" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3492"><a target="_blank" rel="noopener" href="https://newbooksnetwork.com/category/up-partners/mit-press-podcast">Podcasts</a></li>
+		<li id="menu-item-12667" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-12667"><a href="https://mitpress.mit.edu/collections/">Collections</a></li>
+	</ul>
+</li>
+	<li id="menu-item-124" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-124"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3434" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3434"><a target="_blank" rel="noopener" href="https://direct.mit.edu/" aria-haspopup="true" aria-expanded="false">MIT Press Direct</a><p class="menu-item-description">MIT Press Direct is a distinctive collection of influential MIT Press books curated for scholars and libraries worldwide.</p>
+		<ul class="sub-menu">
+			<li id="menu-item-3435" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3435"><a href="https://direct.mit.edu/">Learn more</a></li>
+		</ul>
+</li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-3494" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3494"><a href="#" aria-haspopup="true" aria-expanded="false">Journals</a>
+<ul class="sub-menu">
+	<li id="menu-item-3495" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3495"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3497" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3497"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/browse_by_topic">Journals all topics</a></li>
+		<li id="menu-item-3498" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3498"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/browse_by_topic#econ">Economics</a></li>
+		<li id="menu-item-3499" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3499"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/browse_by_topic#interpol">International Affairs, History, &#038; Political Science</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3496" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3496"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3500" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3500"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/browse_by_topic#artshuman">Arts &#038; Humanities</a></li>
+		<li id="menu-item-3501" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3501"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/browse_by_topic#scitech">Science &#038; Technology</a></li>
+		<li id="menu-item-11045" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11045"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals/pages/open-access">Open access</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3503" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3503"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3502" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3502"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals" aria-haspopup="true" aria-expanded="false">MIT Press journals</a><p class="menu-item-description">MIT Press began publishing journals in 1970 with the first volumes of <em>Linguistic Inquiry</em> and the <em>Journal of Interdisciplinary History</em>. Today we publish over 30 titles in the arts and humanities, social sciences, and science and technology.</p>
+		<ul class="sub-menu">
+			<li id="menu-item-3504" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3504"><a target="_blank" rel="noopener" href="https://direct.mit.edu/journals">Learn more</a></li>
+		</ul>
+</li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-3430" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3430"><a aria-haspopup="true" aria-expanded="false">Open Access</a>
+<ul class="sub-menu">
+	<li id="menu-item-3464" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3464"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-18875" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18875"><a href="https://mitpress.mit.edu/open-access-at-mit-press/">Open access at the MIT Press</a></li>
+		<li id="menu-item-18876" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18876"><a href="https://mitpress.mit.edu/open-access-at-mit-press/initiatives/">Open access initiatives</a></li>
+		<li id="menu-item-3467" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3467"><a target="_blank" rel="noopener" href="https://direct.mit.edu/books/pages/direct-to-open">Direct to Open</a></li>
+		<li id="menu-item-18847" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18847"><a href="https://mitpress.mit.edu/open-access-at-mit-press/mit-open-publishing-services/">MIT Open Publishing Services</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3468" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3468"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-18878" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18878"><a href="https://mitpress.mit.edu/open-access-at-mit-press/books/">Open access books</a></li>
+		<li id="menu-item-18877" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-18877"><a href="https://mitpress.mit.edu/open-access-at-mit-press/journals/">Open access journals</a></li>
+		<li id="menu-item-11873" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-11873"><a href="https://mitpressonpubpub.mitpress.mit.edu/">MIT Press Open Access @ PubPub</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3470" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3470"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-10527" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-10527"><a href="https://mitpress.mit.edu/?page_id=9671" aria-haspopup="true" aria-expanded="false">Open access</a><p class="menu-item-description">The MIT Press has been a leader in open access book publishing for over two decades, beginning in 1995 with the publication of William Mitchell’s City of Bits, which appeared simultaneously in print and in a dynamic, open web edition.</p>
+		<ul class="sub-menu">
+			<li id="menu-item-10445" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-10445"><a href="/about-our-oa-program/">Learn more</a></li>
+		</ul>
+</li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-3431" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3431"><a href="#" aria-haspopup="true" aria-expanded="false">Info for</a>
+<ul class="sub-menu">
+	<li id="menu-item-3474" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3474"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3482" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3482"><a href="https://mitpress.mit.edu/for-authors/">Current authors</a></li>
+		<li id="menu-item-3478" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3478"><a href="https://mitpress.mit.edu/prospective-authors/">Prospective authors</a></li>
+		<li id="menu-item-9771" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9771"><a href="https://mitpress.mit.edu/instructors/">Instructors</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3476" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3476"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-9665" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9665"><a href="https://mitpress.mit.edu/media-inquiries/">Media inquiries</a></li>
+		<li id="menu-item-9664" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9664"><a href="https://mitpress.mit.edu/booksellers/">Booksellers</a></li>
+		<li id="menu-item-3609" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3609"><a href="https://mitpress.mit.edu/rights-permissions/">Rights and permissions</a></li>
+	</ul>
+</li>
+	<li id="menu-item-3475" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3475"><a href="#" aria-haspopup="true" aria-expanded="false">column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3485" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3485"><a href="#" aria-haspopup="true" aria-expanded="false">Resources</a><p class="menu-item-description">Collaborating with authors, instructors, booksellers, librarians, and the media is at the heart of what we do as a scholarly publisher. If you can’t find the resource you need here, visit our contact page to get in touch.</p>
+		<ul class="sub-menu">
+			<li id="menu-item-10443" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-10443"><a href="/for-authors/">Learn more</a></li>
+		</ul>
+</li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-19570" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-19570"><a href="https://mitpress.mit.edu/give-to-the-mit-press/">Give</a></li>
+<li id="menu-item-10854" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10854"><a href="#" aria-haspopup="true" aria-expanded="false">About</a>
+<ul class="sub-menu">
+	<li id="menu-item-10441" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10441"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-11348" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11348"><a href="https://mitpress.mit.edu/about/">About</a></li>
+		<li id="menu-item-10327" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10327"><a href="https://mitpress.mit.edu/jobs/">Jobs</a></li>
+		<li id="menu-item-10328" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10328"><a href="https://mitpress.mit.edu/internships-paid-internships-books-journals/">Internships</a></li>
+		<li id="menu-item-10324" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10324"><a href="https://mitpress.mit.edu/mit-press-editorial-board/">MIT Press Editorial Board</a></li>
+		<li id="menu-item-10325" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10325"><a href="https://mitpress.mit.edu/mit-press-management-board/">MIT Press Management Board</a></li>
+		<li id="menu-item-14905" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-14905"><a href="https://mitpress.mit.edu/collections/our-mit-story/">Our MIT story</a></li>
+	</ul>
+</li>
+	<li id="menu-item-10329" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10329"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-10330" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10330"><a href="https://mitpress.mit.edu/catalogs/">Catalogs</a></li>
+		<li id="menu-item-10331" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10331"><a href="https://mitpress.mit.edu/?page_id=105">News</a></li>
+		<li id="menu-item-9516" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-9516"><a href="/events/">Events</a></li>
+		<li id="menu-item-10332" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10332"><a href="https://mitpress.mit.edu/conferences/">Conferences</a></li>
+		<li id="menu-item-10333" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-10333"><a href="http://mitpressbookstore.mit.edu/">Bookstore</a></li>
+	</ul>
+</li>
+	<li id="menu-item-10440" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10440"><a href="#" aria-haspopup="true" aria-expanded="false">Column</a>
+	<ul class="sub-menu">
+		<li id="menu-item-10334" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-10334"><a href="#" aria-haspopup="true" aria-expanded="false">The MIT Press</a><p class="menu-item-description">Established in 1962, the MIT Press is one of the largest and most distinguished university presses in the world and a leading publisher of books and journals at the intersection of science, technology, art, social science, and design.</p>
+		<ul class="sub-menu">
+			<li id="menu-item-10442" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-10442"><a href="/about">Learn more</a></li>
+		</ul>
+</li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-11708" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11708"><a href="https://mitpress.mit.edu/contact-us/">Contact Us</a></li>
+</ul></div>        </nav>
+
+                        
+        <button class="icon-close show-mobile js-menu-close" id="menu-close" aria-labelledby="menu-close">
+            Close Menu        </button>
+
+                                    <div class="newsletter-link">
+                <a href="https://mitpress.mit.edu/newsletter/" title="Newsletter"
+                    target="_blank">
+                    Newsletter                </a>
+            </div>
+                <button class="search-trigger show-desktop"
+                aria-labelledby="search-trigger-desktop"
+                id="search-trigger-desktop">
+            <span>SEARCH</span>
+            <span><img src="https://mitpress.mit.edu/wp-content/themes/mit-press/img/search.svg"/></span>
+        </button>
+        
+            </div>
+        </div>
+
+                </div>
+        
+        <div class="site-header__mobile-tools show-mobile">
+            
+        <div class="site-branding__logo">
+
+            <a href="https://mitpress.mit.edu/" class="custom-logo-link" rel="home"><img width="386" height="610" src="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo.png" class="custom-logo" alt="MIT Press" decoding="async" srcset="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo.png 386w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-190x300.png 190w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-309x488.png 309w, https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo-127x200.png 127w" sizes="(max-width: 386px) 100vw, 386px" /></a>
+        </div>
+
+                    <div class="newsletter-link">
+                <a href="https://mitpress.mit.edu/newsletter/" title="Newsletter"
+                    target="_blank">
+                    Newsletter                </a>
+            </div>
+                    <div class="site-header__mobile-links">
+                                    <div class="search-trigger" id="search-trigger-mobile" tabindex="0">
+                        <span><img src="https://mitpress.mit.edu/wp-content/themes/mit-press/img/search.svg"></span>
+                    </div>
+                
+                <div class="menu-trigger hamburger js-hamburger hamburger--spin js-menu-switch"
+                     tabindex="0">
+                    <div class="hamburger-box">
+                        <div class="hamburger-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+                    <div class="header-site-search js-header-site-search">
+                <aside class="widget widget_supapress_search">
+    <div class="site-container">
+        
+        <div class="search-form__inner">
+            <form role="search" method="get" class="search-form" action="https://mitpress.mit.edu/search-result-list/">
+                <input class="search-field" placeholder="Search"
+                       id="search-input"
+                       value="" name="keyword"
+                       title="Search:"
+                       type="search"
+                       autocomplete="keyword"/>
+                <label class="search-form__submit">
+                <span class="search-form__submit__icon">
+                    <img src="">
+                </span>
+                    <input class="search-submit screen-reader-text" value="Search" type="submit">
+                </label>
+            </form>
+            <button id="search-close" tabindex="-">+</button>
+        </div>
+    </div>
+</aside>                <div class="predictive-container js-predictive-container" style="display:none">
+                    <div class="site-container">
+                        <div class="predictive-list">
+                            <h3>Books</h3>
+                            <ul class="js-predictive-list predictive-list__inner" data-type="Products"></ul>
+                        </div>
+                        <div class="predictive-list">
+                            <h3>Authors</h3>
+                            <ul class="js-predictive-list predictive-list__inner" data-type="Contributors"></ul>
+                        </div>
+                                    <div class="predictive-list">
+                <h3>On the site</h3>
+                <ul class="js-predictive-list predictive-list__inner" data-type="Content"></ul>
+            </div>
+                            </div>
+                </div>
+            </div>
+        
+            </header>
+    
+    <div id="content" class="site-content">
+        
+    <main id="main" class="site-full-width">
+
+        <p>Book not found...</p>
+
+    </main><!-- #main -->
+
+
+</div><!-- #content -->
+
+
+
+    <footer id="colophon" class="site-footer" role="contentinfo">
+        <div class="site-container">
+            <div class="site-footer__top">
+                            <div class="site-footer__logos">
+                                                        <div class="site-footer__logo">
+                                                    <img src="https://dhjhkxawhe8q4.cloudfront.net/mit-press/wp-content/uploads/2022/05/20143118/logo.png" alt="logo"/>
+                                                </div>
+                                            </div>
+                        <div class="site-footer__links">
+                            <div class="site-footer__nav">
+                            <nav class="footer-navigation" role="navigation" aria-label="footer menu">
+                    <div class="menu-footer-menu-container"><ul id="footer-menu" class="menu"><li id="menu-item-126" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-126"><a href="#" aria-haspopup="true" aria-expanded="false">Column 1</a>
+<ul class="sub-menu">
+	<li id="menu-item-3507" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3507"><a href="/search-result-list/?keyword=">Books</a></li>
+	<li id="menu-item-3508" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3508"><a target="_blank" rel="noopener" href="http://www.mitpressjournals.org/">Journals</a></li>
+	<li id="menu-item-3509" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3509"><a target="_blank" rel="noopener" href="https://thereader.mitpress.mit.edu/">The MIT Press Reader</a></li>
+	<li id="menu-item-3510" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3510"><a target="_blank" rel="noopener" href="https://mitpress.podbean.com/">Podcasts</a></li>
+	<li id="menu-item-128" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-128"><a href="https://mitpress.mit.edu/books/imprints/">Imprints</a></li>
+</ul>
+</li>
+<li id="menu-item-129" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-129"><a href="#" aria-haspopup="true" aria-expanded="false">Column 2</a>
+<ul class="sub-menu">
+	<li id="menu-item-3511" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-3511"><a href="https://mitpress.mit.edu/about/" aria-haspopup="true" aria-expanded="false">The MIT Press</a>
+	<ul class="sub-menu">
+		<li id="menu-item-9746" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9746"><a href="https://mitpress.mit.edu/about/">About</a></li>
+		<li id="menu-item-9545" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-9545"><a target="_blank" rel="noopener" href="http://mitpressbookstore.mit.edu/">Bookstore</a></li>
+		<li id="menu-item-3558" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3558"><a href="https://mitpress.mit.edu/catalogs/">Catalogs</a></li>
+		<li id="menu-item-3520" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3520"><a href="https://mitpress.mit.edu/conferences/">Conferences</a></li>
+		<li id="menu-item-3521" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3521"><a href="https://mitpress.mit.edu/mit-press-editorial-board/">Press Editorial Board</a></li>
+		<li id="menu-item-9590" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9590"><a href="https://mitpress.mit.edu/jobs/">Jobs</a></li>
+		<li id="menu-item-3522" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3522"><a href="https://mitpress.mit.edu/internships-paid-internships-books-journals/">Internships</a></li>
+		<li id="menu-item-3526" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3526"><a href="https://mitpress.mit.edu/mit-press-management-board/">Press Management Board</a></li>
+		<li id="menu-item-3534" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3534"><a href="https://mitpress.mit.edu/?page_id=105">News</a></li>
+		<li id="menu-item-3528" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3528"><a href="https://mitpress.mit.edu/staff/">Staff</a></li>
+		<li id="menu-item-3529" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3529"><a href="https://mitpress.mit.edu/code-of-conduct/">Code of Conduct</a></li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-132" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-132"><a href="#" aria-haspopup="true" aria-expanded="false">Column 3</a>
+<ul class="sub-menu">
+	<li id="menu-item-3512" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children menu-item-3512"><a href="https://mitpress.mit.edu/faq/" aria-haspopup="true" aria-expanded="false">Site Help</a>
+	<ul class="sub-menu">
+		<li id="menu-item-9560" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9560"><a href="https://mitpress.mit.edu/accessibility/">Accessibility</a></li>
+		<li id="menu-item-3532" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3532"><a href="https://mitpress.mit.edu/faq/">FAQ</a></li>
+		<li id="menu-item-10499" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10499"><a href="https://mitpress.mit.edu/our-ebooks/">Our eBooks</a></li>
+		<li id="menu-item-3533" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-privacy-policy menu-item-3533"><a rel="privacy-policy" href="https://mitpress.mit.edu/privacy/">Privacy Policy</a></li>
+		<li id="menu-item-10746" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-10746"><a href="https://mitpress.mit.edu/terms-use/">Terms of Use</a></li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-3514" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3514"><a href="#" aria-haspopup="true" aria-expanded="false">Column 4</a>
+<ul class="sub-menu">
+	<li id="menu-item-3513" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3513"><a href="#" aria-haspopup="true" aria-expanded="false">Resources</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3538" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3538"><a href="https://mitpress.mit.edu/for-authors/">Current Authors</a></li>
+		<li id="menu-item-3540" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-3540"><a href="https://mitpress.mit.edu/prospective-authors/">Prospective Authors</a></li>
+		<li id="menu-item-9750" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9750"><a href="https://mitpress.mit.edu/booksellers/">Booksellers</a></li>
+		<li id="menu-item-9968" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9968"><a href="https://mitpress.mit.edu/instructors/">Instructors</a></li>
+		<li id="menu-item-11042" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-11042"><a href="https://mitpress.mit.edu/rights-permissions/">Rights and Permissions</a></li>
+		<li id="menu-item-9759" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9759"><a href="https://mitpress.mit.edu/media-inquiries/">Media Inquiries</a></li>
+		<li id="menu-item-9758" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9758"><a href="https://mitpress.mit.edu/mit-discounts/">MIT Discounts</a></li>
+	</ul>
+</li>
+</ul>
+</li>
+<li id="menu-item-3515" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3515"><a href="#" aria-haspopup="true" aria-expanded="false">Column 5</a>
+<ul class="sub-menu">
+	<li id="menu-item-3516" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-3516"><a href="#" aria-haspopup="true" aria-expanded="false">Digital</a>
+	<ul class="sub-menu">
+		<li id="menu-item-3546" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3546"><a target="_blank" rel="noopener" href="https://direct.mit.edu/pages/cognet">CogNet</a></li>
+		<li id="menu-item-9757" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-9757"><a href="https://mitpress.mit.edu/digital-partners-and-products/">Digital Partners and Products</a></li>
+		<li id="menu-item-3548" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3548"><a target="_blank" rel="noopener" href="https://kfg.mit.edu/">Knowledge Futures Group</a></li>
+		<li id="menu-item-3549" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3549"><a target="_blank" rel="noopener" href="https://direct.mit.edu/">MIT Press Direct</a></li>
+	</ul>
+</li>
+</ul>
+</li>
+</ul></div>                </nav>
+                    </div>
+                            <div class="site-footer__copyright">
+                                    <nav class="legal-navigation" role="navigation" aria-label="legal navigation">
+                <div class="menu-legal-navigation-container"><ul id="legal-menu" class="menu"><li id="menu-item-3436" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3436"><a href="#">Global</a><p class="menu-item-description">255 Main Street </br>
+9th Floor 
+Cambridge, MA 02142 </p></li>
+<li id="menu-item-3438" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-3438"><a href="/contact-us/">Contact</a></li>
+</ul></div>            </nav><!-- #site-navigation -->
+        <div class='site-branding__social site-footer__social'><p>Connect</p><span class='site-branding__social__icon'><a href='https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Fmitpress' target='_blank' title='Follow us on Facebook' class='facebook'><span class='icon-facebook'></span></a></span><span class='site-branding__social__icon'><a href='https://twitter.com/mitpress' target='_blank' title='Follow us on X (formerly Twitter)' class='twitter'><span class='icon-twitter'></span></a></span><span class='site-branding__social__icon'><a href='https://www.linkedin.com/authwall?trk=ripf&trkInfo=AQF0b-btlYQe5wAAAX1dJr6A1Cn2cXCPya4ruKG7omS4Hz-Re70ocg4b_o0Z_-8YLsB8uAw2KjgobnWbr0G9uZD6PjEfCPL7K5XB0a6Jci-stw5Q3dFxMPGODx3OQh9OV1g1d7s=&originalReferer=https://mitpress.mit.edu/&sessionRedirect=https%3A%2F%2Fwww.linkedin.com%2Fcompany%2F11587565%2F' target='_blank' title='Follow us on LinkedIn' class='linkedin'><span class='icon-linkedin'></span></a></span><span class='site-branding__social__icon'><a href='https://www.instagram.com/mitpress' target='_blank' title='Follow us on Instagram' class='instagram'><span class='icon-instagram'></span></a></span><span class='site-branding__social__icon'><a href='https://youtube.com/c/TheMITPress' target='_blank' title='Follow us on YouTube' class='youtube'><span class='icon-youtube'></span></a></span></div>                    </div>
+                </div>
+            </div>
+            
+        <p class="site-footer__copy-right">
+            © 2024 MIT Press. All Rights Reserved.        </p>
+
+        
+        <p class="site-footer__credit-link">Powered by <a href="http://www.supadu.com" target="_blank">Supadu</a></p>
+
+                </div>
+    </footer>
+
+</div><!-- #page -->
+
+		<script>
+		( function ( body ) {
+			'use strict';
+			body.className = body.className.replace( /\btribe-no-js\b/, 'tribe-js' );
+		} )( document.body );
+		</script>
+		<!-- Instagram Feed JS -->
+<script type="text/javascript">
+var sbiajaxurl = "https://mitpress.mit.edu/wp-admin/admin-ajax.php";
+</script>
+<script> /* <![CDATA[ */var tribe_l10n_datatables = {"aria":{"sort_ascending":": activate to sort column ascending","sort_descending":": activate to sort column descending"},"length_menu":"Show _MENU_ entries","empty_table":"No data available in table","info":"Showing _START_ to _END_ of _TOTAL_ entries","info_empty":"Showing 0 to 0 of 0 entries","info_filtered":"(filtered from _MAX_ total entries)","zero_records":"No matching records found","search":"Search:","all_selected_text":"All items on this page were selected. ","select_all_link":"Select all pages","clear_selection":"Clear Selection.","pagination":{"all":"All","next":"Next","previous":"Previous"},"select":{"rows":{"0":"","_":": Selected %d rows","1":": Selected 1 row"}},"datepicker":{"dayNames":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"dayNamesShort":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],"dayNamesMin":["S","M","T","W","T","F","S"],"monthNames":["January","February","March","April","May","June","July","August","September","October","November","December"],"monthNamesShort":["January","February","March","April","May","June","July","August","September","October","November","December"],"monthNamesMin":["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],"nextText":"Next","prevText":"Prev","currentText":"Today","closeText":"Done","today":"Today","clear":"Clear"}};/* ]]> */ </script><script type="text/javascript" id="leadin-script-loader-js-js-extra">
+/* <![CDATA[ */
+var leadin_wordpress = {"userRole":"visitor","pageType":"page","leadinPluginVersion":"10.2.23"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://js.hs-scripts.com/7809759.js?integration=WordPress&amp;ver=10.2.23" id="leadin-script-loader-js-js"></script>
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-includes/js/jquery/ui/core.min.js?ver=1.13.2" id="jquery-ui-core-js"></script>
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-includes/js/jquery/ui/accordion.min.js?ver=1.13.2" id="jquery-ui-accordion-js"></script>
+<script type="text/javascript" id="university-press-theme-script-js-extra">
+/* <![CDATA[ */
+var universityPressThemeSettings = {"supafolioApiUrl":"https:\/\/api.supafolio.com\/v2\/","supafolioApiKey":"164e068d8849cb674bb2cdaabad7ce25","wordpressAjaxUrl":"https:\/\/mitpress.mit.edu\/wp-admin\/admin-ajax.php","site_url":"https:\/\/mitpress.mit.edu","default_search_page_id":"113","default_search_page_slug":"https:\/\/mitpress.mit.edu\/search-result-list\/","predictive_book_url_pattern":"\/%isbn13%\/%title%","predictive_books_no_results":"No results found","predictive_books_header":"Books","predictive_author_header":"Authors","predictive_content_header":"On the site","predictive_enable_journals":"","predictive_journals_header":"Journals","predictive_results_amount":"3","predictive_cta_copy":"View all results","search_mobile_open_text":"OPEN +","search_mobile_close_text":"CLOSE -","fixed_header_breakpoint":"950","show_google_preview_label":"Preview This Book"};
+/* ]]> */
+</script>
+<script type="text/javascript" src="https://mitpress.mit.edu/wp-content/themes/university_press_theme/js/all.min.js?ver=1.34.1" id="university-press-theme-script-js"></script>
+</body>
+</html>
