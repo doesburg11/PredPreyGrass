@@ -2,36 +2,30 @@
 # implement the recreation of grass when eaten after certain time steps
 
 # AEC pettingzoo predpreygrass environment using random policy
-from environments.predpreygrass_create_agents import raw_env
-from config.config_pettingzoo_create_agents import env_kwargs
+from environments.predpreygrass import raw_env
+from config.config_pettingzoo_benchmark import env_kwargs, local_output_directory
 
 from pettingzoo.utils import agent_selector
 
-num_games = 1
-if num_games > 1: 
-    env_kwargs["render_mode"]="None"
-else:
-    env_kwargs["render_mode"]="human"
+# displaying the population of predators and prey
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib import pyplot as plt
+from matplotlib.ticker import MaxNLocator # for integer ticks
+
+from statistics import mean, stdev
+
+num_games = 100
+env_kwargs["render_mode"]="human" if num_games == 1 else "None"
 
 raw_env = raw_env(**env_kwargs) 
 
-def average(rewards):
-    N = len(rewards)
-    avg_rewards = sum(rewards) / N
-    return avg_rewards
-
-def std_dev(rewards, avg_reward):
-    N = len(rewards.values())
-    variance_rewards = 0
-    for _agent in rewards:
-        variance_rewards += pow(rewards[_agent]-avg_reward,2)
-    variance_rewards = 1/(N-1)*variance_rewards
-    std_rewards = pow(variance_rewards,0.5)
-    return std_rewards
 
 avg_rewards = [0 for _ in range(num_games)]
+avg_cum_rewards = [0 for _ in range(num_games)]
 avg_cycles = [0 for _ in range(num_games)]
 std_rewards = [0 for _ in range(num_games)]
+std_cum_rewards = [0 for _ in range(num_games)]
 
 agent_selector = agent_selector(agent_order=raw_env.agents)
 
@@ -41,7 +35,6 @@ for i in range(num_games):
     cumulative_rewards = {agent: 0.0 for agent in raw_env.possible_agents}
     n_aec_cycles = 0
     for agent in raw_env.agent_iter():
-
         observation, reward, termination, truncation, info = raw_env.last()
         cumulative_rewards[agent] += reward
         if termination or truncation:
@@ -58,15 +51,23 @@ for i in range(num_games):
         raw_env.step(action)
         if agent_selector.is_last(): #
             n_aec_cycles += 1
+            #print(f"Cycle {n_aec_cycles}")
+            #print("Predators: ", raw_env.pred_prey_env.n_active_predator)
+            #print("Prey: ", raw_env.pred_prey_env.n_active_prey)
+            #print()
+            #print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
         agent_selector.next()   
-        
-    avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
+
+
+
+
+    avg_cum_rewards[i]= mean(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_aec_cycles
-    std_rewards[i]= std_dev(cumulative_rewards, avg_rewards[i])
-    print(f"Cycles = {n_aec_cycles}", f"Avg = {round(avg_rewards[i],1)}", 
-          f"Std = {round(std_rewards[i],1)}",end=" ")
+    std_cum_rewards[i]= stdev(cumulative_rewards.values(), avg_cum_rewards[i])
+    print(f"Cycles = {n_aec_cycles}", f"Avg = {round(avg_cum_rewards[i],1)}", 
+          f"Std = {round(std_cum_rewards[i],1)}",end=" ")
     print()
 raw_env.close()
-print(f"Average of Avg = {round(average(avg_rewards),1)}")
-print(f"Average of Cycles = {round(average(avg_cycles),1)}")
+print(f"Average of Avg = {round(mean(avg_cum_rewards),1)}")
+print(f"Average of Cycles = {round(mean(avg_cycles),1)}")
   

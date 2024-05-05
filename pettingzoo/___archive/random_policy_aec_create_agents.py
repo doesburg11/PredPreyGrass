@@ -7,7 +7,7 @@ from config.config_pettingzoo import env_kwargs
 
 from pettingzoo.utils import agent_selector
 
-num_games = 1
+num_games = 10
 if num_games > 1: 
     env_kwargs["render_mode"]="None"
 else:
@@ -59,7 +59,7 @@ for i in range(num_games):
         if agent_selector.is_last(): #
             n_aec_cycles += 1
         agent_selector.next()   
-
+        
     avg_rewards[i]= average(cumulative_rewards.values()) # type: ignore
     avg_cycles[i]= n_aec_cycles
     std_rewards[i]= std_dev(cumulative_rewards, avg_rewards[i])
