@@ -5,6 +5,8 @@ Additionally the grass regrows after a certain number of AEC cycles.
 Addtionally, the environment is adjusted to to give birth to a new prey agent, when the parent 
 has accumulated a certain amount of energy by eating grass and survived 
 (from starvation or being eaten by a predator).
+-implemented reproduction reward for parent prey
+
 """
 import os
 import numpy as np
@@ -46,15 +48,20 @@ class PredPreyGrass:
         cell_scale: int = 40,
         x_pygame_window : int = 0,
         y_pygame_window : int = 0,
+        catch_prey_reward=5.0,
         catch_grass_reward=3.0,
-        catch_prey_reward=3.0,
         regrow_grass=False,
         prey_creation_energy_threshold = 10.0,
         predator_creation_energy_threshold = 10.0,
         create_prey = False,
         create_predator = False,
-        death_reward_prey = -5.0,
-        death_reward_predator = -5.0,
+        death_reward_prey = -10.0,
+        death_reward_predator = -10.0,
+        reproduction_reward_prey = 10.0,
+        reproduction_reward_predator = 10.0,
+        catch_prey_energy = 5.0,
+        catch_grass_energy = 3.0,  
+        show_energy_chart = True, 
         ):
 
         self.x_grid_size = x_grid_size
@@ -87,14 +94,29 @@ class PredPreyGrass:
         self.create_predator = create_predator
         self.death_reward_prey = death_reward_prey
         self.death_reward_predator = death_reward_predator
+        self.reproduction_reward_prey = reproduction_reward_prey
+        self.reproduction_reward_predator = reproduction_reward_predator
+        self.catch_prey_energy = catch_prey_energy
+        self.catch_grass_energy = catch_grass_energy   
+        self.show_energy_chart = show_energy_chart
 
-        # pygam position window
+        # pygame position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
                                                         self.y_pygame_window)
 
+        # visualization
+        self.screen = None
+        self.save_image_steps = False
+        self.width_energy_chart = 1800 if self.show_energy_chart else 0
+        self.height_energy_chart = self.cell_scale * self.y_grid_size
+        if self.n_possible_predator>18 or self.n_possible_prey>24:
+            # too many agents to display in energy chart
+            self.show_energy_chart = False
+            self.width_energy_chart = 0
+        # end visualization
+
         self._seed()
         self.agent_id_counter = 0
-        self.action_range = 3
 
         # agent types
         self.agent_type_name_list = ["wall", "predator", "prey", "grass"]  # different types of agents 
@@ -111,6 +133,7 @@ class PredPreyGrass:
         self.n_active_predator_list = []    
         self.n_active_prey_list = []
         self.n_active_grass_list = []
+
 
 
         self.predator_instance_list = [] # list of all living predator
@@ -174,14 +197,6 @@ class PredPreyGrass:
         self.prey_to_be_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
         # end removal agents
 
-
-        # visualization
-        self.screen = None
-        self.save_image_steps = False
-        self.width_energy_chart = 1800
-        self.height_energy_chart = self.cell_scale * self.y_grid_size
-        # end visualization
-
         self.file_name = 0
         self.n_aec_cycles = 0
 
@@ -235,8 +250,6 @@ class PredPreyGrass:
                     observation_range= self.obs_range_list[agent_type_nr],
                     motion_range=self.motion_range,
                     initial_energy=self.initial_energy_list[agent_type_nr],
-                    catch_grass_reward=self.catch_grass_reward,
-                    catch_prey_reward=self.catch_prey_reward,
                     energy_gain_per_step=self.energy_gain_per_step_list[agent_type_nr]
                 )
                 
@@ -308,8 +321,7 @@ class PredPreyGrass:
         self.n_active_predator_list.insert(self.n_aec_cycles,self.n_active_predator)
         self.n_active_prey_list.insert(self.n_aec_cycles,self.n_active_prey)
         self.n_active_grass_list.insert(self.n_aec_cycles,self.n_active_grass)
-
-        
+ 
     def step(self, action, agent_instance, is_last_step_in_cycle):
         # Extract agent details
         if agent_instance.is_alive:
@@ -375,30 +387,30 @@ class PredPreyGrass:
                         predator_instance.is_alive = False
                         predator_instance.energy = 0.0
                         self.agent_reward_dict[predator_name] += self.death_reward_predator
-                    else: # reap rewards for predator which removes prey
-                        catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
-                        step_reward_predator = predator_instance.energy_gain_per_step
-                        self.agent_reward_dict[predator_name] += step_reward_predator
-                        self.agent_reward_dict[predator_name] += catch_reward_predator
-                        predator_instance.energy += step_reward_predator 
-                        predator_instance.energy += catch_reward_predator
+                    else: 
+                        # reap rewards for predator which removes prey
+                        # energy gain per step equals reward but that is not necessarily so in general
+                        self.agent_reward_dict[predator_name] += self.energy_gain_per_step_predator 
+                        self.agent_reward_dict[predator_name] += self.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name]
+                        predator_instance.energy += self.energy_gain_per_step_predator 
+                        predator_instance.energy += self.catch_prey_energy * self.predator_who_remove_prey_dict[predator_name]
                         # creates new predator agent when energy is above self.predator_creation_energy_threshold
                         if self.create_predator and predator_instance.energy > self.predator_creation_energy_threshold: 
                             non_active_predator_name_list = [predator_name for predator_name in self.predator_name_list if 
                                                          not self.agent_name_to_instance_dict[predator_name].is_alive]
-                            # checks if there are non active predator agent available at all
+                            # checks if there are non active predator agents available at all
                             if len(non_active_predator_name_list) > 0:
-                                # "create" new predator agent (set attribute alive to True)
+                                # "create" new predator agent (set attribute 'alive' to True)
                                 new_predator_name = non_active_predator_name_list[-1]
                                 new_predator_instance = self.agent_name_to_instance_dict[new_predator_name]
                                 new_predator_instance.is_alive = True
-                                # parent energy transferred to child
+                                self.predator_to_be_removed_by_starvation_dict[new_predator_name] = False 
+                                # part of parent energy transferred to child
                                 predator_instance.energy -= self.initial_energy_predator 
                                 new_predator_instance.energy = self.initial_energy_predator
-                                self.predator_to_be_removed_by_starvation_dict[new_predator_name] = False 
-                                self.n_active_predator += 1
-                                # list of all active predators
+                                # add new predator to list of all active predators
                                 self.predator_instance_list.append(new_predator_instance)
+                                self.n_active_predator += 1
                                 # find a new random position for the new predator, which is not yet occupied by another predator
                                 position_found = False
                                 while not position_found:
@@ -409,6 +421,8 @@ class PredPreyGrass:
                                 new_predator_instance.position = x_new_position_predator, y_new_position_predator
                                 self.agent_instance_in_grid_location[self.predator_type_nr,new_predator_instance.position[0],new_predator_instance.position[1]] = new_predator_instance
                                 self.model_state[self.predator_type_nr,new_predator_instance.position[0],new_predator_instance.position[1]] += 1
+                                # reproduction reward for parent predator
+                                self.agent_reward_dict[predator_name] += self.reproduction_reward_predator
 
             for prey_name in self.prey_name_list:
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
@@ -424,25 +438,27 @@ class PredPreyGrass:
                         self.agent_reward_dict[prey_name] += self.death_reward_prey
                     
                     else: 
-                        catch_reward_prey = prey_instance.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name] 
-                        step_reward_prey = prey_instance.energy_gain_per_step
-                        self.agent_reward_dict[prey_name] += step_reward_prey
-                        self.agent_reward_dict[prey_name] += catch_reward_prey                       
-                        prey_instance.energy += step_reward_prey
-                        prey_instance.energy += catch_reward_prey
+                        # reap rewards for predator which removes prey
+                        # energy gain per step equals reward but that is not necessarily so in general
+                        self.agent_reward_dict[prey_name] += self.energy_gain_per_step_prey 
+                        self.agent_reward_dict[prey_name] += self.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name]                     
+                        prey_instance.energy += self.energy_gain_per_step_prey
+                        prey_instance.energy += self.catch_grass_energy * self.prey_who_remove_grass_dict[prey_name] 
                         # creates new prey agent when energy is above self.prey_creation_energy_threshold
                         if self.create_prey and prey_instance.energy > self.prey_creation_energy_threshold: 
-                            # TODO: to be implemented in reset function and increment, not iterate over entire prey_name_list every time again
                             non_active_prey_name_list = [prey_name for prey_name in self.prey_name_list if 
                                                          not self.agent_name_to_instance_dict[prey_name].is_alive]
-                            # checks if there is a non active prey agent available
+                            # checks if there is a non active prey agents available
                             if len(non_active_prey_name_list) > 0:
-                                prey_instance.energy -= self.initial_energy_prey
+                                # "create" new Prey agent (set attribute 'alive' to True)
                                 new_prey_name = non_active_prey_name_list[-1]
                                 new_prey_instance = self.agent_name_to_instance_dict[new_prey_name]
-                                new_prey_instance.energy = self.initial_energy_prey
                                 new_prey_instance.is_alive = True
-                                self.prey_to_be_removed_by_starvation_dict[new_prey_name] = False # to prevent removal within cycle?
+                                self.prey_to_be_removed_by_starvation_dict[new_prey_name] = False 
+                                # parent energy transferred to child
+                                prey_instance.energy -= self.initial_energy_prey
+                                new_prey_instance.energy = self.initial_energy_prey
+
                                 self.n_active_prey += 1
                                 self.prey_instance_list.append(new_prey_instance)
                                 # find a new random position for the new prey, which is not yet occupied by another prey
@@ -456,6 +472,8 @@ class PredPreyGrass:
                                 new_prey_instance.position = x_new_position_prey, y_new_position_prey
                                 self.agent_instance_in_grid_location[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] = new_prey_instance
                                 self.model_state[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] += 1
+                                # reproduction reward for parent prey
+                                self.agent_reward_dict[prey_name] += self.reproduction_reward_prey
 
             for grass_name in self.grass_name_list:
                 grass_instance = self.agent_name_to_instance_dict[grass_name]
@@ -715,7 +733,7 @@ class PredPreyGrass:
 
                 col = (255, 0, 0) # red
 
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
 
         def draw_prey_instances(self):
             for prey_instance in self.prey_instance_list:
@@ -730,7 +748,7 @@ class PredPreyGrass:
 
                 col = (0, 0, 255) # blue
 
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
 
         def draw_grass_instances(self):
             for grass_instance in self.grass_instance_list:
@@ -748,7 +766,7 @@ class PredPreyGrass:
 
                 #col = (0, 0, 255) # blue
 
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 3)) # type: ignore
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
 
         def draw_agent_instance_id_nrs(self):
             font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)
@@ -777,7 +795,7 @@ class PredPreyGrass:
 
             for x, y in predator_positions:
                 (pos_x, pos_y) = (
-                    self.cell_scale * x + self.cell_scale // 3.4,
+                    self.cell_scale * x + self.cell_scale // 6,
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
@@ -789,7 +807,7 @@ class PredPreyGrass:
 
             for x, y in prey_positions:
                 (pos_x, pos_y) = (
-                    self.cell_scale * x + self.cell_scale // 3.4,
+                    self.cell_scale * x + self.cell_scale // 6,
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
@@ -801,7 +819,7 @@ class PredPreyGrass:
 
             for x, y in grass_positions:
                 (pos_x, pos_y) = (
-                    self.cell_scale * x + self.cell_scale // 3.4,
+                    self.cell_scale * x + self.cell_scale // 6,
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
@@ -954,8 +972,6 @@ class PredPreyGrass:
                     text = font.render(label, True, label_color)
                     self.screen.blit(text, (label_x, label_y))
 
-
-
         
         if self.render_mode is None:
             gymnasium.logger.warn(
@@ -977,19 +993,15 @@ class PredPreyGrass:
                 )
 
         draw_grid_model(self)
-
         draw_prey_observations(self)
         draw_predator_observations(self)
-
         draw_grass_instances(self)
         draw_prey_instances(self)
         draw_predator_instances(self)
-
         draw_agent_instance_id_nrs(self)
-
-        draw_white_canvas_energy_chart(self)
-
-        draw_bar_chart_energy(self)
+        if self.show_energy_chart:
+            draw_white_canvas_energy_chart(self)
+            draw_bar_chart_energy(self)
 
 
         observation = pygame.surfarray.pixels3d(self.screen)
@@ -1014,7 +1026,7 @@ class PredPreyGrass:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predpreygrass_record_n_agents",
+        "name": "predpreygrass",
         "is_parallelizable": True,
         "render_fps": 5,
     }
@@ -1083,10 +1095,8 @@ class raw_env(AECEnv, EzPickle):
             if self.pred_prey_env.n_aec_cycles >= self.pred_prey_env.max_cycles:
                 self.truncations[k] = True
             else:
-                self.terminations[k] = \
-                    self.pred_prey_env.is_no_grass or \
-                    self.pred_prey_env.is_no_prey or \
-                    self.pred_prey_env.is_no_predator
+
+                self.terminations[k] = self.pred_prey_env.is_no_prey or self.pred_prey_env.is_no_predator
                 
         for agent_name in self.agents:
             self.rewards[agent_name] = self.pred_prey_env.agent_reward_dict[agent_name]

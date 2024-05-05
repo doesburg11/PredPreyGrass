@@ -1,5 +1,6 @@
 # this file is used to set the benchmark parameters for the PredPreyGrass environment
 # the benchamrk is used to test if it is still performing as expected when adjusted
+# benchmark is without creation of agents and without regrowing grass
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
 training_steps_string = "10_000_000"
@@ -22,15 +23,19 @@ env_kwargs = dict(
     # energy parameters
     energy_gain_per_step_predator = -0.1,
     energy_gain_per_step_prey = -0.05,
-    energy_gain_per_step_grass = 0.2,     
+    energy_gain_per_step_grass = 0.2,
+    catch_prey_energy = 5.0,
+    catch_grass_energy = 3.0,     
     initial_energy_predator = 5.0,
     initial_energy_prey = 5.0, 
     initial_energy_grass = 3.0,
     # reward parameters
-    catch_grass_reward = 3.0,
     catch_prey_reward = 5.0,  
+    catch_grass_reward = 3.0,
     death_reward_prey = 0,
     death_reward_predator = 0,
+    reproduction_reward_prey = 0.0,
+    reproduction_reward_predator = 0.0,
     # create agents parameters
     regrow_grass=False,
     create_prey = False,
@@ -42,5 +47,6 @@ env_kwargs = dict(
     cell_scale=40,
     x_pygame_window=0,
     y_pygame_window=0,
+    show_energy_chart=True,
 
 )

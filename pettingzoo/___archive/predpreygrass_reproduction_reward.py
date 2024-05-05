@@ -88,6 +88,9 @@ class PredPreyGrass:
         self.death_reward_prey = death_reward_prey
         self.death_reward_predator = death_reward_predator
 
+        self.reproduction_reward_prey = 5.0
+        self.reproduction_reward_predator = 5.0
+
         # pygam position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
                                                         self.y_pygame_window)
@@ -185,6 +188,7 @@ class PredPreyGrass:
         self.file_name = 0
         self.n_aec_cycles = 0
 
+
     def reset(self):
         # empty agent lists
         self.predator_instance_list: List[DiscreteAgent] = []
@@ -216,7 +220,7 @@ class PredPreyGrass:
         self.model_state = np.zeros((self.nr_observation_channels, self.x_grid_size, self.y_grid_size), dtype=np.float32)
         
 
-        # instanciate possible (maximum number of) Predator,Prey and Grass agents
+        # create agents of all types excluding "wall"-agents
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
             agent_type_name = self.agent_type_name_list[agent_type_nr]
             #empty cell list: an array of tuples with the coordinates of empty cells, at initialization all cells are empty
@@ -266,7 +270,7 @@ class PredPreyGrass:
             self.grass_instance_list
         )
 
-        # deactivate agents which can be created later at runtime
+        # deactivate agents which can be created at runtime
         for predator_name in self.predator_name_list:
             predator_instance = self.agent_name_to_instance_dict[predator_name]
             if predator_instance.agent_id_nr >= self.n_initial_active_predator: # number of initial active predators
@@ -299,6 +303,10 @@ class PredPreyGrass:
         self.agent_reward_dict = dict(zip(self.agent_name_list, [0.0 for _ in self.agent_name_list]))
     
         self.n_aec_cycles = 0
+        # time series of active agents
+        self.n_active_predator_list = []    
+        self.n_active_prey_list = []
+        self.n_active_grass_list = []
 
         self.n_active_predator_list.insert(self.n_aec_cycles,self.n_active_predator)
         self.n_active_prey_list.insert(self.n_aec_cycles,self.n_active_prey)
@@ -370,7 +378,8 @@ class PredPreyGrass:
                         predator_instance.is_alive = False
                         predator_instance.energy = 0.0
                         self.agent_reward_dict[predator_name] += self.death_reward_predator
-                    else: # reap rewards for predator which removes prey
+                    else: 
+                        # reap rewards for predator which removes prey
                         catch_reward_predator = predator_instance.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name] 
                         step_reward_predator = predator_instance.energy_gain_per_step
                         self.agent_reward_dict[predator_name] += step_reward_predator
@@ -404,6 +413,8 @@ class PredPreyGrass:
                                 new_predator_instance.position = x_new_position_predator, y_new_position_predator
                                 self.agent_instance_in_grid_location[self.predator_type_nr,new_predator_instance.position[0],new_predator_instance.position[1]] = new_predator_instance
                                 self.model_state[self.predator_type_nr,new_predator_instance.position[0],new_predator_instance.position[1]] += 1
+                                # reproduction reward for parent predator
+                                self.agent_reward_dict[predator_name] += self.reproduction_reward_predator
 
             for prey_name in self.prey_name_list:
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
@@ -451,6 +462,8 @@ class PredPreyGrass:
                                 new_prey_instance.position = x_new_position_prey, y_new_position_prey
                                 self.agent_instance_in_grid_location[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] = new_prey_instance
                                 self.model_state[self.prey_type_nr,new_prey_instance.position[0],new_prey_instance.position[1]] += 1
+                                # reproduction reward for parent prey
+                                self.agent_reward_dict[prey_name] += self.reproduction_reward_prey
 
             for grass_name in self.grass_name_list:
                 grass_instance = self.agent_name_to_instance_dict[grass_name]
@@ -477,6 +490,9 @@ class PredPreyGrass:
                         grass_instance.is_alive = True
                              
             self.n_aec_cycles = self.n_aec_cycles + 1
+
+
+            # record number of active agents at the end of the cycle
             self.n_active_predator_list.insert(self.n_aec_cycles,self.n_active_predator)
             self.n_active_prey_list.insert(self.n_aec_cycles,self.n_active_prey)
             self.n_active_grass_list.insert(self.n_aec_cycles,self.n_active_grass)
@@ -1006,7 +1022,7 @@ class PredPreyGrass:
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predpreygrass",
+        "name": "predpreygrass_record_n_agents",
         "is_parallelizable": True,
         "render_fps": 5,
     }
