@@ -114,7 +114,8 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
         std_cumulative_rewards_prey[i]= stdev(cumulative_rewards_prey.values())
         print(f"Episode {i}", f"Episode length = {n_aec_cycles}", f"Mean cumulative rewards agents = {round(mean_cumulative_rewards[i],1)}", 
             f"(Std = {round(std_cumulative_rewards[i],1)})")
-        file.write(f"Episode {i}, Episode length = {n_aec_cycles}, Mean cumulative rewards agents = {round(mean_cumulative_rewards[i],1)}, (Std = {round(std_cumulative_rewards[i],1)})\n")
+        if eval_model_only:
+            file.write(f"Episode {i}, Episode length = {n_aec_cycles}, Mean cumulative rewards agents = {round(mean_cumulative_rewards[i],1)}, (Std = {round(std_cumulative_rewards[i],1)})\n")
     print("Finish evaluation.")
     raw_env.close()
     predator_extinct_at_termination_count = sum(predator_extinct_at_termination)
@@ -132,13 +133,16 @@ if __name__ == "__main__":
     script_directory = os.path.dirname(os.path.abspath(__file__))
     output_directory = script_directory+"/output/"
     loaded_policy = output_directory + model_file_name
+    eval_model_only = True
+    watch_grid_model = not eval_model_only
     #save parameters to file
-    saved_directory_and_evaluation_file_name = os.path.join(output_directory, "evaluation.txt")
-    file = open(saved_directory_and_evaluation_file_name, "w")
-    file.write("model: PredPreyGrass\n")
-    file.write("evaluation:\n")
-    file.write("training steps: "+training_steps_string+"\n")
-    file.write("--------------------------\n")
+    if eval_model_only:
+        saved_directory_and_evaluation_file_name = os.path.join(output_directory, "evaluation.txt")
+        file = open(saved_directory_and_evaluation_file_name, "w")
+        file.write("model: PredPreyGrass\n")
+        file.write("evaluation:\n")
+        file.write("training steps: "+training_steps_string+"\n")
+        file.write("--------------------------\n")
     print()
     print("loaded_policy:",loaded_policy)
     print()

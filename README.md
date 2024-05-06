@@ -20,13 +20,22 @@ High-level breakdown of the algorithm's ```step``` function:
 
 3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles. If the energy of an agent (Predator or Prey) has reached a certain replication-treshold it reproduces a new agent at a random empty spot in the grid environment and the parent transfers a part of its energy to the child.
 
-### Emerging Behavior
+### Emergent Behavior
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This result cannot be obtained with a random policy in the same setting:
 
 <p align="center">The population dynamics of PPO trained Predators and Prey</p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
+Testament to more complex dynamics can be infered from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators show a tipping point rather than a gradual change in outcomes.
+
+
+<p align="center">Radical shifts in outcomes can occour with gradual hyperparamer tuning</p>
+<p align="center">
+    <img src="/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/assets/images/energy_gain_per_step_predator.png" width="450" height="270"/>
+</p>
+
+
 
 More emergening behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
 
@@ -74,34 +83,44 @@ In Visual Studio Code run:
 To evaluate and visualize after training follow instructions in:
 ```pettingzoo/predpreygrass/evaluate_from_file.py```
 
-### The AEC Environment Architecture
 
-Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture. The 'AECEnv.agents' array remains unchanged after agent death or creation. The removal of agents is managed by 'PredPrey.predator_instance_list' and `PredPreyGrass.[predator/prey]_instance_list`. The active status of agents is furthermore tracked by the boolean attribute `alive` of the agents. Optionally, a number of agents have this attribute `alive` set to `False` at `reset`, which gives room for creation of agents during run time. If so, the agents are (re)added to `PredPreyGrass.[predator/prey]_instance_list`.
-
-This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training. In that sense it is comparable to SuperSuit's "Black Death" wrapper.
-
-### Optionalities of the PredPreyGrass AEC Environment
+### Configuration of the PredPreyGrass environment
 The benchmark configuration used in the gif-video :
 - `max_cycles=10000`
 - `x_grid_size=16`
 - `y_grid_size=16`
-- `n_predator=6`
-- `n_prey=8`
-- `n_grass=30`
+- `n_possible_predator=6`
+- `n_possible_prey=8`
+- `n_possible_grass=30`
+- `n_initial_active_predator=6`
+- `n_initial_active_prey=8`
 - `max_observation_range=7` (must be odd)
 - `obs_range_predator=5` (must be odd)  
 - `obs_range_prey=7` (must be odd)
-- `action_range=3` (must be odd)
-- `energy_loss_per_step_predator=-0.1`
-- `energy_loss_per_step_prey=-0.05`
+- `energy_gain_per_step_predator=-0.1`
+- `energy_gain_per_step_prey=-0.05`
+- `energy_gain_per_step_grass = 0.0`  
+- `catch_prey_energy = 5.0`
+- `catch_grass_energy = 3.0`   
 - `initial_energy_predator=5.0`
 - `initial_energy_prey=5.0`
-- `catch_grass_reward=3.0` (for prey)
+- `initial_energy_grass=0.0`
 - `catch_prey_reward=5.0` (for predator)
+- `catch_grass_reward=3.0` (for prey)
+- `death_reward_prey = 0.0`
+- `death_reward_predator = 0.0`
+- `reproduction_reward_prey = 0.0`
+- `reproduction_reward_predator = 0.0`
+- `regrow_grass=False`
+- `create_prey = False`
+- `create_predator = False` 
+- `prey_creation_energy_threshold = 0.0`
+- `predator_creation_energy_threshold = 0.0`
 - `pixel_scale=40`
-
-This implementation supports different observation ranges per agent: If `obs_range < max_observation_range`, the 'outer layers' of observations are set to zero.
-
+- `cell_scale=40` 
+- `x_pygame_window=0`
+- `y_pygame_window=0`
+- `show_energy_chart=True`
 
 
 @readme{PredPreyGrass,

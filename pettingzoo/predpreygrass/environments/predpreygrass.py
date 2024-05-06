@@ -615,46 +615,37 @@ class PredPreyGrass:
 
     def render(self):
 
-        def draw_grid_model(self):
-            x_len, y_len = (self.x_grid_size, self.y_grid_size)
-            for x in range(x_len):
-                for y in range(y_len):
-                    # Draw white cell
+        def draw_grid_model():
+            # Draw grid and borders
+            for x in range(self.x_grid_size):
+                for y in range(self.y_grid_size):
                     cell_pos = pygame.Rect(
-                        self.cell_scale * x,
-                        self.cell_scale * y,
-                        self.cell_scale,
-                        self.cell_scale,
+                        self.cell_scale * x, self.cell_scale * y,
+                        self.cell_scale, self.cell_scale
                     )
-                    cell_color = (255, 255, 255)  # white background
+                    cell_color = (255, 255, 255)
                     pygame.draw.rect(self.screen, cell_color, cell_pos)
 
-                    # Draw black border around cells
                     border_pos = pygame.Rect(
-                        self.cell_scale * x,
-                        self.cell_scale * y,
-                        self.cell_scale,
-                        self.cell_scale,
+                        self.cell_scale * x, self.cell_scale * y,
+                        self.cell_scale, self.cell_scale
                     )
-                    border_color = (192, 192, 192)  # light grey border around cells
+                    border_color = (192, 192, 192)
                     pygame.draw.rect(self.screen, border_color, border_pos, 1)
 
             # Draw red border around total grid
-            border_pos = pygame.Rect(
-                0,
-                0,
-                self.cell_scale * x_len,
-                self.cell_scale * y_len,
-            )
-            border_color = (255, 0, 0) # red
-            pygame.draw.rect(self.screen, border_color, border_pos, 5) # type: ignore
+            border_pos = pygame.Rect(0, 0,
+                                    self.cell_scale * self.x_grid_size,
+                                    self.cell_scale * self.y_grid_size)
+            border_color = (255, 0, 0)
+            pygame.draw.rect(self.screen, border_color, border_pos, 5)
 
-        def draw_predator_observations(self):
+        def draw_predator_observations():
             for predator_instance in self.predator_instance_list:
-                position =  predator_instance.position 
+                position = predator_instance.position
                 x = position[0]
                 y = position[1]
-                mask = int((self.max_observation_range - predator_instance.observation_range)/2)
+                mask = int((self.max_observation_range - predator_instance.observation_range) / 2)
                 if mask == 0:
                     patch = pygame.Surface(
                         (self.cell_scale * self.max_observation_range, self.cell_scale * self.max_observation_range)
@@ -684,13 +675,13 @@ class PredPreyGrass:
                         ),
                     )
 
-        def draw_prey_observations(self):
+        def draw_prey_observations():
             for prey_instance in self.prey_instance_list:
-                position =  prey_instance.position 
+                position = prey_instance.position
                 x = position[0]
                 y = position[1]
                 # this hopefully can be improved with rllib..
-                mask = int((self.max_observation_range - prey_instance.observation_range)/2)
+                mask = int((self.max_observation_range - prey_instance.observation_range) / 2)
                 if mask == 0:
                     patch = pygame.Surface(
                         (self.cell_scale * self.max_observation_range, self.cell_scale * self.max_observation_range)
@@ -720,9 +711,9 @@ class PredPreyGrass:
                         ),
                     )
 
-        def draw_predator_instances(self):
+        def draw_predator_instances():
             for predator_instance in self.predator_instance_list:
-                position =  predator_instance.position 
+                position = predator_instance.position
                 x = position[0]
                 y = position[1]
 
@@ -731,13 +722,13 @@ class PredPreyGrass:
                     int(self.cell_scale * y + self.cell_scale / 2),
                 )
 
-                col = (255, 0, 0) # red
+                col = (255, 0, 0)  # red
 
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3))  # type: ignore
 
-        def draw_prey_instances(self):
+        def draw_prey_instances():
             for prey_instance in self.prey_instance_list:
-                position =  prey_instance.position 
+                position = prey_instance.position
                 x = position[0]
                 y = position[1]
 
@@ -746,14 +737,13 @@ class PredPreyGrass:
                     int(self.cell_scale * y + self.cell_scale / 2),
                 )
 
-                col = (0, 0, 255) # blue
+                col = (0, 0, 255)  # blue
 
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3))  # type: ignore
 
-        def draw_grass_instances(self):
+        def draw_grass_instances():
             for grass_instance in self.grass_instance_list:
-
-                position =  grass_instance.position 
+                position = grass_instance.position
                 x = position[0]
                 y = position[1]
 
@@ -761,14 +751,10 @@ class PredPreyGrass:
                     int(self.cell_scale * x + self.cell_scale / 2),
                     int(self.cell_scale * y + self.cell_scale / 2),
                 )
+                col = (0, 128, 0)  # green
+                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3))  # type: ignore
 
-                col = (0, 128, 0) # green
-
-                #col = (0, 0, 255) # blue
-
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3)) # type: ignore
-
-        def draw_agent_instance_id_nrs(self):
+        def draw_agent_instance_id_nrs():
             font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)
 
             predator_positions = defaultdict(int)
@@ -776,19 +762,19 @@ class PredPreyGrass:
             grass_positions = defaultdict(int)
 
             for predator_instance in self.predator_instance_list:
-                prey_position =  predator_instance.position 
+                prey_position = predator_instance.position
                 x = prey_position[0]
                 y = prey_position[1]
                 predator_positions[(x, y)] = predator_instance.agent_id_nr
 
             for prey_instance in self.prey_instance_list:
-                prey_position =  prey_instance.position 
+                prey_position = prey_instance.position
                 x = prey_position[0]
                 y = prey_position[1]
                 prey_positions[(x, y)] = prey_instance.agent_id_nr
 
             for grass_instance in self.grass_instance_list:
-                grass_position =  grass_instance.position 
+                grass_position = grass_instance.position
                 x = grass_position[0]
                 y = grass_position[1]
                 grass_positions[(x, y)] = grass_instance.agent_id_nr
@@ -799,7 +785,7 @@ class PredPreyGrass:
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
-                predator_id_nr__text =str(predator_positions[(x, y)])
+                predator_id_nr__text = str(predator_positions[(x, y)])
 
                 predator_text = font.render(predator_id_nr__text, False, (255, 255, 0))
 
@@ -811,7 +797,7 @@ class PredPreyGrass:
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
-                prey_id_nr__text =str(prey_positions[(x, y)])
+                prey_id_nr__text = str(prey_positions[(x, y)])
 
                 prey_text = font.render(prey_id_nr__text, False, (255, 255, 0))
 
@@ -823,26 +809,26 @@ class PredPreyGrass:
                     self.cell_scale * y + self.cell_scale // 1.2,
                 )
 
-                grass_id_nr__text =str(grass_positions[(x, y)])
+                grass_id_nr__text = str(grass_positions[(x, y)])
 
                 grass_text = font.render(grass_id_nr__text, False, (255, 255, 0))
 
                 self.screen.blit(grass_text, (pos_x, pos_y - self.cell_scale // 2))
 
-        def draw_white_canvas_energy_chart(self):
+        def draw_white_canvas_energy_chart():
             # relative position of energy chart within pygame window
-            x_position_energy_chart = self.cell_scale*self.x_grid_size
-            y_position_energy_chart = 0 #self.y_pygame_window
+            x_position_energy_chart = self.cell_scale * self.x_grid_size
+            y_position_energy_chart = 0  # self.y_pygame_window
             pos = pygame.Rect(
                 x_position_energy_chart,
                 y_position_energy_chart,
                 self.width_energy_chart,
                 self.height_energy_chart,
             )
-            color = (255, 255, 255) # white background                
-            pygame.draw.rect(self.screen, color, pos) # type: ignore
+            color = (255, 255, 255)  # white background
+            pygame.draw.rect(self.screen, color, pos)  # type: ignore
 
-        def draw_bar_chart_energy(self):
+        def draw_bar_chart_energy():
             # Constants
             BLACK = (0, 0, 0)
             RED = (255, 0, 0)
@@ -852,27 +838,27 @@ class PredPreyGrass:
             data_predators = [self.agent_name_to_instance_dict[name].energy for name in self.predator_name_list]
             data_prey = [self.agent_name_to_instance_dict[name].energy for name in self.prey_name_list]
 
-            #postion and size parameters energy chart
-            width_energy_chart = self.width_energy_chart #= 1800
+            # postion and size parameters energy chart
+            width_energy_chart = self.width_energy_chart  # = 1800
 
             max_energy_value_chart = 30
             bar_width = 20
             offset_bars = 20
-            x_screenposition = 0   #x_axis screen position?
+            x_screenposition = 0  # x_axis screen position?
             y_screenposition = 50
             y_axis_height = 500
-            x_axis_width = width_energy_chart - 120 # = 1680
-            x_screenposition_prey_bars = 1450   
+            x_axis_width = width_energy_chart - 120  # = 1680
+            x_screenposition_prey_bars = 1450
             title_x = 1400
             title_y = 20
 
             # Draw y-axis
             y_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 - 10
-            y_axis_y = y_screenposition # 50
+            y_axis_y = y_screenposition  # 50
             # x-axis
             x_axis_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2
-            x_axis_y = y_screenposition + y_axis_height # 50 + 500 = 550
-            x_start_prey_bars = x_screenposition_prey_bars + x_screenposition 
+            x_axis_y = y_screenposition + y_axis_height  # 50 + 500 = 550
+            x_start_prey_bars = x_screenposition_prey_bars + x_screenposition
             x_start_predator_bars = x_axis_x
             predator_legend_x = x_start_predator_bars
             predator_legend_y = y_screenposition + 550
@@ -885,17 +871,17 @@ class PredPreyGrass:
             # Draw chart title
             chart_title = "Energy levels agents"
             title_color = BLACK  # black
-            title_font= pygame.font.Font(None, title_font_size)
+            title_font = pygame.font.Font(None, title_font_size)
             title_text = title_font.render(chart_title, True, title_color)
             self.screen.blit(title_text, (title_x, title_y))
             # Draw legend title for predators
-            predator_legend_title= "Predators"
-            predator_legend_color = RED  
+            predator_legend_title = "Predators"
+            predator_legend_color = RED
             predator_legend_font = pygame.font.Font(None, predator_legend_font_size)
             predator_legend_text = predator_legend_font.render(predator_legend_title, True, predator_legend_color)
             self.screen.blit(predator_legend_text, (predator_legend_x, predator_legend_y))
             # Draw legend title for prey
-            prey_legend_title= "Prey"
+            prey_legend_title = "Prey"
             prey_legend_color = BLUE
             prey_legend_font = pygame.font.Font(None, prey_legend_font_size)
             prey_legend_text = prey_legend_font.render(prey_legend_title, True, prey_legend_color)
@@ -911,8 +897,7 @@ class PredPreyGrass:
             # Draw predator bars
             for i, value in enumerate(data_predators):
                 bar_height = (value / max_energy_value_chart) * y_axis_height
-                bar_x = x_screenposition + (width_energy_chart - (bar_width * len(data_predators))) // 2 + i * (bar_width+offset_bars)
-                bar_x = x_start_predator_bars + i * (bar_width+offset_bars)
+                bar_x = x_start_predator_bars + i * (bar_width + offset_bars)
                 bar_y = y_screenposition + y_axis_height - bar_height
 
                 color = (255, 0, 0)  # red
@@ -933,7 +918,7 @@ class PredPreyGrass:
             # Draw prey bars
             for i, value in enumerate(data_prey):
                 bar_height = (value / max_energy_value_chart) * y_axis_height
-                bar_x = x_start_prey_bars + i * (bar_width+offset_bars)
+                bar_x = x_start_prey_bars + i * (bar_width + offset_bars)
                 bar_y = y_screenposition + y_axis_height - bar_height
 
                 color = (0, 0, 255)  # blue
@@ -944,7 +929,7 @@ class PredPreyGrass:
             for i, prey_name in enumerate(self.prey_name_list):
                 prey_instance = self.agent_name_to_instance_dict[prey_name]
                 label = str(prey_instance.agent_id_nr)
-                label_x = x_start_prey_bars+ i * (bar_width+offset_bars)
+                label_x = x_start_prey_bars + i * (bar_width + offset_bars)
                 label_y = x_axis_y + 10
                 label_color = BLUE
                 font = pygame.font.Font(None, 30)
@@ -952,7 +937,7 @@ class PredPreyGrass:
                 self.screen.blit(text, (label_x, label_y))
 
             # Draw tick points on y-axis
-            num_ticks = max_energy_value_chart + 1 
+            num_ticks = max_energy_value_chart + 1
             tick_spacing = y_axis_height // (num_ticks - 1)
             for i in range(num_ticks):
                 tick_x = y_axis_x - 5
@@ -972,7 +957,6 @@ class PredPreyGrass:
                     text = font.render(label, True, label_color)
                     self.screen.blit(text, (label_x, label_y))
 
-        
         if self.render_mode is None:
             gymnasium.logger.warn(
                 "You are calling render method without specifying any render mode."
@@ -983,8 +967,8 @@ class PredPreyGrass:
             if self.render_mode == "human":
                 pygame.display.init()
                 self.screen = pygame.display.set_mode(
-                    (self.cell_scale * self.x_grid_size +self.width_energy_chart, 
-                     self.cell_scale * self.y_grid_size)
+                    (self.cell_scale * self.x_grid_size + self.width_energy_chart,
+                    self.cell_scale * self.y_grid_size)
                 )
                 pygame.display.set_caption("PredPreyGrass - create agents")
             else:
@@ -992,17 +976,16 @@ class PredPreyGrass:
                     (self.cell_scale * self.x_grid_size, self.cell_scale * self.y_grid_size)
                 )
 
-        draw_grid_model(self)
-        draw_prey_observations(self)
-        draw_predator_observations(self)
-        draw_grass_instances(self)
-        draw_prey_instances(self)
-        draw_predator_instances(self)
-        draw_agent_instance_id_nrs(self)
+        draw_grid_model()
+        draw_prey_observations()
+        draw_predator_observations()
+        draw_grass_instances()
+        draw_prey_instances()
+        draw_predator_instances()
+        draw_agent_instance_id_nrs()
         if self.show_energy_chart:
-            draw_white_canvas_energy_chart(self)
-            draw_bar_chart_energy(self)
-
+            draw_white_canvas_energy_chart()
+            draw_bar_chart_energy()
 
         observation = pygame.surfarray.pixels3d(self.screen)
         new_observation = np.copy(observation)
@@ -1011,11 +994,11 @@ class PredPreyGrass:
             pygame.event.pump()
             pygame.display.update()
             if self.save_image_steps:
-                self.file_name+=1
-                print(str(self.file_name)+".png saved")
-                directory= "./assets/images/"
-                pygame.image.save(self.screen, directory+str(self.file_name)+".png")
-        
+                self.file_name += 1
+                print(str(self.file_name) + ".png saved")
+                directory = "./assets/images/"
+                pygame.image.save(self.screen, directory + str(self.file_name) + ".png")
+
         return (
             np.transpose(new_observation, axes=(1, 0, 2))
             if self.render_mode == "rgb_array"

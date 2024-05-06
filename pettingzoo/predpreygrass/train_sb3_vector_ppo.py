@@ -85,9 +85,9 @@ if __name__ == "__main__":
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
     tune = True
-    tune_parameter_string = "death_reward_predator"
+    tune_parameter_string = "death_reward_prey"
     if tune:
-        tune_scenarios = [-1.5,-1.8]
+        tune_scenarios = [0, -1,-2,-3,-4,-5,-6,-7,-8,-9,-10] 
     else:
         tune_scenarios = [env_kwargs[tune_parameter_string]] # default value, must be iterable
     # output file name
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         if tune:
             env_kwargs[tune_parameter_string] = tune_parameter
             # Define the destination directory for the source code
-            destination_directory_source_code = local_output_directory+tune_parameter_string+"/"+str(tune_parameter)
+            destination_directory_source_code = local_output_directory+tune_parameter_string + "/" + str(tune_parameter)
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
         else:
@@ -109,11 +109,10 @@ if __name__ == "__main__":
             loaded_policy = output_directory + file_name
 
 
-        # save the source code
+        # save the source code locally
         python_file_name = os.path.basename(sys.argv[0])
         python_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         file_names_in_directory = os.listdir(python_directory)
-
         # Create the destination directory for the source code
         os.makedirs(destination_directory_source_code, exist_ok=True)
 
@@ -128,7 +127,7 @@ if __name__ == "__main__":
                 shutil.copytree(source_item, destination_item)
 
         if tune:
-            # overwrite config file
+            # overwrite config file locally
             # Start of the code string
             code = "local_output_directory = '{}'\n".format(local_output_directory)
             code += "training_steps_string = '{}'\n".format(training_steps_string)
