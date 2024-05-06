@@ -22,20 +22,18 @@ High-level breakdown of the algorithm's ```step``` function:
 
 ### Emergent Behavior
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This result cannot be obtained with a random policy in the same setting:
-
+<br />
 <p align="center">The population dynamics of PPO trained Predators and Prey</p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
-Testament to more complex dynamics can be infered from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators show a tipping point rather than a gradual change in outcomes.
-
-
-<p align="center">Radical shifts in outcomes can occour with gradual hyperparamer tuning</p>
+Testament to more complex dynamics can be infered from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators show a tipping point rather than a gradual change in outcomes:
+<br />
+<br />
+<p align="center">Gradual hyperparameter tuning can lead to radical shifts in outcomes</p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/energy_gain_per_step_predator.png" width="450" height="270"/>
 </p>
-
-
 
 More emergening behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
 
