@@ -32,7 +32,7 @@ Testament to more complex dynamics can be infered from hyperparameter scenarios.
 
 <p align="center">Radical shifts in outcomes can occour with gradual hyperparamer tuning</p>
 <p align="center">
-    <img src="/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/assets/images/energy_gain_per_step_predator.png" width="450" height="270"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/energy_gain_per_step_predator.png" width="450" height="270"/>
 </p>
 
 
