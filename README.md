@@ -35,7 +35,7 @@ Testament to more complex dynamics can be infered from hyperparameter scenarios.
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/energy_gain_per_step_predator.png" width="450" height="270"/>
 </p>
 
-More emergening behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
+More emergent behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
 
 
 ### Installation Instructions
