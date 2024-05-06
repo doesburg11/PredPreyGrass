@@ -5,7 +5,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "650_000"
+training_steps_string = "10_000_000"
 
 env_kwargs = dict(
     # environment parameters
