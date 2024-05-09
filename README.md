@@ -1,7 +1,7 @@
 
 ### A Predator-Prey-Grass multiagent learning environment
 
-<p align="center"><i>The benchmark configuration (without offspring creation)</i></p>
+
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
@@ -22,13 +22,12 @@ High-level breakdown of the algorithm's ```step``` function:
 
 ### Emergent Behavior
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This result cannot be obtained with a random policy in the same setting:
-<br />
-<p align="center"><i>The population dynamics of PPO trained Predators and Prey</i></p>
+
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
-More emergent behavior and findings are described in the [`config` directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
+More emergent behavior and findings are described in the [config directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
 
 
 ### Installation Instructions
@@ -114,9 +113,3 @@ The benchmark configuration used in the gif-video :
 - `show_energy_chart=True`
 
 
-@readme{PredPreyGrass,
-  Title={A Predator, Prey, Grass Multiagent Learning Environment},
-  Author={Van Doesburg, P.},
-  Year={2024}
-}
-```
