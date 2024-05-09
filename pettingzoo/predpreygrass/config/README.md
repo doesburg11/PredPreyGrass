@@ -15,7 +15,7 @@ Overall, the configurations display emergent behavior of the agents:
 
 ***Predators***: 
 
-- In the trained configurations, Predators tend to hover around grass agents to capture prey. An example of this beahvior is shown in the video above by Predator number 0, who is hovering around at grass number 26, 31 and 41 before it is going after Prey number 12. However, this strategy is less frequent when 'energy_gain_per_step_predator' becomes more negative, incentivizing Predators to abandon the 'wait-and-see' approach. 
+- In the trained configurations, Predators tend to hover around grass agents to capture prey. An example of this beahvior is shown in the video above by Predator number 0, who is hovering around at grass number 26, 31 and 41 before it is going after Prey number 12. However, this strategy is less frequent when `energy_gain_per_step_predator` becomes more negative, incentivizing Predators to abandon the 'wait-and-see' approach. 
 
 - Predators pursue Prey even when there is no reward for eating Prey in the reward function. In such cases, they consume Prey as a means to reproduce, a process that requires sufficient energy. The threshold energy level for reproduction can only be attained through consuming prey. Therefore, Predators learn to consume prey without the promise of immediate rewards, but attain only a (sparse) reward for reproduction.
 
@@ -31,21 +31,19 @@ Overall, the configurations display emergent behavior of the agents:
 
 This theoretical escape possibility is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it (his is a feature of the Von Neumann neighborhood which is utilized).
 
-However, this particular Prey behavior goes largely unnoticed in practice in the benchmark display because the simulation is trained in a *parallel* environment where all agents decide simultaneously, rather than in a turn-based fashion (remember: the simulation is parallel trained but evaluated in a turn based fashion). 
+However, this particular Prey behavior goes largely unnoticed in practice in the benchmark display because the simulation is trained in a *parallel* environment where all agents decide simultaneously, rather than in a turn-based fashion (note: the simulation is parallel trained but evaluated in a turn based fashion). 
 
-At first glance, Prey let themselves sometimes easily get caught by Predators in the `config_pettingzoo_benchmark_1` configuration. This is maybe due to that no penalty is given for "dying". When a (severe) penalty for being eaten by Predators is given, then Prey tend to be more careful and stay out of the observation range of Predators more often.
+At first glance, Prey let themselves sometimes easily get caught by Predators. This is maybe due to that no penalty is given for "dying". When a (severe) penalty for being eaten by Predators is given, then Prey tend to be more careful and stay out of the observation range of Predators more often.
 
-This is illustrated by tuning the death_reward_prey in the configuration:  
+This is illustrated by tuning the `death_reward_prey` parameter in the configuration:  
 
 <p align="center"><i>Evading behavior Prey towards Predators can be enforced by penalizing death for Prey</i></p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_average_age_agents.png" width="450" height="270"/>
 </p>
 
-Prey are still trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -6. However, thereafter the system collapses. This is additionally illustrated by a sudden collapse of the average episode length: 
+In any case, Prey are trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -6. However, thereafter the system breaks. This is additionally illustrated below by a sudden collapse of the average episode length: 
 
-<br />
-<br />
 <p align="center"><i>Gradual hyperparameter tuning can lead to radical shifts in outcomes</i></p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_episode_length.png" width="450" height="270"/>
