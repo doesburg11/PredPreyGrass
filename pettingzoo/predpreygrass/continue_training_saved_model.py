@@ -9,7 +9,7 @@ The `tb_log_name` parameter is used to specify the name of the run for TensorBoa
 The `reset_num_timesteps` parameter is set to `False` to ensure that the timestep count 
 continues from where it left off, rather than resetting to zero.
 
-After training, you can view the logs in TensorBoard by running the following command in your terminal:
+After/during training, you can review the logs in TensorBoard
 
 """
 # Continue training for X steps and log the results to TensorBoard

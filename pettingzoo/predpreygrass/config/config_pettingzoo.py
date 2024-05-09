@@ -1,7 +1,3 @@
-# benchmark with creation of agents and with regrowing grass
-# this benchmark has the maximum number of possible Predators (18) and Prey (24)
-# which can still be displayed with the energy chart 
-
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
@@ -34,7 +30,7 @@ env_kwargs = dict(
     # reward parameters
     catch_grass_reward = 0.0,
     catch_prey_reward = 0.0,  
-    death_reward_prey = 0.0,
+    death_reward_prey = -5.0,
     death_reward_predator = 0.0,
     reproduction_reward_prey = 10.0,
     reproduction_reward_predator = 10.0,

@@ -21,8 +21,6 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-from statistics import mean, stdev
-
 from stable_baselines3.common.callbacks import BaseCallback
 
 class SampleLoggerCallback(BaseCallback):
@@ -33,10 +31,15 @@ class SampleLoggerCallback(BaseCallback):
     def _on_step(self) -> bool:
         # Access and log the collected samples if available
         #print("_on_step is called")
-        last_observation = self.training_env.get_attr("last_observation")
-        #print("last_observation", last_observation)
-        if last_observation is not None:
-            self.collected_samples.append(last_observation[0])
+        local_variables = self.locals  # This holds step data like 'actions' and 'rewards'
+
+        # Print observations, actions, and rewards
+        print("locals: ", self.locals)
+        print("Rewards: ", self.locals["rewards"])
+        print("Actions: ", self.locals["actions"])
+        print("len(Actions): ", len(self.locals["actions"]))
+        print("Step number: ", self.num_timesteps)
+        #print("Observation tensor: ", self.locals["obs_tensor"])
         return True  # Continue training
 
     def _on_training_end(self) -> None:
@@ -55,7 +58,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 
     print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
     if tune:
-        print(tune_parameter_string+": ", env_kwargs[tune_parameter_string])
+        print("Tuning "+tune_parameter_string+": ", env_kwargs[tune_parameter_string])
 
     raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
     raw_parallel_env = ss.concat_vec_envs_v1(raw_parallel_env, 8, num_cpus=8, base_class="stable_baselines3")
@@ -84,10 +87,10 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 if __name__ == "__main__":
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    tune = True
+    tune = False
     tune_parameter_string = "death_reward_prey"
     if tune:
-        tune_scenarios = [0, -1,-2,-3,-4,-5,-6,-7,-8,-9,-10] 
+        tune_scenarios = [0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10] 
     else:
         tune_scenarios = [env_kwargs[tune_parameter_string]] # default value, must be iterable
     # output file name
@@ -98,12 +101,12 @@ if __name__ == "__main__":
     for tune_parameter in tune_scenarios:
         if tune:
             env_kwargs[tune_parameter_string] = tune_parameter
-            # Define the destination directory for the source code
-            destination_directory_source_code = local_output_directory+tune_parameter_string + "/" + str(tune_parameter)
+            # define the destination directory for the source code
+            destination_directory_source_code = local_output_directory + tune_parameter_string + "/" + str(tune_parameter)
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
         else:
-            # Define the destination directory for the source code
+            # define the destination directory for the source code
             destination_directory_source_code = os.path.join(local_output_directory, start_time)
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
@@ -113,10 +116,11 @@ if __name__ == "__main__":
         python_file_name = os.path.basename(sys.argv[0])
         python_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
         file_names_in_directory = os.listdir(python_directory)
-        # Create the destination directory for the source code
+        # create the destination directory for the source code
         os.makedirs(destination_directory_source_code, exist_ok=True)
 
-        # Copy all files and directories in the current directory to the local directory
+        # Copy all files and directories in the current directory to the local directory 
+        # for safekeeping experiment scenarios
         for item_name in file_names_in_directory:
             source_item = os.path.join(python_directory, item_name)
             destination_item = os.path.join(destination_directory_source_code, item_name)

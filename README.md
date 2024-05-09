@@ -1,7 +1,7 @@
 
 ### A Predator-Prey-Grass multiagent learning environment
 
-<p align="center">The benchmark configuration (without offspring creation)</p>
+<p align="center"><i>The benchmark configuration (without offspring creation)</i></p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
@@ -14,11 +14,11 @@ A multi-agent reinforcement learning environment trained using Proximal Policy O
 
 High-level breakdown of the algorithm's ```step``` function:
 
-1. **Predator Actions**: If the agent is a Predator and it's alive, it checks if the Predator has positive energy. If it does, the Predator moves and the model state is updated. If the predator lands on a cell with prey, it selects the prey to eat and to be removed at the end of a cycle (AEC). Otherwise, if the Predator has no positive energy left, it is being selected to become inactive at the end of a cycle. 
+1. **Predator Actions**: If the agent is a Predator and it's active, it checks if the Predator has positive energy. If it does, the Predator moves and the model state is updated. If the predator lands on a cell with prey, it selects the prey to eat and to be removed at the end of a cycle (AEC). Otherwise, if the Predator has no positive energy left, it is being selected to become inactive at the end of a cycle. 
 
-2. **Prey Actions**: If the agent is a prey and it's alive, it checks if the prey has positive energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass it selects the grass to eat and to be removed ath the end of a cycle. If the prey has no energy left, it is being selected to become inactive at the end of a cycle.
+2. **Prey Actions**: If the agent is a prey and it's active, it checks if the prey has positive energy. If it does, the prey moves and the model state is updated. If the prey lands on a cell with grass it selects the grass to eat and to be removed ath the end of a cycle. If the prey has no energy left, it is being selected to become inactive at the end of a cycle.
 
-3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten, and updates the rewards for the remaining agents. It also increments the number of cycles. If the energy of an agent (Predator or Prey) has reached a certain replication-treshold it reproduces a new agent at a random empty spot in the grid environment and the parent transfers a part of its energy to the child.
+3. **End of Cycle Actions**: If it's the last step in the PettingZoo cycle (AEC), the function removes agents that have starved to death or have been eaten (the agents are set to), and updates the rewards for the remaining agents. It also increments the number of cycles. If the energy of an agent (Predator or Prey) has reached a certain replication-treshold it reproduces a new agent at a random empty spot in the grid environment and the parent transfers a part of its energy to the child.
 
 ### Emergent Behavior
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This result cannot be obtained with a random policy in the same setting:
@@ -27,7 +27,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
-Testament to more complex dynamics can be infered from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators show a tipping point rather than a gradual change in outcomes:
+Testament to more complex dynamics can be inferred from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators shows a tipping point, rather than a gradual change, in outcomes:
 <br />
 <br />
 <p align="center"><i>Gradual hyperparameter tuning can lead to radical shifts in outcomes</i></p>
