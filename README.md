@@ -27,15 +27,8 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
-Testament to more complex dynamics can be inferred from hyperparameter scenarios. For instance, gradually tuning the negative step rewards for predators shows a tipping point, rather than a gradual change, in outcomes:
-<br />
-<br />
-<p align="center"><i>Gradual hyperparameter tuning can lead to radical shifts in outcomes</i></p>
-<p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_episode_length.png" width="450" height="270"/>
-</p>
 
-More emergent behavior and findings are described in the [wiki](https://github.com/doesburg11/PredPreyGrass/wiki/Emergent-behavior-in-the-Predator%E2%80%90Prey%E2%80%90Grass-environment).
+More emergent behavior and findings are described in the [`config` directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
 
 
 ### Installation Instructions

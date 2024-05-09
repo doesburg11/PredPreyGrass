@@ -2,8 +2,8 @@
 
 The benchmark configuration `config_pettingzoo_benchmark_1.py` is, somewhat arbitrarily, to test new developments in the environment. It is the same configuration used in an early stage of the environment some time ago and is displayed on the front page of the repository. It is used to test if it is still performing as expected when devoloping new features, such as for example creating new learning agents (Predator and Prey) or regrowing Grass agents.
 
+<p align="center"><i>The benchmark configuration config_pettingzoo_benchmark.py</i></p>
 <p align="center">
-The benchmark configuration `config_pettingzoo_benchmark.py`
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
@@ -42,6 +42,13 @@ This is illustrated by tuning the death_reward_prey in the configuration:
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_average_age_agents.png" width="450" height="270"/>
 </p>
 
-Prey are still trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -5 (thereafter the system breaks).
+Prey are still trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -6. However, thereafter the system collapses. This is additionally illustrated by a sudden collapse of the average episode length: 
+
+<br />
+<br />
+<p align="center"><i>Gradual hyperparameter tuning can lead to radical shifts in outcomes</i></p>
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_episode_length.png" width="450" height="270"/>
+</p>
 
 
