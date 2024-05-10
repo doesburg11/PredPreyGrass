@@ -56,7 +56,7 @@ More emergent behavior and findings are described in the [config directory](http
    ```bash
    pip install box2d box2d-kengz
    ```
-4. Alternatively, copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
+4. Alternatively, a workaround is to copy Box2d files from 'assets/box2d' (https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
 5. If facing "libGL error: failed to load driver: swrast," execute:
     ```bash
     conda install -c conda-forge gcc=12.1.0
