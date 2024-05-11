@@ -7,7 +7,7 @@ The benchmark configuration `config_pettingzoo_benchmark_1.py` is, somewhat arbi
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
-The benchmark configuration `config_pettingzoo_benchmark_2.py` is, the tuned configuration combined with the possible creation and removal of Predators and Prey.
+The benchmark configuration `config_pettingzoo_benchmark_2.py` is, the tuned configuration combined with the possible creation and removal of Predators and Prey. Grass agents are removed when eaten by Prey but regrow after a certain 
 
 #### Emergent behavior 
 
@@ -15,11 +15,11 @@ Overall, the configurations display emergent behavior of the agents:
 
 ***Predators***: 
 
-- In the trained configurations, Predators tend to hover around grass agents to capture prey. An example of this beahvior is shown in the video above by Predator number 0, who is hovering around at grass number 26, 31 and 41 before it is going after Prey number 12. However, this strategy is less frequent when `energy_gain_per_step_predator` becomes more negative, incentivizing Predators to abandon the 'wait-and-see' approach. 
+- Predators are pursuing Prey, when in their observation range. When no Prey is in the Predator's observation range a common strategy for Predators is to hover around grass agents to wait for incoming Prey. An example of this behavior is shown in the video above by Predator number 0, who is hovering around at grass number 26, 31 and 41 before it is going after Prey number 12, when it enters the observation range of Predator 0. However, this strategy seems less frequent when `energy_gain_per_step_predator` becomes more negative, incentivizing Predators to abandon the 'wait-and-see' approach. 
 
-- Predators pursue Prey even when there is no reward for eating Prey in the reward function. In such cases, they consume Prey as a means to reproduce, a process that requires sufficient energy. The threshold energy level for reproduction can only be attained through consuming prey. Therefore, Predators learn to consume prey without the promise of immediate rewards, but attain only a (sparse) reward for reproduction.
+- Predators pursue Prey even when there is no reward for eating Prey in the reward function and/or when there is no negative step reward. In such cases, they apparantly learn to consume Prey as a means to reproduce in the future, a process that requires sufficient energy. In that case, Predators learn to consume prey without the promise of immediate rewards, but attain only a (sparse) reward for reproduction.
 
-- Predators sometimes engage into cooperation with another Predator to catch a single Prey. However, the benchmark configuration only gives a reward to the one Predator who ultimately catches the Prey. Therefore, this cooperating behavior can only be attributed to the higher overall probability per agent to catch a Prey in tandem.
+- Predators sometimes engage into cooperation with another Predator to catch a single Prey. However, the configurations only gives a reward to the one Predator who ultimately catches the Prey. Therefore, this cooperating behavior can only be attributed to the higher overall probability per agent to catch a Prey in tandem.
 
 ***Prey***:
 
@@ -29,7 +29,7 @@ Overall, the configurations display emergent behavior of the agents:
 1) the agents move in a turn-based fashion
 2) no other predators are involved in catching that specific prey; ie. no cooperation among Predators. 
 
-This theoretical escape possibility is because a prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it (his is a feature of the Von Neumann neighborhood which is utilized).
+This theoretical escape possibility is because a Prey, even when at risk of being caught in the immediate next turn by a predator, can always make a single step towards a position where the threatening predator needs to move at least two times to catch it (a feature of the Von Neumann neighborhood which is utilized).
 
 However, this particular Prey behavior goes largely unnoticed in practice in the benchmark display because the simulation is trained in a *parallel* environment where all agents decide simultaneously, rather than in a turn-based fashion (note: the simulation is parallel trained but evaluated in a turn based fashion). 
 
