@@ -13,8 +13,8 @@ In the file `train_sb3_vector_ppo.py` the conversion is done using the `ss.petti
 
 The function `train` sets up the environment and uses the PPO algorithm from Stable Baselines3 with an MLP policy to train a single model that handles actions and observations for all agents in the environment. This is done in a parallel manner where the environment expects all agents to act simultaneously. In short, although the environment is multi-agent, the training loop treats it as a high-dimensional single-agent environment due to the transformations applied. This means the model learns to handle inputs and outputs for all agents simultaneously.
 
-In the file, training over multiple hyperparameters can be utilized, by setting `tune` to `True` and defining the parameter and the scenarios. Training results and the configuration are saved to local files from where the `evaluate_from_file.py` can be run. 
+In the file, training over multiple environment parameters can be utilized, by setting `parameter_variation` to `True` and defining the parameter and scenarios. Training results and the configuration are saved to local files from where the `evaluate_from_file.py` can be run. 
 
-### evluate_from_file.py
+### evaluate_from_file.py
 
 The `eval` function evaluates the trained model. Notably, it uses the AEC (Agent Environment Cycle) API during evaluation, which differs from the parallel API used during training. This requires handling individual steps and actions for each agent sequentially within each environment cycle.

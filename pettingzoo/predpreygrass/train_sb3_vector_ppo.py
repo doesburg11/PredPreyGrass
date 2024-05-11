@@ -8,7 +8,7 @@ The environment used is predpreygrass
 """
 
 import environments.predpreygrass as predpreygrass
-from config.config_pettingzoo_benchmark_1 import env_kwargs, training_steps_string, local_output_directory
+from config.config_pettingzoo import env_kwargs, training_steps_string, local_output_directory
 
 import os
 import time
@@ -64,8 +64,8 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 
 
     print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
-    if tune:
-        print("Tuning "+tune_parameter_string+": ", env_kwargs[tune_parameter_string])
+    if parameter_variation:
+        print("Tuning "+parameter_variation_parameter_string+": ", env_kwargs[parameter_variation_parameter_string])
     # create parallel environments by concatenating multiple copies of the base environment
     # 
     num_vec_envs_concatenated = 8
@@ -102,22 +102,22 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    tune = False
-    tune_parameter_string = "energy_gain_per_step_grass"
-    if tune:
-        tune_scenarios = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4] 
+    parameter_variation = False
+    parameter_variation_parameter_string = "obs_range_prey"
+    if parameter_variation:
+        parameter_variation_scenarios = [5,7,9] 
     else:
-        tune_scenarios = [env_kwargs[tune_parameter_string]] # default value, must be iterable
+        parameter_variation_scenarios = [env_kwargs[parameter_variation_parameter_string]] # default value, must be iterable
     # output file name
     #start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
     start_time = str(time.strftime('%Y-%m-%d_%H:%M:%S')) # add seconds
     file_name = f"{environment_name}_steps_{training_steps_string}"
 
-    for tune_parameter in tune_scenarios:
-        if tune:
-            env_kwargs[tune_parameter_string] = tune_parameter
+    for parameter_variation_parameter in parameter_variation_scenarios:
+        if parameter_variation:
+            env_kwargs[parameter_variation_parameter_string] = parameter_variation_parameter
             # define the destination directory for the source code
-            destination_directory_source_code = local_output_directory + tune_parameter_string + "/" + str(tune_parameter)
+            destination_directory_source_code = local_output_directory + parameter_variation_parameter_string + "/" + str(parameter_variation_parameter)
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
         else:
@@ -144,7 +144,7 @@ if __name__ == "__main__":
             elif os.path.isdir(source_item):
                 shutil.copytree(source_item, destination_item)
 
-        if tune:
+        if parameter_variation:
             # overwrite config file locally
             # Start of the code string
             code = "local_output_directory = '{}'\n".format(local_output_directory)
