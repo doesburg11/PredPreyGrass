@@ -1,10 +1,10 @@
 """
-pred/prey/grass PettingZoo multi-agent learning environment
+pred/prey/grass PettingZoo multi-agent learning environment,
 """
 import os
 import numpy as np
 import random
-from typing import List, Dict
+from typing import List
 import pygame
 from collections import defaultdict
 
@@ -32,25 +32,22 @@ class PredPreyGrass:
         obs_range_predator: int = 5,
         obs_range_prey: int = 7,
         render_mode = None,
-        energy_gain_per_step_predator = -0.3,
+        energy_gain_per_step_predator = -0.1,
         energy_gain_per_step_prey = -0.05,  
-        energy_gain_per_step_grass = 0.2,   
+        energy_gain_per_step_grass = 1.0,   
         initial_energy_predator = 5.0,
         initial_energy_prey = 5.0,
         initial_energy_grass = 3.0,
         cell_scale: int = 40,
         x_pygame_window : int = 0,
         y_pygame_window : int = 0,
+        catch_prey_reward=5.0,
+        catch_grass_reward=3.0,
         regrow_grass=False,
         prey_creation_energy_threshold = 10.0,
         predator_creation_energy_threshold = 10.0,
         create_prey = False,
         create_predator = False,
-        step_reward_predator=-0.3,
-        step_reward_prey=-0.05,
-        step_reward_grass=0.2,
-        catch_reward_prey=5.0,
-        catch_reward_grass=3.0,
         death_reward_prey = -10.0,
         death_reward_predator = -10.0,
         reproduction_reward_prey = 10.0,
@@ -81,8 +78,8 @@ class PredPreyGrass:
         self.initial_energy_grass = initial_energy_grass
         self.x_pygame_window = x_pygame_window
         self.y_pygame_window = y_pygame_window
-        self.catch_reward_grass = catch_reward_grass
-        self.catch_reward_prey = catch_reward_prey
+        self.catch_grass_reward = catch_grass_reward
+        self.catch_prey_reward = catch_prey_reward
         self.regrow_grass = regrow_grass
         self.prey_creation_energy_threshold = prey_creation_energy_threshold
         self.predator_creation_energy_threshold = predator_creation_energy_threshold
@@ -95,144 +92,149 @@ class PredPreyGrass:
         self.catch_prey_energy = catch_prey_energy
         self.catch_grass_energy = catch_grass_energy   
         self.show_energy_chart = show_energy_chart
-        self.step_reward_predator = step_reward_predator
-        self.step_reward_prey = step_reward_prey
-        self.step_reward_grass = step_reward_grass
 
-        # visualization
-        # pygame screen position window
+        # pygame position window
         os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (self.x_pygame_window, 
                                                         self.y_pygame_window)
+
+        # visualization
         self.screen = None
-        self.save_image_steps: bool = False
-        self.width_energy_chart: int = 1800 if self.show_energy_chart else 0
-        self.height_energy_chart: int = self.cell_scale * self.y_grid_size
+        self.save_image_steps = False
+        self.width_energy_chart = 1800 if self.show_energy_chart else 0
+        self.height_energy_chart = self.cell_scale * self.y_grid_size
         if self.n_possible_predator>18 or self.n_possible_prey>24:
             # too many agents to display in energy chart
-            self.show_energy_chart: bool = False
-            self.width_energy_chart: int = 0
+            self.show_energy_chart = False
+            self.width_energy_chart = 0
         # end visualization
 
         self._seed()
-        self.agent_id_counter: int = 0
+        self.agent_id_counter = 0
 
         # agent types
-        self.agent_type_name_list: List[str] = ["wall", "predator", "prey", "grass"]
-        self.predator_type_nr: int = self.agent_type_name_list.index("predator")
-        self.prey_type_nr: int = self.agent_type_name_list.index("prey")
-        self.grass_type_nr: int = self.agent_type_name_list.index("grass")
+        self.agent_type_name_list = ["wall", "predator", "prey", "grass"]  # different types of agents 
+        self.predator_type_nr = self.agent_type_name_list.index("predator") #0
+        self.prey_type_nr = self.agent_type_name_list.index("prey")  #1
+        self.grass_type_nr = self.agent_type_name_list.index("grass")  #2
         
-        # episode population metrics
-        self.n_possible_agents: int = self.n_possible_predator + self.n_possible_prey
-        self.n_active_predator: int = self.n_possible_predator
-        self.n_active_prey: int = self.n_possible_prey  
-        self.n_active_grass: int = self.n_possible_grass
-        self.n_active_predator_list: List[int] = []
-        self.n_active_prey_list: List[int] = []
-        self.n_active_grass_list: List[int] = []
-        self.n_starved_predator: int = 0
-        self.n_starved_prey: int = 0  # note: prey can become inactive due to starvation or getting eaten by predators
-        self.n_eaten_prey: int = 0
-        self.n_born_predator: int = 0
-        self.n_born_prey: int = 0
-        self.predator_age_list: List[int] = []
-        self.prey_age_list: List[int] = []
-
-        self.predator_instance_list: List[DiscreteAgent] = []  # list of all active ("living") predators
-        self.prey_instance_list: List[DiscreteAgent] = []  # list of all active prey
-        self.grass_instance_list: List[DiscreteAgent] =[]  # list of all active grass
-        self.agent_instance_list: List[DiscreteAgent] = []  # list of all active learning agents (predators and prey)
-        self.predator_name_list: List[str] = []
-        self.prey_name_list: List[str] = []
-        self.grass_name_list: List[str] = []
-        self.agent_name_list: List[str] = []
-
-        # lookup record for agent instances per grid location
-        self.agent_instance_in_grid_location = np.empty((len(self.agent_type_name_list), x_grid_size, y_grid_size), dtype=object)
-        for agent_type_nr in range(1, len(self.agent_type_name_list)):
-            self.agent_instance_in_grid_location[agent_type_nr] = np.full((self.x_grid_size, self.y_grid_size), None)
-
-        # lookup record for agent instances per agent name
-        self.agent_name_to_instance_dict: Dict[str, DiscreteAgent] = {}
-
-        # creation agent name lists
-        predator_id_nr_range = range(0, self.n_possible_predator)
-        prey_id_nr_range = range(self.n_possible_predator, self.n_possible_prey+self.n_possible_predator)
-        grass_id_nr_range = range(self.n_possible_prey+self.n_possible_predator, self.n_possible_prey+self.n_possible_predator+self.n_possible_grass)
-        self.predator_name_list =  ["predator" + "_" + str(a) for a in predator_id_nr_range]
-        self.prey_name_list =  ["prey" + "_" + str(a) for a in prey_id_nr_range]
-        self.grass_name_list =  ["grass" + "_" + str(a) for a in grass_id_nr_range]
-        self.agent_name_list = self.predator_name_list + self.prey_name_list
-
-        # observations
-        self.max_obs_offset: int = int((self.max_observation_range - 1) / 2) 
-        self.nr_observation_channels: int = len(self.agent_type_name_list)
-        obs_space = spaces.Box(
-            low=0,
-            high=1, # only one agent per cell per agent type observation channel
-            shape=(self.max_observation_range, self.max_observation_range, self.nr_observation_channels),
-            dtype=np.float32,
-        )
-        self.observation_space = [obs_space for _ in range(self.n_possible_agents)]  # type: ignore
-        # end observations
-
-
-        # actions
-        self.motion_range: List[List[int]] = [
-            [-1, 0], # move left (in a pygame grid)
-            [0, -1], # move up
-            [0, 0], # stay
-            [0, 1], # move down
-            [1, 0], # move right
-        ]    
-        self.n_actions_agent: int =len(self.motion_range)
-        action_space_agent = spaces.Discrete(self.n_actions_agent)  
-        self.action_space = [action_space_agent for _ in range(self.n_possible_agents)] 
-        # end actions
-
-        # removal agents
-        self.prey_who_remove_grass_dict: Dict[str, bool] = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        self.grass_to_be_removed_by_prey_dict: Dict[str, bool] = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
-        self.predator_who_remove_prey_dict: Dict[str, bool] = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
-        self.prey_to_be_removed_by_predator_dict: Dict[str, bool] = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        self.predator_to_be_removed_by_starvation_dict: Dict[str, bool] = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
-        self.prey_to_be_removed_by_starvation_dict: Dict[str, bool] = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        # end removal agents
-
-        self.file_name: int = 0
-        self.n_aec_cycles: int = 0
-
-    def reset(self):
-        # empty agent lists
-        self.predator_instance_list = []
-        self.prey_instance_list = []
-        self.grass_instance_list = []
-        self.agent_instance_list = []
-
-        self.predator_name_list = []
-        self.prey_name_list = []
-        self.grass_name_list = []
-        self.agent_name_list = []
-
-        self.agent_type_instance_list: List[List[DiscreteAgent]] = [[] for _ in range(4)]
-        # record of agent ages 
-        self.predator_age_list = []
-        self.prey_age_list = []
-
         # initialization
         self.n_active_predator = self.n_possible_predator
         self.n_active_prey = self.n_possible_prey  
         self.n_active_grass = self.n_possible_grass
 
+        # time series of active agents
+        self.n_active_predator_list = []    
+        self.n_active_prey_list = []
+        self.n_active_grass_list = []
+        # episode population metrics
+        self.n_starved_predator = 0
+        self.n_starved_prey = 0
+        self.n_eaten_prey = 0
+        self.n_born_predator = 0
+        self.n_born_prey = 0
 
-        self.n_agent_type_list: List[int] = [0, self.n_possible_predator, self.n_possible_prey, self.n_possible_grass]
-        self.obs_range_list: List[int] = [0, self.obs_range_predator, self.obs_range_prey, 0]
-        self.initial_energy_list: List[int] = [0, self.initial_energy_predator, self.initial_energy_prey, self.initial_energy_grass]
-        self.energy_gain_per_step_list: List[int] = [0, self.energy_gain_per_step_predator, self.energy_gain_per_step_prey, self.energy_gain_per_step_grass]
+
+
+        self.predator_instance_list = [] # list of all living predator
+        self.prey_instance_list = [] # list of all living prey
+        self.grass_instance_list = [] # list of all living grass
+        self.agent_instance_list = [] # list of all living agents
+        self.predator_name_list = []
+        self.prey_name_list = []
+        self.grass_name_list = []
+
+        self.predator_age_list = []
+        self.prey_age_list = []
+ 
+        self.agent_instance_in_grid_location = np.empty((len(self.agent_type_name_list), x_grid_size, y_grid_size), dtype=object)
+        for agent_type_nr in range(1, len(self.agent_type_name_list)):
+            self.agent_instance_in_grid_location[agent_type_nr] = np.full((self.x_grid_size, self.y_grid_size), None)
+
+
+        self.agent_name_to_instance_dict = dict()
+        self.n_agents = self.n_possible_predator + self.n_possible_prey
+
+        
+
+        # creation agent type lists
+        self.predator_name_list =  ["predator" + "_" + str(a) for a in range(self.n_possible_predator)]
+        self.prey_name_list =  ["prey" + "_" + str(a) for a in range(self.n_possible_predator, self.n_possible_prey+self.n_possible_predator)]
+        self.agent_name_list = self.predator_name_list + self.prey_name_list
+
+
+        # observations
+        max_agents_overlap = max(self.n_possible_predator, self.n_possible_prey, self.n_possible_grass)
+        self.max_obs_offset = int((self.max_observation_range - 1) / 2) 
+        self.nr_observation_channels = len(self.agent_type_name_list)
+        obs_space = spaces.Box(
+            low=0,
+            high=max_agents_overlap,
+            shape=(self.max_observation_range, self.max_observation_range, self.nr_observation_channels),
+            dtype=np.float32,
+        )
+        self.observation_space = [obs_space for _ in range(self.n_agents)]  # type: ignore
+        # end observations
+
+
+        # actions
+        self.motion_range = [
+            [-1, 0], # move left
+            [0, -1], # move up
+            [0, 0], # stay
+            [0, 1], # move down
+            [1, 0], # move right
+        ]    
+        self.n_actions_agent=len(self.motion_range)
+        action_space_agent = spaces.Discrete(self.n_actions_agent)  
+        self.action_space = [action_space_agent for _ in range(self.n_agents)] # type: ignore
+        # end actions
+
+
+        # removal agents
+        self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+        self.grass_to_be_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
+        self.predator_who_remove_prey_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
+        self.prey_to_be_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+        self.predator_to_be_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
+        self.prey_to_be_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
+        # end removal agents
+
+        self.file_name = 0
+        self.n_aec_cycles = 0
+
+
+    def reset(self):
+        # empty agent lists
+        self.predator_instance_list: List[DiscreteAgent] = []
+        self.prey_instance_list: List[DiscreteAgent] = []
+        self.grass_instance_list: List[DiscreteAgent] =[]
+        self.agent_instance_list: List[DiscreteAgent] = []
+
+        self.predator_name_list: List[str] = []
+        self.prey_name_list: List[str] = []
+        self.grass_name_list: List[str] = []
+        self.agent_name_list: List[str] = []
+
+        self.agent_type_instance_list = [[] for _ in range(4)]
+        # record of agent ages 
+        self.predator_age_list: List[int] = []
+        self.prey_age_list: List[int] = []
+
+        # initialization
+        self.n_active_predator: int = self.n_possible_predator
+        self.n_active_prey: int = self.n_possible_prey  
+        self.n_active_grass: int = self.n_possible_grass
+
+
+        self.n_agent_type_list = [0, self.n_possible_predator, self.n_possible_prey, self.n_possible_grass]
+        self.obs_range_list = [0, self.obs_range_predator, self.obs_range_prey, 0]
+        self.initial_energy_list = [0, self.initial_energy_predator, self.initial_energy_prey, self.initial_energy_grass]
+        self.energy_gain_per_step_list = [0, self.energy_gain_per_step_predator, self.energy_gain_per_step_prey, self.energy_gain_per_step_grass]
 
         self.agent_id_counter = 0
         self.agent_name_to_instance_dict = {}        
-        self.model_state: np.ndarray = np.zeros((self.nr_observation_channels, self.x_grid_size, self.y_grid_size), dtype=np.float32)        
+        self.model_state = np.zeros((self.nr_observation_channels, self.x_grid_size, self.y_grid_size), dtype=np.float32)
+        
 
         # create agents of all types excluding "wall"-agents
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
@@ -283,7 +285,7 @@ class PredPreyGrass:
             self.grass_instance_list
         )
 
-        # deactivate agents which can be created later at runtime
+        # deactivate agents which can be created at runtime
         for predator_name in self.predator_name_list:
             predator_instance = self.agent_name_to_instance_dict[predator_name]
             if predator_instance.agent_id_nr >= self.n_initial_active_predator: # number of initial active predators
@@ -308,18 +310,14 @@ class PredPreyGrass:
         # removal agents set to false
         self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
         self.grass_to_be_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
-        self.predator_who_remove_prey_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
-        self.prey_to_be_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        self.prey_to_be_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-        self.predator_to_be_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
 
         # define the learning agents
         self.agent_instance_list = self.predator_instance_list + self.prey_instance_list        
         self.agent_name_list = self.predator_name_list + self.prey_name_list
 
-        self.agent_reward_dict: Dict[str, float] = dict(zip(self.agent_name_list, [0.0 for _ in self.agent_name_list]))    
+        self.agent_reward_dict = dict(zip(self.agent_name_list, [0.0 for _ in self.agent_name_list]))
+    
         self.n_aec_cycles = 0
-
         # time series of active agents
         self.n_active_predator_list = []    
         self.n_active_prey_list = []
@@ -383,8 +381,9 @@ class PredPreyGrass:
                 else: # prey starves to death
                     self.prey_to_be_removed_by_starvation_dict[agent_name] = True
 
-        # reset rewards to zero in every single agent step
-        self.agent_reward_dict = dict(zip(self.agent_name_list, [0.0 for _ in self.agent_name_list]))
+        # reset rewards to zero in every step of an agent
+        self.agent_reward_dict = dict(zip(self.agent_name_list, 
+                                        [0.0 for _ in self.agent_name_list]))
 
         if is_last_step_of_cycle: 
             # removes agents, reap rewards, eventually regrows grass, create predators and prey at the end of the cycle
@@ -406,9 +405,8 @@ class PredPreyGrass:
                     else: 
                         # reap rewards for predator which removes prey
                         # energy gain per step equals reward but that is not necessarily so in general
-                        #self.agent_reward_dict[predator_name] += self.energy_gain_per_step_predator 
-                        self.agent_reward_dict[predator_name] += self.step_reward_predator 
-                        self.agent_reward_dict[predator_name] += self.catch_reward_prey * self.predator_who_remove_prey_dict[predator_name]
+                        self.agent_reward_dict[predator_name] += self.energy_gain_per_step_predator 
+                        self.agent_reward_dict[predator_name] += self.catch_prey_reward * self.predator_who_remove_prey_dict[predator_name]
                         predator_instance.energy += self.energy_gain_per_step_predator 
                         predator_instance.energy += self.catch_prey_energy * self.predator_who_remove_prey_dict[predator_name]
                         # creates new predator agent when energy is above self.predator_creation_energy_threshold
@@ -465,8 +463,8 @@ class PredPreyGrass:
                     else: 
                         # reap rewards for predator which removes prey
                         # energy gain per step equals reward but that is not necessarily so in general
-                        self.agent_reward_dict[prey_name] += self.step_reward_prey 
-                        self.agent_reward_dict[prey_name] += self.catch_reward_grass * self.prey_who_remove_grass_dict[prey_name]                     
+                        self.agent_reward_dict[prey_name] += self.energy_gain_per_step_prey 
+                        self.agent_reward_dict[prey_name] += self.catch_grass_reward * self.prey_who_remove_grass_dict[prey_name]                     
                         prey_instance.energy += self.energy_gain_per_step_prey
                         prey_instance.energy += self.catch_grass_energy * self.prey_who_remove_grass_dict[prey_name] 
                         # creates new prey agent when energy is above self.prey_creation_energy_threshold
@@ -514,6 +512,8 @@ class PredPreyGrass:
                     self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] -= 1
                     grass_instance.energy = 0.0
                     grass_instance.is_active = False
+                    #TODO next line crashes but is needed to remove grass from position dict
+                    #self.remove_agent_instance_from_position_dict(grass_instance)
 
                 # whether or not grass can regrow
                 if self.regrow_grass:
@@ -524,21 +524,23 @@ class PredPreyGrass:
                         self.model_state[self.grass_type_nr,grass_instance.position[0],grass_instance.position[1]] += 1
                         grass_instance.is_active = True
                              
-            self.n_aec_cycles += 1
+            self.n_aec_cycles = self.n_aec_cycles + 1
+
 
             # record number of active agents at the end of the cycle
             self.n_active_predator_list.insert(self.n_aec_cycles,self.n_active_predator)
             self.n_active_prey_list.insert(self.n_aec_cycles,self.n_active_prey)
             self.n_active_grass_list.insert(self.n_aec_cycles,self.n_active_grass)
 
-            #reinit agents removal records to default at the end of the cycle
+            
+            
+            #reinit agents records to default at the end of the cycle
             self.prey_who_remove_grass_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
             self.grass_to_be_removed_by_prey_dict = dict(zip(self.grass_name_list, [False for _ in self.grass_name_list]))
             self.predator_who_remove_prey_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list])) 
             self.prey_to_be_removed_by_predator_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
-            self.prey_to_be_removed_by_starvation_dict = dict(zip(self.prey_name_list, [False for _ in self.prey_name_list]))
             self.predator_to_be_removed_by_starvation_dict = dict(zip(self.predator_name_list, [False for _ in self.predator_name_list]))
-            # end reinit agents removal records to default at the end of the cycle
+            # end reinit agents records to default at the end of the cycle
 
         if self.render_mode == "human" and agent_instance.is_active:
             self.render()

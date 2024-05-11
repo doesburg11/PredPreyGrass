@@ -11,7 +11,7 @@
 - note that ajusting the configuration of the trained model is done 
   in the defined local directory (and not in your cloned directory!)
 """
-# Agent Enironment Cycle (AEC) pettingzoo predpreygrass environment
+# Agent Environment Cycle (AEC) pettingzoo predpreygrass environment
 import environments.predpreygrass as predpreygrass
 # make sure this configuration is consistent with the training configuration in "train_sb3_vector_ppo.py"
 from config.config_pettingzoo import env_kwargs, training_steps_string, local_output_directory
@@ -180,8 +180,9 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
     # end evaluation
 
 if __name__ == "__main__":
+    environment_name = "predpreygrass"
     env_fn = predpreygrass
-    model_file_name = "predprey_steps_"+training_steps_string
+    model_file_name = f"{environment_name}_steps_{training_steps_string}"
     script_directory = os.path.dirname(os.path.abspath(__file__))
     output_directory = script_directory+"/output/"
     loaded_policy = output_directory + model_file_name
@@ -290,10 +291,22 @@ if __name__ == "__main__":
         print(f"Per episode mean of mean age Predator = {round(episode_mean_of_mean_age_predator,1)}")
         print(f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}")
 
-
     if watch_grid_model:
         # Evaluate and watch games
-        episode_mean_of_mean_cumulative_rewards, episode_mean_of_mean_cumulative_rewards_predators, episode_mean_of_mean_cumulative_rewards_prey, mean_episode_length, std_episode_length, predator_extinct_at_termination_count = eval(
+        (
+            episode_mean_of_mean_cumulative_rewards, 
+            episode_mean_of_mean_cumulative_rewards_predators, 
+            episode_mean_of_mean_cumulative_rewards_prey, 
+            mean_episode_length, std_episode_length, 
+            predator_extinct_at_termination_count,
+            episode_mean_of_n_starved_predator_per_cycle,
+            episode_mean_of_n_starved_prey_per_cycle,
+            episode_mean_of_n_eaten_prey_per_cycle,
+            episode_mean_of_n_born_predator_per_cycle,
+            episode_mean_of_n_born_prey_per_cycle,
+            episode_mean_of_mean_age_predator,
+            episode_mean_of_mean_age_prey
+        ) = eval(
             env_fn, 
             num_episodes=5, 
             render_mode="human", 
@@ -313,3 +326,5 @@ if __name__ == "__main__":
         print(f"Per episode mean of eaten prey/cycle = {round(episode_mean_of_n_eaten_prey_per_cycle,3)}")
         print(f"Per episode mean of born predator/cycle = {round(episode_mean_of_n_born_predator_per_cycle,3)}")
         print(f"Per episode_mean_of_born prey/cycle = {round(episode_mean_of_n_born_prey_per_cycle,3)}")
+        print(f"Per episode mean of mean age Predator = {round(episode_mean_of_mean_age_predator,1)}")
+        print(f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}")
