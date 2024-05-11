@@ -8,9 +8,8 @@ The environment used is predpreygrass
 """
 
 import environments.predpreygrass as predpreygrass
-from config.config_pettingzoo import env_kwargs, training_steps_string, local_output_directory
+from config.config_pettingzoo_benchmark_1 import env_kwargs, training_steps_string, local_output_directory
 
-import glob
 import os
 import time
 import sys
@@ -22,29 +21,37 @@ from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common import logger
 
 class SampleLoggerCallback(BaseCallback):
     def __init__(self, verbose=0):
         super().__init__(verbose)
-        self.collected_samples = []
+        self.current_episode_length = 0
+        self.episode_lengths = []
 
     def _on_step(self) -> bool:
         # Access and log the collected samples if available
         #print("_on_step is called")
-        local_variables = self.locals  # This holds step data like 'actions' and 'rewards'
+        #local_variables = self.locals  # This holds step data like 'actions' and 'rewards'
+        #print("Rewards: ", self.locals["rewards"])
+        #print("Actions: ", self.locals["actions"])
+        #print("len(Actions): ", len(self.locals["actions"]))
+        #print("len(Rewards): ", len(self.locals["rewards"]))
 
-        # Print observations, actions, and rewards
-        print("locals: ", self.locals)
-        print("Rewards: ", self.locals["rewards"])
-        print("Actions: ", self.locals["actions"])
-        print("len(Actions): ", len(self.locals["actions"]))
-        print("Step number: ", self.num_timesteps)
-        #print("Observation tensor: ", self.locals["obs_tensor"])
+        # TODO: DOES 1 STEP INVOLVES ACTUALLY 8 STEPS? BECAUSE 8 ENVIRONMENTS ARE COPIED INTO 1 BY
+        # ss.concat_vec_envs_v1 ??? 
+        self.current_episode_length += 1
+
+        # If the episode is done, log the episode length and reset the counter
+        if 'done' in self.locals and self.locals['done']:
+            self.episode_lengths.append(self.current_episode_length)
+            self.logger.record('train/episode_length', self.current_episode_length)
+            self.current_episode_length = 0
         return True  # Continue training
 
     def _on_training_end(self) -> None:
         # Print collected samples at the end of training
-        print("Collected Samples:", self.collected_samples)
+        print("Training ended.")
 
 
 def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
@@ -59,9 +66,16 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
     if tune:
         print("Tuning "+tune_parameter_string+": ", env_kwargs[tune_parameter_string])
-
+    # create parallel environments by concatenating multiple copies of the base environment
+    # 
+    num_vec_envs_concatenated = 8
     raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
-    raw_parallel_env = ss.concat_vec_envs_v1(raw_parallel_env, 8, num_cpus=8, base_class="stable_baselines3")
+    raw_parallel_env = ss.concat_vec_envs_v1(
+        raw_parallel_env, 
+        num_vec_envs_concatenated, 
+        num_cpus=8, 
+        base_class="stable_baselines3"
+    )
 
     model = PPO(
         MlpPolicy,
@@ -74,8 +88,8 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     sample_logger_callback = SampleLoggerCallback()
 
 
-    model.learn(total_timesteps=steps, progress_bar=True)
-    #model.learn(total_timesteps=steps, progress_bar=True, callback=sample_logger_callback)
+    #model.learn(total_timesteps=steps, progress_bar=True)
+    model.learn(total_timesteps=steps, progress_bar=True, callback=sample_logger_callback)
     model.save(saved_directory_and_model_file_name)
     print("saved path: ",saved_directory_and_model_file_name)
     print("Model has been saved.")
@@ -85,17 +99,18 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 
 
 if __name__ == "__main__":
+    environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
     tune = False
-    tune_parameter_string = "death_reward_prey"
+    tune_parameter_string = "energy_gain_per_step_grass"
     if tune:
-        tune_scenarios = [0, -1, -2, -3, -4, -5, -6, -7, -8, -9, -10] 
+        tune_scenarios = [0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4] 
     else:
         tune_scenarios = [env_kwargs[tune_parameter_string]] # default value, must be iterable
     # output file name
-    start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
-    environment_name = "predprey"
+    #start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
+    start_time = str(time.strftime('%Y-%m-%d_%H:%M:%S')) # add seconds
     file_name = f"{environment_name}_steps_{training_steps_string}"
 
     for tune_parameter in tune_scenarios:
@@ -110,7 +125,6 @@ if __name__ == "__main__":
             destination_directory_source_code = os.path.join(local_output_directory, start_time)
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
-
 
         # save the source code locally
         python_file_name = os.path.basename(sys.argv[0])

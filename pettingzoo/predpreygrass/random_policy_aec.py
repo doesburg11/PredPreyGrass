@@ -3,7 +3,7 @@
 
 # AEC pettingzoo predpreygrass environment using random policy
 from environments.predpreygrass import raw_env
-from config.config_pettingzoo_benchmark_2 import env_kwargs, local_output_directory
+from config.config_pettingzoo import env_kwargs, local_output_directory
 
 from pettingzoo.utils import agent_selector
 

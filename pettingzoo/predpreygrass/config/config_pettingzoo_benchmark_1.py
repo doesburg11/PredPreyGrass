@@ -1,6 +1,10 @@
-# benchmark with creation of agents and with regrowing grass
-# this benchmark has the maximum number of possible Predators (18) and Prey (24)
-# which can still be displayed with the energy chart 
+"""
+The benchmark configuration config_pettingzoo_benchmark_1.py is, somewhat arbitrarily, to 
+test new developments in the environment. It is the same configuration used in an early 
+stage of the environment some time ago and is displayed on the front page of the repository. 
+It is used to test if it is still performing as expected when devoloping new features, such 
+as for example creating new learning agents (Predator and Prey) or regrowing Grass agents.
+"""
 
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
@@ -31,8 +35,10 @@ env_kwargs = dict(
     initial_energy_prey = 5.0, 
     initial_energy_grass = 0.0,
     # reward parameters
-    catch_prey_reward = 5.0, # for predator 
-    catch_grass_reward = 3.0, # for prey
+    step_reward_predator = 0.0,
+    step_reward_prey = 0.0,
+    catch_reward_prey = 5.0, # for predator 
+    catch_reward_grass = 3.0, # for prey
     death_reward_prey = 0.0,
     death_reward_predator = 0.0,
     reproduction_reward_prey = 0.0,
