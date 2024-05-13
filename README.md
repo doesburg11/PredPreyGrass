@@ -72,4 +72,9 @@ To evaluate and visualize after training follow instructions in:
 ## Configuration of the PredPreyGrass environment
 [The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/pettingzoo/predpreygrass/config/config_pettingzoo_benchmark_1.py) used in the gif-video above.
 
+## References
+
+-- [Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer. Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. MIT Press, 2024](https://www.marl-book.com/download/marl-book.pdf)
+-- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learnin. 2021-2024](https://pettingzoo.farama.org/)
+
 
