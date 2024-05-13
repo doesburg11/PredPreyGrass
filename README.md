@@ -13,7 +13,7 @@ A multi-agent reinforcement learning (MARL) environment, trained using Proximal 
 </p>
 
 
-### Emergent Behaviors
+## Emergent Behaviors
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
 
 <p align="center">
@@ -23,7 +23,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 More emergent behavior and findings are described in the [config directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
 
 
-### Installation
+## Installation
 
 **Editor used:** Visual Studio Code 1.88.1 on Linux Mint 21.3 Cinnamon
 
@@ -56,11 +56,11 @@ More emergent behavior and findings are described in the [config directory](http
     
 ### Getting started
 
-#### Visualize a random polic
+### Visualize a random polic
 In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy.py```
 
-#### Training and visualize trained model using PPO from stable baselines3
+### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
 ```pettingzoo/predpreygrass/config/config_pettingzoo.py```
 In Visual Studio Code run:
@@ -69,7 +69,7 @@ To evaluate and visualize after training follow instructions in:
 ```pettingzoo/predpreygrass/evaluate_from_file.py```
 
 
-### Configuration of the PredPreyGrass environment
+## Configuration of the PredPreyGrass environment
 [The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/pettingzoo/predpreygrass/config/config_pettingzoo_benchmark_1.py) used in the gif-video above.
 
 
