@@ -1,5 +1,13 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ### A Predator-Prey-Grass multiagent learning environment
+
+
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predprey.png" width="700" height="300"/>
+</p>
+
+
 
 
 <p align="center">
