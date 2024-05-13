@@ -3,7 +3,7 @@
 ### A Predator-Prey-Grass multiagent learning environment
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="150" height="80"/> <b style="font-size: 24px;">A Predator-Prey-Grass multiagent learning environment</b>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="150" height="80"/> <b style="font-size: 36px;">A Predator-Prey-Grass multiagent learning environment</b>
 </p>
 
 <p align="center">
