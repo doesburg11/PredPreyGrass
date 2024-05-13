@@ -6,6 +6,9 @@
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predatorprey.png" width="150" height="80"/> <b style="font-size: 24px;">A Predator-Prey-Grass multiagent learning environment</b>
 </p>
 
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
+</p>
 
 
 ### Explanation of the agents, the environment and the learning algorithm
