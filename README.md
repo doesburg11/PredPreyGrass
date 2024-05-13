@@ -1,11 +1,12 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-
+</br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="1000" height="80"/> 
 </p>
+</br>
 A multi-agent reinforcement learning environment trained using Proximal Policy Optimization (PPO) is employed. Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. This simulation represents a predator-prey-grass ecosystem within a multi-agent reinforcement learning framework. Learning agents, learn to execute movement actions based on their partially observations of the environment to maximize cumulative reward. The environment is a bounded grid world and the agents move within a Von Neumann neighborhood.
-
+</br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
