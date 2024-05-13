@@ -4,7 +4,7 @@
 
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predatorprey.png" width="700" height="300"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predatorprey.png" width="200" height="100"/>
 </p>
 
 
