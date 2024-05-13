@@ -13,7 +13,7 @@ A multi-agent reinforcement learning (MARL) environment, trained using Proximal 
 </p>
 
 
-### Emergent Behavior
+### Emergent Behaviors
 This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. Each agent (Predator, Prey, Grass) follows simple rules based on its current state, but the interactions between agents can lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
 
 <p align="center">
