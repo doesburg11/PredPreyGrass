@@ -102,10 +102,10 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = False
-    parameter_variation_parameter_string = "obs_range_prey"
+    parameter_variation = True
+    parameter_variation_parameter_string = "prey_creation_energy_threshold"
     if parameter_variation:
-        parameter_variation_scenarios = [5,7,9] 
+        parameter_variation_scenarios = [8,9,10,11,12,13,14,15,16] 
     else:
         parameter_variation_scenarios = [env_kwargs[parameter_variation_parameter_string]] # default value, must be iterable
     # output file name
