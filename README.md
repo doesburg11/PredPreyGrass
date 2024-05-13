@@ -23,7 +23,7 @@ This algorithm is an example of how elaborate behaviors can emerge from simple r
 More emergent behavior and findings are described in the [config directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
 
 
-### Installation Instructions
+### Installation
 
 **Editor used:** Visual Studio Code 1.88.1 on Linux Mint 21.3 Cinnamon
 
@@ -54,11 +54,13 @@ More emergent behavior and findings are described in the [config directory](http
     ```bash
     conda install -c conda-forge gcc=12.1.0
     
-### Visualize a random policy
+### Getting started
+
+#### Visualize a random polic
 In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy.py```
 
-### Training and visualize trained model using PPO from stable baselines3
+#### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
 ```pettingzoo/predpreygrass/config/config_pettingzoo.py```
 In Visual Studio Code run:
