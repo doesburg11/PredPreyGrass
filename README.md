@@ -54,7 +54,7 @@ More emergent behavior and findings are described in the [config directory](http
     ```bash
     conda install -c conda-forge gcc=12.1.0
     
-### Getting started
+## Getting started
 
 ### Visualize a random polic
 In Visual Studio Code run:
