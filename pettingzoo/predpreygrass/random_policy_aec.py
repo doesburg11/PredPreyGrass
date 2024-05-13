@@ -9,16 +9,17 @@ from pettingzoo.utils import agent_selector
 
 # displaying the population of predators and prey
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator # for integer ticks
+from matplotlib.ticker import MaxNLocator  # for integer ticks
 
 from statistics import mean, stdev
 
 num_episodes = 1
-env_kwargs["render_mode"]="human" if num_episodes == 1 else "None"
+env_kwargs["render_mode"] = "human" if num_episodes == 1 else "None"
 
-raw_env = raw_env(**env_kwargs) 
+raw_env = raw_env(**env_kwargs)
 
 
 avg_cum_rewards = [0 for _ in range(num_episodes)]
@@ -47,18 +48,21 @@ for i in range(num_episodes):
             4: [1, 0], # move right
             """
         raw_env.step(action)
-        if agent_selector.is_last(): #
+        if agent_selector.is_last():  #
             n_aec_cycles += 1
-            #print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
-        agent_selector.next()   
+            # print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
+        agent_selector.next()
 
-    avg_cum_rewards[i]= mean(cumulative_rewards.values()) # type: ignore
-    avg_cycles[i]= n_aec_cycles
-    std_cum_rewards[i]= stdev(cumulative_rewards.values())
-    print(f"Cycles = {n_aec_cycles}", f"Avg = {round(avg_cum_rewards[i],1)}", 
-          f"Std = {round(std_cum_rewards[i],1)}",end=" ")
+    avg_cum_rewards[i] = mean(cumulative_rewards.values())  # type: ignore
+    avg_cycles[i] = n_aec_cycles
+    std_cum_rewards[i] = stdev(cumulative_rewards.values())
+    print(
+        f"Cycles = {n_aec_cycles}",
+        f"Avg = {round(avg_cum_rewards[i],1)}",
+        f"Std = {round(std_cum_rewards[i],1)}",
+        end=" ",
+    )
     print()
 raw_env.close()
 print(f"Average of Avg = {round(mean(avg_cum_rewards),1)}")
 print(f"Average of Cycles = {round(mean(avg_cycles),1)}")
-  
