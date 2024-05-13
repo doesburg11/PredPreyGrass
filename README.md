@@ -56,7 +56,7 @@ More emergent behavior and findings are described in the [config directory](http
     
 ## Getting started
 
-### Visualize a random polic
+### Visualize a random policy
 In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy.py```
 
