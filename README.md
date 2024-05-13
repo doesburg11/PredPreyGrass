@@ -74,7 +74,7 @@ To evaluate and visualize after training follow instructions in:
 
 ## References
 
-- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/) The utlimate go-to for multi-agent reinforcement learning deployment. My project could never had even the slightest lift-off without their monumental work. The [Waterworld tutorial](https://github.com/Farama-Foundation/PettingZoo/blob/master/docs/tutorials/sb3/waterworld.md) got me initially on the road and is certainly a place to good start.  
+- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/) The utlimate go-to for multi-agent reinforcement learning deployment. My project could never had even the slightest lift-off without their monumental work. The [Waterworld tutorial](https://github.com/Farama-Foundation/PettingZoo/blob/master/docs/tutorials/sb3/waterworld.md) got me initially on the road and is certainly a good place to start.  
 - [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
 
 
