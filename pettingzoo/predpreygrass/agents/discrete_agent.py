@@ -2,12 +2,14 @@ import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
 
+from pettingzoo.utils.env import AgentID
+
 class DiscreteAgent:
     def __init__(
         self,
         agent_type_nr: int,
         agent_id_nr: int,
-        agent_name: str,
+        agent_name: AgentID,
         model_state_agent: np.ndarray,
         observation_range: int = 7,
         n_channels: int = 4,  # number of observation channels

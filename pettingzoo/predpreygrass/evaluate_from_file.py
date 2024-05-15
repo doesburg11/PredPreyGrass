@@ -284,6 +284,7 @@ if __name__ == "__main__":
         file.write(f"Number of episodes = {num_episodes}" + "\n")
         file.write(f"Mean episode length = {mean_episode_length}" + "\n")
         file.write(f"Standard deviation episode length = {std_episode_length}" + "\n")
+        # TODO: put writing into function for scalability and code "blackness"
         file.write(
             f"Per episode mean of per agent mean cumulative reward = {episode_mean_of_mean_cumulative_rewards}"
             + "\n"

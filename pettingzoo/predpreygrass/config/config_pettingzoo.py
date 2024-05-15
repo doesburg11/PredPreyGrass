@@ -19,8 +19,10 @@ env_kwargs = dict(
     obs_range_predator=5, # must be odd    
     obs_range_prey=7, # must be odd
     # energy parameters
-    energy_gain_per_step_predator = -0.3,
-    energy_gain_per_step_prey = -0.05,
+    energy_gain_per_step_predator = -0.3,  # -0.3,
+    energy_gain_per_step_prey = -0.05,  #-0.05,
+    #energy_gain_per_move_predator = -0.2,
+    #energy_gain_per_move_prey = -0.02,
     energy_gain_per_step_grass = 0.2,  
     catch_prey_energy = 5.0,
     catch_grass_energy = 3.0,   
