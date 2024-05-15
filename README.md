@@ -1,5 +1,5 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-
+[![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
 </br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="700" height="80"/> 
