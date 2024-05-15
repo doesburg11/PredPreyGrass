@@ -1,10 +1,9 @@
 """
-This file trains a multi agent  reinforcement model in a parallel 
+This file trains a multi agent reinforcement model in a parallel 
 environment. Evaluation is done using the AEC API. After training, 
 the source code and the trained model is saved in a separate 
-directory, for reuse and analysis. 
-The algorithm used is PPO from stable_baselines3. 
-The environment used is predpreygrass
+directory, for reuse and analysis. The algorithm used is PPO from 
+stable_baselines3. 
 """
 
 import environments.predpreygrass as predpreygrass
@@ -35,30 +34,14 @@ class SampleLoggerCallback(BaseCallback):
         self.episode_lengths = []
 
     def _on_step(self) -> bool:
-        # Access and log the collected samples if available
-        # print("_on_step is called")
-        # local_variables = self.locals  # This holds step data like 'actions' and 'rewards'
-        # print("Rewards: ", self.locals["rewards"])
-        # print("Actions: ", self.locals["actions"])
-        # print("len(Actions): ", len(self.locals["actions"]))
-        # print("len(Rewards): ", len(self.locals["rewards"]))
-
-        # TODO: DOES 1 STEP INVOLVES ACTUALLY 8 STEPS? BECAUSE 8 ENVIRONMENTS ARE COPIED INTO 1 BY
-        # ss.concat_vec_envs_v1 ???
         self.current_episode_length += 1
-
         # If the episode is done, log the episode length and reset the counter
         if "done" in self.locals and self.locals["done"]:
             self.episode_lengths.append(self.current_episode_length)
             self.logger.record("train/episode_length", self.current_episode_length)
             self.current_episode_length = 0
         return True  # Continue training
-
-    def _on_training_end(self) -> None:
-        # Print collected samples at the end of training
-        print("Training ended.")
-
-
+ 
 def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     parallel_env = parallel_wrapper_fn(env_fn.raw_env)
 
@@ -110,9 +93,9 @@ if __name__ == "__main__":
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
     parameter_variation = False
-    parameter_variation_parameter_string = "prey_creation_energy_threshold"
+    parameter_variation_parameter_string = "n_initial_active_prey"
     if parameter_variation:
-        parameter_variation_scenarios = [8, 9, 10, 11, 12, 13, 14, 15, 16]
+        parameter_variation_scenarios = [8, 10, 12, 14, 16]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]
