@@ -193,7 +193,7 @@ class PredPreyGrass:
                 self.max_observation_range,
                 self.nr_observation_channels,
             ),
-            dtype=np.float32,
+            dtype=np.float64,
         )
         self.observation_space = [obs_space for _ in range(self.n_possible_agents)]  # type: ignore
         # end observations
@@ -288,7 +288,7 @@ class PredPreyGrass:
         self.agent_name_to_instance_dict = {}
         self.model_state: np.ndarray = np.zeros(
             (self.nr_observation_channels, self.x_grid_size, self.y_grid_size),
-            dtype=np.float32,
+            dtype=np.float64,
         )
 
         # create agents of all types excluding "wall"-agents
@@ -887,7 +887,7 @@ class PredPreyGrass:
                 self.max_observation_range,
                 self.max_observation_range,
             ),
-            dtype=np.float32,
+            dtype=np.float64,
         )
         # wall channel  filled with ones up front
         observation[0].fill(1.0)
