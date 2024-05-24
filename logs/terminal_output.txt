@@ -1,0 +1,954 @@
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 33.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 03:04:53,873] Trial 39 finished with value: 0.0 and parameters: {'n_steps': 2805, 'batch_size': 32, 'gamma': 0.816721317353958, 'learning_rate': 0.009458379031807431, 'ent_coef': 2.1171047901384187e-07, 'clip_range': 0.24940061423499293}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 4.90
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=6.00 +/- 4.90
+Episode length: 42.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=12.00 +/- 7.48
+Episode length: 56.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 03:18:50,679] Trial 40 finished with value: 3.0 and parameters: {'n_steps': 2465, 'batch_size': 64, 'gamma': 0.888723280189157, 'learning_rate': 0.3594138281355754, 'ent_coef': 3.651442817451828e-06, 'clip_range': 0.23125740799993977}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 12.00
+Episode length: 59.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=12.00 +/- 11.66
+Episode length: 50.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=12.00 +/- 4.00
+Episode length: 62.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=230.00 +/- 86.72
+Episode length: 734.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=652.00 +/- 72.50
+Episode length: 2557.00 +/- 0.00
+New best mean reward!
+MAJOR ERROR
+State model nonzero prey:  2.8500000000000183
+(x,y): ( 0 , 8 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+    return self.pred_prey_env.render()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    agent_instance.position[1],
+                                
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Evaluation failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 03:41:40,926] Trial 41 failed with parameters: {'n_steps': 2547, 'batch_size': 32, 'gamma': 0.9824009630435242, 'learning_rate': 0.0013270642793013268, 'ent_coef': 2.4648929203059637e-08, 'clip_range': 0.17207998659304002} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 03:41:40,927] Trial 41 failed with value None.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=64.00 +/- 27.28
+Episode length: 260.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=36.00 +/- 16.25
+Episode length: 95.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=8.00 +/- 4.00
+Episode length: 65.00 +/- 0.00
+[I 2024-05-24 04:05:45,983] Trial 42 finished with value: 47.0 and parameters: {'n_steps': 2545, 'batch_size': 32, 'gamma': 0.9824969956366445, 'learning_rate': 0.0003587032273306546, 'ent_coef': 1.282954805027341e-08, 'clip_range': 0.16900460814200274}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 48.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=4.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 04:24:09,549] Trial 43 finished with value: 43.0 and parameters: {'n_steps': 2285, 'batch_size': 32, 'gamma': 0.9802590041567733, 'learning_rate': 0.0014029699065143959, 'ent_coef': 1.133117571236017e-08, 'clip_range': 0.13212663682480685}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 4.90
+Episode length: 47.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=106.00 +/- 23.32
+Episode length: 258.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=20.00 +/- 6.32
+Episode length: 63.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=26.00 +/- 13.56
+Episode length: 59.00 +/- 0.00
+[I 2024-05-24 04:43:41,160] Trial 44 finished with value: 243.0 and parameters: {'n_steps': 2549, 'batch_size': 32, 'gamma': 0.9647189034733695, 'learning_rate': 0.00010787871317882533, 'ent_coef': 3.1057442778251966e-08, 'clip_range': 0.1551927603205176}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=874.00 +/- 79.15
+Episode length: 2341.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=68.00 +/- 19.39
+Episode length: 257.00 +/- 0.00
+[I 2024-05-24 05:00:12,433] Trial 45 finished with value: 30.0 and parameters: {'n_steps': 2057, 'batch_size': 32, 'gamma': 0.9658300616748191, 'learning_rate': 4.2976563108895325e-05, 'ent_coef': 3.744445007827053e-08, 'clip_range': 0.14860252020143808}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 05:02:20,686] Trial 46 finished with value: 8.0 and parameters: {'n_steps': 3192, 'batch_size': 512, 'gamma': 0.9516342354320974, 'learning_rate': 9.744090614724296e-05, 'ent_coef': 6.224484241363693e-07, 'clip_range': 0.11556158833370032}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=18.00 +/- 16.00
+Episode length: 45.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=88.00 +/- 17.20
+Episode length: 327.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=50.00 +/- 18.97
+Episode length: 262.00 +/- 0.00
+[I 2024-05-24 05:10:23,586] Trial 47 finished with value: 7.0 and parameters: {'n_steps': 2845, 'batch_size': 128, 'gamma': 0.9867752281504899, 'learning_rate': 0.005053788981092976, 'ent_coef': 2.503928767925058e-08, 'clip_range': 0.20480321998755646}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=26.00 +/- 18.55
+Episode length: 46.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=12.00 +/- 7.48
+Episode length: 20.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=214.00 +/- 50.04
+Episode length: 428.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 05:15:55,444] Trial 48 finished with value: 77.0 and parameters: {'n_steps': 2754, 'batch_size': 256, 'gamma': 0.9694247151666014, 'learning_rate': 0.00012513562198766018, 'ent_coef': 1.4822875799509115e-07, 'clip_range': 0.1839662470018903}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 41.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=90.00 +/- 20.98
+Episode length: 206.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=72.00 +/- 21.35
+Episode length: 192.00 +/- 0.00
+[I 2024-05-24 05:33:47,010] Trial 49 finished with value: 10.0 and parameters: {'n_steps': 2363, 'batch_size': 32, 'gamma': 0.9307972537886988, 'learning_rate': 1.893792156141199e-05, 'ent_coef': 0.000508678882065869, 'clip_range': 0.21662087685787648}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=4.00 +/- 4.90
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 05:40:50,100] Trial 50 finished with value: 118.0 and parameters: {'n_steps': 3025, 'batch_size': 64, 'gamma': 0.9425633304802099, 'learning_rate': 0.000550088836160972, 'ent_coef': 2.5963866392724618e-05, 'clip_range': 0.3764361162967438}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 4.90
+Episode length: 58.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=6.00 +/- 4.90
+Episode length: 81.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=48.00 +/- 17.20
+Episode length: 142.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=386.00 +/- 92.87
+Episode length: 797.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=10.00 +/- 6.32
+Episode length: 35.00 +/- 0.00
+[I 2024-05-24 05:45:58,080] Trial 51 finished with value: 18.0 and parameters: {'n_steps': 2687, 'batch_size': 256, 'gamma': 0.958606839255432, 'learning_rate': 6.25428415128647e-05, 'ent_coef': 8.014672435066796e-05, 'clip_range': 0.25631375670266365}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 8.00
+Episode length: 43.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=14.00 +/- 4.90
+Episode length: 62.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=6.00 +/- 8.00
+Episode length: 43.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=30.00 +/- 17.89
+Episode length: 171.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 06:05:06,446] Trial 52 finished with value: 24.0 and parameters: {'n_steps': 2536, 'batch_size': 32, 'gamma': 0.9944911354960129, 'learning_rate': 0.0011725395013809916, 'ent_coef': 2.2274325522841244e-08, 'clip_range': 0.1593917364522126}. Best is trial 33 with value: 669.0.
+MAJOR ERROR
+State model nonzero prey:  2.9500000000000073
+(x,y): ( 8 , 3 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    print("self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)] ",self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)])
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Training failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 06:05:25,154] Trial 53 failed with parameters: {'n_steps': 2442, 'batch_size': 32, 'gamma': 0.9744779623159403, 'learning_rate': 0.00019326557400975306, 'ent_coef': 6.569259221199748e-08, 'clip_range': 0.17547312305588383} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 06:05:25,154] Trial 53 failed with value None.
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+    self.close()
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    self.close()
+    self.close()
+    self.close()
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+    if proc.is_alive():
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+    if proc.is_alive():
+    if proc.is_alive():
+    if proc.is_alive():
+    if proc.is_alive():
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+AssertionError: can only test a child process
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+AssertionError: can only test a child process
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+    self.close()
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+AssertionError: can only test a child process
+    self.close()
+    self.close()
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    if proc.is_alive():
+    if proc.is_alive():
+       ^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+AssertionError: can only test a child process
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+    if proc.is_alive():
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Exception ignored in: <function ProcConcatVec.__del__ at 0x7fe413a1f600>
+Traceback (most recent call last):
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 223, in __del__
+    self.close()
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+    if proc.is_alive():
+       ^^^^^^^^^^^^^^^
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+AssertionError: can only test a child process
+    self.close()
+    self.close()
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 239, in close
+    if proc.is_alive():
+    if proc.is_alive():
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+       ^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/multiprocessing/process.py", line 160, in is_alive
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+    assert self._parent_pid == os.getpid(), 'can only test a child process'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: can only test a child process
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=132.00 +/- 23.15
+Episode length: 260.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=22.00 +/- 11.66
+Episode length: 96.00 +/- 0.00
+[I 2024-05-24 06:24:27,223] Trial 54 finished with value: 210.0 and parameters: {'n_steps': 2448, 'batch_size': 32, 'gamma': 0.9743105051851008, 'learning_rate': 0.00020075203674353975, 'ent_coef': 1.0436368169115119e-08, 'clip_range': 0.16696345369425455}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 43.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=32.00 +/- 21.35
+Episode length: 146.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=36.00 +/- 16.25
+Episode length: 89.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 06:43:00,391] Trial 55 finished with value: 158.0 and parameters: {'n_steps': 2452, 'batch_size': 32, 'gamma': 0.9993868585393081, 'learning_rate': 0.00015386903652896974, 'ent_coef': 6.514508939691793e-08, 'clip_range': 0.13308226050048655}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 4.90
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=70.00 +/- 14.14
+Episode length: 136.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=90.00 +/- 29.66
+Episode length: 242.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 06:59:53,435] Trial 56 finished with value: 58.0 and parameters: {'n_steps': 2176, 'batch_size': 32, 'gamma': 0.9874889766559087, 'learning_rate': 0.0004920185901317107, 'ent_coef': 2.406559012797799e-08, 'clip_range': 0.17616082780021744}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 38.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=236.00 +/- 95.62
+Episode length: 547.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=202.00 +/- 23.15
+Episode length: 501.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=670.00 +/- 53.67
+Episode length: 1338.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 07:08:02,761] Trial 57 finished with value: 78.0 and parameters: {'n_steps': 2639, 'batch_size': 128, 'gamma': 0.9709205966570418, 'learning_rate': 1.0113368877205045e-05, 'ent_coef': 9.385925063726438e-08, 'clip_range': 0.1930965262067277}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=10.00 +/- 12.65
+Episode length: 73.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=16.00 +/- 8.00
+Episode length: 79.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=46.00 +/- 8.00
+Episode length: 114.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=32.00 +/- 11.66
+Episode length: 75.00 +/- 0.00
+MAJOR ERROR
+State model nonzero prey:  4.750000000000001
+(x,y): ( 12 , 8 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    print("self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)] ",self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)])
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Training failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 07:17:22,224] Trial 58 failed with parameters: {'n_steps': 2289, 'batch_size': 32, 'gamma': 0.8913217921758777, 'learning_rate': 0.00024948322398896024, 'ent_coef': 9.442209253748744e-07, 'clip_range': 0.23827116874392007} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 07:17:22,225] Trial 58 failed with value None.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=170.00 +/- 51.77
+Episode length: 405.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=346.00 +/- 59.53
+Episode length: 845.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 07:35:35,291] Trial 59 finished with value: 8.0 and parameters: {'n_steps': 2279, 'batch_size': 32, 'gamma': 0.8598161349019972, 'learning_rate': 0.00020362747226636643, 'ent_coef': 3.02688349756174e-07, 'clip_range': 0.2045338453232854}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 51.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=6.00 +/- 4.90
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 07:38:10,291] Trial 60 finished with value: 13.0 and parameters: {'n_steps': 3735, 'batch_size': 512, 'gamma': 0.9613361318994809, 'learning_rate': 8.44986558711612e-05, 'ent_coef': 4.4152826305882526e-08, 'clip_range': 0.23610276271506303}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+MAJOR ERROR
+State model nonzero prey:  5.699999999999996
+(x,y): ( 13 , 0 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    print("self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)] ",self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)])
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Training failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 07:49:12,337] Trial 61 failed with parameters: {'n_steps': 2417, 'batch_size': 32, 'gamma': 0.9077065801615859, 'learning_rate': 0.003342986123339037, 'ent_coef': 2.0360399374486738e-06, 'clip_range': 0.2148843831923314} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 07:49:12,337] Trial 61 failed with value None.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=8.00 +/- 4.00
+Episode length: 72.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 08:05:28,935] Trial 62 finished with value: 8.0 and parameters: {'n_steps': 2153, 'batch_size': 32, 'gamma': 0.9284297492414587, 'learning_rate': 0.007120268044652472, 'ent_coef': 2.155368230454943e-06, 'clip_range': 0.2656151412672889}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=20.00 +/- 12.65
+Episode length: 102.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=78.00 +/- 24.82
+Episode length: 266.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 08:12:00,941] Trial 63 finished with value: 36.0 and parameters: {'n_steps': 2402, 'batch_size': 128, 'gamma': 0.8905146995031951, 'learning_rate': 0.0027938496082314823, 'ent_coef': 1.6723795337584566e-08, 'clip_range': 0.2806576077940987}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=10.00 +/- 8.94
+Episode length: 51.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=8.00 +/- 9.80
+Episode length: 33.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 30.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=6.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=4.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+MAJOR ERROR
+State model nonzero prey:  2.4500000000000197
+(x,y): ( 0 , 0 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    print("self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)] ",self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)])
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Evaluation failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 08:17:15,201] Trial 64 failed with parameters: {'n_steps': 2790, 'batch_size': 256, 'gamma': 0.9067213263412726, 'learning_rate': 0.01235084086650742, 'ent_coef': 8.199443432910114e-07, 'clip_range': 0.22110456600286393} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 08:17:15,202] Trial 64 failed with value None.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 8.00
+Episode length: 50.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=162.00 +/- 74.14
+Episode length: 580.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=484.00 +/- 46.73
+Episode length: 1612.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=182.00 +/- 20.40
+Episode length: 490.00 +/- 0.00
+[I 2024-05-24 08:23:39,068] Trial 65 finished with value: 230.0 and parameters: {'n_steps': 2791, 'batch_size': 256, 'gamma': 0.9045842906376345, 'learning_rate': 0.019063552859841272, 'ent_coef': 9.77560223908795e-07, 'clip_range': 0.3982692172361475}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 51.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=6.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=10.00 +/- 6.32
+Episode length: 48.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 08:28:48,942] Trial 66 finished with value: 5.0 and parameters: {'n_steps': 2801, 'batch_size': 256, 'gamma': 0.903587609111504, 'learning_rate': 0.029911017286255327, 'ent_coef': 7.641502810438202e-06, 'clip_range': 0.39391917319787184}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 43.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=82.00 +/- 24.82
+Episode length: 187.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=22.00 +/- 11.66
+Episode length: 78.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=18.00 +/- 22.27
+Episode length: 71.00 +/- 0.00
+[I 2024-05-24 08:33:40,843] Trial 67 finished with value: 18.0 and parameters: {'n_steps': 2581, 'batch_size': 256, 'gamma': 0.8786817466486507, 'learning_rate': 0.012821408272219129, 'ent_coef': 8.968138462744532e-07, 'clip_range': 0.35908963979734254}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 53.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=18.00 +/- 7.48
+Episode length: 101.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=2.00 +/- 4.00
+Episode length: 43.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=22.00 +/- 17.20
+Episode length: 129.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 08:38:47,572] Trial 68 finished with value: 87.0 and parameters: {'n_steps': 2708, 'batch_size': 256, 'gamma': 0.8690844010070419, 'learning_rate': 0.022072144200528224, 'ent_coef': 1.6836812818817282e-07, 'clip_range': 0.33612151851498634}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=8.00 +/- 7.48
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+[I 2024-05-24 08:44:30,036] Trial 69 finished with value: 0.0 and parameters: {'n_steps': 2484, 'batch_size': 256, 'gamma': 0.9105970535132201, 'learning_rate': 0.06302180804328185, 'ent_coef': 3.629220060515948e-07, 'clip_range': 0.37687274898678036}. Best is trial 33 with value: 669.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 08:56:43,087] Trial 70 finished with value: 735.0 and parameters: {'n_steps': 2991, 'batch_size': 32, 'gamma': 0.9490290020658139, 'learning_rate': 0.004250116067482504, 'ent_coef': 1.3269731317349482e-05, 'clip_range': 0.360807938014153}. Best is trial 70 with value: 735.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 52.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 4.90
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 09:04:06,335] Trial 71 finished with value: 385.0 and parameters: {'n_steps': 2989, 'batch_size': 64, 'gamma': 0.9513542783737373, 'learning_rate': 0.004337923719700043, 'ent_coef': 1.533555883721592e-05, 'clip_range': 0.3641390535110134}. Best is trial 70 with value: 735.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 59.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=6.00 +/- 8.00
+Episode length: 74.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 46.00 +/- 0.00
+[I 2024-05-24 09:11:16,240] Trial 72 finished with value: 44.0 and parameters: {'n_steps': 3193, 'batch_size': 64, 'gamma': 0.948369184030805, 'learning_rate': 0.0035540839968050773, 'ent_coef': 1.6926869985317172e-05, 'clip_range': 0.36580799698482636}. Best is trial 70 with value: 735.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 4.90
+Episode length: 46.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=10.00 +/- 6.32
+Episode length: 51.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 51.00 +/- 0.00
+[I 2024-05-24 09:19:12,216] Trial 73 finished with value: 396.0 and parameters: {'n_steps': 3328, 'batch_size': 64, 'gamma': 0.936322606966122, 'learning_rate': 0.0019000939553505715, 'ent_coef': 4.266591809820074e-05, 'clip_range': 0.3471930533849949}. Best is trial 70 with value: 735.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+MAJOR ERROR
+State model nonzero prey:  2.8500000000000076
+(x,y): ( 6 , 5 )
+Traceback (most recent call last):
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/multiproc_vec.py", line 91, in async_loop
+    observations, rewards, terms, truncs, infos = vec_env.step(actions)
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/concat_vec_env.py", line 84, in step
+    venv.step(
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/supersuit/vector/markov_vector_wrapper.py", line 70, in step
+    observations, rewards, terms, truncs, infos = self.par_env.step(act_dict)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/.conda/lib/python3.11/site-packages/pettingzoo/utils/conversions.py", line 207, in step
+    self.aec_env.step(actions[agent])
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 1429, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 470, in step
+  File "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/pettingzoo/predpreygrass/environments/predpreygrass_variable_energy_transfer_12_test.py", line 591, in predator_catches_prey_records
+    print("self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)] ",self.agent_instance_in_grid_location[self.grass_type_nr][(x, y)])
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'agent_name'
+
+Training failed: 'NoneType' object has no attribute 'agent_name'
+[W 2024-05-24 09:19:57,261] Trial 74 failed with parameters: {'n_steps': 2999, 'batch_size': 64, 'gamma': 0.924342526159384, 'learning_rate': 0.0020290391010481133, 'ent_coef': 5.9475930539851265e-05, 'clip_range': 0.3468435708131043} because of the following error: The value None could not be cast to float..
+[W 2024-05-24 09:19:57,261] Trial 74 failed with value None.
+Eval num_timesteps=336000, episode_reward=8.00 +/- 7.48
+Episode length: 31.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+[I 2024-05-24 09:32:16,328] Trial 75 finished with value: 3259.0 and parameters: {'n_steps': 3322, 'batch_size': 64, 'gamma': 0.9380536705276602, 'learning_rate': 0.001848071372611125, 'ent_coef': 5.459115508153335e-05, 'clip_range': 0.3462312313824111}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 09:40:48,346] Trial 76 finished with value: 12.0 and parameters: {'n_steps': 3391, 'batch_size': 64, 'gamma': 0.9368444287204809, 'learning_rate': 0.0017888836512134194, 'ent_coef': 4.540137800384627e-05, 'clip_range': 0.3395872371247652}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 4.90
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=8.00 +/- 7.48
+Episode length: 79.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=6.00 +/- 4.90
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 09:49:30,678] Trial 77 finished with value: 29.0 and parameters: {'n_steps': 3421, 'batch_size': 64, 'gamma': 0.923442040614974, 'learning_rate': 0.005143111232134486, 'ent_coef': 0.00014303794283503579, 'clip_range': 0.3239922445621932}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 37.00 +/- 0.00
+[I 2024-05-24 09:57:27,354] Trial 78 finished with value: 332.0 and parameters: {'n_steps': 3108, 'batch_size': 64, 'gamma': 0.9482430561968007, 'learning_rate': 0.001169450579163537, 'ent_coef': 4.238728982718815e-05, 'clip_range': 0.35144478372802757}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=6.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+[I 2024-05-24 10:05:56,025] Trial 79 finished with value: 7.0 and parameters: {'n_steps': 3507, 'batch_size': 64, 'gamma': 0.9376506555649479, 'learning_rate': 0.011351888576427074, 'ent_coef': 1.3585855134837557e-05, 'clip_range': 0.3064247382300621}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 36.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 10:13:54,345] Trial 80 finished with value: 46.0 and parameters: {'n_steps': 3280, 'batch_size': 64, 'gamma': 0.9553511993380666, 'learning_rate': 0.004007447764058784, 'ent_coef': 0.00028351495498125847, 'clip_range': 0.34579050759329283}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 4.90
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 10:21:24,431] Trial 81 finished with value: 60.0 and parameters: {'n_steps': 2989, 'batch_size': 64, 'gamma': 0.9142426820688995, 'learning_rate': 0.0023403317434098642, 'ent_coef': 7.282236116339117e-05, 'clip_range': 0.367954667453259}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=12.00 +/- 9.80
+Episode length: 43.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=6.00 +/- 8.00
+Episode length: 65.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=58.00 +/- 29.26
+Episode length: 349.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=10.00 +/- 10.95
+Episode length: 67.00 +/- 0.00
+[I 2024-05-24 10:36:42,096] Trial 82 finished with value: 69.0 and parameters: {'n_steps': 2889, 'batch_size': 64, 'gamma': 0.926410448111639, 'learning_rate': 0.0073447504259879955, 'ent_coef': 4.922939689187504e-06, 'clip_range': 0.3847750961839329}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 42.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=6.00 +/- 4.90
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=8.00 +/- 7.48
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 10:45:51,677] Trial 83 finished with value: 72.0 and parameters: {'n_steps': 3144, 'batch_size': 64, 'gamma': 0.9342106306759934, 'learning_rate': 0.0006913466627768666, 'ent_coef': 1.8401723811182674e-05, 'clip_range': 0.3541149332094787}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 4.90
+Episode length: 33.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 10:53:31,846] Trial 84 finished with value: 11.0 and parameters: {'n_steps': 3247, 'batch_size': 64, 'gamma': 0.9438986008413649, 'learning_rate': 0.0015706549062943103, 'ent_coef': 0.0021167076547292905, 'clip_range': 0.31156461009523856}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 39.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 51.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 43.00 +/- 0.00
+[I 2024-05-24 11:02:15,984] Trial 85 finished with value: 116.0 and parameters: {'n_steps': 3361, 'batch_size': 64, 'gamma': 0.9169576853732961, 'learning_rate': 0.0060583584051799805, 'ent_coef': 3.544862956627478e-05, 'clip_range': 0.3277409070353184}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 42.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=8.00 +/- 7.48
+Episode length: 59.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=4.00 +/- 4.90
+Episode length: 39.00 +/- 0.00
+[I 2024-05-24 11:06:53,488] Trial 86 finished with value: 156.0 and parameters: {'n_steps': 3062, 'batch_size': 128, 'gamma': 0.9456104212602997, 'learning_rate': 0.003072372953166507, 'ent_coef': 0.00014446897622514543, 'clip_range': 0.2942450345237285}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 28.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+[I 2024-05-24 11:15:02,612] Trial 87 finished with value: 103.0 and parameters: {'n_steps': 3136, 'batch_size': 64, 'gamma': 0.9485956878934414, 'learning_rate': 0.0012004447368707432, 'ent_coef': 4.2009020736489664e-05, 'clip_range': 0.3502340549864949}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=10.00 +/- 6.32
+Episode length: 53.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 64.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 40.00 +/- 0.00
+[I 2024-05-24 11:23:30,471] Trial 88 finished with value: 31.0 and parameters: {'n_steps': 3456, 'batch_size': 64, 'gamma': 0.8955451311650228, 'learning_rate': 0.0009049129131701952, 'ent_coef': 6.924852047792382e-06, 'clip_range': 0.34307307809280163}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=12.00 +/- 9.80
+Episode length: 43.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 33.00 +/- 0.00
+[I 2024-05-24 11:33:09,954] Trial 89 finished with value: 135.0 and parameters: {'n_steps': 3697, 'batch_size': 64, 'gamma': 0.9531434125868083, 'learning_rate': 0.002252309331392182, 'ent_coef': 5.666402870649199e-05, 'clip_range': 0.3688112291113699}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=4.00 +/- 8.00
+Episode length: 48.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=30.00 +/- 10.95
+Episode length: 69.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=108.00 +/- 7.48
+Episode length: 282.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1680000, episode_reward=142.00 +/- 31.87
+Episode length: 258.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 11:47:19,181] Trial 90 finished with value: 12.0 and parameters: {'n_steps': 2956, 'batch_size': 64, 'gamma': 0.9599138052324099, 'learning_rate': 0.001011528017688036, 'ent_coef': 0.00010664857233372664, 'clip_range': 0.3870528905119388}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 55.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 11:49:42,956] Trial 91 finished with value: 27.0 and parameters: {'n_steps': 3090, 'batch_size': 512, 'gamma': 0.9408381507820843, 'learning_rate': 0.004479505370102128, 'ent_coef': 2.683232144766018e-05, 'clip_range': 0.3569644432113081}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=6.00 +/- 12.00
+Episode length: 61.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 35.00 +/- 0.00
+[I 2024-05-24 11:57:34,083] Trial 92 finished with value: 102.0 and parameters: {'n_steps': 3302, 'batch_size': 64, 'gamma': 0.923432006674373, 'learning_rate': 0.0006399670377221884, 'ent_coef': 9.641833611701609e-06, 'clip_range': 0.32011084860231626}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=8.00 +/- 7.48
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=10.00 +/- 10.95
+Episode length: 77.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1008000, episode_reward=8.00 +/- 7.48
+Episode length: 43.00 +/- 0.00
+[I 2024-05-24 12:01:58,905] Trial 93 finished with value: 97.0 and parameters: {'n_steps': 3191, 'batch_size': 128, 'gamma': 0.9325453382417046, 'learning_rate': 0.0018685249384718038, 'ent_coef': 2.88368662795207e-06, 'clip_range': 0.3293186901400798}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=12.00 +/- 7.48
+Episode length: 66.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=12.00 +/- 4.00
+Episode length: 38.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1344000, episode_reward=8.00 +/- 7.48
+Episode length: 59.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=2.00 +/- 4.00
+Episode length: 45.00 +/- 0.00
+[I 2024-05-24 12:15:02,922] Trial 94 finished with value: 2.0 and parameters: {'n_steps': 2853, 'batch_size': 64, 'gamma': 0.9706813598012356, 'learning_rate': 0.015573477846449595, 'ent_coef': 1.9227051051979143e-05, 'clip_range': 0.3637480176426917}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 30.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 12:29:26,434] Trial 95 finished with value: 2.0 and parameters: {'n_steps': 3036, 'batch_size': 32, 'gamma': 0.948080495602378, 'learning_rate': 0.10186257325733994, 'ent_coef': 5.629014195936954e-06, 'clip_range': 0.3023081927253269}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=0.00 +/- 0.00
+Episode length: 34.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=54.00 +/- 25.77
+Episode length: 275.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=16.00 +/- 13.56
+Episode length: 48.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=12.00 +/- 11.66
+Episode length: 63.00 +/- 0.00
+[I 2024-05-24 12:44:28,873] Trial 96 finished with value: 46.0 and parameters: {'n_steps': 2904, 'batch_size': 64, 'gamma': 0.9822376336370149, 'learning_rate': 0.009462100514472115, 'ent_coef': 0.0003947254537217902, 'clip_range': 0.37404576970346987}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 18.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 18.00 +/- 0.00
+[I 2024-05-24 12:57:46,662] Trial 97 finished with value: 943.0 and parameters: {'n_steps': 2979, 'batch_size': 32, 'gamma': 0.9669022729365991, 'learning_rate': 0.0012873323160961867, 'ent_coef': 1.2822421240338557e-05, 'clip_range': 0.3481815281795694}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=2.00 +/- 4.00
+Episode length: 48.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=0.00 +/- 0.00
+Episode length: 49.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=58.00 +/- 27.13
+Episode length: 226.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=1344000, episode_reward=8.00 +/- 4.00
+Episode length: 51.00 +/- 0.00
+Eval num_timesteps=1680000, episode_reward=28.00 +/- 17.20
+Episode length: 127.00 +/- 0.00
+[I 2024-05-24 13:22:03,811] Trial 98 finished with value: 198.0 and parameters: {'n_steps': 2942, 'batch_size': 32, 'gamma': 0.9618642232940612, 'learning_rate': 0.001375598967128641, 'ent_coef': 1.2627924019988248e-05, 'clip_range': 0.33400321333805905}. Best is trial 75 with value: 3259.0.
+Eval num_timesteps=336000, episode_reward=4.00 +/- 4.90
+Episode length: 27.00 +/- 0.00
+New best mean reward!
+Eval num_timesteps=672000, episode_reward=2.00 +/- 4.00
+Episode length: 35.00 +/- 0.00
+Eval num_timesteps=1008000, episode_reward=8.00 +/- 11.66
+Episode length: 38.00 +/- 0.00
+New best mean reward!
+[I 2024-05-24 13:35:24,200] Trial 99 finished with value: 699.0 and parameters: {'n_steps': 3124, 'batch_size': 32, 'gamma': 0.9551673722197283, 'learning_rate': 0.00046893598162002964, 'ent_coef': 3.3888048596617844e-05, 'clip_range': 0.34789005319320243}. Best is trial 75 with value: 3259.0.
+Best trial:
+  Value: 3259.0
+  Params: 
+    n_steps: 3322
+    batch_size: 64
+    gamma: 0.9380536705276602
+    learning_rate: 0.001848071372611125
+    ent_coef: 5.459115508153335e-05
+    clip_range: 0.3462312313824111
+  

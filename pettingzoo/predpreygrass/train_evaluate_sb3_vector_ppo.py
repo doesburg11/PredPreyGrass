@@ -7,7 +7,7 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 
-import environments.predpreygrass as predpreygrass
+import environments.predpreygrass_variable_energy_transfer_13 as predpreygrass
 from config.config_pettingzoo import (
     env_kwargs,
     training_steps_string,
@@ -45,16 +45,6 @@ class SampleLoggerCallback(BaseCallback):
         self.episode_lengths = []
 
     def _on_step(self) -> bool:
-        # Access and log the collected samples if available
-        # print("_on_step is called")
-        # local_variables = self.locals  # This holds step data like 'actions' and 'rewards'
-        # print("Rewards: ", self.locals["rewards"])
-        # print("Actions: ", self.locals["actions"])
-        # print("len(Actions): ", len(self.locals["actions"]))
-        # print("len(Rewards): ", len(self.locals["rewards"]))
-
-        # TODO: DOES 1 STEP INVOLVES ACTUALLY 8 STEPS? BECAUSE 8 ENVIRONMENTS ARE COPIED INTO 1 BY
-        # ss.concat_vec_envs_v1 ???
         self.current_episode_length += 1
 
         # If the episode is done, log the episode length and reset the counter

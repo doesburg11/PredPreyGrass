@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "10_000_000"
+training_steps_string = "25_000_000"
 
 env_kwargs = dict(
     # environment parameters
@@ -24,11 +24,12 @@ env_kwargs = dict(
     #energy_gain_per_move_predator = -0.2,
     #energy_gain_per_move_prey = -0.02,
     energy_gain_per_step_grass = 0.2,  
-    catch_prey_energy = 5.0,
-    catch_grass_energy = 3.0,   
+    catch_prey_energy = 0.0,
+    catch_grass_energy = 0.0,   
     initial_energy_predator = 5.0,
     initial_energy_prey = 5.0, 
     initial_energy_grass = 3.0,
+    max_energy_level_grass = 4.0,
     # reward parameters
     step_reward_predator = 0.0,
     step_reward_prey = 0.0,
@@ -40,16 +41,16 @@ env_kwargs = dict(
     reproduction_reward_prey = 10.0,  
     reproduction_reward_predator = 10.0, 
     # create agents parameters
-    regrow_grass=True,
-    create_prey = True,
-    create_predator = True, 
-    prey_creation_energy_threshold = 8,  # in three cycles attainable
-    predator_creation_energy_threshold = 10, # in three cycles attainable
+    create_prey = True,  # only effect on and applicable to fixed energy transfer environments
+    create_predator = True,  # only effect on and applicable to fixed energy transfer environments
+    regrow_grass = True,  # only effect on and applicable to fixed energy transfer environments
+    prey_creation_energy_threshold = 8,  # from reset in three cycles attainable
+    predator_creation_energy_threshold = 10, # from reset in three cycles attainable
     
     # visualization parameters
-    cell_scale=40,
-    x_pygame_window=0,
-    y_pygame_window=0,
-    show_energy_chart=True,
+    cell_scale = 40,
+    x_pygame_window = 0,
+    y_pygame_window = 0,
+    show_energy_chart = True,
 
 )

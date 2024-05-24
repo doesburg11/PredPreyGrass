@@ -12,7 +12,7 @@
   in the defined local directory (and not in your cloned directory!)
 """
 # Agent Environment Cycle (AEC) pettingzoo predpreygrass environment
-import environments.predpreygrass as predpreygrass
+import environments.predpreygrass_variable_energy_transfer as predpreygrass
 
 # make sure this configuration is consistent with the training configuration in "train_sb3_vector_ppo.py"
 from config.config_pettingzoo import env_kwargs, training_steps_string
@@ -52,9 +52,9 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
         raw_env.reset()
         agent_selector.reset()
         raw_env._agent_selector.reset()
-        predator_name_list = raw_env.pred_prey_env.predator_name_list
-        prey_name_list = raw_env.pred_prey_env.prey_name_list
-        agent_name_list = raw_env.pred_prey_env.agent_name_list
+        predator_name_list = raw_env.pred_prey_env.possible_predator_name_list
+        prey_name_list = raw_env.pred_prey_env.possible_prey_name_list
+        agent_name_list = raw_env.pred_prey_env.possible_agent_name_list
         cumulative_rewards = {agent: 0 for agent in agent_name_list}
         cumulative_rewards_predator = {agent: 0 for agent in predator_name_list}
         cumulative_rewards_prey = {agent: 0 for agent in prey_name_list}
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     script_directory = os.path.dirname(os.path.abspath(__file__))
     output_directory = script_directory + "/output/"
     loaded_policy = output_directory + model_file_name
-    eval_model_only = True
+    eval_model_only = False
     watch_grid_model = not eval_model_only
     # save parameters to file
     if eval_model_only:
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     predator_extinct_at_termination_count: int = 0
     mean_episode_length: int = 0
     std_episode_length: int = 0
-    
+
     if eval_model_only:
         # Evaluate episodes
         (

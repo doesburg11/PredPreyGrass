@@ -25,7 +25,7 @@ class DiscreteAgent:
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
-        self.agent_name: str = agent_name  # string like "prey_1"
+        self.agent_name: AgentID = agent_name  # string like "prey_1"
         self.agent_id_nr: int = agent_id_nr  # unique integer per agent
 
         self.model_state_agent: np.ndarray = model_state_agent
