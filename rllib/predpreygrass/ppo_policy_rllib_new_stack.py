@@ -6,7 +6,7 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.algorithms.ppo import PPO
 
 from ray.rllib.env.multi_agent_env_runner import MultiAgentEnvRunner  
-from ray.rllib.utils.pre_checks.env import  check_env
+from ray.rllib.utils.pre_checks.env import  check_multiagent_environments
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune.registry import register_env
 from ray.tune.logger import pretty_print
@@ -17,7 +17,7 @@ import time
 
 warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
-check_env(PredPreyGrassEnv(configuration))
+check_multiagent_environments(PredPreyGrassEnv(configuration))
 print("Environment checked")
 
 
@@ -82,7 +82,6 @@ config = (
     .evaluation(
         evaluation_num_workers=1,
         evaluation_interval=1,
-        enable_async_evaluation=True,
         evaluation_config=PPOConfig.overrides(
             # Render the env while evaluating.
             # Note that this will always only render the 1st RolloutWorker's

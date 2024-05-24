@@ -2,19 +2,14 @@
 # implement the recreation of grass when eaten after certain time steps
 
 # AEC pettingzoo predpreygrass environment using random policy
-from environments.predpreygrass import raw_env
-from config.config_pettingzoo import env_kwargs, local_output_directory
+from environments.predpreygrass_variable_energy_transfer_13 import raw_env
+from config.config_pettingzoo import env_kwargs
 
 from pettingzoo.utils import agent_selector
 
-# displaying the population of predators and prey
-import matplotlib
-
-matplotlib.use("Agg")
-from matplotlib import pyplot as plt
-from matplotlib.ticker import MaxNLocator  # for integer ticks
-
 from statistics import mean, stdev
+
+import numpy as np
 
 num_episodes = 1
 env_kwargs["render_mode"] = "human" if num_episodes == 1 else "None"
@@ -35,6 +30,22 @@ for i in range(num_episodes):
     n_aec_cycles = 0
     for agent in raw_env.agent_iter():
         observation, reward, termination, truncation, info = raw_env.last()
+
+        if raw_env.pred_prey_env.agent_name_to_instance_dict[agent].is_active:
+            """
+            print("Agent = ", agent)
+            
+            print("Wall")
+            print(np.transpose(np.transpose(observation)[0]))
+            print("Predator")
+            print(np.transpose(np.transpose(observation)[1]))
+            print("Prey")
+            print(np.transpose(np.transpose(observation)[2]))
+            
+            print("Grass")
+            print(np.transpose(np.transpose(observation)[3]))
+            """
+
         cumulative_rewards[agent] += reward
         if termination or truncation:
             action = None

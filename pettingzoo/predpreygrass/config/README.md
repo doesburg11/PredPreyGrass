@@ -7,7 +7,7 @@ The benchmark configuration `config_pettingzoo_benchmark_1.py` is, somewhat arbi
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
 </p>
 
-The benchmark configuration `config_pettingzoo_benchmark_2.py` is, the tuned configuration combined with the possible creation and removal of Predators and Prey during runtime (upt to a certain maximum give by `n_possible_predator` and `n_possible_prey`). Grass agents are removed when eaten by Prey but regrow after a certain amount of cycles (depending on `energy_gain_per_step_grass` and `initial_energy_grass`).
+opThe benchmark configuration `config_pettingzoo_benchmark_2.py` is, a more optimizes configuration combined with the possible creation and removal of Predators and Prey during runtime (upt to a certain maximum give by `n_possible_predator` and `n_possible_prey`). Grass agents are removed when eaten by Prey but regrow after a certain amount of cycles (depending on `energy_gain_per_step_grass` and `initial_energy_grass`).
 
 #### Emergent behavior 
 
@@ -44,7 +44,7 @@ This is illustrated by tuning the `death_reward_prey` parameter in the configura
 
 In any case, Prey are trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -6. However, thereafter the system breaks. This is additionally illustrated below by a sudden collapse of the average episode length: 
 
-<p align="center"><i>Gradual hyperparameter tuning can lead to radical shifts in outcomes</i></p>
+<p align="center"><i>Gradual parameter variation can lead to radical shifts in outcomes</i></p>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_episode_length.png" width="450" height="270"/>
 </p>

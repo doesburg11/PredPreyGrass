@@ -6,7 +6,7 @@ directory, for reuse and analysis. The algorithm used is PPO from
 stable_baselines3. 
 """
 
-import environments.predpreygrass as predpreygrass
+import environments.predpreygrass_variable_energy_transfer as predpreygrass
 
 from config.config_pettingzoo import (
     env_kwargs,
@@ -42,7 +42,8 @@ class SampleLoggerCallback(BaseCallback):
             self.logger.record("train/episode_length", self.current_episode_length)
             self.current_episode_length = 0
         return True  # Continue training
- 
+
+
 def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     parallel_env = parallel_wrapper_fn(env_fn.raw_env)
 
@@ -66,12 +67,28 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         num_cpus=8,
         base_class="stable_baselines3",
     )
-
+    """
+    #untuned
+    
     model = PPO(
         MlpPolicy,
         raw_parallel_env,
         verbose=0,  # 0 for no output, 1 for info messages, 2 for debug messages, 3 deafult
         batch_size=256,
+        tensorboard_log=output_directory + "/ppo_predprey_tensorboard/",
+    )
+    """
+    #tuned with optuna
+    model = PPO(
+        MlpPolicy,
+        raw_parallel_env,
+        verbose=0,  # 0 for no output, 1 for info messages, 2 for debug messages, 3 deafult
+        n_steps=2048,
+        batch_size=64,
+        gamma=0.9380536705276602,
+        learning_rate=0.001848071372611125,
+        ent_coef=5.459115508153335e-05,
+        clip_range=0.3462312313824111,
         tensorboard_log=output_directory + "/ppo_predprey_tensorboard/",
     )
 
@@ -186,7 +203,7 @@ if __name__ == "__main__":
         train(env_fn, steps=training_steps, seed=0, **env_kwargs)
         end_training_time = time.time()
         training_time = end_training_time - start_training_time
-        if training_time < 3600:
+        if training_time < 3600:  # seconds
             file.write(
                 "training time (min)= " + str(round(training_time / 60, 1)) + "\n"
             )

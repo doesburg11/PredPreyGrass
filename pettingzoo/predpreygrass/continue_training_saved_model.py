@@ -24,7 +24,7 @@ from pettingzoo.utils.conversions import parallel_wrapper_fn
 continued_training_steps_string = "350_000"
 
 continued_training_steps = int(continued_training_steps_string)
-continued_model_file_name = "predprey_steps_" + continued_training_steps_string
+continued_model_file_name = "predpreygrass_steps_" + continued_training_steps_string
 model_file_name = "predprey_steps_" + training_steps_string
 script_directory = os.path.dirname(os.path.abspath(__file__))
 loaded_policy = script_directory + "/output/" + model_file_name

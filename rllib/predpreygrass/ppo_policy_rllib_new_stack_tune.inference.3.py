@@ -58,24 +58,20 @@ def policy_mapping_fn(agent_id, episode, worker=None, **kwargs):
         raise ValueError(f"Unexpected agent ID: {agent_id}")
 
 base_config = (
-    #PPOConfig()
-    get_trainable_cls("PPO")
-    .get_default_config()
-    .environment(env="pred_prey_grass")
-    .experimental(_enable_new_api_stack=True)
-    .rollouts(env_runner_cls=MultiAgentEnvRunner)
-    .resources(
-        num_learner_workers=1,
-        num_gpus_per_learner_worker=0,
-        num_cpus_for_local_worker=5,
-    )    .framework("torch")
-     .rollouts(
-        create_env_on_local_worker=True,
-        batch_mode="complete_episodes", #"truncate_episodes",
-        num_rollout_workers=1,
-        rollout_fragment_length= "auto",
-        num_envs_per_worker=1, 
+    PPOConfig()
+    #get_trainable_cls("PPO")
+    .api_stack(
+        enable_rl_module_and_learner=True,
+        enable_env_runner_and_connector_v2=True,
     )
+    .resources(
+        num_learner_workers=0,  # <- in most cases, set this value to the number of GPUs
+        num_gpus_per_learner_worker=0,   # <- set this to 1, if you have at least 1 GPU
+        num_cpus_for_local_worker=5,
+    )    
+    .framework("torch")
+    .env_runners(num_env_runners=1)
+    .framework("torch")
     .debugging(seed=0,log_level="ERROR")
     .training(model={
         "uses_new_env_runners": True,
@@ -91,7 +87,7 @@ base_config = (
         policy_mapping_fn=policy_mapping_fn
     )
     .evaluation(
-        evaluation_num_workers=1,
+        evaluation_num_env_runners=1,
         evaluation_interval=1,
         evaluation_config=PPOConfig.overrides(
             # Render the env while evaluating.
