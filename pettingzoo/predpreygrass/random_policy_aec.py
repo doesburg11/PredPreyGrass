@@ -2,7 +2,7 @@
 # implement the recreation of grass when eaten after certain time steps
 
 # AEC pettingzoo predpreygrass environment using random policy
-from environments.predpreygrass_variable_energy_transfer_13 import raw_env
+from environments.predpreygrass_variable_energy_transfer import raw_env
 from config.config_pettingzoo import env_kwargs
 
 from pettingzoo.utils import agent_selector
@@ -11,8 +11,8 @@ from statistics import mean, stdev
 
 import numpy as np
 
-num_episodes = 1
-env_kwargs["render_mode"] = "human" if num_episodes == 1 else "None"
+num_episodes = 10
+env_kwargs["render_mode"] = "human" if num_episodes == 10 else "None"
 
 raw_env = raw_env(**env_kwargs)
 

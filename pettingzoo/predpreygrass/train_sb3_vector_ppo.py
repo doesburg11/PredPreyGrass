@@ -38,6 +38,7 @@ class SampleLoggerCallback(BaseCallback):
         self.current_episode_length += 1
         # If the episode is done, log the episode length and reset the counter
         if "done" in self.locals and self.locals["done"]:
+            print("done")
             self.episode_lengths.append(self.current_episode_length)
             self.logger.record("train/episode_length", self.current_episode_length)
             self.current_episode_length = 0
@@ -59,7 +60,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         )
     # create parallel environments by concatenating multiple copies of the base environment
     #
-    num_vec_envs_concatenated = 8
+    num_vec_envs_concatenated = 1
     raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
     raw_parallel_env = ss.concat_vec_envs_v1(
         raw_parallel_env,
@@ -67,9 +68,8 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         num_cpus=8,
         base_class="stable_baselines3",
     )
-    """
+
     #untuned
-    
     model = PPO(
         MlpPolicy,
         raw_parallel_env,
@@ -91,6 +91,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         clip_range=0.3462312313824111,
         tensorboard_log=output_directory + "/ppo_predprey_tensorboard/",
     )
+    """
 
     sample_logger_callback = SampleLoggerCallback()
 
