@@ -1,4 +1,4 @@
-import environments.predpreygrass_variable_energy_transfer_original as predpreygrass
+import environments.predpreygrass_available_energy_transfer as predpreygrass
 
 from config.config_pettingzoo import (
     env_kwargs,

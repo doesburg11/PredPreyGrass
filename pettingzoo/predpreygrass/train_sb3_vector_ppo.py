@@ -1,12 +1,12 @@
 """
-This file trains a multi agent reinforcement model in a parallel 
-environment. Evaluation is done using the AEC API. After training, 
-the source code and the trained model is saved in a separate 
-directory, for reuse and analysis. The algorithm used is PPO from 
-stable_baselines3. 
+-This file trains a multi agent reinforcement model in a parallel environment. 
+-After traing evaluation can be done using the AEC API.
+-The source code and the trained model are saved in a separate 
+directory, for reuse and analysis. 
+-The algorithm used is PPO from stable_baselines3. 
 """
 
-import environments.predpreygrass_variable_energy_transfer as predpreygrass
+import environments.predpreygrass_available_energy_transfer as predpreygrass
 
 from config.config_pettingzoo import (
     env_kwargs,
@@ -38,7 +38,7 @@ class SampleLoggerCallback(BaseCallback):
         self.current_episode_length += 1
         # If the episode is done, log the episode length and reset the counter
         if "done" in self.locals and self.locals["done"]:
-            print("done")
+            #print("done")
             self.episode_lengths.append(self.current_episode_length)
             self.logger.record("train/episode_length", self.current_episode_length)
             self.current_episode_length = 0
@@ -60,7 +60,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         )
     # create parallel environments by concatenating multiple copies of the base environment
     #
-    num_vec_envs_concatenated = 1
+    num_vec_envs_concatenated = 8
     raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
     raw_parallel_env = ss.concat_vec_envs_v1(
         raw_parallel_env,

@@ -12,7 +12,7 @@
   in the defined local directory (and not in your cloned directory!)
 """
 # Agent Environment Cycle (AEC) pettingzoo predpreygrass environment
-import environments.predpreygrass_variable_energy_transfer as predpreygrass
+import environments.predpreygrass_available_energy_transfer as predpreygrass
 
 # make sure this configuration is consistent with the training configuration in "train_sb3_vector_ppo.py"
 from config.config_pettingzoo import env_kwargs, training_steps_string

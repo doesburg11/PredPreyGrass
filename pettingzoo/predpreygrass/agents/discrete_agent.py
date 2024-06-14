@@ -43,6 +43,11 @@ class DiscreteAgent:
 
         self.x_grid_dim: int = self.model_state_agent.shape[0]
         self.y_grid_dim: int = self.model_state_agent.shape[1]
+        # TODO: yet to implement for generalization
+        # in general, an agent type can have more pursuers or recource agents; 
+        # therefore a list
+        self.pursuer_agent_type_nr: List[int] = None
+        self.resource_agent_type_nr: List[int] = None
 
     def step(self, action: int) -> np.ndarray:
         # returns new position of agent "self" given action "action"
