@@ -4,7 +4,7 @@ The benchmark configuration `config_pettingzoo_benchmark_1.py` is, somewhat arbi
 
 <p align="center"><i>The benchmark configuration config_pettingzoo_benchmark_1.py</i></p>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="700" height="300"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_benchmark_0.gif" width="700" height="300"/>
 </p>
 
 opThe benchmark configuration `config_pettingzoo_benchmark_2.py` is, a more optimizes configuration combined with the possible creation and removal of Predators and Prey during runtime (upt to a certain maximum give by `n_possible_predator` and `n_possible_prey`). Grass agents are removed when eaten by Prey but regrow after a certain amount of cycles (depending on `energy_gain_per_step_grass` and `initial_energy_grass`).
