@@ -4,7 +4,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 </br>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="780" height="60"/> 
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/predpreygrass.png" width="700" height="80"/> 
 </p>
 </br>
 A multi-agent reinforcement learning (MARL) environment, trained using Proximal Policy Optimization (PPO). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partially observations of the environment to maximize cumulative reward. 
