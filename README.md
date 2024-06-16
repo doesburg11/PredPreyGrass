@@ -61,6 +61,11 @@ More emergent behavior and findings are described in the [config directory](http
 ### Visualize a random policy
 In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy.py```
+</br>
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="240"/>
+</p>
+
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
