@@ -109,7 +109,7 @@ class PredPreyGrass:
             self.y_pygame_window,
         )
         self.screen = None
-        self.save_image_steps: bool = False  # save step images of the environment
+        self.save_image_steps: bool = True  # save step images of the environment
         self.width_energy_chart: int = 1800 if self.show_energy_chart else 0 # width of energy chart
         self.height_energy_chart: int = self.cell_scale * self.y_grid_size
         if self.n_possible_predator > 18 or self.n_possible_prey > 24:
