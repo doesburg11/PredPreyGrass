@@ -39,14 +39,14 @@ This is illustrated by tuning the `death_reward_prey` parameter in the configura
 
 <p align="center"><i>Evading behavior Prey towards Predators can be enforced by penalizing death for Prey</i></p>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_average_age_agents.png" width="450" height="270"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/death_reward_prey_v_average_age_agents.png" width="450" height="270"/>
 </p>
 
 In any case, Prey are trying to escape from Predators, even when the penalty for dying is set to zero. This is because the "ultimate" reward is for reproduction for Prey, which is optimized when Prey are evading Predators. However, if an additional penalty for dying is introduced, Prey will try to avoid Predators even more. This can be concluded from a rising average age of Prey when the penalty is increased to -6. However, thereafter the system breaks. This is additionally illustrated below by a sudden collapse of the average episode length: 
 
 <p align="center"><i>Gradual parameter variation can lead to radical shifts in outcomes</i></p>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/death_reward_prey_v_episode_length.png" width="450" height="270"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/death_reward_prey_v_episode_length.png" width="450" height="270"/>
 </p>
 
 
