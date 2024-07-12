@@ -1,6 +1,3 @@
-# implement the creation of predators and prey when above certain energy level
-# implement the recreation of grass when eaten after certain time steps
-
 # AEC pettingzoo predpreygrass environment using random policy
 from environments.predpreygrass_available_energy_transfer import raw_env
 from config.config_pettingzoo import env_kwargs
@@ -44,7 +41,7 @@ for i in range(num_episodes):
             4: [1, 0], # move right
             """
         raw_env.step(action)
-        if agent_selector.is_last():  #
+        if agent_selector.is_last():  
             n_aec_cycles += 1
             # print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
         agent_selector.next()

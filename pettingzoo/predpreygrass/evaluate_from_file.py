@@ -235,7 +235,6 @@ if __name__ == "__main__":
     print("--------------------------")
 
     training_steps = int(training_steps_string)
-    num_episodes = 100
 
     # global variables for evaluation used in eval function
     num_episodes: int = 100  # replace with the actual number of episodes

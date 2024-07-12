@@ -7,6 +7,11 @@ from config.config_pettingzoo import (
 )
 
 import optuna
+import sys
+import time
+import os
+import shutil
+
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
@@ -40,8 +45,8 @@ def optimize_ppo(trial):
     # default values
     verbose = 0
     #learning_rate = 3e-4
-    #n_steps =2048
-    #batch_size = 64
+    n_steps =2048
+    batch_size = 64
     #gamma = 0.99
     gae_lambda = 0.95
     #clip_range = 0.2
@@ -53,12 +58,12 @@ def optimize_ppo(trial):
     
 
     # Suggest hyperparameters
-    n_steps = trial.suggest_int('n_steps', 2048, 4096)
-    batch_size = trial.suggest_categorical('batch_size', [32, 64, 128, 256, 512])
+    #n_steps = trial.suggest_int('n_steps', 2048, 4096)
+    #batch_size = trial.suggest_categorical('batch_size', [32, 64, 128, 256, 512])
     gamma = trial.suggest_float('gamma', 0.8, 0.9999)
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1,log=True)
     ent_coef = trial.suggest_float('ent_coef', 0.00000001, 0.1,log=True)
-    clip_range = trial.suggest_float('clip_range', 0.1, 0.4)
+    clip_range = trial.suggest_float('clip_range', 0.15, 0.2)
 
 
 
@@ -89,6 +94,7 @@ def optimize_ppo(trial):
 
     # Define evaluation environment separately to avoid state leaks
     eval_env = parallel_wrapper_fn(env_fn.raw_env)(render_mode=None, **env_kwargs)
+    #eval_env = Monitor(eval_env, "./monitor_output", allow_early_resets=True)   
     eval_env = ss.pettingzoo_env_to_vec_env_v1(eval_env)
     eval_env = ss.concat_vec_envs_v1(
         eval_env,
@@ -97,17 +103,14 @@ def optimize_ppo(trial):
         base_class="stable_baselines3",
     )
 
-    tune_results_dir = local_output_directory + "tune_results/logs/"
-
     # Set up evaluation callback
-    eval_callback = EvalCallback(eval_env, best_model_save_path=tune_results_dir,
-                                 log_path=tune_results_dir, eval_freq=1000,
+    eval_callback = EvalCallback(eval_env, best_model_save_path=tune_results_logs_dir,
+                                 log_path=tune_results_logs_dir, eval_freq=1000,
                                  deterministic=True, render=False)
-
 
     # Train the model
     try:
-        model.learn(total_timesteps=1000000, callback=eval_callback)
+        model.learn(total_timesteps=training_steps, callback=eval_callback)
     except AttributeError as e:
         print(f"Training failed: {e}")
         return None
@@ -124,17 +127,70 @@ def optimize_ppo(trial):
 
 # Create and run the study
 if __name__ == "__main__":
+    N_TRIALS = 1
+    environment_name = "predpreygrass"
     # Ensure the correct reference to the environment function
     env_fn = predpreygrass
+    training_steps = int(training_steps_string)
+
+    start_time = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  # add seconds
+    file_name = f"{environment_name}"
+    tune_results_dir = local_output_directory + "tune_results/"+start_time
+    tune_results_logs_dir = tune_results_dir+"/logs/"
+
+
+    # save the source code locally
+    python_file_name = os.path.basename(sys.argv[0])
+    python_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
+    file_names_in_directory = os.listdir(python_directory)
+    # create the destination directory for the source code
+    os.makedirs(tune_results_dir, exist_ok=True)
+
+    # Copy all files and directories in the current directory to the local directory
+    # for safekeeping experiment scenarios
+    for item_name in file_names_in_directory:
+        source_item = os.path.join(python_directory, item_name)
+        destination_item = os.path.join(
+            tune_results_dir, item_name
+        )
+
+        if os.path.isfile(source_item):
+            shutil.copy2(source_item, destination_item)
+        elif os.path.isdir(source_item):
+            shutil.copytree(source_item, destination_item)
+
+
+
+
+
+
 
     study = optuna.create_study(direction='maximize')
-    study.optimize(optimize_ppo, n_trials=100)
+    study.optimize(optimize_ppo, n_trials=N_TRIALS)
+    print()
+    print(tune_results_dir+"/screenoutput.txt")
 
-    print('Best trial:')
-    trial = study.best_trial
 
-    print('  Value: {}'.format(trial.value))
 
-    print('  Params: ')
-    for key, value in trial.params.items():
-        print('    {}: {}'.format(key, value))
+
+
+    # Open a file to save the output
+    with open(tune_results_dir+"/screenoutput.txt", "w") as f:
+        # Redirect standard output to the file
+        sys.stdout = f
+
+        print('Best trial:')
+        trial = study.best_trial
+
+        print('  Value: {}'.format(trial.value))
+
+        print('  Params: ')
+        for key, value in trial.params.items():
+            print('    {}: {}'.format(key, value))
+
+        df = study.trials_dataframe()
+        df.to_csv("optuna_trials.csv", index=False)
+
+    # Reset standard output to its original value
+    sys.stdout = sys.__stdout__
+
