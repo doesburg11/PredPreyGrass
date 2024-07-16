@@ -69,7 +69,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
     if parameter_variation:
         print(
-            "Tuning " + parameter_variation_parameter_string + ": ",
+            "Parameter variation " + parameter_variation_parameter_string + ": ",
             env_kwargs[parameter_variation_parameter_string],
         )
     # create parallel environments by concatenating multiple copies of the base environment
@@ -125,19 +125,19 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
         raw_env.reset()
         agent_selector.reset()
         raw_env._agent_selector.reset()
-        predator_name_list = raw_env.pred_prey_env.predator_name_list
-        prey_name_list = raw_env.pred_prey_env.prey_name_list
-        agent_name_list = raw_env.pred_prey_env.agent_name_list
-        cumulative_rewards = {agent: 0 for agent in agent_name_list}
-        cumulative_rewards_predator = {agent: 0 for agent in predator_name_list}
-        cumulative_rewards_prey = {agent: 0 for agent in prey_name_list}
+        possible_predator_name_list = raw_env.pred_prey_env.possible_predator_name_list
+        possible_prey_name_list = raw_env.pred_prey_env.possible_prey_name_list
+        possible_agent_name_list = raw_env.pred_prey_env.possible_agent_name_list
+        cumulative_rewards = {agent: 0 for agent in possible_agent_name_list}
+        cumulative_rewards_predator = {agent: 0 for agent in possible_predator_name_list}
+        cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
         n_aec_cycles = 0
         for agent in raw_env.agent_iter():
             observation, reward, termination, truncation, info = raw_env.last()
             cumulative_rewards[agent] += reward
-            if agent in predator_name_list:
+            if agent in possible_predator_name_list:
                 cumulative_rewards_predator[agent] += reward
-            elif agent in prey_name_list:
+            elif agent in possible_prey_name_list:
                 cumulative_rewards_prey[agent] += reward
 
             if termination or truncation:
@@ -285,10 +285,10 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = False
-    parameter_variation_parameter_string = "predator_creation_energy_threshold"
+    parameter_variation = True
+    parameter_variation_parameter_string = "initial_energy_predator"
     if parameter_variation:
-        parameter_variation_scenarios = [11, 12, 13, 14, 15, 16]
+        parameter_variation_scenarios = [10, 12, 14, 16 , 18, 20]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]
@@ -299,7 +299,7 @@ if __name__ == "__main__":
     file_name = f"{environment_name}_steps_{training_steps_string}"
     if parameter_variation:
         root_destination_directory_source_code = (
-            local_output_directory + parameter_variation_parameter_string
+            local_output_directory + "parameter_variation/" + parameter_variation_parameter_string + "_" + start_time
         )
     else:
         root_destination_directory_source_code = local_output_directory
@@ -408,6 +408,7 @@ if __name__ == "__main__":
         output_directory = script_directory + "/output/"
         loaded_policy = output_directory + model_file_name
         eval_model_only = True
+        num_episodes = 100
         watch_grid_model = not eval_model_only
         # save parameters to file
         if eval_model_only:
@@ -428,7 +429,6 @@ if __name__ == "__main__":
         print("--------------------------")
 
         training_steps = int(training_steps_string)
-        num_episodes = 100
 
         # global variables for evaluation used in eval function
         episode_length = [0 for _ in range(num_episodes)]
