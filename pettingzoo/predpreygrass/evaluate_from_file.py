@@ -237,7 +237,7 @@ if __name__ == "__main__":
     training_steps = int(training_steps_string)
 
     # global variables for evaluation used in eval function
-    num_episodes: int = 100  # replace with the actual number of episodes
+    num_episodes: int = 10  # replace with the actual number of episodes
 
     episode_length: List[int] = [0 for _ in range(num_episodes)]
     predator_extinct_at_termination: List[int] = [0 for _ in range(num_episodes)]

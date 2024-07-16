@@ -17,13 +17,7 @@ from pettingzoo.utils import agent_selector
 
 from agents.discrete_agent import DiscreteAgent
 from pettingzoo.utils.env import AgentID
-"""
-from config.config_pettingzoo import (
-    PREDATOR_TYPE_NR,
-    PREY_TYPE_NR,
-    GRASS_TYPE_NR,
-)
-"""
+
 # agent types
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2
@@ -133,6 +127,8 @@ class PredPreyGrass:
         self.spawning_area_predator = spawning_area_predator
         self.spawning_area_prey = spawning_area_prey
         self.spawning_area_grass = spawning_area_grass
+
+        self.anomaly = False
 
         # agent types
         
@@ -523,8 +519,38 @@ class PredPreyGrass:
         self.n_eaten_prey = 0
         self.n_born_predator = 0
         self.n_born_prey = 0
-    
+
+
     def step(self, action, agent_instance, is_last_step_of_cycle):
+        if self.anomaly and is_last_step_of_cycle:
+            print()
+            print("====================")
+            print("Anomaly detected in step function")
+            print("model_state[PREY_TYPE_NR] at end of cycle:")
+            print(self.model_state[PREY_TYPE_NR])
+            print("END OF CYCLE: active_prey_instance_list:")
+            for prey_instance in self.active_prey_instance_list:
+                print(prey_instance.agent_name, prey_instance.position, prey_instance.energy, prey_instance.is_active)
+            print()
+            print("END OF CYCLE: agent_instance_in_grid_location:")
+            for x in range(self.x_grid_size):
+                for y in range(self.y_grid_size):
+                    if self.model_state[PREY_TYPE_NR][x, y] > 0:
+                        print("Prey energy in cell (", str(x), ",", str(y), ") = " + str(self.model_state[PREY_TYPE_NR][x, y]))
+                    if self.model_state[PREDATOR_TYPE_NR][x, y] > 0:
+                        print("Predator energy in cell (", str(x), ",", str(y), ") = " + str(self.model_state[PREDATOR_TYPE_NR][x, y]))
+            print("END OF CYCLE: agent_instance_in_grid_location:")
+            for x in range(self.x_grid_size):
+                for y in range(self.y_grid_size):
+                    if self.agent_instance_in_grid_location[PREY_TYPE_NR][x, y] is not None:
+                        print("Prey instance in cell (", str(x), ",", str(y), ")")
+                    if self.agent_instance_in_grid_location[PREDATOR_TYPE_NR][x, y] is not None:
+                        print("Predator instance in cell (", str(x), ",", str(y), ")")
+            self.anomaly = False
+            print("====================")
+
+
+
         if agent_instance.is_active:
             agent_type_nr = agent_instance.agent_type_nr
 
@@ -536,29 +562,48 @@ class PredPreyGrass:
                     x_new, y_new = agent_instance.position
                     is_prey_in_new_cell = self.agent_instance_in_grid_location[PREY_TYPE_NR][(x_new, y_new)] is not None
                     if is_prey_in_new_cell:
-                        # found prey to eat and store records for last step of the cycle
-                        # if energy of predator is above energy of all prey surrounding in neighborhood of attacked prey
+                        # found prey to eat and store records for inactivation in last step of the cycle
                         self.earmarking_predator_catches_prey(agent_instance, x_new, y_new)
                     else:
-                        # no prey instance in new cell
+                        # no prey instance in new cell while model state tells otherwise
+                        # this unsolved discrepancy between self.model_state and self.agent_instance_in_grid_location
+                        # occurs sometimes at training (when a prey instance is removed from the grid?)
+                        
                         if self.model_state[PREY_TYPE_NR, x_new, y_new] > 0:
-                            print("WARNING: Prey instance not found in in cel (", x_new,
+                            self.anomaly = True
+                            print("WARNING: Prey instance not found in in cell (", x_new,
                                    ",", y_new, 
                                    ") but model_state[PREY_TYPE_NR,", x_new,",", y_new,"] = "
                                   , self.model_state[PREY_TYPE_NR, x_new, y_new])
-                            """
-                            found_prey = False
+                            print("is_last_step_of_cycle: ", is_last_step_of_cycle)
+                            print("active_prey_instance_list:")
                             for prey_instance in self.active_prey_instance_list:
+                                print(prey_instance.agent_name, prey_instance.position, prey_instance.energy, prey_instance.is_active)
                                 if prey_instance.position[0] == x_new and prey_instance.position[1] == y_new:
-                                    print("Prey instance found in active_prey_instance_list")
-                                    print("Prey instance name: ", prey_instance.agent_name)
-                                    print("Prey instance energy: ", prey_instance.energy)
-                                    self.render_mode = "human"
-                                    self.render()
-                                    found_prey = True
-                            if not found_prey:
-                                print("Prey instance not found in active_prey_instance_list")
-                            """
+                                    missing_prey_instance_name = prey_instance.agent_name
+                                    print("Missing Prey instance in cell (", x_new, ",", y_new, ") = ", missing_prey_instance_name)
+                                    print("self.prey_to_be_removed_by_predator_dict: ", self.prey_to_be_removed_by_predator_dict[missing_prey_instance_name])
+                            print()
+                            print("ACTION PREDATOR: ", str(action))
+                            print()
+                            print("agent_instance_in_grid_location:")
+                            for x in range(self.x_grid_size):
+                                for y in range(self.y_grid_size):
+                                    if self.model_state[PREY_TYPE_NR][x, y] > 0:
+                                        print("Prey energy in cell (", str(x), ",", str(y), ") = " + str(self.model_state[PREY_TYPE_NR][x, y]))
+                                    if self.model_state[PREDATOR_TYPE_NR][x, y] > 0:
+                                        print("Predator energy in cell (", str(x), ",", str(y), ") = " + str(self.model_state[PREDATOR_TYPE_NR][x, y]))
+                            print("agent_instance_in_grid_location:")
+                            for x in range(self.x_grid_size):
+                                for y in range(self.y_grid_size):
+                                    if self.agent_instance_in_grid_location[PREY_TYPE_NR][x, y] is not None:
+                                        print("Prey instance in cell (", str(x), ",", str(y), ")")
+                                    if self.agent_instance_in_grid_location[PREDATOR_TYPE_NR][x, y] is not None:
+                                        print("Predator instance in cell (", str(x), ",", str(y), ")")
+
+
+                            print("len(self.active_prey_instance_list): ", len(self.active_prey_instance_list))
+                            print("n_active_prey: ", self.n_active_prey)
 
                 else:
                     # store for inactivation at last step of the cycle
@@ -641,9 +686,11 @@ class PredPreyGrass:
                         grass_instance.is_active = True
 
             # record number of active agents at the end of the cycle
+
             self.n_active_predator_list.insert(self.n_aec_cycles, self.n_active_predator)
             self.n_active_prey_list.insert(self.n_aec_cycles, self.n_active_prey)
             self.n_active_grass_list.insert(self.n_aec_cycles, self.n_active_grass)
+            print("self.n_active_prey_list: ", self.n_active_prey_list)
 
             self.reset_removal_records()
 
@@ -673,33 +720,18 @@ class PredPreyGrass:
         ] = agent_instance
 
     def earmarking_predator_catches_prey(self, predator_instance, x_new, y_new):
-        energy_grouped_prey = ( 
-            self.model_state[PREY_TYPE_NR, x_new, y_new]  +       
-            (self.model_state[PREY_TYPE_NR, x_new, y_new-1] if y_new-1 >=0 else 0) + 
-            (self.model_state[PREY_TYPE_NR, x_new, y_new+1] if y_new+1 < self.y_grid_size else 0) +
-            (self.model_state[PREY_TYPE_NR, x_new-1, y_new] if x_new-1 >=0 else 0) + 
-            (self.model_state[PREY_TYPE_NR, x_new-1, y_new-1] if x_new-1 >=0 and y_new-1 >=0 else 0) + 
-            (self.model_state[PREY_TYPE_NR, x_new-1, y_new+1] if x_new-1 >=0 and y_new+1 < self.y_grid_size else 0) + 
-            (self.model_state[PREY_TYPE_NR, x_new+1, y_new] if x_new+1 < self.x_grid_size else 0)+
-            (self.model_state[PREY_TYPE_NR, x_new+1, y_new+1] if x_new+1 < self.x_grid_size and y_new+1 < self.y_grid_size else 0) +
-            (self.model_state[PREY_TYPE_NR, x_new+1, y_new-1] if x_new+1 < self.x_grid_size and y_new-1 >=0 else 0)
-        )
-
-        if predator_instance.energy >= energy_grouped_prey:
-
-            prey_instance_removed = self.agent_instance_in_grid_location[
-                PREY_TYPE_NR][
-                (x_new, y_new)
-            ]
-            # book keeping for last step of the cycle actions
-            # TODO: change to: agent_who_eats_dict and agent_who_gets_eaten_dict? 
-            # To generalize function for both predator and prey
-            self.predator_who_remove_prey_dict[predator_instance.agent_name] = True
-            self.prey_to_be_removed_by_predator_dict[prey_instance_removed.agent_name] = True
-            self.agent_energy_from_eating_dict[
-                predator_instance.agent_name
-            ] = prey_instance_removed.energy
-
+        prey_instance_removed = self.agent_instance_in_grid_location[
+            PREY_TYPE_NR][
+            (x_new, y_new)
+        ]
+        # book keeping for last step of the cycle actions
+        # TODO: change to: agent_who_eats_dict and agent_who_gets_eaten_dict? 
+        # To generalize function for both predator and prey
+        self.predator_who_remove_prey_dict[predator_instance.agent_name] = True
+        self.prey_to_be_removed_by_predator_dict[prey_instance_removed.agent_name] = True
+        self.agent_energy_from_eating_dict[
+            predator_instance.agent_name
+        ] = prey_instance_removed.energy
 
     def earmarking_prey_eats_grass(self, prey_instance, x_new, y_new):
         grass_instance_removed = self.agent_instance_in_grid_location[GRASS_TYPE_NR][
@@ -806,10 +838,9 @@ class PredPreyGrass:
             new_prey_instance = self.agent_name_to_instance_dict[new_prey_name]
             new_prey_instance.is_active = True
             self.prey_to_be_removed_by_starvation_dict[new_prey_name] = False
-            parent_prey.energy -= self.initial_energy_prey
             self.model_state[
                 PREY_TYPE_NR, parent_prey.position[0], parent_prey.position[1]
-            ] = parent_prey.energy
+            ] -= self.initial_energy_prey
             new_prey_instance.energy = self.initial_energy_prey
             new_prey_instance.age = 0
             self.active_prey_instance_list.append(new_prey_instance)

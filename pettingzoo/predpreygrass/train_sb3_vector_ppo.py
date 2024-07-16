@@ -55,7 +55,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
     if parameter_variation:
         print(
-            "Tuning " + parameter_variation_parameter_string + ": ",
+            "Parameter variation " + parameter_variation_parameter_string + ": ",
             env_kwargs[parameter_variation_parameter_string],
         )
     # create parallel environments by concatenating multiple copies of the base environment
@@ -70,6 +70,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     )
 
     #untuned
+    """
     model = PPO(
         MlpPolicy,
         raw_parallel_env,
@@ -84,14 +85,15 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
         raw_parallel_env,
         verbose=0,  # 0 for no output, 1 for info messages, 2 for debug messages, 3 deafult
         n_steps=2048,
-        batch_size=64,
-        gamma=0.9380536705276602,
-        learning_rate=0.001848071372611125,
-        ent_coef=5.459115508153335e-05,
-        clip_range=0.3462312313824111,
+        batch_size=256,
+        gamma=0.94,
+        learning_rate=0.0015,
+        ent_coef=0.0135,
+        clip_range=0.17,
         tensorboard_log=output_directory + "/ppo_predprey_tensorboard/",
     )
-    """
+
+
 
     sample_logger_callback = SampleLoggerCallback()
 
@@ -112,7 +114,7 @@ if __name__ == "__main__":
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
     parameter_variation = False
-    parameter_variation_parameter_string = "n_initial_active_prey"
+    parameter_variation_parameter_string = "prey_creation_energy_threshold"
     if parameter_variation:
         parameter_variation_scenarios = [8, 10, 12, 14, 16]
     else:
