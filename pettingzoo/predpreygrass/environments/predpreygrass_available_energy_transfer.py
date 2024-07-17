@@ -673,10 +673,28 @@ class PredPreyGrass:
         ] = agent_instance
 
     def earmarking_predator_catches_prey(self, predator_instance, x_new, y_new):
+        """
+        # check if there is a prey in the neighborhood of the attacked prey
+        is_accompanied_prey = (
+            (self.model_state[PREY_TYPE_NR, x_new, y_new-1] > 0  if y_new-1 >=0 else False) or
+            (self.model_state[PREY_TYPE_NR, x_new, y_new+1] > 0 if y_new+1 < self.y_grid_size else False) +
+            (self.model_state[PREY_TYPE_NR, x_new-1, y_new] > 0 if x_new-1 >=0 else False) + 
+            (self.model_state[PREY_TYPE_NR, x_new-1, y_new-1] > 0 if x_new-1 >=0 and y_new-1 >=0 else False) + 
+            (self.model_state[PREY_TYPE_NR, x_new-1, y_new+1] > 0 if x_new-1 >=0 and y_new+1 < self.y_grid_size else False) + 
+            (self.model_state[PREY_TYPE_NR, x_new+1, y_new] > 0 if x_new+1 < self.x_grid_size else False)+
+            (self.model_state[PREY_TYPE_NR, x_new+1, y_new+1] > 0 if x_new+1 < self.x_grid_size and y_new+1 < self.y_grid_size else False) +
+            (self.model_state[PREY_TYPE_NR, x_new+1, y_new-1] > 0 if x_new+1 < self.x_grid_size and y_new-1 >=0 else False)
+        )
+        # if there is no other prey in the neighborhood of the attacked prey, the prey is earmarked for removal by the predator 
+        if not is_accompanied_prey:
+        """
         prey_instance_removed = self.agent_instance_in_grid_location[
             PREY_TYPE_NR][
             (x_new, y_new)
         ]
+        # book keeping for last step of the cycle actions
+        # TODO: change to: agent_who_eats_dict and agent_who_gets_eaten_dict? 
+        # To generalize function for both predator and prey
         self.predator_who_remove_prey_dict[predator_instance.agent_name] = True
         self.prey_to_be_removed_by_predator_dict[prey_instance_removed.agent_name] = True
         self.agent_energy_from_eating_dict[

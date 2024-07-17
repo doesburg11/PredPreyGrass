@@ -19,12 +19,12 @@ env_kwargs = dict(
     obs_range_predator=7,  
     obs_range_prey=9, 
     # energy parameters
-    energy_gain_per_step_predator = -0.1,  
+    energy_gain_per_step_predator = -0.3,  
     energy_gain_per_step_prey = -0.05,  
     energy_gain_per_step_grass = 0.2,  
     catch_prey_energy = 0.0,
     catch_grass_energy = 0.0,   
-    initial_energy_predator = 10.0,
+    initial_energy_predator = 5.0,
     initial_energy_prey = 5.0, 
     initial_energy_grass = 3.0,
     max_energy_level_grass = 4.0,
@@ -43,7 +43,7 @@ env_kwargs = dict(
     create_predator = True,  # only effect on and applicable to fixed energy transfer environments
     regrow_grass = True,  # only effect on and applicable to fixed energy transfer environments
     prey_creation_energy_threshold = 8,  
-    predator_creation_energy_threshold = 16, # optimized by parameter variation [10, 12, 14, 16, 18, 20]
+    predator_creation_energy_threshold = 10, # optimized by parameter variation [10, 12, 14, 16, 18, 20]
     # visualization parameters
     cell_scale = 40,
     x_pygame_window = 0,
