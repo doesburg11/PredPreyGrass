@@ -285,10 +285,10 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = False
-    parameter_variation_parameter_string = "initial_energy_predator"
+    parameter_variation = True
+    parameter_variation_parameter_string = "n_possible_grass"
     if parameter_variation:
-        parameter_variation_scenarios = [10, 12, 14, 16 , 18, 20]
+        parameter_variation_scenarios = [42, 44, 46, 48, 50]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]

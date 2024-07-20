@@ -11,7 +11,7 @@ env_kwargs = dict(
     # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
-    n_possible_grass=50,
+    n_possible_grass=20,  # optimized by parameter variation [10,12,14,16,18,20,...,26,28,40]
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters
@@ -34,7 +34,7 @@ env_kwargs = dict(
     step_reward_grass = 0.0,
     catch_reward_grass = 0.0,
     catch_reward_prey = 0.0,  
-    death_reward_prey = 0.0,
+    death_reward_prey = -15.0,
     death_reward_predator = 0.0,
     reproduction_reward_prey = 10.0,  
     reproduction_reward_predator = 10.0, 
