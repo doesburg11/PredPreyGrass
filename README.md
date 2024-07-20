@@ -2,7 +2,7 @@
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
 [![API test](https://img.shields.io/badge/API_test-passed-brightgreen)]()
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Wiki](https://img.shields.io/badge/Wiki-background-green])
+[![Wiki](https://img.shields.io/badge/Wiki-background-green)]()
 </br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
