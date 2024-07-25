@@ -1,0 +1,163 @@
+model: PredPreyGrass
+evaluation: /home/doesburg/Dropbox/02_marl_results/predpreygras_results/parameter_variation/n_possible_grass_2024-07-19_13:11:08/10
+training steps: 10_000_000
+--------------------------
+Eps 0 Lngth = 30 Strv Prd/cycl = 0.2 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.033 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.267 Mn age Prd = 37.7 Mn age Pry = 34
+Eps 1 Lngth = 35 Strv Prd/cycl = 0.171 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.029 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.314 Mn age Prd = 39.3 Mn age Pry = 14
+Eps 2 Lngth = 123 Strv Prd/cycl = 0.398 Strv Pry/cycl = 0.016 Eeatn Pry/cycl = 0.154 Brn Prd/cycl = 0.39 Brn Pry/cycl = 0.106 Mn age Prd = 46.6 Mn age Pry = 76.9
+Eps 3 Lngth = 19 Strv Prd/cycl = 0.316 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.0 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.211 Mn age Prd = 34 Mn age Pry = 0
+Eps 4 Lngth = 60 Strv Prd/cycl = 0.133 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.033 Brn Prd/cycl = 0.033 Brn Pry/cycl = 0.25 Mn age Prd = 45.5 Mn age Pry = 35
+Eps 5 Lngth = 58 Strv Prd/cycl = 0.397 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.293 Brn Prd/cycl = 0.603 Brn Pry/cycl = 0.155 Mn age Prd = 43.4 Mn age Pry = 27.6
+Eps 6 Lngth = 76 Strv Prd/cycl = 0.118 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.079 Brn Prd/cycl = 0.039 Brn Pry/cycl = 0.276 Mn age Prd = 58.7 Mn age Pry = 19
+Eps 7 Lngth = 74 Strv Prd/cycl = 0.257 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.203 Brn Prd/cycl = 0.176 Brn Pry/cycl = 0.149 Mn age Prd = 62.9 Mn age Pry = 26.8
+Eps 8 Lngth = 37 Strv Prd/cycl = 0.216 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.081 Brn Prd/cycl = 0.054 Brn Pry/cycl = 0.216 Mn age Prd = 47.8 Mn age Pry = 5.3
+Eps 9 Lngth = 61 Strv Prd/cycl = 0.262 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.131 Brn Prd/cycl = 0.164 Brn Pry/cycl = 0.213 Mn age Prd = 49.1 Mn age Pry = 26
+Eps 10 Lngth = 125 Strv Prd/cycl = 0.52 Strv Pry/cycl = 0.016 Eeatn Pry/cycl = 0.104 Brn Prd/cycl = 0.592 Brn Pry/cycl = 0.056 Mn age Prd = 45.4 Mn age Pry = 68.5
+Eps 11 Lngth = 173 Strv Prd/cycl = 0.439 Strv Pry/cycl = 0.006 Eeatn Pry/cycl = 0.156 Brn Prd/cycl = 0.451 Brn Pry/cycl = 0.116 Mn age Prd = 44.1 Mn age Pry = 56.6
+Eps 12 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.083 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.333 Mn age Prd = 50.7 Mn age Pry = 6.7
+Eps 13 Lngth = 32 Strv Prd/cycl = 0.375 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.156 Brn Prd/cycl = 0.188 Brn Pry/cycl = 0.25 Mn age Prd = 38.7 Mn age Pry = 12.8
+Eps 14 Lngth = 75 Strv Prd/cycl = 0.347 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.213 Brn Prd/cycl = 0.467 Brn Pry/cycl = 0.107 Mn age Prd = 44.9 Mn age Pry = 30
+Eps 15 Lngth = 205 Strv Prd/cycl = 0.532 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.141 Brn Prd/cycl = 0.571 Brn Pry/cycl = 0.102 Mn age Prd = 45.5 Mn age Pry = 59.8
+Eps 16 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.056 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.222 Mn age Prd = 45.3 Mn age Pry = 2
+Eps 17 Lngth = 19 Strv Prd/cycl = 0.316 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.0 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.263 Mn age Prd = 34 Mn age Pry = 0
+Eps 18 Lngth = 297 Strv Prd/cycl = 0.3 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.189 Brn Prd/cycl = 0.34 Brn Pry/cycl = 0.162 Mn age Prd = 47.0 Mn age Pry = 60.1
+Eps 19 Lngth = 53 Strv Prd/cycl = 0.132 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.075 Brn Prd/cycl = 0.019 Brn Pry/cycl = 0.208 Mn age Prd = 47.7 Mn age Pry = 7.5
+Eps 20 Lngth = 137 Strv Prd/cycl = 0.365 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.146 Brn Prd/cycl = 0.321 Brn Pry/cycl = 0.248 Mn age Prd = 50.1 Mn age Pry = 24.3
+Eps 21 Lngth = 61 Strv Prd/cycl = 0.131 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.033 Brn Prd/cycl = 0.033 Brn Pry/cycl = 0.262 Mn age Prd = 47 Mn age Pry = 46
+Eps 22 Lngth = 19 Strv Prd/cycl = 0.316 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.0 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.158 Mn age Prd = 34 Mn age Pry = 0
+Eps 23 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.056 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.194 Mn age Prd = 47 Mn age Pry = 18
+Eps 24 Lngth = 315 Strv Prd/cycl = 0.511 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.073 Brn Prd/cycl = 0.549 Brn Pry/cycl = 0.048 Mn age Prd = 54.1 Mn age Pry = 64.9
+Eps 25 Lngth = 79 Strv Prd/cycl = 0.076 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.089 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.165 Mn age Prd = 76.7 Mn age Pry = 52.6
+Eps 26 Lngth = 67 Strv Prd/cycl = 0.104 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.09 Brn Prd/cycl = 0.015 Brn Pry/cycl = 0.269 Mn age Prd = 58.6 Mn age Pry = 13.7
+Eps 27 Lngth = 158 Strv Prd/cycl = 0.418 Strv Pry/cycl = 0.025 Eeatn Pry/cycl = 0.108 Brn Prd/cycl = 0.386 Brn Pry/cycl = 0.082 Mn age Prd = 46.5 Mn age Pry = 94
+Eps 28 Lngth = 35 Strv Prd/cycl = 0.171 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.057 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.343 Mn age Prd = 44.3 Mn age Pry = 17
+Eps 29 Lngth = 98 Strv Prd/cycl = 0.459 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.153 Brn Prd/cycl = 0.541 Brn Pry/cycl = 0.071 Mn age Prd = 49.9 Mn age Pry = 42.3
+Eps 30 Lngth = 89 Strv Prd/cycl = 0.112 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.079 Brn Prd/cycl = 0.045 Brn Pry/cycl = 0.202 Mn age Prd = 60.6 Mn age Pry = 32.3
+Eps 31 Lngth = 229 Strv Prd/cycl = 0.437 Strv Pry/cycl = 0.004 Eeatn Pry/cycl = 0.083 Brn Prd/cycl = 0.41 Brn Pry/cycl = 0.122 Mn age Prd = 44.9 Mn age Pry = 97.3
+Eps 32 Lngth = 168 Strv Prd/cycl = 0.071 Strv Pry/cycl = 0.036 Eeatn Pry/cycl = 0.071 Brn Prd/cycl = 0.036 Brn Pry/cycl = 0.202 Mn age Prd = 64.8 Mn age Pry = 129.3
+Eps 33 Lngth = 138 Strv Prd/cycl = 0.239 Strv Pry/cycl = 0.014 Eeatn Pry/cycl = 0.159 Brn Prd/cycl = 0.196 Brn Pry/cycl = 0.196 Mn age Prd = 61.4 Mn age Pry = 56.8
+Eps 34 Lngth = 72 Strv Prd/cycl = 0.097 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.069 Brn Prd/cycl = 0.014 Brn Pry/cycl = 0.208 Mn age Prd = 55.1 Mn age Pry = 40.8
+Eps 35 Lngth = 55 Strv Prd/cycl = 0.127 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.091 Brn Prd/cycl = 0.018 Brn Pry/cycl = 0.273 Mn age Prd = 48.3 Mn age Pry = 26
+Eps 36 Lngth = 78 Strv Prd/cycl = 0.487 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.128 Brn Prd/cycl = 0.641 Brn Pry/cycl = 0.026 Mn age Prd = 44.1 Mn age Pry = 32.8
+Eps 37 Lngth = 118 Strv Prd/cycl = 0.339 Strv Pry/cycl = 0.008 Eeatn Pry/cycl = 0.119 Brn Prd/cycl = 0.288 Brn Pry/cycl = 0.203 Mn age Prd = 52.2 Mn age Pry = 45.5
+Eps 38 Lngth = 792 Strv Prd/cycl = 0.375 Strv Pry/cycl = 0.016 Eeatn Pry/cycl = 0.145 Brn Prd/cycl = 0.367 Brn Pry/cycl = 0.155 Mn age Prd = 48.8 Mn age Pry = 110.5
+Eps 39 Lngth = 42 Strv Prd/cycl = 0.143 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.048 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.357 Mn age Prd = 41.7 Mn age Pry = 30
+Eps 40 Lngth = 98 Strv Prd/cycl = 0.408 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.122 Brn Prd/cycl = 0.531 Brn Pry/cycl = 0.041 Mn age Prd = 43.4 Mn age Pry = 71.8
+Eps 41 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.0 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.278 Mn age Prd = 39.7 Mn age Pry = 0
+Eps 42 Lngth = 209 Strv Prd/cycl = 0.177 Strv Pry/cycl = 0.014 Eeatn Pry/cycl = 0.124 Brn Prd/cycl = 0.148 Brn Pry/cycl = 0.182 Mn age Prd = 60.4 Mn age Pry = 83.9
+Eps 43 Lngth = 126 Strv Prd/cycl = 0.357 Strv Pry/cycl = 0.008 Eeatn Pry/cycl = 0.214 Brn Prd/cycl = 0.452 Brn Pry/cycl = 0.159 Mn age Prd = 49.6 Mn age Pry = 76.1
+Eps 44 Lngth = 86 Strv Prd/cycl = 0.465 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.128 Brn Prd/cycl = 0.581 Brn Pry/cycl = 0.035 Mn age Prd = 40.2 Mn age Pry = 68.7
+Eps 45 Lngth = 231 Strv Prd/cycl = 0.212 Strv Pry/cycl = 0.03 Eeatn Pry/cycl = 0.121 Brn Prd/cycl = 0.186 Brn Pry/cycl = 0.221 Mn age Prd = 52.6 Mn age Pry = 139.3
+Eps 46 Lngth = 136 Strv Prd/cycl = 0.375 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.14 Brn Prd/cycl = 0.463 Brn Pry/cycl = 0.081 Mn age Prd = 46 Mn age Pry = 85.4
+Eps 47 Lngth = 563 Strv Prd/cycl = 0.627 Strv Pry/cycl = 0.005 Eeatn Pry/cycl = 0.119 Brn Prd/cycl = 0.616 Brn Pry/cycl = 0.114 Mn age Prd = 47.6 Mn age Pry = 70.2
+Eps 48 Lngth = 283 Strv Prd/cycl = 0.611 Strv Pry/cycl = 0.004 Eeatn Pry/cycl = 0.099 Brn Prd/cycl = 0.59 Brn Pry/cycl = 0.078 Mn age Prd = 43.7 Mn age Pry = 55.5
+Eps 49 Lngth = 42 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.095 Brn Prd/cycl = 0.024 Brn Pry/cycl = 0.19 Mn age Prd = 46.6 Mn age Pry = 20
+Eps 50 Lngth = 155 Strv Prd/cycl = 0.452 Strv Pry/cycl = 0.006 Eeatn Pry/cycl = 0.103 Brn Prd/cycl = 0.413 Brn Pry/cycl = 0.135 Mn age Prd = 49.9 Mn age Pry = 52.1
+Eps 51 Lngth = 51 Strv Prd/cycl = 0.353 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.216 Brn Prd/cycl = 0.588 Brn Pry/cycl = 0.059 Mn age Prd = 39.2 Mn age Pry = 35.8
+Eps 52 Lngth = 95 Strv Prd/cycl = 0.474 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.179 Brn Prd/cycl = 0.6 Brn Pry/cycl = 0.095 Mn age Prd = 43.2 Mn age Pry = 48.8
+Eps 53 Lngth = 44 Strv Prd/cycl = 0.409 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.045 Brn Prd/cycl = 0.273 Brn Pry/cycl = 0.068 Mn age Prd = 39.4 Mn age Pry = 15
+Eps 54 Lngth = 234 Strv Prd/cycl = 0.509 Strv Pry/cycl = 0.009 Eeatn Pry/cycl = 0.162 Brn Prd/cycl = 0.56 Brn Pry/cycl = 0.137 Mn age Prd = 40.9 Mn age Pry = 74.5
+Eps 55 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.028 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.083 Mn age Prd = 39.7 Mn age Pry = 6
+Eps 56 Lngth = 31 Strv Prd/cycl = 0.194 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.032 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.258 Mn age Prd = 38 Mn age Pry = 12
+Eps 57 Lngth = 139 Strv Prd/cycl = 0.489 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.122 Brn Prd/cycl = 0.576 Brn Pry/cycl = 0.065 Mn age Prd = 48 Mn age Pry = 62.5
+Eps 58 Lngth = 50 Strv Prd/cycl = 0.12 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.04 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.28 Mn age Prd = 44.3 Mn age Pry = 14
+Eps 59 Lngth = 103 Strv Prd/cycl = 0.485 Strv Pry/cycl = 0.019 Eeatn Pry/cycl = 0.146 Brn Prd/cycl = 0.602 Brn Pry/cycl = 0.087 Mn age Prd = 42.6 Mn age Pry = 65.9
+Eps 60 Lngth = 106 Strv Prd/cycl = 0.075 Strv Pry/cycl = 0.009 Eeatn Pry/cycl = 0.066 Brn Prd/cycl = 0.019 Brn Pry/cycl = 0.217 Mn age Prd = 57.8 Mn age Pry = 82
+Eps 61 Lngth = 145 Strv Prd/cycl = 0.503 Strv Pry/cycl = 0.007 Eeatn Pry/cycl = 0.138 Brn Prd/cycl = 0.462 Brn Pry/cycl = 0.097 Mn age Prd = 44.6 Mn age Pry = 59.5
+Eps 62 Lngth = 207 Strv Prd/cycl = 0.459 Strv Pry/cycl = 0.005 Eeatn Pry/cycl = 0.169 Brn Prd/cycl = 0.43 Brn Pry/cycl = 0.155 Mn age Prd = 50.4 Mn age Pry = 66
+Eps 63 Lngth = 46 Strv Prd/cycl = 0.13 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.0 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.283 Mn age Prd = 43 Mn age Pry = 0
+Eps 64 Lngth = 200 Strv Prd/cycl = 0.55 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.155 Brn Prd/cycl = 0.52 Brn Pry/cycl = 0.12 Mn age Prd = 50.1 Mn age Pry = 54.7
+Eps 65 Lngth = 58 Strv Prd/cycl = 0.121 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.086 Brn Prd/cycl = 0.017 Brn Pry/cycl = 0.241 Mn age Prd = 57.7 Mn age Pry = 26
+Eps 66 Lngth = 214 Strv Prd/cycl = 0.486 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.084 Brn Prd/cycl = 0.542 Brn Pry/cycl = 0.047 Mn age Prd = 48.8 Mn age Pry = 65.6
+Eps 67 Lngth = 384 Strv Prd/cycl = 0.557 Strv Pry/cycl = 0.023 Eeatn Pry/cycl = 0.148 Brn Prd/cycl = 0.542 Brn Pry/cycl = 0.154 Mn age Prd = 44.4 Mn age Pry = 75.7
+Eps 68 Lngth = 89 Strv Prd/cycl = 0.315 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.157 Brn Prd/cycl = 0.247 Brn Pry/cycl = 0.247 Mn age Prd = 50.1 Mn age Pry = 27.7
+Eps 69 Lngth = 95 Strv Prd/cycl = 0.095 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.084 Brn Prd/cycl = 0.032 Brn Pry/cycl = 0.221 Mn age Prd = 66.9 Mn age Pry = 53
+Eps 70 Lngth = 196 Strv Prd/cycl = 0.071 Strv Pry/cycl = 0.026 Eeatn Pry/cycl = 0.087 Brn Prd/cycl = 0.041 Brn Pry/cycl = 0.194 Mn age Prd = 69.9 Mn age Pry = 131.7
+Eps 71 Lngth = 197 Strv Prd/cycl = 0.513 Strv Pry/cycl = 0.01 Eeatn Pry/cycl = 0.107 Brn Prd/cycl = 0.482 Brn Pry/cycl = 0.157 Mn age Prd = 49.2 Mn age Pry = 69.4
+Eps 72 Lngth = 67 Strv Prd/cycl = 0.209 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.119 Brn Prd/cycl = 0.119 Brn Pry/cycl = 0.134 Mn age Prd = 59.9 Mn age Pry = 33.8
+Eps 73 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.028 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.167 Mn age Prd = 39.7 Mn age Pry = 6
+Eps 74 Lngth = 34 Strv Prd/cycl = 0.176 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.029 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.324 Mn age Prd = 39 Mn age Pry = 20
+Eps 75 Lngth = 90 Strv Prd/cycl = 0.178 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.1 Brn Prd/cycl = 0.111 Brn Pry/cycl = 0.222 Mn age Prd = 51.1 Mn age Pry = 27.3
+Eps 76 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.028 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.389 Mn age Prd = 39.7 Mn age Pry = 4
+Eps 77 Lngth = 104 Strv Prd/cycl = 0.385 Strv Pry/cycl = 0.01 Eeatn Pry/cycl = 0.135 Brn Prd/cycl = 0.5 Brn Pry/cycl = 0.067 Mn age Prd = 53.2 Mn age Pry = 52.8
+Eps 78 Lngth = 103 Strv Prd/cycl = 0.408 Strv Pry/cycl = 0.01 Eeatn Pry/cycl = 0.223 Brn Prd/cycl = 0.524 Brn Pry/cycl = 0.155 Mn age Prd = 41 Mn age Pry = 73.8
+Eps 79 Lngth = 66 Strv Prd/cycl = 0.182 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.091 Brn Prd/cycl = 0.091 Brn Pry/cycl = 0.167 Mn age Prd = 53.3 Mn age Pry = 17.3
+Eps 80 Lngth = 81 Strv Prd/cycl = 0.333 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.148 Brn Prd/cycl = 0.259 Brn Pry/cycl = 0.086 Mn age Prd = 52.7 Mn age Pry = 31.2
+Eps 81 Lngth = 111 Strv Prd/cycl = 0.054 Strv Pry/cycl = 0.045 Eeatn Pry/cycl = 0.054 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.243 Mn age Prd = 64.7 Mn age Pry = 118.2
+Eps 82 Lngth = 149 Strv Prd/cycl = 0.436 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.134 Brn Prd/cycl = 0.517 Brn Pry/cycl = 0.081 Mn age Prd = 47.6 Mn age Pry = 50.2
+Eps 83 Lngth = 98 Strv Prd/cycl = 0.459 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.133 Brn Prd/cycl = 0.398 Brn Pry/cycl = 0.071 Mn age Prd = 47.6 Mn age Pry = 63.2
+Eps 84 Lngth = 49 Strv Prd/cycl = 0.122 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.061 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.347 Mn age Prd = 49 Mn age Pry = 22.7
+Eps 85 Lngth = 46 Strv Prd/cycl = 0.174 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.065 Brn Prd/cycl = 0.043 Brn Pry/cycl = 0.283 Mn age Prd = 51.2 Mn age Pry = 3.3
+Eps 86 Lngth = 33 Strv Prd/cycl = 0.242 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.303 Brn Prd/cycl = 0.606 Brn Pry/cycl = 0.061 Mn age Prd = 33.5 Mn age Pry = 23
+Eps 87 Lngth = 195 Strv Prd/cycl = 0.056 Strv Pry/cycl = 0.041 Eeatn Pry/cycl = 0.103 Brn Prd/cycl = 0.026 Brn Pry/cycl = 0.226 Mn age Prd = 82.5 Mn age Pry = 129.1
+Eps 88 Lngth = 37 Strv Prd/cycl = 0.162 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.081 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.297 Mn age Prd = 50.3 Mn age Pry = 11.3
+Eps 89 Lngth = 49 Strv Prd/cycl = 0.184 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.102 Brn Prd/cycl = 0.061 Brn Pry/cycl = 0.102 Mn age Prd = 52 Mn age Pry = 23.2
+Eps 90 Lngth = 61 Strv Prd/cycl = 0.426 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.197 Brn Prd/cycl = 0.328 Brn Pry/cycl = 0.115 Mn age Prd = 49.9 Mn age Pry = 22.3
+Eps 91 Lngth = 41 Strv Prd/cycl = 0.146 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.024 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.244 Mn age Prd = 41.3 Mn age Pry = 26
+Eps 92 Lngth = 51 Strv Prd/cycl = 0.157 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.039 Brn Prd/cycl = 0.039 Brn Pry/cycl = 0.275 Mn age Prd = 48.2 Mn age Pry = 6
+Eps 93 Lngth = 144 Strv Prd/cycl = 0.125 Strv Pry/cycl = 0.014 Eeatn Pry/cycl = 0.118 Brn Prd/cycl = 0.083 Brn Pry/cycl = 0.236 Mn age Prd = 58.4 Mn age Pry = 81.2
+Eps 94 Lngth = 140 Strv Prd/cycl = 0.271 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.114 Brn Prd/cycl = 0.229 Brn Pry/cycl = 0.136 Mn age Prd = 59.3 Mn age Pry = 46.2
+Eps 95 Lngth = 37 Strv Prd/cycl = 0.189 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.027 Brn Prd/cycl = 0.027 Brn Pry/cycl = 0.054 Mn age Prd = 43.1 Mn age Pry = 0
+Eps 96 Lngth = 36 Strv Prd/cycl = 0.167 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.028 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.25 Mn age Prd = 39.7 Mn age Pry = 2
+Eps 97 Lngth = 80 Strv Prd/cycl = 0.138 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.087 Brn Prd/cycl = 0.062 Brn Pry/cycl = 0.2 Mn age Prd = 44.2 Mn age Pry = 33.7
+Eps 98 Lngth = 34 Strv Prd/cycl = 0.176 Strv Pry/cycl = 0.0 Eeatn Pry/cycl = 0.059 Brn Prd/cycl = 0.0 Brn Pry/cycl = 0.235 Mn age Prd = 43.7 Mn age Pry = 14
+Eps 99 Lngth = 106 Strv Prd/cycl = 0.434 Strv Pry/cycl = 0.019 Eeatn Pry/cycl = 0.123 Brn Prd/cycl = 0.547 Brn Pry/cycl = 0.066 Mn age Prd = 45.9 Mn age Pry = 87.6
+--------------------------
+Number of episodes = 100
+Mean episode length = 112.1
+Standard deviation episode length = 110.1
+Per episode mean of per agent mean cumulative reward = 7.9
+Per episode mean of per Predator mean cumulative reward = 20.9
+Per episode mean of per Prey mean cumulative reward = -1.8
+% Predator extinct at termination = 74.0
+Per episode mean of starved Predator/cycle = 0.283
+Per episode mean of starved_Prey/cycle = 0.005
+Per episode mean of eaten Prey/cycle = 0.103
+Per episode mean of born Predator/cycle = 0.231
+Per episode_mean_of_born Prey/cycle = 0.178
+Per episode mean of mean age Predator = 47.9
+Per episode_mean_of_mean age Prey = 68.0
+--------------------------
+Evaluation parameters:
+max_cycles = 10000
+x_grid_size = 25
+y_grid_size = 25
+n_possible_predator = 18
+n_possible_prey = 24
+n_possible_grass = 10
+n_initial_active_predator = 6
+n_initial_active_prey = 8
+max_observation_range = 9
+obs_range_predator = 7
+obs_range_prey = 9
+energy_gain_per_step_predator = -0.3
+energy_gain_per_step_prey = -0.05
+energy_gain_per_step_grass = 0.2
+catch_prey_energy = 0.0
+catch_grass_energy = 0.0
+initial_energy_predator = 5.0
+initial_energy_prey = 5.0
+initial_energy_grass = 3.0
+max_energy_level_grass = 4.0
+step_reward_predator = 0.0
+step_reward_prey = 0.0
+step_reward_grass = 0.0
+catch_reward_grass = 0.0
+catch_reward_prey = 0.0
+death_reward_prey = -15.0
+death_reward_predator = 0.0
+reproduction_reward_prey = 10.0
+reproduction_reward_predator = 10.0
+create_prey = True
+create_predator = True
+regrow_grass = True
+prey_creation_energy_threshold = 8
+predator_creation_energy_threshold = 10
+cell_scale = 40
+x_pygame_window = 0
+y_pygame_window = 0
+show_energy_chart = True
+spawning_area_predator = {'x_begin': 0, 'y_begin': 0, 'x_end': 24, 'y_end': 24}
+spawning_area_prey = {'x_begin': 0, 'y_begin': 0, 'x_end': 24, 'y_end': 24}
+spawning_area_grass = {'x_begin': 12, 'y_begin': 0, 'x_end': 13, 'y_end': 24}
+--------------------------
