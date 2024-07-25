@@ -288,7 +288,7 @@ if __name__ == "__main__":
     parameter_variation = True
     parameter_variation_parameter_string = "n_possible_grass"
     if parameter_variation:
-        parameter_variation_scenarios = [42, 44, 46, 48, 50]
+        parameter_variation_scenarios = [32, 34, 36, 38, 40]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]
@@ -313,7 +313,7 @@ if __name__ == "__main__":
             destination_directory_source_code = (
                 root_destination_directory_source_code
                 + "/"
-                + str(parameter_variation_parameter)
+                + str(parameter_variation_parameter) 
             )
             output_directory = destination_directory_source_code + "/output/"
             loaded_policy = output_directory + file_name
@@ -470,6 +470,7 @@ if __name__ == "__main__":
                 episode_mean_of_mean_age_predator,
                 episode_mean_of_mean_age_prey,
             ) = eval(env_fn, num_episodes=num_episodes, render_mode=None, **env_kwargs)
+            
             # save evaluation results to file
             file.write("--------------------------\n")
             file.write(f"Number of episodes = {num_episodes}" + "\n")
