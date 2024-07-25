@@ -12,7 +12,7 @@ A multi-agent reinforcement learning (MARL) environment, trained using Proximal 
 </br>
 </br>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="220"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="180"/>
 </p>
 
 
