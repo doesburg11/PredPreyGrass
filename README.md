@@ -64,7 +64,7 @@ In Visual Studio Code run:
 ```pettingzoo/predpreygrass/random_policy.py```
 </br>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="240"/>
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
 
