@@ -17,13 +17,13 @@ A multi-agent reinforcement learning (MARL) environment, trained using Proximal 
 
 
 ## Emergent Behaviors
-This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above example, rewards for learning agents are only obtained by reproduction. However, maximizing these rewards results in emerging behaviors such as: 1) Predators hunting Prey, 2) Predators hovering around grass to catch Prey and 3) Prey trying to escape Predators. These emergimg behaviors lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
+This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above example, rewards for learning agents are only obtained by reproduction. However, maximizing these rewards results in emerging behaviors such as: 1) Predators hunting Prey, 2) Predators hovering around grass to catch Prey and 3) Prey trying to escape Predators. These emerging behaviors lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
 
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
-More emergent behavior and findings are described in the [config directory](https://github.com/doesburg11/PredPreyGrass/tree/main/pettingzoo/predpreygrass/config).
+More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
 
 
 ## Installation
