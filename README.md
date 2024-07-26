@@ -78,7 +78,7 @@ To evaluate and visualize after training follow instructions in:
 
 
 ## Configuration of the PredPreyGrass environment
-[The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/pettingzoo/predpreygrass/config/config_pettingzoo_benchmark_1.py) used in the gif-video above.
+[The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/pettingzoo/predpreygrass/config/config_pettingzoo.py) used in the gif-video above.
 
 ## References
 
