@@ -285,7 +285,7 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = True
+    parameter_variation = False
     parameter_variation_parameter_string = "energy_gain_per_step_predator"
     if parameter_variation:
         parameter_variation_scenarios = [-0.1, -0.15, -0.2, -0.25, -0.3]
