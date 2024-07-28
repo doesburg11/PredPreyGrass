@@ -1,7 +1,7 @@
 local_output_directory = '/home/doesburg/Dropbox/02_marl_results/predpreygras_results/'
 training_steps_string = '10_000_000'
 env_kwargs = dict(
-    max_cycles=10000,
+    max_cycles=5000,
     x_grid_size=25,
     y_grid_size=25,
     n_possible_predator=18,
@@ -17,7 +17,7 @@ env_kwargs = dict(
     energy_gain_per_step_grass=0.2,
     catch_prey_energy=0.0,
     catch_grass_energy=0.0,
-    initial_energy_predator=18.0, # was 5 but know increased according to metabolism rate and Kleiber's law
+    initial_energy_predator=15.0, # was 5 but know increased according to metabolism rate and Kleiber's law
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,

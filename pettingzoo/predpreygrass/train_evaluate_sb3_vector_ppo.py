@@ -188,6 +188,46 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
         file_name = population_dir + "/PredPreyPopulation_episode_" + str(i) + ".pdf"
         plt.savefig(file_name)
 
+
+        # plot energy of Predators, Prey and Grass
+        plt.clf()
+        plt.plot(raw_env.pred_prey_env.total_energy_predator_list, "r")
+        plt.plot(raw_env.pred_prey_env.total_energy_prey_list, "b")
+        plt.plot(raw_env.pred_prey_env.total_energy_grass_list, "g")
+        plt.title("Total energy", weight="bold")
+        plt.xlabel("Time steps", weight="bold")
+        ax = plt.gca()
+        # Set x and y limits
+        ax.set_xlim([0, raw_env.pred_prey_env.n_aec_cycles])
+        ax.set_ylim(
+            [
+                0,
+                max(
+                    raw_env.pred_prey_env.total_energy_predator_list
+                    + raw_env.pred_prey_env.total_energy_prey_list
+                    + raw_env.pred_prey_env.total_energy_grass_list
+                ),
+            ]
+        )
+        # Display only whole numbers on the y-axis
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+        # Remove box/spines
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+        # Make axes thicker
+        plt.axhline(0, color="black", linewidth=4)
+        plt.axvline(0, color="black", linewidth=4)
+        # Make tick marks thicker
+        plt.tick_params(width=2)
+
+        total_energy_dir = output_directory + "population_charts/"
+        os.makedirs(total_energy_dir, exist_ok=True)
+        file_name = total_energy_dir + "/PredPreyGrassTotalEnergy_episode_" + str(i) + ".pdf"
+        plt.savefig(file_name)
+
+
         episode_length[i] = n_aec_cycles
         n_starved_predator_per_cycle[i] = (
             raw_env.pred_prey_env.n_starved_predator / n_aec_cycles
@@ -285,10 +325,10 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = False
-    parameter_variation_parameter_string = "energy_gain_per_step_predator"
+    parameter_variation = True
+    parameter_variation_parameter_string = "predator_creation_energy_threshold"
     if parameter_variation:
-        parameter_variation_scenarios = [-0.1, -0.15, -0.2, -0.25, -0.3]
+        parameter_variation_scenarios = [20, 22, 24, 26, 28, 30]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]
