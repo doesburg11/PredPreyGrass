@@ -1,5 +1,6 @@
 """
 pred/prey/grass PettingZoo multi-agent learning environment
+this environment transfers the energy of eaten prey/grass to the predator/prey
 
 """
 import os
