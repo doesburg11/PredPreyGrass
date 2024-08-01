@@ -1,11 +1,11 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "1_000_000"
+training_steps_string = "30_000_000"
 
 env_kwargs = dict(
     # environment parameters
-    max_cycles=10000, 
+    max_cycles=5000, 
     x_grid_size=25,
     y_grid_size=25, 
     # agent parameters
@@ -43,7 +43,7 @@ env_kwargs = dict(
     create_predator = True,  # only effect on and applicable to fixed energy transfer environments
     regrow_grass = True,  # only effect on and applicable to fixed energy transfer environments
     prey_creation_energy_threshold = 8,  
-    predator_creation_energy_threshold = 10, # optimized by parameter variation [10, 12, 14, 16, 18, 20]
+    predator_creation_energy_threshold = 12, # optimized by parameter variation [2,4, 6,..., 22, 24]
     # visualization parameters
     cell_scale = 40,
     x_pygame_window = 0,
