@@ -269,7 +269,7 @@ class PredPreyGrass:
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
         # end actions
 
-        # records for removal of agents
+        # records for removal of agents at the end of the cycle
         self.agent_energy_from_eating_dict = dict(
             zip(
                 self.possible_agent_name_list,
