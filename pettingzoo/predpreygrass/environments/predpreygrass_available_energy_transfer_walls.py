@@ -43,9 +43,11 @@ class PredPreyGrass:
         obs_range_predator: int = 5,
         obs_range_prey: int = 7,
         render_mode: Optional[str] = None,
-        energy_gain_per_step_predator: float = -0.3,
-        energy_gain_per_step_prey: float = -0.05,
-        energy_gain_per_step_grass: float = 0.2,
+        energy_change_per_move_predator: float = -0.3,
+        energy_change_per_move_prey: float = -0.05,
+        energy_change_per_step_grass: float = 0.2,
+        energy_change_per_wall_build_predator: float = 3.0,
+        energy_change_per_wall_build_prey: float = 3.0,
         initial_energy_predator: float = 5.0,
         initial_energy_prey: float = 5.0,
         initial_energy_grass: float = 3.0,
@@ -57,13 +59,13 @@ class PredPreyGrass:
         predator_creation_energy_threshold: float = 10.0,
         create_prey: bool = False,
         create_predator: bool = False,
-        step_reward_predator: float = -0.3,
-        step_reward_prey: float = -0.05,
-        step_reward_grass: float = 0.2,
-        catch_reward_prey: float = 5.0,
-        catch_reward_grass: float = 3.0,
-        death_reward_prey: float = -10.0,
-        death_reward_predator: float = -10.0,
+        step_reward_predator: float = 0.0,
+        step_reward_prey: float = 0.0,
+        step_reward_grass: float = 0.0,
+        catch_reward_prey: float = 0.0,
+        catch_reward_grass: float = 0.0,
+        death_reward_prey: float = -15.0,
+        death_reward_predator: float = 0.0,
         reproduction_reward_prey: float = 10.0,
         reproduction_reward_predator: float = 10.0,
         catch_prey_energy: float = 5.0,
@@ -107,9 +109,9 @@ class PredPreyGrass:
         self.obs_range_predator = obs_range_predator
         self.obs_range_prey = obs_range_prey
         self.render_mode = render_mode
-        self.energy_gain_per_step_predator = energy_gain_per_step_predator
-        self.energy_gain_per_step_prey = energy_gain_per_step_prey
-        self.energy_gain_per_step_grass = energy_gain_per_step_grass
+        self.energy_change_per_move_predator = energy_change_per_move_predator
+        self.energy_change_per_move_prey = energy_change_per_move_prey
+        self.energy_change_per_step_grass = energy_change_per_step_grass
         self.cell_scale = cell_scale
         self.initial_energy_predator = initial_energy_predator
         self.initial_energy_prey = initial_energy_prey
@@ -137,6 +139,8 @@ class PredPreyGrass:
         self.spawning_area_predator = spawning_area_predator
         self.spawning_area_prey = spawning_area_prey
         self.spawning_area_grass = spawning_area_grass
+        self.energy_change_per_wall_build_predator = energy_change_per_wall_build_predator
+        self.energy_change_per_wall_build_prey = energy_change_per_wall_build_prey
 
         # agent types
 
@@ -416,9 +420,9 @@ class PredPreyGrass:
         ]
         self.energy_gain_per_step_list: List[int] = [
             0,
-            self.energy_gain_per_step_predator,
-            self.energy_gain_per_step_prey,
-            self.energy_gain_per_step_grass,
+            self.energy_change_per_move_predator,
+            self.energy_change_per_move_prey,
+            self.energy_change_per_step_grass,
         ]
 
         self.agent_id_counter = 0
@@ -757,7 +761,7 @@ class PredPreyGrass:
                     if self.grass_to_be_removed_by_prey_dict[grass_name]:
                         self.remove_grass(grass_instance)
                     else:
-                        # increase grass energy by self.energy_gain_per_step_grass, but not higher than self.max_energy_level_grass
+                        # increase grass energy by self.energy_change_per_step_grass, but not higher than self.max_energy_level_grass
                         grass_energy_gain = min(
                             grass_instance.energy_gain_per_step,
                             max(self.max_energy_level_grass - grass_instance.energy, 0),
@@ -836,7 +840,6 @@ class PredPreyGrass:
                 new_wall_instance.is_active = True
                 self.active_wall_instance_list.append(new_wall_instance)
 
-
     def step_agent(self, agent_instance, action):
         if action < 5:
             self.move_agent(agent_instance, action)
@@ -844,20 +847,19 @@ class PredPreyGrass:
             # place wall in Moore neighborhood
             if action == 5:
                 position_wall = (agent_instance.position[0]-1, agent_instance.position[1])
-                self.place_wall_in_model_state(position_wall[0], position_wall[1])
-                agent_instance.energy -= 1
             elif action == 6:
                 position_wall = (agent_instance.position[0], agent_instance.position[1]-1)
-                self.place_wall_in_model_state(position_wall[0], position_wall[1])
-                agent_instance.energy -= 1
             elif action == 7:
                 position_wall = (agent_instance.position[0]+1, agent_instance.position[1])
-                self.place_wall_in_model_state(position_wall[0], position_wall[1])
-                agent_instance.energy -= 1
             elif action == 8:
                 position_wall = (agent_instance.position[0], agent_instance.position[1]+1)
-                self.place_wall_in_model_state(position_wall[0], position_wall[1])
-                agent_instance.energy -= 1
+            self.place_wall_in_model_state(position_wall[0], position_wall[1])
+            agent_instance.energy += (
+                self.energy_change_per_wall_build_predator if
+                agent_instance.agent_type_nr == PREDATOR_TYPE_NR else 
+                self.energy_change_per_wall_build_prey
+            )
+            
 
     def move_agent(self, agent_instance, action):
         self.agent_instance_in_grid_location[
@@ -1097,7 +1099,7 @@ class PredPreyGrass:
         self.agent_reward_dict[predator_name] += (
             self.catch_reward_prey * self.predator_who_remove_prey_dict[predator_name]
         )
-        predator_instance.energy += self.energy_gain_per_step_predator
+        predator_instance.energy += self.energy_change_per_move_predator
         predator_instance.energy += self.agent_energy_from_eating_dict[predator_name]
         self.model_state[
             PREDATOR_TYPE_NR,
@@ -1111,7 +1113,7 @@ class PredPreyGrass:
         self.agent_reward_dict[prey_name] += (
             self.catch_reward_grass * self.prey_who_remove_grass_dict[prey_name]
         )
-        prey_instance.energy += self.energy_gain_per_step_prey
+        prey_instance.energy += self.energy_change_per_move_prey
         prey_instance.energy += self.agent_energy_from_eating_dict[prey_name]
         self.model_state[
             PREY_TYPE_NR,
@@ -1438,19 +1440,6 @@ class PredPreyGrass:
                 col = (0, 128, 0)  # green
                 pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3))  # type: ignore
 
-        def draw_wall_instances_circles():
-            for wall_instance in self.active_wall_instance_list:
-                position = wall_instance.position
-                x = position[0]
-                y = position[1]
-
-                center = (
-                    int(self.cell_scale * x + self.cell_scale / 2),
-                    int(self.cell_scale * y + self.cell_scale / 2),
-                )
-                col = (128, 128, 128)  # black
-                pygame.draw.circle(self.screen, col, center, int(self.cell_scale / 2.3))  # type: ignore
-
         def draw_wall_instances():
             for wall_instance in self.active_wall_instance_list:
                 position = wall_instance.position
@@ -1467,15 +1456,14 @@ class PredPreyGrass:
                 center_x, center_y = center
 
                 # Calculate the top-left corner of the rectangle
-                rect_left = center_x - int(self.cell_scale / 2.3) // 2
-                rect_top = center_y - int(self.cell_scale / 2.3) // 2
+                rect_left = center_x - int(self.cell_scale ) // 2
+                rect_top = center_y - int(self.cell_scale ) // 2
 
                 # Create the rect tuple
-                rect = (rect_left, rect_top, int(self.cell_scale / 2.3), int(self.cell_scale / 2.3))
+                rect = (rect_left, rect_top, int(self.cell_scale), int(self.cell_scale))
 
                 # Draw the rectangle
                 pygame.draw.rect(self.screen, col, rect)
-
 
         def draw_agent_instance_id_nrs():
             font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)

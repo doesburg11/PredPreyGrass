@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "20_000_000"
+training_steps_string = "10_000_000"
 
 env_kwargs = dict(
     # environment parameters
@@ -19,9 +19,11 @@ env_kwargs = dict(
     obs_range_predator=7,  
     obs_range_prey=9, 
     # energy parameters
-    energy_gain_per_step_predator = -0.15, # optimized by parameter variation [-0.3,-0.25,-0.20,-0.15,-0.10]
-    energy_gain_per_step_prey = -0.05,  
-    energy_gain_per_step_grass = 0.2,  
+    energy_change_per_move_predator = -0.15, # optimized by parameter variation [-0.3,-0.25,-0.20,-0.15,-0.10]
+    energy_change_per_move_prey = -0.05,  
+    energy_change_per_step_grass = 0.2,  
+    energy_change_per_wall_build_predator = -5,
+    energy_change_per_wall_build_prey = -5,
     catch_prey_energy = 0.0,
     catch_grass_energy = 0.0,   
     initial_energy_predator = 5.0,
