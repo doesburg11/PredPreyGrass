@@ -54,13 +54,14 @@ More emergent behavior and findings are described [on our website](https://www.b
    ```bash
    pip install box2d box2d-kengz
    ```
-4. Alternatively 1: ```bash
+4. Alternative 1:
+   ```bash
    pip install wheel setuptools pip --upgrade
    pip install swig
    pip install gymnasium[box2d]
    ``` 
-5. Alternatively 2: a workaround is to copy Box2d files from [assets/box2d](https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
-6. If facing "libGL error: failed to load driver: swrast," execute:
+6. Alternative 2: a workaround is to copy Box2d files from [assets/box2d](https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
+7. If facing "libGL error: failed to load driver: swrast," execute:
     ```bash
     conda install -c conda-forge gcc=12.1.0
     
