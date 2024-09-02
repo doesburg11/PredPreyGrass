@@ -1,6 +1,6 @@
 # AEC pettingzoo predpreygrass environment using random policy
 from environments.predpreygrass_default import raw_env
-from config.config_predpreygrass_default import env_kwargs
+from config.config_predpreygrass import env_kwargs
 
 from pettingzoo.utils import agent_selector
 

@@ -8,7 +8,7 @@ directory, for reuse and analysis.
 
 import environments.predpreygrass_default as predpreygrass
 
-from config.config_predpreygrass_default import (
+from predpreygrass.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
