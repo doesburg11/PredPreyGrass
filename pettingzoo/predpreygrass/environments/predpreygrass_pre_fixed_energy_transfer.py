@@ -1,5 +1,7 @@
 """
-pred/prey/grass PettingZoo multi-agent learning environment
+pred/prey/grass PettingZoo multi-agent learning environment.
+Energy transfer of eating is pre-fixed and not dependant on 
+the actual energy of the eaten agent.
 """
 import os
 import numpy as np

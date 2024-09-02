@@ -12,10 +12,10 @@
   in the defined local directory (and not in your cloned directory!)
 """
 # Agent Environment Cycle (AEC) pettingzoo predpreygrass environment
-import environments.predpreygrass_available_energy_transfer as predpreygrass
+import environments.predpreygrass_default as predpreygrass
 
 # make sure this configuration is consistent with the training configuration in "train_sb3_vector_ppo.py"
-from config.config_pettingzoo import env_kwargs, training_steps_string
+from config.config_predpreygrass_default import env_kwargs, training_steps_string
 
 # displaying the population of predators and prey
 import matplotlib
@@ -31,6 +31,8 @@ from typing import List
 import supersuit as ss
 from stable_baselines3 import PPO
 
+WATCH_GRID_MODEL = True # if false only evaluation is done
+NUM_EPISODES = 5
 
 def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_kwargs):
     # Evaluate a trained agent vs a random agent
@@ -256,8 +258,10 @@ if __name__ == "__main__":
     script_directory = os.path.dirname(os.path.abspath(__file__))
     output_directory = script_directory + "/output/"
     loaded_policy = output_directory + model_file_name
-    eval_model_only = True
-    watch_grid_model = not eval_model_only
+    watch_grid_model = WATCH_GRID_MODEL
+    eval_model_only = not watch_grid_model
+    num_episodes = NUM_EPISODES 
+
     # save parameters to file
     if eval_model_only:
         saved_directory_and_evaluation_file_name = os.path.join(
@@ -279,7 +283,6 @@ if __name__ == "__main__":
     training_steps = int(training_steps_string)
 
     # global variables for evaluation used in eval function
-    num_episodes: int = 100  # replace with the actual number of episodes
 
     episode_length: List[int] = [0 for _ in range(num_episodes)]
     predator_extinct_at_termination: List[int] = [0 for _ in range(num_episodes)]

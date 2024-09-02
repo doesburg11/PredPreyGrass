@@ -1,13 +1,16 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "30_000_000"
+training_steps_string = "10_000_000"
+
+x_grid_size = 25
+y_grid_size = 25
 
 env_kwargs = dict(
     # environment parameters
     max_cycles=5000, 
-    x_grid_size=25,
-    y_grid_size=25, 
+    x_grid_size=x_grid_size,
+    y_grid_size=y_grid_size, 
     # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
@@ -19,7 +22,7 @@ env_kwargs = dict(
     obs_range_predator=7,  
     obs_range_prey=9, 
     # energy parameters
-    energy_gain_per_step_predator = -0.15, # optimized by parameter variation [-0.3,-0.25,-0.20,-0.15,-0.10]
+    energy_gain_per_step_predator = -0.15,  # optimized by parameter variation [-0.3,-0.25,-0.20,-0.15,-0.10]
     energy_gain_per_step_prey = -0.05,  
     energy_gain_per_step_grass = 0.2,  
     catch_prey_energy = 0.0,
@@ -52,22 +55,21 @@ env_kwargs = dict(
     spawning_area_predator = dict({
             "x_begin": 0,
             "y_begin": 0,
-            "x_end": 24,
-            "y_end": 24,
+            "x_end": x_grid_size-1,
+            "y_end": y_grid_size-1,
         }),
     spawning_area_prey = dict({
             "x_begin": 0,
             "y_begin": 0,
-            "x_end": 24,
-            "y_end": 24,
+            "x_end": x_grid_size-1,
+            "y_end": y_grid_size-1,
         }), 
     spawning_area_grass = dict({
             "x_begin": 12,
             "y_begin": 0,
             "x_end": 13,
-            "y_end": 24,
+            "y_end": y_grid_size-1,
         }),
-
 
 
 )

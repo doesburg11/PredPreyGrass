@@ -1,6 +1,6 @@
-import environments.predpreygrass_available_energy_transfer as predpreygrass
+import environments.predpreygrass_default as predpreygrass
 
-from config.config_pettingzoo import (
+from config.config_predpreygrass_default import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
