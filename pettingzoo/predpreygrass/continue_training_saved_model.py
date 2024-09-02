@@ -12,8 +12,8 @@ After/during training, you can review the logs in TensorBoard
 
 """
 # Continue training for X steps and log the results to TensorBoard
-import environments.predpreygrass_available_energy_transfer as predpreygrass
-from config.config_pettingzoo import env_kwargs, training_steps_string
+import environments.predpreygrass_default as predpreygrass
+from config.config_predpreygrass_default import env_kwargs, training_steps_string
 
 import os
 

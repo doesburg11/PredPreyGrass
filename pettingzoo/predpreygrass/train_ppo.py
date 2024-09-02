@@ -6,9 +6,9 @@ directory, for reuse and analysis.
 -The algorithm used is PPO from stable_baselines3. 
 """
 
-import environments.predpreygrass_available_energy_transfer_walls as predpreygrass
+import environments.predpreygrass_default as predpreygrass
 
-from config.config_pettingzoo_walls import (
+from config.config_predpreygrass_default import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
