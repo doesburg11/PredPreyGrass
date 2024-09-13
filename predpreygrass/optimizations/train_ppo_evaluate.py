@@ -7,8 +7,8 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 
-import predpreygrass.environments.predpreygrass as predpreygrass
-from predpreygrass.config.config_predpreygrass import (
+import envs.predpreygrass.predpreygrass as predpreygrass
+from envs.predpreygrass.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
@@ -380,7 +380,7 @@ if __name__ == "__main__":
     environment_name = "predpreygrass"
     env_fn = predpreygrass
     training_steps = int(training_steps_string)
-    parameter_variation = False
+    parameter_variation = True
     parameter_variation_parameter_string = "reproduction_reward_prey"
     if parameter_variation:
         parameter_variation_scenarios = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
@@ -389,6 +389,7 @@ if __name__ == "__main__":
             env_kwargs[parameter_variation_parameter_string]
         ]  # default value, must be iterable
     # output file name
+    # start_time = str(time.strftime('%Y-%m-%d_%H:%M'))
     start_time = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  # add seconds
     file_name = f"{environment_name}_steps_{training_steps_string}"
     if parameter_variation:

@@ -5,10 +5,18 @@
 directory, for reuse and analysis. 
 -The algorithm used is PPO from stable_baselines3. 
 """
+from __future__ import annotations
 
-import predpreygrass.environments.predpreygrass as predpreygrass
+import glob
+import os
+import time
 
-from predpreygrass.config.config_predpreygrass import (
+import supersuit as ss
+from stable_baselines3 import PPO
+from stable_baselines3.ppo import MlpPolicy
+
+from envs import predpreygrass_v0
+from envs.predpreygrass.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
@@ -20,6 +28,9 @@ import sys
 import shutil
 
 import supersuit as ss
+from stable_baselines3 import PPO
+from stable_baselines3.ppo import MlpPolicy
+
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import parallel_wrapper_fn
@@ -94,7 +105,7 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 
 if __name__ == "__main__":
     environment_name = "predpreygrass"
-    env_fn = predpreygrass
+    env_fn = predpreygrass_v0
     training_steps = int(training_steps_string)
     parameter_variation = False
     parameter_variation_parameter_string = "prey_creation_energy_threshold"
