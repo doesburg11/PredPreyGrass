@@ -15,7 +15,11 @@
 import predpreygrass.environments.predpreygrass as predpreygrass
 
 # make sure this configuration is consistent with the training configuration in "train_sb3_vector_ppo.py"
-from config.config_predpreygrass import env_kwargs, training_steps_string
+from pettingzoo.envs.predpreygrass.config.config_predpreygrass import (
+    env_kwargs,
+    training_steps_string,
+)
+
 
 # displaying the population of predators and prey
 import matplotlib
