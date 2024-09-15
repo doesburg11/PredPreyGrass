@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "10_000_000"
+training_steps_string = "600_000"
 
 x_grid_size = 25
 y_grid_size = 25
@@ -10,7 +10,7 @@ env_kwargs = dict(
     max_cycles=10000,
     # reward parameters
     step_reward_predator=0.0,
-    step_reward_prey=00,
+    step_reward_prey=0.0,
     step_reward_grass=0.0,
     catch_reward_grass=0.0,
     catch_reward_prey=0.0,

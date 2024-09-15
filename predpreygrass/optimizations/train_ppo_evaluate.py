@@ -7,8 +7,8 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 
-import envs.predpreygrass.predpreygrass as predpreygrass
-from envs.predpreygrass.config.config_predpreygrass import (
+import predpreygrass.envs._predpreygrass_v0.predpreygrass as predpreygrass
+from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
@@ -458,6 +458,7 @@ if __name__ == "__main__":
             code += ")\n"
             config_file_name = "config_predpreygrass.py"
             config_file_directory = destination_directory_source_code + "/config/"
+            print("destination_directory_source_code",destination_directory_source_code)
 
             with open(config_file_directory + config_file_name, "w") as config_file:
                 config_file.write(code)

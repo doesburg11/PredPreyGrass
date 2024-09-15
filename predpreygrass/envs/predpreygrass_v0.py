@@ -1,3 +1,3 @@
-from envs.predpreygrass import env, parallel_env, raw_env
+from predpreygrass.envs._predpreygrass_v0.predpreygrass import env, parallel_env, raw_env
 
 __all__ = ["env", "parallel_env", "raw_env"]

@@ -1,5 +1,5 @@
-from envs import predpreygrass_v0
-from envs.predpreygrass.config.config_predpreygrass import env_kwargs
+from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import env_kwargs
 
 
 

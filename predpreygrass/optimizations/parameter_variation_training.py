@@ -15,8 +15,8 @@ import supersuit as ss
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 
-from envs import predpreygrass_v0
-from envs.predpreygrass.config.config_predpreygrass import (
+from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
