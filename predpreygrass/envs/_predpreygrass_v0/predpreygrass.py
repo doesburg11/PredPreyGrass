@@ -1,9 +1,9 @@
-from gymnasium.utils import EzPickle
+from predpreygrass.envs._predpreygrass_v0.predpreygrass_base import PredPreyGrass as _env
 
+from gymnasium.utils import EzPickle
 from pettingzoo import AECEnv
-from predpreygrass_base import PredPreyGrass as _env
-from utils import agent_selector, wrappers
-from utils.conversions import parallel_wrapper_fn
+from pettingzoo.utils import agent_selector, wrappers
+from pettingzoo.utils.conversions import parallel_wrapper_fn
 
 import numpy as np
 import pygame
