@@ -29,7 +29,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ## Installation
 
-**Editor used:** Visual Studio Code 1.88.1 on Linux Mint 21.3 Cinnamon
+**Editor used:** Visual Studio Code 1.93.1 on Linux Mint 21.3 Cinnamon
 
 1. Clone the repository: 
    ```bash
@@ -77,15 +77,14 @@ In Visual Studio Code run:
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
-```pettingzoo/predpreygrass/config/config_pettingzoo.py```
+```predpreygrass/envs/_predpreygrass_v0/config/config_predpreygrass.py```
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/train_sb3_vector_ppo_parallel.py```
+```predpreygrass/optimizationspredpreygrass/train_predpreygrass_v0_ppo.py```
 To evaluate and visualize after training follow instructions in:
-```pettingzoo/predpreygrass/evaluate_from_file.py```
-
+```predpreygrass/optimizationspredpreygrass/evaluate_from_file.py```
 
 ## Configuration of the PredPreyGrass environment
-[The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/pettingzoo/predpreygrass/config/config_pettingzoo.py) used in the gif-video above.
+[The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_predpreygrass_v0/config/config_predpreygrass.py) used in the gif-video above.
 
 ## References
 
