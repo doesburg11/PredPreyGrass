@@ -3,7 +3,7 @@ pred/prey/grass PettingZoo multi-agent learning environment
 this environment transfers the energy of eaten prey/grass to the predator/prey
 
 """
-from predpreygrass.envs._predpreygrass_v0.agents.discrete_agent import DiscreteAgent
+from predpreygrass.envs._so_predpreygrass_v0.agents.discrete_agent import DiscreteAgent
 
 import gymnasium
 from gymnasium.utils import seeding
@@ -21,6 +21,7 @@ from collections import defaultdict
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2
 GRASS_TYPE_NR = 3
+
 
 
 class PredPreyGrass:
@@ -626,12 +627,12 @@ class PredPreyGrass:
                     )
                     if is_prey_in_new_cell:
                         # found prey to eat and store records for last step of the cycle
-                        # if energy of predator is above energy of all prey surrounding in neighborhood of attacked prey
                         self.earmarking_predator_catches_prey(
                             agent_instance, x_new, y_new
                         )
                     else:
                         # no prey instance in new cell
+                        # check for (rare) anomaly
                         if self.model_state[PREY_TYPE_NR, x_new, y_new] > 0:
                             print(
                                 "WARNING: Prey instance not found in in cel (",

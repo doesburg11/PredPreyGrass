@@ -6,21 +6,22 @@ directory, for reuse and analysis.
 -The algorithm used is PPO from stable_baselines3. 
 """
 
-from predpreygrass.envs import predpreygrass_v0
-from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.envs import so_predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
 )
-from predpreygrass.optimizations.training.trainer import Trainer
+from predpreygrass.optimizations.so_predpreygrass_v0.training.trainer import Trainer
 
 import os
 import time
-import sys
 import shutil
+from os.path import dirname as up
+
 
 if __name__ == "__main__":
-    env_fn = predpreygrass_v0
+    env_fn = so_predpreygrass_v0
     environment_name = "predpreygrass_v0"
     training_steps = int(training_steps_string)
     # create model file name for saving
@@ -30,10 +31,9 @@ if __name__ == "__main__":
     destination_directory_source_code = os.path.join(
         local_output_directory, time_stamp_string
     )
+
+    project_directory = up(up(up(up(__file__)))) # up 4 levels in directory tree
     # copy the project code to the local directory
-    optimization_directory = os.path.dirname(os.path.abspath(sys.argv[0]))
-    # get the project directory, the parent directory of the optimization directory
-    project_directory = os.path.dirname(optimization_directory)
     shutil.copytree(project_directory, destination_directory_source_code)
     # Create the output directory
     output_directory = destination_directory_source_code + "/output/"

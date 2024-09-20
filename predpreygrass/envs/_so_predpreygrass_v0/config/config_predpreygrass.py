@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
 
-training_steps_string = "600_000"
+training_steps_string = "10_000_000"
 
 x_grid_size = 25
 y_grid_size = 25
@@ -16,14 +16,14 @@ env_kwargs = dict(
     catch_reward_prey=0.0,
     death_reward_prey=0.0,  # -15.0,  # this results in a zero-sum element between Predator and Prey rewards
     death_reward_predator=0.0,
-    reproduction_reward_prey=10.0,
+    reproduction_reward_prey=17.0,
     reproduction_reward_predator=10.0,
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     # agent parameters
-    n_possible_predator=18,  # maximum number of predators during runtime
-    n_possible_prey=24,
+    n_possible_predator=36,  # maximum number of predators during runtime
+    n_possible_prey=48,
     n_possible_grass=30,  # optimized by parameter variation [10,12,14,16,18,20,...,26,28,40]
     n_initial_active_predator=6,
     n_initial_active_prey=8,

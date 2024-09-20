@@ -2,7 +2,7 @@ import supersuit as ss
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import parallel_wrapper_fn
-from predpreygrass.optimizations.training.utils.logger import SampleLoggerCallback
+from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.logger import SampleLoggerCallback
 
 class Trainer:
     def __init__(
