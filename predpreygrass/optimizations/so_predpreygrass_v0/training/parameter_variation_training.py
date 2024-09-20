@@ -15,8 +15,8 @@ import supersuit as ss
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 
-from predpreygrass.envs import predpreygrass_v0
-from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.envs import so_predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
@@ -55,7 +55,7 @@ class SampleLoggerCallback(BaseCallback):
             self.current_episode_length = 0
         return True  # Continue training
 
-
+# TODO: use Trainer class to train the model
 def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
     parallel_env = parallel_wrapper_fn(env_fn.raw_env)
 
@@ -105,12 +105,12 @@ def train(env_fn, steps: int = 10_000, seed: int | None = 0, **env_kwargs):
 
 if __name__ == "__main__":
     environment_name = "predpreygrass"
-    env_fn = predpreygrass_v0
+    env_fn = so_predpreygrass_v0
     training_steps = int(training_steps_string)
     parameter_variation = False
     parameter_variation_parameter_string = "prey_creation_energy_threshold"
     if parameter_variation:
-        parameter_variation_scenarios = [8, 10, 12, 14, 16]
+        parameter_variation_scenarios = [8, 10] #, 12, 14, 16]
     else:
         parameter_variation_scenarios = [
             env_kwargs[parameter_variation_parameter_string]

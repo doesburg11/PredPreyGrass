@@ -1,4 +1,4 @@
-from predpreygrass.envs._predpreygrass_v0.predpreygrass_base import PredPreyGrass as _env
+from predpreygrass.envs._so_predpreygrass_v0.predpreygrass_base import PredPreyGrass as _env
 
 from gymnasium.utils import EzPickle
 from pettingzoo import AECEnv
@@ -22,7 +22,7 @@ parallel_env = parallel_wrapper_fn(env)
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predpreygrass",
+        "name": "predpreygrass_v0",
         "is_parallelizable": True,
         "render_fps": 5,
     }
@@ -100,19 +100,13 @@ class raw_env(AECEnv, EzPickle):
                 self.terminations[k] = (
                     self._env.is_no_prey or self._env.is_no_predator
                 )
-
         for agent_name in self.agents:
             self.rewards[agent_name] = self._env.agent_reward_dict[agent_name]
-
         self.steps += 1
-        # _cumulative_rewards functions as non_cumulative reward   
-        #  
-        #self._cumulative_rewards[self.agent_selection] = 0    
+
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
-  
         self.agent_selection = self._agent_selector.next()
-        
-        self._accumulate_rewards()  # cannot be left out for proper rewards
+        self._accumulate_rewards()  
         if self.render_mode == "human" and agent_instance.is_active:
             self.render()
 

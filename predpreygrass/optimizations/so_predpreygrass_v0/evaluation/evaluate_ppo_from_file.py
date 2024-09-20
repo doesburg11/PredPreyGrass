@@ -1,4 +1,9 @@
 """
+- to evaluate a ppo trained and saved model
+- evaluation can be done with or without watching the grid
+"""
+"""
+instructions:
 - navigate with linux mint file-explorer to your local directory 
   (definedd in "env/_predpreygraas_v0/config/config_predpreygrass.py").
 - note that the entire files/directories of the project are copied 
@@ -10,16 +15,13 @@
 - select "Run" (in taskbar of Visual Studio Code)
 - select "Run without debugging"
 - note that adjusting the configuration of the trained model is done 
-  in the defined local directory (and not in your original directory!)
+  in the defined local directory (and *not* in your original directory!)
 """
-from predpreygrass.envs import predpreygrass_v0
-from predpreygrass.envs._predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.envs import so_predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
 )
-
-# rom pettingzoo.utils import agent_selector  # on top of file gives error unbound(?)
-
 
 # displaying the population of predators and prey
 import matplotlib
@@ -31,11 +33,13 @@ from matplotlib.ticker import MaxNLocator  # for integer ticks
 import os
 from statistics import mean, stdev
 from typing import List
+from os.path import dirname as up
+
 
 from stable_baselines3 import PPO
 
 WATCH_GRID_MODEL = False # if false only evaluation is done
-NUM_EPISODES = 10
+NUM_EPISODES = 100
 
 def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_kwargs):
     # Evaluate a trained agent vs a random agent
@@ -270,12 +274,12 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
 
 if __name__ == "__main__":
-    env_fn = predpreygrass_v0
+    env_fn = so_predpreygrass_v0
     environment_name = "predpreygrass_v0"
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
-    script_directory = os.path.dirname(os.path.abspath(__file__))
-    project_directory = os.path.dirname(script_directory)
-    output_directory = project_directory + "/output/"
+    evaluation_directory = os.path.dirname(os.path.abspath(__file__))
+    script_directory = up(up(up(up(__file__))))  # up 4 levels in directory tree
+    output_directory = script_directory +"/output/"
     loaded_policy = output_directory + model_file_name
 
     watch_grid_model = WATCH_GRID_MODEL
