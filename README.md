@@ -21,7 +21,7 @@
 
 
 ## Emergent Behaviors
-This algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above example, rewards for learning agents are only obtained by reproduction. However, maximizing these rewards results in emerging behaviors such as: 1) Predators hunting Prey, 2) Predators hovering around grass to catch Prey and 3) Prey trying to escape Predators. These emerging behaviors lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
+The PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are only obtained by reproduction. However, maximizing these rewards results in emerging behaviors such as: 1) Predators hunting Prey, 2) Predators hovering around grass to catch Prey and 3) Prey trying to escape Predators. These emerging behaviors lead to more complex dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. This learned outcome is not obtained with a random policy:
 
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
@@ -96,7 +96,8 @@ To evaluate and visualize after training follow instructions in:
 - [MOMAland: A Set of Benchmarks for Multi-Objective Multi-Agent Reinforcement Learning (MOMARL). Florian Felten and Umut Ucak and Hicham Azmani and Gao Peng and Willem Röpke and Hendrik Baier and Patrick Mannion and Diederik M. Roijers and Jordan K. Terry and El-Ghazali Talbi and Grégoire Danoy and Ann Nowé and Roxana Rădulescu](https://momaland.farama.org/)
 - [Multi-Objective Multi-Agent Decision Making: A Utility-based Analysis and Survey](https://arxiv.org/abs/1909.02964)
 - [A Practical Guide to Multi-Objective Reinforcement Learning and Planning](https://arxiv.org/abs/2103.09568)
-(https://www.marl-book.com/download/marl-book.pdf)
+- [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
+
 
 
 
