@@ -240,7 +240,7 @@ if __name__ == "__main__":
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     parameter_variation_parameter_string = "reproduction_reward_prey"
-    parameter_variation_scenarios = [17.0]
+    parameter_variation_scenarios = [8.0, 10.0, 12.0, 14.0, 16.0, 18.0]
     root_destination_directory_source_code = (
         local_output_directory
         + "parameter_variation/"

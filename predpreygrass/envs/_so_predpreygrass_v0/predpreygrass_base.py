@@ -3,7 +3,6 @@ pred/prey/grass PettingZoo multi-agent learning environment
 this environment transfers the energy of eaten prey/grass to the predator/prey
 
 """
-
 from predpreygrass.envs._so_predpreygrass_v0.agents.discrete_agent import DiscreteAgent
 
 import gymnasium
@@ -22,6 +21,7 @@ from collections import defaultdict
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2
 GRASS_TYPE_NR = 3
+
 
 
 class PredPreyGrass:
@@ -321,36 +321,6 @@ class PredPreyGrass:
         self.max_energy_level_prey = 25.0  # in kwargs later, init level = 5.0
         self.max_energy_level_predator = 25.0  # in kwargs later, init level = 5.0
 
-        # added for MOAEC
-        self.num_objectives = 2
-        self.reward_spaces = dict(
-            zip(
-                self.possible_agent_name_list,
-                [spaces.Box(low=0, high=100, shape=(self.num_objectives,))]
-                * len(self.possible_agent_name_list),
-            )
-        )
-        zero_reward = np.zeros(
-            self.reward_spaces[self.possible_agent_name_list[0]].shape, dtype=np.float32
-        )  # np.copy() makes different copies of this.
-        self._cumulative_rewards = dict(
-            zip(
-                self.possible_agent_name_list,
-                [zero_reward.copy() for _ in self.possible_agent_name_list],
-            )
-        )
-        self.agent_reward_dict = dict(
-            zip(
-                self.possible_agent_name_list,
-                [zero_reward.copy() for _ in self.possible_agent_name_list],
-            )
-        )
-
-    def reward_space(self, agent: str):
-        return self.reward_spaces[agent]
-
-    # end MOAEC
-
     def position_new_agent_on_gridworld(
         self, agent_instance, spawning_area, model_state
     ):
@@ -593,18 +563,13 @@ class PredPreyGrass:
         self.possible_agent_name_list = (
             self.possible_predator_name_list + self.possible_prey_name_list
         )
-        # MOAEC
-        zero_reward = np.zeros(
-            self.reward_spaces[self.possible_agent_name_list[0]].shape, dtype=np.float32
-        )  # np.copy() makes different copies of this.
 
-        self.agent_reward_dict = dict(
+        self.agent_reward_dict: Dict[str, float] = dict(
             zip(
                 self.possible_agent_name_list,
-                [zero_reward.copy() for _ in self.possible_agent_name_list],
+                [0.0 for _ in self.possible_agent_name_list],
             )
         )
-        # end MOAEC
 
         self.agent_energy_from_eating_dict = dict(
             zip(
@@ -842,49 +807,40 @@ class PredPreyGrass:
             # since accompanied prey cannot be earmarked for removal)
             is_accompanied_prey = False  # initialization
             is_accompanied_prey = (
-                (
-                    self.model_state[PREY_TYPE_NR, x_new, y_new - 1] > 0
-                    if y_new - 1 >= 0
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new, y_new + 1] > 0
-                    if y_new + 1 < self.y_grid_size
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new] > 0
-                    if x_new - 1 >= 0
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new - 1] > 0
-                    if x_new - 1 >= 0 and y_new - 1 >= 0
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new + 1] > 0
-                    if x_new - 1 >= 0 and y_new + 1 < self.y_grid_size
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new] > 0
-                    if x_new + 1 < self.x_grid_size
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new + 1] > 0
-                    if x_new + 1 < self.x_grid_size and y_new + 1 < self.y_grid_size
-                    else False
-                )
-                + (
-                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new - 1] > 0
-                    if x_new + 1 < self.x_grid_size and y_new - 1 >= 0
-                    else False
-                )
+                self.model_state[PREY_TYPE_NR, x_new, y_new - 1] > 0
+                if y_new - 1 >= 0
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new, y_new + 1] > 0
+                if y_new + 1 < self.y_grid_size
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new - 1, y_new] > 0
+                if x_new - 1 >= 0
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new - 1, y_new - 1] > 0
+                if x_new - 1 >= 0 and y_new - 1 >= 0
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new - 1, y_new + 1] > 0
+                if x_new - 1 >= 0 and y_new + 1 < self.y_grid_size
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new + 1, y_new] > 0
+                if x_new + 1 < self.x_grid_size
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new + 1, y_new + 1] > 0
+                if x_new + 1 < self.x_grid_size and y_new + 1 < self.y_grid_size
+                else False
+            ) + (
+                self.model_state[PREY_TYPE_NR, x_new + 1, y_new - 1] > 0
+                if x_new + 1 < self.x_grid_size and y_new - 1 >= 0
+                else False
             )
-            # if there is no other prey in the neighborhood of the attacked prey,
-            # the prey is earmarked for removal by the predator otherwise it is
+            # if there is no other prey in the neighborhood of the attacked prey, 
+            # the prey is earmarked for removal by the predator otherwise it is 
             # not earmarked for removal
             if not is_accompanied_prey:
                 prey_instance_removed = self.agent_instance_in_grid_location[
@@ -922,20 +878,13 @@ class PredPreyGrass:
             grass_instance_removed.energy
         )
 
-    # MOAEC
     def reset_rewards(self):
-        zero_reward = np.zeros(
-            self.reward_spaces[self.possible_agent_name_list[0]].shape, dtype=np.float32
-        )  # np.copy() makes different copies of this.
-
         self.agent_reward_dict = dict(
             zip(
                 self.possible_agent_name_list,
-                [zero_reward.copy() for _ in self.possible_agent_name_list],
+                [0.0 for _ in self.possible_agent_name_list],
             )
         )
-
-    # end MOAEC
 
     def remove_predator(self, predator_instance):
         self.active_predator_instance_list.remove(predator_instance)
@@ -955,6 +904,9 @@ class PredPreyGrass:
         self.predator_age_list.append(predator_instance.age)
         predator_instance.energy = 0.0
         predator_instance.age = 0
+        self.agent_reward_dict[
+            predator_instance.agent_name
+        ] += self.death_reward_predator
 
     def remove_prey(self, prey_instance):
         self.active_prey_instance_list.remove(prey_instance)
@@ -973,6 +925,7 @@ class PredPreyGrass:
         self.prey_age_list.append(prey_instance.age)
         prey_instance.energy = 0.0
         prey_instance.age = 0
+        self.agent_reward_dict[prey_instance.agent_name] += self.death_reward_prey
 
     def remove_grass(self, grass_instance):
         self.active_grass_instance_list.remove(grass_instance)
@@ -1019,7 +972,7 @@ class PredPreyGrass:
             )
             self.agent_reward_dict[
                 parent_predator.agent_name
-            ][0] += self.reproduction_reward_predator
+            ] += self.reproduction_reward_predator
 
     def create_new_prey(self, parent_prey):
         non_active_prey_names = [
@@ -1053,10 +1006,14 @@ class PredPreyGrass:
             self.model_state[PREY_TYPE_NR, x_new, y_new] = new_prey_instance.energy
             self.agent_reward_dict[
                 parent_prey.agent_name
-            ][1] += self.reproduction_reward_prey
+            ] += self.reproduction_reward_prey
 
     def reward_predator(self, predator_instance):
         predator_name = predator_instance.agent_name
+        self.agent_reward_dict[predator_name] += self.step_reward_predator
+        self.agent_reward_dict[predator_name] += (
+            self.catch_reward_prey * self.predator_who_remove_prey_dict[predator_name]
+        )
         predator_instance.energy += self.energy_gain_per_step_predator
         predator_instance.energy += self.agent_energy_from_eating_dict[predator_name]
         self.model_state[
@@ -1067,6 +1024,10 @@ class PredPreyGrass:
 
     def reward_prey(self, prey_instance):
         prey_name = prey_instance.agent_name
+        self.agent_reward_dict[prey_name] += self.step_reward_prey
+        self.agent_reward_dict[prey_name] += (
+            self.catch_reward_grass * self.prey_who_remove_grass_dict[prey_name]
+        )
         prey_instance.energy += self.energy_gain_per_step_prey
         prey_instance.energy += self.agent_energy_from_eating_dict[prey_name]
         self.model_state[
