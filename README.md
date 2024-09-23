@@ -8,8 +8,8 @@
 </p>
 </br>
 
-## The environment
-A multi-agent reinforcement learning (MARL) environment, trained using Proximal Policy Optimization (PPO). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain 100% of the energy from the eaten Prey or Grass. However, in the 'real world' this is much less because the [ecological efficiency](https://en.wikipedia.org/wiki/Ecological_efficiency) is only around 10% in most cases. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward.
+## The environments
+[so_predpregrass_v0.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/so_predpreygrass_v0.py): A (single-objective) multi-agent reinforcement learning (MARL) environment, trained using Proximal Policy Optimization (PPO). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards are simply added and can be adjusted in the [environment configuration]()  file. 
 </br>
 </br>
 <p align="center">
