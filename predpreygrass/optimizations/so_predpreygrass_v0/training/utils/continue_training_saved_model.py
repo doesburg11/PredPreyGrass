@@ -1,3 +1,4 @@
+"""DEPRECATED"""
 """
 To log both the previous model's training and the continued training in TensorBoard, 
 you can use the same log directory for both training sessions. 

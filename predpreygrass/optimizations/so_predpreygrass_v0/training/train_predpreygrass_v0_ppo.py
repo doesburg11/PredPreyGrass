@@ -12,7 +12,7 @@ from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import 
     training_steps_string,
     local_output_directory,
 )
-from predpreygrass.optimizations.so_predpreygrass_v0.training.trainer import Trainer
+from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer import Trainer
 
 import os
 import time
