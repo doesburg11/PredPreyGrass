@@ -1,4 +1,4 @@
-from predpreygrass.envs._so_predpreygrass_v0.predpreygrass_base import PredPreyGrass as _env
+from predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass_base import PredPreyGrass as _env
 
 from gymnasium.utils import EzPickle
 from pettingzoo import AECEnv

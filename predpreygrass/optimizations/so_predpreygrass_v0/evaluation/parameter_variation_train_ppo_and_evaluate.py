@@ -7,14 +7,14 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 
-import predpreygrass.envs._so_predpreygrass_v0.predpreygrass as so_predpreygrass_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
+import predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass as so_predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
 )
 
-from predpreygrass.optimizations.so_predpreygrass_v0.training.trainer import Trainer
+from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer import Trainer
 
 import os
 import time

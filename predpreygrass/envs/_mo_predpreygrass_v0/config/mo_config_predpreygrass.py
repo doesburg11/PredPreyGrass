@@ -3,19 +3,12 @@ local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_re
 
 training_steps_string = "10_000_000"
 
-x_grid_size = 16
-y_grid_size = 16
+x_grid_size = 25
+y_grid_size = 25
 
 env_kwargs = dict(
     max_cycles=10000,
     # reward parameters
-    step_reward_predator=0.0,
-    step_reward_prey=0.0,
-    step_reward_grass=0.0,
-    catch_reward_grass=0.0,
-    catch_reward_prey=0.0,
-    death_reward_prey=0.0,  # -15.0,  # this results in a zero-sum element between Predator and Prey rewards
-    death_reward_predator=0.0,
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # environment parameters
@@ -24,7 +17,7 @@ env_kwargs = dict(
     # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
-    n_possible_grass=30,  
+    n_possible_grass=30,  # optimized by parameter variation [10,12,14,16,18,20,...,26,28,40]
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters
@@ -47,6 +40,11 @@ env_kwargs = dict(
     regrow_grass=True,  # only effect on and applicable to fixed energy transfer environments
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,  # optimized by parameter variation [2,4, 6,..., 22, 24]
+    # visualization parameters
+    cell_scale=40,
+    x_pygame_window=0,
+    y_pygame_window=0,
+    show_energy_chart=True,
     spawning_area_predator=dict(
         {
             "x_begin": 0,
@@ -70,10 +68,5 @@ env_kwargs = dict(
             "x_end": x_grid_size - 1,
             "y_end": y_grid_size - 1,
         }
-    ),    
-    # visualization parameters
-    cell_scale=40,
-    x_pygame_window=0,
-    y_pygame_window=0,
-    show_energy_chart=True,
+    ),
 )

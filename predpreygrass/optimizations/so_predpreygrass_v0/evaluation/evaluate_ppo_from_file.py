@@ -18,7 +18,7 @@ instructions:
   in the defined local directory (and *not* in your original directory!)
 """
 from predpreygrass.envs import so_predpreygrass_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
 )

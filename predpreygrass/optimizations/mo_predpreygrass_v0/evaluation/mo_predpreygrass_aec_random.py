@@ -1,12 +1,13 @@
 from predpreygrass.envs import mo_predpreygrass_v0
-from predpreygrass.envs._mo_predpreygrass_v0.config.config_predpreygrass import env_kwargs
+from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import env_kwargs
 
 env = mo_predpreygrass_v0.env(render_mode='human', **env_kwargs)
 
 env.reset()
 for agent in env.agent_iter():
     observation, vec_reward, termination, truncation, info = env.last()
-    print(f"agent: {agent}, reward: {vec_reward}")
+    if vec_reward[0] > 0.0 or vec_reward[1] > 0.0:
+        print(f"agent: {agent}, reward: {vec_reward}")
     if termination or truncation:
         action = None
     else:
