@@ -3,7 +3,10 @@ pred/prey/grass PettingZoo multi-agent learning environment
 this environment transfers the energy of eaten prey/grass to the predator/prey
 
 """
-from predpreygrass.envs._so_predpreygrass_v0.agents.discrete_agent import DiscreteAgent
+
+from predpreygrass.envs._mo_predpreygrass_v0.agents.mo_discrete_agent import (
+    DiscreteAgent,
+)
 
 import gymnasium
 from gymnasium.utils import seeding
@@ -16,12 +19,10 @@ from typing import List, Dict, Optional
 import pygame
 from collections import defaultdict
 
-
 # agent types
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2
 GRASS_TYPE_NR = 3
-
 
 
 class PredPreyGrass:
@@ -53,13 +54,6 @@ class PredPreyGrass:
         predator_creation_energy_threshold: float = 10.0,
         create_prey: bool = True,
         create_predator: bool = True,
-        step_reward_predator: float = 0.0,
-        step_reward_prey: float = 0.0,
-        step_reward_grass: float = 0.0,
-        catch_reward_prey: float = 0.0,
-        catch_reward_grass: float = 0.0,
-        death_reward_prey: float = 0.0,
-        death_reward_predator: float = 0.0,
         reproduction_reward_prey: float = 10.0,
         reproduction_reward_predator: float = 10.0,
         catch_prey_energy: float = 5.0,
@@ -112,23 +106,16 @@ class PredPreyGrass:
         self.initial_energy_grass = initial_energy_grass
         self.x_pygame_window = x_pygame_window
         self.y_pygame_window = y_pygame_window
-        self.catch_reward_grass = catch_reward_grass
-        self.catch_reward_prey = catch_reward_prey
         self.regrow_grass = regrow_grass
         self.prey_creation_energy_threshold = prey_creation_energy_threshold
         self.predator_creation_energy_threshold = predator_creation_energy_threshold
         self.create_prey = create_prey
         self.create_predator = create_predator
-        self.death_reward_prey = death_reward_prey
-        self.death_reward_predator = death_reward_predator
         self.reproduction_reward_prey = reproduction_reward_prey
         self.reproduction_reward_predator = reproduction_reward_predator
         self.catch_prey_energy = catch_prey_energy
         self.catch_grass_energy = catch_grass_energy
         self.show_energy_chart = show_energy_chart
-        self.step_reward_predator = step_reward_predator
-        self.step_reward_prey = step_reward_prey
-        self.step_reward_grass = step_reward_grass
         self.max_energy_level_grass = max_energy_level_grass
         self.spawning_area_predator = spawning_area_predator
         self.spawning_area_prey = spawning_area_prey
@@ -267,6 +254,22 @@ class PredPreyGrass:
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
         # end actions
+
+        # rewards
+        rew_space = spaces.Box(
+            low=np.array([0.0, 0.0]),
+            high=np.array([10.0, 10.0]),
+            shape=(2,),
+            dtype=np.float64,
+        )
+        self.reward_space = [rew_space for _ in range(self.n_possible_agents)]
+        self.agent_reward_dict = dict(
+            zip(
+                self.possible_agent_name_list,
+                [[0.0, 0.0] for _ in self.possible_agent_name_list],
+            )
+        )
+        # end rewards
 
         # records for removal of agents at the end of the cycle
         self.agent_energy_from_eating_dict = dict(
@@ -564,10 +567,10 @@ class PredPreyGrass:
             self.possible_predator_name_list + self.possible_prey_name_list
         )
 
-        self.agent_reward_dict: Dict[str, float] = dict(
+        self.agent_reward_dict = dict(
             zip(
                 self.possible_agent_name_list,
-                [0.0 for _ in self.possible_agent_name_list],
+                [[0.0, 0.0] for _ in self.possible_agent_name_list],
             )
         )
 
@@ -672,9 +675,10 @@ class PredPreyGrass:
                         agent_instance.agent_name
                     ] = True
 
+        # reset rewards to zero
+        # self.reset_rewards() # works for parallel environments
         if is_last_step_of_cycle:
-            # reset rewards to zero
-            self.reset_rewards()
+            # self.reset_rewards() # works for aec environments
             self.total_energy_predator = 0.0
             self.total_energy_prey = 0.0
             self.total_energy_grass = 0.0
@@ -807,40 +811,49 @@ class PredPreyGrass:
             # since accompanied prey cannot be earmarked for removal)
             is_accompanied_prey = False  # initialization
             is_accompanied_prey = (
-                self.model_state[PREY_TYPE_NR, x_new, y_new - 1] > 0
-                if y_new - 1 >= 0
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new, y_new + 1] > 0
-                if y_new + 1 < self.y_grid_size
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new - 1, y_new] > 0
-                if x_new - 1 >= 0
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new - 1, y_new - 1] > 0
-                if x_new - 1 >= 0 and y_new - 1 >= 0
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new - 1, y_new + 1] > 0
-                if x_new - 1 >= 0 and y_new + 1 < self.y_grid_size
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new + 1, y_new] > 0
-                if x_new + 1 < self.x_grid_size
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new + 1, y_new + 1] > 0
-                if x_new + 1 < self.x_grid_size and y_new + 1 < self.y_grid_size
-                else False
-            ) + (
-                self.model_state[PREY_TYPE_NR, x_new + 1, y_new - 1] > 0
-                if x_new + 1 < self.x_grid_size and y_new - 1 >= 0
-                else False
+                (
+                    self.model_state[PREY_TYPE_NR, x_new, y_new - 1] > 0
+                    if y_new - 1 >= 0
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new, y_new + 1] > 0
+                    if y_new + 1 < self.y_grid_size
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new] > 0
+                    if x_new - 1 >= 0
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new - 1] > 0
+                    if x_new - 1 >= 0 and y_new - 1 >= 0
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new - 1, y_new + 1] > 0
+                    if x_new - 1 >= 0 and y_new + 1 < self.y_grid_size
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new] > 0
+                    if x_new + 1 < self.x_grid_size
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new + 1] > 0
+                    if x_new + 1 < self.x_grid_size and y_new + 1 < self.y_grid_size
+                    else False
+                )
+                + (
+                    self.model_state[PREY_TYPE_NR, x_new + 1, y_new - 1] > 0
+                    if x_new + 1 < self.x_grid_size and y_new - 1 >= 0
+                    else False
+                )
             )
-            # if there is no other prey in the neighborhood of the attacked prey, 
-            # the prey is earmarked for removal by the predator otherwise it is 
+            # if there is no other prey in the neighborhood of the attacked prey,
+            # the prey is earmarked for removal by the predator otherwise it is
             # not earmarked for removal
             if not is_accompanied_prey:
                 prey_instance_removed = self.agent_instance_in_grid_location[
@@ -882,7 +895,7 @@ class PredPreyGrass:
         self.agent_reward_dict = dict(
             zip(
                 self.possible_agent_name_list,
-                [0.0 for _ in self.possible_agent_name_list],
+                [[0.0, 0.0] for _ in self.possible_agent_name_list],
             )
         )
 
@@ -904,9 +917,6 @@ class PredPreyGrass:
         self.predator_age_list.append(predator_instance.age)
         predator_instance.energy = 0.0
         predator_instance.age = 0
-        self.agent_reward_dict[
-            predator_instance.agent_name
-        ] += self.death_reward_predator
 
     def remove_prey(self, prey_instance):
         self.active_prey_instance_list.remove(prey_instance)
@@ -925,7 +935,6 @@ class PredPreyGrass:
         self.prey_age_list.append(prey_instance.age)
         prey_instance.energy = 0.0
         prey_instance.age = 0
-        self.agent_reward_dict[prey_instance.agent_name] += self.death_reward_prey
 
     def remove_grass(self, grass_instance):
         self.active_grass_instance_list.remove(grass_instance)
@@ -970,8 +979,8 @@ class PredPreyGrass:
             self.model_state[PREDATOR_TYPE_NR, x_new, y_new] = (
                 new_predator_instance.energy
             )
-            self.agent_reward_dict[
-                parent_predator.agent_name
+            self.agent_reward_dict[parent_predator.agent_name][
+                0
             ] += self.reproduction_reward_predator
 
     def create_new_prey(self, parent_prey):
@@ -1004,16 +1013,23 @@ class PredPreyGrass:
                 new_prey_instance
             )
             self.model_state[PREY_TYPE_NR, x_new, y_new] = new_prey_instance.energy
-            self.agent_reward_dict[
-                parent_prey.agent_name
+            self.agent_reward_dict[parent_prey.agent_name][
+                1
             ] += self.reproduction_reward_prey
+
+    def update_energy_agent(self, agent_instance):
+        agent_type_nr = agent_instance.agent_type_nr
+        agent_name = agent_instance.agent_name
+        agent_instance.energy += self.energy_gain_per_step_list[agent_type_nr]
+        agent_instance.energy += self.agent_energy_from_eating_dict[agent_name]
+        self.model_state[
+            agent_type_nr,
+            agent_instance.position[0],
+            agent_instance.position[1],
+        ] = agent_instance.energy
 
     def reward_predator(self, predator_instance):
         predator_name = predator_instance.agent_name
-        self.agent_reward_dict[predator_name] += self.step_reward_predator
-        self.agent_reward_dict[predator_name] += (
-            self.catch_reward_prey * self.predator_who_remove_prey_dict[predator_name]
-        )
         predator_instance.energy += self.energy_gain_per_step_predator
         predator_instance.energy += self.agent_energy_from_eating_dict[predator_name]
         self.model_state[
@@ -1024,10 +1040,6 @@ class PredPreyGrass:
 
     def reward_prey(self, prey_instance):
         prey_name = prey_instance.agent_name
-        self.agent_reward_dict[prey_name] += self.step_reward_prey
-        self.agent_reward_dict[prey_name] += (
-            self.catch_reward_grass * self.prey_who_remove_grass_dict[prey_name]
-        )
         prey_instance.energy += self.energy_gain_per_step_prey
         prey_instance.energy += self.agent_energy_from_eating_dict[prey_name]
         self.model_state[

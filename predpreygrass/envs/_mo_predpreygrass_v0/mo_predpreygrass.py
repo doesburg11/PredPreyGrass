@@ -1,12 +1,13 @@
-from predpreygrass.envs._so_predpreygrass_v0.predpreygrass_base import PredPreyGrass as _env
-
-from gymnasium.utils import EzPickle
-from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector, wrappers
-from pettingzoo.utils.conversions import parallel_wrapper_fn
-from momaland.utils.env import MOAECEnv
+from predpreygrass.envs._mo_predpreygrass_v0.mo_predpreygrass_base import PredPreyGrass as _env
 
 import numpy as np
+
+from gymnasium.utils import EzPickle
+from pettingzoo.utils import agent_selector, wrappers
+from momaland.utils.env import MOAECEnv
+
+from momaland.utils.conversions import mo_aec_to_parallel
+    
 import pygame
 
 
@@ -17,8 +18,20 @@ def env(**kwargs):
     return env
 
 
-parallel_env = parallel_wrapper_fn(env)
+#parallel_env = mo_aec_to_parallel(env)
 
+def parallel_env(**kwargs):
+    """Returns the wrapped env in `parallel` format.
+
+    Args:
+        **kwargs: keyword args to forward to the raw_env function.
+
+    Returns:
+        A fully wrapped parallel env.
+    """
+    env = raw_env(**kwargs)
+    env = mo_aec_to_parallel(env)
+    return env
 
 class raw_env(MOAECEnv, EzPickle):
     metadata = {
@@ -37,14 +50,13 @@ class raw_env(MOAECEnv, EzPickle):
 
         self._env = _env(
             *args, **kwargs
-        )  #  this calls the code from PredPreyGrass
+        )  #  this calls the code from mo_predpreygrass_base.py
 
         self.agents = self._env.possible_agent_name_list
-
         self.possible_agents = self.agents[:]
-        # added for optuna
         self.action_spaces = dict(zip(self.agents, self._env.action_space))  # type: ignore
         self.observation_spaces = dict(zip(self.agents, self._env.observation_space))  # type: ignore
+        self.reward_spaces = dict(zip(self.agents, self._env.reward_space))  # type: ignore
 
 
     def reset(self, seed=None, options=None):
@@ -65,26 +77,19 @@ class raw_env(MOAECEnv, EzPickle):
         self.steps = 0
         # this method "reset"
         # initialise rewards and observations
-        self.reward_spaces = self.pred_prey_env.reward_spaces
-        self.rewards = self.pred_prey_env.agent_reward_dict
-        zero_reward = np.zeros(
-            self.reward_spaces[self.possible_agents[0]].shape, dtype=np.float32
-        )  # np.copy() makes different copies of this.
-
+        self.rewards = self._env.agent_reward_dict
         self._cumulative_rewards = dict(
-            zip(self.possible_agents, 
-            [zero_reward.copy() for _ in self.possible_agents])
+            zip(self.agents, 
+            [ [0.0, 0.0] for _ in self.agents])
         )
         
-
+ 
         self.terminations = dict(zip(self.agents, [False for _ in self.agents]))
         self.truncations = dict(zip(self.agents, [False for _ in self.agents]))
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
         self._env.reset()  # this calls reset from PredPreyGrass
-
-
 
     def close(self):
         if not self.closed:
@@ -104,6 +109,9 @@ class raw_env(MOAECEnv, EzPickle):
             return
         agent = self.agent_selection
         agent_instance = self._env.agent_name_to_instance_dict[agent]
+
+        #self.rewards = dict(zip(self.agents, [ [0,0] for _ in self.agents]))
+
         self._env.step(action, agent_instance, self._agent_selector.is_last())
 
         for k in self.terminations:
@@ -114,13 +122,17 @@ class raw_env(MOAECEnv, EzPickle):
                     self._env.is_no_prey or self._env.is_no_predator
                 )
 
+        # clear rewards
         for agent_name in self.agents:
             self.rewards[agent_name] = self._env.agent_reward_dict[agent_name]
-        self.steps += 1
+            if self.rewards[agent_name][0] > 0 or self.rewards[agent_name][1] > 0:
+                #print(f"agent: {agent_name}, reward: {self.rewards[agent_name]}")
+                pass
 
-        self._cumulative_rewards = dict(zip(self.agents, [ [0,0] for _ in self.agents]))
+        self.steps += 1
         self.agent_selection = self._agent_selector.next()
-        self._accumulate_rewards()  
+        self._cumulative_rewards = dict(zip(self.agents, [ [] for _ in self.agents]))
+        self._accumulate_rewards() 
         if self.render_mode == "human" and agent_instance.is_active:
             self.render()
 
@@ -133,8 +145,11 @@ class raw_env(MOAECEnv, EzPickle):
             observation = np.zeros(observation.shape)
         return observation
 
-    def observation_space(self, agent: str):  # must remain
+    def observation_space(self, agent: str):  
         return self.observation_spaces[agent]
 
     def action_space(self, agent: str):
         return self.action_spaces[agent]
+    
+    def reward_space(self, agent: str):
+        return self.reward_spaces[agent]
