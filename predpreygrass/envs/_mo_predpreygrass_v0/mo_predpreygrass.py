@@ -110,7 +110,6 @@ class raw_env(MOAECEnv, EzPickle):
         agent = self.agent_selection
         agent_instance = self._env.agent_name_to_instance_dict[agent]
 
-        #self.rewards = dict(zip(self.agents, [ [0,0] for _ in self.agents]))
 
         self._env.step(action, agent_instance, self._agent_selector.is_last())
 
@@ -121,17 +120,13 @@ class raw_env(MOAECEnv, EzPickle):
                 self.terminations[k] = (
                     self._env.is_no_prey or self._env.is_no_predator
                 )
-
-        # clear rewards
         for agent_name in self.agents:
             self.rewards[agent_name] = self._env.agent_reward_dict[agent_name]
-            if self.rewards[agent_name][0] > 0 or self.rewards[agent_name][1] > 0:
-                #print(f"agent: {agent_name}, reward: {self.rewards[agent_name]}")
-                pass
 
         self.steps += 1
-        self.agent_selection = self._agent_selector.next()
         self._cumulative_rewards = dict(zip(self.agents, [ [] for _ in self.agents]))
+        self.agent_selection = self._agent_selector.next()
+        
         self._accumulate_rewards() 
         if self.render_mode == "human" and agent_instance.is_active:
             self.render()

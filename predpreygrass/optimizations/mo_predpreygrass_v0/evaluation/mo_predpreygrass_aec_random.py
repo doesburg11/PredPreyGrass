@@ -1,5 +1,7 @@
-from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import env_kwargs
+# environment loop is aec
+env_kwargs["is_parallel_wrapped"] = False
+from predpreygrass.envs import mo_predpreygrass_v0
 
 env = mo_predpreygrass_v0.env(render_mode='human', **env_kwargs)
 

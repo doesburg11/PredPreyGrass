@@ -1,4 +1,5 @@
-from predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass_base import PredPreyGrass as predpreygrass
+#original file with _env as PredPreyGrass, replaced with predpreygrass later
+from predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass_base import PredPreyGrass as _env
 
 from gymnasium.utils import EzPickle
 from pettingzoo import AECEnv
@@ -34,22 +35,22 @@ class raw_env(AECEnv, EzPickle):
         pygame.init()
         self.closed = False
 
-        self.predpreygrass = predpreygrass(
+        self._env = _env(
             *args, **kwargs
         )  #  this calls the code from PredPreyGrass
 
-        self.agents = self.predpreygrass.possible_agent_name_list
+        self.agents = self._env.possible_agent_name_list
 
         self.possible_agents = self.agents[:]
         # added for optuna
-        self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  # type: ignore
-        self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  # type: ignore
+        self.action_spaces = dict(zip(self.agents, self._env.action_space))  # type: ignore
+        self.observation_spaces = dict(zip(self.agents, self._env.observation_space))  # type: ignore
 
 
 
     def reset(self, seed=None, options=None):
         if seed is not None:
-            self.predpreygrass._seed(seed=seed)
+            self._env._seed(seed=seed)
         self.steps = 0
         self.agents = self.possible_agents
 
@@ -60,8 +61,8 @@ class raw_env(AECEnv, EzPickle):
         self._agent_selector = agent_selector(self.agents)
 
         # spaces
-        self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  # type: ignore
-        self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  # type: ignore
+        self.action_spaces = dict(zip(self.agents, self._env.action_space))  # type: ignore
+        self.observation_spaces = dict(zip(self.agents, self._env.observation_space))  # type: ignore
         self.steps = 0
         # this method "reset"
         self.rewards = dict(zip(self.agents, [0.0 for _ in self.agents]))
@@ -71,16 +72,16 @@ class raw_env(AECEnv, EzPickle):
         self.infos = dict(zip(self.agents, [{} for _ in self.agents]))
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
-        self.predpreygrass.reset()  # this calls reset from PredPreyGrass
+        self._env.reset()  # this calls reset from PredPreyGrass
 
     def close(self):
         if not self.closed:
             self.closed = True
-            self.predpreygrass.close()
+            self._env.close()
 
     def render(self):
         if not self.closed:
-            return self.predpreygrass.render()
+            return self._env.render()
 
     def step(self, action):
         if (
@@ -90,18 +91,18 @@ class raw_env(AECEnv, EzPickle):
             self._was_dead_step(action)
             return
         agent = self.agent_selection
-        agent_instance = self.predpreygrass.agent_name_to_instance_dict[agent]
-        self.predpreygrass.step(action, agent_instance, self._agent_selector.is_last())
+        agent_instance = self._env.agent_name_to_instance_dict[agent]
+        self._env.step(action, agent_instance, self._agent_selector.is_last())
 
         for k in self.terminations:
-            if self.predpreygrass.n_aec_cycles >= self.predpreygrass.max_cycles:
+            if self._env.n_aec_cycles >= self._env.max_cycles:
                 self.truncations[k] = True
             else:
                 self.terminations[k] = (
-                    self.predpreygrass.is_no_prey or self.predpreygrass.is_no_predator
+                    self._env.is_no_prey or self._env.is_no_predator
                 )
         for agent_name in self.agents:
-            self.rewards[agent_name] = self.predpreygrass.agent_reward_dict[agent_name]
+            self.rewards[agent_name] = self._env.agent_reward_dict[agent_name]
         self.steps += 1
 
         self._cumulative_rewards = dict(zip(self.agents, [0 for _ in self.agents]))
@@ -111,8 +112,8 @@ class raw_env(AECEnv, EzPickle):
             self.render()
 
     def observe(self, agent_name):
-        agent_instance = self.predpreygrass.agent_name_to_instance_dict[agent_name]
-        obs = self.predpreygrass.observe(agent_name)
+        agent_instance = self._env.agent_name_to_instance_dict[agent_name]
+        obs = self._env.observe(agent_name)
         observation = np.swapaxes(obs, 2, 0)  # type: ignore
         # "black death": return observation of only zeros if agent is not alive
         if not agent_instance.is_active:

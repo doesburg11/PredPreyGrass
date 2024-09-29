@@ -12,6 +12,7 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # environment parameters
+    is_parallel_wrapped=True,
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     # agent parameters

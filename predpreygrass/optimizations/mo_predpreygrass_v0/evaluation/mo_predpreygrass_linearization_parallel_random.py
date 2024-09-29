@@ -1,5 +1,7 @@
-from predpreygrass.envs import mo_predpreygrass_v0 as _env
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import env_kwargs
+# environment loop is parallel
+env_kwargs["is_parallel_wrapped"] = True
+from predpreygrass.envs import mo_predpreygrass_v0 as _env
 from momaland.utils.parallel_wrappers import LinearizeReward
 
 # .parallel_env() function will return a Parallel environment, as per PZ standard
@@ -20,7 +22,6 @@ for i in range(num_predators):
 for i in range(num_prey):
     weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
 
-#print(weights)
 # optionally, you can scalarize the reward with weights
 parallel_env = LinearizeReward(parallel_env, weights)
 

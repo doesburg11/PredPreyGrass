@@ -1,84 +1,54 @@
 """
--This file trains a multi agent reinforcement model in a parallel environment. 
+-This file trains a mutlti object multi agent reinforcement model in a parallel environment. 
 -After traing evaluation can be done using the AEC API.
 -The source code and the trained model are saved in a separate 
 directory, for reuse and analysis. 
 -The algorithm used is PPO from stable_baselines3. 
 """
-
-from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_directory,
 )
+# environment loop is parallel wrapped
+env_kwargs["is_parallel_wrapped"] = True
+
+from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.trainer import Trainer
 
-from momaland.utils.aec_wrappers import LinearizeReward
+from momaland.utils.conversions import mo_aec_to_parallel
+from momaland.utils.parallel_wrappers import LinearizeReward
 
-env=mo_predpreygrass_v0.env(render_mode='human', **env_kwargs)
+env = mo_predpreygrass_v0.env(**env_kwargs)
 
-# TODO: remove hard coding of weights
-weights={
-    "predator_0": [0.5, 0.5],
-    "predator_1": [0.5, 0.5],
-    "predator_2": [0.5, 0.5],
-    "predator_3": [0.5, 0.5],
-    "predator_4": [0.5, 0.5],
-    "predator_5": [0.5, 0.5],
-    "predator_6": [0.5, 0.5],
-    "predator_7": [0.5, 0.5],
-    "predator_8": [0.5, 0.5],
-    "predator_9": [0.5, 0.5],
-    "predator_10": [0.5, 0.5],
-    "predator_11": [0.5, 0.5],
-    "predator_12": [0.5, 0.5],
-    "predator_13": [0.5, 0.5],
-    "predator_14": [0.5, 0.5],
-    "predator_15": [0.5, 0.5],
-    "predator_16": [0.5, 0.5],
-    "predator_17": [0.5, 0.5],
-    "prey_18": [0.5, 0.5],
-    "prey_19": [0.5, 0.5],
-    "prey_20": [0.5, 0.5],
-    "prey_21": [0.5, 0.5],
-    "prey_22": [0.5, 0.5],
-    "prey_23": [0.5, 0.5],
-    "prey_24": [0.5, 0.5],
-    "prey_25": [0.5, 0.5],
-    "prey_26": [0.5, 0.5],
-    "prey_27": [0.5, 0.5],
-    "prey_28": [0.5, 0.5],
-    "prey_29": [0.5, 0.5],
-    "prey_30": [0.5, 0.5],
-    "prey_31": [0.5, 0.5],
-    "prey_32": [0.5, 0.5],
-    "prey_33": [0.5, 0.5],
-    "prey_34": [0.5, 0.5],
-    "prey_35": [0.5, 0.5],
-    "prey_36": [0.5, 0.5],
-    "prey_37": [0.5, 0.5],
-    "prey_38": [0.5, 0.5],
-    "prey_39": [0.5, 0.5],
-    "prey_40": [0.5, 0.5],
-    "prey_41": [0.5, 0.5],
-}
+weights = {}
 
-env = LinearizeReward(env, weights) 
+# Define the number of predators and prey
+num_predators = env_kwargs["n_possible_predator"]
+num_prey = env_kwargs["n_possible_prey"]
 
-env.reset()
+# Populate the weights dictionary for predators
+for i in range(num_predators):
+    weights[f"predator_{i}"] = [0.5, 0.5]
+
+# Populate the weights dictionary for prey
+for i in range(num_prey):
+    weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
 
 
-import os
-import time
-import shutil
+
+parallel_env = mo_aec_to_parallel(env)
+
+parallel_env = LinearizeReward(parallel_env, weights)
+
+
 from os.path import dirname as up
-
-mo_predpreygrass_v0 = env
-
+import os
+import shutil
+import time
 
 if __name__ == "__main__":
-    env_fn = mo_predpreygrass_v0
+    env_fn = parallel_env
     environment_name = "mo_predpreygrass_v0"
     training_steps = int(training_steps_string)
     # create model file name for saving
@@ -132,3 +102,4 @@ if __name__ == "__main__":
             "training time = " + str(round(training_time / 3600, 1)) + " hours \n"
         )
     file.close()
+
