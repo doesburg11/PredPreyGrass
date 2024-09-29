@@ -84,6 +84,10 @@ class PredPreyGrass:
                 "y_end": 24,
             }
         ),
+        # whether to utilize parallel wrapper for the environment
+        # if True, aec loop does not give proper rewards, 
+        # so to use aec loop, (re)set is_parallel_wrapped to False
+        is_parallel_wrapped: bool = False, 
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -120,6 +124,7 @@ class PredPreyGrass:
         self.spawning_area_predator = spawning_area_predator
         self.spawning_area_prey = spawning_area_prey
         self.spawning_area_grass = spawning_area_grass
+        self.is_parallel_wrapped = is_parallel_wrapped
 
         # agent types
 
@@ -675,10 +680,15 @@ class PredPreyGrass:
                         agent_instance.agent_name
                     ] = True
 
-        # reset rewards to zero
-        # self.reset_rewards() # works for parallel environments
+        # for parallel wrapped environments
+        if self.is_parallel_wrapped:
+            self.reset_rewards() 
+
+        #self.reset_rewards() # works for parallel environments
         if is_last_step_of_cycle:
-            # self.reset_rewards() # works for aec environments
+            # for non parallel wrapped environments (ie aec)
+            if not self.is_parallel_wrapped:
+                self.reset_rewards() 
             self.total_energy_predator = 0.0
             self.total_energy_prey = 0.0
             self.total_energy_grass = 0.0
@@ -693,7 +703,8 @@ class PredPreyGrass:
                         self.remove_predator(predator_instance)
                     else:
                         # reap rewards and updates energy for predator which removes prey
-                        self.reward_predator(predator_instance)
+                        #self.reward_predator(predator_instance)
+                        self.update_energy_agent(predator_instance)
                         self.total_energy_predator += predator_instance.energy
                         if (
                             predator_instance.energy
@@ -713,7 +724,8 @@ class PredPreyGrass:
                         # from self.active_prey_instance_list
                         self.remove_prey(prey_instance)
                     else:
-                        self.reward_prey(prey_instance)
+                        self.update_energy_agent(prey_instance)
+                        #self.reward_prey(prey_instance)
                         self.total_energy_prey += prey_instance.energy
                         if prey_instance.energy > self.prey_creation_energy_threshold:
                             self.create_new_prey(prey_instance)
@@ -1027,26 +1039,6 @@ class PredPreyGrass:
             agent_instance.position[0],
             agent_instance.position[1],
         ] = agent_instance.energy
-
-    def reward_predator(self, predator_instance):
-        predator_name = predator_instance.agent_name
-        predator_instance.energy += self.energy_gain_per_step_predator
-        predator_instance.energy += self.agent_energy_from_eating_dict[predator_name]
-        self.model_state[
-            PREDATOR_TYPE_NR,
-            predator_instance.position[0],
-            predator_instance.position[1],
-        ] = predator_instance.energy
-
-    def reward_prey(self, prey_instance):
-        prey_name = prey_instance.agent_name
-        prey_instance.energy += self.energy_gain_per_step_prey
-        prey_instance.energy += self.agent_energy_from_eating_dict[prey_name]
-        self.model_state[
-            PREY_TYPE_NR,
-            prey_instance.position[0],
-            prey_instance.position[1],
-        ] = prey_instance.energy
 
     def reset_removal_records(self):
         # reinit agents removal records to default at the end of the cycle
