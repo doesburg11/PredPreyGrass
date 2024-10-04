@@ -9,8 +9,8 @@
 </p>
 </br>
 
-## Predator-Prey-Grass multi-objective multi-agent reinforcement learning
-Predator-Prey-Grass gridworld multi-objective multi-agent environments using PettingZoo and Momaland, with dynamic deletion and spawning of partially observant agents.
+## Predator-Prey-Grass multi-objective multi-agent reinforcement learning (MOMARL)
+Predator-Prey-Grass gridworld deploying multi-objective and multi-agent environments with dynamic deletion and spawning of partially observant agents. Utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/) and [Momaland](https://momaland.farama.org/).
 
 </br>
 </br>
@@ -31,8 +31,6 @@ The rewards returned by the environment are stored in a two-dimensional vector w
 This repository is structured along:
 1) environments (including environment configurations and agents) 
 2) optimizations (including training and evaluation)
-
-
 
 
 ## Emergent Behaviors
