@@ -51,7 +51,6 @@ class Trainer:
             total_timesteps=self.steps, progress_bar=True, callback=sample_logger_callback
         )
         saved_directory_and_model_file_name = self.output_directory + self.model_file_name + ".zip" 
-        print("saved model to: ", saved_directory_and_model_file_name)
 
         model.save(saved_directory_and_model_file_name)   
 
