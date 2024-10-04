@@ -99,9 +99,6 @@ In Visual Studio Code run:
 To evaluate and visualize after training follow instructions in:
 ```predpreygrass/optimizationspredpreygrass/evaluate_from_file.py```
 
-## Configuration of the PredPreyGrass environment
-[The benchmark configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_predpreygrass_v0/config/config_predpreygrass.py) used in the gif-video above.
-
 ## References
 
 - [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/)    
