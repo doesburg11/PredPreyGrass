@@ -64,6 +64,7 @@ class PredPreyGrass:
         reproduction_reward_predator: float = 10.0,
         catch_prey_energy: float = 5.0,
         catch_grass_energy: float = 3.0,
+        watch_grid_model: bool = False,
         show_energy_chart: bool = True,
         max_energy_level_grass: float = 4.0,
         spawning_area_predator: dict = dict(
@@ -90,6 +91,7 @@ class PredPreyGrass:
                 "y_end": 24,
             }
         ),
+        num_episodes: int = 100,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -133,6 +135,8 @@ class PredPreyGrass:
         self.spawning_area_predator = spawning_area_predator
         self.spawning_area_prey = spawning_area_prey
         self.spawning_area_grass = spawning_area_grass
+        self.watch_grid_model = watch_grid_model
+        self.num_episodes = num_episodes
 
         # agent types
 

@@ -1,5 +1,5 @@
 # put in here your own directory to the output folder
-local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
+local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
 training_steps_string = "10_000_000"
 
@@ -24,7 +24,7 @@ env_kwargs = dict(
     # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
-    n_possible_grass=30,  
+    n_possible_grass=30,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters
@@ -70,10 +70,13 @@ env_kwargs = dict(
             "x_end": x_grid_size - 1,
             "y_end": y_grid_size - 1,
         }
-    ),    
+    ),
     # visualization parameters
     cell_scale=40,
     x_pygame_window=0,
     y_pygame_window=0,
     show_energy_chart=True,
+    # evaluation parameters
+    num_episodes=100,
+    watch_grid_model=False,
 )

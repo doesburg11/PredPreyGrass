@@ -22,7 +22,7 @@ parallel_env = parallel_wrapper_fn(env)
 class raw_env(AECEnv, EzPickle):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predpreygrass_v0",
+        "name": "so_predpreygrass_v0",
         "is_parallelizable": True,
         "render_fps": 5,
     }
@@ -44,6 +44,7 @@ class raw_env(AECEnv, EzPickle):
         # added for optuna
         self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  # type: ignore
         self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  # type: ignore
+        self.is_last_step_of_cycle = False
 
 
 
@@ -72,6 +73,8 @@ class raw_env(AECEnv, EzPickle):
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
         self.predpreygrass.reset()  # this calls reset from PredPreyGrass
+        self.is_last_step_of_cycle = False
+
 
     def close(self):
         if not self.closed:
