@@ -1,5 +1,5 @@
 # put in here your own directory to the output folder
-local_output_directory = "/home/doesburg/Dropbox/02_marl_results/predpreygras_results/"
+local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
 training_steps_string = "10_000_000"
 
@@ -70,4 +70,7 @@ env_kwargs = dict(
             "y_end": y_grid_size - 1,
         }
     ),
+     # evaluation parameters
+    num_episodes=100,
+    watch_grid_model=False,   
 )

@@ -16,7 +16,6 @@ from typing import List, Dict, Optional
 import pygame
 from collections import defaultdict
 
-
 # agent types
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2

@@ -42,14 +42,6 @@ if __name__ == "__main__":
     num_episodes = env_kwargs["num_episodes"] 
     training_steps = int(training_steps_string)
 
-    episode_mean_of_mean_cumulative_rewards: int = 0
-    episode_mean_of_mean_cumulative_rewards_predators: int = 0
-    episode_mean_of_mean_cumulative_rewards_prey: int = 0
-    predator_extinct_at_termination_count: int = 0
-    mean_episode_length: int = 0
-    std_episode_length: int = 0
-
-
     render_mode = "human" if watch_grid_model else None
 
     # Create an instance of the Evaluator class

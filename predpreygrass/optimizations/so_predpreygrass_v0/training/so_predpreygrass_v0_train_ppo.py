@@ -5,7 +5,6 @@
 directory, for reuse and analysis. 
 -The algorithm used is PPO from stable_baselines3. 
 """
-
 from predpreygrass.envs import so_predpreygrass_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
     env_kwargs,
@@ -28,7 +27,6 @@ import time
 import shutil
 from os.path import dirname as up
 
-
 if __name__ == "__main__":
     env_fn = so_predpreygrass_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
@@ -41,7 +39,7 @@ if __name__ == "__main__":
         local_output_root, time_stamp_string
     )
 
-    source_code_dir = up(up(up(up(__file__))))  # up 4 levels in directory tree
+    source_code_dir = up(up(up(up(__file__)))) # up 4 levels in directory tree
     # copy the project code to the local directory
     shutil.copytree(source_code_dir, destination_source_code_dir)
     # Create the output directory
