@@ -5,47 +5,42 @@
 directory, for reuse and analysis. 
 -The algorithm used is PPO from stable_baselines3. 
 """
+# discretionary libraries
+from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
-    local_output_directory,
+    local_output_root,
 )
-# environment loop is parallel wrapped
-env_kwargs["is_parallel_wrapped"] = True
-
-from predpreygrass.envs import mo_predpreygrass_v0
-from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.trainer import Trainer
-
+env_kwargs["is_parallel_wrapped"] = True # environment loop is parallel wrapped
+from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.trainer import (
+    Trainer
+)
+# external libraries
 from momaland.utils.conversions import mo_aec_to_parallel
 from momaland.utils.parallel_wrappers import LinearizeReward
+from os.path import dirname as up
+import os
+import time
+import shutil
 
-env = mo_predpreygrass_v0.env(**env_kwargs)
 
+# weights for linearization rewards
 weights = {}
-
 # Define the number of predators and prey
 num_predators = env_kwargs["n_possible_predator"]
 num_prey = env_kwargs["n_possible_prey"]
-
 # Populate the weights dictionary for predators
 for i in range(num_predators):
     weights[f"predator_{i}"] = [0.5, 0.5]
-
 # Populate the weights dictionary for prey
 for i in range(num_prey):
     weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
 
-
-
+env = mo_predpreygrass_v0.env(**env_kwargs)
 parallel_env = mo_aec_to_parallel(env)
-
 parallel_env = LinearizeReward(parallel_env, weights)
 
-
-from os.path import dirname as up
-import os
-import shutil
-import time
 
 if __name__ == "__main__":
     env_fn = parallel_env
@@ -55,23 +50,23 @@ if __name__ == "__main__":
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     # create a local directory to save the project code and output results
-    destination_directory_source_code = os.path.join(
-        local_output_directory, time_stamp_string
+    destination_source_code_dir = os.path.join(
+        local_output_root, time_stamp_string
     )
 
-    project_directory = up(up(up(up(__file__)))) # up 4 levels in directory tree
+    source_code_dir = up(up(up(up(__file__)))) # up 4 levels in directory tree
     # copy the project code to the local directory
-    shutil.copytree(project_directory, destination_directory_source_code)
+    shutil.copytree(source_code_dir, destination_source_code_dir)
     # Create the output directory
-    output_directory = destination_directory_source_code + "/output/"
-    os.makedirs(output_directory, exist_ok=True)
+    destination_output_dir = destination_source_code_dir + "/output/"
+    os.makedirs(destination_output_dir, exist_ok=True)
 
     # save environment configuration to file
-    saved_directory_and_env_config_file_name = os.path.join(
-        output_directory, "env_config.txt"
+    destination_training_file = os.path.join(
+        destination_output_dir, "training.txt"
     )
     # write environment configuration to file
-    file = open(saved_directory_and_env_config_file_name, "w")
+    file = open(destination_training_file, "w")
     file.write("environment: " + environment_name + "\n")
     file.write("learning algorithm: PPO \n")
     file.write("training steps: " + training_steps_string + "\n")
@@ -82,12 +77,12 @@ if __name__ == "__main__":
 
     # train the model
     trainer = Trainer(
-        env_fn, 
-        output_directory,
-        model_file_name, 
-        steps=training_steps, 
-        seed=0, 
-        **env_kwargs
+        env_fn,
+        destination_output_dir,
+        model_file_name,
+        steps=training_steps,
+        seed=0,
+        **env_kwargs,
     )
     start_training_time = time.time()
     trainer.train()

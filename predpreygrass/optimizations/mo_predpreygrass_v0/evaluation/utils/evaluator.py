@@ -1,5 +1,6 @@
 from utils.population_plotter import PopulationPlotter
 
+from momaland.utils.aec_wrappers import LinearizeReward
 import os
 from statistics import mean, stdev
 from stable_baselines3 import PPO
@@ -28,12 +29,26 @@ class Evaluator:
         self.num_episodes = env_kwargs["num_episodes"]
 
     def eval(self):
+        weights = {}
+
+        # Define the number of predators and prey
+        num_predators = self.env_kwargs["n_possible_predator"]
+        num_prey = self.env_kwargs["n_possible_prey"]
+
+        # Populate the weights dictionary for predators
+        for i in range(num_predators):
+            weights[f"predator_{i}"] = [0.5, 0.5]
+
+        # Populate the weights dictionary for prey
+        for i in range(num_prey):
+            weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
+
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
+        env = LinearizeReward(env, weights)
         model = PPO.load(self.loaded_policy)
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
         plotter = PopulationPlotter(self.destination_output_dir)
 
-        # inserted
         saved_directory_and_evaluation_file_name = os.path.join(
             self.destination_output_dir, "evaluation.txt"
         )

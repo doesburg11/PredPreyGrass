@@ -17,11 +17,14 @@ instructions:
 - note that adjusting the configuration of the trained model is done 
   in the defined local directory (and *not* in your original directory!)
 """
+# discretionary libraries
 from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
 )
+from predpreygrass.optimizations.mo_predpreygrass_v0.evaluation.utils.evaluator import Evaluator
+
 
 # displaying the population of predators and prey
 import matplotlib
@@ -30,6 +33,7 @@ matplotlib.use("Agg")
 from matplotlib import pyplot as plt
 from matplotlib.ticker import MaxNLocator  # for integer ticks
 
+from momaland.utils.aec_wrappers import LinearizeReward
 import os
 from statistics import mean, stdev
 from typing import List
@@ -38,18 +42,26 @@ from os.path import dirname as up
 
 from stable_baselines3 import PPO
 
-WATCH_GRID_MODEL = False # if false evaluation is done without watching the grid
-NUM_EPISODES = 100
-
 def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_kwargs):
+    weights = {}
+
+    # Define the number of predators and prey
+    num_predators = env_kwargs["n_possible_predator"]
+    num_prey = env_kwargs["n_possible_prey"]
+
+    # Populate the weights dictionary for predators
+    for i in range(num_predators):
+        weights[f"predator_{i}"] = [0.5, 0.5]
+
+    # Populate the weights dictionary for prey
+    for i in range(num_prey):
+        weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
+
     # Evaluate a trained agent vs a random agent
-    raw_env = env_fn.raw_env(render_mode=render_mode, **env_kwargs)
+    env = env_fn.env(render_mode=render_mode, **env_kwargs)
+    env = LinearizeReward(env, weights)
     model = PPO.load(loaded_policy)
-    cumulative_rewards = {agent: 0 for agent in raw_env.possible_agents}
-
-    from pettingzoo.utils import agent_selector  # on top of file gives error unbound(?)
-
-    agent_selector = agent_selector(agent_order=raw_env.agents)
+    cumulative_rewards = {agent: 0 for agent in env.possible_agents}
 
     # Note: We train using the Parallel API but evaluate using the AEC API
     # SB3 models are designed for single-agent settings, we get around this by using he same model for every agent
@@ -58,18 +70,18 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
     total_predator_age_list = []
     total_prey_age_list = []
     for i in range(num_episodes):
-        raw_env.reset()
-        agent_selector.reset()
-        raw_env._agent_selector.reset()
-        predator_name_list = raw_env._env.possible_predator_name_list
-        prey_name_list = raw_env._env.possible_prey_name_list
-        agent_name_list = raw_env._env.possible_agent_name_list
+        env.reset()
+        predator_name_list = env.predpreygrass.possible_predator_name_list
+        prey_name_list = env.predpreygrass.possible_prey_name_list
+        agent_name_list = env.predpreygrass.possible_agent_name_list
         cumulative_rewards = {agent: 0 for agent in agent_name_list}
         cumulative_rewards_predator = {agent: 0 for agent in predator_name_list}
         cumulative_rewards_prey = {agent: 0 for agent in prey_name_list}
         n_aec_cycles = 0
-        for agent in raw_env.agent_iter():
-            observation, reward, termination, truncation, info = raw_env.last()
+        for agent in env.agent_iter():
+            observation, reward, termination, truncation, info = env.last()
+            #print(f"Agent: {agent} rew={reward}")
+            #print("cumulative_rewards", cumulative_rewards)
             cumulative_rewards[agent] += reward
             if agent in predator_name_list:
                 cumulative_rewards_predator[agent] += reward
@@ -78,38 +90,28 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
             if termination or truncation:
                 action = None
-                if raw_env._env.is_no_predator:
+                if env.predpreygrass.is_no_predator:
                     predator_extinct_at_termination[i] = 1
+                    break
             else:
                 action = model.predict(observation, deterministic=False)[0]
-                """
-                0: [-1, 0], # move left
-                1: [0, -1], # move up
-                2: [0, 0], # stay
-                3: [0, 1], # move down
-                4: [1, 0], # move right
-                """
-            raw_env.step(action)
-            if agent_selector.is_last():  # called at end of cycle
-                n_aec_cycles += 1
-                # print({key : round(cumulative_rewards[key], 2) for key in cumulative_rewards}) # DON'T REMOVE
-            agent_selector.next()  # called at end of cycle
-
+            env.step(action)
+        n_aec_cycles = env.predpreygrass.n_aec_cycles
         # plot population of Predators and Prey
         plt.clf()
-        plt.plot(raw_env._env.n_active_predator_list, "r")
-        plt.plot(raw_env._env.n_active_prey_list, "b")
+        plt.plot(env.predpreygrass.n_active_predator_list, "r")
+        plt.plot(env.predpreygrass.n_active_prey_list, "b")
         plt.title("Predator and Prey Population", weight="bold")
         plt.xlabel("Time steps", weight="bold")
         ax = plt.gca()
         # Set x and y limits
-        ax.set_xlim([0, raw_env._env.n_aec_cycles])
+        ax.set_xlim([0, env.predpreygrass.n_aec_cycles])
         ax.set_ylim(
             [
                 0,
                 max(
-                    raw_env._env.n_active_predator_list
-                    + raw_env._env.n_active_prey_list
+                    env.predpreygrass.n_active_predator_list
+                    + env.predpreygrass.n_active_prey_list
                 ),
             ]
         )
@@ -134,23 +136,23 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
         # plot energy of Predators, Prey and Grass
         plt.clf()
-        plt.plot(raw_env._env.total_energy_predator_list, "r")
-        plt.plot(raw_env._env.total_energy_prey_list, "b")
-        plt.plot(raw_env._env.total_energy_grass_list, "g")
-        plt.plot(raw_env._env.total_energy_learning_agents_list, "k")
+        plt.plot(env.predpreygrass.total_energy_predator_list, "r")
+        plt.plot(env.predpreygrass.total_energy_prey_list, "b")
+        plt.plot(env.predpreygrass.total_energy_grass_list, "g")
+        plt.plot(env.predpreygrass.total_energy_learning_agents_list, "k")
         plt.title("Total energy", weight="bold")
         plt.xlabel("Time steps", weight="bold")
         ax = plt.gca()
         # Set x and y limits
-        ax.set_xlim([0, raw_env._env.n_aec_cycles])
+        ax.set_xlim([0, env.predpreygrass.n_aec_cycles])
         ax.set_ylim(
             [
                 0,
                 max(
-                    raw_env._env.total_energy_predator_list
-                    + raw_env._env.total_energy_prey_list
-                    + raw_env._env.total_energy_grass_list
-                    + raw_env._env.total_energy_learning_agents_list
+                    env.predpreygrass.total_energy_predator_list
+                    + env.predpreygrass.total_energy_prey_list
+                    + env.predpreygrass.total_energy_grass_list
+                    + env.predpreygrass.total_energy_learning_agents_list
                 ),
             ]
         )
@@ -175,22 +177,22 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
         episode_length[i] = n_aec_cycles
         n_starved_predator_per_cycle[i] = (
-            raw_env._env.n_starved_predator / n_aec_cycles
+            env.predpreygrass.n_starved_predator / n_aec_cycles
         )
         n_starved_prey_per_cycle[i] = (
-            raw_env._env.n_starved_prey / n_aec_cycles
+            env.predpreygrass.n_starved_prey / n_aec_cycles
         )
-        n_eaten_prey_per_cycle[i] = raw_env._env.n_eaten_prey / n_aec_cycles
+        n_eaten_prey_per_cycle[i] = env.predpreygrass.n_eaten_prey / n_aec_cycles
         n_born_predator_per_cycle[i] = (
-            raw_env._env.n_born_predator / n_aec_cycles
+            env.predpreygrass.n_born_predator / n_aec_cycles
         )
-        n_eaten_grass_per_cycle[i] = raw_env._env.n_eaten_grass / n_aec_cycles
+        n_eaten_grass_per_cycle[i] = env.predpreygrass.n_eaten_grass / n_aec_cycles
         n_born_predator_per_cycle[i] = (
-            raw_env._env.n_born_predator / n_aec_cycles
+            env.predpreygrass.n_born_predator / n_aec_cycles
         )
-        n_born_prey_per_cycle[i] = raw_env._env.n_born_prey / n_aec_cycles
-        episode_predator_age_list = raw_env._env.predator_age_list
-        episode_prey_age_list = raw_env._env.prey_age_list
+        n_born_prey_per_cycle[i] = env.predpreygrass.n_born_prey / n_aec_cycles
+        episode_predator_age_list = env.predpreygrass.predator_age_list
+        episode_prey_age_list = env.predpreygrass.prey_age_list
         mean_age_predator[i] = (
             mean(episode_predator_age_list) if episode_predator_age_list else 0
         )
@@ -227,7 +229,7 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
             file.write(f"Mn age Prd = {round(mean_age_predator[i],1)} ")
             file.write(f"Mn age Pry = {round(mean_age_prey[i],1)}\n")
     print("Finish evaluation.")
-    raw_env.close()
+    env.close()
     predator_extinct_at_termination_count = sum(predator_extinct_at_termination)
     episode_mean_of_mean_cumulative_rewards = round(mean(mean_cumulative_rewards), 1)
     episode_mean_of_mean_cumulative_rewards_predators = round(
@@ -275,239 +277,30 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
 if __name__ == "__main__":
     env_fn = mo_predpreygrass_v0
-    environment_name = "mo_predpreygrass_v0"
+    environment_name = str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     evaluation_directory = os.path.dirname(os.path.abspath(__file__))
-    script_directory = up(up(up(up(__file__))))  # up 4 levels in directory tree
-    output_directory = script_directory +"/output/"
+    destination_source_code_dir = up(up(up(up(__file__))))  # up 4 levels in directory tree
+    output_directory = destination_source_code_dir +"/output/"
     loaded_policy = output_directory + model_file_name
-
-    watch_grid_model = WATCH_GRID_MODEL
+    # input from so_config_predpreygrass.py
+    watch_grid_model = env_kwargs["watch_grid_model"]
     eval_model_only = not watch_grid_model
-    num_episodes = NUM_EPISODES 
-
-    # save parameters to file
-    if eval_model_only:
-        saved_directory_and_evaluation_file_name = os.path.join(
-            output_directory, "evaluation.txt"
-        )
-        file = open(saved_directory_and_evaluation_file_name, "w")
-        file.write("evaluation:\n")
-        file.write("environment: " + environment_name + "\n")
-        file.write("learning algorithm: PPO \n")
-        file.write("training steps: " + training_steps_string + "\n")
-        file.write("--------------------------\n")
-    print()
-    print("loaded_policy:", loaded_policy)
-    print()
-    print("model: PredPreyGrass")
-    print("evaluation:")
-    print("training steps: " + training_steps_string)
-    print("--------------------------")
-
+    num_episodes = env_kwargs["num_episodes"] 
     training_steps = int(training_steps_string)
 
-    # global variables for evaluation used in eval function
+    render_mode = "human" if watch_grid_model else None
 
-    episode_length: List[int] = [0 for _ in range(num_episodes)]
-    predator_extinct_at_termination: List[int] = [0 for _ in range(num_episodes)]
-    n_starved_predator_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    n_starved_prey_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    n_eaten_prey_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    n_eaten_grass_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    n_born_predator_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    n_born_prey_per_cycle: List[int] = [0 for _ in range(num_episodes)]
-    mean_cumulative_rewards: List[int] = [0 for _ in range(num_episodes)]
-    mean_cumulative_rewards_predator: List[int] = [0 for _ in range(num_episodes)]
-    mean_cumulative_rewards_prey: List[int] = [0 for _ in range(num_episodes)]
-    std_cumulative_rewards: List[int] = [0 for _ in range(num_episodes)]
-    std_cumulative_rewards_predator: List[int] = [0 for _ in range(num_episodes)]
-    std_cumulative_rewards_prey: List[int] = [0 for _ in range(num_episodes)]
-    mean_age_predator: List[int] = [0 for _ in range(num_episodes)]
-    mean_age_prey: List[int] = [0 for _ in range(num_episodes)]
-    episode_mean_of_mean_cumulative_rewards: int = 0
-    episode_mean_of_mean_cumulative_rewards_predators: int = 0
-    episode_mean_of_mean_cumulative_rewards_prey: int = 0
-    predator_extinct_at_termination_count: int = 0
-    mean_episode_length: int = 0
-    std_episode_length: int = 0
-
-    if eval_model_only:
-        # Evaluate episodes
-        (
-            episode_mean_of_mean_cumulative_rewards,
-            episode_mean_of_mean_cumulative_rewards_predators,
-            episode_mean_of_mean_cumulative_rewards_prey,
-            mean_episode_length,
-            std_episode_length,
-            predator_extinct_at_termination_count,
-            episode_mean_of_n_starved_predator_per_cycle,
-            episode_mean_of_n_starved_prey_per_cycle,
-            episode_mean_of_n_eaten_prey_per_cycle,
-            episode_mean_of_n_eaten_grass_per_cycle,
-            episode_mean_of_n_born_predator_per_cycle,
-            episode_mean_of_n_born_prey_per_cycle,
-            episode_mean_of_mean_age_predator,
-            episode_mean_of_mean_age_prey,
-        ) = eval(env_fn, num_episodes=num_episodes, render_mode=None, **env_kwargs)
-        # save evaluation results to file
-        file.write("--------------------------\n")
-        file.write(f"Number of episodes = {num_episodes}" + "\n")
-        file.write(f"Mean episode length = {mean_episode_length}" + "\n")
-        file.write(f"Standard deviation episode length = {std_episode_length}" + "\n")
-        # TODO: put writing into function for scalability and code "blackness"
-        file.write(
-            f"Per episode mean of per agent mean cumulative reward = {episode_mean_of_mean_cumulative_rewards}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of per Predator mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_predators}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of per Prey mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_prey}"
-            + "\n"
-        )
-        file.write(
-            f"% Predator extinct at termination = {round(predator_extinct_at_termination_count/num_episodes*100,1)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of starved Predator/cycle = {round(episode_mean_of_n_starved_predator_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of starved_Prey/cycle = {round(episode_mean_of_n_starved_prey_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of eaten Prey/cycle = {round(episode_mean_of_n_eaten_prey_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of eaten Grass/cycle = {round(episode_mean_of_n_eaten_grass_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of born Predator/cycle = {round(episode_mean_of_n_born_predator_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode_mean_of_born Prey/cycle = {round(episode_mean_of_n_born_prey_per_cycle,3)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode mean of mean age Predator = {round(episode_mean_of_mean_age_predator,1)}"
-            + "\n"
-        )
-        file.write(
-            f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}"
-            + "\n"
-        )
-        file.write("--------------------------\n")
-        file.write("Evaluation parameters:\n")
-        for item in env_kwargs:
-            file.write(str(item) + " = " + str(env_kwargs[item]) + "\n")
-        file.write("--------------------------\n")
-        file.close()
-        # and print to console
-        print("--------------------------")
-        print(f"Number of episodes = {num_episodes}")
-        print(f"Mean episode length = {mean_episode_length}")
-        print(f"Standard deviation episode length = {std_episode_length}")
-        print(
-            f"Per episode mean of per agent mean cumulative reward = {episode_mean_of_mean_cumulative_rewards}"
-        )
-        print(
-            f"Per episode mean of per Predator mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_predators}"
-        )
-        print(
-            f"Per episode mean of per Prey mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_prey}"
-        )
-        print(
-            f"% Predator extinct at termination = {round(predator_extinct_at_termination_count/num_episodes*100,1)}"
-        )
-        print(
-            f"Per episode mean of starved predator/cycle = {round(episode_mean_of_n_starved_predator_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of starved_prey/cycle = {round(episode_mean_of_n_starved_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of eaten prey/cycle = {round(episode_mean_of_n_eaten_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of eaten grass/cycle = {round(episode_mean_of_n_eaten_grass_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of born predator/cycle = {round(episode_mean_of_n_born_predator_per_cycle,3)}"
-        )
-        print(
-            f"Per episode_mean_of_born prey/cycle = {round(episode_mean_of_n_born_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of mean age Predator = {round(episode_mean_of_mean_age_predator,1)}"
-        )
-        print(
-            f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}"
-        )
-
-    if watch_grid_model:
-        # Evaluate and watch games
-        (
-            episode_mean_of_mean_cumulative_rewards,
-            episode_mean_of_mean_cumulative_rewards_predators,
-            episode_mean_of_mean_cumulative_rewards_prey,
-            mean_episode_length,
-            std_episode_length,
-            predator_extinct_at_termination_count,
-            episode_mean_of_n_starved_predator_per_cycle,
-            episode_mean_of_n_starved_prey_per_cycle,
-            episode_mean_of_n_eaten_prey_per_cycle,
-            episode_mean_of_n_eaten_grass_per_cycle,
-            episode_mean_of_n_born_predator_per_cycle,
-            episode_mean_of_n_born_prey_per_cycle,
-            episode_mean_of_mean_age_predator,
-            episode_mean_of_mean_age_prey,
-        ) = eval(env_fn, num_episodes=5, render_mode="human", **env_kwargs)
-        # print to console
-        print("--------------------------")
-        print(f"Number of episodes = {num_episodes}")
-        print(f"Mean episode length = {mean_episode_length}")
-        print(f"Standard deviation episode length = {std_episode_length}")
-        print(
-            f"Per episode mean of per agent mean cumulative reward = {episode_mean_of_mean_cumulative_rewards}"
-        )
-        print(
-            f"Per episode mean of per Predator mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_predators}"
-        )
-        print(
-            f"Per episode mean of per Prey mean cumulative reward = {episode_mean_of_mean_cumulative_rewards_prey}"
-        )
-        print(
-            f"% Predator extinct at termination = {round(predator_extinct_at_termination_count/num_episodes*100,1)}"
-        )
-        print(
-            f"Per episode mean of starved predator/cycle = {round(episode_mean_of_n_starved_predator_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of starved_prey/cycle = {round(episode_mean_of_n_starved_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of eaten prey/cycle = {round(episode_mean_of_n_eaten_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of eaten grass/cycle = {round(episode_mean_of_n_eaten_grass_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of born predator/cycle = {round(episode_mean_of_n_born_predator_per_cycle,3)}"
-        )
-        print(
-            f"Per episode_mean_of_born prey/cycle = {round(episode_mean_of_n_born_prey_per_cycle,3)}"
-        )
-        print(
-            f"Per episode mean of mean age Predator = {round(episode_mean_of_mean_age_predator,1)}"
-        )
-        print(
-            f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}"
-        )
+    # Create an instance of the Evaluator class
+    evaluator = Evaluator(
+        env_fn,
+        output_directory, # destination_output_dir,
+        loaded_policy,
+        destination_source_code_dir, # destination_root_dir,
+        render_mode,
+        training_steps_string,
+        destination_source_code_dir, # destination_source_code_dir,
+        **env_kwargs
+    )
+    # Call the eval method to perform the evaluation
+    evaluator.eval()

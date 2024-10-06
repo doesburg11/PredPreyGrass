@@ -1,17 +1,25 @@
 """
-pred/prey/grass PettingZoo multi-agent learning environment
-this environment transfers the energy of eaten prey/grass to the predator/prey
-
+pred/prey/grass PettingZoo multi-object multi-agent learning environment
+this environment (MOMARL) transfers the energy of eaten Prey/Grass to the 
+learning agents Predator/Prey. If the learnin agents gain enough energy,
+they can reproduce and create new agents. The agents can also die of
+starvation or being eaten. 
+The reward for each learning agent is a multi-objective two dimensional vector, where the
+first element is the positive reward gained from reproducing Predators and the second
+element is the reward gained from reproducing Prey. Strictly speaking, this setting is
+is a coopperative co-evolutionary learning environment. However if Predators eat Prey 
+they reduce potential future reproduction rewards for the Prey and therfore potential
+future energy intake for the Predartors themselves.
 """
-
+# discretionary libraries
 from predpreygrass.envs._mo_predpreygrass_v0.agents.mo_discrete_agent import (
     DiscreteAgent,
 )
 
+# external libraries
 import gymnasium
 from gymnasium.utils import seeding
 from gymnasium import spaces
-
 import os
 import numpy as np
 import random
@@ -58,6 +66,7 @@ class PredPreyGrass:
         reproduction_reward_predator: float = 10.0,
         catch_prey_energy: float = 5.0,
         catch_grass_energy: float = 3.0,
+        watch_grid_model: bool = False,
         show_energy_chart: bool = True,
         max_energy_level_grass: float = 4.0,
         spawning_area_predator: dict = dict(
@@ -88,6 +97,7 @@ class PredPreyGrass:
         # if True, aec loop does not give proper rewards, 
         # so to use aec loop, (re)set is_parallel_wrapped to False
         is_parallel_wrapped: bool = False, 
+        num_episodes: int = 100,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -125,6 +135,8 @@ class PredPreyGrass:
         self.spawning_area_prey = spawning_area_prey
         self.spawning_area_grass = spawning_area_grass
         self.is_parallel_wrapped = is_parallel_wrapped
+        self.watch_grid_model = watch_grid_model
+        self.num_episodes = num_episodes
 
         # agent types
 
