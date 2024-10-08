@@ -34,7 +34,7 @@ if __name__ == "__main__":
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     # parameter variation scenarios
     parameter_variation_parameter_string = "reproduction_reward_prey"
-    parameter_variation_scenarios = [8,10,12] 
+    parameter_variation_scenarios = [10] 
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
             local_output_root + "parameter_variation/"

@@ -1,5 +1,6 @@
+# discretionary libraries
 from utils.population_plotter import PopulationPlotter
-
+# external libraries
 import os
 from statistics import mean, stdev
 from stable_baselines3 import PPO
@@ -39,15 +40,23 @@ class Evaluator:
         )
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = (
-            "Evaluation results:\n" +
-            "--------------------------\n" +
-            "loaded_policy: " + self.loaded_policy + "\n" +
-            "environment: " + str(env.metadata['name']) + "\n" +
-            "evaluation: " + self.destination_source_code_dir + "\n" +  
-            "training steps: " + self.training_steps_string + "\n" +
-            "--------------------------\n"  
+            "Evaluation results:\n"
+            + "--------------------------\n"
+            + "loaded_policy: "
+            + self.loaded_policy
+            + "\n"
+            + "environment: "
+            + str(env.metadata["name"])
+            + "\n"
+            + "evaluation: "
+            + self.destination_source_code_dir
+            + "\n"
+            + "training steps: "
+            + self.training_steps_string
+            + "\n"
+            + "--------------------------\n"
         )
-        evaluation_file = open(saved_directory_and_evaluation_file_name, "w") 
+        evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
         evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
         # initialization evaluation metrics
@@ -101,7 +110,7 @@ class Evaluator:
                         predator_extinct_at_termination[i] = 1
                         break
                 else:
-                    action = model.predict(observation, deterministic=False)[0]
+                    action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
             n_aec_cycles = env.predpreygrass.n_aec_cycles
             plotter.plot_population(
@@ -146,18 +155,17 @@ class Evaluator:
             )
             std_cumulative_rewards_prey[i] = stdev(cumulative_rewards_prey.values())
 
-            eval_results_text =(
-                f"Eps {i} " +
-                f"Lngth = {n_aec_cycles} " +
-                f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} " +
-                f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)} " +
-                f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)} " +
-                f"Eatn Gra/cycl = {round(n_eaten_grass_per_cycle[i],3)} " +
-                f"Brn Prd/cycl = {round(n_born_predator_per_cycle[i],3)} " +
-                f"Brn Pry/cycle = {round(n_born_prey_per_cycle[i],3)} " +
-                f"Mn age Prd = {round(mean_age_predator[i],1)} " +
-                f"Mn age Pry = {round(mean_age_prey[i],1)}\n"
-
+            eval_results_text = (
+                f"Eps {i} "
+                + f"Lngth = {n_aec_cycles} "
+                + f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
+                + f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)} "
+                + f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)} "
+                + f"Eatn Gra/cycl = {round(n_eaten_grass_per_cycle[i],3)} "
+                + f"Brn Prd/cycl = {round(n_born_predator_per_cycle[i],3)} "
+                + f"Brn Pry/cycle = {round(n_born_prey_per_cycle[i],3)} "
+                + f"Mn age Prd = {round(mean_age_predator[i],1)} "
+                + f"Mn age Pry = {round(mean_age_prey[i],1)}\n"
             )
             print(eval_results_text)
             evaluation_file.write(eval_results_text)
@@ -211,7 +219,9 @@ class Evaluator:
             mean(mean_cumulative_rewards_prey), 1
         )
         mean_episode_length = round(mean(episode_length), 1)
-        std_episode_length = round(stdev(episode_length), 1) if self.num_episodes > 1 else None
+        std_episode_length = (
+            round(stdev(episode_length), 1) if self.num_episodes > 1 else None
+        )
         episode_mean_of_n_starved_predator_per_cycle = round(
             mean(n_starved_predator_per_cycle), 3
         )

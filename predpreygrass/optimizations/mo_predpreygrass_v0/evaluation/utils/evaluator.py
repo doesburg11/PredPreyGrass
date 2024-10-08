@@ -1,5 +1,8 @@
-from utils.population_plotter import PopulationPlotter
+# dicretionary libraries
+from predpreygrass.optimizations.mo_predpreygrass_v0.evaluation.utils.population_plotter import PopulationPlotter
+from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.weights_constructor import construct_linearalized_weights
 
+# external libraries
 from momaland.utils.aec_wrappers import LinearizeReward
 import os
 from statistics import mean, stdev
@@ -29,20 +32,12 @@ class Evaluator:
         self.num_episodes = env_kwargs["num_episodes"]
 
     def eval(self):
-        weights = {}
-
         # Define the number of predators and prey
         num_predators = self.env_kwargs["n_possible_predator"]
         num_prey = self.env_kwargs["n_possible_prey"]
-
-        # Populate the weights dictionary for predators
-        for i in range(num_predators):
-            weights[f"predator_{i}"] = [0.5, 0.5]
-
-        # Populate the weights dictionary for prey
-        for i in range(num_prey):
-            weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
-
+        # Construct the weights for linearization of the multi objective rewards
+        weights = construct_linearalized_weights(num_predators, num_prey)
+        
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         env = LinearizeReward(env, weights)
         model = PPO.load(self.loaded_policy)
@@ -116,7 +111,7 @@ class Evaluator:
                         predator_extinct_at_termination[i] = 1
                         break
                 else:
-                    action = model.predict(observation, deterministic=False)[0]
+                    action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
             n_aec_cycles = env.predpreygrass.n_aec_cycles
             plotter.plot_population(
