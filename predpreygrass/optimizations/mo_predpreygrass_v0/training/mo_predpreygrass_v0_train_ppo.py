@@ -1,5 +1,5 @@
 """
--This file trains a mutlti object multi agent reinforcement model in a parallel environment. 
+-This file trains a multi-object multi-agent reinforcement model in a parallel environment. 
 -After traing evaluation can be done using the AEC API.
 -The source code and the trained model are saved in a separate 
 directory, for reuse and analysis. 
@@ -16,6 +16,11 @@ env_kwargs["is_parallel_wrapped"] = True # environment loop is parallel wrapped
 from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.trainer import (
     Trainer
 )
+from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.linearization_weights_constructor import (
+    construct_linearalized_weights
+)
+
+
 # external libraries
 from momaland.utils.conversions import mo_aec_to_parallel
 from momaland.utils.parallel_wrappers import LinearizeReward
@@ -25,17 +30,11 @@ import time
 import shutil
 
 
-# weights for linearization rewards
-weights = {}
 # Define the number of predators and prey
 num_predators = env_kwargs["n_possible_predator"]
 num_prey = env_kwargs["n_possible_prey"]
-# Populate the weights dictionary for predators
-for i in range(num_predators):
-    weights[f"predator_{i}"] = [0.5, 0.5]
-# Populate the weights dictionary for prey
-for i in range(num_prey):
-    weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
+# Construct the weights
+weights = construct_linearalized_weights(num_predators, num_prey)
 
 env = mo_predpreygrass_v0.env(**env_kwargs)
 parallel_env = mo_aec_to_parallel(env)
@@ -53,7 +52,6 @@ if __name__ == "__main__":
     destination_source_code_dir = os.path.join(
         local_output_root, time_stamp_string
     )
-
     source_code_dir = up(up(up(up(__file__)))) # up 4 levels in directory tree
     # copy the project code to the local directory
     shutil.copytree(source_code_dir, destination_source_code_dir)

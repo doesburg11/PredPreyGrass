@@ -1,27 +1,21 @@
+# discretionary libraries
+from predpreygrass.envs import mo_predpreygrass_v0
 from predpreygrass.envs._mo_predpreygrass_v0.config.mo_config_predpreygrass import env_kwargs
 # environment loop is aec
 env_kwargs["is_parallel_wrapped"] = False
-
-from predpreygrass.envs import mo_predpreygrass_v0
-
+from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.linearization_weights_constructor import (
+    construct_linearalized_weights
+)
+# external libraries
 from momaland.utils.aec_wrappers import LinearizeReward
 
 env = mo_predpreygrass_v0.env(render_mode='human', **env_kwargs)
 
-# weights for linearization rewards
-weights = {}
-
 # Define the number of predators and prey
 num_predators = env_kwargs["n_possible_predator"]
 num_prey = env_kwargs["n_possible_prey"]
-
-# Populate the weights dictionary for predators
-for i in range(num_predators):
-    weights[f"predator_{i}"] = [0.5, 0.5]
-
-# Populate the weights dictionary for prey
-for i in range(num_prey):
-    weights[f"prey_{i + num_predators}"] = [0.5, 0.5]
+# Construct the weights for linearization of the multi objective rewards
+weights = construct_linearalized_weights(num_predators, num_prey)
 
 env = LinearizeReward(env, weights)
 

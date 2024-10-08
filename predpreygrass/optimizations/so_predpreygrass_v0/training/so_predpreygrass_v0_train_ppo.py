@@ -5,6 +5,7 @@
 directory, for reuse and analysis. 
 -The algorithm used is PPO from stable_baselines3. 
 """
+# discretionary libraries
 from predpreygrass.envs import so_predpreygrass_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
     env_kwargs,
@@ -14,14 +15,10 @@ from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass impo
 from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer import (
     Trainer,
 )
-# Import the ConfigSaver class
-from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer import (
-    Trainer,
-)
 from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.config_saver import (
     ConfigSaver
 )
-
+# external libraries
 import os
 import time
 import shutil

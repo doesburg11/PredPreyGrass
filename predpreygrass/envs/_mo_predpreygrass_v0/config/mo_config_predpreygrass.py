@@ -16,8 +16,8 @@ env_kwargs = dict(
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     # agent parameters
-    n_possible_predator=18,  # maximum number of predators during runtime
-    n_possible_prey=24,
+    n_possible_predator=40,  # maximum number of predators during runtime
+    n_possible_prey=50,
     n_possible_grass=30,  # optimized by parameter variation [10,12,14,16,18,20,...,26,28,40]
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -26,26 +26,21 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # energy parameters
-    energy_gain_per_step_predator=-0.15,  # optimized by parameter variation [-0.3,-0.25,-0.20,-0.15,-0.10]
+    energy_gain_per_step_predator=-0.15,  
     energy_gain_per_step_prey=-0.05,
     energy_gain_per_step_grass=0.2,
-    catch_prey_energy=0.0,
-    catch_grass_energy=0.0,
+    catch_prey_energy=0.0, #TODO: remove?
+    catch_grass_energy=0.0, #TODO: remove?
     initial_energy_predator=5.0,
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
     # create agents parameters
-    create_prey=True,  # only effect on and applicable to fixed energy transfer environments
-    create_predator=True,  # only effect on and applicable to fixed energy transfer environments
-    regrow_grass=True,  # only effect on and applicable to fixed energy transfer environments
+    create_prey=True, 
+    create_predator=True,  
+    regrow_grass=True,  
     prey_creation_energy_threshold=8,
-    predator_creation_energy_threshold=12,  # optimized by parameter variation [2,4, 6,..., 22, 24]
-    # visualization parameters
-    cell_scale=40,
-    x_pygame_window=0,
-    y_pygame_window=0,
-    show_energy_chart=True,
+    predator_creation_energy_threshold=12, 
     spawning_area_predator=dict(
         {
             "x_begin": 0,
@@ -70,7 +65,12 @@ env_kwargs = dict(
             "y_end": y_grid_size - 1,
         }
     ),
-     # evaluation parameters
+    #vizualization parameters
+    cell_scale=40,
+    x_pygame_window=0,
+    y_pygame_window=0,
+    show_energy_chart=True,
+    # evaluation parameters
     num_episodes=100,
     watch_grid_model=False,   
 )
