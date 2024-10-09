@@ -10,7 +10,7 @@ The `step` function handles the actions of agents during each simulation step. I
 
 The `move_agent`function updates the position of an agent based on the given action and adjusts the grid state accordingly. The `earmarking_predator_catches_prey` and `earmarking_prey_eats_grass` functions handle the bookkeeping for when a predator catches prey or a prey eats grass, respectively.
 
-The `reset_rewards`function resets the reward dictionary for all agents, while the `remove_predator`, `remove_prey`, and `remove_grass' functions handle the removal of agents from the environment when they die or are eaten.
+The `reset_rewards`function resets the reward dictionary for all agents, while the `remove_predator`, `remove_prey`, and `remove_grass` functions handle the removal of agents from the environment when they starve to death or are eaten.
 
 The `create_new_predator` and `create_new_prey` functions create new predator and prey agents, respectively, when the energy levels of parent agents exceed a certain threshold. These functions also update the grid state and agent lists accordingly.
 
