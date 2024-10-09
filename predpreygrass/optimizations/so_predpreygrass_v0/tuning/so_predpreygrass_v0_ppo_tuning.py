@@ -152,7 +152,7 @@ if __name__ == "__main__":
     end_training_time = time.time()
     print(f"Training time: {end_training_time - start_training_time}")
 
-    # Open a file to save the output
+    # Open a file to save the screen output
     with open(tune_results_logs_dir + "/screenoutput.txt", "w") as f:
         # Redirect standard output to the file
         sys.stdout = f
