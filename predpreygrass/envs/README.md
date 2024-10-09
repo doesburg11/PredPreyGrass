@@ -1,17 +1,8 @@
-### Environments
-`predatorpreygrass_fixed_energy_transfer.py`:
-Learning agents (Predators and Prey) receive fixed pre determined energy and rewards optionally by eating, moving, dying and reproduction.
-1. Penalty per time step 
-2. Reward for capturing food 
-3. Penalty for dying (either by being caught or by starving to death)
+## The environments
+[**so_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_so_predpreygrass_v0): A (single-objective) multi-agent reinforcement learning (MARL) environment, [trained and evaluated](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/optimizations/so_predpreygrass_v0) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards (stepping, eating, dying and reproducing) are naively summed and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py) file. 
 
-- Grass agents optionally regrow after a number of steps a the same spot. 
-- Predators and Prey can be removed or optionally created; by reproduction the parent agent tranfers energy to the child agent and receives a positive reward
+[**mo_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_mo_predpreygrass_v0):  A (multi-objective) multi-agent reinforcement learning (MOMARL) environment. The environment has two objectives: 
+- maximize cumulative rewards for reproduction of Predator agents
+- maximize cumulative rewards for reproduction of Prey agents. 
 
-The removal or creation of Predators or Prey is handeled by the `is_active` boolean of the agents.
-At `reset`,`n_possible_predator` and `n_possible_prey` are initialized. However, a portion of agents is intialized at `is_active` = `False`, this will give room for creation of agents during runtime. Conversely, removal of agents during runtime is handled by setting the attribute `is_active` from `True` to `False`. The rewards and observations of non active agents are zeros, comparable with SuperSuit's Black Death wrapper.
-
-`predatorpreygrass_available_energy_transfer.py`: A generalization of 'predatorpreygrass_fixed_energy_transfer.py'. Rather than receiving fixed predeterimined energy quantities, agents exchange energy depending on the energy available from the eaten agents. The observation channels consists of the energy levels of agents, rather than just one's or zero's in 'predatorpreygrass_fixed_energy_transfer.py'. The purpose of this generalization is to gauge wether agents maken energy-efficiency choices. So, if they go after a resource which has higher energetic value than antother within their observation range.
-
-
-`predatorpreygrass_available_energy_transfer_walls.py`: The action space is extended where Predators as well as Prey can build obstacles or walls in the grid world environment at the expense of a certain amount of energy for the agent. So the action space for learning agents is ['MOVE UP', 'MOVE DOWN', 'MOVE LEFT', 'MOVE RIGHT', 'STAY', 'BUILD WALL']
+The rewards returned by the environment are stored in a two-dimensional vector conform Farama's [Momaland](https://momaland.farama.org/) framework, which follows the standard [PettingZoo API](https://pettingzoo.farama.org/). This environment is a generalization of the single objective version described above and offers the opportunity to go beyond naively summing rewards and permits the possibility of implementing predefined (possibly non-linear) utility functions for every seperate learning agent.
