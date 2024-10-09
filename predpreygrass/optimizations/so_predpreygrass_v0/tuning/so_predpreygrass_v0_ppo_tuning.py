@@ -1,18 +1,27 @@
-# TODO: update
-import predpreygrass.environments.predpreygrass as predpreygrass
-
-from config.config_predpreygrass import (
+# discretionary libraries
+from predpreygrass.envs import so_predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
     env_kwargs,
     training_steps_string,
-    local_output_directory,
+    local_output_root,
 )
 
+# external libraries
+import os
+import time
+import shutil
+from os.path import dirname as up
+import optuna
+from stable_baselines3 import PPO
+from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.callbacks import EvalCallback
+import supersuit as ss
+from pettingzoo.utils.conversions import aec_to_parallel
 import optuna
 import sys
 import time
 import os
 import shutil
-
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
@@ -20,27 +29,21 @@ import supersuit as ss
 from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import parallel_wrapper_fn
 
-from stable_baselines3.common.callbacks import BaseCallback
-from stable_baselines3.common import logger
-from stable_baselines3.common.monitor import Monitor
-
 
 def optimize_ppo(trial):
     # Define the environment
-    parallel_env = parallel_wrapper_fn(env_fn.raw_env)
-
-    # Train a single model to play as each agent in a parallel environment
-    raw_parallel_env = parallel_env(render_mode=None, **env_kwargs)
-
+    env = so_predpreygrass_v0.env(render_mode=None, **env_kwargs)
+    env = aec_to_parallel(env)
+    env = ss.pettingzoo_env_to_vec_env_v1(env)
     # create parallel environments by concatenating multiple copies of the base environment
     num_vec_envs_concatenated = 8
-    raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
-    raw_parallel_env = ss.concat_vec_envs_v1(
-        raw_parallel_env,
+    env = ss.concat_vec_envs_v1(
+        env,
         num_vec_envs_concatenated,
         num_cpus=8,
         base_class="stable_baselines3",
     )
+    # env = Monitor(env)  # Wrap the evaluation environment with Monitor
 
     # default values
     verbose = 0
@@ -73,7 +76,7 @@ def optimize_ppo(trial):
     # Create the PPO model
     model = PPO(
         "MlpPolicy",
-        raw_parallel_env,
+        env,
         verbose=verbose,
         n_steps=n_steps,
         gamma=gamma,
@@ -88,15 +91,14 @@ def optimize_ppo(trial):
         normalize_advantage=normalize_advantage,
     )
 
-    # Define evaluation environment separately to avoid state leaks
-    eval_env = parallel_wrapper_fn(env_fn.raw_env)(render_mode=None, **env_kwargs)
+    # Create the evaluation environment
+    eval_env = so_predpreygrass_v0.env(**env_kwargs)
+    eval_env = aec_to_parallel(eval_env)
     eval_env = ss.pettingzoo_env_to_vec_env_v1(eval_env)
     eval_env = ss.concat_vec_envs_v1(
-        eval_env,
-        num_vec_envs_concatenated,
-        num_cpus=8,
-        base_class="stable_baselines3",
+        eval_env, num_vec_envs_concatenated, num_cpus=4, base_class="stable_baselines3"
     )
+    # eval_env = Monitor(eval_env)  # Wrap the evaluation environment with Monitor
 
     # Set up evaluation callback
     eval_callback = EvalCallback(
@@ -127,15 +129,14 @@ def optimize_ppo(trial):
 
 # Create and run the study
 if __name__ == "__main__":
-    N_TRIALS = 10
-    environment_name = "predpreygrass"
+    N_TRIALS = 5
+    environment_name = "so_predpreygrass_v0"
     # Ensure the correct reference to the environment function
-    env_fn = predpreygrass
     training_steps = int(training_steps_string)
 
     start_time = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  # add seconds
     file_name = f"{environment_name}"
-    tune_results_dir = local_output_directory + "tune_results/" + start_time
+    tune_results_dir = local_output_root + "tune_results/" + start_time
     tune_results_logs_dir = tune_results_dir + "/logs/"
 
     # save the source code locally
@@ -156,8 +157,11 @@ if __name__ == "__main__":
         elif os.path.isdir(source_item):
             shutil.copytree(source_item, destination_item)
 
+    start_training_time = time.time()
     study = optuna.create_study(direction="maximize")
     study.optimize(optimize_ppo, n_trials=N_TRIALS)
+    end_training_time = time.time()
+    print(f"Training time: {end_training_time - start_training_time}")
 
     # Open a file to save the output
     with open(tune_results_logs_dir + "/screenoutput.txt", "w") as f:

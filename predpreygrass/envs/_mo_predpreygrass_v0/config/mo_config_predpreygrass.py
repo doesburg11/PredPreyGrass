@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
-training_steps_string = "10_000_000"
+training_steps_string = "100_000"
 
 x_grid_size = 25
 y_grid_size = 25
@@ -16,9 +16,9 @@ env_kwargs = dict(
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     # agent parameters
-    n_possible_predator=40,  # maximum number of predators during runtime
-    n_possible_prey=50,
-    n_possible_grass=30,  # optimized by parameter variation [10,12,14,16,18,20,...,26,28,40]
+    n_possible_predator=18,  # maximum number of predators during runtime
+    n_possible_prey=24,
+    n_possible_grass=30,  
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters

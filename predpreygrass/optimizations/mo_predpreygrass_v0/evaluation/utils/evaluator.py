@@ -1,6 +1,6 @@
 # dicretionary libraries
 from predpreygrass.optimizations.mo_predpreygrass_v0.evaluation.utils.population_plotter import PopulationPlotter
-from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.weights_constructor import construct_linearalized_weights
+from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.linearization_weights_constructor import construct_linearalized_weights
 
 # external libraries
 from momaland.utils.aec_wrappers import LinearizeReward

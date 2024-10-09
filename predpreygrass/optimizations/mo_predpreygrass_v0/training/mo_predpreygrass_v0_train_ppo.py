@@ -16,7 +16,7 @@ env_kwargs["is_parallel_wrapped"] = True # environment loop is parallel wrapped
 from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.trainer import (
     Trainer
 )
-from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.linearization_weights_constructor import (
+from utils.linearization_weights_constructor import (
     construct_linearalized_weights
 )
 
