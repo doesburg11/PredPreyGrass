@@ -25,9 +25,7 @@ The `observe` function generates observations for a given agent, providing infor
 
 ## so_predpreygrass.py
 
-The provided code defines a multi-agent environment for a predator-prey-grass simulation using the`gymnasium` and `pettingzoo` libraries. The environment is encapsulated in the `raw_env` class, which inherits from `AECEnv` and `EzPickle`. This class is designed to manage the interactions between agents (predators, prey, and grass) within a grid-based world.
-
-The `raw_env` class begins by importing necessary libraries, including the custom `PredPreyGrass` environment from the predpreygrass module. It also imports utilities from `gymnasium` and `pettingzoo` for environment management and agent selection. The `env` function wraps the `raw_env` instance with additional wrappers to enforce action order and boundary conditions, and the `parallel_env` function enables parallel execution of the environment.
+Calls an instance of PredPreyGrass from `so_predpreygrass_base.py`, according to the `pettingzoo` protocol. Defines a multi-agent environment for a predator-prey-grass simulation using the`gymnasium` and `pettingzoo` libraries. The environment is encapsulated in the `raw_env` class, which inherits from `AECEnv` and `EzPickle`. This class is designed to manage the interactions between agents (predators, prey, and grass) within a grid-based world.
 
 The `raw_env` class metadata specifies rendering modes, the environment name, parallelizability, and frames per second for rendering. The `__init__`method initializes the environment, setting up the rendering mode, initializing `pygame`, and creating an instance of the `PredPreyGrass` environment. It also sets up the list of agents, their action spaces, and observation spaces.
 
