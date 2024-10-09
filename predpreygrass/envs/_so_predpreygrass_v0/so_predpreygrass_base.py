@@ -3,8 +3,10 @@ pred/prey/grass PettingZoo multi-agent learning environment
 this environment transfers the energy of eaten prey/grass to the predator/prey
 
 """
+# discretionary libraries
 from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import DiscreteAgent
 
+# external libraries
 import gymnasium
 from gymnasium.utils import seeding
 from gymnasium import spaces
@@ -20,7 +22,6 @@ from collections import defaultdict
 PREDATOR_TYPE_NR = 1
 PREY_TYPE_NR = 2
 GRASS_TYPE_NR = 3
-
 
 
 class PredPreyGrass:
@@ -323,34 +324,6 @@ class PredPreyGrass:
         # TODO: upperbound for observation space = max(energy levels of all agents)
         self.max_energy_level_prey = 25.0  # in kwargs later, init level = 5.0
         self.max_energy_level_predator = 25.0  # in kwargs later, init level = 5.0
-
-    def position_new_agent_on_gridworld(
-        self, agent_instance, spawning_area, model_state
-    ):
-        """
-        ouputs a random position for a new agent on the gridworld, within the spawning
-        area of the agent and not on a cell which is already occupied by an agent of
-        the same type
-        """
-        agent_type_nr = agent_instance.agent_type_nr
-        # intialize an empty list to store the available cells for spawning a new agent
-        available_cell_list = []
-
-        # Iterate over the range of x and y coordinates within the spawning area of the agent
-        for x in range(
-            spawning_area[agent_type_nr]["x_begin"],
-            spawning_area[agent_type_nr]["x_end"] + 1,
-        ):
-            for y in range(
-                spawning_area[agent_type_nr]["y_begin"],
-                spawning_area[agent_type_nr]["y_end"] + 1,
-            ):
-                # checks if the cell is not already occupied by an agent of the same type
-                if model_state[agent_type_nr][x, y] == 0.0:
-                    # If the cell is empty, append the (x, y) coordinate to the list
-                    available_cell_list.append((x, y))
-        # Return a random choice from the available cell list
-        return random.choice(available_cell_list)
 
     def reset(self):
         # empty agent lists
@@ -1010,6 +983,34 @@ class PredPreyGrass:
             self.agent_reward_dict[
                 parent_prey.agent_name
             ] += self.reproduction_reward_prey
+
+    def position_new_agent_on_gridworld(
+        self, agent_instance, spawning_area, model_state
+    ):
+        """
+        ouputs a random position for a new agent on the gridworld, within the spawning
+        area of the agent and not on a cell which is already occupied by an agent of
+        the same type
+        """
+        agent_type_nr = agent_instance.agent_type_nr
+        # intialize an empty list to store the available cells for spawning a new agent
+        available_cell_list = []
+
+        # Iterate over the range of x and y coordinates within the spawning area of the agent
+        for x in range(
+            spawning_area[agent_type_nr]["x_begin"],
+            spawning_area[agent_type_nr]["x_end"] + 1,
+        ):
+            for y in range(
+                spawning_area[agent_type_nr]["y_begin"],
+                spawning_area[agent_type_nr]["y_end"] + 1,
+            ):
+                # checks if the cell is not already occupied by an agent of the same type
+                if model_state[agent_type_nr][x, y] == 0.0:
+                    # If the cell is empty, append the (x, y) coordinate to the list
+                    available_cell_list.append((x, y))
+        # Return a random choice from the available cell list
+        return random.choice(available_cell_list)
 
     def reward_predator(self, predator_instance):
         predator_name = predator_instance.agent_name
