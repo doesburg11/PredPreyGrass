@@ -6,6 +6,7 @@ env_kwargs["is_parallel_wrapped"] = False
 from predpreygrass.optimizations.mo_predpreygrass_v0.training.utils.linearization_weights_constructor import (
     construct_linearalized_weights
 )
+
 # external libraries
 from momaland.utils.aec_wrappers import LinearizeReward
 
@@ -18,9 +19,6 @@ num_prey = env_kwargs["n_possible_prey"]
 weights = construct_linearalized_weights(num_predators, num_prey)
 
 env = LinearizeReward(env, weights)
-
-
-#print("env_kwargs", env_kwargs)
 
 env.reset()
 for agent in env.agent_iter():
