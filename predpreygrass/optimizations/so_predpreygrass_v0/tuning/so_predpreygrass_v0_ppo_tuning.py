@@ -8,26 +8,15 @@ from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass impo
 
 # external libraries
 import os
-import time
-import shutil
-from os.path import dirname as up
-import optuna
-from stable_baselines3 import PPO
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.callbacks import EvalCallback
-import supersuit as ss
-from pettingzoo.utils.conversions import aec_to_parallel
-import optuna
 import sys
 import time
-import os
 import shutil
 from stable_baselines3 import PPO
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.callbacks import EvalCallback
+from pettingzoo.utils.conversions import aec_to_parallel
 import supersuit as ss
-from stable_baselines3.ppo import MlpPolicy
-from pettingzoo.utils.conversions import parallel_wrapper_fn
+import optuna
 
 
 def optimize_ppo(trial):
