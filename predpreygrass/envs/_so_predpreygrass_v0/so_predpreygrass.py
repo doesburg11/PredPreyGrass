@@ -1,5 +1,7 @@
+# discretionary libraries   
 from predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass_base import PredPreyGrass as predpreygrass
 
+# external libraries
 from gymnasium.utils import EzPickle
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector, wrappers
@@ -13,7 +15,6 @@ def env(**kwargs):
     env = wrappers.AssertOutOfBoundsWrapper(env)
     env = wrappers.OrderEnforcingWrapper(env)
     return env
-
 
 parallel_env = parallel_wrapper_fn(env)
 
