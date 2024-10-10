@@ -118,7 +118,7 @@ def optimize_ppo(trial):
 
 # Create and run the study
 if __name__ == "__main__":
-    N_TRIALS = 5
+    N_TRIALS = 1
     environment_name = "so_predpreygrass_v0"
     # Ensure the correct reference to the environment function
     training_steps = int(training_steps_string)
@@ -172,3 +172,7 @@ if __name__ == "__main__":
     # Reset standard output to its original value
     sys.stdout = sys.__stdout__
     print("Optimization finished")
+
+    optuna.visualization.plot_optimization_history(study)
+    optuna.visualization.plot_slice(study)
+
