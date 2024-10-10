@@ -85,7 +85,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ### Visualize a random policy
 In Visual Studio Code run:
-```pettingzoo/predpreygrass/random_policy.py```
+```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_simple_aec_random_policy.py```
 </br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
