@@ -35,20 +35,5 @@ The `close` method ensures that the environment is properly closed, while the `r
 
 The `observe` method retrieves observations for a given agent, ensuring that inactive agents receive zeroed observations. The `observation_space` and `action_space` methods return the respective spaces for a given agent, facilitating interaction with the environment.
 
-Overall, this code provides a comprehensive framework for simulating and managing a multi-agent predator-prey-grass environment, leveraging the capabilities of `gymnasium` and `pettingzoo`to handle agent interactions and environment dynamics.
+Overall, this code provides a framework for simulating and managing a multi-agent predator-prey-grass environment, leveraging the capabilities of `gymnasium` and `pettingzoo`to handle agent interactions and environment dynamics.
 
-## Workarounds in the environments
-
-### Workarounds for the environments
-Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture of the deletion and spawning of agents. The 'AECEnv.agents' array remains unchanged after agent death or creation. The removal of agents is managed by 'PredPrey.predator_instance_list' and `PredPreyGrass.[predator/prey]_instance_list`. The active status of agents is tracked by the boolean attribute `alive` of the agents. Optionally, a number of agents have this attribute `alive` set to `False` at `reset`, which gives room for creation of agents during run time. If so, the agents are (re)added to `PredPreyGrass.[predator/prey]_instance_list`, where at the same time PettingZoo's `agent` attribute remains unchanged and equal to the `possible_agents` attribute.
-
-This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training. 
-
-At ```reset``` a fixed number of agents is initialized and remains constant. However they are Active ("alive") or in Inactive ("dead" or not "born" yet), which is checked at the beginning of the ```step``` function. Inactive agents do not change at ```step```. Inactive agents are handled more or less similarly as in the "black death" wrapper.[See PettingZoo's Knights-Archer-Zombies environment: Not able to use the standard PettingZoo procedure to remove agents from 'self.agents' array. Knights-Archer-Zombies environment documentation states: "This environment allows agents to spawn and die, so it requires using SuperSuit’s Black Death wrapper, which provides blank observations to dead agents rather than removing them from the environment."]
-
- ### Workarounds for the PPO algorithm
-MarkovVectorEnv, which is used in the PPO algorithm, does not support environments with varying numbers of agents. Therefore, the workaround for the deletion and spawning of agents described above at the same time is utilized for the PPO algorithm. 
-
-### Workarounds for the observation ranges
-The learning agents, Predator and Prey, can have different observation ranges. We implemented an overall max_observation_range and a specific (smaller) observation range per agent by masking ("zero-ing") all non-observable cells. Note that setting the max_observation_range unneededly high can result in unneeded computing time loss.
- 
