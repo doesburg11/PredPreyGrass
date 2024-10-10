@@ -94,11 +94,13 @@ In Visual Studio Code run:
 
 ### Training and visualize trained model using PPO from stable baselines3
 Adjust parameters accordingly in:
-```predpreygrass/envs/_predpreygrass_v0/config/config_predpreygrass.py```
+```predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py```
 In Visual Studio Code run:
-```predpreygrass/optimizationspredpreygrass/train_predpreygrass_v0_ppo.py```
+```predpreygrass/optimizations/so_predpreygrass_v0/training/so_predpreygrass_v0_train_ppo.py```
 To evaluate and visualize after training follow instructions in:
-```predpreygrass/optimizationspredpreygrass/evaluate_from_file.py```
+```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_evaluate_ppo_from_file.py```
+Batch training and evaluating in one go:
+```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_parameter_variation_train_ppo_and_evaluate.py```
 
 ## References
 
