@@ -1,6 +1,6 @@
 # discretionary libraries
-from predpreygrass.envs import so_predpreygrass_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
+from predpreygrass.envs import so_predpreygrass_v0_2
+from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass_2 import (
     env_kwargs,
     training_steps_string,
     local_output_root,
@@ -21,7 +21,7 @@ import optuna
 
 def optimize_ppo(trial):
     # Define the environment
-    env = so_predpreygrass_v0.env(render_mode=None, **env_kwargs)
+    env = so_predpreygrass_v0_2.env(render_mode=None, **env_kwargs)
     env = aec_to_parallel(env)
     env = ss.pettingzoo_env_to_vec_env_v1(env)
     # create parallel environments by concatenating multiple copies of the base environment
@@ -81,7 +81,7 @@ def optimize_ppo(trial):
     )
 
     # Create the evaluation environment
-    eval_env = so_predpreygrass_v0.env(**env_kwargs)
+    eval_env = so_predpreygrass_v0_2.env(**env_kwargs)
     eval_env = aec_to_parallel(eval_env)
     eval_env = ss.pettingzoo_env_to_vec_env_v1(eval_env)
     eval_env = ss.concat_vec_envs_v1(
@@ -115,6 +115,11 @@ def optimize_ppo(trial):
 
     return mean_reward
 
+# Function to redirect output to a file
+def redirect_output_to_file(file_path):
+    file = open(file_path, 'a')
+    sys.stdout = file
+
 
 # Create and run the study
 if __name__ == "__main__":
@@ -122,8 +127,9 @@ if __name__ == "__main__":
     environment_name = "so_predpreygrass_v0"
     # Ensure the correct reference to the environment function
     training_steps = int(training_steps_string)
-
     start_time = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  # add seconds
+    file_path = 'output_'+start_time+'.txt'
+    redirect_output_to_file(file_path)
     file_name = f"{environment_name}"
     tune_results_dir = local_output_root + "tune_results/" + start_time
     tune_results_logs_dir = tune_results_dir + "/logs/"
