@@ -6,13 +6,13 @@ directory, for reuse and analysis.
 -The algorithm used is PPO from stable_baselines3. 
 """
 # discretionary libraries
-from predpreygrass.envs import so_predpreygrass_v0_par
-from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass_par import (
+from predpreygrass.envs import predpreygrass_parallel_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_root,
 )
-from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer_1 import (
+from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer_par import (
     Trainer,
 )
 from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.config_saver import (
@@ -25,7 +25,7 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    env_fn = so_predpreygrass_v0_par
+    env_fn = predpreygrass_parallel_v0
     environment_name = str(env_fn.parallel_env.metadata['name'])
     training_steps = int(training_steps_string)
     # create model file name for saving

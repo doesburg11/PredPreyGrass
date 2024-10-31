@@ -4,6 +4,7 @@ from utils.population_plotter import PopulationPlotter
 import os
 from statistics import mean, stdev
 from stable_baselines3 import PPO
+from pettingzoo.utils import parallel_to_aec
 
 
 class Evaluator:
@@ -29,11 +30,10 @@ class Evaluator:
         self.num_episodes = env_kwargs["num_episodes"]
 
     def eval(self):
-        env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
+        parallel_env = self.env_fn
         model = PPO.load(self.loaded_policy)
-        cumulative_rewards = {agent: 0 for agent in env.possible_agents}
+        cumulative_rewards = {agent: 0 for agent in parallel_env.possible_agents}
         plotter = PopulationPlotter(self.destination_output_dir)
-
         # inserted
         saved_directory_and_evaluation_file_name = os.path.join(
             self.destination_output_dir, "evaluation.txt"
@@ -46,7 +46,7 @@ class Evaluator:
             + self.loaded_policy
             + "\n"
             + "environment: "
-            + str(env.metadata["name"])
+            + str(parallel_env.metadata["name"])
             + "\n"
             + "evaluation: "
             + self.destination_source_code_dir
@@ -86,56 +86,57 @@ class Evaluator:
         total_predator_age_list = []
         total_prey_age_list = []
         for i in range(self.num_episodes):
-            env.reset(seed=i)
-            possible_predator_name_list = env.predpreygrass.possible_predator_name_list
-            possible_prey_name_list = env.predpreygrass.possible_prey_name_list
-            possible_agent_name_list = env.predpreygrass.possible_agent_name_list
+            parallel_env.unwrapped.reset(seed=i)
+            possible_predator_name_list = parallel_env.unwrapped.predpreygrass.possible_predator_name_list
+            possible_prey_name_list = parallel_env.unwrapped.predpreygrass.possible_prey_name_list
+            possible_agent_name_list = parallel_env.unwrapped.predpreygrass.possible_agent_name_list
             cumulative_rewards = {agent: 0 for agent in possible_agent_name_list}
             cumulative_rewards_predator = {
                 agent: 0 for agent in possible_predator_name_list
             }
             cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
-            n_aec_cycles = 0
-            for agent in env.agent_iter():
-                observation, reward, termination, truncation, info = env.last()
-                cumulative_rewards[agent] += reward
-                if agent in possible_predator_name_list:
-                    cumulative_rewards_predator[agent] += reward
-                elif agent in possible_prey_name_list:
-                    cumulative_rewards_prey[agent] += reward
+            n_cycles = 0
 
-                if termination or truncation:
-                    action = None
-                    if env.predpreygrass.is_no_predator:
-                        predator_extinct_at_termination[i] = 1
-                        break
-                else:
-                    action = model.predict(observation, deterministic=True)[0]
-                env.step(action)
-            n_aec_cycles = env.predpreygrass.n_aec_cycles
+            env_base = parallel_env.unwrapped.predpreygrass
+            observations, _ = parallel_env.reset(seed=1)
+            done = False
+            while not done:
+                actions = {}
+                for agent in parallel_env.agents:
+                    actions[agent] = model.predict(observations[agent], deterministic=True)[0]
+                observations, rewards, _, _, _ = parallel_env.step(actions)
+                for agent in rewards:
+                    if rewards[agent] > 0.0:
+                        print(f"{agent}, reward: {rewards[agent]}")
+                done = env_base.is_no_prey or env_base.is_no_predator
+            parallel_env.close()
+
+
+
+            n_cycles = parallel_env.predpreygrass.n_cycles
             plotter.plot_population(
-                env.predpreygrass.n_active_predator_list,
-                env.predpreygrass.n_active_prey_list,
-                n_aec_cycles,
+                parallel_env.predpreygrass.n_active_predator_list,
+                parallel_env.predpreygrass.n_active_prey_list,
+                n_cycles,
                 i,
                 title="Predator and Prey Population Over Time",
             )
 
-            episode_length[i] = n_aec_cycles
+            episode_length[i] = n_cycles
             n_starved_predator_per_cycle[i] = (
-                env.predpreygrass.n_starved_predator / n_aec_cycles
+                parallel_env.predpreygrass.n_starved_predator / n_cycles
             )
             n_starved_prey_per_cycle[i] = (
-                env.predpreygrass.n_starved_prey / n_aec_cycles
+                parallel_env.predpreygrass.n_starved_prey / n_cycles
             )
-            n_eaten_prey_per_cycle[i] = env.predpreygrass.n_eaten_prey / n_aec_cycles
-            n_eaten_grass_per_cycle[i] = env.predpreygrass.n_eaten_grass / n_aec_cycles
+            n_eaten_prey_per_cycle[i] = parallel_env.predpreygrass.n_eaten_prey / n_cycles
+            n_eaten_grass_per_cycle[i] = parallel_env.predpreygrass.n_eaten_grass / n_cycles
             n_born_predator_per_cycle[i] = (
-                env.predpreygrass.n_born_predator / n_aec_cycles
+                parallel_env.predpreygrass.n_born_predator / n_cycles
             )
-            n_born_prey_per_cycle[i] = env.predpreygrass.n_born_prey / n_aec_cycles
-            episode_predator_age_list = env.predpreygrass.predator_age_list
-            episode_prey_age_list = env.predpreygrass.prey_age_list
+            n_born_prey_per_cycle[i] = parallel_env.predpreygrass.n_born_prey / n_cycles
+            episode_predator_age_list = parallel_env.predpreygrass.predator_age_list
+            episode_prey_age_list = parallel_env.predpreygrass.prey_age_list
             mean_age_predator[i] = (
                 mean(episode_predator_age_list) if episode_predator_age_list else 0
             )
@@ -157,7 +158,7 @@ class Evaluator:
 
             eval_results_text = (
                 f"Eps {i} "
-                + f"Lngth = {n_aec_cycles} "
+                + f"Lngth = {n_cycles} "
                 + f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
                 + f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)} "
                 + f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)} "
@@ -172,7 +173,7 @@ class Evaluator:
             """
             print(
                 f"Eps {i}",
-                f"Lngth = {n_aec_cycles}",
+                f"Lngth = {n_cycles}",
                 f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)}",
                 f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)}",
                 f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)}",
@@ -183,7 +184,7 @@ class Evaluator:
                 f"Mn age Pry = {round(mean_age_prey[i],1)}",
             )
             evaluation_file.write(f"Eps {i} ")
-            evaluation_file.write(f"Lngth = {n_aec_cycles} ")
+            evaluation_file.write(f"Lngth = {n_cycles} ")
             evaluation_file.write(
                 f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
             )
@@ -207,7 +208,7 @@ class Evaluator:
             """
         print("Finish evaluation.")
 
-        env.close()
+        parallel_env.close()
         predator_extinct_at_termination_count = sum(predator_extinct_at_termination)
         episode_mean_of_mean_cumulative_rewards = round(
             mean(mean_cumulative_rewards), 1
@@ -346,3 +347,5 @@ class Evaluator:
         print(
             f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}"
         )
+
+

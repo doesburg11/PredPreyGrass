@@ -1,5 +1,3 @@
-
-
 # discretionary libraries   
 from predpreygrass.envs._so_predpreygrass_v0.so_predpreygrass_base_par import PredPreyGrass as predpreygrass
 
@@ -14,23 +12,16 @@ import pygame
 
 # wrapped AEC env class
 def env(**kwargs):
-    env = raw_env(render_mode="human")
-    # this wrapper helps error handling for discrete action spaces
+    env = raw_env(**kwargs)
     env = wrappers.AssertOutOfBoundsWrapper(env)
-    # Provides a wide vareity of helpful user errors
-    # Strongly recommended
     env = wrappers.OrderEnforcingWrapper(env)
     return env
-# non-wrapped AEC env class
-def raw_env(render_mode=None):
-    """
-    To support the AEC API, the raw_env() function just uses the from_parallel
-    function to convert from a ParallelEnv to an AEC env
-    """
-    env = parallel_env(render_mode=render_mode)
+
+# unwrapped parallel env class
+def raw_env(**kwargs):
+    env = parallel_env(**kwargs)
     env = parallel_to_aec(env)
     return env
-
 
 # paralel env class
 class parallel_env(ParallelEnv):
@@ -45,18 +36,17 @@ class parallel_env(ParallelEnv):
         self.render_mode = kwargs.get("render_mode")
         pygame.init()
         self.closed = False
-
-        self.predpreygrass = predpreygrass(
-            *args, **kwargs
-        )  #  this calls the code from PredPreyGrass
-
+        #  this calls the code from the PredPreyGrass base class
+        self.predpreygrass = predpreygrass(*args, **kwargs)  
         self.agents = self.predpreygrass.possible_agent_name_list
         self.possible_agents = self.agents[:]
         self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  # type: ignore
         self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  # type: ignore
 
-
+    # "options" needs to be passed to the reset method 
+    # because it is required  by conversions.py
     def reset(self, seed=None, options=None):
+
         if seed is not None:
             self.predpreygrass._seed(seed=seed)
         self.steps = 0
