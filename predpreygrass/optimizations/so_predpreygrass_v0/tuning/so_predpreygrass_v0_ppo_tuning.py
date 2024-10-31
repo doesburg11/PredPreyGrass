@@ -1,6 +1,6 @@
 # discretionary libraries
-from predpreygrass.envs import so_predpreygrass_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass import (
+from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_root,
@@ -21,7 +21,7 @@ import optuna
 
 def optimize_ppo(trial):
     # Define the environment
-    env = so_predpreygrass_v0.env(render_mode=None, **env_kwargs)
+    env = predpreygrass_v0.env(render_mode=None, **env_kwargs)
     env = aec_to_parallel(env)
     env = ss.pettingzoo_env_to_vec_env_v1(env)
     # create parallel environments by concatenating multiple copies of the base environment
@@ -81,7 +81,7 @@ def optimize_ppo(trial):
     )
 
     # Create the evaluation environment
-    eval_env = so_predpreygrass_v0.env(**env_kwargs)
+    eval_env = predpreygrass_v0.env(**env_kwargs)
     eval_env = aec_to_parallel(eval_env)
     eval_env = ss.pettingzoo_env_to_vec_env_v1(eval_env)
     eval_env = ss.concat_vec_envs_v1(

@@ -1,8 +1,8 @@
 # discretionary libraries
-from predpreygrass.envs import so_predpreygrass_v0_par
-from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass_par import env_kwargs
+from predpreygrass.envs import so_predpreygrass_v0_1
+from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass_1 import env_kwargs
 
-env = so_predpreygrass_v0_par.env(render_mode='human', **env_kwargs)
+env = so_predpreygrass_v0_1.env(render_mode='human', **env_kwargs)
 
 env.reset(seed=1)
 for agent in env.agent_iter():
