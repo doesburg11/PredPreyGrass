@@ -1,14 +1,12 @@
 """
 pred/prey/grass PettingZoo multi-agent learning environment
 this environment transfers the energy of eaten prey/grass to the predator/prey
-
 """
-
 # discretionary libraries
-from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent_1 import (
+from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import (
     DiscreteAgent
 )
-
+from predpreygrass.utils.renderer import render
 # external libraries
 import gymnasium
 from gymnasium.utils import seeding

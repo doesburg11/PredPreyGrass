@@ -24,7 +24,7 @@ env_kwargs = dict(
     # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
-    n_possible_grass=30,
+    n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters
@@ -32,8 +32,8 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # energy parameters
-    energy_gain_per_step_predator=-0.15,  # -0.15 # default
-    energy_gain_per_step_prey=-0.05, # -0.05 # default
+    energy_gain_per_step_predator=-0.01,  # -0.15 # default
+    energy_gain_per_step_prey=-0.01, # -0.05 # default
     energy_gain_per_step_grass=0.2,
     catch_prey_energy=0.0, #TODO: remove?
     catch_grass_energy=0.0, #TODO: remove?
@@ -78,5 +78,5 @@ env_kwargs = dict(
     show_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
-    watch_grid_model=False,
+    watch_grid_model=True,
 )

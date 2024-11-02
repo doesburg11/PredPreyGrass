@@ -7,7 +7,7 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs import predpreygrass_aec_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
@@ -26,7 +26,7 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    env_fn = predpreygrass_v0
+    env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
     # create model file name for saving

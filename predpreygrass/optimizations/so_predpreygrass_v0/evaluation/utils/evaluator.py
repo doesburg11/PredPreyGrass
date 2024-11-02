@@ -97,18 +97,18 @@ class Evaluator:
             cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
             n_aec_cycles = 0
             for agent in env.agent_iter():
-                observation, reward, termination, truncation, info = env.last()
+                observation, reward = env.last()[:2]
                 cumulative_rewards[agent] += reward
                 if agent in possible_predator_name_list:
                     cumulative_rewards_predator[agent] += reward
                 elif agent in possible_prey_name_list:
                     cumulative_rewards_prey[agent] += reward
 
-                if termination or truncation:
+                if env.predpreygrass.is_no_predator or env.predpreygrass.is_no_prey:
                     action = None
                     if env.predpreygrass.is_no_predator:
                         predator_extinct_at_termination[i] = 1
-                        break
+                    break
                 else:
                     action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
@@ -169,7 +169,6 @@ class Evaluator:
             )
             print(eval_results_text)
             evaluation_file.write(eval_results_text)
-            """
             print(
                 f"Eps {i}",
                 f"Lngth = {n_aec_cycles}",
@@ -204,7 +203,7 @@ class Evaluator:
             )
             evaluation_file.write(f"Mn age Prd = {round(mean_age_predator[i],1)} ")
             evaluation_file.write(f"Mn age Pry = {round(mean_age_prey[i],1)}\n")
-            """
+
         print("Finish evaluation.")
 
         env.close()

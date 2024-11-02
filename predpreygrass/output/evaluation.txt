@@ -1,7 +1,0 @@
-Evaluation results:
---------------------------
-loaded_policy: /home/doesburg/Dropbox/03_marl_code/PredPreyGrass/predpreygrass/output/so_predpreygrass_parallel_v0_steps_10_000_000
-environment: so_predpreygrass_parallel_v0
-evaluation: /home/doesburg/Dropbox/03_marl_code/PredPreyGrass/predpreygrass
-training steps: 10_000_000
---------------------------

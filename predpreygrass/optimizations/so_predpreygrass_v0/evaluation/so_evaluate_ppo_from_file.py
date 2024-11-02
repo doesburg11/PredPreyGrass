@@ -18,7 +18,7 @@ instructions:
 - results can be found in: /[time_stamp]/output/
 """
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs import predpreygrass_aec_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
@@ -30,7 +30,7 @@ import os
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    env_fn = predpreygrass_v0
+    env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     evaluation_directory = os.path.dirname(os.path.abspath(__file__))

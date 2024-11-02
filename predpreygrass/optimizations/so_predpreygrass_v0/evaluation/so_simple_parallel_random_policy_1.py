@@ -1,8 +1,8 @@
 # discretionary libraries
-from predpreygrass.envs import so_predpreygrass_v0_1
+from predpreygrass.envs import predpreygrass_aec_v0_1
 from predpreygrass.envs._so_predpreygrass_v0.config.so_config_predpreygrass_1 import env_kwargs
 
-parallel_env = so_predpreygrass_v0_1.parallel_env(render_mode="human", **env_kwargs)
+parallel_env = predpreygrass_aec_v0_1.parallel_env(render_mode="human", **env_kwargs)
 observations, infos = parallel_env.reset(seed=42)
 
 #print(f"observations: {observations}")
