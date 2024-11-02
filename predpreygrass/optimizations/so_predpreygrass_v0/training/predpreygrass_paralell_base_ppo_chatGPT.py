@@ -1,10 +1,3 @@
-import argparse
-import logging
-import os
-import shutil
-import time
-from os.path import dirname as up
-
 # discretionary libraries
 from predpreygrass.envs import predpreygrass_parallel_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
@@ -18,6 +11,14 @@ from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer_par 
 from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.config_saver import (
     ConfigSaver
 )
+
+# external libraries
+import argparse
+import logging
+import os
+import shutil
+import time
+from os.path import dirname as up
 
 
 def setup_logging():

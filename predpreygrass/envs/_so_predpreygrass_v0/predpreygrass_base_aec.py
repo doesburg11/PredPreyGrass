@@ -320,7 +320,7 @@ class PredPreyGrass:
         # end records for removal agents
 
         self.file_name: int = 0
-        self.n_aec_cycles: int = 0
+        self.n_cycles: int = 0
 
         # TODO: upperbound for observation space = max(energy levels of all agents)
         self.max_energy_level_prey = 25.0  # in kwargs later, init level = 5.0
@@ -541,7 +541,7 @@ class PredPreyGrass:
             self.possible_predator_name_list + self.possible_prey_name_list
         )
 
-        self.agent_reward_dict: Dict[str, float] = dict(
+        self.rewards: Dict[str, float] = dict(
             zip(
                 self.possible_agent_name_list,
                 [0.0 for _ in self.possible_agent_name_list],
@@ -555,27 +555,27 @@ class PredPreyGrass:
             )
         )
 
-        self.n_aec_cycles = 0
+        self.n_cycles = 0
 
         # time series of active agents
         self.n_active_predator_list = []
         self.n_active_prey_list = []
         self.n_active_grass_list = []
 
-        self.n_active_predator_list.insert(self.n_aec_cycles, self.n_active_predator)
-        self.n_active_prey_list.insert(self.n_aec_cycles, self.n_active_prey)
-        self.n_active_grass_list.insert(self.n_aec_cycles, self.n_active_grass)
+        self.n_active_predator_list.insert(self.n_cycles, self.n_active_predator)
+        self.n_active_prey_list.insert(self.n_cycles, self.n_active_prey)
+        self.n_active_grass_list.insert(self.n_cycles, self.n_active_grass)
 
         self.total_energy_predator_list.insert(
-            self.n_aec_cycles, self.total_energy_predator
+            self.n_cycles, self.total_energy_predator
         )
-        self.total_energy_prey_list.insert(self.n_aec_cycles, self.total_energy_prey)
-        self.total_energy_grass_list.insert(self.n_aec_cycles, self.total_energy_grass)
+        self.total_energy_prey_list.insert(self.n_cycles, self.total_energy_prey)
+        self.total_energy_grass_list.insert(self.n_cycles, self.total_energy_grass)
         self.total_energy_learning_agents = (
             self.total_energy_predator + self.total_energy_prey
         )
         self.total_energy_learning_agents_list.insert(
-            self.n_aec_cycles, self.total_energy_learning_agents
+            self.n_cycles, self.total_energy_learning_agents
         )
 
         # episode population metrics
@@ -726,29 +726,29 @@ class PredPreyGrass:
                         ] = grass_instance.energy
                         grass_instance.is_active = True
 
-            self.n_aec_cycles += 1
+            self.n_cycles += 1
 
             # record number of active agents at the end of the cycle
             self.n_active_predator_list.insert(
-                self.n_aec_cycles, self.n_active_predator
+                self.n_cycles, self.n_active_predator
             )
-            self.n_active_prey_list.insert(self.n_aec_cycles, self.n_active_prey)
-            self.n_active_grass_list.insert(self.n_aec_cycles, self.n_active_grass)
+            self.n_active_prey_list.insert(self.n_cycles, self.n_active_prey)
+            self.n_active_grass_list.insert(self.n_cycles, self.n_active_grass)
 
             self.total_energy_learning_agents = (
                 self.total_energy_predator + self.total_energy_prey
             )
             self.total_energy_predator_list.insert(
-                self.n_aec_cycles, self.total_energy_predator
+                self.n_cycles, self.total_energy_predator
             )
             self.total_energy_prey_list.insert(
-                self.n_aec_cycles, self.total_energy_prey
+                self.n_cycles, self.total_energy_prey
             )
             self.total_energy_grass_list.insert(
-                self.n_aec_cycles, self.total_energy_grass
+                self.n_cycles, self.total_energy_grass
             )
             self.total_energy_learning_agents_list.insert(
-                self.n_aec_cycles, self.total_energy_learning_agents
+                self.n_cycles, self.total_energy_learning_agents
             )
 
             self.reset_removal_records()
@@ -858,7 +858,7 @@ class PredPreyGrass:
         )
 
     def reset_rewards(self):
-        self.agent_reward_dict = dict(
+        self.rewards = dict(
             zip(
                 self.possible_agent_name_list,
                 [0.0 for _ in self.possible_agent_name_list],
@@ -883,7 +883,7 @@ class PredPreyGrass:
         self.predator_age_list.append(predator_instance.age)
         predator_instance.energy = 0.0
         predator_instance.age = 0
-        self.agent_reward_dict[
+        self.rewards[
             predator_instance.agent_name
         ] += self.death_reward_predator
 
@@ -904,7 +904,7 @@ class PredPreyGrass:
         self.prey_age_list.append(prey_instance.age)
         prey_instance.energy = 0.0
         prey_instance.age = 0
-        self.agent_reward_dict[prey_instance.agent_name] += self.death_reward_prey
+        self.rewards[prey_instance.agent_name] += self.death_reward_prey
 
     def remove_grass(self, grass_instance):
         self.active_grass_instance_list.remove(grass_instance)
@@ -949,7 +949,7 @@ class PredPreyGrass:
             self.model_state[PREDATOR_TYPE_NR, x_new, y_new] = (
                 new_predator_instance.energy
             )
-            self.agent_reward_dict[
+            self.rewards[
                 parent_predator.agent_name
             ] += self.reproduction_reward_predator
 
@@ -983,7 +983,7 @@ class PredPreyGrass:
                 new_prey_instance
             )
             self.model_state[PREY_TYPE_NR, x_new, y_new] = new_prey_instance.energy
-            self.agent_reward_dict[
+            self.rewards[
                 parent_prey.agent_name
             ] += self.reproduction_reward_prey
 
@@ -1017,8 +1017,8 @@ class PredPreyGrass:
 
     def reward_predator(self, predator_instance):
         predator_name = predator_instance.agent_name
-        self.agent_reward_dict[predator_name] += self.step_reward_predator
-        self.agent_reward_dict[predator_name] += (
+        self.rewards[predator_name] += self.step_reward_predator
+        self.rewards[predator_name] += (
             self.catch_reward_prey * self.predator_who_remove_prey_dict[predator_name]
         )
         predator_instance.energy += self.energy_gain_per_step_predator
@@ -1031,8 +1031,8 @@ class PredPreyGrass:
 
     def reward_prey(self, prey_instance):
         prey_name = prey_instance.agent_name
-        self.agent_reward_dict[prey_name] += self.step_reward_prey
-        self.agent_reward_dict[prey_name] += (
+        self.rewards[prey_name] += self.step_reward_prey
+        self.rewards[prey_name] += (
             self.catch_reward_grass * self.prey_who_remove_grass_dict[prey_name]
         )
         prey_instance.energy += self.energy_gain_per_step_prey

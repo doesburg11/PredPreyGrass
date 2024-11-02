@@ -1,5 +1,5 @@
 # AEC pettingzoo predpreygrass environment using random policy
-from predpreygrass.envs import predpreygrass_v0
+from predpreygrass.envs import predpreygrass_aec_v0
 from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
     env_kwargs,
     local_output_directory,
@@ -267,7 +267,7 @@ def eval(env_fn, num_episodes: int = 100, render_mode: str | None = None, **env_
 
 if __name__ == "__main__":
     # Train
-    env_fn = predpreygrass_v0
+    env_fn = predpreygrass_aec_v0
     policy = "random"
     environment_name = "predpreygrass_v0"
     parameter_variation = True
