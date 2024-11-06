@@ -1,8 +1,3 @@
-"""
-pred/prey/grass PettingZoo multi-agent learning environment
-this environment transfers the energy of eaten prey/grass to the predator/prey
-"""
-
 # discretionary libraries
 from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import (
     DiscreteAgent,
@@ -13,14 +8,17 @@ from predpreygrass.utils.renderer import Renderer
 from gymnasium.utils import seeding
 from gymnasium import spaces
 import numpy as np
-import pygame
-import os
 import random
-from typing import List, Dict, Optional
-import types
+from typing import Tuple, List, Dict, Optional, Set
 
 
 class PredPreyGrass:
+    """
+    pred/prey/grass PettingZoo multi-agent learning environment this environment 
+    transfers the energy of eaten prey/grass to the predator/prey while the grass
+    regrows over time. The environment is a 2D grid world where agents can move
+    in four cardinal directions. 
+    """
     def __init__(
         self,
         x_grid_size: int = 25,
@@ -204,7 +202,10 @@ class PredPreyGrass:
         # end visualization
         """
 
-    def reset(self):
+    def reset(self) -> None:
+        """
+        Resets the environment to the initial state.
+        """
         self._initialize_variables()
         # create agents of all types excluding "wall"-agents
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
@@ -293,20 +294,12 @@ class PredPreyGrass:
             self.n_cycles, self.n_active_agent_type[self.grass_type_nr]
         )
 
-    def step(self, actions):
+    def step(self, actions: Dict[str, int]) -> None:
         """
-        1. take actions of all active learning agents
-        2. update energy changes of all agents as a concequence of actions:  # TODO
-        3, update energy as a concequence of time:
-            - homeostasis: predator and prey lose energy over time
-            - regrow and activate grass if energy is above threshold
-        4. (de)activate agents if energy threshold is breached
-            - predator: if energy is below threshold, deactivate predator
-            - prey: if energy is below threshold, deactivate prey
-            - grass: if energy gets above threshold, activate grass
-        3. apply rules of engagement
-            - predator eats prey => predator energy += prey energy => prey dies => predator reproduces? if so: gets rewarded
-            - prey eats grass => prey energy += grass energy => grass dies => prey reproduces? if so gets rewarded
+        Executes a step in the environment based on the provided actions.
+
+        Parameters:
+            actions (Dict[str, int]): Dictionary containing actions for each agent.
         """
         # 1] apply actions (i.e. movements) for all active agents in parallel
         for predator_instance in self.active_agent_instance_list_type[
@@ -321,12 +314,8 @@ class PredPreyGrass:
         self._reset_rewards()
 
         # 2] apply rules of engagement for all agents
-        # in that way active list does not get modified during iteration
-        for predator_instance in self.active_agent_instance_list_type[
-            self.predator_type_nr
-        ][
-            :
-        ]:  # make a copy to make removal during iteration possible
+        for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr].copy():  
+            # make a copy to make removal during iteration possible
             if predator_instance.energy > 0:
                 # engagement with environment: "nature and time"
                 predator_instance.age += 1
@@ -353,7 +342,7 @@ class PredPreyGrass:
                         > self.predator_creation_energy_threshold
                     ):
                         potential_new_predator_instance_list = (
-                            self.non_active_agent_instance_list(predator_instance)
+                            self._non_active_agent_instance_list(predator_instance)
                         )
                         if potential_new_predator_instance_list:
                             self._reproduce_new_agent(
@@ -372,9 +361,7 @@ class PredPreyGrass:
                 self.predator_age_of_death_list.append(predator_instance.age)
                 self.rewards[predator_instance.agent_name] += self.death_reward_predator
 
-        for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr][
-            :
-        ]:  # make a copy to make removal during iteration possible
+        for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr].copy():  
             if prey_instance.energy > 0:
                 # engagement with environment: "nature and time"
                 prey_instance.age += 1
@@ -391,7 +378,7 @@ class PredPreyGrass:
                     self.rewards[prey_instance.agent_name] += self.catch_reward_grass
                     if prey_instance.energy > self.prey_creation_energy_threshold:
                         potential_new_prey_instance_list = (
-                            self.non_active_agent_instance_list(prey_instance)
+                            self._non_active_agent_instance_list(prey_instance)
                         )
                         if potential_new_prey_instance_list:
                             self._reproduce_new_agent(
@@ -436,7 +423,16 @@ class PredPreyGrass:
         self._record_population_metrics()
         self.n_cycles += 1
 
-    def observe(self, agent_name):
+    def observe(self, agent_name: str) -> np.ndarray:
+        """
+        Returns the observation for the given agent.
+
+        Parameters:
+            agent_name (str): The name of the agent for which to return the observation.
+
+        Returns:
+            np.ndarray: The observation matrix for the agent.
+        """
         max_obs_range = self.max_observation_range
         max_obs_offset = (max_obs_range - 1) // 2
         x_grid_size, y_grid_size = self.x_grid_size, self.y_grid_size
@@ -484,38 +480,75 @@ class PredPreyGrass:
 
         return observation
 
-    def render(self):
+    def render(self) -> Optional[np.ndarray]:
+        """
+        Renders the environment if a renderer is available.
+
+        Returns:
+            Optional[np.ndarray]: Rendered frame or None if no renderer is set.
+        """
         if self.renderer:
             return self.renderer.render()
 
-    def close(self):
+    def close(self) -> None:
+        """
+        Closes the renderer if it exists.
+        """
         if self.renderer:
             self.renderer.close()
 
     @property
-    def is_no_grass(self):
-        if self.n_active_agent_type[self.grass_type_nr] == 0:
-            return True
-        return False
+    def is_no_grass(self) -> bool:
+        """
+        Checks if there is no grass left in the environment.
+
+        Returns:
+            bool: True if no grass is left, otherwise False.
+        """
+        return self.n_active_agent_type[self.grass_type_nr] == 0
 
     @property
-    def is_no_prey(self):
-        if self.n_active_agent_type[self.prey_type_nr] == 0:
-            return True
-        return False
+    def is_no_prey(self) -> bool:
+        """
+        Checks if there is no prey left in the environment.
+
+        Returns:
+            bool: True if no prey is left, otherwise False.
+        """
+        return self.n_active_agent_type[self.prey_type_nr] == 0
 
     @property
-    def is_no_predator(self):
-        if self.n_active_agent_type[self.predator_type_nr] == 0:
-            return True
-        return False
+    def is_no_predator(self) -> bool:
+        """
+        Checks if there is no predator left in the environment.
 
-    def _apply_agent_action(self, agent_instance, action):
+        Returns:
+            bool: True if no predator is left, otherwise False.
+        """
+        return self.n_active_agent_type[self.predator_type_nr] == 0
+
+    def _apply_agent_action(self, agent_instance: 'DiscreteAgent', action: int) -> None:
+        """
+        Applies the given action to the agent instance.
+
+        Parameters:
+            agent_instance (DiscreteAgent): The agent instance to apply the action to.
+            action (int): The action to apply.
+        """
         self._unlink_agent_from_grid(agent_instance)
         agent_instance.step(action)
         self._link_agent_to_grid(agent_instance)
 
-    def non_active_agent_instance_list(self, agent_instance):
+    def _non_active_agent_instance_list(self, agent_instance: 'DiscreteAgent') -> List['DiscreteAgent']:
+        """
+        Returns a list of non-active agent instances of the same type as the given agent.
+
+        Parameters:
+            agent_instance (DiscreteAgent): The agent instance to check against.
+
+        Returns:
+            List[DiscreteAgent]: A list of non-active agent instances of the same type.
+        """
         return [
             agent_instance
             for agent_instance in self.possible_agent_instance_list_type[
@@ -525,8 +558,16 @@ class PredPreyGrass:
         ]
 
     def _reproduce_new_agent(
-        self, parent_agent_instance, non_active_agent_instance_list
-    ):
+        self, parent_agent_instance: 'DiscreteAgent', non_active_agent_instance_list: List['DiscreteAgent']
+    ) -> None:
+        """
+        Reproduces a new agent based on the parent agent instance.
+
+        Parameters:
+            parent_agent_instance (DiscreteAgent): The parent agent instance.
+            non_active_agent_instance_list (List[DiscreteAgent]): List of non-active agent instances to activate.
+        """
+
         agent_type_nr = parent_agent_instance.agent_type_nr
         parent_agent_instance.energy -= self.initial_energy_type[agent_type_nr]
         self.model_state[
@@ -541,21 +582,42 @@ class PredPreyGrass:
         )
         self._activate_agent(new_agent_instance)
 
-    def _unlink_agent_from_grid(self, agent_instance):
-        self.agent_instance_in_grid_location[
-            agent_instance.agent_type_nr, *agent_instance.position
-        ] = None
-        self.model_state[agent_instance.agent_type_nr, *agent_instance.position] = 0.0
+    def _unlink_agent_from_grid(self, agent_instance: 'DiscreteAgent') -> None:
+        """
+        Unlink the given agent from the grid (i.e., free its position).
 
-    def _link_agent_to_grid(self, agent_instance):
-        self.agent_instance_in_grid_location[
-            agent_instance.agent_type_nr, *agent_instance.position
-        ] = agent_instance
-        self.model_state[agent_instance.agent_type_nr, *agent_instance.position] = (
-            agent_instance.energy
-        )
+        Args:
+            agent_instance: The agent to unlink from the grid.
+        """
+        x, y = agent_instance.position
+        self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = None
+        self.model_state[agent_instance.agent_type_nr, x, y] = 0.0
 
-    def _activate_agent(self, agent_instance):
+        # Add the cell back to available cells since it is now free
+        self.available_cells_per_agent_type[agent_instance.agent_type_nr].add((x, y))
+        
+    def _link_agent_to_grid(self, agent_instance: 'DiscreteAgent') -> None:
+        """
+        Link the given agent to the grid (i.e., occupy its position).
+
+        Args:
+            agent_instance: The agent to link to the grid.
+        """
+        x, y = agent_instance.position
+        self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = agent_instance
+        self.model_state[agent_instance.agent_type_nr, x, y] = agent_instance.energy
+
+        # Remove the position from available cells for the specific agent type
+        if (x, y) in self.available_cells_per_agent_type[agent_instance.agent_type_nr]:
+            self.available_cells_per_agent_type[agent_instance.agent_type_nr].remove((x, y))
+
+    def _activate_agent(self, agent_instance: 'DiscreteAgent') -> None:
+        """
+        Activates an agent instance, setting its energy and age, and linking it to the grid.
+
+        Parameters:
+            agent_instance (DiscreteAgent): The agent instance to activate.
+        """
         agent_instance.is_active = True
         agent_instance.energy = self.initial_energy_type[agent_instance.agent_type_nr]
         agent_instance.age = 0
@@ -564,7 +626,13 @@ class PredPreyGrass:
         )
         self._link_agent_to_grid(agent_instance)
 
-    def _deactivate_agent(self, agent_instance):
+    def _deactivate_agent(self, agent_instance: 'DiscreteAgent') -> None:
+        """
+        Deactivates an agent instance, setting its energy to 0 and unlinking it from the grid.
+
+        Parameters:
+            agent_instance (DiscreteAgent): The agent instance to deactivate.
+        """
         self._unlink_agent_from_grid(agent_instance)
         agent_instance.is_active = False
         agent_instance.energy = 0.0
@@ -572,44 +640,85 @@ class PredPreyGrass:
             agent_instance
         )
 
-    def _get_new_allowed_position(self, new_agent_instance, spawning_area, model_state):
-        available_cell_list = [
-            (x, y)
-            for x in range(
-                spawning_area[new_agent_instance.agent_type_nr]["x_begin"],
-                spawning_area[new_agent_instance.agent_type_nr]["x_end"] + 1,
-            )
-            for y in range(
-                spawning_area[new_agent_instance.agent_type_nr]["y_begin"],
-                spawning_area[new_agent_instance.agent_type_nr]["y_end"] + 1,
-            )
-            if model_state[new_agent_instance.agent_type_nr, x, y] == 0.0
-        ]
-        return random.choice(available_cell_list)
+    def _get_new_allowed_position(self, agent_instance, spawning_area, model_state) -> Tuple[int, int]:
+        """
+        Get a new allowed position for the given agent within the spawning area.
 
-    def _seed(self, seed=None, options=None):
+        Args:
+            agent_instance: The agent for which to find a new position.
+            model_state: The current state of the model.
+
+        Returns:
+            Tuple[int, int]: A new allowed position (x, y) for the agent.
+        """
+        agent_type_nr = agent_instance.agent_type_nr
+
+        # Fetch the available cells for the specific agent type within the spawning area
+        possible_positions = [
+            (x, y) for (x, y) in self.available_cells_per_agent_type[agent_type_nr]
+            if spawning_area[agent_type_nr]["x_begin"] <= x <= spawning_area[agent_type_nr]["x_end"] and
+               spawning_area[agent_type_nr]["y_begin"] <= y <= spawning_area[agent_type_nr]["y_end"] and
+               model_state[agent_type_nr, x, y] == 0.0
+        ]
+
+        if not possible_positions:
+            raise ValueError(f"No available positions left for spawning agent type {agent_type_nr}.")
+
+        new_position = random.choice(possible_positions)
+
+        # Remove the position from available cells since it will now be occupied
+        self.available_cells_per_agent_type[agent_type_nr].remove(new_position)
+
+        return new_position
+
+    def _seed(self, seed: Optional[int] = None, options: Optional[Dict] = None) -> List[int]:
+        """
+        Sets the random seed for the environment.
+
+        Parameters:
+            seed (Optional[int]): The random seed.
+            options (Optional[Dict]): Additional seed options.
+
+        Returns:
+            List[int]: The list of seeds used.
+        """        
         self.np_random, seed_ = seeding.np_random(seed)
         return [seed_]
 
-    def _create_agent_name_list_from_instance_list(self, agent_instance_list):
+    def _create_agent_name_list_from_instance_list(self, agent_instance_list: List['DiscreteAgent']) -> List[str]:
+        """
+        Creates a list of agent names from a list of agent instances.
+
+        Parameters:
+            agent_instance_list (List[DiscreteAgent]): List of agent instances.
+
+        Returns:
+            List[str]: List of agent names.
+        """        
         return [agent_instance.agent_name for agent_instance in agent_instance_list]
 
-    def _reset_rewards(self):
+    def _reset_rewards(self) -> None:
+        """
+        Resets the rewards for all agents.
+        """
         self.rewards = dict.fromkeys(self.possible_agent_name_list, 0.0)
 
-    def _record_population_metrics(self):
+    def _record_population_metrics(self) -> None:
+        """
+        Records population metrics for predators, prey, and grass.
+        """
         self.n_active_predator_list.append(
             self.n_active_agent_type[self.predator_type_nr]
         )
         self.n_active_prey_list.append(self.n_active_agent_type[self.prey_type_nr])
         self.n_active_grass_list.append(self.n_active_agent_type[self.grass_type_nr])
 
-    def _initialize_variables(self):
-        # id
+    def _initialize_variables(self) -> None:
+        """
+        Initializes all environment variables, including agent types, energy levels, and agent positions.
+        """
         self.agent_id_counter: int = 0
-
         self.n_cycles: int = 0
-
         # agent types definitions
         self.agent_type_name_list: List[str] = ["wall", "predator", "prey", "grass"]
         self.predator_type_nr = 1
@@ -809,4 +918,20 @@ class PredPreyGrass:
             self.possible_agent_name_list_type[self.predator_type_nr]
             + self.possible_agent_name_list_type[self.prey_type_nr]
         )
+
+        # Track available cells in the grid per agent type using a dictionary of sets
+        self.available_cells_per_agent_type: Dict[int, Set[Tuple[int, int]]] = {
+            self.predator_type_nr: set(),
+            self.prey_type_nr: set(),
+            self.grass_type_nr: set()
+        }
+
+        # Initialize available cells for each agent type based on their spawning areas
+        for agent_type_nr in [self.predator_type_nr, self.prey_type_nr, self.grass_type_nr]:
+            area = self.spawning_area[agent_type_nr]
+            self.available_cells_per_agent_type[agent_type_nr] = {
+                (x, y)
+                for x in range(area["x_begin"], area["x_end"] + 1)
+                for y in range(area["y_begin"], area["y_end"] + 1)
+            }
         self._reset_rewards()
