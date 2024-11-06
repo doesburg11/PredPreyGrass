@@ -13,7 +13,7 @@ def render(self):
         predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
         prey_label = prey_label_font.render("Prey", True, (0, 0, 255))
         self.screen.blit(predator_label, (x_pos, y_pos))
-        self.screen.blit(prey_label, (x_pos + (len(self.possible_agent_name_list_type[self.predator_type_nr]) * 40), y_pos))
+        self.screen.blit(prey_label, (x_pos + (len(self.possible_predator_name_list) * 40), y_pos))
 
 
     def _initialize_screen():
@@ -63,7 +63,7 @@ def render(self):
 
     def _draw_agent_ids():
         font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)
-        for agent_list in [self.active_agent_instance_list_type[self.predator_type_nr], self.active_agent_instance_list_type[self.prey_type_nr], self.active_agent_instance_list_type[self.grass_type_nr]]:
+        for agent_list in [self.active_predator_instance_list, self.active_prey_instance_list, self.active_grass_instance_list]:
             for instance in agent_list:
                 x, y = instance.position
                 pos_x, pos_y = self.cell_scale * x + self.cell_scale // 6, self.cell_scale * y + self.cell_scale // 1.2
@@ -86,7 +86,7 @@ def render(self):
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y, width + 40, 5))
 
         # Draw Bars and Labels for Predators
-        for i, name in enumerate(self.possible_agent_name_list_type[self.predator_type_nr]):
+        for i, name in enumerate(self.possible_predator_name_list):
             instance = self.agent_name_to_instance_dict[name]
             bar_height = (instance.energy / max_energy) * height
             bar_x, bar_y = x_pos + i * (bar_width + offset), y_pos + height - bar_height
@@ -96,10 +96,10 @@ def render(self):
             self.screen.blit(label, (label_x, label_y))
 
         # Draw Bars and Labels for Prey
-        for i, name in enumerate(self.possible_agent_name_list_type[self.prey_type_nr]):
+        for i, name in enumerate(self.possible_prey_name_list):
             instance = self.agent_name_to_instance_dict[name]
             bar_height = (instance.energy / max_energy) * height
-            bar_x, bar_y = x_pos + (i + len(self.possible_agent_name_list_type[self.predator_type_nr])) * (bar_width + offset), y_pos + height - bar_height
+            bar_x, bar_y = x_pos + (i + len(self.possible_predator_name_list)) * (bar_width + offset), y_pos + height - bar_height
             pygame.draw.rect(self.screen, blue, (bar_x, bar_y, bar_width, bar_height))
             label_x, label_y = bar_x, x_axis_y + 10
             label = pygame.font.Font(None, 30).render(str(instance.agent_id_nr), True, blue)
@@ -126,11 +126,11 @@ def render(self):
         _initialize_screen()
 
     _draw_grid()
-    _draw_observations(self.active_agent_instance_list_type[self.prey_type_nr], (72, 152, 255))
-    _draw_observations(self.active_agent_instance_list_type[self.predator_type_nr], (255, 152, 72))
-    _draw_instances(self.active_agent_instance_list_type[self.grass_type_nr], (0, 128, 0))
-    _draw_instances(self.active_agent_instance_list_type[self.prey_type_nr], (0, 0, 255))
-    _draw_instances(self.active_agent_instance_list_type[self.predator_type_nr], (255, 0, 0))
+    _draw_observations(self.active_prey_instance_list, (72, 152, 255))
+    _draw_observations(self.active_predator_instance_list, (255, 152, 72))
+    _draw_instances(self.active_grass_instance_list, (0, 128, 0))
+    _draw_instances(self.active_prey_instance_list, (0, 0, 255))
+    _draw_instances(self.active_predator_instance_list, (255, 0, 0))
     _draw_agent_ids()
     if self.show_energy_chart:
         _draw_energy_chart(0)

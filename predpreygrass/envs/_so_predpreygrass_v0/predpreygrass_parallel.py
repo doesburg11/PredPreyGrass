@@ -42,15 +42,15 @@ class parallel_env(ParallelEnv):
         if seed is not None:
             self.predpreygrass._seed(seed=seed)
         self.steps = 0
-        self.agents = self.possible_agents[:]
+        self.agents = self.possible_agents[:]  # use slice to create a copy
         self.possible_agents = self.agents[:]
         self.agent_name_to_index_mapping = dict(
             zip(self.agents, list(range(self.num_agents)))
         )
 
         # spaces
-        self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  # type: ignore
-        self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  # type: ignore
+        self.action_spaces = dict(zip(self.agents, self.predpreygrass.action_space))  
+        self.observation_spaces = dict(zip(self.agents, self.predpreygrass.observation_space))  
         self.rewards = dict(zip(self.agents, [0.0 for _ in self.agents]))
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
@@ -76,7 +76,23 @@ class parallel_env(ParallelEnv):
         # return observation of only zeros if agent is not active ("black death")
         if not agent_instance.is_active:
             observation = np.zeros(observation.shape)
+        # TODO 
         return observation
+    """
+    # TODO more efficent implementation according to chatGPT: avoid unnecessary swaps if inactive 
+    def observe(self, agent_name):
+        agent_instance = self.predpreygrass.agent_name_to_instance_dict[agent_name]
+        obs = self.predpreygrass.observe(agent_name)
+
+        # If agent is not active ("black death"), return zeros
+        if not agent_instance.is_active:
+            return np.zeros((obs.shape[2], obs.shape[1], obs.shape[0]))  # Shape after swapaxes
+
+        # Otherwise, return the swapped observation
+        return np.swapaxes(obs, 2, 0)
+    """
+
+
 
     def observation_space(self, agent: str):
         return self.observation_spaces[agent]
