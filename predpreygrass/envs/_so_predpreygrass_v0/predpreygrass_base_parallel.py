@@ -7,7 +7,7 @@ this environment transfers the energy of eaten prey/grass to the predator/prey
 from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import (
     DiscreteAgent,
 )
-from predpreygrass.utils.renderer import render
+from predpreygrass.utils.renderer import Renderer
 
 # external libraries
 from gymnasium.utils import seeding
@@ -134,6 +134,20 @@ class PredPreyGrass:
         self.watch_grid_model = watch_grid_model
         self.num_episodes = num_episodes
 
+        # Create a Renderer instance if rendering is needed
+        if self.render_mode is not None:
+            self.renderer = Renderer(
+                env=self,
+                cell_scale=cell_scale,
+                show_energy_chart=show_energy_chart,
+                x_pygame_window=x_pygame_window,
+                y_pygame_window=y_pygame_window,
+            )
+        else:
+            self.renderer = None
+
+
+
         self._seed()
 
         self._initialize_variables()
@@ -168,7 +182,7 @@ class PredPreyGrass:
         # end actions
 
         self.file_name: int = 0
-
+        """
         # visualization grid
         # pygame screen position window
         os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (
@@ -188,12 +202,7 @@ class PredPreyGrass:
             self.show_energy_chart: bool = False
             self.width_energy_chart: int = 0
         # end visualization
-
-        # Assign the imported render function to the instance using MethodType
-        # to bind the function to the instance to be able to call it in
-        # another file (like so_predpreygrass.py); pretty ugly hack...
-        # TODO import a class instead of a function
-        self.render = types.MethodType(render, self)
+        """
 
     def reset(self):
         self._initialize_variables()
@@ -475,10 +484,13 @@ class PredPreyGrass:
 
         return observation
 
+    def render(self):
+        if self.renderer:
+            return self.renderer.render()
+
     def close(self):
-        if self.screen is not None:
-            pygame.quit()
-            self.screen = None
+        if self.renderer:
+            self.renderer.close()
 
     @property
     def is_no_grass(self):
