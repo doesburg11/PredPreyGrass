@@ -6,7 +6,7 @@ this environment transfers the energy of eaten prey/grass to the predator/prey
 from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import (
     DiscreteAgent
 )
-from predpreygrass.utils.renderer import render
+from predpreygrass.utils.render_function import render
 # external libraries
 import gymnasium
 from gymnasium.utils import seeding
