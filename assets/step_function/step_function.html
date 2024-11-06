@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredPreyGrass Step Function Diagram</title>
+    <style>
+        .box {
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            margin: 20px auto;
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-bottom: 20px solid black;
+            margin: 20px auto;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">Start of Step Function</div>
+    <div class="arrow"></div>
+    <div class="box">1. Apply Actions (Movement of Predators and Prey)</div>
+    <div class="arrow"></div>
+    <div class="box">2. Reset Rewards (Initialize Rewards for All Agents)</div>
+    <div class="arrow"></div>
+    <div class="box">3. Apply Rules of Engagement:<br>Predators hunt Prey, Prey eat Grass, Reproduce, Deactivate Agents</div>
+    <div class="arrow"></div>
+    <div class="box">4. Update Grass Growth<br>(Regrow Grass if Energy Exceeds Threshold)</div>
+    <div class="arrow"></div>
+    <div class="box">5. Record Population Metrics<br>(Update Metrics for Predators, Prey, and Grass)</div>
+    <div class="arrow"></div>
+    <div class="box">End of Step Function (Cycle Complete)</div>
+</body>
+</html>
+

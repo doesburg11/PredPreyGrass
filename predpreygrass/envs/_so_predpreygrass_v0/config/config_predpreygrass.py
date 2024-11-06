@@ -7,7 +7,7 @@ x_grid_size = 25
 y_grid_size = 25
 
 env_kwargs = dict(
-    max_cycles=10000,
+    max_cycles=2000,
     # reward parameters
     step_reward_predator=0.0,
     step_reward_prey=0.0,
@@ -32,8 +32,8 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # energy parameters
-    energy_gain_per_step_predator=-0.01,  # -0.15 # default
-    energy_gain_per_step_prey=-0.01, # -0.05 # default
+    energy_gain_per_step_predator=-0.15,  # -0.15 # default
+    energy_gain_per_step_prey=-0.05, # -0.05 # default
     energy_gain_per_step_grass=0.2,
     catch_prey_energy=0.0, #TODO: remove?
     catch_grass_energy=0.0, #TODO: remove?

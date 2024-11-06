@@ -13,7 +13,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     env_fn = predpreygrass_parallel_v0 
-    is_aec_evaluated = True
+    is_aec_evaluated = False
     environment_name = str(env_fn.parallel_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     evaluation_directory = os.path.dirname(os.path.abspath(__file__))

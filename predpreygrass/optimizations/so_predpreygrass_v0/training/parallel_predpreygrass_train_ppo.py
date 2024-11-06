@@ -17,7 +17,7 @@ from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer_par 
 )
 from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.config_saver import (
     ConfigSaver
-)
+)  
 # external libraries
 import os
 import time
