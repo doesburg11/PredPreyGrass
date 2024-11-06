@@ -23,7 +23,7 @@ def parallel_evaluation(env_fn, model_path):
             if reward > 0.0:
                  print(f"{agent}, reward: {reward}")
         """
-        print(f"Prey: {env_base.n_active_prey}, Predator: {env_base.n_active_predator}, Grass: {env_base.n_active_grass}")
+        print(f"Prey: {env_base.n_active_agent_type[env_base.prey_type_nr]}, Predator: {env_base.n_active_agent_type[env_base.predator_type_nr]}, Grass: {env_base.n_active_agent_type[env_base.grass_type_nr]}")
         
         done = env_base.is_no_prey or env_base.is_no_predator
 
@@ -46,7 +46,7 @@ def aec_evaluation(env_fn, model_path, watch_grid=False):
     env.close()
 
 if __name__ == "__main__":
-    is_aec_evaluated = False
+    is_aec_evaluated = True
     env_fn = predpreygrass_parallel_v0 
     environment_name = str(env_fn.parallel_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
