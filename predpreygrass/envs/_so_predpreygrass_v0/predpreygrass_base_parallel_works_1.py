@@ -137,8 +137,6 @@ class PredPreyGrass:
         self._initialize_variables()
 
         # observation spac
-        self.max_energy_level_prey = 100.0  # TODO in kwargs later?, init level = 5.0
-        self.max_energy_level_predator = 100.0  
         obs_space = spaces.Box(
             low=0,
             high=max(self.max_energy_level_predator,self.max_energy_level_prey),  # maximum energy level of agents
@@ -236,23 +234,41 @@ class PredPreyGrass:
                 self.possible_agent_instance_list_type[agent_type]
             )
 
+        self.start_index_type: list[int] = []
+        self.start_index_type[self.predator_type_nr] = 0,
+        self.start_index_type[self.prey_type_nr] = self.n_possible_agent_type[self.predator_type_nr],
+        self.start_index_type[self.grass_type_nr] = self.n_possible_agent_type[self.predator_type_nr] + self.n_possible_agent_type[self.prey_type_nr] 
+        
+
         # deactivate agents which can be created later at runtime
         for predator_instance in self.possible_agent_instance_list_type[self.predator_type_nr]:
-            if predator_instance.agent_id_nr >= self.n_initial_active_predator:  
+            if predator_instance.agent_id_nr >= self.start_index_type[self.predator_type_nr] + self.n_initial_active_agent_type[self.predator_type_nr]:  
                 self.active_agent_instance_list_type[self.predator_type_nr].remove(predator_instance)
                 self.n_active_agent_type[self.predator_type_nr] -= 1
                 self.total_energy_predator -= predator_instance.energy
                 predator_instance.is_active = False
                 predator_instance.energy = 0.0
                 self._unlink_agent_from_grid(predator_instance)
+
         for prey_instance in self.possible_agent_instance_list_type[self.prey_type_nr]:
-            if prey_instance.agent_id_nr >= self.n_possible_agent_type[self.predator_type_nr] + self.n_initial_active_prey:
+            if prey_instance.agent_id_nr >= self.start_index_type[self.prey_type_nr] + self.n_initial_active_agent_type[self.prey_type_nr]:
                 self.active_agent_instance_list_type[self.prey_type_nr].remove(prey_instance)
                 self.n_active_agent_type[self.prey_type_nr] -= 1
                 self.total_energy_prey -= prey_instance.energy
                 self._unlink_agent_from_grid(prey_instance)
                 prey_instance.is_active = False
                 prey_instance.energy = 0.0
+
+        self.learning_agent_types = [self.predator_type_nr, self.prey_type_nr]
+        for agent_type in self.learning_agent_types:
+            for agent_instance in self.possible_agent_instance_list_type[agent_type]:
+                if agent_instance.agent_id_nr >= self.start_index_type[self.prey_type_nr] + self.n_initial_active_agent_type[self.prey_type_nr]:
+                    self.active_agent_instance_list_type[agent_type].remove(agent_instance)
+                    self.n_active_agent_type[agent_type] -= 1
+                    self.total_energy_agent_type[agent_type] -= agent_instance.energy
+                    self._unlink_agent_from_grid(agent_instance)
+                    agent_instance.is_active = False
+                    agent_instance.energy = 0.0
 
         # define the learning agents
         self.active_agent_instance_list = (
@@ -517,6 +533,10 @@ class PredPreyGrass:
         self.n_possible_agent_type[self.predator_type_nr] = self.n_possible_predator
         self.n_possible_agent_type[self.prey_type_nr] = self.n_possible_prey
         self.n_possible_agent_type[self.grass_type_nr] = self.n_possible_grass
+
+        self.n_initial_active_agent_type: List[int] = [0, 0, 0, 0]
+        self.n_initial_active_agent_type[self.predator_type_nr] = self.n_initial_active_predator
+        self.n_initial_active_agent_type[self.prey_type_nr] = self.n_initial_active_prey
 
         self.n_possible_agents: int = self.n_possible_agent_type[self.predator_type_nr] + self.n_possible_agent_type[self.prey_type_nr]
 
