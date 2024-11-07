@@ -1,5 +1,5 @@
 # discretionary libraries
-from predpreygrass.envs._so_predpreygrass_v0.agents.so_discrete_agent import (
+from predpreygrass.envs._so_predpreygrass_v0.agents.discrete_agent import (
     DiscreteAgent,
 )
 from predpreygrass.utils.renderer import Renderer
@@ -144,10 +144,6 @@ class PredPreyGrass:
         else:
             self.renderer = None
 
-
-
-        self._seed()
-
         self._initialize_variables()
 
         # observation spac
@@ -178,29 +174,6 @@ class PredPreyGrass:
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
         # end actions
-
-        self.file_name: int = 0
-        """
-        # visualization grid
-        # pygame screen position window
-        os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (
-            self.x_pygame_window,
-            self.y_pygame_window,
-        )
-        self.screen = None
-        self.save_image_steps: bool = False  # save step images of the environment
-        # width of energy chart
-        self.width_energy_chart: int = 1800 if self.show_energy_chart else 0
-        self.height_energy_chart: int = self.cell_scale * self.y_grid_size
-        if (
-            self.n_possible_agent_type[self.predator_type_nr] > 18
-            or self.n_possible_agent_type[self.prey_type_nr] > 24
-        ):
-            # too many agents to display on screen in energy chart
-            self.show_energy_chart: bool = False
-            self.width_energy_chart: int = 0
-        # end visualization
-        """
 
     def reset(self) -> None:
         """
@@ -254,12 +227,10 @@ class PredPreyGrass:
 
             # Create agent name lists from instance lists
             self.possible_agent_name_list_type[agent_type] = (
-                self._create_agent_name_list_from_instance_list(
+                self._get_agent_name_list_from_instance_list(
                     self.possible_agent_instance_list_type[agent_type]
                 )
             )
-
-        self.learning_agent_types = [self.predator_type_nr, self.prey_type_nr]
         for agent_type in self.learning_agent_types:
             for agent_instance in self.possible_agent_instance_list_type[agent_type]:
                 if agent_instance.agent_id_nr >= (
@@ -302,26 +273,18 @@ class PredPreyGrass:
             actions (Dict[str, int]): Dictionary containing actions for each agent.
         """
         # 1] apply actions (i.e. movements) for all active agents in parallel
-        for predator_instance in self.active_agent_instance_list_type[
-            self.predator_type_nr
-        ]:
-            self._apply_agent_action(
-                predator_instance, actions[predator_instance.agent_name]
-            )
-        for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr]:
-            self._apply_agent_action(prey_instance, actions[prey_instance.agent_name])
+        for agent_instance in self._active_learning_agent_instance_list:
+            self._apply_agent_action(agent_instance, actions[agent_instance.agent_name])
 
         self._reset_rewards()
 
         # 2] apply rules of engagement for all agents
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr].copy():  
-            # make a copy to make removal during iteration possible
+            """ a copy to make removal/appending during iteration possible"""
             if predator_instance.energy > 0:
-                # engagement with environment: "nature and time"
                 predator_instance.age += 1
                 predator_instance.energy += predator_instance.energy_gain_per_step
-                # predator_instance.energy += predator_action_energy
-                # engagement with environment: "other agents"
+
                 prey_instance_in_predator_cell = self.agent_instance_in_grid_location[
                     self.prey_type_nr, *predator_instance.position
                 ]
@@ -354,7 +317,7 @@ class PredPreyGrass:
                         self.rewards[
                             predator_instance.agent_name
                         ] += self.reproduction_reward_predator
-            else:  # predator_instance.energy <= 0
+            else: 
                 self._deactivate_agent(predator_instance)
                 self.n_active_agent_type[self.predator_type_nr] -= 1
                 self.n_starved_predator += 1
@@ -592,10 +555,9 @@ class PredPreyGrass:
         x, y = agent_instance.position
         self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = None
         self.model_state[agent_instance.agent_type_nr, x, y] = 0.0
-
         # Add the cell back to available cells since it is now free
         self.available_cells_per_agent_type[agent_instance.agent_type_nr].add((x, y))
-        
+
     def _link_agent_to_grid(self, agent_instance: 'DiscreteAgent') -> None:
         """
         Link the given agent to the grid (i.e., occupy its position).
@@ -606,8 +568,7 @@ class PredPreyGrass:
         x, y = agent_instance.position
         self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = agent_instance
         self.model_state[agent_instance.agent_type_nr, x, y] = agent_instance.energy
-
-        # Remove the position from available cells for the specific agent type
+         # Remove the position from available cells for the specific agent type
         if (x, y) in self.available_cells_per_agent_type[agent_instance.agent_type_nr]:
             self.available_cells_per_agent_type[agent_instance.agent_type_nr].remove((x, y))
 
@@ -685,7 +646,7 @@ class PredPreyGrass:
         self.np_random, seed_ = seeding.np_random(seed)
         return [seed_]
 
-    def _create_agent_name_list_from_instance_list(self, agent_instance_list: List['DiscreteAgent']) -> List[str]:
+    def _get_agent_name_list_from_instance_list(self, agent_instance_list: List['DiscreteAgent']) -> List[str]:
         """
         Creates a list of agent names from a list of agent instances.
 
@@ -712,6 +673,16 @@ class PredPreyGrass:
         )
         self.n_active_prey_list.append(self.n_active_agent_type[self.prey_type_nr])
         self.n_active_grass_list.append(self.n_active_agent_type[self.grass_type_nr])
+
+    @property
+    def _active_learning_agent_instance_list(self) -> List['DiscreteAgent']:
+        """
+        Returns a list of active learning agent instances (predators and prey).
+
+        Returns:
+            List[DiscreteAgent]: List of active learning agent instances.
+        """
+        return self.active_agent_instance_list_type[self.predator_type_nr] + self.active_agent_instance_list_type[self.prey_type_nr]
 
     def _initialize_variables(self) -> None:
         """
@@ -876,6 +847,10 @@ class PredPreyGrass:
             self.predator_type_nr,
             self.prey_type_nr,
             self.grass_type_nr,
+        ]
+        self.learning_agent_types = [
+            self.predator_type_nr, 
+            self.prey_type_nr
         ]
         for agent_type_nr in self.agent_types:
             self.agent_instance_in_grid_location[agent_type_nr] = np.full(
