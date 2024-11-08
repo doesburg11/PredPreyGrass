@@ -2,7 +2,7 @@ absl-py==2.0.0
 aiosignal==1.3.1
 ale-py==0.8.1
 alembic==1.13.1
-asttokens @ file:///home/conda/feedstock_root/build_artifacts/asttokens_1698341106958/work
+asttokens
 attrs==23.1.0
 AutoROM==0.6.1
 AutoROM.accept-rom-license==0.6.1
@@ -19,17 +19,17 @@ chess==1.9.4
 click==8.1.7
 cloudpickle==3.0.0
 colorlog==6.8.2
-comm @ file:///home/conda/feedstock_root/build_artifacts/comm_1704278392174/work
+comm
 contextlib2==21.6.0
 contourpy==1.2.0
 cycler==0.12.1
-debugpy @ file:///home/conda/feedstock_root/build_artifacts/debugpy_1707444446407/work
-decorator @ file:///home/conda/feedstock_root/build_artifacts/decorator_1641555617451/work
+debugpy
+decorator
 distlib==0.3.8
 dm-tree==0.1.8
 docker-pycreds==0.4.0
-exceptiongroup @ file:///home/conda/feedstock_root/build_artifacts/exceptiongroup_1704921103267/work
-executing @ file:///home/conda/feedstock_root/build_artifacts/executing_1698579936712/work
+exceptiongroup
+executing
 Farama-Notifications==0.0.4
 filelock==3.13.1
 fonttools==4.46.0
@@ -48,18 +48,18 @@ gymnasium-notices==0.0.1
 identify==2.6.0
 idna==3.6
 imageio==2.34.0
-importlib-metadata @ file:///home/conda/feedstock_root/build_artifacts/importlib-metadata_1703269254275/work
+importlib-metadata
 importlib-resources==6.1.1
-ipykernel @ file:///home/conda/feedstock_root/build_artifacts/ipykernel_1708996548741/work
-ipython @ file:///home/conda/feedstock_root/build_artifacts/ipython_1708707351472/work
+ipykernel
+ipython
 ipywidgets==8.1.2
 jax-jumpy==1.0.0
-jedi @ file:///home/conda/feedstock_root/build_artifacts/jedi_1696326070614/work
+jedi
 Jinja2==3.1.2
 jsonschema==4.21.1
 jsonschema-specifications==2023.12.1
-jupyter_client @ file:///home/conda/feedstock_root/build_artifacts/jupyter_client_1699283905679/work
-jupyter_core @ file:///home/conda/feedstock_root/build_artifacts/jupyter_core_1704727045866/work
+jupyter_client
+jupyter_core
 jupyterlab_widgets==3.0.10
 kiwisolver==1.4.5
 lazy_loader==0.3
@@ -69,14 +69,14 @@ Markdown==3.5.1
 markdown-it-py==3.0.0
 MarkupSafe==2.1.3
 matplotlib==3.8.2
-matplotlib-inline @ file:///home/conda/feedstock_root/build_artifacts/matplotlib-inline_1660814786464/work
+matplotlib-inline
 mdurl==0.1.2
 ml-collections==0.1.1
 momaland==0.1.1
 mpmath==1.3.0
 msgpack==1.0.7
 mypy-extensions==1.0.0
-nest_asyncio @ file:///home/conda/feedstock_root/build_artifacts/nest-asyncio_1705850609492/work
+nest_asyncio
 networkx==3.2.1
 nodeenv==1.9.1
 numpy==1.26.4
@@ -96,38 +96,38 @@ oauthlib==3.2.2
 open-spiel==1.4
 opencv-python==4.8.1.78
 optuna==3.6.1
-packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1696202382185/work
+packaging
 pandas==2.1.4
-parso @ file:///home/conda/feedstock_root/build_artifacts/parso_1638334955874/work
+parso
 pathspec==0.12.1
 pettingzoo==1.24.3
-pexpect @ file:///home/conda/feedstock_root/build_artifacts/pexpect_1706113125309/work
-pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602536217715/work
+pexpect
+pickleshare
 Pillow==10.1.0
-platformdirs @ file:///home/conda/feedstock_root/build_artifacts/platformdirs_1706713388748/work
+platformdirs
 pre-commit==3.8.0
 -e git+https://github.com/doesburg11/PredPreyGrass.git@b64a0786fc40878ca2f32c3ab13f9f66c927d20f#egg=PredPreyGrass
-prompt-toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1702399386289/work
+prompt-toolkit
 protobuf==4.23.4
 psutil==5.9.7
-ptyprocess @ file:///home/conda/feedstock_root/build_artifacts/ptyprocess_1609419310487/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
-pure-eval @ file:///home/conda/feedstock_root/build_artifacts/pure_eval_1642875951954/work
+ptyprocess
+pure-eval
 pyarrow==15.0.0
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pycparser==2.21
 pydub==0.25.1
 pygame==2.3.0
-Pygments @ file:///home/conda/feedstock_root/build_artifacts/pygments_1700607939962/work
+Pygments
 pymunk==6.2.0
 PyOpenGL==3.1.6
 PyOpenGL-accelerate==3.1.7
 pyparsing==3.1.1
 python-chess==1.999
-python-dateutil @ file:///home/conda/feedstock_root/build_artifacts/python-dateutil_1626286286081/work
+python-dateutil
 pytz==2023.3.post1
 PyYAML==6.0.1
-pyzmq @ file:///home/conda/feedstock_root/build_artifacts/pyzmq_1701783162530/work
+pyzmq
 ray==2.22.0
 referencing==0.33.0
 requests==2.31.0
@@ -141,11 +141,11 @@ scipy==1.11.4
 sentry-sdk==2.14.0
 setproctitle==1.3.3
 Shimmy==1.3.0
-six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
+six
 smmap==5.0.1
 SQLAlchemy==2.0.30
 stable-baselines3==2.2.1
-stack-data @ file:///home/conda/feedstock_root/build_artifacts/stack_data_1669632077133/work
+stack-data
 SuperSuit==3.9.1
 sympy==1.12
 tabulate==0.9.0
@@ -156,17 +156,17 @@ termcolor==2.4.0
 tifffile==2024.2.12
 tinyscaler==1.2.7
 torch==2.1.1
-tornado @ file:///home/conda/feedstock_root/build_artifacts/tornado_1708363099148/work
+tornado
 tqdm==4.66.1
-traitlets @ file:///home/conda/feedstock_root/build_artifacts/traitlets_1704212992681/work
+traitlets
 triton==2.1.0
 typer==0.9.0
-typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1708904622550/work
+typing_extensions
 tzdata==2023.3
 urllib3==2.1.0
 virtualenv==20.25.1
 wandb==0.18.1
-wcwidth @ file:///home/conda/feedstock_root/build_artifacts/wcwidth_1704731205417/work
+wcwidth
 Werkzeug==3.0.1
 widgetsnbextension==4.0.10
-zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1695255097490/work
+zipp
