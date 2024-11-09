@@ -179,14 +179,6 @@ class PredPreyGrass:
         """
         Resets the environment to the initial state.
         """
-<<<<<<< HEAD
-
-    def reset(self) -> None:
-        """
-        Resets the environment to the initial state.
-        """
-=======
->>>>>>> f8bd8c64fa721a32a898a6954b8733e4b136c579
         self._initialize_variables()
         # create agents of all types excluding "wall"-agents
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
@@ -288,11 +280,7 @@ class PredPreyGrass:
 
         # 2] apply rules of engagement for all agents
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr].copy():  
-<<<<<<< HEAD
             # make a copy to make removal during iteration possible
-=======
-            """ a copy to make removal/appending during iteration possible"""
->>>>>>> f8bd8c64fa721a32a898a6954b8733e4b136c579
             if predator_instance.energy > 0:
                 predator_instance.age += 1
                 predator_instance.energy += predator_instance.energy_gain_per_step
@@ -567,16 +555,10 @@ class PredPreyGrass:
         x, y = agent_instance.position
         self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = None
         self.model_state[agent_instance.agent_type_nr, x, y] = 0.0
-<<<<<<< HEAD
-
-        # Add the cell back to available cells since it is now free
-        self.available_cells_per_agent_type[agent_instance.agent_type_nr].add((x, y))
         
-=======
         # Add the cell back to available cells since it is now free
         self.available_cells_per_agent_type[agent_instance.agent_type_nr].add((x, y))
 
->>>>>>> f8bd8c64fa721a32a898a6954b8733e4b136c579
     def _link_agent_to_grid(self, agent_instance: 'DiscreteAgent') -> None:
         """
         Link the given agent to the grid (i.e., occupy its position).
@@ -587,12 +569,7 @@ class PredPreyGrass:
         x, y = agent_instance.position
         self.agent_instance_in_grid_location[agent_instance.agent_type_nr, x, y] = agent_instance
         self.model_state[agent_instance.agent_type_nr, x, y] = agent_instance.energy
-<<<<<<< HEAD
-
         # Remove the position from available cells for the specific agent type
-=======
-         # Remove the position from available cells for the specific agent type
->>>>>>> f8bd8c64fa721a32a898a6954b8733e4b136c579
         if (x, y) in self.available_cells_per_agent_type[agent_instance.agent_type_nr]:
             self.available_cells_per_agent_type[agent_instance.agent_type_nr].remove((x, y))
 
