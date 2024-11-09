@@ -1,9 +1,8 @@
 # external libraries
-from pettingzoo.utils.env import AgentID
 import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
-
+from pettingzoo.utils.env import AgentID
 
 class DiscreteAgent:
     def __init__(
@@ -39,7 +38,7 @@ class DiscreteAgent:
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
 
-        self.is_active: bool = False
+        self.is_alive: bool = False
         self.age: int = 0
 
         self.x_grid_dim: int = self.model_state_agent.shape[0]
