@@ -1,7 +1,7 @@
+# external libraries
 import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
-
 from pettingzoo.utils.env import AgentID
 
 class DiscreteAgent:
