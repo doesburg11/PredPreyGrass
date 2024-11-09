@@ -1,8 +1,9 @@
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_parallel_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.parallel_predpreygrass.envs import predpreygrass_parallel_v0
+from predpreygrass.parallel_predpreygrass.config.config_predpreygrass import (
     env_kwargs,
 )
+
 
 parallel_env = predpreygrass_parallel_v0.parallel_env(render_mode="human", **env_kwargs)
 env_base = parallel_env.predpreygrass
