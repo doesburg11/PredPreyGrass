@@ -1,7 +1,8 @@
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_parallel_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass_parallel import (
+from predpreygrass.parallel_predpreygrass.envs import predpreygrass_parallel_v0
+from predpreygrass.parallel_predpreygrass.config.config_predpreygrass import (
     env_kwargs,
+    training_steps_string,
 )
 
 # external libraries

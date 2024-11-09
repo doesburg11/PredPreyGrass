@@ -45,11 +45,6 @@ class raw_env(AECEnv):
         self.steps = 0
         self.agents = self.possible_agents
         self.possible_agents = self.agents[:]
-        """
-        self.agent_name_to_index_mapping = dict(
-            zip(self.agents, list(range(self.num_agents)))
-        )
-        """
         self._agent_selector = agent_selector(self.agents)
         self.action_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.action_space)}
         self.observation_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.observation_space)}
