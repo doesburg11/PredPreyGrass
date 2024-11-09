@@ -22,7 +22,7 @@ def raw_env(**kwargs):
 class parallel_env(ParallelEnv):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "so_predpreygrass_parallel_v0",
+        "name": "predpreygrass_parallel_v0",
         "is_parallelizable": True,
     }
 

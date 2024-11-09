@@ -95,7 +95,7 @@ class Evaluator:
                 agent: 0 for agent in possible_predator_name_list
             }
             cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
-            n_aec_cycles = 0
+            n_cycles = 0
             for agent in env.agent_iter():
                 observation, reward = env.last()[:2]
                 cumulative_rewards[agent] += reward
@@ -112,28 +112,28 @@ class Evaluator:
                 else:
                     action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
-            n_aec_cycles = env.predpreygrass.n_aec_cycles
+            n_cycles = env.predpreygrass.n_cycles
             plotter.plot_population(
                 env.predpreygrass.n_active_predator_list,
                 env.predpreygrass.n_active_prey_list,
-                n_aec_cycles,
+                n_cycles,
                 i,
                 title="Predator and Prey Population Over Time",
             )
 
-            episode_length[i] = n_aec_cycles
+            episode_length[i] = n_cycles
             n_starved_predator_per_cycle[i] = (
-                env.predpreygrass.n_starved_predator / n_aec_cycles
+                env.predpreygrass.n_starved_predator / n_cycles
             )
             n_starved_prey_per_cycle[i] = (
-                env.predpreygrass.n_starved_prey / n_aec_cycles
+                env.predpreygrass.n_starved_prey / n_cycles
             )
-            n_eaten_prey_per_cycle[i] = env.predpreygrass.n_eaten_prey / n_aec_cycles
-            n_eaten_grass_per_cycle[i] = env.predpreygrass.n_eaten_grass / n_aec_cycles
+            n_eaten_prey_per_cycle[i] = env.predpreygrass.n_eaten_prey / n_cycles
+            n_eaten_grass_per_cycle[i] = env.predpreygrass.n_eaten_grass / n_cycles
             n_born_predator_per_cycle[i] = (
-                env.predpreygrass.n_born_predator / n_aec_cycles
+                env.predpreygrass.n_born_predator / n_cycles
             )
-            n_born_prey_per_cycle[i] = env.predpreygrass.n_born_prey / n_aec_cycles
+            n_born_prey_per_cycle[i] = env.predpreygrass.n_born_prey / n_cycles
             episode_predator_age_list = env.predpreygrass.predator_age_list
             episode_prey_age_list = env.predpreygrass.prey_age_list
             mean_age_predator[i] = (
@@ -157,7 +157,7 @@ class Evaluator:
 
             eval_results_text = (
                 f"Eps {i} "
-                + f"Lngth = {n_aec_cycles} "
+                + f"Lngth = {n_cycles} "
                 + f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
                 + f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)} "
                 + f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)} "
@@ -171,7 +171,7 @@ class Evaluator:
             evaluation_file.write(eval_results_text)
             print(
                 f"Eps {i}",
-                f"Lngth = {n_aec_cycles}",
+                f"Lngth = {n_cycles}",
                 f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)}",
                 f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)}",
                 f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)}",
@@ -182,7 +182,7 @@ class Evaluator:
                 f"Mn age Pry = {round(mean_age_prey[i],1)}",
             )
             evaluation_file.write(f"Eps {i} ")
-            evaluation_file.write(f"Lngth = {n_aec_cycles} ")
+            evaluation_file.write(f"Lngth = {n_cycles} ")
             evaluation_file.write(
                 f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
             )

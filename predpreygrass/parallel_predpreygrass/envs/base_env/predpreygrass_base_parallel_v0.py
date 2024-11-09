@@ -144,6 +144,8 @@ class PredPreyGrass:
         else:
             self.renderer = None
 
+
+
         self._seed()
 
         self._initialize_variables()
@@ -237,11 +239,19 @@ class PredPreyGrass:
                     agent_instance
                 )
 
-        for agent_type in self.agent_types:
+        agent_types = [self.predator_type_nr, self.prey_type_nr, self.grass_type_nr]
+
+        for agent_type in agent_types:
             # Copy possible agent instances to active agent instances
             self.active_agent_instance_list_type[agent_type] = (
                 self.possible_agent_instance_list_type[agent_type].copy()
             )
+
+            # Create identical twins for the active agents for generic iterating purposes
+            self.active_agent_instance_list_type[agent_type] = (
+                self.possible_agent_instance_list_type[agent_type].copy()
+            )
+
             # Create agent name lists from instance lists
             self.possible_agent_name_list_type[agent_type] = (
                 self._create_agent_name_list_from_instance_list(
