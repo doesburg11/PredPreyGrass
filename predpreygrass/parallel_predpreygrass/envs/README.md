@@ -1,0 +1,25 @@
+## The environments
+[**so_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_so_predpreygrass_v0): A (single-objective) multi-agent reinforcement learning (MARL) environment, [trained and evaluated](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/optimizations/so_predpreygrass_v0) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards (stepping, eating, dying and reproducing) are naively summed and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py) file. 
+
+[**mo_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_mo_predpreygrass_v0):  A (multi-objective) multi-agent reinforcement learning (MOMARL) environment. The environment has two objectives: 
+- maximize cumulative rewards for reproduction of Predator agents
+- maximize cumulative rewards for reproduction of Prey agents. 
+
+The rewards returned by the environment are stored in a two-dimensional vector conform Farama's [Momaland](https://momaland.farama.org/) framework, which follows the standard [PettingZoo API](https://pettingzoo.farama.org/). This environment is a generalization of the single objective version described above and offers the opportunity to go beyond naively summing rewards and permits the possibility of implementing predefined (possibly non-linear) utility functions for every seperate learning agent.
+
+
+## Workarounds in the environments
+
+### Workarounds for the environments
+Due to unexpected behavior when agents terminate during a simulation in PettingZoo AEC (https://github.com/Farama-Foundation/PettingZoo/issues/713), we modified the architecture of the deletion and spawning of agents. The `AECEnv.agents` array remains unchanged after agent death or creation. The removal of agents is managed by 'PredPrey.predator_instance_list' and `PredPreyGrass.prey_instance_list`. The active status of agents is tracked by the boolean attribute `alive` of the agents. Optionally, a number of agents have this attribute `alive` set to `False` at `reset`, which gives room for creation of agents during run time. If so, the agents are (re)added to `PredPreyGrass.[predator/prey]_instance_list`, where at the same time PettingZoo's `AECEnv.agent` attribute remains unchanged and equal to the `AECEnv.possible_agents` attribute.
+
+This architecture provides an alternative to the unexpected behavior of individual agents terminating during simulation in the standard PettingZoo API and circumvents the PPO-algorithm's requirement of an unchanged number of agents during training. 
+
+At ```reset``` a fixed number of agents is initialized and remains constant. However they are Active ("alive") or in Inactive ("dead" or not "born" yet), which is checked at the beginning of the ```step``` function. Inactive agents do not change at ```step```. Inactive agents are handled more or less similarly as in the "black death" wrapper.[See PettingZoo's Knights-Archer-Zombies environment: Not able to use the standard PettingZoo procedure to remove agents from 'self.agents' array. Knights-Archer-Zombies environment documentation states: "This environment allows agents to spawn and die, so it requires using SuperSuit’s Black Death wrapper, which provides blank observations to dead agents rather than removing them from the environment."]
+
+ ### Workarounds for the PPO algorithm
+MarkovVectorEnv, which is used in the PPO algorithm, does not support environments with varying numbers of agents. Therefore, the workaround for the deletion and spawning of agents described above at the same time is also utilized for a proper functioning of the PPO algorithm. 
+
+### Workarounds for the observation ranges
+The learning agents, Predator and Prey, can have different observation ranges. We implemented an overall max_observation_range and a specific (smaller) observation range per agent by masking ("zero-ing") all non-observable cells. Note that setting the max_observation_range unneededly high can result in unneeded computing time loss. The featureof flexible observation ranges can probably implemented more efficiently, but has currently no priority.
+ 
