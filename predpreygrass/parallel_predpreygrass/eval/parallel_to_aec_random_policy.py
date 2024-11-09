@@ -3,7 +3,10 @@ from predpreygrass.parallel_predpreygrass.envs import predpreygrass_parallel_v0
 from predpreygrass.parallel_predpreygrass.config.config_predpreygrass import (
     env_kwargs,
 )
+# external libraries
+import time
 
+time_sleep = 0.01
 env = predpreygrass_parallel_v0.env(render_mode="human", **env_kwargs)
 # attributes of base environment cannot be accessed directly via wrapped
 # parallel to AEC environment
@@ -18,4 +21,5 @@ for agent in env.agent_iter():
     else:
         action = env.action_space(agent).sample() # random policy
     env.step(action)
+    time.sleep(time_sleep)
 env.close()

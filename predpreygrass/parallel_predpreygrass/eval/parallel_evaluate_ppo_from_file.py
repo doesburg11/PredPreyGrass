@@ -10,6 +10,7 @@ from predpreygrass.parallel_predpreygrass.config.config_predpreygrass import (
 # external libraries
 from pathlib import Path
 from stable_baselines3 import PPO
+import time
 
 
 def parallel_evaluation(env_fn, model_path):
@@ -37,6 +38,7 @@ def parallel_evaluation(env_fn, model_path):
         )
 
         done = env_base.is_no_prey or env_base.is_no_predator
+        time.sleep(sleep_time)
 
 
 def aec_evaluation(env_fn, model_path, watch_grid=False):
@@ -57,12 +59,14 @@ def aec_evaluation(env_fn, model_path, watch_grid=False):
         else:
             action = model.predict(observation, deterministic=True)[0]
         env.step(action)
+        time.sleep(sleep_time)
     env.close()
 
 
 if __name__ == "__main__":
     is_aec_evaluated = True
     env_fn = predpreygrass_parallel_v0
+    sleep_time = 0.1
     environment_name = str(env_fn.parallel_env.metadata["name"])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
 

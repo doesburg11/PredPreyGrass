@@ -48,7 +48,6 @@ if __name__ == "__main__":
         destination_output_dir, "training.txt"
     )
     # Create an instance of the ConfigSaver class
-    print("local_output_root: ", local_output_root)
     config_saver = ConfigSaver(
         destination_training_file, 
         environment_name, 

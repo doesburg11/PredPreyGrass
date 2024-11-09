@@ -1,7 +1,8 @@
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_aec_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import env_kwargs
-
+from predpreygrass.aec_predpreygrass.envs import predpreygrass_aec_v0
+from predpreygrass.aec_predpreygrass.config.config_predpreygrass import (
+    env_kwargs,
+)
 env = predpreygrass_aec_v0.env(render_mode='human', **env_kwargs)
 
 env.reset(seed=1)
