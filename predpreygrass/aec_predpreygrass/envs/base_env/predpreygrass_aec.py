@@ -21,7 +21,7 @@ parallel_env = parallel_wrapper_fn(env)
 class raw_env(AECEnv):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "so_predpreygrass_aec_v0",
+        "name": "predpreygrass_aec_v0",
         "is_parallelizable": True,
         "render_fps": 5,
     }
