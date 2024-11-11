@@ -21,7 +21,7 @@ parallel_env = parallel_wrapper_fn(env)
 class raw_env(AECEnv):
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "name": "predpreygrass_aec_v0",
+        "name": "so_predpreygrass_aec_v0",
         "is_parallelizable": True,
         "render_fps": 5,
     }
@@ -33,7 +33,7 @@ class raw_env(AECEnv):
         self.closed = False
 
         self.predpreygrass = predpreygrass(*args, **kwargs)  
-        self.agents = self.predpreygrass.possible_agent_name_list
+        self.agents = self.predpreygrass.possible_learning_agent_name_list
         self.possible_agents = self.agents[:]
         self.action_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.action_space)}
         self.observation_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.observation_space)}
@@ -45,6 +45,7 @@ class raw_env(AECEnv):
         self.steps = 0
         self.agents = self.possible_agents
         self.possible_agents = self.agents[:]
+
         self._agent_selector = agent_selector(self.agents)
         self.action_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.action_space)}
         self.observation_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.observation_space)}

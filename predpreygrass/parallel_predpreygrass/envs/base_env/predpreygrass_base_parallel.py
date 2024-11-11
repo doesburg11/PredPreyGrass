@@ -205,7 +205,7 @@ class PredPreyGrass:
         Resets the environment to the initial state.
         """
         self._initialize_variables()
-        # create agents of all types excluding "wall"-agents
+
         for agent_type_nr in range(1, len(self.agent_type_name_list)):
             agent_type_name = self.agent_type_name_list[agent_type_nr]
             # intialize all possible agents of a certain type (agent_type_nr)
@@ -250,6 +250,7 @@ class PredPreyGrass:
             )
 
         self.learning_agent_types = [self.predator_type_nr, self.prey_type_nr]
+        # deactivate agents which can be created later at runtime
         for agent_type in self.learning_agent_types:
             for agent_instance in self.possible_agent_instance_list_type[agent_type]:
                 if agent_instance.agent_id_nr >= (
@@ -347,8 +348,10 @@ class PredPreyGrass:
             else:  # predator_instance.energy <= 0
                 self._deactivate_agent(predator_instance)
                 self.n_active_agent_type[self.predator_type_nr] -= 1
-                self.n_starved_predator += 1
+
+
                 self.predator_age_of_death_list.append(predator_instance.age)
+                self.n_starved_predator += 1
                 self.rewards[predator_instance.agent_name] += self.death_reward_predator
 
         for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr].copy():  

@@ -82,14 +82,14 @@ class Evaluator:
         std_cumulative_rewards_prey = [0 for _ in range(self.num_episodes)]
         mean_age_predator = [0 for _ in range(self.num_episodes)]
         mean_age_prey = [0 for _ in range(self.num_episodes)]
-
+        env_base = env.predpreygrass
         total_predator_age_list = []
         total_prey_age_list = []
         for i in range(self.num_episodes):
             env.reset(seed=i)
-            possible_predator_name_list = env.predpreygrass.possible_predator_name_list
-            possible_prey_name_list = env.predpreygrass.possible_prey_name_list
-            possible_agent_name_list = env.predpreygrass.possible_agent_name_list
+            possible_predator_name_list = env_base.possible_agent_name_list_type[env_base.predator_type_nr]
+            possible_prey_name_list = env_base.possible_agent_name_list_type[env_base.prey_type_nr]
+            possible_agent_name_list = env_base.possible_learning_agent_name_list
             cumulative_rewards = {agent: 0 for agent in possible_agent_name_list}
             cumulative_rewards_predator = {
                 agent: 0 for agent in possible_predator_name_list
@@ -104,18 +104,18 @@ class Evaluator:
                 elif agent in possible_prey_name_list:
                     cumulative_rewards_prey[agent] += reward
 
-                if env.predpreygrass.is_no_predator or env.predpreygrass.is_no_prey:
+                if env_base.is_no_predator or env_base.is_no_prey:
                     action = None
-                    if env.predpreygrass.is_no_predator:
+                    if env_base.is_no_predator:
                         predator_extinct_at_termination[i] = 1
                     break
                 else:
                     action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
-            n_cycles = env.predpreygrass.n_cycles
+            n_cycles = env_base.n_cycles
             plotter.plot_population(
-                env.predpreygrass.n_active_predator_list,
-                env.predpreygrass.n_active_prey_list,
+                env_base.n_active_predator_list,
+                env_base.n_active_prey_list,
                 n_cycles,
                 i,
                 title="Predator and Prey Population Over Time",
@@ -123,19 +123,19 @@ class Evaluator:
 
             episode_length[i] = n_cycles
             n_starved_predator_per_cycle[i] = (
-                env.predpreygrass.n_starved_predator / n_cycles
+                env_base.n_starved_predator / n_cycles
             )
             n_starved_prey_per_cycle[i] = (
-                env.predpreygrass.n_starved_prey / n_cycles
+                env_base.n_starved_prey / n_cycles
             )
-            n_eaten_prey_per_cycle[i] = env.predpreygrass.n_eaten_prey / n_cycles
-            n_eaten_grass_per_cycle[i] = env.predpreygrass.n_eaten_grass / n_cycles
+            n_eaten_prey_per_cycle[i] = env_base.n_eaten_prey / n_cycles
+            n_eaten_grass_per_cycle[i] = env_base.n_eaten_grass / n_cycles
             n_born_predator_per_cycle[i] = (
-                env.predpreygrass.n_born_predator / n_cycles
+                env_base.n_born_predator / n_cycles
             )
-            n_born_prey_per_cycle[i] = env.predpreygrass.n_born_prey / n_cycles
-            episode_predator_age_list = env.predpreygrass.predator_age_list
-            episode_prey_age_list = env.predpreygrass.prey_age_list
+            n_born_prey_per_cycle[i] = env_base.n_born_prey / n_cycles
+            episode_predator_age_list = env_base.predator_age_list
+            episode_prey_age_list = env_base.prey_age_list
             mean_age_predator[i] = (
                 mean(episode_predator_age_list) if episode_predator_age_list else 0
             )
