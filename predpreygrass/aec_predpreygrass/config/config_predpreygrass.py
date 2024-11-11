@@ -45,7 +45,7 @@ env_kwargs = dict(
     create_prey=True,  
     create_predator=True,  
     regrow_grass=True,  
-    prey_creation_energy_threshold=8,
+    prey_creation_energy_threshold=10,
     predator_creation_energy_threshold=12, 
     spawning_area_predator=dict(
         {

@@ -5,7 +5,7 @@
             "name": "Python: Launch File",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/predpreygrass/parallel_predpreygrass/eval/parallel_random_policy.py",
+            "program": "${workspaceFolder}/predpreygrass/aec_predpreygrass/eval/aec_random_policy.py",
             "console": "integratedTerminal"
         }
     ]
