@@ -114,8 +114,8 @@ class Evaluator:
                 env.step(action)
             n_cycles = env_base.n_cycles
             plotter.plot_population(
-                env_base.n_active_predator_list,
-                env_base.n_active_prey_list,
+                env_base.n_active_agent_list_type[env_base.predator_type_nr],
+                env_base.n_active_agent_list_type[env_base.prey_type_nr],
                 n_cycles,
                 i,
                 title="Predator and Prey Population Over Time",
@@ -134,8 +134,8 @@ class Evaluator:
                 env_base.n_born_predator / n_cycles
             )
             n_born_prey_per_cycle[i] = env_base.n_born_prey / n_cycles
-            episode_predator_age_list = env_base.predator_age_list
-            episode_prey_age_list = env_base.prey_age_list
+            episode_predator_age_list = env_base.agent_age_of_death_list_type[env_base.predator_type_nr]
+            episode_prey_age_list = env_base.agent_age_of_death_list_type[env_base.prey_type_nr]
             mean_age_predator[i] = (
                 mean(episode_predator_age_list) if episode_predator_age_list else 0
             )
@@ -169,18 +169,6 @@ class Evaluator:
             )
             print(eval_results_text)
             evaluation_file.write(eval_results_text)
-            print(
-                f"Eps {i}",
-                f"Lngth = {n_cycles}",
-                f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)}",
-                f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)}",
-                f"Eatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)}",
-                f"Eatn Gra/cycl = {round(n_eaten_grass_per_cycle[i],3)}",
-                f"Brn Prd/cycl = {round(n_born_predator_per_cycle[i],3)}",
-                f"Brn Pry/cycle = {round(n_born_prey_per_cycle[i],3)}",
-                f"Mn age Prd = {round(mean_age_predator[i],1)}",
-                f"Mn age Pry = {round(mean_age_prey[i],1)}",
-            )
             evaluation_file.write(f"Eps {i} ")
             evaluation_file.write(f"Lngth = {n_cycles} ")
             evaluation_file.write(

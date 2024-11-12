@@ -51,24 +51,28 @@ env_kwargs = dict(
         {
             "x_begin": 0,
             "y_begin": 0,
-            "x_end": x_grid_size - 1,
-            "y_end": y_grid_size - 1,
-        }
+            "x_end": 10,
+            "y_end": 10,
+         }
     ),
     spawning_area_prey=dict(
         {
             "x_begin": 0,
             "y_begin": 0,
-            "x_end": x_grid_size - 1,
-            "y_end": y_grid_size - 1,
+#            "x_end": x_grid_size - 1,
+#            "y_end": y_grid_size - 1,
+            "x_end": 10,
+            "y_end": 10,
         }
     ),
     spawning_area_grass=dict(
         {
             "x_begin": 0,
             "y_begin": 0,
-            "x_end": x_grid_size - 1,
-            "y_end": y_grid_size - 1,
+#            "x_end": x_grid_size - 1,
+#            "y_end": y_grid_size - 1,
+            "x_end": 10,
+            "y_end": 10,
         }
     ),
     # visualization parameters
