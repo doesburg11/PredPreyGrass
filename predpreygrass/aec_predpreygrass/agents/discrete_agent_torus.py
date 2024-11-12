@@ -1,8 +1,9 @@
 # external libraries
+from pettingzoo.utils.env import AgentID
 import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
-from pettingzoo.utils.env import AgentID
+
 
 class DiscreteAgent:
     def __init__(
@@ -38,7 +39,7 @@ class DiscreteAgent:
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
 
-        self.is_alive: bool = False
+        self.is_active: bool = False
         self.age: int = 0
 
         self.x_grid_dim: int = self.model_state_agent.shape[0]
@@ -52,21 +53,17 @@ class DiscreteAgent:
     def step(self, action: int) -> np.ndarray:
         # returns new position of agent "self" given action "action"
 
-        self.age += 1
-
         next_position: np.ndarray = np.zeros(2, dtype=np.int32)
         next_position[0], next_position[1] = self.position[0], self.position[1]
 
         next_position += self.motion_range[action]
-        if not (
-            0 <= next_position[0] < self.x_grid_dim
-            and 0 <= next_position[1] < self.y_grid_dim
-        ):
-            return self.position  # if moved out of borders: dont move
-        elif self.model_state_agent[next_position[0], next_position[1]] > 0:
-            return (
-                self.position
-            )  # if intended to moved to occupied cell of same agent type: dont move
+
+        # Apply torus transformation to handle out-of-bounds movement
+        next_position[0] = next_position[0] % self.x_grid_dim
+        next_position[1] = next_position[1] % self.y_grid_dim
+
+        if self.model_state_agent[next_position[0], next_position[1]] > 0:
+            return self.position  # if intended to move to occupied cell of same agent type: don't move
         else:
             self.position = next_position
             return self.position

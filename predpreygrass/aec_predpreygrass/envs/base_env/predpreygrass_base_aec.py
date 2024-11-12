@@ -137,8 +137,10 @@ class PredPreyGrass:
         self.regrow_grass = regrow_grass
         self.max_energy_level_grass = max_energy_level_grass
 
+        
         self._initialize_variables()
 
+        self.torus = True
 
         # Create a Renderer instance if rendering is needed
         if self.render_mode is not None:
@@ -217,6 +219,7 @@ class PredPreyGrass:
                     motion_range=self.motion_range,
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
+                    torus=self.torus,
                 )
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
                 #  and which is within the spawning area of the agent
@@ -448,12 +451,13 @@ class PredPreyGrass:
             self._record_population_metrics()
             self.n_cycles += 1
 
-    def observe(self, agent_name: str) -> np.ndarray:
+    def observe(self, agent_name: str, torus: bool = True) -> np.ndarray:
         """
         Returns the observation for the given agent.
 
         Parameters:
             agent_name (str): The name of the agent for which to return the observation.
+            torus (bool): Whether to treat the grid as a torus (wrap-around).
 
         Returns:
             np.ndarray: The observation matrix for the agent.
@@ -468,28 +472,30 @@ class PredPreyGrass:
         xp, yp = agent_instance.position
         observation_range_agent = agent_instance.observation_range
 
-        # Observation clipping limits
-        xlo = max(0, xp - max_obs_offset)
-        xhi = min(x_grid_size, xp + max_obs_offset + 1)
-        ylo = max(0, yp - max_obs_offset)
-        yhi = min(y_grid_size, yp + max_obs_offset + 1)
-
         # Observation matrix initialization (filled with 1s in the wall channel only)
         observation = np.zeros(
             (nr_channels, max_obs_range, max_obs_range), dtype=np.float64
         )
         observation[0].fill(1.0)
 
-        # Calculate bounds for observation array assignment
-        xolo = max(0, max_obs_offset - xp)
-        xohi = xolo + (xhi - xlo)
-        yolo = max(0, max_obs_offset - yp)
-        yohi = yolo + (yhi - ylo)
+        # Populate observation within visible area, handling torus wrap-around if enabled
+        for dx in range(-max_obs_offset, max_obs_offset + 1):
+            for dy in range(-max_obs_offset, max_obs_offset + 1):
+                x = xp + dx
+                y = yp + dy
 
-        # Populate observation within visible area
-        observation[:, xolo:xohi, yolo:yohi] = np.abs(
-            self.model_state[:, xlo:xhi, ylo:yhi]
-        )
+                if torus:
+                    x = x % x_grid_size
+                    y = y % y_grid_size
+                elif not (0 <= x < x_grid_size and 0 <= y < y_grid_size):
+                    continue
+
+                # Calculate the corresponding position in the observation matrix
+                obs_x = dx + max_obs_offset
+                obs_y = dy + max_obs_offset
+
+                # Populate the observation matrix with the model state
+                observation[:, obs_x, obs_y] = np.abs(self.model_state[:, x, y])
 
         # Apply mask to limit observation range based on agent's capabilities
         mask = (max_obs_range - observation_range_agent) // 2
