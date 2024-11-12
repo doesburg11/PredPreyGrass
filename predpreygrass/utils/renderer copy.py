@@ -74,45 +74,10 @@ class Renderer:
             patch.set_alpha(128)
             patch.fill(color)
             offset = instance.observation_range / 2.0
-
-            # Handle torus wrapping
-            positions = [(x, y)]
-            if self.env.torus:  # If the environment has torus topology
-                positions = self._get_torus_positions(x, y, instance.observation_range)
-
-            for pos_x, pos_y in positions:
-                self.screen.blit(
-                    patch,
-                    (self.cell_scale * (pos_x - offset + 0.5), self.cell_scale * (pos_y - offset + 0.5))
-                )
-
-    def _get_torus_positions(self, x, y, observation_range):
-        """
-        Get all possible positions for an observation patch in a toroidal environment.
-        """
-        positions = [(x, y)]
-        offset = observation_range // 2
-
-        if x - offset < 0:
-            positions.append((x + self.env.x_grid_size, y))
-        if x + offset >= self.env.x_grid_size:
-            positions.append((x - self.env.x_grid_size, y))
-        if y - offset < 0:
-            positions.append((x, y + self.env.y_grid_size))
-        if y + offset >= self.env.y_grid_size:
-            positions.append((x, y - self.env.y_grid_size))
-
-        # Handle corners for torus wrapping
-        if x - offset < 0 and y - offset < 0:
-            positions.append((x + self.env.x_grid_size, y + self.env.y_grid_size))
-        if x - offset < 0 and y + offset >= self.env.y_grid_size:
-            positions.append((x + self.env.x_grid_size, y - self.env.y_grid_size))
-        if x + offset >= self.env.x_grid_size and y - offset < 0:
-            positions.append((x - self.env.x_grid_size, y + self.env.y_grid_size))
-        if x + offset >= self.env.x_grid_size and y + offset >= self.env.y_grid_size:
-            positions.append((x - self.env.x_grid_size, y - self.env.y_grid_size))
-
-        return positions
+            self.screen.blit(
+                patch,
+                (self.cell_scale * (x - offset + 0.5), self.cell_scale * (y - offset + 0.5))
+            )
 
     def _draw_instances(self, instances, color):
         for instance in instances:
