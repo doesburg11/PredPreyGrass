@@ -348,8 +348,6 @@ class PredPreyGrass:
             else:  # predator_instance.energy <= 0
                 self._deactivate_agent(predator_instance)
                 self.n_active_agent_type[self.predator_type_nr] -= 1
-
-
                 self.predator_age_of_death_list.append(predator_instance.age)
                 self.n_starved_predator += 1
                 self.rewards[predator_instance.agent_name] += self.death_reward_predator
@@ -383,8 +381,7 @@ class PredPreyGrass:
                         self.rewards[
                             prey_instance.agent_name
                         ] += self.reproduction_reward_prey
-            # TODO replace by "else:" # i.e. prey_instance.energy <= 0
-            else:  # prey_instance.energy <= 0
+            else:  
                 self._deactivate_agent(prey_instance)
                 self.n_active_agent_type[self.prey_type_nr] -= 1
                 self.n_starved_prey += 1
@@ -573,6 +570,7 @@ class PredPreyGrass:
         new_agent_instance.position = self._get_new_allowed_position(
             new_agent_instance, self.spawning_area, self.model_state
         )
+
         self._activate_agent(new_agent_instance)
 
     def _unlink_agent_from_grid(self, agent_instance: 'DiscreteAgent') -> None:
