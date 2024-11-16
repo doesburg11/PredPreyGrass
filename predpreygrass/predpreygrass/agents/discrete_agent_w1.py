@@ -4,7 +4,6 @@ import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
 
-
 class DiscreteAgent:
     def __init__(
         self,
@@ -23,6 +22,7 @@ class DiscreteAgent:
         ],
         initial_energy: float = 10,
         energy_gain_per_step: float = -0.1,
+        torus: bool = True,
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
@@ -38,6 +38,7 @@ class DiscreteAgent:
         self.position: np.ndarray = np.zeros(2, dtype=np.int32)  # x and y position
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
+        self.torus: bool = torus
 
         self.is_active: bool = False
         self.age: int = 0
@@ -58,12 +59,26 @@ class DiscreteAgent:
 
         next_position += self.motion_range[action]
 
-        # Apply torus transformation to handle out-of-bounds movement
-        next_position[0] = next_position[0] % self.x_grid_dim
-        next_position[1] = next_position[1] % self.y_grid_dim
+        if self.torus:
+            # Apply torus transformation to handle out-of-bounds movement
+            next_position[0] = next_position[0] % self.x_grid_dim
+            next_position[1] = next_position[1] % self.y_grid_dim
 
-        if self.model_state_agent[next_position[0], next_position[1]] > 0:
-            return self.position  # if intended to move to occupied cell of same agent type: don't move
+            if self.model_state_agent[next_position[0], next_position[1]] > 0:
+                return self.position  # if intended to move to occupied cell of same agent type: don't move
+            else:
+                self.position = next_position
+                return self.position
         else:
-            self.position = next_position
-            return self.position
+            if not (
+                0 <= next_position[0] < self.x_grid_dim
+                and 0 <= next_position[1] < self.y_grid_dim
+            ):
+                return self.position  # if moved out of borders: dont move
+            elif self.model_state_agent[next_position[0], next_position[1]] > 0:
+                return (
+                    self.position
+                )  # if intended to moved to occupied cell of same agent type: dont move
+            else:
+                self.position = next_position
+                return self.position
