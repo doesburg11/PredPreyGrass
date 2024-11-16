@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
-training_steps_string = "50_000_000"
+training_steps_string = "10_000_000"
 
 x_grid_size = 25
 y_grid_size = 25
@@ -72,6 +72,7 @@ env_kwargs = dict(
 
         }
     ),
+    torus=False,
     # visualization parameters
     cell_scale=40,
     x_pygame_window=0,

@@ -1,3 +1,7 @@
+"""
+pred/prey/grass PettingZoo multi-agent learning environment
+this environment transfers the energy of eaten prey/grass to the predator/prey
+"""
 # discretionary libraries
 from predpreygrass.aec_predpreygrass.agents.discrete_agent import DiscreteAgent
 
@@ -15,12 +19,6 @@ from collections import defaultdict
 
 
 class PredPreyGrass:
-    """
-    pred/prey/grass PettingZoo multi-agent learning environment this environment 
-    transfers the energy of eaten prey/grass to the predator/prey while the grass
-    regrows over time. The environment is a 2D grid world where agents can move
-    in four cardinal directions. 
-    """
     def __init__(
         self,
         x_grid_size: int = 25,
@@ -1504,3 +1502,19 @@ class PredPreyGrass:
             else None
         )
  
+    def print_model_state_to_screen(self, agent_type):
+        """
+        Print the self.model_state matrix for a specific agent type with a precision of 2 decimal places.
+        Zeros are replaced with dots, and the matrix is surrounded by brackets.
+
+        :param agent_type: The agent type to be printed.
+        """
+        # Determine the maximum width needed for the values
+        max_width = max(len(f'{value:.1f}') for row in self.model_state[agent_type] for value in row)
+
+        print("[")  # Opening bracket for the matrix
+        for row in self.model_state[agent_type]:
+            formatted_row = '  '.join(f'{value:>{max_width}.1f}' if value != 0 else '.' * max_width for value in row)
+            print(f"  [{formatted_row}]")
+        print("]")  # Closing bracket for the matrix
+
