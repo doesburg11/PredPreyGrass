@@ -21,14 +21,14 @@ from predpreygrass.predpreygrass.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
 )
-from predpreygrass.aec_predpreygrass.eval.utils.evaluator import Evaluator
+from predpreygrass.predpreygrass.eval.utils.evaluator import Evaluator
 
 # external libraries
 import os
 from os.path import dirname as up 
 
 if __name__ == "__main__":
-    is_parallel = False
+    is_parallel = True
     env_fn = predpreygrass_parallel_v0 if is_parallel else predpreygrass_aec_v0
     environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel else str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
