@@ -2,6 +2,14 @@ import os
 
 
 class ConfigSaver:
+    """
+    Saves the curreny configuration of the training scenario to a file with
+    `destination_training_file` as the file path. The configuration is saved
+    aloong with the environment name, training steps, and environment type 
+    (parallel/aec, torus/flat), and the total training time. This saved
+    configuration is especially useful when doing paramater variation studies
+    when the original configuration is overwritten by the current scenario.
+    """
     def __init__(
         self,
         destination_training_file,
@@ -18,11 +26,14 @@ class ConfigSaver:
         self.local_output_root = local_output_root
         self.destination_source_code_dir = destination_source_code_dir
 
+        self.torus = "torus" if env_kwargs["torus"] else "bounded"
+
     def save(self):
         # Save training scenario to file
         with open(self.destination_training_file, "w") as training_file:
             training_file.write("environment: " + self.environment_name + "\n")
             training_file.write("learning algorithm: PPO \n")
+            training_file.write("grid transformation: " + self.torus +" \n")
             training_file.write("training steps: " + self.training_steps_string + "\n")
             training_file.write("------------------------\n")
             for item in self.env_kwargs:

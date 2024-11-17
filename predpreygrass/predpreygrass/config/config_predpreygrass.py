@@ -72,7 +72,7 @@ env_kwargs = dict(
 
         }
     ),
-    torus=False,
+    torus=True,
     # visualization parameters
     cell_scale=40,
     x_pygame_window=0,
