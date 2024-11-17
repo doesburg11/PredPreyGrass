@@ -22,8 +22,7 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    print("env_kwars: ", env_kwargs)
-    is_parallel = False 
+    is_parallel = True 
     env_fn = predpreygrass_parallel_v0 if is_parallel else predpreygrass_aec_v0
     environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel else str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
