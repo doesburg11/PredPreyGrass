@@ -1,5 +1,6 @@
 # discretionary libraries
 from utils.population_plotter import PopulationPlotter
+
 # external libraries
 import os
 from statistics import mean, stdev
@@ -27,6 +28,27 @@ class Evaluator:
         self.destination_source_code_dir = destination_source_code_dir
         self.env_kwargs = env_kwargs
         self.num_episodes = env_kwargs["num_episodes"]
+
+    def save_combined_population_data(
+        self, predator_population, prey_population, episode_index
+    ):
+        """
+        Save the combined predator and prey population data to a text file for each episode.
+
+        Parameters:
+        - predator_population: list of predator population counts per cycle.
+        - prey_population: list of prey population counts per cycle.
+        - episode_index: int, index of the current episode.
+        """
+        file_path = os.path.join(
+            self.destination_output_dir, f"episode_{episode_index}_population.txt"
+        )
+        with open(file_path, "w") as f:
+            f.write("Cycle\tPredator Population\tPrey Population\n")
+            for cycle, (pred_count, prey_count) in enumerate(
+                zip(predator_population, prey_population)
+            ):
+                f.write(f"{cycle + 1}\t{pred_count}\t{prey_count}\n")
 
     def aec_evaluation(self):
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
@@ -87,8 +109,12 @@ class Evaluator:
         total_prey_age_list = []
         for i in range(self.num_episodes):
             env.reset(seed=i)
-            possible_predator_name_list = env_base.possible_agent_name_list_type[env_base.predator_type_nr]
-            possible_prey_name_list = env_base.possible_agent_name_list_type[env_base.prey_type_nr]
+            possible_predator_name_list = env_base.possible_agent_name_list_type[
+                env_base.predator_type_nr
+            ]
+            possible_prey_name_list = env_base.possible_agent_name_list_type[
+                env_base.prey_type_nr
+            ]
             possible_agent_name_list = env_base.possible_learning_agent_name_list
             cumulative_rewards = {agent: 0 for agent in possible_agent_name_list}
             cumulative_rewards_predator = {
@@ -122,20 +148,18 @@ class Evaluator:
             )
 
             episode_length[i] = n_cycles
-            n_starved_predator_per_cycle[i] = (
-                env_base.n_starved_predator / n_cycles
-            )
-            n_starved_prey_per_cycle[i] = (
-                env_base.n_starved_prey / n_cycles
-            )
+            n_starved_predator_per_cycle[i] = env_base.n_starved_predator / n_cycles
+            n_starved_prey_per_cycle[i] = env_base.n_starved_prey / n_cycles
             n_eaten_prey_per_cycle[i] = env_base.n_eaten_prey / n_cycles
             n_eaten_grass_per_cycle[i] = env_base.n_eaten_grass / n_cycles
-            n_born_predator_per_cycle[i] = (
-                env_base.n_born_predator / n_cycles
-            )
+            n_born_predator_per_cycle[i] = env_base.n_born_predator / n_cycles
             n_born_prey_per_cycle[i] = env_base.n_born_prey / n_cycles
-            episode_predator_age_list = env_base.agent_age_of_death_list_type[env_base.predator_type_nr]
-            episode_prey_age_list = env_base.agent_age_of_death_list_type[env_base.prey_type_nr]
+            episode_predator_age_list = env_base.agent_age_of_death_list_type[
+                env_base.predator_type_nr
+            ]
+            episode_prey_age_list = env_base.agent_age_of_death_list_type[
+                env_base.prey_type_nr
+            ]
             mean_age_predator[i] = (
                 mean(episode_predator_age_list) if episode_predator_age_list else 0
             )
@@ -191,6 +215,19 @@ class Evaluator:
             )
             evaluation_file.write(f"Mn age Prd = {round(mean_age_predator[i],1)} ")
             evaluation_file.write(f"Mn age Pry = {round(mean_age_prey[i],1)}\n")
+
+            # Collect predator and prey population data
+            predator_population_data = env_base.n_active_agent_list_type[
+                env_base.predator_type_nr
+            ]
+            prey_population_data = env_base.n_active_agent_list_type[
+                env_base.prey_type_nr
+            ]
+
+            # Save predator and prey population data to a single file per episode
+            self.save_combined_population_data(
+                predator_population_data, prey_population_data, i
+            )
 
         print("Finish evaluation.")
 
@@ -335,12 +372,12 @@ class Evaluator:
         )
 
     def parallel_evaluation(self):
-        #env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
+        # env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
-        parallel_env = self.env_fn.parallel_env(**self.env_kwargs, render_mode=self.render_mode)
+        parallel_env = self.env_fn.parallel_env(
+            **self.env_kwargs, render_mode=self.render_mode
+        )
         env_base = parallel_env.predpreygrass
-
-
 
         cumulative_rewards = {agent: 0 for agent in parallel_env.possible_agents}
         plotter = PopulationPlotter(self.destination_output_dir)
@@ -397,9 +434,13 @@ class Evaluator:
         total_predator_age_list = []
         total_prey_age_list = []
         for i in range(self.num_episodes):
-            #env.reset(seed=i)
-            possible_predator_name_list = env_base.possible_agent_name_list_type[env_base.predator_type_nr]
-            possible_prey_name_list = env_base.possible_agent_name_list_type[env_base.prey_type_nr]
+            # env.reset(seed=i)
+            possible_predator_name_list = env_base.possible_agent_name_list_type[
+                env_base.predator_type_nr
+            ]
+            possible_prey_name_list = env_base.possible_agent_name_list_type[
+                env_base.prey_type_nr
+            ]
             possible_agent_name_list = env_base.possible_learning_agent_name_list
             cumulative_rewards = {agent: 0 for agent in possible_agent_name_list}
             cumulative_rewards_predator = {
@@ -418,8 +459,6 @@ class Evaluator:
                 observations, rewards = parallel_env.step(actions)[:2]
                 done = env_base.is_no_prey or env_base.is_no_predator
 
-
-
             n_cycles = env_base.n_cycles
             plotter.plot_population(
                 env_base.n_active_agent_list_type[env_base.predator_type_nr],
@@ -430,20 +469,18 @@ class Evaluator:
             )
 
             episode_length[i] = n_cycles
-            n_starved_predator_per_cycle[i] = (
-                env_base.n_starved_predator / n_cycles
-            )
-            n_starved_prey_per_cycle[i] = (
-                env_base.n_starved_prey / n_cycles
-            )
+            n_starved_predator_per_cycle[i] = env_base.n_starved_predator / n_cycles
+            n_starved_prey_per_cycle[i] = env_base.n_starved_prey / n_cycles
             n_eaten_prey_per_cycle[i] = env_base.n_eaten_prey / n_cycles
             n_eaten_grass_per_cycle[i] = env_base.n_eaten_grass / n_cycles
-            n_born_predator_per_cycle[i] = (
-                env_base.n_born_predator / n_cycles
-            )
+            n_born_predator_per_cycle[i] = env_base.n_born_predator / n_cycles
             n_born_prey_per_cycle[i] = env_base.n_born_prey / n_cycles
-            episode_predator_age_list = env_base.agent_age_of_death_list_type[env_base.predator_type_nr]
-            episode_prey_age_list = env_base.agent_age_of_death_list_type[env_base.prey_type_nr]
+            episode_predator_age_list = env_base.agent_age_of_death_list_type[
+                env_base.predator_type_nr
+            ]
+            episode_prey_age_list = env_base.agent_age_of_death_list_type[
+                env_base.prey_type_nr
+            ]
             mean_age_predator[i] = (
                 mean(episode_predator_age_list) if episode_predator_age_list else 0
             )
@@ -499,6 +536,19 @@ class Evaluator:
             )
             evaluation_file.write(f"Mn age Prd = {round(mean_age_predator[i],1)} ")
             evaluation_file.write(f"Mn age Pry = {round(mean_age_prey[i],1)}\n")
+
+            # Collect predator and prey population data
+            predator_population_data = env_base.n_active_agent_list_type[
+                env_base.predator_type_nr
+            ]
+            prey_population_data = env_base.n_active_agent_list_type[
+                env_base.prey_type_nr
+            ]
+
+            # Save predator and prey population data to a single file per episode
+            self.save_combined_population_data(
+                predator_population_data, prey_population_data, i
+            )
 
         print("Finish evaluation.")
 
