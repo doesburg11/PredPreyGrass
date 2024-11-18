@@ -1,5 +1,5 @@
 # discretionary libraries
-from predpreygrass.predpreygrass.agents.discrete_agent import DiscreteAgent
+from predpreygrass.single_objective.agents.discrete_agent import DiscreteAgent
 from predpreygrass.utils.renderer import Renderer
 
 
