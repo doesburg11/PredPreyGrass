@@ -41,8 +41,9 @@ class Evaluator:
         - episode_index: int, index of the current episode.
         """
         file_path = os.path.join(
-            self.destination_output_dir, f"episode_{episode_index}_population.txt"
+            self.destination_output_dir, "population_data", f"episode_{episode_index}_population.txt"
         )
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the directory exists
         with open(file_path, "w") as f:
             f.write("Cycle\tPredator Population\tPrey Population\n")
             for cycle, (pred_count, prey_count) in enumerate(
@@ -130,7 +131,7 @@ class Evaluator:
                 elif agent in possible_prey_name_list:
                     cumulative_rewards_prey[agent] += reward
 
-                if env_base.is_no_predator or env_base.is_no_prey:
+                if env_base.is_no_predator or env_base.is_no_prey or env.truncations[agent]:
                     action = None
                     if env_base.is_no_predator:
                         predator_extinct_at_termination[i] = 1
@@ -457,7 +458,7 @@ class Evaluator:
                     for agent in parallel_env.agents
                 }
                 observations, rewards = parallel_env.step(actions)[:2]
-                done = env_base.is_no_prey or env_base.is_no_predator
+                done = env_base.is_no_prey or env_base.is_no_predator or n_cycles >= env_base.max_cycles
 
             n_cycles = env_base.n_cycles
             plotter.plot_population(
@@ -552,7 +553,7 @@ class Evaluator:
 
         print("Finish evaluation.")
 
-        env.close()
+        env_base.close()
         predator_extinct_at_termination_count = sum(predator_extinct_at_termination)
         episode_mean_of_mean_cumulative_rewards = round(
             mean(mean_cumulative_rewards), 1

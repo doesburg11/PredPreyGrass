@@ -1,8 +1,8 @@
-environment: predpreygrass_parallel_v0
+date: 2024-11-18_23:08:18
+environment: predpreygrass_aec_v0
 learning algorithm: PPO 
 grid transformation: torus 
-training steps: 10_000_000
-ttime: 2024-11-18_09:21:43
+training steps: 30_000_000
 ------------------------
 max_cycles = 2000
 step_reward_predator = 0.0
@@ -18,7 +18,7 @@ x_grid_size = 25
 y_grid_size = 25
 n_possible_predator = 18
 n_possible_prey = 24
-n_possible_grass = 25
+n_possible_grass = 20
 n_initial_active_predator = 6
 n_initial_active_prey = 8
 max_observation_range = 9
@@ -49,4 +49,4 @@ show_energy_chart = True
 num_episodes = 100
 watch_grid_model = True
 ------------------------
-training time = 53.1 minutes 
+training time = 3.8 hours 
