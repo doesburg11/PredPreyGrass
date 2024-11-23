@@ -1,7 +1,7 @@
 # put in here your own directory to the output folder
 local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
-training_steps_string = "30_000_000"
+training_steps_string = "10_000_000"
 
 x_grid_size = 25
 y_grid_size = 25
@@ -18,10 +18,7 @@ env_kwargs = dict(
     death_reward_predator=0.0,
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
-    # environment parameters
-    x_grid_size=x_grid_size,
-    y_grid_size=y_grid_size,
-    # agent parameters
+   # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
     n_possible_grass=20,
@@ -47,6 +44,18 @@ env_kwargs = dict(
     regrow_grass=True,  
     prey_creation_energy_threshold=10,
     predator_creation_energy_threshold=12, 
+    # visualization parameters
+    cell_scale=40,
+    x_pygame_window=0,
+    y_pygame_window=0,
+    show_energy_chart=True,
+    # evaluation parameters
+    num_episodes=100,
+    watch_grid_model=False,
+    # environment parameters
+    x_grid_size=x_grid_size,
+    y_grid_size=y_grid_size,
+    torus=False,
     spawning_area_predator=dict(
         {
             "x_begin": 0,
@@ -72,13 +81,4 @@ env_kwargs = dict(
 
         }
     ),
-    torus=True,
-    # visualization parameters
-    cell_scale=40,
-    x_pygame_window=0,
-    y_pygame_window=0,
-    show_energy_chart=True,
-    # evaluation parameters
-    num_episodes=100,
-    watch_grid_model=False,
 )
