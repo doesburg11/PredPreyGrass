@@ -19,7 +19,6 @@ instructions:
 from predpreygrass.single_objective.envs import predpreygrass_aec_v0, predpreygrass_parallel_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
-    training_steps_string,
 )
 from predpreygrass.single_objective.eval.utils.evaluator import Evaluator
 
@@ -28,7 +27,10 @@ import os
 from os.path import dirname as up 
 
 if __name__ == "__main__":
-    is_parallel = False
+    training_steps_string = env_kwargs["training_steps_string"]
+    watch_grid_model = env_kwargs["watch_grid_model"]
+    num_episodes = env_kwargs["num_episodes"] 
+    is_parallel = env_kwargs["is_parallel"]
     env_fn = predpreygrass_parallel_v0 if is_parallel else predpreygrass_aec_v0
     environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel else str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
@@ -39,8 +41,6 @@ if __name__ == "__main__":
     output_directory = destination_source_code_dir +"/output/"
     loaded_policy = output_directory + model_file_name
     # input from so_config_predpreygrass.py
-    watch_grid_model = env_kwargs["watch_grid_model"]
-    num_episodes = env_kwargs["num_episodes"] 
     training_steps = int(training_steps_string)
 
     render_mode = "human" if watch_grid_model else None
@@ -52,7 +52,6 @@ if __name__ == "__main__":
         loaded_policy,
         destination_source_code_dir, # destination_root_dir,
         render_mode,
-        training_steps_string,
         destination_source_code_dir, # destination_source_code_dir,
         **env_kwargs
     )

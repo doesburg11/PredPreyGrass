@@ -86,6 +86,7 @@ class PredPreyGrassSuperBaseEnv:
         num_episodes: int = 100,
         torus: bool = False,
         is_parallel: bool = False,
+        training_steps_string: str = "10_000_000",
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -133,6 +134,7 @@ class PredPreyGrassSuperBaseEnv:
         self.max_energy_level_grass = max_energy_level_grass
         self.torus = torus
         self.is_parallel = is_parallel
+        self.training_steps_string = training_steps_string
 
         self._initialize_variables()
         # TODO implement in config

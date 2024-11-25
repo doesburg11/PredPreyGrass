@@ -1,13 +1,10 @@
 # put in here your own directory to the output folder
 local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
-training_steps_string = "10_000_000"
-
 x_grid_size = 25
 y_grid_size = 25
 
 env_kwargs = dict(
-    max_cycles=5000,
     # reward parameters
     step_reward_predator=0.0,
     step_reward_prey=0.0,
@@ -52,6 +49,9 @@ env_kwargs = dict(
     # evaluation parameters
     num_episodes=100,
     watch_grid_model=False,
+    # training parameters
+    max_cycles=5000,
+    training_steps_string = "10_000_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
