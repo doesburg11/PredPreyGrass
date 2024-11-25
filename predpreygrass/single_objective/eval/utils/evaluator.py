@@ -1,8 +1,11 @@
+
 # discretionary libraries
 from utils.population_plotter import PopulationPlotter
 
 # external libraries
 import os
+import csv
+import time
 from statistics import mean, stdev
 from stable_baselines3 import PPO
 
@@ -15,7 +18,6 @@ class Evaluator:
         loaded_policy,
         destination_root_dir,
         render_mode,
-        training_steps_string,
         destination_source_code_dir,
         **env_kwargs,
     ):
@@ -24,16 +26,47 @@ class Evaluator:
         self.loaded_policy = loaded_policy
         self.destination_root_dir = destination_root_dir
         self.render_mode = render_mode
-        self.training_steps_string = training_steps_string
         self.destination_source_code_dir = destination_source_code_dir
+
         self.env_kwargs = env_kwargs
+        self.training_steps_string = env_kwargs["training_steps_string"]
         self.num_episodes = env_kwargs["num_episodes"]
+        self.environment_name = str(env_fn.parallel_env.metadata["name"]) if env_kwargs["is_parallel"] else str(env_fn.raw_env.metadata["name"])
+        self.torus = env_kwargs["torus"]
+        self.grid_transformation = "torus transformation" if self.torus else "bounded grid"
+        self.evaluation_time_stamp = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
+
+
+    def evaluation_header_text(self):
+        return (
+             "Evaluation results:\n"
+            + "--------------------------\n"
+            + "environment: "
+            + self.environment_name
+            + "\n"
+            + "policy algorithm: PPO"
+            + "loaded_policy: "
+            + self.loaded_policy
+            + "\n"
+            + "evaluation directory: "
+            + self.destination_source_code_dir
+            + "\n"
+            + "training steps: "
+            + self.training_steps_string
+            + "\n"
+            + "Date and Time: "
+            + self.evaluation_time_stamp
+            + "\n"
+            + "--------------------------\n"
+        )
+
+
 
     def save_combined_population_data(
         self, predator_population, prey_population, episode_index
     ):
         """
-        Save the combined predator and prey population data to a text file for each episode.
+        Save the combined predator and prey population data to a CSV file for each episode.
 
         Parameters:
         - predator_population: list of predator population counts per cycle.
@@ -41,15 +74,18 @@ class Evaluator:
         - episode_index: int, index of the current episode.
         """
         file_path = os.path.join(
-            self.destination_output_dir, "population_data", f"episode_{episode_index}_population.txt"
+            self.destination_output_dir, "population_data", f"episode_{episode_index}_population.csv"
         )
         os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Ensure the directory exists
-        with open(file_path, "w") as f:
-            f.write("Cycle\tPredator Population\tPrey Population\n")
-            for cycle, (pred_count, prey_count) in enumerate(
-                zip(predator_population, prey_population)
-            ):
-                f.write(f"{cycle + 1}\t{pred_count}\t{prey_count}\n")
+
+        with open(file_path, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            # Write the header row
+            writer.writerow(["Cycle", "Predator Population", "Prey Population"])
+            # Write each cycle's data
+            for cycle, (pred_count, prey_count) in enumerate(zip(predator_population, prey_population)):
+                writer.writerow([cycle + 1, pred_count, prey_count])
+
 
     def aec_evaluation(self):
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
@@ -62,23 +98,7 @@ class Evaluator:
             self.destination_output_dir, "evaluation.txt"
         )
         print("Start evaluation on: " + self.destination_root_dir)
-        eval_header_text = (
-            "Evaluation results:\n"
-            + "--------------------------\n"
-            + "loaded_policy: "
-            + self.loaded_policy
-            + "\n"
-            + "environment: "
-            + str(env.metadata["name"])
-            + "\n"
-            + "evaluation: "
-            + self.destination_source_code_dir
-            + "\n"
-            + "training steps: "
-            + self.training_steps_string
-            + "\n"
-            + "--------------------------\n"
-        )
+        eval_header_text = self.evaluation_header_text()
         evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
         evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
@@ -179,7 +199,6 @@ class Evaluator:
                 cumulative_rewards_predator.values()
             )
             std_cumulative_rewards_prey[i] = stdev(cumulative_rewards_prey.values())
-
             eval_results_text = (
                 f"Eps {i} "
                 + f"Lngth = {n_cycles} "
@@ -194,28 +213,6 @@ class Evaluator:
             )
             print(eval_results_text)
             evaluation_file.write(eval_results_text)
-            evaluation_file.write(f"Eps {i} ")
-            evaluation_file.write(f"Lngth = {n_cycles} ")
-            evaluation_file.write(
-                f"Strv Prd/cycl = {round(n_starved_predator_per_cycle[i],3)} "
-            )
-            evaluation_file.write(
-                f"Strv Pry/cycl = {round(n_starved_prey_per_cycle[i],3)} "
-            )
-            evaluation_file.write(
-                f"Eeatn Pry/cycl = {round(n_eaten_prey_per_cycle[i],3)} "
-            )
-            evaluation_file.write(
-                f"Eeatn Gra/cycl = {round(n_eaten_grass_per_cycle[i],3)} "
-            )
-            evaluation_file.write(
-                f"Brn Prd/cycl = {round(n_born_predator_per_cycle[i],3)} "
-            )
-            evaluation_file.write(
-                f"Brn Pry/cycl = {round(n_born_prey_per_cycle[i],3)} "
-            )
-            evaluation_file.write(f"Mn age Prd = {round(mean_age_predator[i],1)} ")
-            evaluation_file.write(f"Mn age Pry = {round(mean_age_prey[i],1)}\n")
 
             # Collect predator and prey population data
             predator_population_data = env_base.n_active_agent_list_type[
@@ -379,7 +376,6 @@ class Evaluator:
             **self.env_kwargs, render_mode=self.render_mode
         )
         env_base = parallel_env.predpreygrass
-
         cumulative_rewards = {agent: 0 for agent in parallel_env.possible_agents}
         plotter = PopulationPlotter(self.destination_output_dir)
 
@@ -388,23 +384,7 @@ class Evaluator:
             self.destination_output_dir, "evaluation.txt"
         )
         print("Start evaluation on: " + self.destination_root_dir)
-        eval_header_text = (
-            "Evaluation results:\n"
-            + "--------------------------\n"
-            + "loaded_policy: "
-            + self.loaded_policy
-            + "\n"
-            + "environment: "
-            + str(parallel_env.metadata["name"])
-            + "\n"
-            + "evaluation: "
-            + self.destination_source_code_dir
-            + "\n"
-            + "training steps: "
-            + self.training_steps_string
-            + "\n"
-            + "--------------------------\n"
-        )
+        eval_header_text = self.evaluation_header_text()
         evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
         evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen

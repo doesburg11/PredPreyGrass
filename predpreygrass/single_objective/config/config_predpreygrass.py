@@ -7,7 +7,7 @@ x_grid_size = 25
 y_grid_size = 25
 
 env_kwargs = dict(
-    max_cycles=2000,
+    max_cycles=5000,
     # reward parameters
     step_reward_predator=0.0,
     step_reward_prey=0.0,
@@ -21,7 +21,7 @@ env_kwargs = dict(
    # agent parameters
     n_possible_predator=18,  # maximum number of predators during runtime
     n_possible_prey=24,
-    n_possible_grass=20,
+    n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
     # observation parameters
@@ -42,7 +42,7 @@ env_kwargs = dict(
     create_prey=True,  
     create_predator=True,  
     regrow_grass=True,  
-    prey_creation_energy_threshold=10,
+    prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12, 
     # visualization parameters
     cell_scale=40,
