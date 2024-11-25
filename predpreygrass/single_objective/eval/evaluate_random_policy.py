@@ -7,7 +7,6 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 
 is_parallel = env_kwargs["is_parallel"]
 
-
 if is_parallel:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
         render_mode="human", **env_kwargs
