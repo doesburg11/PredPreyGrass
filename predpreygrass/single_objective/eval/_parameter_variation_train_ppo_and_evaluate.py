@@ -8,17 +8,16 @@ The algorithm used is PPO from stable_baselines3.
 The environment used is predpreygrass
 """
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_aec_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.single_objective.envs import predpreygrass_aec_v0
+from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
-    training_steps_string,
     local_output_root,
 )
-from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.trainer import (
+from predpreygrass.single_objective.train.utils.trainer import (
     Trainer,
 )
-from predpreygrass.optimizations.so_predpreygrass_v0.training.utils.config_saver import ConfigSaver
-from predpreygrass.optimizations.so_predpreygrass_v0.evaluation.utils.evaluator import Evaluator
+from predpreygrass.single_objective.train.utils.config_saver import ConfigSaver
+from predpreygrass.single_objective.eval.utils.evaluator import Evaluator
 
 # external libraries
 import os
@@ -27,6 +26,7 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
+    training_steps_string =  env_kwargs["training_steps_string"]
     env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)

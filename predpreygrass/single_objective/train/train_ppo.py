@@ -9,7 +9,6 @@ directory, for reuse and analysis.
 from predpreygrass.single_objective.envs import predpreygrass_parallel_v0, predpreygrass_aec_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
-    training_steps_string,
     local_output_root,
 )
 from predpreygrass.single_objective.train.utils.trainer import Trainer
@@ -22,12 +21,13 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    is_parallel = False 
+    is_parallel = env_kwargs["is_parallel"]
+    training_steps_string = env_kwargs["training_steps_string"]
+    time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_parallel_v0 if is_parallel else predpreygrass_aec_v0
     environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel else str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
     # create model file name for saving
-    time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     # create a local directory to save the project code and output results
     destination_source_code_dir = os.path.join(
