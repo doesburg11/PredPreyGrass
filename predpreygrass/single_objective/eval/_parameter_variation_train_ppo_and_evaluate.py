@@ -125,7 +125,7 @@ if __name__ == "__main__":
         num_episodes = env_kwargs["num_episodes"]
         training_steps = int(training_steps_string)
         render_mode = "human" if watch_grid_model else None
-                # Create an instance of the Evaluator class
+        # Create an instance of the Evaluator class
         evaluator = Evaluator(
             env_fn,
             destination_output_dir,
