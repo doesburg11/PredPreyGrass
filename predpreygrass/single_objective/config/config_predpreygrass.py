@@ -48,7 +48,7 @@ env_kwargs = dict(
     show_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
-    watch_grid_model=False,
+    watch_grid_model=True,
     # training parameters
     max_cycles=5000,
     training_steps_string = "10_000_000",
