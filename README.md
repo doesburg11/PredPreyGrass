@@ -20,16 +20,11 @@ Predator-Prey-Grass gridworld deploying multi-objective and multi-agent environm
 </p>
 
 ## The environments
-[**so_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_so_predpreygrass_v0): A (single-objective) multi-agent reinforcement learning (MARL) environment, [trained and evaluated](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/optimizations/so_predpreygrass_v0) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards (stepping, eating, dying and reproducing) are naively summed and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py) file. 
+[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): A (single-objective) multi-agent reinforcement learning (MARL) environment, [trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo.py) and [evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file.py) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards (stepping, eating, dying and reproducing) are naively summed and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
 
-[**mo_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_mo_predpreygrass_v0):  A (multi-objective) multi-agent reinforcement learning (MOMARL) environment. The environment has two objectives: 
-- maximize cumulative rewards for reproduction of Predator agents
-- maximize cumulative rewards for reproduction of Prey agents. 
-
-The rewards returned by the environment are stored in a two-dimensional vector conform Farama's [Momaland](https://momaland.farama.org/) framework, which follows the standard [PettingZoo API](https://pettingzoo.farama.org/). This environment is a generalization of the single objective version described above and offers the opportunity to go beyond naively summing rewards and permits the possibility of implementing predefined (possibly non-linear) utility functions for every seperate learning agent.
 
 ## Emergent Behaviors
-Training the single onbjective environment [**mo_predpregrass_v0.py**](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/envs/_mo_predpreygrass_v0) with the PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
+Training the single objective environment [predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py) with the PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
 - Predators hunting Prey 
 - Prey finding and eating grass 
 - Predators hovering around grass to catch Prey 
@@ -58,34 +53,28 @@ More emergent behavior and findings are described [on our website](https://www.b
    - Choose environment: Conda 
    - Choose interpreter: Python 3.11.7
    - Open a new terminal
-   - Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. If encountering "ERROR: Failed building wheel for box2d-py," run:
-   ```bash
-   conda install swig
-   ```
-   and
-   ```bash
-   pip install box2d box2d-kengz
-   ```
-4. Alternative 1:
-   ```bash
-   pip install wheel setuptools pip --upgrade
-   pip install swig
-   pip install gymnasium[box2d]
-   ``` 
-6. Alternative 2: a workaround is to copy Box2d files from [assets/box2d](https://github.com/doesburg11/PredPreyGrass/tree/main/assets/box2d) to the site-packages directory.
-7. If facing "libGL error: failed to load driver: swrast," execute:
-    ```bash
-    conda install -c conda-forge gcc=12.1.0
+   - ```bash
+     pip install -e . 
+     ```
+ 3. Install the following requirements:  
+    -   ```bash 
+        pip install supersuit==3.9.3 
+        ```
+    -   ```bash 
+        pip install tensorboard==2.18.0 
+        ```
+    -   ```bash 
+        pip install stable-baselines3[extra] 
+        ```
+    - ```bash
+      conda install -c conda-forge gcc=12.1.0
+         ```
     
 ## Getting started
 
 ### Visualize a random policy
 In Visual Studio Code run:
-```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_simple_aec_random_policy.py```
+```predpreygrass/single_objective/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
@@ -96,19 +85,19 @@ In Visual Studio Code run:
 
 Adjust parameters accordingly in:
 
-```predpreygrass/envs/_so_predpreygrass_v0/config/so_config_predpreygrass.py```
+```predpreygrass/single_objective/config/config_predpreygrass.py```
 
 In Visual Studio Code run:
 
-```predpreygrass/optimizations/so_predpreygrass_v0/training/so_predpreygrass_v0_train_ppo.py```
+```predpreygrass/single_objective/train/train_ppo.py```
 
 To evaluate and visualize after training follow instructions in:
 
-```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_evaluate_ppo_from_file.py```
+```predpreygrass/single_objective/eval/evaluate_ppo_from_file.py```
 
-Batch training and evaluating in one go:
+[UNDER (RE)CONSTRUCTION] Batch training and evaluating in one go:
 
-```predpreygrass/optimizations/so_predpreygrass_v0/evaluation/so_parameter_variation_train_ppo_and_evaluate.py```
+```predpreygrass/single_objective/eval/_parameter_variation_train_ppo_and_evaluate.py```
 
 ## References
 
@@ -118,7 +107,6 @@ Batch training and evaluating in one go:
 - [Multi-Objective Multi-Agent Decision Making: A Utility-based Analysis and Survey](https://arxiv.org/abs/1909.02964)
 - [A Practical Guide to Multi-Objective Reinforcement Learning and Planning](https://arxiv.org/abs/2103.09568)
 - [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
-
 
 
 
