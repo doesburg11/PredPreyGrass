@@ -1,6 +1,6 @@
 # discretionary libraries
 from predpreygrass.single_objective.agents.discrete_agent import DiscreteAgent
-from predpreygrass.utils.renderer import Renderer
+from predpreygrass.single_objective.utils.renderer import Renderer
 
 
 # external libraries
