@@ -5,7 +5,11 @@ from predpreygrass.single_objective.envs import (
 )
 from predpreygrass.single_objective.config.config_predpreygrass import env_kwargs
 
+# external libraries
+import time
+
 is_parallel = env_kwargs["is_parallel"]
+delay = 0.01
 
 if is_parallel:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
@@ -40,4 +44,5 @@ else:
             action = env.action_space(agent).sample()  # random policy
 
         env.step(action)
+        time.sleep(delay)
     env.close()
