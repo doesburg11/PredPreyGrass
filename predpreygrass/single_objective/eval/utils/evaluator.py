@@ -210,7 +210,7 @@ class Evaluator:
                 else:
                     action = model.predict(observation, deterministic=True)[0]
                 env.step(action)
-            self.n_cycles = env_base.self.n_cycles
+            self.n_cycles = env_base.n_cycles
             plotter.plot_population(
                 env_base.n_active_agent_list_type[env_base.predator_type_nr],
                 env_base.n_active_agent_list_type[env_base.prey_type_nr],

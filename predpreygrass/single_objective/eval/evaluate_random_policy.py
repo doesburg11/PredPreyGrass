@@ -9,7 +9,7 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 import time
 
 is_parallel = env_kwargs["is_parallel"]
-delay = 0.5
+delay = 0.4
 
 if is_parallel:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
@@ -30,6 +30,7 @@ if is_parallel:
             if rewards[agent] > 0.0:
                 print(f"{agent}, reward: {rewards[agent]}")
         done = env_base.is_no_prey or env_base.is_no_predator
+        time.sleep(delay)
     parallel_env.close()
 else:
     env = predpreygrass_aec_v0.env(render_mode="human", **env_kwargs)
@@ -44,5 +45,4 @@ else:
             action = env.action_space(agent).sample()  # random policy
 
         env.step(action)
-        time.sleep(delay)
     env.close()
