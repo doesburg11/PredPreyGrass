@@ -23,7 +23,7 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
             #print(f"n_active_agent_type: {self.n_active_agent_type}")
             self._reset_rewards()
             # removes agents, reap rewards and eventually (re)create agents
-            for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr].copy():
+            for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr][:]:
                 if predator_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = predator_instance.position
@@ -75,7 +75,7 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                         predator_instance.agent_name
                     ] += self.death_reward_predator
 
-            for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr]:
+            for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr][:]:
                 if prey_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = prey_instance.position
