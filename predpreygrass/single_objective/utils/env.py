@@ -187,9 +187,9 @@ class PredPreyGrassSuperBaseEnv:
         self._initialize_variables()
 
         # create all possible agents
-        for agent_type_nr in self.agent_types:
+        for agent_type_nr in self.biotic_agent_types:
             """
-            create all possibel agents of all types (excluding "wall"-agents), 
+            create all possible agents of all types (excluding "wall"-agents), 
             which can be activated or deactivated during runtime
             """
 
@@ -226,7 +226,7 @@ class PredPreyGrassSuperBaseEnv:
                     agent_instance
                 )
         # create lists of all possible agents and the subset active agents  
-        for agent_type_nr in self.agent_types:
+        for agent_type_nr in self.biotic_agent_types:
             # Copy possible agent instances to active agent instances
             self.active_agent_instance_list_type[agent_type_nr] = (
                 self.possible_agent_instance_list_type[agent_type_nr].copy()
@@ -237,7 +237,11 @@ class PredPreyGrassSuperBaseEnv:
                     self.possible_agent_instance_list_type[agent_type_nr]
                 )
             )
-     
+        # create one single list of all possible biotic agent instances together
+        for agent_type_nr in self.biotic_agent_types:
+            self.possible_agent_instance_list+=self.possible_agent_instance_list_type[agent_type_nr]
+
+             
         # deactivate part of the agents which can be created later at runtime
         for agent_type in self.learning_agent_types:
             for agent_instance in self.possible_agent_instance_list_type[agent_type]:
@@ -253,45 +257,7 @@ class PredPreyGrassSuperBaseEnv:
                     self._unlink_agent_from_grid(agent_instance)
                     agent_instance.is_active = False
                     agent_instance.energy = 0.0
-        """           
-        # removal agents set to false
-        self.prey_who_remove_grass_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.prey_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.prey_type_nr]],
-            )
-        )
-        self.grass_to_be_removed_by_prey_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.grass_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.grass_type_nr]],
-            )
-        )
-        self.predator_who_remove_prey_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.predator_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.predator_type_nr]],
-            )
-        )
-        self.prey_to_be_removed_by_predator_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.prey_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.prey_type_nr]],
-            )
-        )
-        self.prey_to_be_removed_by_starvation_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.prey_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.prey_type_nr]],
-            )
-        )
-        self.predator_to_be_removed_by_starvation_dict = dict(
-            zip(
-                self.possible_agent_name_list_type[self.predator_type_nr],
-                [False for _ in self.possible_agent_name_list_type[self.predator_type_nr]],
-            )
-        )
-        """
+
         # define the learning agents
         self.possible_learning_agent_name_list = (
             self.possible_agent_name_list_type[self.predator_type_nr] + self.possible_agent_name_list_type[self.prey_type_nr]
@@ -621,6 +587,8 @@ class PredPreyGrassSuperBaseEnv:
     def _initialize_variables(self) -> None:
         # Agent types definitions
         self.agent_type_name_list = ["wall", "predator", "prey", "grass"]
+        self.biotic_agent_type_name_list = ["predator", "prey", "grass"]
+        self.learning_agent_type_name_list = ["predator", "prey"]
         self.predator_type_nr, self.prey_type_nr, self.grass_type_nr = 1, 2, 3
         self.agent_id_counter = 0
 
@@ -631,7 +599,7 @@ class PredPreyGrassSuperBaseEnv:
 
         # Initialization per agent type
         self.learning_agent_types = [self.predator_type_nr, self.prey_type_nr]
-        self.agent_types = [self.predator_type_nr, self.prey_type_nr, self.grass_type_nr]
+        self.biotic_agent_types = [self.predator_type_nr, self.prey_type_nr, self.grass_type_nr]
         self.n_possible_agents = sum(self.n_possible_agent_type[1:3])
 
         # Translation of input parameters
@@ -653,6 +621,7 @@ class PredPreyGrassSuperBaseEnv:
         )
         self.agent_name_to_instance_dict = {}
         self.total_energy_agent_type = [0.0] * list_length
+        self.possible_agent_instance_list = []
         self.possible_agent_instance_list_type = [[] for _ in range(list_length)]
         self.active_agent_instance_list_type = [[] for _ in range(list_length)]
         self.agent_age_of_death_list_type = [[] for _ in range(list_length)]
@@ -671,14 +640,14 @@ class PredPreyGrassSuperBaseEnv:
             range(self.start_index_type[i], self.start_index_type[i + 1]) if i < list_length - 1 else range(self.start_index_type[i], self.start_index_type[i] + self.n_possible_agent_type[i])
             for i in range(list_length)
         ]
-        for agent_type in self.agent_types:
+        for agent_type in self.biotic_agent_types:
             self.possible_agent_name_list_type[agent_type] = [
                 f"{self.agent_type_name_list[agent_type]}_{a}" for a in self.agent_id_nr_range_type[agent_type]
             ]
         self.possible_learning_agent_name_list = (
             self.possible_agent_name_list_type[self.predator_type_nr] + self.possible_agent_name_list_type[self.prey_type_nr]
         )
-        for agent_type in self.agent_types:
+        for agent_type in self.biotic_agent_types:
             self.total_energy_agent_type[agent_type] = (
                 self.n_active_agent_type[agent_type] * self.initial_energy_type[agent_type]
             )
@@ -698,7 +667,7 @@ class PredPreyGrassSuperBaseEnv:
                 for x in range(self.spawning_area_list_type[agent_type]["x_begin"], self.spawning_area_list_type[agent_type]["x_end"] + 1)
                 for y in range(self.spawning_area_list_type[agent_type]["y_begin"], self.spawning_area_list_type[agent_type]["y_end"] + 1)
             }
-            for agent_type in self.agent_types
+            for agent_type in self.biotic_agent_types
         }
 
         # Population metrics
