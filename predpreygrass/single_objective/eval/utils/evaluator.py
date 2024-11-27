@@ -38,12 +38,12 @@ class Evaluator:
     def initialize_evaluation_metrics(self):
 
             # initialization evaluation metrics
-            self.self.episode_mean_of_mean_cumulative_rewards = 0
-            self.self.episode_mean_of_mean_cumulative_rewards_predators = 0
-            self.self.episode_mean_of_mean_cumulative_rewards_prey = 0
-            self.self.predator_extinct_at_termination_count = 0
-            self.self.mean_episode_length = 0
-            self.self.std_episode_length = 0
+            self.episode_mean_of_mean_cumulative_rewards = 0
+            self.episode_mean_of_mean_cumulative_rewards_predators = 0
+            self.episode_mean_of_mean_cumulative_rewards_prey = 0
+            self.predator_extinct_at_termination_count = 0
+            self.mean_episode_length = 0
+            self.std_episode_length = 0
             self.episode_length = [0 for _ in range(self.num_episodes)]
             self.predator_extinct_at_termination = [0 for _ in range(self.num_episodes)]
             self.n_starved_predator_per_cycle = [0 for _ in range(self.num_episodes)]
@@ -369,7 +369,7 @@ class Evaluator:
                 observations, rewards = parallel_env.step(actions)[:2]
                 done = env_base.is_no_prey or env_base.is_no_predator or self.n_cycles >= env_base.max_cycles
 
-            self.n_cycles = env_base.self.n_cycles
+            self.n_cycles = env_base.n_cycles
             plotter.plot_population(
                 env_base.n_active_agent_list_type[env_base.predator_type_nr],
                 env_base.n_active_agent_list_type[env_base.prey_type_nr],
@@ -384,7 +384,7 @@ class Evaluator:
             self.n_eaten_prey_per_cycle[i] = env_base.n_eaten_prey / self.n_cycles
             self.n_eaten_grass_per_cycle[i] = env_base.n_eaten_grass / self.n_cycles
             self.n_born_predator_per_cycle[i] = env_base.n_born_predator / self.n_cycles
-            self.self.n_born_prey_per_cycle[i] = env_base.n_born_prey / self.n_cycles
+            self.n_born_prey_per_cycle[i] = env_base.n_born_prey / self.n_cycles
             self.episode_predator_age_list = env_base.agent_age_of_death_list_type[
                 env_base.predator_type_nr
             ]
