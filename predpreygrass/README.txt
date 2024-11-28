@@ -24,8 +24,7 @@ predpreygrass/
     ├── tune/
     │   ├── so_predpreygrass_v0_ppo_tuning_2.py     # UNDER CONSTRUCTION
     │   └── so_predpreygrass_v0_ppo_tuning.py       # UNDER CONSTRUCTION
-    │
-    └── utils/                                      # General utility scripts used across different parts of the project
+    └── utils/                                      
         ├── env.py                                  # General utility functions for the environment
         └── renderer.py                             # Utility script for rendering the environment
 
