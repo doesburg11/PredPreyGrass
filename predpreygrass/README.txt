@@ -1,4 +1,4 @@
-## Structure of the respository
+Structure of the respository
 
 predpreygrass/
 ├── multi_objective/                                # UNDER CONSTRUCTION
@@ -21,11 +21,11 @@ predpreygrass/
 │   │   ├── README.md                               # Documentation for training scripts
 │   │   ├── train_ppo.py                            # Training script using PPO for single-objective environment
 │   │   └── utils/                                  # Utility scripts for training (details not provided)
-│   └── tune/
-│       ├── so_predpreygrass_v0_ppo_tuning_2.py     # UNDER CONSTRUCTION
-│       └── so_predpreygrass_v0_ppo_tuning.py       # UNDER CONSTRUCTION
-│
-├── utils/                                          # General utility scripts used across different parts of the project
-│   ├── env.py                                      # General utility functions for the environment
-│   └── renderer.py                                 # Utility script for rendering the environment
+│   ├── tune/
+    │   ├── so_predpreygrass_v0_ppo_tuning_2.py     # UNDER CONSTRUCTION
+    │   └── so_predpreygrass_v0_ppo_tuning.py       # UNDER CONSTRUCTION
+    │
+    └── utils/                                      # General utility scripts used across different parts of the project
+        ├── env.py                                  # General utility functions for the environment
+        └── renderer.py                             # Utility script for rendering the environment
 
