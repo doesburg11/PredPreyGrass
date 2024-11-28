@@ -1,8 +1,7 @@
 # put in here your own directory to the output folder
 local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
 
-x_grid_size = 25
-y_grid_size = 25
+x_grid_size, y_grid_size = 25, 25
 
 env_kwargs = dict(
     # reward parameters
