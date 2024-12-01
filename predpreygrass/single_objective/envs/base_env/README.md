@@ -1,4 +1,4 @@
-## so_predpreygrass_base.py
+## predpreygrass_base.py
 Defines a multi-agent learning environment called `PredPreyGrass`, which simulates interactions between predators, prey, and grass. This environment is designed to model energy transfer dynamics where predators gain energy by eating prey, and prey gain energy by eating grass. The environment is built using the `gymnasium` library and includes various configurations and parameters to control the simulation.
 
 The `PredPreyGrass` class initializes the environment with a grid of specified size and sets up the initial conditions for the agents, including their energy levels, observation ranges, and spawning areas. The class also defines various constants and parameters such as the number of possible predators, prey, and grass, as well as rewards and energy gains associated with different actions.
@@ -23,9 +23,9 @@ The `reset_removal_records` function resets the records for agent removals at th
 
 The `observe` function generates observations for a given agent, providing information about the surrounding grid cells within the agent's observation range. The `render` function visualizes the environment using the `pygame` library, drawing the grid, agents, and energy levels on the screen.
 
-## so_predpreygrass.py
+## predpreygrass_aec.py
 
-Calls an instance of PredPreyGrass from `so_predpreygrass_base.py`, according to the `pettingzoo` protocol. Defines a multi-agent environment for a predator-prey-grass simulation using the`gymnasium` and `pettingzoo` libraries. The environment is encapsulated in the `raw_env` class, which inherits from `AECEnv` and `EzPickle`. This class is designed to manage the interactions between agents (predators, prey, and grass) within a grid-based world.
+Calls an instance of PredPreyGrass from `predpreygrass_base.py`, according to the `pettingzoo` protocol. Defines a multi-agent environment for a predator-prey-grass simulation using the`gymnasium` and `pettingzoo` libraries. The environment is encapsulated in the `raw_env` class, which inherits from `AECEnv` and `EzPickle`. This class is designed to manage the interactions between agents (predators, prey, and grass) within a grid-based world.
 
 The `raw_env` class metadata specifies rendering modes, the environment name, parallelizability, and frames per second for rendering. The `__init__`method initializes the environment, setting up the rendering mode, initializing `pygame`, and creating an instance of the `PredPreyGrass` environment. It also sets up the list of agents, their action spaces, and observation spaces.
 
