@@ -55,7 +55,7 @@ env_kwargs = dict(
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     torus=False,
-    is_parallel=False,
+    is_parallel=True,
     spawning_area_predator=dict(
         {
             "x_begin": 0,
