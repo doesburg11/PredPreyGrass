@@ -1,5 +1,7 @@
-# put in here your own directory to the output folder
-local_output_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/"
+import os.path as osp
+from predpreygrass.global_config import RESULTS_DIR
+
+local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
 

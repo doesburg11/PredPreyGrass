@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # copy the project code to the local directory
     shutil.copytree(source_code_dir, destination_source_code_dir)
     # Create the output directory
-    destination_output_dir = destination_source_code_dir + "/output/"
+    destination_output_dir = os.path.join(destination_source_code_dir, "output")
     os.makedirs(destination_output_dir, exist_ok=True)
 
     # save environment configuration to file
