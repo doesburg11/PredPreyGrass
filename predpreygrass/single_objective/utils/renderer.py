@@ -18,7 +18,7 @@ class Renderer:
         self.width_energy_chart = 1800 if show_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
-        self.save_image_steps = True 
+        self.save_image_steps = False # TODO put into config file? 
 
         pygame.init()
         if env.render_mode == "human":

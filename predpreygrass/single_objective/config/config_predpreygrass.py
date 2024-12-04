@@ -49,15 +49,15 @@ env_kwargs = dict(
     show_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
-    watch_grid_model=False,
+    watch_grid_model=True,
     # training parameters
     max_cycles=5000,
-    training_steps_string="10_000_000",
+    training_steps_string="1_400_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
-    torus=False,
-    is_parallel=True,
+    torus=True,
+    is_parallel_environment=True,
     spawning_area_predator=dict(
         {
             "x_begin": 0,
