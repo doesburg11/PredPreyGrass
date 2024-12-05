@@ -54,8 +54,6 @@ class PredPreyGrassSuperBaseEnv:
         death_reward_predator: float = 0.0,
         reproduction_reward_prey: float = 10.0,
         reproduction_reward_predator: float = 10.0,
-        catch_prey_energy: float = 5.0,
-        catch_grass_energy: float = 3.0,
         watch_grid_model: bool = False,
         show_energy_chart: bool = True,
         max_energy_level_grass: float = 4.0,
@@ -114,8 +112,6 @@ class PredPreyGrassSuperBaseEnv:
         self.death_reward_predator = death_reward_predator
         self.reproduction_reward_prey = reproduction_reward_prey
         self.reproduction_reward_predator = reproduction_reward_predator
-        self.catch_prey_energy = catch_prey_energy
-        self.catch_grass_energy = catch_grass_energy
         self.step_reward_predator = step_reward_predator
         self.step_reward_prey = step_reward_prey
         self.step_reward_grass = step_reward_grass

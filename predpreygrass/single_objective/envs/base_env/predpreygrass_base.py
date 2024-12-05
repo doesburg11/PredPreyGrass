@@ -126,8 +126,8 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                     self.n_active_agent_type[self.grass_type_nr] -= 1
      
             # 3] record step metrics
-            self._record_population_metrics()
             self.n_cycles += 1
+            self._record_population_metrics()
 
 class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
     """
@@ -262,5 +262,5 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
                 self._deactivate_agent(grass_instance)
                 self.n_active_agent_type[self.grass_type_nr] -= 1
         # 3] record step metrics
-        self._record_population_metrics()
         self.n_cycles += 1
+        self._record_population_metrics()
