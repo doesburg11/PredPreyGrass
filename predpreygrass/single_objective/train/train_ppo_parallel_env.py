@@ -21,7 +21,6 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    is_parallel_environment = True
     training_steps_string = env_kwargs["training_steps_string"]
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_parallel_v0
