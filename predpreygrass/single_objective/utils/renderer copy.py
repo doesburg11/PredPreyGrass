@@ -15,14 +15,10 @@ class Renderer:
         # Pygame screen settings
         self.width = env.x_grid_size * self.cell_scale
         self.height = env.y_grid_size * self.cell_scale
-        self.width_energy_chart = 2040 if show_energy_chart else 0
+        self.width_energy_chart = 1800 if show_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
         self.save_image_steps = False # TODO put into config file? 
-
-        # BAR CHART POSITION
-        self.y_position_predator_chart = 300
-        self.y_position_prey_chart = 420
 
         pygame.init()
         if env.render_mode == "human":
@@ -45,8 +41,7 @@ class Renderer:
         self._draw_agent_ids()
 
         if self.show_energy_chart:
-            self._draw_energy_chart_predators(0)
-            self._draw_energy_chart_prey(0)
+            self._draw_energy_chart(0)
 
         observation = pygame.surfarray.pixels3d(self.screen)
         new_observation = np.copy(observation)
@@ -133,15 +128,13 @@ class Renderer:
         title = title_font.render("Energy Level Agents", True, (0, 0, 0))
         self.screen.blit(title, (x_pos, y_pos))
 
-    def _draw_energy_label_predator(self, x_pos, y_pos):
+    def _draw_energy_labels(self, x_pos, y_pos):
         predator_label_font = pygame.font.Font(None, 35)
-        predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
-        self.screen.blit(predator_label, (x_pos, self.y_position_predator_chart+ 180))
-
-    def _draw_energy_label_prey(self, x_pos, y_pos):
         prey_label_font = pygame.font.Font(None, 35)
+        predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
         prey_label = prey_label_font.render("Prey", True, (0, 0, 255))
-        self.screen.blit(prey_label, (x_pos, y_pos))
+        self.screen.blit(predator_label, (x_pos, y_pos))
+        self.screen.blit(prey_label, (x_pos + (len(self.env.possible_agent_name_list_type[self.env.predator_type_nr]) * 40), y_pos))
 
     def _initialize_screen(self):
         if self.render_mode == "human":
@@ -163,43 +156,33 @@ class Renderer:
                 text = font.render(str(instance.agent_id_nr), False, (255, 255, 0))
                 self.screen.blit(text, (pos_x, pos_y - self.cell_scale // 2))
 
-    def _draw_energy_chart_predators(self, offset_x):
+    def _draw_energy_chart(self, offset_x):
         x_pos, y_pos = self.cell_scale * self.env.x_grid_size + offset_x, 0
         pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
         self._draw_energy_title(x_pos + 750, 20)
-        self._draw_energy_bars_predators(
-            x_pos + 100, 
-            50, 
-            self.width_energy_chart - 100, 
-            400)
-        self._draw_energy_label_predator(x_pos + 100, 585)
-
-    def _draw_energy_chart_prey(self, offset_x):
-        x_pos, y_pos = self.cell_scale * self.env.x_grid_size + offset_x, 500
-        pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
-        self._draw_energy_title(x_pos + 750, 20)
-        self._draw_energy_bars_prey(
-            x_pos + 100, 
-            100+self.y_position_prey_chart, 
-            self.width_energy_chart - 100, 
-            self.y_position_prey_chart
-            )
-        self._draw_energy_label_prey(x_pos + 100, self.y_position_prey_chart+550)
-
+        self._draw_energy_bars(x_pos + 100, 50, self.width_energy_chart - 100, 500)
+        self._draw_energy_labels(x_pos + 100, 585)
 
     def _draw_energy_title(self, x_pos, y_pos):
         title_font = pygame.font.Font(None, 40)
         title = title_font.render("Energy Level Agents", True, (0, 0, 0))
         self.screen.blit(title, (x_pos, y_pos))
 
-    def _draw_energy_bars_predators(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 10, 20, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
+    def _draw_energy_labels(self, x_pos, y_pos):
+        predator_label_font = pygame.font.Font(None, 35)
+        prey_label_font = pygame.font.Font(None, 35)
+        predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
+        prey_label = prey_label_font.render("Prey", True, (0, 0, 255))
+        self.screen.blit(predator_label, (x_pos, y_pos))
+        self.screen.blit(prey_label, (x_pos + (len(self.env.possible_agent_name_list_type[self.env.predator_type_nr]) * 40), y_pos))
+
+    def _draw_energy_bars(self, x_pos, y_pos, width, height):
+        bar_width, offset, max_energy, red, blue = 20, 20, 30, (255, 0, 0), (0, 0, 255)
+        y_axis_x, x_axis_y = x_pos - 20, y_pos + height
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos, 5, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y, width  -720, 5))
+        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y, width + 40, 5))
 
         # Draw Bars and Labels for Predators
         for i, name in enumerate(self.env.possible_agent_name_list_type[self.env.predator_type_nr]):
@@ -211,28 +194,11 @@ class Renderer:
             label = pygame.font.Font(None, 30).render(str(instance.agent_id_nr), True, red)
             self.screen.blit(label, (label_x, label_y))
 
-        # Draw Tick Points on Y-Axis
-        for i in range(max_energy + 1):
-            if i % 5 == 0:
-                tick_y = y_pos + height - (i / max_energy) * height
-                pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x - 5, tick_y, 10, 2))
-                label = pygame.font.Font(None, 30).render(str(i), True, (0, 0, 0))
-                self.screen.blit(label, (y_axis_x - 35, tick_y - 5))
-
-    def _draw_energy_bars_prey(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 12, 20, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
-
-        # Draw Axes
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos+0, 5, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y+0, width + 0, 5))
-
         # Draw Bars and Labels for Prey
         for i, name in enumerate(self.env.possible_agent_name_list_type[self.env.prey_type_nr]):
             instance = self.env.agent_name_to_instance_dict[name]
             bar_height = (instance.energy / max_energy) * height
-            bar_x, bar_y = x_pos + i * (bar_width + offset), y_pos + height - bar_height
+            bar_x, bar_y = x_pos + (i + len(self.env.possible_agent_name_list_type[self.env.predator_type_nr])) * (bar_width + offset), y_pos + height - bar_height
             pygame.draw.rect(self.screen, blue, (bar_x, bar_y, bar_width, bar_height))
             label_x, label_y = bar_x, x_axis_y + 10
             label = pygame.font.Font(None, 30).render(str(instance.agent_id_nr), True, blue)
