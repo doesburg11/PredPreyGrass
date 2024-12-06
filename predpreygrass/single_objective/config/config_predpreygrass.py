@@ -17,8 +17,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=36,  # maximum number of predators during runtime
-    n_possible_prey=48,
+    n_possible_predator=40,  # maximum number of predators during runtime
+    n_possible_prey=60,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,

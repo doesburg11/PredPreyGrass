@@ -8,7 +8,7 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 # external libraries
 import time
 
-is_parallel = env_kwargs["is_parallel"]
+is_parallel = env_kwargs["is_parallel_environment"]
 delay = 0.4
 
 if is_parallel:
