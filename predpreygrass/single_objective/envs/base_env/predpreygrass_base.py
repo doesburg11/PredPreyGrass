@@ -145,19 +145,15 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
             actions (Dict[str, int]): Dictionary containing actions for each agent.
         """
         # 1] apply actions (i.e. movements) for all active agents in parallel
-        for predator_instance in self.active_agent_instance_list_type[
-            self.predator_type_nr
-        ]:
-            self._apply_agent_action(
-                predator_instance, actions[predator_instance.agent_name]
-            )
+        for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr]:
+            self._apply_agent_action(predator_instance, actions[predator_instance.agent_name])
         for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr]:
             self._apply_agent_action(prey_instance, actions[prey_instance.agent_name])
 
         self._reset_rewards()
 
         # 2] apply rules of engagement for all agents
-        for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr].copy():  
+        for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr][:]:  
             # make a copy to make removal during iteration possible
             if predator_instance.energy > 0:
                 # engagement with environment: "nature and time"
@@ -204,7 +200,7 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
                 self.n_starved_predator += 1
                 self.rewards[predator_instance.agent_name] += self.death_reward_predator
 
-        for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr].copy():  
+        for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr][:]:  
             if prey_instance.energy > 0:
                 # engagement with environment: "nature and time"
                 prey_instance.age += 1

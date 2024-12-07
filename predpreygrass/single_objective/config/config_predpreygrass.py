@@ -40,6 +40,7 @@ env_kwargs = dict(
     regrow_grass=True,
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
+    random_action_prob=0.0,
     # visualization parameters
     cell_scale=40,
     x_pygame_window=0,

@@ -3,7 +3,6 @@ from pettingzoo.utils.env import AgentID
 import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
-import random
 
 class DiscreteAgent:
     def __init__(
@@ -24,7 +23,6 @@ class DiscreteAgent:
         initial_energy: float = 10,
         energy_gain_per_step: float = -0.1,
         torus: bool = True,
-        random_action_prob: float = 0.1,  # probability of taking a random action
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
@@ -41,7 +39,6 @@ class DiscreteAgent:
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
         self.torus: bool = torus
-        self.random_action_prob: float = random_action_prob
 
         self.is_active: bool = False
         self.age: int = 0
@@ -50,10 +47,6 @@ class DiscreteAgent:
         self.y_grid_dim: int = self.model_state_agent.shape[1]
 
     def step(self, action: int) -> np.ndarray:
-        # Introduce randomness in action selection
-        if random.random() < self.random_action_prob:
-            action = self.action_space_agent.sample()
-
         # returns new position of agent "self" given action "action"
         next_position = self.position + np.array(self.motion_range[action])
 
@@ -72,3 +65,4 @@ class DiscreteAgent:
         # Update position
         self.position = next_position
         return self.position
+
