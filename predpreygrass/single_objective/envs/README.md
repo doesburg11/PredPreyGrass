@@ -15,5 +15,5 @@ The single objective rewards (stepping, eating, dying and reproducing) are naive
 
 
 [**predpregrass_parallel_v0.py**](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/predpreygrass_parallel_v0.py):
-The unwrapped parallel version of the multi-agent reinforcement learning (MARL) environment.
+The unwrapped parallel version of the MARL environment.
 
