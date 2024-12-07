@@ -83,7 +83,6 @@ class PredPreyGrassSuperBaseEnv:
         ),
         num_episodes: int = 100,
         torus: bool = False,
-        is_parallel_environment: bool = False,
         training_steps_string: str = "10_000_000",
     ):
         self.x_grid_size = x_grid_size
@@ -129,7 +128,6 @@ class PredPreyGrassSuperBaseEnv:
         self.regrow_grass = regrow_grass
         self.max_energy_level_grass = max_energy_level_grass
         self.torus = torus
-        self.is_parallel_environment = is_parallel_environment
         self.training_steps_string = training_steps_string
 
         self._initialize_variables()

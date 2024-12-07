@@ -8,10 +8,10 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 # external libraries
 import time
 
-is_parallel = env_kwargs["is_parallel_environment"]
+is_parallel_evaluated = False
 delay = 0.4
 
-if is_parallel:
+if is_parallel_evaluated:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
         render_mode="human", **env_kwargs
     )

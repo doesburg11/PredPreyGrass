@@ -22,7 +22,7 @@ class Trainer:
         self.seed = seed
         self.env_kwargs = env_kwargs
 
-    def train(self):
+    def train_parallel_wrapped_aec_env(self):
         parallel_env = parallel_wrapper_fn(self.env_fn.raw_env)
 
         # Train a single model to play as each agent in a parallel environment
@@ -63,7 +63,7 @@ class Trainer:
 
         raw_parallel_env.close()
 
-    def train_parallel_env(self):
+    def train_unwrapped_parallel_env(self):
         parallel_env = self.env_fn.parallel_env
 
         # Train a single model to play as each agent in a parallel environment

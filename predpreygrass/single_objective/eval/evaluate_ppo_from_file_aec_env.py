@@ -16,7 +16,7 @@ instructions:
 - results can be found in: /[time_stamp]/output/
 """
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_aec_v0, predpreygrass_parallel_v0
+from predpreygrass.single_objective.envs import predpreygrass_aec_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
 )
@@ -30,9 +30,8 @@ if __name__ == "__main__":
     training_steps_string = env_kwargs["training_steps_string"]
     watch_grid_model = env_kwargs["watch_grid_model"]
     num_episodes = env_kwargs["num_episodes"] 
-    is_parallel_environment = env_kwargs["is_parallel_environment"]
-    env_fn = predpreygrass_parallel_v0 if is_parallel_environment else predpreygrass_aec_v0
-    environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel_environment else str(env_fn.raw_env.metadata['name'])
+    env_fn = predpreygrass_aec_v0
+    environment_name = str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     evaluation_directory = os.path.dirname(os.path.abspath(__file__))
     print("evaluation_directory: ", evaluation_directory)
@@ -48,6 +47,7 @@ if __name__ == "__main__":
     # Create an instance of the Evaluator class
     evaluator = Evaluator(
         env_fn,
+        environment_name,
         output_directory, # destination_output_dir,
         loaded_policy,
         destination_source_code_dir, # destination_root_dir,
@@ -57,8 +57,5 @@ if __name__ == "__main__":
     )
 
     # Call the eval method to perform the evaluation
-    if is_parallel_environment:
-      evaluator.parallel_evaluation()
-    else:
-      evaluator.aec_evaluation()
+    evaluator.aec_evaluation_parallel_wrapped_aec_env()
     
