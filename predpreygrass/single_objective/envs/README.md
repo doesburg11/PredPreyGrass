@@ -1,4 +1,4 @@
-## The environments
+## Environments
 
 [**predpregrass_aec_v0.py**](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/predpreygrass_aec_v0.py): 
 A (single-objective) multi-agent reinforcement learning (MARL) environment, 
