@@ -6,7 +6,7 @@ directory, for reuse and analysis.
 -The algorithm used is PPO from stable_baselines3. 
 """
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_parallel_v0, predpreygrass_aec_v0
+from predpreygrass.single_objective.envs import predpreygrass_parallel_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
     local_output_root,
@@ -21,11 +21,10 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    is_parallel = env_kwargs["is_parallel"]
     training_steps_string = env_kwargs["training_steps_string"]
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
-    env_fn = predpreygrass_parallel_v0 if is_parallel else predpreygrass_aec_v0
-    environment_name = str(env_fn.parallel_env.metadata['name']) if is_parallel else str(env_fn.raw_env.metadata['name'])
+    env_fn = predpreygrass_parallel_v0
+    environment_name = str(env_fn.parallel_env.metadata['name'])
     training_steps = int(training_steps_string)
     # create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
@@ -68,7 +67,7 @@ if __name__ == "__main__":
         **env_kwargs,
     )
     start_training_time = time.time()
-    trainer.train()
+    trainer.train_unwrapped_parallel_env()
     end_training_time = time.time()
     training_time = end_training_time - start_training_time
     # append training time to training_file

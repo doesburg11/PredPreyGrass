@@ -17,8 +17,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=40,  # maximum number of predators during runtime
-    n_possible_prey=60,
+    n_possible_predator=36, #40,  # maximum number of predators during runtime
+    n_possible_prey=48, # #60,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -47,11 +47,11 @@ env_kwargs = dict(
     show_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
-    watch_grid_model=False,
+    watch_grid_model=True,
     # training parameters
     max_cycles=5000,
-    #training_steps_string="688_128",
-    training_steps_string="1_376_256",
+    training_steps_string="688_128",
+    #training_steps_string="1_376_256",
     #training_steps_string="2064384",
     #training_steps_string="2752512",
     #training_steps_string="3440640",
@@ -69,7 +69,6 @@ env_kwargs = dict(
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
     torus=True,
-    is_parallel_environment=True,
     spawning_area_predator=dict(
         {
             "x_begin": 0,
