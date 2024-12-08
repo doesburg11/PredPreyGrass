@@ -17,8 +17,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=36, #40,  # maximum number of predators during runtime
-    n_possible_prey=48, # #60,
+    n_possible_predator=60, #40,  # maximum number of predators during runtime
+    n_possible_prey=80, # #60,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -27,8 +27,8 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # energy parameters
-    energy_gain_per_step_predator=-0.15,  # -0.15 # default
-    energy_gain_per_step_prey=-0.05,  # -0.05 # default
+    energy_gain_per_step_predator= 0, #-0.15,  # -0.15 # default
+    energy_gain_per_step_prey= 0, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
     initial_energy_prey=5.0,
@@ -48,10 +48,10 @@ env_kwargs = dict(
     show_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
-    watch_grid_model=True,
+    watch_grid_model=False,
     # training parameters
     max_cycles=5000,
-    training_steps_string="688_128",
+    #training_steps_string="688_128",
     #training_steps_string="1_376_256",
     #training_steps_string="2064384",
     #training_steps_string="2752512",
@@ -65,11 +65,11 @@ env_kwargs = dict(
     #training_steps_string="8257536",
     #training_steps_string="8945664",
     #training_steps_string="10321920",
-    #training_steps_string="10_000_000",
+    training_steps_string="10_000_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
-    torus=True,
+    torus=False,
     spawning_area_predator=dict(
         {
             "x_begin": 0,

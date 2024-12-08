@@ -193,13 +193,13 @@ class Renderer:
         self.screen.blit(title, (x_pos, y_pos))
 
     def _draw_energy_bars_predators(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 10, 20, 50, (255, 0, 0), (0, 0, 255)
+        bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
         y_axis_x = x_pos -20
         x_axis_y = y_pos + height 
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos, 5, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y, width  -720, 5))
+        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y, width - 490, 5))
 
         # Draw Bars and Labels for Predators
         for i, name in enumerate(self.env.possible_agent_name_list_type[self.env.predator_type_nr]):
@@ -208,7 +208,7 @@ class Renderer:
             bar_x, bar_y = x_pos + i * (bar_width + offset), y_pos + height - bar_height
             pygame.draw.rect(self.screen, red, (bar_x, bar_y, bar_width, bar_height))
             label_x, label_y = bar_x, x_axis_y + 10
-            label = pygame.font.Font(None, 30).render(str(instance.agent_id_nr), True, red)
+            label = pygame.font.Font(None, 20).render(str(instance.agent_id_nr), True, red)
             self.screen.blit(label, (label_x, label_y))
 
         # Draw Tick Points on Y-Axis
@@ -220,13 +220,13 @@ class Renderer:
                 self.screen.blit(label, (y_axis_x - 35, tick_y - 5))
 
     def _draw_energy_bars_prey(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 12, 20, 50, (255, 0, 0), (0, 0, 255)
+        bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
         y_axis_x = x_pos -20
         x_axis_y = y_pos + height 
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos+0, 5, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y+0, width + 0, 5))
+        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y+0, width - 0, 5))
 
         # Draw Bars and Labels for Prey
         for i, name in enumerate(self.env.possible_agent_name_list_type[self.env.prey_type_nr]):
@@ -235,7 +235,7 @@ class Renderer:
             bar_x, bar_y = x_pos + i * (bar_width + offset), y_pos + height - bar_height
             pygame.draw.rect(self.screen, blue, (bar_x, bar_y, bar_width, bar_height))
             label_x, label_y = bar_x, x_axis_y + 10
-            label = pygame.font.Font(None, 30).render(str(instance.agent_id_nr), True, blue)
+            label = pygame.font.Font(None, 20).render(str(instance.agent_id_nr), True, blue)
             self.screen.blit(label, (label_x, label_y))
 
         # Draw Tick Points on Y-Axis

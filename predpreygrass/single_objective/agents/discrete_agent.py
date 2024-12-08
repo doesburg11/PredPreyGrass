@@ -61,7 +61,7 @@ class DiscreteAgent:
             # Apply torus transformation to handle out-of-bounds movement
             next_position %= [self.x_grid_dim, self.y_grid_dim]
         else:
-            # Clip next position to be within bounds
+            # Clip next position to stay within bounds
             next_position = np.clip(next_position, [0, 0], [self.x_grid_dim - 1, self.y_grid_dim - 1])
             
 
