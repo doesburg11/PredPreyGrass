@@ -84,7 +84,7 @@ class PredPreyGrassSuperBaseEnv:
         num_episodes: int = 100,
         torus: bool = False,
         training_steps_string: str = "10_000_000",
-        random_action_prob: float = 0.1,  # probability of taking a random action
+        random_action_prob: float = 0.0,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -207,7 +207,6 @@ class PredPreyGrassSuperBaseEnv:
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
                     torus=self.torus,
-                    random_action_prob=self.random_action_prob,
                 )
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
                 #  and which is within the spawning area of the agent
