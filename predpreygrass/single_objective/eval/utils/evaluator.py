@@ -36,6 +36,9 @@ class Evaluator:
         self.grid_transformation = "torus transformation" if self.torus else "bounded grid"
         self.evaluation_time_stamp = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
 
+        self.torus = "torus" if env_kwargs["torus"] else "bounded"
+
+
     def initialize_evaluation_metrics(self):
 
             # initialization evaluation metrics
@@ -71,21 +74,24 @@ class Evaluator:
         return (
              "Evaluation results:\n"
             + "--------------------------\n"
-            + "environment: "
+            + "Date and Time: "
+            + self.evaluation_time_stamp
+            + "\n"
+            + "Environment: "
             + self.environment_name
             + "\n"
-            + "policy algorithm: PPO"
+             + "Grid transformation: "
+            + self.torus
+            + "\n"
+            + "Learning algorithm: PPO"
             + "loaded_policy: "
             + self.loaded_policy
             + "\n"
-            + "evaluation directory: "
-            + self.destination_source_code_dir
-            + "\n"
-            + "training steps: "
+            + "Training steps: "
             + self.training_steps_string
             + "\n"
-            + "Date and Time: "
-            + self.evaluation_time_stamp
+            + "Evaluation directory: "
+            + self.destination_source_code_dir
             + "\n"
             + "--------------------------\n"
         )
@@ -101,7 +107,7 @@ class Evaluator:
                 + f"Brn Prd/cycl = {round(self.n_born_predator_per_cycle[i],3)} "
                 + f"Brn Pry/cycle = {round(self.n_born_prey_per_cycle[i],3)} "
                 + f"Mn age Prd = {round(self.mean_age_predator[i],1)} "
-                + f"Mn age Pry = {round(self.mean_age_prey[i],1)}\n"
+                + f"Mn age Pry = {round(self.mean_age_prey[i],1)}"
             )
 
     def evaluation_results_summary(self):
@@ -641,7 +647,6 @@ class Evaluator:
 
         # print to console
         print(evaluation_results_summary)
-
 
     def aec_evaluation_parallel_wrapped_aec_env(self):
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
