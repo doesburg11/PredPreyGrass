@@ -165,11 +165,15 @@ class PredPreyGrassSuperBaseEnv:
 
         # actions
         self.motion_range: np.ndarray = np.array([
+            [-1, -1],  # move up left
             [-1, 0],  # move left
+            [-1, 1],  # move down left
             [0, -1],  # move up
             [0, 0],   # stay
             [0, 1],   # move down
+            [1, -1],  # move up right
             [1, 0],   # move right
+            [1, 1],   # move down right
         ], dtype=np.int32)
         self.n_actions_agent: int = len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)
