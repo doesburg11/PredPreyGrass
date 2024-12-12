@@ -16,7 +16,7 @@ class DiscreteGrassAgent(DiscreteSuperAgent):
         max_energy_grass: float = 4,
     ):
         super().__init__(agent_type_nr, agent_id_nr, agent_name, initial_energy, energy_gain_per_step)
-        # identification agent
+        # addtional attributes voor gGrass agent
         self.max_energy_grass: float = max_energy_grass
 
 
