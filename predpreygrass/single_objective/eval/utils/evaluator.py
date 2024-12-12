@@ -107,7 +107,7 @@ class Evaluator:
                 + f"Brn Prd/cycl = {round(self.n_born_predator_per_cycle[i],3)} "
                 + f"Brn Pry/cycle = {round(self.n_born_prey_per_cycle[i],3)} "
                 + f"Mn age Prd = {round(self.mean_age_predator[i],1)} "
-                + f"Mn age Pry = {round(self.mean_age_prey[i],1)}"
+                + f"Mn age Pry = {round(self.mean_age_prey[i],1)}\n"
             )
 
     def evaluation_results_summary(self):

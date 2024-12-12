@@ -47,7 +47,7 @@ env_kwargs = dict(
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=100,
+    num_episodes=1000,
     watch_grid_model=False,
     # training parameters
     max_cycles=10000,
