@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # Parameter variation scenarios
     parameter_variation_parameter_string = "torus"
-    parameter_variation_scenarios = [True, False]
+    parameter_variation_scenarios = [False]
 
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
