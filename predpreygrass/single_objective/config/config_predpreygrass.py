@@ -51,7 +51,7 @@ env_kwargs = dict(
     watch_grid_model=False,
     # training parameters
     max_cycles=10000,
-    #training_steps_string="688_128",
+    training_steps_string="688_128",
     #training_steps_string="1_376_256",
     #training_steps_string="2064384",
     #training_steps_string="2752512",
@@ -65,7 +65,7 @@ env_kwargs = dict(
     #training_steps_string="8257536",
     #training_steps_string="8945664",
     #training_steps_string="10321920",
-    training_steps_string="10_000_000",
+    #training_steps_string="10_000_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,

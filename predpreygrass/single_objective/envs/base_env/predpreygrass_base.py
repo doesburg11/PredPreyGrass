@@ -26,8 +26,8 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 if predator_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = predator_instance.position
-                    predator_instance.energy += predator_instance.energy_gain_per_step
-                    predator_instance.age += 1
+                    #predator_instance.energy += predator_instance.energy_gain_per_step
+                    #predator_instance.age += 1
                     # predator_instance.energy += predator_action_energy
                     # engagement with environment: "other agents"
                     prey_instance_in_predator_cell = (
@@ -78,8 +78,8 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 if prey_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = prey_instance.position
-                    prey_instance.age += 1
-                    prey_instance.energy += prey_instance.energy_gain_per_step
+                    #prey_instance.age += 1
+                    #prey_instance.energy += prey_instance.energy_gain_per_step
                     grass_instance_in_prey_cell = self.agent_instance_in_grid_location[
                         self.grass_type_nr][(x_new, y_new)]
                     if grass_instance_in_prey_cell is not None:

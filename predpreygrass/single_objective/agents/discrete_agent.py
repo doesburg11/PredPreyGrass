@@ -50,10 +50,8 @@ class DiscreteAgent:
         self.y_grid_dim: int = self.model_state_agent.shape[1]
 
     def step(self, action: int) -> np.ndarray:
-        # Introduce randomness in action selection
-        if random.random() < self.random_action_prob:
-            action = self.action_space_agent.sample()
-
+        self.age += 1
+        self.energy += self.energy_gain_per_step
         # returns new position of agent "self" given action "action"
         next_position = self.position + np.array(self.motion_range[action])
 
