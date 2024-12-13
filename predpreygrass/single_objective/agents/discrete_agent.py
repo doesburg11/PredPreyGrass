@@ -50,6 +50,8 @@ class DiscreteAgent:
         self.y_grid_dim: int = self.model_state_agent.shape[1]
 
     def step(self, action: int) -> np.ndarray:
+        self.age += 1
+        self.energy += self.energy_gain_per_step
         # Introduce randomness in action selection
         if random.random() < self.random_action_prob:
             action = self.action_space_agent.sample()
@@ -59,16 +61,22 @@ class DiscreteAgent:
 
         if self.torus:
             # Apply torus transformation to handle out-of-bounds movement
+            distance = np.linalg.norm(self.position - next_position)
             next_position %= [self.x_grid_dim, self.y_grid_dim]
         else:
             # Clip next position to stay within bounds
             next_position = np.clip(next_position, [0, 0], [self.x_grid_dim - 1, self.y_grid_dim - 1])
+            #distance = np.linalg.norm(self.position - next_position)
             
 
         # Check if the next position is occupied by the same agent type
         if self.model_state_agent[tuple(next_position)] > 0:
+            #distance = 0
+            #print(f"Agent {self.agent_name} tried to move to occupied cell {next_position} but stays at {self.position} with energy {round(self.energy,2)}")
             return self.position  # if intended to move to occupied cell of same agent type: don't move
 
         # Update position
+        #print(f"Agent {self.agent_name} moved from {self.position} to {next_position} (distance={round(distance,2)}) with energy {round(self.energy,2)}->{round(self.energy+distance*self.energy_gain_per_step,2)}")
+        #self.energy += distance*self.energy_gain_per_step
         self.position = next_position
         return self.position

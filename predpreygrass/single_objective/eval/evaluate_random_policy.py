@@ -8,8 +8,7 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 # external libraries
 import time
 
-is_parallel_evaluated = True
-delay = 0.3
+is_parallel_evaluated = False
 
 if is_parallel_evaluated:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
@@ -18,6 +17,7 @@ if is_parallel_evaluated:
     env_base = parallel_env.predpreygrass
     observations, infos = parallel_env.reset(seed=1)
     done = False
+    delay = 0.3
     while not done:
         actions = {
             agent: parallel_env.action_space(agent).sample()

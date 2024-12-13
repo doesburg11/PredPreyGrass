@@ -26,10 +26,6 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 if predator_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = predator_instance.position
-                    predator_instance.energy += predator_instance.energy_gain_per_step
-                    predator_instance.age += 1
-                    # predator_instance.energy += predator_action_energy
-                    # engagement with environment: "other agents"
                     prey_instance_in_predator_cell = (
                         self.agent_instance_in_grid_location[self.prey_type_nr][
                             (x_new, y_new)
@@ -68,7 +64,10 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 else:
                     self._deactivate_agent(predator_instance)
                     self.n_active_agent_type[self.predator_type_nr] -= 1
+
                     self.agent_age_of_death_list_type[self.predator_type_nr].append(predator_instance.age)
+                    print("list of predator ages: ", self.agent_age_of_death_list_type[self.predator_type_nr])
+                    print(f"Predator {predator_instance.agent_name} died at age {predator_instance.age}")
                     self.n_starved_predator += 1
                     self.rewards[
                         predator_instance.agent_name
@@ -78,8 +77,6 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 if prey_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = prey_instance.position
-                    prey_instance.age += 1
-                    prey_instance.energy += prey_instance.energy_gain_per_step
                     grass_instance_in_prey_cell = self.agent_instance_in_grid_location[
                         self.grass_type_nr][(x_new, y_new)]
                     if grass_instance_in_prey_cell is not None:

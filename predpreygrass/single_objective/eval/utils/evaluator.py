@@ -717,6 +717,8 @@ class Evaluator:
             self.episode_predator_age_list = env_base.agent_age_of_death_list_type[
                 env_base.predator_type_nr
             ]
+            print("self.episode_predator_age_list")
+            print(self.episode_predator_age_list)
             self.episode_prey_age_list = env_base.agent_age_of_death_list_type[
                 env_base.prey_type_nr
             ]
