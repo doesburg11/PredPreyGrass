@@ -22,8 +22,8 @@ if __name__ == "__main__":
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
 
     # Parameter variation scenarios
-    parameter_variation_parameter_string = "energy_gain_per_step_predator"
-    parameter_variation_scenarios = [-0.13,-0.14,-0.15,-0.16,-0.17]
+    parameter_variation_parameter_string = "torus"
+    parameter_variation_scenarios = [False, True]
 
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
