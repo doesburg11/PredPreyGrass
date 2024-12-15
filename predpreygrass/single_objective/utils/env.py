@@ -40,11 +40,8 @@ class PredPreyGrassSuperBaseEnv:
         cell_scale: int = 40,
         x_pygame_window: int = 0,
         y_pygame_window: int = 0,
-        regrow_grass: bool = True,
         prey_creation_energy_threshold: float = 10.0,
         predator_creation_energy_threshold: float = 10.0,
-        create_prey: bool = True,
-        create_predator: bool = True,
         step_reward_predator: float = 0.0,
         step_reward_prey: float = 0.0,
         step_reward_grass: float = 0.0,
@@ -84,7 +81,18 @@ class PredPreyGrassSuperBaseEnv:
         num_episodes: int = 100,
         torus: bool = False,
         training_steps_string: str = "10_000_000",
-        random_action_prob: float = 0.0,
+        motion_range: np.ndarray = np.array([
+            #[-1, -1],  # move up left
+            [-1, 0],  # move left
+            #[-1, 1],  # move down left
+            [0, -1],  # move up
+            [0, 0],   # stay
+            [0, 1],   # move down
+            #[1, -1],  # move up right
+            [1, 0],   # move right
+            #[1, 1],   # move down right
+        ], dtype=np.int32)
+      
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -106,8 +114,6 @@ class PredPreyGrassSuperBaseEnv:
         self.catch_reward_prey = catch_reward_prey
         self.prey_creation_energy_threshold = prey_creation_energy_threshold
         self.predator_creation_energy_threshold = predator_creation_energy_threshold
-        self.create_prey = create_prey
-        self.create_predator = create_predator
         self.death_reward_prey = death_reward_prey
         self.death_reward_predator = death_reward_predator
         self.reproduction_reward_prey = reproduction_reward_prey
@@ -126,11 +132,10 @@ class PredPreyGrassSuperBaseEnv:
         self.x_pygame_window = x_pygame_window
         self.y_pygame_window = y_pygame_window
         self.show_energy_chart = show_energy_chart
-        self.regrow_grass = regrow_grass
         self.max_energy_level_grass = max_energy_level_grass
         self.torus = torus
         self.training_steps_string = training_steps_string
-        self.random_action_prob = random_action_prob
+        self.motion_range = motion_range
 
         self._initialize_variables()
         # TODO implement in config
@@ -164,13 +169,6 @@ class PredPreyGrassSuperBaseEnv:
         # end observations
 
         # actions
-        self.motion_range: np.ndarray = np.array([
-            [-1, 0],  # move left
-            [0, -1],  # move up
-            [0, 0],   # stay
-            [0, 1],   # move down
-            [1, 0],   # move right
-        ], dtype=np.int32)
         self.n_actions_agent: int = len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]

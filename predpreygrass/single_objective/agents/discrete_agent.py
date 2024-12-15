@@ -51,22 +51,28 @@ class DiscreteAgent:
 
     def step(self, action: int) -> np.ndarray:
         self.age += 1
+        # update step energy
         self.energy += self.energy_gain_per_step
         # returns new position of agent "self" given action "action"
         next_position = self.position + np.array(self.motion_range[action])
 
         if self.torus:
+            # Calculate distance to next position in torus space
+            distance_traveled = np.linalg.norm(self.position - next_position)
             # Apply torus transformation to handle out-of-bounds movement
             next_position %= [self.x_grid_dim, self.y_grid_dim]
         else:
             # Clip next position to stay within bounds
             next_position = np.clip(next_position, [0, 0], [self.x_grid_dim - 1, self.y_grid_dim - 1])
+            distance_traveled = np.linalg.norm(self.position - next_position)
             
 
         # Check if the next position is occupied by the same agent type
         if self.model_state_agent[tuple(next_position)] > 0:
+            distance_traveled = 0
             return self.position  # if intended to move to occupied cell of same agent type: don't move
-
+        # update move energy
+        self.energy += distance_traveled*self.energy_gain_per_step
         # Update position
         self.position = next_position
         return self.position

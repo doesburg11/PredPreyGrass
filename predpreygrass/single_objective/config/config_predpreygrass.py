@@ -1,5 +1,6 @@
 import os.path as osp
 from predpreygrass.global_config import RESULTS_DIR
+import numpy as np
 
 local_output_root = RESULTS_DIR
 
@@ -26,6 +27,18 @@ env_kwargs = dict(
     max_observation_range=9,  # must be odd and not smaller than any obs_range
     obs_range_predator=7,
     obs_range_prey=9,
+    # action parameters
+    motion_range = np.array([
+        [-1, 0],  # move left
+        [0, -1],  # move up
+        [0, 0],   # stay
+        [0, 1],   # move down
+        [1, 0],   # move right
+        [-1, -1],  # move up left
+        [-1, 1],  # move down left
+        [1, -1],  # move up right
+        [1, 1],   # move down right
+    ], dtype=np.int32),
     # energy parameters
     energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.05, #-0.05,  # -0.05 # default
@@ -35,23 +48,19 @@ env_kwargs = dict(
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
     # create agents parameters
-    create_prey=True,
-    create_predator=True,
-    regrow_grass=True,
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
-    random_action_prob=0.0,
     # visualization parameters
     cell_scale=40,
     x_pygame_window=0,
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=100,
-    watch_grid_model=False,
+    num_episodes=10,
+    watch_grid_model=True,
     # training parameters
     max_cycles=10000,
-    training_steps_string="688_128",
+    #training_steps_string="688_128",
     #training_steps_string="1_376_256",
     #training_steps_string="2064384",
     #training_steps_string="2752512",
@@ -65,7 +74,7 @@ env_kwargs = dict(
     #training_steps_string="8257536",
     #training_steps_string="8945664",
     #training_steps_string="10321920",
-    #training_steps_string="10_000_000",
+    training_steps_string="10_000_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
