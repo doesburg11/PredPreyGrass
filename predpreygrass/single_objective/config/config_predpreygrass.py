@@ -47,7 +47,7 @@ env_kwargs = dict(
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    motion_energy = False,
+    motion_energy = True,
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,

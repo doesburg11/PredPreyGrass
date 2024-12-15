@@ -208,6 +208,7 @@ class PredPreyGrassSuperBaseEnv:
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
                     torus=self.torus,
+                    motion_energy=self.motion_energy,
                 )
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
                 #  and which is within the spawning area of the agent
