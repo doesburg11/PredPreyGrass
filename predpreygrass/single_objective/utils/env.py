@@ -91,7 +91,9 @@ class PredPreyGrassSuperBaseEnv:
             #[1, -1],  # move up right
             [1, 0],   # move right
             #[1, 1],   # move down right
-        ], dtype=np.int32)
+        ], dtype=np.int32),
+        motion_energy: bool = False,
+
       
     ):
         self.x_grid_size = x_grid_size
@@ -136,6 +138,7 @@ class PredPreyGrassSuperBaseEnv:
         self.torus = torus
         self.training_steps_string = training_steps_string
         self.motion_range = motion_range
+        self.motion_energy = motion_energy
 
         self._initialize_variables()
         # TODO implement in config

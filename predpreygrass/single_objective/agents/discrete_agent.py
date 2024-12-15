@@ -3,7 +3,6 @@ from pettingzoo.utils.env import AgentID
 import numpy as np
 from gymnasium import spaces
 from typing import List, Tuple
-import random
 
 class DiscreteAgent:
     def __init__(
@@ -23,8 +22,8 @@ class DiscreteAgent:
         ]),
         initial_energy: float = 10,
         energy_gain_per_step: float = -0.1,
-        torus: bool = True,
-        random_action_prob: float = 0.1,  # probability of taking a random action
+        torus: bool = False,
+        motion_energy: bool = False,
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
@@ -41,7 +40,7 @@ class DiscreteAgent:
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
         self.torus: bool = torus
-        self.random_action_prob: float = random_action_prob
+        self.motion_energy: bool = motion_energy
 
         self.is_active: bool = False
         self.age: int = 0
@@ -72,7 +71,8 @@ class DiscreteAgent:
             distance_traveled = 0
             return self.position  # if intended to move to occupied cell of same agent type: don't move
         # update move energy
-        self.energy += distance_traveled*self.energy_gain_per_step
+        if self.motion_energy:
+            self.energy += distance_traveled*self.energy_gain_per_step
         # Update position
         self.position = next_position
         return self.position
