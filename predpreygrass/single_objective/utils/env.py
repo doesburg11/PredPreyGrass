@@ -93,8 +93,7 @@ class PredPreyGrassSuperBaseEnv:
             #[1, 1],   # move down right
         ], dtype=np.int32),
         motion_energy: bool = False,
-
-      
+        write_evaluation_to_file: bool = False,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -139,6 +138,8 @@ class PredPreyGrassSuperBaseEnv:
         self.training_steps_string = training_steps_string
         self.motion_range = motion_range
         self.motion_energy = motion_energy
+        self.write_evaluation_to_file = write_evaluation_to_file
+
 
         self._initialize_variables()
         # TODO implement in config

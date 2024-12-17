@@ -33,10 +33,12 @@ class Evaluator:
         self.num_episodes = env_kwargs["num_episodes"]
         self.environment_name = environment_name
         self.torus = env_kwargs["torus"]
+        self.write_evaluation_to_file = env_kwargs["write_evaluation_to_file"]   
         self.grid_transformation = "torus transformation" if self.torus else "bounded grid"
         self.evaluation_time_stamp = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
 
         self.torus = "torus" if env_kwargs["torus"] else "bounded"
+
 
 
     def initialize_evaluation_metrics(self):
@@ -69,6 +71,7 @@ class Evaluator:
 
             self.episode_predator_age_list = []
             self.episode_prey_age_list = []
+
 
     def evaluation_header_text(self):
         return (
@@ -171,16 +174,17 @@ class Evaluator:
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
-        plotter = PopulationPlotter(self.destination_output_dir)
-
-        saved_directory_and_evaluation_file_name = os.path.join(
-            self.destination_output_dir, "evaluation.txt"
-        )
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()
-        evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
-        evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
+        if self.write_evaluation_to_file:
+            plotter = PopulationPlotter(self.destination_output_dir)
+
+            saved_directory_and_evaluation_file_name = os.path.join(
+                self.destination_output_dir, "evaluation.txt"
+            )
+            evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
+            evaluation_file.write(eval_header_text)  # write to file
 
         self.initialize_evaluation_metrics()
 
@@ -219,13 +223,14 @@ class Evaluator:
 
                 
             self.n_cycles = env_base.n_cycles
-            plotter.plot_population(
-                env_base.n_active_agent_list_type[env_base.predator_type_nr],
-                env_base.n_active_agent_list_type[env_base.prey_type_nr],
-                self.n_cycles,
-                i,
-                title="Predator and Prey Population Over Time",
-            )
+            if self.write_evaluation_to_file:
+                plotter.plot_population(
+                    env_base.n_active_agent_list_type[env_base.predator_type_nr],
+                    env_base.n_active_agent_list_type[env_base.prey_type_nr],
+                    self.n_cycles,
+                    i,
+                    title="Predator and Prey Population Over Time",
+                )
 
             self.episode_length[i] = self.n_cycles
             self.n_starved_predator_per_cycle[i] = env_base.n_starved_predator / self.n_cycles
@@ -261,20 +266,19 @@ class Evaluator:
             self.std_cumulative_rewards_prey[i] = stdev(cumulative_rewards_prey.values())
             eval_results_output = self.evaluation_results_output(i)
             print(eval_results_output)
-            evaluation_file.write(eval_results_output)
-
-            # Collect predator and prey population data
-            predator_population_data = env_base.n_active_agent_list_type[
-                env_base.predator_type_nr
-            ]
-            prey_population_data = env_base.n_active_agent_list_type[
-                env_base.prey_type_nr
-            ]
-
-            # Save predator and prey population data to a single file per episode
-            self.save_combined_population_data(
-                predator_population_data, prey_population_data, i
-            )
+            if self.write_evaluation_to_file:
+                evaluation_file.write(eval_results_output)
+                # Collect predator and prey population data
+                predator_population_data = env_base.n_active_agent_list_type[
+                    env_base.predator_type_nr
+                ]
+                prey_population_data = env_base.n_active_agent_list_type[
+                    env_base.prey_type_nr
+                ]
+                # Save predator and prey population data to a single file per episode
+                self.save_combined_population_data(
+                    predator_population_data, prey_population_data, i
+                )
 
         print("Finish evaluation.")
 
@@ -314,19 +318,20 @@ class Evaluator:
             sum(self.total_prey_age_list) / len(self.total_prey_age_list), 1
         )
 
-        # save evaluation results to evaluation_file
         evaluation_results_summary= self.evaluation_results_summary()   
-        evaluation_file.write(evaluation_results_summary)
-        # additionally save the config file
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.write("Evaluation parameters:\n")
-        for item in self.env_kwargs:
-            evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.close()
-
         # print to console
         print(evaluation_results_summary)
+        if self.write_evaluation_to_file:
+            # save evaluation results to evaluation_file
+            evaluation_file.write(evaluation_results_summary)
+            # additionally save the config file
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("Evaluation parameters:\n")
+            for item in self.env_kwargs:
+                evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.close()
+
         
     def parallel_evaluation(self):
         # env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
@@ -336,17 +341,17 @@ class Evaluator:
         )
         env_base = parallel_env.predpreygrass
         cumulative_rewards = {agent: 0 for agent in parallel_env.possible_agents}
-        plotter = PopulationPlotter(self.destination_output_dir)
-
-        # inserted
-        saved_directory_and_evaluation_file_name = os.path.join(
-            self.destination_output_dir, "evaluation.txt"
-        )
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()
-        evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
-        evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
+        if self.write_evaluation_to_file:
+            plotter = PopulationPlotter(self.destination_output_dir)
+
+            saved_directory_and_evaluation_file_name = os.path.join(
+                self.destination_output_dir, "evaluation.txt"
+            )
+            evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
+            evaluation_file.write(eval_header_text)  # write to file
         self.initialize_evaluation_metrics()
 
         env_base = parallel_env.predpreygrass
@@ -377,13 +382,14 @@ class Evaluator:
                 done = env_base.is_no_prey or env_base.is_no_predator or self.n_cycles >= env_base.max_cycles
 
             self.n_cycles = env_base.n_cycles
-            plotter.plot_population(
-                env_base.n_active_agent_list_type[env_base.predator_type_nr],
-                env_base.n_active_agent_list_type[env_base.prey_type_nr],
-                self.n_cycles,
-                i,
-                title="Predator and Prey Population Over Time",
-            )
+            if self.write_evaluation_to_file:
+                plotter.plot_population(
+                    env_base.n_active_agent_list_type[env_base.predator_type_nr],
+                    env_base.n_active_agent_list_type[env_base.prey_type_nr],
+                    self.n_cycles,
+                    i,
+                    title="Predator and Prey Population Over Time",
+                )
 
             self.episode_length[i] = self.n_cycles
             self.n_starved_predator_per_cycle[i] = env_base.n_starved_predator / self.n_cycles
@@ -419,20 +425,20 @@ class Evaluator:
 
             eval_results_output = self.evaluation_results_output(i)
             print(eval_results_output)
-            evaluation_file.write(eval_results_output)  
+            if self.write_evaluation_to_file:
+                evaluation_file.write(eval_results_output)  
+                # Collect predator and prey population data
+                predator_population_data = env_base.n_active_agent_list_type[
+                    env_base.predator_type_nr
+                ]
+                prey_population_data = env_base.n_active_agent_list_type[
+                    env_base.prey_type_nr
+                ]
 
-            # Collect predator and prey population data
-            predator_population_data = env_base.n_active_agent_list_type[
-                env_base.predator_type_nr
-            ]
-            prey_population_data = env_base.n_active_agent_list_type[
-                env_base.prey_type_nr
-            ]
-
-            # Save predator and prey population data to a single file per episode
-            self.save_combined_population_data(
-                predator_population_data, prey_population_data, i
-            )
+                # Save predator and prey population data to a single file per episode
+                self.save_combined_population_data(
+                    predator_population_data, prey_population_data, i
+                )
 
         print("Finish evaluation.")
 
@@ -474,16 +480,17 @@ class Evaluator:
 
         # save evaluation results to evaluation_file
         evaluation_results_summary= self.evaluation_results_summary()   
-        evaluation_file.write(evaluation_results_summary)
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.write("Evaluation parameters:\n")
-        for item in self.env_kwargs:
-            evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.close()
-
         # print to console
         print(evaluation_results_summary)
+        if self.write_evaluation_to_file:
+            evaluation_file.write(evaluation_results_summary)
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("Evaluation parameters:\n")
+            for item in self.env_kwargs:
+                evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.close()
+
 
     def aec_evaluation_parallel_env(self):
         model = PPO.load(self.loaded_policy)
@@ -494,16 +501,18 @@ class Evaluator:
 
         env_base = parallel_env.predpreygrass
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
-        plotter = PopulationPlotter(self.destination_output_dir)
-
-        saved_directory_and_evaluation_file_name = os.path.join(
-            self.destination_output_dir, "evaluation.txt"
-        )
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()
-        evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
-        evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
+        if self.write_evaluation_to_file:
+            plotter = PopulationPlotter(self.destination_output_dir)
+
+            saved_directory_and_evaluation_file_name = os.path.join(
+                self.destination_output_dir, "evaluation.txt"
+            )
+            evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
+            evaluation_file.write(eval_header_text)  # write to file
+
         self.initialize_evaluation_metrics()
 
         env_base = env.unwrapped.predpreygrass
@@ -540,13 +549,14 @@ class Evaluator:
                 env.step(action)
 
             self.n_cycles = env_base.n_cycles
-            plotter.plot_population(
-                env_base.n_active_agent_list_type[env_base.predator_type_nr],
-                env_base.n_active_agent_list_type[env_base.prey_type_nr],
-                self.n_cycles,
-                i,
-                title="Predator and Prey Population Over Time",
-            )
+            if self.write_evaluation_to_file:
+                plotter.plot_population(
+                    env_base.n_active_agent_list_type[env_base.predator_type_nr],
+                    env_base.n_active_agent_list_type[env_base.prey_type_nr],
+                    self.n_cycles,
+                    i,
+                    title="Predator and Prey Population Over Time",
+                )
 
             self.episode_length[i] = self.n_cycles
             self.n_starved_predator_per_cycle[i] = env_base.n_starved_predator / self.n_cycles
@@ -582,20 +592,20 @@ class Evaluator:
 
             eval_results_output = self.evaluation_results_output(i)
             print(eval_results_output)
-            evaluation_file.write(eval_results_output)  
+            if self.write_evaluation_to_file:
+                evaluation_file.write(eval_results_output)
+                # Collect predator and prey population data
+                predator_population_data = env_base.n_active_agent_list_type[
+                    env_base.predator_type_nr
+                ]
+                prey_population_data = env_base.n_active_agent_list_type[
+                    env_base.prey_type_nr
+                ]
 
-            # Collect predator and prey population data
-            predator_population_data = env_base.n_active_agent_list_type[
-                env_base.predator_type_nr
-            ]
-            prey_population_data = env_base.n_active_agent_list_type[
-                env_base.prey_type_nr
-            ]
-
-            # Save predator and prey population data to a single file per episode
-            self.save_combined_population_data(
-                predator_population_data, prey_population_data, i
-            )
+                # Save predator and prey population data to a single file per episode
+                self.save_combined_population_data(
+                    predator_population_data, prey_population_data, i
+                )
 
         print("Finish evaluation.")
 
@@ -637,32 +647,34 @@ class Evaluator:
 
         # save evaluation results to evaluation_file
         evaluation_results_summary= self.evaluation_results_summary()   
-        evaluation_file.write(evaluation_results_summary)
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.write("Evaluation parameters:\n")
-        for item in self.env_kwargs:
-            evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.close()
-
         # print to console
         print(evaluation_results_summary)
+        if self.write_evaluation_to_file:
+            evaluation_file.write(evaluation_results_summary)
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("Evaluation parameters:\n")
+            for item in self.env_kwargs:
+                evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.close()
+
 
     def aec_evaluation_parallel_wrapped_aec_env(self):
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
 
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
-        plotter = PopulationPlotter(self.destination_output_dir)
-
-        saved_directory_and_evaluation_file_name = os.path.join(
-            self.destination_output_dir, "evaluation.txt"
-        )
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()
-        evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
-        evaluation_file.write(eval_header_text)  # write to file
         print(eval_header_text)  # write to screen
+        if self.write_evaluation_to_file:
+            plotter = PopulationPlotter(self.destination_output_dir)
+
+            saved_directory_and_evaluation_file_name = os.path.join(
+                self.destination_output_dir, "evaluation.txt"
+            )
+            evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
+            evaluation_file.write(eval_header_text)  # write to file
         self.initialize_evaluation_metrics()
 
         env_base = env.predpreygrass
@@ -699,13 +711,14 @@ class Evaluator:
                 env.step(action)
 
             self.n_cycles = env_base.n_cycles
-            plotter.plot_population(
-                env_base.n_active_agent_list_type[env_base.predator_type_nr],
-                env_base.n_active_agent_list_type[env_base.prey_type_nr],
-                self.n_cycles,
-                i,
-                title="Predator and Prey Population Over Time",
-            )
+            if self.write_evaluation_to_file:
+                plotter.plot_population(
+                    env_base.n_active_agent_list_type[env_base.predator_type_nr],
+                    env_base.n_active_agent_list_type[env_base.prey_type_nr],
+                    self.n_cycles,
+                    i,
+                    title="Predator and Prey Population Over Time",
+                )
 
             self.episode_length[i] = self.n_cycles
             self.n_starved_predator_per_cycle[i] = env_base.n_starved_predator / self.n_cycles
@@ -741,20 +754,20 @@ class Evaluator:
 
             eval_results_output = self.evaluation_results_output(i)
             print(eval_results_output)
-            evaluation_file.write(eval_results_output)  
+            if self.write_evaluation_to_file:
+                evaluation_file.write(eval_results_output)  
+                # Collect predator and prey population data
+                predator_population_data = env_base.n_active_agent_list_type[
+                    env_base.predator_type_nr
+                ]
+                prey_population_data = env_base.n_active_agent_list_type[
+                    env_base.prey_type_nr
+                ]
 
-            # Collect predator and prey population data
-            predator_population_data = env_base.n_active_agent_list_type[
-                env_base.predator_type_nr
-            ]
-            prey_population_data = env_base.n_active_agent_list_type[
-                env_base.prey_type_nr
-            ]
-
-            # Save predator and prey population data to a single file per episode
-            self.save_combined_population_data(
-                predator_population_data, prey_population_data, i
-            )
+                # Save predator and prey population data to a single file per episode
+                self.save_combined_population_data(
+                    predator_population_data, prey_population_data, i
+                )
 
         print("Finish evaluation.")
 
@@ -794,15 +807,16 @@ class Evaluator:
             sum(self.total_prey_age_list) / len(self.total_prey_age_list), 1
         )
 
-        # save evaluation results to evaluation_file
-        evaluation_results_summary= self.evaluation_results_summary()   
-        evaluation_file.write(evaluation_results_summary)
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.write("Evaluation parameters:\n")
-        for item in self.env_kwargs:
-            evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-        evaluation_file.write("---------------------------------------------------\n")
-        evaluation_file.close()
-
         # print to console
+        evaluation_results_summary= self.evaluation_results_summary()   
         print(evaluation_results_summary)
+        if self.write_evaluation_to_file:
+            # save evaluation results to evaluation_file
+            evaluation_file.write(evaluation_results_summary)
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("Evaluation parameters:\n")
+            for item in self.env_kwargs:
+                evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
+            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.close()
+

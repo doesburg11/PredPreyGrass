@@ -18,8 +18,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=60, #60,  # maximum number of predators during runtime
-    n_possible_prey=80, # #80,
+    n_possible_predator=18, #60,  # maximum number of predators during runtime
+    n_possible_prey=24, # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -29,31 +29,15 @@ env_kwargs = dict(
     obs_range_prey=9,
     # action parameters
     motion_range = np.array([
-        [-2,-2],  # move left left up up
-        [-2,-1],  # move left left up
-        [-2, 0],  # move left left
-        [-2, 1],  # move left left down
-        [-2, 2],  # move left left down down 
-        [-1,-2],  # move left up up
-        [-1,-1],  # move left up
         [-1, 0],  # move left
-        [-1, 1],  # move left down
-        [-1, 2],  # move left down down
-        [ 0,-2],  # move up up
-        [ 0,-1],  # move up
-        [ 0, 0],  # stay
-        [ 0, 1],  # move down
-        [ 0, 2],  # move down down
-        [ 1,-2],  # move right up up
-        [ 1,-1],  # move right up
-        [ 1, 0],  # move right
-        [ 1, 1],  # move right down
-        [ 1, 2],  # move right down down
-        [ 2,-2],  # move right right up up
-        [ 2,-1],  # move right right up
-        [ 2, 0],  # move right right
-        [ 2, 1],  # move right right down
-        [ 2, 2],  # move rihgt right down down
+        [0, -1],  # move up
+        [0, 0],   # stay
+        [0, 1],   # move down
+        [1, 0],   # move right
+        [-1, -1],  # move up left
+        [-1, 1],  # move down left
+        [1, -1],  # move up right
+        [1, 1],   # move down right
     ], dtype=np.int32),
     # energy parameters
     energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
@@ -73,9 +57,8 @@ env_kwargs = dict(
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=3,
-    watch_grid_model=True,
-    write_evaluation_to_file=False,
+    num_episodes=100,
+    watch_grid_model=False,
     # training parameters
     max_cycles=10000,
     #training_steps_string="688_128",
@@ -91,8 +74,8 @@ env_kwargs = dict(
     #training_steps_string="7569408",
     #training_steps_string="8257536",
     #training_steps_string="8945664",
-    training_steps_string="10321920",
-    #training_steps_string="10_000_000",
+    #training_steps_string="10321920",
+    training_steps_string="10_000_000",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,

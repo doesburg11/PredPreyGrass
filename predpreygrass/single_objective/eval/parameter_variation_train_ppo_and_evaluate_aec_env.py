@@ -20,10 +20,10 @@ if __name__ == "__main__":
     training_steps = int(training_steps_string)
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
+    parameter_variation_parameter_string = "torus"
+    parameter_variation_scenarios = [False]
 
     # Parameter variation scenarios
-    parameter_variation_parameter_string = "torus"
-    parameter_variation_scenarios = [False, True]
 
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
