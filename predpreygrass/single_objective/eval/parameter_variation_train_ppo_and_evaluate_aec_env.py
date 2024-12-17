@@ -21,7 +21,7 @@ if __name__ == "__main__":
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     parameter_variation_parameter_string = "torus"
-    parameter_variation_scenarios = [False]
+    parameter_variation_scenarios = [False, True]
 
     # Parameter variation scenarios
 

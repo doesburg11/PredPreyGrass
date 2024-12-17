@@ -63,7 +63,7 @@ env_kwargs = dict(
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    motion_energy = False,
+    motion_energy = True,
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
@@ -73,9 +73,9 @@ env_kwargs = dict(
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=3,
-    watch_grid_model=True,
-    write_evaluation_to_file=False,
+    num_episodes=100,
+    watch_grid_model=False,
+    write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,
     #training_steps_string="688_128",
