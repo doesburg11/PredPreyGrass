@@ -1,11 +1,14 @@
-### Stablebaseline3 PPO in multi-agent setting
+### Centralized Training
 
-Stable Baselines3 (SB3) is designed primarily for single-agent environments, but can also be implemented in multi-agent setting. This is done by wrapping the multi-agent environment to appear as single-agent. This involves:
+The Predators and Prey agents share a single PPO network during training. The training process has access to the observations, actions, and rewards of all agents, enabling a single coordinated policy optimization process.
+
+### Stablebaseline3 PPO in multi-agent setting
+The training process utilizes the PPO algorithm from the external Stable Baselines3 library (SB3), which is designed primarily for single-agent environments, but can also be implemented in multi-agent setting. This is done by wrapping the multi-agent environment to appear as a single-agent. This involves:
 
 - Creating a wrapper that aggregates observations from all agents into a single observation space.
 - Combining the actions and rewards from all agents into single action and reward vectors that SB3 can process.
 
-The SuperSuit library is used to convert the PettingZoo environment into a format compatible with Stable Baselines3. With both `train_ppo_parallel_wrapped_aec_env.py` and `train_ppo_unwrapped_parallel_env.py` this conversion is done using the `ss.pettingzoo_env_to_vec_env_v1` function which translates the PettingZoo environment into a vectorized environment. This makes the multi-agent environment appear as a single, though high-dimensional, environment to the SB3 model. The environments are further processed with `ss.concat_vec_envs_v1`, which concatenates several copies of the environment into a single environment to enable more efficient training using multiple CPU cores. The number of copies can be adjusted accordingly. In this case 8 copies are concatenated to utilize 8 CPU cores. 
+The SuperSuit library is used to convert the PettingZoo environment into a format compatible with SB3. With both `train_ppo_parallel_wrapped_aec_env.py` and `train_ppo_unwrapped_parallel_env.py` this conversion is done using the SuperSuit `pettingzoo_env_to_vec_env_v1` function which translates the PettingZoo environment into a vectorized environment. This makes the multi-agent environment appear as a single, though high-dimensional, environment to the SB3 model. The environments are further processed with `concat_vec_envs_v1`, which concatenates several copies of the environment into a single environment to enable more efficient training using multiple CPU cores. The number of copies can be adjusted accordingly. In this case 8 copies are concatenated to utilize 8 CPU cores. 
 
 ### train_ppo_parallel_wrapped_aec_env.py
 

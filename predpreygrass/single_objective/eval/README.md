@@ -1,3 +1,7 @@
+## Centralized training and decentralized execution
+
+During training, the Predators and Prey agents share a single PPO network. The training process has access to the observations, actions, and rewards of all agents, enabling a single coordinated policy optimization process. During evaluation, each agent receives a unique slice of the state as input, tailored to its role (e.g., predators observe prey positions; prey focus on predator positions and grass), enabling decntralized execution.
+
 ## Instructions
 
 To evaluate a ppo trained and saved model:
@@ -14,7 +18,8 @@ instructions set in config_file ```predpreygrass/single_objective/config/config_
 - select "Run without debugging"
 - results are saved in: ```local_output_root/[time_stamp]/output/```
 
-### Stablebaseline3 PPO in multi-agent setting
+
+### Stablebaseline3 PPO in a multi-agent setting
 
 Stable Baselines3 (SB3) is designed primarily for single-agent environments, but can also be implemented in multi-agent setting. This is done by wrapping the multi-agent environment to appear as single-agent. This involves:
 

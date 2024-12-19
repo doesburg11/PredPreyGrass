@@ -1,7 +1,5 @@
-[![Python 3.11.7](https://img.shields.io/badge/python-3.11.7-blue.svg)](https://www.python.org/downloads/release/python-3117/)
+[![Python 3.11.10](https://img.shields.io/badge/python-3.11.7-blue.svg)](https://www.python.org/downloads/release/python-3117/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
-[![MOMAland version dependency](https://img.shields.io/badge/MOMAland-v0.1.1-blue)]()
-
 
 
 </br>
@@ -10,8 +8,8 @@
 </p>
 </br>
 
-## Predator-Prey-Grass multi-objective multi-agent reinforcement learning (MOMARL)
-Predator-Prey-Grass gridworld deploying multi-objective and multi-agent environments with dynamic deletion and spawning of partially observant agents. Utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/) and [Momaland](https://momaland.farama.org/).
+## Predator-Prey-Grass multi-agent reinforcement learning (MARL)
+Predator-Prey-Grass gridworld deploying multi-agent environments with dynamic deletion and spawning of partially observant agents, utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/).
 
 </br>
 </br>
@@ -20,7 +18,7 @@ Predator-Prey-Grass gridworld deploying multi-objective and multi-agent environm
 </p>
 
 ## The environments
-[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): A (single-objective) multi-agent reinforcement learning (MARL) environment, [trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo.py) and [evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file.py) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case for simplicity, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents, learn to execute movement actions based on their partial observations (transparent red and blue squares respectively) of the environment to maximize cumulative reward. The single objective rewards (stepping, eating, dying and reproducing) are naively summed and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
+[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): A (single-objective) multi-agent reinforcement learning (MARL) environment, [centralized trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo.py) and [decentralized evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file.py) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
 
 
 ## Emergent Behaviors
