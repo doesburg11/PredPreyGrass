@@ -72,7 +72,6 @@ class Evaluator:
             self.episode_predator_age_list = []
             self.episode_prey_age_list = []
 
-
     def evaluation_header_text(self):
         return (
              "Evaluation results:\n"
@@ -331,8 +330,7 @@ class Evaluator:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
             evaluation_file.write("---------------------------------------------------\n")
             evaluation_file.close()
-
-        
+  
     def parallel_evaluation(self):
         # env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
@@ -491,8 +489,7 @@ class Evaluator:
             evaluation_file.write("---------------------------------------------------\n")
             evaluation_file.close()
 
-
-    def aec_evaluation_parallel_env(self):
+    def parallel_env_training_aec_evaluation(self):
         model = PPO.load(self.loaded_policy)
         parallel_env = self.env_fn.parallel_env(
             **self.env_kwargs, render_mode=self.render_mode
@@ -658,8 +655,7 @@ class Evaluator:
             evaluation_file.write("---------------------------------------------------\n")
             evaluation_file.close()
 
-
-    def aec_evaluation_parallel_wrapped_aec_env(self):
+    def parallel_wrapped_aec_env_training_aec_evaluation(self):
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
 

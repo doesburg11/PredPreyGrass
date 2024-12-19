@@ -57,5 +57,5 @@ if __name__ == "__main__":
     )
 
     # Call the eval method to perform the evaluation
-    evaluator.aec_evaluation_parallel_wrapped_aec_env()
+    evaluator.parallel_wrapped_aec_env_training_aec_evaluation()
     

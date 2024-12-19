@@ -56,7 +56,7 @@ env_kwargs = dict(
         [ 2, 2],  # move rihgt right down down
     ], dtype=np.int32),
     # energy parameters
-    energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
+    energy_gain_per_step_predator= -0.10, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.05, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
@@ -91,8 +91,8 @@ env_kwargs = dict(
     #training_steps_string="7569408",
     #training_steps_string="8257536",
     #training_steps_string="8945664",
-    training_steps_string="10321920",
-    #training_steps_string="10_000_000",
+    #training_steps_string="10321920",
+    training_steps_string="11_468_800",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,

@@ -18,10 +18,12 @@ if __name__ == "__main__":
     env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
+
+
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
-    parameter_variation_parameter_string = "torus"
-    parameter_variation_scenarios = [False, True]
+    parameter_variation_parameter_string = "energy_gain_per_step_prey"
+    parameter_variation_scenarios = [-0.06, -0.07, -0.08]
 
     # Parameter variation scenarios
 
@@ -132,4 +134,4 @@ if __name__ == "__main__":
             destination_source_code_dir, # destination_source_code_dir,
             **env_kwargs
         )
-        evaluator.aec_evaluation_parallel_wrapped_aec_env()
+        evaluator.parallel_wrapped_aec_env_training_aec_evaluation()
