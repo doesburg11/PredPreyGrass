@@ -1,6 +1,5 @@
 # discretionary libraries
 from predpreygrass.single_objective.envs import (
-    predpreygrass_parallel_v0,
     predpreygrass_aec_v0,
 )
 from predpreygrass.single_objective.config.config_predpreygrass import (

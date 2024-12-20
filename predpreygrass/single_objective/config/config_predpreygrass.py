@@ -56,7 +56,7 @@ env_kwargs = dict(
         [ 2, 2],  # move rihgt right down down
     ], dtype=np.int32),
     # energy parameters
-    energy_gain_per_step_predator= -0.10, #-0.15,  # -0.15 # default
+    energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.05, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
@@ -73,26 +73,20 @@ env_kwargs = dict(
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=100,
+    num_episodes=5,
     watch_grid_model=False,
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,
-    #training_steps_string="688_128",
-    #training_steps_string="1_376_256",
-    #training_steps_string="2064384",
-    #training_steps_string="2752512",
-    #training_steps_string="3440640",
-    #training_steps_string="4128768",
-    #training_steps_string="4816896",
-    #training_steps_string="5505024",
-    #training_steps_string="6193152",
-    #training_steps_string="6881280",
-    #training_steps_string="7569408",
-    #training_steps_string="8257536",
-    #training_steps_string="8945664",
-    #training_steps_string="10321920",
-    training_steps_string="11_468_800",
+    #training_steps_string="2_293_760",
+    training_steps_string="4_587_520",
+    #training_steps_string="6_881_280",
+    #training_steps_string="9_175_040",
+    #training_steps_string="11_468_800",
+    #training_steps_string="13_762_560",
+    #training_steps_string="16_056_320",
+    #training_steps_string="18_350_080",
+    #training_steps_string="20_643_840",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
