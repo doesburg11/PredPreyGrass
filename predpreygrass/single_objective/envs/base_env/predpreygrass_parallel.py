@@ -78,19 +78,7 @@ class parallel_env(ParallelEnv):
             observation = np.zeros(observation.shape)
         # TODO 
         return observation
-    """
-    # TODO more efficent implementation according to chatGPT: avoid unnecessary swaps if inactive 
-    def observe(self, agent_name):
-        agent_instance = self.predpreygrass.agent_name_to_instance_dict[agent_name]
-        obs = self.predpreygrass.observe(agent_name)
 
-        # If agent is not active ("black death"), return zeros
-        if not agent_instance.is_active:
-            return np.zeros((obs.shape[2], obs.shape[1], obs.shape[0]))  # Shape after swapaxes
-
-        # Otherwise, return the swapped observation
-        return np.swapaxes(obs, 2, 0)
-    """
 
     def observation_space(self, agent: str):
         return self.observation_spaces[agent]

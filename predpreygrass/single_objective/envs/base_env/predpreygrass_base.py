@@ -19,17 +19,12 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
 
         # apply the engagement rules and reap rewards
         if is_last_step_of_cycle:
-            #print(f"n_active_agent_type: {self.n_active_agent_type}")
             self._reset_rewards()
             # removes agents, reap rewards and eventually (re)create agents
             for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr][:]:
                 if predator_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = predator_instance.position
-                    #predator_instance.energy += predator_instance.energy_gain_per_step
-                    #predator_instance.age += 1
-                    # predator_instance.energy += predator_action_energy
-                    # engagement with environment: "other agents"
                     prey_instance_in_predator_cell = (
                         self.agent_instance_in_grid_location[self.prey_type_nr][
                             (x_new, y_new)
@@ -154,17 +149,15 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
 
         # 2] apply rules of engagement for all agents
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr][:]:  
-            # make a copy to make removal during iteration possible
             if predator_instance.energy > 0:
-                # engagement with environment: "nature and time"
-                predator_instance.age += 1
-                predator_instance.energy += predator_instance.energy_gain_per_step
-                # predator_instance.energy += predator_action_energy
-                # engagement with environment: "other agents"
-                prey_instance_in_predator_cell = self.agent_instance_in_grid_location[
-                    self.prey_type_nr, *predator_instance.position
-                ]
-                if prey_instance_in_predator_cell:
+                # new is the position of the predator after the move
+                x_new, y_new = predator_instance.position
+                prey_instance_in_predator_cell = (
+                    self.agent_instance_in_grid_location[self.prey_type_nr][
+                        (x_new, y_new)
+                    ]
+                )
+                if prey_instance_in_predator_cell is not None:
                     predator_instance.energy += prey_instance_in_predator_cell.energy
                     self._deactivate_agent(prey_instance_in_predator_cell)
                     self.n_active_agent_type[self.prey_type_nr] -= 1

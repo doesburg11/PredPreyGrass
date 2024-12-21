@@ -363,6 +363,7 @@ class PredPreyGrassSuperBaseEnv:
             Optional[np.ndarray]: Rendered frame or None if no renderer is set.
         """
         if self.renderer:
+            #return self.renderer.render_without_agent_ids
             return self.renderer.render()
 
     def close(self):

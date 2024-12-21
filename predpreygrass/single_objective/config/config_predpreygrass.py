@@ -22,38 +22,38 @@ env_kwargs = dict(
     n_possible_prey=80, # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
-    n_initial_active_prey=8,
+    n_initial_active_prey=18,
     # observation parameters
     max_observation_range=9,  # must be odd and not smaller than any obs_range
     obs_range_predator=7,
     obs_range_prey=9,
     # action parameters
     motion_range = np.array([
-        [-2,-2],  # move left left up up
-        [-2,-1],  # move left left up
-        [-2, 0],  # move left left
-        [-2, 1],  # move left left down
-        [-2, 2],  # move left left down down 
-        [-1,-2],  # move left up up
+        #[-2,-2],  # move left left up up
+        #[-2,-1],  # move left left up
+        #[-2, 0],  # move left left
+        #[-2, 1],  # move left left down
+        #[-2, 2],  # move left left down down 
+        #[-1,-2],  # move left up up
         [-1,-1],  # move left up
         [-1, 0],  # move left
         [-1, 1],  # move left down
-        [-1, 2],  # move left down down
-        [ 0,-2],  # move up up
+        #[-1, 2],  # move left down down
+        #[ 0,-2],  # move up up
         [ 0,-1],  # move up
         [ 0, 0],  # stay
         [ 0, 1],  # move down
-        [ 0, 2],  # move down down
-        [ 1,-2],  # move right up up
+        #[ 0, 2],  # move down down
+        #[ 1,-2],  # move right up up
         [ 1,-1],  # move right up
         [ 1, 0],  # move right
         [ 1, 1],  # move right down
-        [ 1, 2],  # move right down down
-        [ 2,-2],  # move right right up up
-        [ 2,-1],  # move right right up
-        [ 2, 0],  # move right right
-        [ 2, 1],  # move right right down
-        [ 2, 2],  # move rihgt right down down
+        #[ 1, 2],  # move right down down
+        #[ 2,-2],  # move right right up up
+        #[ 2,-1],  # move right right up
+        #[ 2, 0],  # move right right
+        #[ 2, 1],  # move right right down
+        #[ 2, 2],  # move rihgt right down down
     ], dtype=np.int32),
     # energy parameters
     energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
@@ -68,21 +68,21 @@ env_kwargs = dict(
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
     # visualization parameters
-    cell_scale=40,
+    cell_scale=40, # 40
     x_pygame_window=0,
     y_pygame_window=0,
     show_energy_chart=True,
     # evaluation parameters
-    num_episodes=5,
+    num_episodes=100,
     watch_grid_model=False,
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,
     #training_steps_string="2_293_760",
-    training_steps_string="4_587_520",
+    #training_steps_string="4_587_520",
     #training_steps_string="6_881_280",
     #training_steps_string="9_175_040",
-    #training_steps_string="11_468_800",
+    training_steps_string="11_468_800",
     #training_steps_string="13_762_560",
     #training_steps_string="16_056_320",
     #training_steps_string="18_350_080",
