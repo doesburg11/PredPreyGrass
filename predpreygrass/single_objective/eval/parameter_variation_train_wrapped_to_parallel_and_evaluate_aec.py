@@ -2,6 +2,7 @@ from predpreygrass.single_objective.envs import predpreygrass_aec_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
     local_output_root,
+    training_steps_string
 )
 from predpreygrass.single_objective.train.utils.trainer import Trainer
 from predpreygrass.single_objective.train.utils.config_saver import ConfigSaver
@@ -13,20 +14,17 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    training_steps_string = env_kwargs["training_steps_string"]
+    parameter_variation_parameter_string = "energy_gain_per_step_predator"
+    parameter_variation_scenarios = [-0.11,-0,13,-0.15]
+
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
-
-
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
-    parameter_variation_parameter_string = "energy_gain_per_step_prey"
-    parameter_variation_scenarios = [-0.05]
 
     # Parameter variation scenarios
-
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
             local_output_root + "parameter_variation/"
@@ -132,6 +130,7 @@ if __name__ == "__main__":
             destination_source_code_dir, # destination_root_dir,
             render_mode,
             destination_source_code_dir, # destination_source_code_dir,
+            training_steps_string,
             **env_kwargs
         )
         evaluator.parallel_wrapped_aec_env_training_aec_evaluation()
