@@ -1,4 +1,4 @@
-[![Python 3.11.10](https://img.shields.io/badge/python-3.11.7-blue.svg)](https://www.python.org/downloads/release/python-3117/)
+[![Python 3.11.10](https://img.shields.io/badge/python-3.11.7-blue.svg)](https://www.python.org/downloads/release/python-31110/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
 
 
