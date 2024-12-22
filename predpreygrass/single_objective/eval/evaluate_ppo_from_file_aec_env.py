@@ -15,19 +15,23 @@ instructions:
 - select "Run without debugging"
 - results can be found in: /[time_stamp]/output/
 """
-# discretionary libraries
-from ..envs import predpreygrass_aec_v0
-from ..config.config_predpreygrass import (
-    env_kwargs,
-)
-from predpreygrass.single_objective.eval.utils.evaluator import Evaluator
-
 # external libraries
 import os
+import sys
 from os.path import dirname as up 
 
+
+# Add the parent directory to sys.path
+sys.path.append(up(up(__file__)))
+
+# Import your external packages using absolute imports
+from envs import predpreygrass_aec_v0
+from config.config_predpreygrass import env_kwargs, training_steps_string
+
+from eval.utils.evaluator import Evaluator
+
+
 if __name__ == "__main__":
-    training_steps_string = env_kwargs["training_steps_string"]
     watch_grid_model = env_kwargs["watch_grid_model"]
     num_episodes = env_kwargs["num_episodes"] 
     env_fn = predpreygrass_aec_v0
@@ -40,7 +44,6 @@ if __name__ == "__main__":
     output_directory = destination_source_code_dir +"/output/"
     loaded_policy = output_directory + model_file_name
     # input from so_config_predpreygrass.py
-    training_steps = int(training_steps_string)
 
     render_mode = "human" if watch_grid_model else None
 
@@ -53,6 +56,7 @@ if __name__ == "__main__":
         destination_source_code_dir, # destination_root_dir,
         render_mode,
         destination_source_code_dir, # destination_source_code_dir,
+        training_steps_string,
         **env_kwargs
     )
 

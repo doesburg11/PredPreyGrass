@@ -1,10 +1,20 @@
-import os.path as osp
 from predpreygrass.global_config import RESULTS_DIR
 import numpy as np
 
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
+training_steps_string= "680_000"
+#training_steps_string="2_293_760"
+#training_steps_string="4_587_520"
+#training_steps_string="6_881_280"
+#training_steps_string="9_175_040"
+#training_steps_string="11_468_800"
+#training_steps_string="13_762_560"
+#training_steps_string="16_056_320"
+#training_steps_string="18_350_080"
+#training_steps_string="20_643_840"
+
 
 env_kwargs = dict(
     # reward parameters
@@ -18,8 +28,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=60, #60,  # maximum number of predators during runtime
-    n_possible_prey=80, # #80,
+    n_possible_predator=18, #60,  # maximum number of predators during runtime
+    n_possible_prey=24, # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=18,
@@ -28,7 +38,7 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # action parameters
-    motion_range = np.array([
+    motion_range = [
         #[-2,-2],  # move left left up up
         #[-2,-1],  # move left left up
         #[-2, 0],  # move left left
@@ -54,7 +64,7 @@ env_kwargs = dict(
         #[ 2, 0],  # move right right
         #[ 2, 1],  # move right right down
         #[ 2, 2],  # move rihgt right down down
-    ], dtype=np.int32),
+    ],
     # energy parameters
     energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.05, #-0.05,  # -0.05 # default
@@ -79,15 +89,6 @@ env_kwargs = dict(
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,
-    training_steps_string="2_293_760",
-    #training_steps_string="4_587_520",
-    #training_steps_string="6_881_280",
-    #training_steps_string="9_175_040",
-    #training_steps_string="11_468_800",
-    #training_steps_string="13_762_560",
-    #training_steps_string="16_056_320",
-    #training_steps_string="18_350_080",
-    #training_steps_string="20_643_840",
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,

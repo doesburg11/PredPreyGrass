@@ -19,6 +19,7 @@ class Evaluator:
         destination_root_dir,
         render_mode,
         destination_source_code_dir,
+        training_steps_string,
         **env_kwargs,
     ):
         self.env_fn = env_fn
@@ -29,7 +30,7 @@ class Evaluator:
         self.destination_source_code_dir = destination_source_code_dir
 
         self.env_kwargs = env_kwargs
-        self.training_steps_string = env_kwargs["training_steps_string"]
+        self.training_steps_string = training_steps_string
         self.num_episodes = env_kwargs["num_episodes"]
         self.environment_name = environment_name
         self.is_torus = env_kwargs["is_torus"]
