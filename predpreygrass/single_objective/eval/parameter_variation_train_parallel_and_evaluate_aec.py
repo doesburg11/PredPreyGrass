@@ -40,10 +40,12 @@ if __name__ == "__main__":
     for parameter_variation_parameter in parameter_variation_scenarios:
         # Define subdirectory for parameter variation
         if len(parameter_variation_scenarios) > 1:
+            print("--------------------------------------------------------------")
             print(
-                "Parameter variation " + parameter_variation_parameter_string + ": ",
+                "Parameter variation: " + parameter_variation_parameter_string + ": ",
                 str(parameter_variation_parameter),
             )
+            print("--------------------------------------------------------------")
             destination_source_code_dir = (
                 destination_root_dir + "/" + str(parameter_variation_parameter)
             )
