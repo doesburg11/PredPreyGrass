@@ -20,7 +20,6 @@ import os
 import sys
 from os.path import dirname as up 
 
-
 # Add the parent directory to sys.path
 sys.path.append(up(up(__file__)))
 
@@ -43,8 +42,6 @@ if __name__ == "__main__":
     print("destination_source_code_dir: ", destination_source_code_dir)
     output_directory = destination_source_code_dir +"/output/"
     loaded_policy = output_directory + model_file_name
-    # input from so_config_predpreygrass.py
-
     render_mode = "human" if watch_grid_model else None
 
     # Create an instance of the Evaluator class

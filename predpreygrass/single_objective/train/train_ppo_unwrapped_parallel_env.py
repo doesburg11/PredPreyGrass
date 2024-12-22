@@ -10,6 +10,7 @@ from predpreygrass.single_objective.envs import predpreygrass_parallel_v0
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
     local_output_root,
+    training_steps_string
 )
 from predpreygrass.single_objective.train.utils.trainer import Trainer
 from predpreygrass.single_objective.train.utils.config_saver import ConfigSaver
@@ -21,7 +22,6 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    training_steps_string = env_kwargs["training_steps_string"]
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_parallel_v0
     environment_name = str(env_fn.parallel_env.metadata['name'])
