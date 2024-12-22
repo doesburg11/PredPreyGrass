@@ -63,7 +63,8 @@ env_kwargs = dict(
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    motion_energy = True,
+    has_motion_energy = True,
+    motion_energy_per_distance_unit = -0.01, #-0.0001,
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
@@ -71,18 +72,18 @@ env_kwargs = dict(
     cell_scale=40, # 40
     x_pygame_window=0,
     y_pygame_window=0,
-    show_energy_chart=True,
+    has_energy_chart=True,
     # evaluation parameters
     num_episodes=100,
     watch_grid_model=False,
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,
-    #training_steps_string="2_293_760",
+    training_steps_string="2_293_760",
     #training_steps_string="4_587_520",
     #training_steps_string="6_881_280",
     #training_steps_string="9_175_040",
-    training_steps_string="11_468_800",
+    #training_steps_string="11_468_800",
     #training_steps_string="13_762_560",
     #training_steps_string="16_056_320",
     #training_steps_string="18_350_080",
@@ -90,7 +91,7 @@ env_kwargs = dict(
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
-    torus=False,
+    is_torus=False,
     spawning_area_predator=dict(
         {
             "x_begin": 0,

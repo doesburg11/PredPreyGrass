@@ -52,7 +52,7 @@ class PredPreyGrassSuperBaseEnv:
         reproduction_reward_prey: float = 10.0,
         reproduction_reward_predator: float = 10.0,
         watch_grid_model: bool = False,
-        show_energy_chart: bool = True,
+        has_energy_chart: bool = True,
         max_energy_level_grass: float = 4.0,
         spawning_area_predator: dict = dict(
             {
@@ -79,7 +79,7 @@ class PredPreyGrassSuperBaseEnv:
             }
         ),
         num_episodes: int = 100,
-        torus: bool = False,
+        is_torus: bool = False,
         training_steps_string: str = "10_000_000",
         motion_range: np.ndarray = np.array([
             #[-1, -1],  # move up left
@@ -92,8 +92,9 @@ class PredPreyGrassSuperBaseEnv:
             [1, 0],   # move right
             #[1, 1],   # move down right
         ], dtype=np.int32),
-        motion_energy: bool = False,
+        has_motion_energy: bool = False,
         write_evaluation_to_file: bool = False,
+        motion_energy_per_distance_unit: float = 1.0,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -132,13 +133,14 @@ class PredPreyGrassSuperBaseEnv:
         self.cell_scale = cell_scale
         self.x_pygame_window = x_pygame_window
         self.y_pygame_window = y_pygame_window
-        self.show_energy_chart = show_energy_chart
+        self.has_energy_chart = has_energy_chart
         self.max_energy_level_grass = max_energy_level_grass
-        self.torus = torus
+        self.is_torus = is_torus
         self.training_steps_string = training_steps_string
         self.motion_range = motion_range
-        self.motion_energy = motion_energy
+        self.has_motion_energy = has_motion_energy
         self.write_evaluation_to_file = write_evaluation_to_file
+        self.motion_energy_per_distance_unit = motion_energy_per_distance_unit
 
 
         self._initialize_variables()
@@ -149,7 +151,7 @@ class PredPreyGrassSuperBaseEnv:
             self.renderer = Renderer(
                 env=self,
                 cell_scale=cell_scale,
-                show_energy_chart=show_energy_chart,
+                has_energy_chart=has_energy_chart,
                 x_pygame_window=x_pygame_window,
                 y_pygame_window=y_pygame_window,
             )
@@ -208,8 +210,10 @@ class PredPreyGrassSuperBaseEnv:
                     motion_range=self.motion_range,
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
-                    torus=self.torus,
-                    motion_energy=self.motion_energy,
+                    is_torus=self.is_torus,
+                    has_motion_energy=self.has_motion_energy,
+                    motion_energy_per_distance_unit=self.motion_energy_per_distance_unit
+                                       
                 )
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
                 #  and which is within the spawning area of the agent
@@ -295,13 +299,13 @@ class PredPreyGrassSuperBaseEnv:
         """
         raise NotImplementedError
 
-    def observe(self, agent_name: str, torus: bool = True) -> np.ndarray:
+    def observe(self, agent_name: str, is_torus: bool = True) -> np.ndarray:
         """
         Returns the observation for the given agent.
 
         Parameters:
             agent_name (str): The name of the agent for which to return the observation.
-            torus (bool): Whether to treat the grid as a torus (wrap-around).
+            is_torus (bool): Whether to treat the grid as a is_torus (wrap-around).
 
         Returns:
             np.ndarray: The observation matrix for the agent.
@@ -322,13 +326,13 @@ class PredPreyGrassSuperBaseEnv:
         )
         observation[0].fill(1.0)
 
-        # Populate observation within visible area, handling torus wrap-around if enabled
+        # Populate observation within visible area, handling is_torus wrap-around if enabled
         for dx in range(-max_obs_offset, max_obs_offset + 1):
             for dy in range(-max_obs_offset, max_obs_offset + 1):
                 x = xp + dx
                 y = yp + dy
 
-                if torus:
+                if is_torus:
                     x = x % x_grid_size
                     y = y % y_grid_size
                 elif not (0 <= x < x_grid_size and 0 <= y < y_grid_size):

@@ -2,7 +2,7 @@
 from pettingzoo.utils.env import AgentID
 import numpy as np
 from gymnasium import spaces
-from typing import List, Tuple
+from typing import Tuple
 
 class DiscreteAgent:
     def __init__(
@@ -22,8 +22,9 @@ class DiscreteAgent:
         ]),
         initial_energy: float = 10,
         energy_gain_per_step: float = -0.1,
-        torus: bool = False,
-        motion_energy: bool = False,
+        is_torus: bool = False,
+        has_motion_energy: bool = False,
+        motion_energy_per_distance_unit: float = -1
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
@@ -39,8 +40,9 @@ class DiscreteAgent:
         self.position: np.ndarray = np.zeros(2, dtype=np.int32)  # x and y position
         self.energy: float = initial_energy  # still to implement
         self.energy_gain_per_step: float = energy_gain_per_step
-        self.torus: bool = torus
-        self.motion_energy: bool = motion_energy
+        self.motion_energy_per_distance_unit = motion_energy_per_distance_unit
+        self.is_torus: bool = is_torus
+        self.has_motion_energy: bool = has_motion_energy
 
         self.is_active: bool = False
         self.age: int = 0
@@ -51,16 +53,17 @@ class DiscreteAgent:
     def step(self, action: int) -> np.ndarray:
         self.age += 1
         # update step energy
+        #print("self.motion_energy_per_distance_unit", self.motion_energy_per_distance_unit)
         #print(self.agent_name, "=> energy", round(self.energy,2),"steps => energy ",end="")
         self.energy += self.energy_gain_per_step
         #print(round(self.energy,2),end="")
         # returns new position of agent "self" given action "action"
         next_position = self.position + np.array(self.motion_range[action])
 
-        if self.torus:
-            # Calculate distance to next position in torus space
+        if self.is_torus:
+            # Calculate distance to next position in is_torus space
             distance_traveled = np.linalg.norm(self.position - next_position)
-            # Apply torus transformation to handle out-of-bounds movement
+            # Apply is_torus transformation to handle out-of-bounds movement
             next_position %= [self.x_grid_dim, self.y_grid_dim]
         else:
             # Clip next position to stay within bounds
@@ -74,9 +77,10 @@ class DiscreteAgent:
             #print(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2))
             return self.position  # if intended to move to occupied cell of same agent type: don't move
         # update move energy
-        if self.motion_energy:
-            self.energy += distance_traveled*self.energy_gain_per_step
-            #rint(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2))
+        if self.has_motion_energy:
+            energy_gain_per_move = distance_traveled*self.energy*self.motion_energy_per_distance_unit
+            self.energy += energy_gain_per_move
+            #print(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2), "energy_gain_per_move", round(energy_gain_per_move,2))
         # Update position
         self.position = next_position
         return self.position

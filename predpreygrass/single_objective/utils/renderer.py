@@ -3,10 +3,10 @@ import numpy as np
 import os
 
 class Renderer:
-    def __init__(self, env, cell_scale=40, show_energy_chart=True, x_pygame_window=0, y_pygame_window=0):
+    def __init__(self, env, cell_scale=40, has_energy_chart=True, x_pygame_window=0, y_pygame_window=0):
         self.env = env
         self.cell_scale = cell_scale
-        self.show_energy_chart = show_energy_chart
+        self.has_energy_chart = has_energy_chart
         self.file_name = 0
 
         # Initialize the Pygame window position
@@ -15,7 +15,7 @@ class Renderer:
         # Pygame screen settings
         self.width = env.x_grid_size * self.cell_scale
         self.height = env.y_grid_size * self.cell_scale
-        self.width_energy_chart = 2040 if show_energy_chart else 0
+        self.width_energy_chart = 2040 if has_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
         self.save_image_steps = False # TODO put into config file? 
@@ -44,7 +44,7 @@ class Renderer:
         self._draw_instances(self.env.active_agent_instance_list_type[self.env.predator_type_nr], (255, 0, 0))
         self._draw_agent_ids()
 
-        if self.show_energy_chart:
+        if self.has_energy_chart:
             self._draw_energy_chart_predators(0)
             self._draw_energy_chart_prey(0)
 
@@ -80,9 +80,9 @@ class Renderer:
             patch.fill(color)
             offset = instance.observation_range / 2.0
 
-            # Handle torus wrapping
+            # Handle is_torus wrapping
             positions = [(x, y)]
-            if self.env.torus:  # If the environment has torus topology
+            if self.env.is_torus:  # If the environment has is_torus topology
                 positions = self._get_torus_positions(x, y, instance.observation_range)
 
             for pos_x, pos_y in positions:
@@ -107,7 +107,7 @@ class Renderer:
         if y + offset >= self.env.y_grid_size:
             positions.append((x, y - self.env.y_grid_size))
 
-        # Handle corners for torus wrapping
+        # Handle corners for is_torus wrapping
         if x - offset < 0 and y - offset < 0:
             positions.append((x + self.env.x_grid_size, y + self.env.y_grid_size))
         if x - offset < 0 and y + offset >= self.env.y_grid_size:

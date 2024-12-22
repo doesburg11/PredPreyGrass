@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     parameter_variation_parameter_string = "energy_gain_per_step_prey"
-    parameter_variation_scenarios = [-0.04, -0.05, -0.06]
+    parameter_variation_scenarios = [-0.05]
 
     # Parameter variation scenarios
 

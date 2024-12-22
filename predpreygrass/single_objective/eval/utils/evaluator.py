@@ -32,12 +32,12 @@ class Evaluator:
         self.training_steps_string = env_kwargs["training_steps_string"]
         self.num_episodes = env_kwargs["num_episodes"]
         self.environment_name = environment_name
-        self.torus = env_kwargs["torus"]
+        self.is_torus = env_kwargs["is_torus"]
         self.write_evaluation_to_file = env_kwargs["write_evaluation_to_file"]   
-        self.grid_transformation = "torus transformation" if self.torus else "bounded grid"
+        self.grid_transformation = "torus transformation" if self.is_torus else "bounded grid"
         self.evaluation_time_stamp = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
 
-        self.torus = "torus" if env_kwargs["torus"] else "bounded"
+        self.is_torus = "is_torus" if env_kwargs["is_torus"] else "bounded"
 
 
 
@@ -83,7 +83,7 @@ class Evaluator:
             + self.environment_name
             + "\n"
              + "Grid transformation: "
-            + self.torus
+            + self.is_torus
             + "\n"
             + "Learning algorithm: PPO"
             + "loaded_policy: "

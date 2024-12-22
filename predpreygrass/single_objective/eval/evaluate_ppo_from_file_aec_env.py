@@ -16,8 +16,8 @@ instructions:
 - results can be found in: /[time_stamp]/output/
 """
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_aec_v0
-from predpreygrass.single_objective.config.config_predpreygrass import (
+from ..envs import predpreygrass_aec_v0
+from ..config.config_predpreygrass import (
     env_kwargs,
 )
 from predpreygrass.single_objective.eval.utils.evaluator import Evaluator

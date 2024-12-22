@@ -28,14 +28,14 @@ class ConfigSaver:
         self.destination_source_code_dir = destination_source_code_dir
         self.time_stamp_string = time_stamp_string
 
-        self.torus = "torus" if env_kwargs["torus"] else "bounded"
+        self.is_torus = "torus" if env_kwargs["is_torus"] else "bounded"
 
     def save(self):
         # Save training scenario to file
         with open(self.destination_training_file, "w") as training_file:
             training_file.write("Date and time: " + self.time_stamp_string + "\n")
             training_file.write("Environment: " + self.environment_name + "\n")
-            training_file.write("Grid transformation: " + self.torus +" \n")
+            training_file.write("Grid transformation: " + self.is_torus +" \n")
             training_file.write("Learning algorithm: PPO \n")
             training_file.write("Training steps: " + self.training_steps_string + "\n")
             training_file.write("------------------------\n")

@@ -9,8 +9,6 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 import time
 
 is_parallel_evaluated = False
-delay = 0.0
-
 if is_parallel_evaluated:
     parallel_env = predpreygrass_parallel_v0.parallel_env(
         render_mode="human", **env_kwargs
