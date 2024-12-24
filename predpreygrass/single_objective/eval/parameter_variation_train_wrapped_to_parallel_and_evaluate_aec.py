@@ -15,7 +15,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     parameter_variation_parameter_string = "motion_energy_per_distance_unit"
-    parameter_variation_scenarios = [-0.006, -0.004, -0.002]
+    parameter_variation_scenarios = [-0.014, -0.012, -0.010, -0.008,-0.006]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
