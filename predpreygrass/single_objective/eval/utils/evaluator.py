@@ -322,6 +322,7 @@ class Evaluator:
         # print to console
         print(evaluation_results_summary)
         if self.write_evaluation_to_file:
+            evaluation_file.write(eval_header_text)
             # save evaluation results to evaluation_file
             evaluation_file.write(evaluation_results_summary)
             # additionally save the config file
@@ -649,7 +650,6 @@ class Evaluator:
         print(evaluation_results_summary)
         if self.write_evaluation_to_file:
             evaluation_file.write(evaluation_results_summary)
-            evaluation_file.write("---------------------------------------------------\n")
             evaluation_file.write("Evaluation parameters:\n")
             for item in self.env_kwargs:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
@@ -808,6 +808,7 @@ class Evaluator:
         evaluation_results_summary= self.evaluation_results_summary()   
         print(evaluation_results_summary)
         if self.write_evaluation_to_file:
+            evaluation_file.write(eval_header_text)
             # save evaluation results to evaluation_file
             evaluation_file.write(evaluation_results_summary)
             evaluation_file.write("---------------------------------------------------\n")

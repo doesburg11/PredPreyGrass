@@ -199,9 +199,11 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
                 prey_instance.age += 1
                 prey_instance.energy += prey_instance.energy_gain_per_step
                 # engagement with environmeny: "other agents"
+                # new is the position of the prey after the move
+                x_new, y_new = prey_instance.position
+
                 grass_instance_in_prey_cell = self.agent_instance_in_grid_location[
-                    self.grass_type_nr, *prey_instance.position
-                ]
+                    self.grass_type_nr][(x_new,y_new)]
                 if grass_instance_in_prey_cell:
                     prey_instance.energy += grass_instance_in_prey_cell.energy
                     self._deactivate_agent(grass_instance_in_prey_cell)

@@ -37,9 +37,11 @@ if __name__ == "__main__":
     environment_name = str(env_fn.raw_env.metadata['name'])
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
     evaluation_directory = os.path.dirname(os.path.abspath(__file__))
-    print("evaluation_directory: ", evaluation_directory)
+    print("----------------------------------------")
+    print("Evaluation_directory: ", evaluation_directory)
     destination_source_code_dir = up(up(__file__))  # up 2 levels in directory tree
-    print("destination_source_code_dir: ", destination_source_code_dir)
+    print("Destination_source_code_dir: ", destination_source_code_dir)
+    print("----------------------------------------")
     output_directory = destination_source_code_dir +"/output/"
     loaded_policy = output_directory + model_file_name
     render_mode = "human" if watch_grid_model else None

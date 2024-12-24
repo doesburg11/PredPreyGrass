@@ -14,8 +14,8 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    parameter_variation_parameter_string = "energy_gain_per_step_predator"
-    parameter_variation_scenarios = [-0.11,-0,13,-0.15]
+    parameter_variation_parameter_string = "motion_energy_per_distance_unit"
+    parameter_variation_scenarios = [-0.006, -0.004, -0.002]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0

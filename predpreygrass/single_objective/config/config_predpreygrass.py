@@ -4,12 +4,12 @@ import numpy as np
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
-#training_steps_string= "680_000"
+training_steps_string= "10_000_000"
 #training_steps_string="2_293_760"
 #training_steps_string="4_587_520"
 #training_steps_string="6_881_280"
 #training_steps_string="9_175_040"
-training_steps_string="11_468_800"
+#training_steps_string="11_468_800"
 #training_steps_string="13_762_560"
 #training_steps_string="16_056_320"
 #training_steps_string="18_350_080"
@@ -32,7 +32,7 @@ env_kwargs = dict(
     n_possible_prey=24, # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
-    n_initial_active_prey=18,
+    n_initial_active_prey=8,
     # observation parameters
     max_observation_range=9,  # must be odd and not smaller than any obs_range
     obs_range_predator=7,
@@ -66,7 +66,7 @@ env_kwargs = dict(
         #[ 2, 2],  # move rihgt right down down
     ],
     # energy parameters
-    energy_gain_per_step_predator= -0.15, #-0.15,  # -0.15 # default
+    energy_gain_per_step_predator= -0.11, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.05, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
