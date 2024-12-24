@@ -76,7 +76,7 @@ class Evaluator:
     def evaluation_header_text(self):
         return (
              "Evaluation results:\n"
-            + "--------------------------\n"
+            + "-----------------------------------------------------------------------------\n"
             + "Date and Time: "
             + self.evaluation_time_stamp
             + "\n"
@@ -96,7 +96,7 @@ class Evaluator:
             + "Evaluation directory: "
             + self.destination_source_code_dir
             + "\n"
-            + "--------------------------\n"
+            + "-----------------------------------------------------------------------------\n"
         )
 
     def evaluation_results_output(self,i):
@@ -115,7 +115,7 @@ class Evaluator:
 
     def evaluation_results_summary(self):
         return (
-            "---------------------------------------------------\n" 
+            "-----------------------------------------------------------------------------\n" 
             + f"Number of episodes = {self.num_episodes}" + "\n"
             + f"Mean episode length = {self.mean_episode_length}" + "\n"
             + f"Standard deviation episode length = {self.std_episode_length}" + "\n"
@@ -143,7 +143,7 @@ class Evaluator:
             + "\n"
             + f"Per episode_mean_of_mean age Prey = {round(self.episode_mean_of_mean_age_prey,1)}"
             + "\n"
-            + "---------------------------------------------------\n"
+            + "-----------------------------------------------------------------------------\n"
         )
 
     def save_combined_population_data(
@@ -326,11 +326,11 @@ class Evaluator:
             # save evaluation results to evaluation_file
             evaluation_file.write(evaluation_results_summary)
             # additionally save the config file
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.write("Evaluation parameters:\n")
             for item in self.env_kwargs:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.close()
   
     def parallel_evaluation(self):
@@ -484,11 +484,11 @@ class Evaluator:
         print(evaluation_results_summary)
         if self.write_evaluation_to_file:
             evaluation_file.write(evaluation_results_summary)
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.write("Evaluation parameters:\n")
             for item in self.env_kwargs:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.close()
 
     def parallel_env_training_aec_evaluation(self):
@@ -653,7 +653,7 @@ class Evaluator:
             evaluation_file.write("Evaluation parameters:\n")
             for item in self.env_kwargs:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.close()
 
     def parallel_wrapped_aec_env_training_aec_evaluation(self):
@@ -811,10 +811,10 @@ class Evaluator:
             evaluation_file.write(eval_header_text)
             # save evaluation results to evaluation_file
             evaluation_file.write(evaluation_results_summary)
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.write("Evaluation parameters:\n")
             for item in self.env_kwargs:
                 evaluation_file.write(str(item) + " = " + str(self.env_kwargs[item]) + "\n")
-            evaluation_file.write("---------------------------------------------------\n")
+            evaluation_file.write("-----------------------------------------------------------------------------\n")
             evaluation_file.close()
 

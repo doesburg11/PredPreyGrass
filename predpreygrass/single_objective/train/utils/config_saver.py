@@ -38,12 +38,12 @@ class ConfigSaver:
             training_file.write("Grid transformation: " + self.is_torus +" \n")
             training_file.write("Learning algorithm: PPO \n")
             training_file.write("Training steps: " + self.training_steps_string + "\n")
-            training_file.write("------------------------\n")
+            training_file.write("-----------------------------------------------------------------------------\n")
             for item in self.env_kwargs:
                 training_file.write(
                     str(item) + " = " + str(self.env_kwargs[item]) + "\n"
                 )
-            training_file.write("------------------------\n")
+            training_file.write("-----------------------------------------------------------------------------\n")
 
         # Overwrite config file locally, with the parameters for the current scenario
         code = "local_output_root = '{}'\n".format(self.local_output_root)
