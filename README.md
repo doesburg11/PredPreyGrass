@@ -64,10 +64,9 @@ More emergent behavior and findings are described [on our website](https://www.b
     -   ```bash 
         pip install stable-baselines3[extra] 
         ```
-    - ```bash
+    -   ```bash
         conda install -y -c conda-forge gcc=12.1.0
-
-         ```
+        ```
     
 ## Getting started
 
