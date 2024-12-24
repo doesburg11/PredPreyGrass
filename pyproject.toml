@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PredPreyGrass"
+version = "0.1"
+description = "Predator-Prey-Grass gridworld environment using PettingZoo, with dynamic deletion and spawning of partially observant agents."
+authors = [{name = "P. van Doesburg", email = "petervandoesburg11@gmail.com"}]
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+keywords = ["multi-agent", "reinforcement-learning", "gridworld"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+dependencies = [
+    "pettingzoo",
+    "stable_baselines3",
+    "numpy",
+    "pygame",
+]

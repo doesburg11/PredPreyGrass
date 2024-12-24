@@ -52,7 +52,7 @@ More emergent behavior and findings are described [on our website](https://www.b
    - Choose interpreter: Python 3.11.7
    - Open a new terminal
    - ```bash
-     pip install -e . 
+     pip install -e . --use-pep517
      ```
  3. Install the following requirements:  
     -   ```bash 
@@ -65,7 +65,8 @@ More emergent behavior and findings are described [on our website](https://www.b
         pip install stable-baselines3[extra] 
         ```
     - ```bash
-      conda install -c conda-forge gcc=12.1.0
+        conda install -y -c conda-forge gcc=12.1.0
+
          ```
     
 ## Getting started
