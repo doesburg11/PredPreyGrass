@@ -17,9 +17,9 @@ def evaluation_header_text():
     return (
         "\n"
             "Evaluation results:\n"
-        + "--------------------------\n"
+        + "-----------------------------------------------------------------------------\n"
         + "Random policy\n"
-        + "--------------------------\n"
+        + "-----------------------------------------------------------------------------\n"
     )
 
 def evaluation_results_output(i):
@@ -38,7 +38,7 @@ def evaluation_results_output(i):
 
 def evaluation_results_summary():
     return (
-        "---------------------------------------------------\n" 
+        "-----------------------------------------------------------------------------\n" 
         + f"Number of episodes = {num_episodes}" + "\n"
         + f"Mean episode length = {mean_episode_length}" + "\n"
         + f"Standard deviation episode length = {std_episode_length}" + "\n"
@@ -66,7 +66,7 @@ def evaluation_results_summary():
         + "\n"
         + f"Per episode_mean_of_mean age Prey = {round(episode_mean_of_mean_age_prey,1)}"
         + "\n"
-        + "---------------------------------------------------\n"
+        + "-----------------------------------------------------------------------------\n"
     )
 
 num_episodes = env_kwargs["num_episodes"]
@@ -222,11 +222,11 @@ episode_mean_of_mean_age_prey = round(
 evaluation_results_summary= evaluation_results_summary()   
 evaluation_file.write(evaluation_results_summary)
 # additionally save the config file
-evaluation_file.write("---------------------------------------------------\n")
+evaluation_file.write("-----------------------------------------------------------------------------\n")
 evaluation_file.write("Evaluation parameters:\n")
 for item in env_kwargs:
     evaluation_file.write(str(item) + " = " + str(env_kwargs[item]) + "\n")
-evaluation_file.write("---------------------------------------------------\n")
+evaluation_file.write("-----------------------------------------------------------------------------\n")
 evaluation_file.close()
 
 # print to console
