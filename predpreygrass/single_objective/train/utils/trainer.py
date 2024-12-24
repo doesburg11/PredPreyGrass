@@ -57,7 +57,7 @@ class Trainer:
 
         model.save(saved_directory_and_model_file_name)   
 
-        print("saved model to: ", saved_directory_and_model_file_name)
+        print("Saved model to: ", saved_directory_and_model_file_name)
         print("Model has been saved.")
         print(f"Finished training on {str(raw_parallel_env.unwrapped.metadata['name'])}.")
 
@@ -98,7 +98,7 @@ class Trainer:
 
         model.save(saved_directory_and_model_file_name)   
 
-        print("saved model to: ", saved_directory_and_model_file_name)
+        print("Saved model to: ", saved_directory_and_model_file_name)
         print("Model has been saved.")
         print(f"Finished training on {str(raw_parallel_env.unwrapped.metadata['name'])}.")
 
