@@ -20,8 +20,23 @@ import os
 import time
 import shutil
 from os.path import dirname as up
+import argparse
+
 
 if __name__ == "__main__":
+    # Add argument parsing
+    parser = argparse.ArgumentParser(description="Train the PredPreyGrass model.")
+    parser.add_argument(
+        "--output_dir", 
+        type=str, 
+        default=local_output_root,  # Default directory
+        help="Directory where the model and outputs will be saved."
+    )
+    args = parser.parse_args()
+
+    # Use the output_dir argument
+    local_output_root = args.output_dir
+
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
