@@ -54,14 +54,15 @@ class ConfigSaver:
             code += f"    {key}={value},\n"
 
         code += ")\n"
-        print("self.destination_source_code_dir:",self.destination_source_code_dir)
+        print("-------------------------------------------------")
+        print("Destination source code:",self.destination_source_code_dir)
 
         config_env_file = "config_predpreygrass.py"
         config_file_directory = os.path.join(
             self.destination_source_code_dir, "config/"
         )
-        print("config_file_directory:",config_file_directory)
-        print()
+        print("Configuration file directory:",config_file_directory)
+        print("-------------------------------------------------")
 
         with open(
             os.path.join(config_file_directory, config_env_file), "w"
