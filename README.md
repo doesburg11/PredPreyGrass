@@ -1,5 +1,6 @@
 [![Python 3.11.10](https://img.shields.io/badge/python-3.11.10-blue.svg)](https://www.python.org/downloads/release/python-31110/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
+[![Open In Colab](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)]()
 
 
 </br>
