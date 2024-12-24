@@ -52,7 +52,7 @@ More emergent behavior and findings are described [on our website](https://www.b
    - Choose interpreter: Python 3.11.7
    - Open a new terminal
    - ```bash
-     pip install -e . --use-pep517
+     pip install -e .
      ```
  3. Install the following requirements:  
     -   ```bash 
@@ -88,15 +88,15 @@ Adjust parameters accordingly in:
 
 In Visual Studio Code run:
 
-```predpreygrass/single_objective/train/train_ppo.py```
+```predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py```
 
 To evaluate and visualize after training follow instructions in:
 
-```predpreygrass/single_objective/eval/evaluate_ppo_from_file.py```
+```predpreygrass/single_objective/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```
 
-[UNDER (RE)CONSTRUCTION] Batch training and evaluating in one go:
+Batch training and evaluating in one go:
 
-```predpreygrass/single_objective/eval/_parameter_variation_train_ppo_and_evaluate.py```
+```predpreygrass/single_objective/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```
 
 ## References
 
