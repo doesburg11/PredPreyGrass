@@ -4,8 +4,8 @@ import numpy as np
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
-#training_steps_string= "10_000_000"
-training_steps_string="2_293_760"
+training_steps_string= "10_000_000"
+#training_steps_string="2_293_760"
 #training_steps_string="4_587_520"
 #training_steps_string="6_881_280"
 #training_steps_string="9_175_040"
@@ -28,8 +28,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=60, #60,  # maximum number of predators during runtime
-    n_possible_prey=80, # #80,
+    n_possible_predator=18, #60,  # maximum number of predators during runtime
+    n_possible_prey=24, # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -45,9 +45,9 @@ env_kwargs = dict(
         #[-2, 1],  # move left left down
         #[-2, 2],  # move left left down down 
         #[-1,-2],  # move left up up
-        [-1,-1],  # move left up
+        #[-1,-1],  # move left up
         [-1, 0],  # move left
-        [-1, 1],  # move left down
+        #[-1, 1],  # move left down
         #[-1, 2],  # move left down down
         #[ 0,-2],  # move up up
         [ 0,-1],  # move up
@@ -55,9 +55,9 @@ env_kwargs = dict(
         [ 0, 1],  # move down
         #[ 0, 2],  # move down down
         #[ 1,-2],  # move right up up
-        [ 1,-1],  # move right up
+        #[ 1,-1],  # move right up
         [ 1, 0],  # move right
-        [ 1, 1],  # move right down
+        #[ 1, 1],  # move right down
         #[ 1, 2],  # move right down down
         #[ 2,-2],  # move right right up up
         #[ 2,-1],  # move right right up
@@ -73,8 +73,8 @@ env_kwargs = dict(
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    has_motion_energy = True,
-    motion_energy_per_distance_unit = -0.01, 
+    has_motion_energy = False,
+    motion_energy_per_distance_unit = 0.0, # -0.01
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
