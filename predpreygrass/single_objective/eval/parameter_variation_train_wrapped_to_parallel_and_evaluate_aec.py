@@ -32,7 +32,7 @@ if __name__ == "__main__":
             + time_stamp_string
         )
     else:
-        destination_root_dir = local_output_root + time_stamp_string
+        destination_root_dir = local_output_root + "/" + time_stamp_string
 
     # Training
     for parameter_variation_parameter in parameter_variation_scenarios:
