@@ -31,12 +31,12 @@ class Trainer:
 
         print(f"Starting training on {str(raw_parallel_env.metadata['name'])}.")
         # create parallel environments by concatenating multiple copies of the base environment
-        num_vec_envs_concatenated = 8
+        num_vec_envs_concatenated = 16
         raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
         raw_parallel_env = ss.concat_vec_envs_v1(
             raw_parallel_env,
             num_vec_envs_concatenated,
-            num_cpus=8,
+            num_cpus=16,
             base_class="stable_baselines3",
         )
 

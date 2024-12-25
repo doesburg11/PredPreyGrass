@@ -4,8 +4,8 @@ import numpy as np
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
-#training_steps_string= "10_000_000"
-training_steps_string="2_293_760"
+training_steps_string= "10_000_000"
+#training_steps_string="2_293_760"
 #training_steps_string="4_587_520"
 #training_steps_string="6_881_280"
 #training_steps_string="9_175_040"
