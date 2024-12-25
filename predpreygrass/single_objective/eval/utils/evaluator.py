@@ -41,7 +41,6 @@ class Evaluator:
         self.is_torus = "is_torus" if env_kwargs["is_torus"] else "bounded"
 
 
-
     def initialize_evaluation_metrics(self):
 
             # initialization evaluation metrics
