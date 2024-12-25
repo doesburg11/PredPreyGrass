@@ -15,10 +15,16 @@ from statistics import mean, stdev
 
 def evaluation_header_text():
     return (
-        "\n"
             "Evaluation results:\n"
         + "-----------------------------------------------------------------------------\n"
-        + "Random policy\n"
+        + "Date and Time: "
+        + time_stamp_string
+        + "\n"
+        + "Environment: "
+        + "predpreygrass_aec_v0"
+        + "\n"
+        + "policy: random"
+        + "\n"
         + "-----------------------------------------------------------------------------\n"
     )
 
@@ -72,7 +78,7 @@ def evaluation_results_summary():
 num_episodes = env_kwargs["num_episodes"]
 render_mode = None #"human"
 time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
-destination_output_dir = local_output_root + time_stamp_string
+destination_output_dir = local_output_root + "/" + time_stamp_string
 eval_header_text = evaluation_header_text()
 os.makedirs(destination_output_dir, exist_ok=True)
 saved_directory_and_evaluation_file_name = os.path.join(
@@ -231,8 +237,3 @@ evaluation_file.close()
 
 # print to console
 print(evaluation_results_summary)
-
-
-
-
-
