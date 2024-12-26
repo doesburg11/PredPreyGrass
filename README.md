@@ -85,13 +85,11 @@ In Visual Studio Code run:
 
 Adjust parameters accordingly in:
 
-[```environment configuration```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py)
+[```predpreygrass/single_objective/config/config_predpreygrass.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py)
 
 In Visual Studio Code run:
 
-```predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py```
-
-https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py
+[```predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py)
 
 
 To evaluate and visualize after training follow instructions in:
