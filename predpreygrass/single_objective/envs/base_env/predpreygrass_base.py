@@ -9,7 +9,13 @@ class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
     """
     Base environment class for shared logic in PredPreyGrass environments.
     """
-    def process_agent(self, agent_instance, agent_type_nr, target_type_nr, energy_gain_threshold, catch_reward, reproduction_reward, death_reward):
+    def process_engagements_agent(self, agent_instance):
+        agent_type_nr = agent_instance.agent_type_nr
+        target_type_nr = agent_type_nr + 1
+        energy_gain_threshold = agent_instance.energy_gain_threshold
+        catch_reward = agent_instance.catch_reward
+        reproduction_reward = agent_instance.reproduction_reward
+        death_reward = agent_instance.death_reward
         if agent_instance.energy > 0:
             x_new, y_new = agent_instance.position
             target_instance_in_cell = self.agent_instance_in_grid_location[target_type_nr].get((x_new, y_new))
@@ -69,41 +75,29 @@ class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
         """
         self._reset_rewards()
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr]:
-            self.process_agent(
-                predator_instance,
-                self.predator_type_nr,
-                self.prey_type_nr,
-                self.predator_creation_energy_threshold,
-                self.catch_reward_prey,
-                self.reproduction_reward_predator,
-                self.death_reward_predator
-            )
+            self.process_engagements_agent(predator_instance)
         for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr]:
-            self.process_agent(
-                prey_instance,
-                self.prey_type_nr,
-                self.grass_type_nr,
-                self.prey_creation_energy_threshold,
-                self.catch_reward_grass,
-                self.reproduction_reward_prey,
-                self.death_reward_prey
-            )
+            self.process_engagements_agent(prey_instance)
         self.process_grass()
         self.record_metrics()
 
 
 class PredPreyGrassAECEnv(PredPreyGrassBaseEnv):
     def step(self, action, agent_instance, is_last_step_of_cycle):
+        # movement and step/move-energy update
         if agent_instance.is_active:
             self._apply_agent_action(agent_instance, action)
+        # engagements between agents update
         if is_last_step_of_cycle:
             self.process_end_of_cycle()
 
 
 class PredPreyGrassParallelEnv(PredPreyGrassBaseEnv):
     def step(self, actions: Dict[str, int]):
+        # movement and step/move-energy update
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr]:
             self._apply_agent_action(predator_instance, actions[predator_instance.agent_name])
         for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr]:
             self._apply_agent_action(prey_instance, actions[prey_instance.agent_name])
+        # engagements between agents update
         self.process_end_of_cycle()
