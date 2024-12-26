@@ -50,7 +50,7 @@ More emergent behavior and findings are described [on our website](https://www.b
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
    - Choose environment: Conda 
-   - Choose interpreter: Python 3.11.7
+   - Choose interpreter: Python 3.11.10 or higher
    - Open a new terminal
    - ```bash
      pip install -e .
@@ -63,7 +63,8 @@ More emergent behavior and findings are described [on our website](https://www.b
         pip install tensorboard==2.18.0 
         ```
     -   ```bash 
-        pip install stable-baselines3[extra] 
+        pip install stable-baselines3[extra]==2.4.0
+ 
         ```
     -   ```bash
         conda install -y -c conda-forge gcc=12.1.0
@@ -84,11 +85,14 @@ In Visual Studio Code run:
 
 Adjust parameters accordingly in:
 
-```predpreygrass/single_objective/config/config_predpreygrass.py```
+[```environment configuration```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py)
 
 In Visual Studio Code run:
 
 ```predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py```
+
+https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py
+
 
 To evaluate and visualize after training follow instructions in:
 
