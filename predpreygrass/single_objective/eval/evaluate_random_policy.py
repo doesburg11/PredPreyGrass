@@ -7,6 +7,7 @@ from predpreygrass.single_objective.config.config_predpreygrass import env_kwarg
 
 # external libraries
 import time
+delay = 0.0
 
 is_parallel_evaluated = False
 if is_parallel_evaluated:

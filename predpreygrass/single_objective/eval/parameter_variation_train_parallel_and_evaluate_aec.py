@@ -14,8 +14,8 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    parameter_variation_parameter_string = "energy_gain_per_step_prey"
-    parameter_variation_scenarios = [-0.05]
+    parameter_variation_parameter_string = "energy_gain_per_step_predator"
+    parameter_variation_scenarios = [-0.15]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_parallel_v0
@@ -34,7 +34,7 @@ if __name__ == "__main__":
             + time_stamp_string
         )
     else:
-        destination_root_dir = local_output_root + time_stamp_string
+        destination_root_dir = local_output_root + "/" + time_stamp_string
 
     # Training
     for parameter_variation_parameter in parameter_variation_scenarios:

@@ -1,6 +1,6 @@
 # discretionary libraries
 from predpreygrass.single_objective.envs import (
-    predpreygrass_aec_v0,
+    predpreygrass_parallel_v0,
 )
 from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
@@ -21,9 +21,12 @@ def evaluation_header_text():
         + time_stamp_string
         + "\n"
         + "Environment: "
-        + "predpreygrass_aec_v0"
+        + "predpreygrass_parallel_v0"
         + "\n"
-        + "policy: random"
+        + "Grid transformation: "
+        + "bounded"
+        + "\n"
+        + "Learning algorithm: random"
         + "\n"
         + "-----------------------------------------------------------------------------\n"
     )
@@ -76,7 +79,7 @@ def evaluation_results_summary():
     )
 
 num_episodes = env_kwargs["num_episodes"]
-render_mode = None #"human"
+render_mode = None
 time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
 destination_output_dir = local_output_root + "/" + time_stamp_string
 eval_header_text = evaluation_header_text()
@@ -117,10 +120,10 @@ total_prey_age_list = []
 episode_predator_age_list = []
 episode_prey_age_list = []
 
-env = predpreygrass_aec_v0.env(render_mode=render_mode, **env_kwargs)
-env_base = env.predpreygrass
+parallel_env = predpreygrass_parallel_v0.parallel_env(render_mode=render_mode, **env_kwargs)
+env_base = parallel_env.predpreygrass
 for i in range(num_episodes):
-    env.reset(seed=1)
+    parallel_env.reset(seed=1)
     possible_predator_name_list = env_base.possible_agent_name_list_type[
         env_base.predator_type_nr
     ]
@@ -135,22 +138,23 @@ for i in range(num_episodes):
     cumulative_rewards_prey = {agent: 0 for agent in possible_prey_name_list}
     n_cycles = 0
 
-    for agent in env.agent_iter():
-        observation, reward, termination, truncation, info = env.last()
-        cumulative_rewards[agent] += reward
-        if agent in possible_predator_name_list:
-            cumulative_rewards_predator[agent] += reward
-        elif agent in possible_prey_name_list:
-            cumulative_rewards_prey[agent] += reward
-        if env_base.is_no_predator or env_base.is_no_prey or env.truncations[agent]:
-            action = None
-            if env_base.is_no_predator:
-                predator_extinct_at_termination[i] = 1
-            break
-        else:
-            action = env.action_space(agent).sample()  # random policy
+    done = False
+    while not done:
+        actions = {
+            agent: parallel_env.action_space(agent).sample()
+            for agent in parallel_env.agents
+        }
+        observations, rewards, terminations, truncations, infos = parallel_env.step(
+            actions
+        )
 
-        env.step(action)
+        done = env_base.is_no_prey or env_base.is_no_predator or parallel_env.truncations[agent]:
+        if done:
+            actions = None
+            if env_base.is_no_predator:
+                predator_extinct_at_termination[i] = 1  
+            break
+    parallel_env.close()
     n_cycles = env_base.n_cycles
     episode_length[i] = n_cycles
     n_starved_predator_per_cycle[i] = env_base.n_starved_predator / n_cycles
