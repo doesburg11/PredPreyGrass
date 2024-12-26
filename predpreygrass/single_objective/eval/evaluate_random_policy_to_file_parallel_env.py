@@ -148,7 +148,7 @@ for i in range(num_episodes):
             actions
         )
 
-        done = env_base.is_no_prey or env_base.is_no_predator or parallel_env.truncations[agent]:
+        done = env_base.is_no_prey or env_base.is_no_predator or parallel_env.truncations["predator_0"]
         if done:
             actions = None
             if env_base.is_no_predator:
@@ -191,7 +191,7 @@ for i in range(num_episodes):
     eval_results_output = evaluation_results_output(i)
     print(eval_results_output)
     evaluation_file.write(eval_results_output)  
-env.close
+parallel_env.close
 
 predator_extinct_at_termination_count = sum(predator_extinct_at_termination)
 episode_mean_of_mean_cumulative_rewards = round(
