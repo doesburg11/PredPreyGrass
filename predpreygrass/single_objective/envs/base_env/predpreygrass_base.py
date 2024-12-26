@@ -45,22 +45,21 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                         if (
                             predator_instance.energy
                             > self.predator_creation_energy_threshold
-                        ):          
-        
+                        ):        
                             potential_new_predator_instance_list = (
                                 self._non_active_agent_instance_list(predator_instance)
                             )
-
                             if potential_new_predator_instance_list:
                                 self._reproduce_new_agent(
                                     predator_instance, potential_new_predator_instance_list
                                 )
                                 self.n_active_agent_type[self.predator_type_nr] += 1
                                 self.n_born_predator += 1
+                            # weather or not reproduction actually occurred, the predator gets rewarded
                             self.rewards[
                                 predator_instance.agent_name
                             ] += self.reproduction_reward_predator
-                else:
+                else:   # predator_instance.energy <= 0
                     self._deactivate_agent(predator_instance)
                     self.n_active_agent_type[self.predator_type_nr] -= 1
                     self.agent_age_of_death_list_type[self.predator_type_nr].append(predator_instance.age)
@@ -73,8 +72,6 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                 if prey_instance.energy > 0:
                     # new is the position of the predator after the move
                     x_new, y_new = prey_instance.position
-                    #prey_instance.age += 1
-                    #prey_instance.energy += prey_instance.energy_gain_per_step
                     grass_instance_in_prey_cell = self.agent_instance_in_grid_location[
                         self.grass_type_nr][(x_new, y_new)]
                     if grass_instance_in_prey_cell is not None:
@@ -91,7 +88,6 @@ class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
                                 self._reproduce_new_agent( prey_instance, potential_new_prey_instance_list)
                                 self.n_active_agent_type[self.prey_type_nr] += 1
                                 self.n_born_prey += 1
-
                             # weather or not reproduction actually occurred, the prey gets rewarded
                             self.rewards[prey_instance.agent_name] += self.reproduction_reward_prey
                 else:
@@ -161,10 +157,10 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
                     predator_instance.energy += prey_instance_in_predator_cell.energy
                     self._deactivate_agent(prey_instance_in_predator_cell)
                     self.n_active_agent_type[self.prey_type_nr] -= 1
-                    self.n_eaten_prey += 1
                     self.agent_age_of_death_list_type[self.prey_type_nr].append(
                         prey_instance_in_predator_cell.age
                     )
+                    self.n_eaten_prey += 1
                     self.rewards[predator_instance.agent_name] += self.catch_reward_prey
                     self.rewards[
                         prey_instance_in_predator_cell.agent_name
@@ -195,16 +191,11 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
 
         for prey_instance in self.active_agent_instance_list_type[self.prey_type_nr][:]:  
             if prey_instance.energy > 0:
-                # engagement with environment: "nature and time"
-                prey_instance.age += 1
-                prey_instance.energy += prey_instance.energy_gain_per_step
-                # engagement with environmeny: "other agents"
                 # new is the position of the prey after the move
                 x_new, y_new = prey_instance.position
-
                 grass_instance_in_prey_cell = self.agent_instance_in_grid_location[
                     self.grass_type_nr][(x_new,y_new)]
-                if grass_instance_in_prey_cell:
+                if grass_instance_in_prey_cell is not None:
                     prey_instance.energy += grass_instance_in_prey_cell.energy
                     self._deactivate_agent(grass_instance_in_prey_cell)
                     self.n_active_agent_type[self.grass_type_nr] -= 1
@@ -227,8 +218,8 @@ class PredPreyGrassParallelEnv(PredPreyGrassSuperBaseEnv):
             else:  
                 self._deactivate_agent(prey_instance)
                 self.n_active_agent_type[self.prey_type_nr] -= 1
-                self.n_starved_prey += 1
                 self.agent_age_of_death_list_type[self.prey_type_nr].append(prey_instance.age)
+                self.n_starved_prey += 1
                 self.rewards[prey_instance.agent_name] += self.death_reward_prey
 
         # process grass (re)growth
