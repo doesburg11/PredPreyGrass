@@ -12,13 +12,20 @@ class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
     def process_engagements_agent(self, agent_instance):
         agent_type_nr = agent_instance.agent_type_nr
         target_type_nr = agent_type_nr + 1
-        energy_gain_threshold = agent_instance.energy_gain_threshold
-        catch_reward = agent_instance.catch_reward
-        reproduction_reward = agent_instance.reproduction_reward
-        death_reward = agent_instance.death_reward
+        if agent_type_nr == self.predator_type_nr:
+            agent_creation_energy_threshold = self.predator_creation_energy_threshold
+            catch_reward = self.catch_reward_prey
+            reproduction_reward = self.reproduction_reward_predator
+            death_reward = self.death_reward_predator
+        elif agent_type_nr == self.prey_type_nr:
+            agent_creation_energy_threshold = self.prey_creation_energy_threshold
+            catch_reward = self.catch_reward_grass
+            reproduction_reward = self.reproduction_reward_prey
+            death_reward = self.death_reward_prey
+
         if agent_instance.energy > 0:
             x_new, y_new = agent_instance.position
-            target_instance_in_cell = self.agent_instance_in_grid_location[target_type_nr].get((x_new, y_new))
+            target_instance_in_cell = self.agent_instance_in_grid_location[target_type_nr][((x_new, y_new))]
             if target_instance_in_cell is not None:
                 agent_instance.energy += target_instance_in_cell.energy
                 self._deactivate_agent(target_instance_in_cell)
@@ -30,7 +37,7 @@ class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
                     self.n_eaten_grass += 1
                 self.rewards[agent_instance.agent_name] += catch_reward
                 self.rewards[target_instance_in_cell.agent_name] += death_reward
-                if agent_instance.energy > energy_gain_threshold:
+                if agent_instance.energy > agent_creation_energy_threshold:
                     potential_new_agents = self._non_active_agent_instance_list(agent_instance)
                     if potential_new_agents:
                         self._reproduce_new_agent(agent_instance, potential_new_agents)

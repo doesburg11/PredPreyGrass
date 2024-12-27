@@ -15,7 +15,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     parameter_variation_parameter_string = "motion_energy_per_distance_unit"
-    parameter_variation_scenarios = [0.005,0.01]
+    parameter_variation_scenarios = [0.0,-0.015]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     # Parameter variation scenarios
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
-            local_output_root + "parameter_variation/"
+            local_output_root + "/parameter_variation/"
             + parameter_variation_parameter_string + "_"
             + time_stamp_string
         )

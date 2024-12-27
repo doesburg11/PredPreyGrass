@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
-            local_output_root + "parameter_variation/"
+            local_output_root + "/parameter_variation/"
             + parameter_variation_parameter_string + "_"
             + time_stamp_string
         )
