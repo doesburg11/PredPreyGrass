@@ -211,7 +211,6 @@ class PredPreyGrassSuperBaseEnv:
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
                     is_torus=self.is_torus,
-                    has_motion_energy=self.has_motion_energy,
                     motion_energy_per_distance_unit=self.motion_energy_per_distance_unit
                                        
                 )

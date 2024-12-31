@@ -4,12 +4,6 @@ from predpreygrass.single_objective.utils.env import PredPreyGrassSuperBaseEnv
 # external libraries
 from typing import Dict
 
-
-class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
-
-    def process_engagements_agent(self, agent_instance):
-        pass
-
 class PredPreyGrassAECEnv(PredPreyGrassSuperBaseEnv):
     """
     Pred/Prey/Grass PettingZoo multi-agent learning AEC environment. This environment 

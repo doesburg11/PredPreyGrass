@@ -1,6 +1,6 @@
 # discretionary libraries
-from predpreygrass.envs import predpreygrass_aec_v0
-from predpreygrass.envs._so_predpreygrass_v0.config.config_predpreygrass import (
+from predpreygrass.single_objective.envs import predpreygrass_aec_v0
+from predpreygrass.single_objective.config.config_predpreygrass import (
     env_kwargs,
     training_steps_string,
     local_output_root,
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     start_time = str(time.strftime("%Y-%m-%d_%H:%M:%S"))  # add seconds
     file_name = f"{environment_name}"
-    tune_results_dir = local_output_root + "tune_results/" + start_time
+    tune_results_dir = local_output_root + "/tune_results/" + start_time
     tune_results_logs_dir = tune_results_dir + "/logs/"
 
     # save the source code locally

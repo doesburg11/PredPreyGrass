@@ -23,8 +23,7 @@ class DiscreteAgent:
         initial_energy: float = 10,
         energy_gain_per_step: float = -0.1,
         is_torus: bool = False,
-        has_motion_energy: bool = False,
-        motion_energy_per_distance_unit: float = -1
+        motion_energy_per_distance_unit: float = -0.0,
     ):
         # identification agent
         self.agent_type_nr: int = agent_type_nr  # also channel number of agent
@@ -42,7 +41,6 @@ class DiscreteAgent:
         self.energy_gain_per_step: float = energy_gain_per_step
         self.motion_energy_per_distance_unit = motion_energy_per_distance_unit
         self.is_torus: bool = is_torus
-        self.has_motion_energy: bool = has_motion_energy
 
         self.is_active: bool = False
         self.age: int = 0
@@ -77,10 +75,9 @@ class DiscreteAgent:
             #print(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2))
             return self.position  # if intended to move to occupied cell of same agent type: don't move
         # update move energy
-        if self.has_motion_energy:
-            energy_gain_per_move = distance_traveled*self.energy*self.motion_energy_per_distance_unit
-            self.energy += energy_gain_per_move
-            #print(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2), "energy_gain_per_move", round(energy_gain_per_move,2))
+        energy_gain_per_move = distance_traveled*self.energy*self.motion_energy_per_distance_unit
+        self.energy += energy_gain_per_move
+        #print(" moves distance", round(distance_traveled,2)," => energy",round(self.energy,2), "energy_gain_per_move", round(energy_gain_per_move,2))
         # Update position
         self.position = next_position
         return self.position

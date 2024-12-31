@@ -43,10 +43,12 @@ class Trainer:
         model = PPO(
             MlpPolicy,
             raw_parallel_env,
+            n_steps=2048,
+            batch_size=32_768,  # Factor of 1,638,400; n_steps * num_envs (8) * n_possible_agents (100)
+            n_epochs=10,        # Default number of epochs
             verbose=0,  # 0 for no output, 1 for info messages, 2 for debug messages, 3 default
-            batch_size=256,
             tensorboard_log=self.output_directory + "/ppo_predprey_tensorboard/",
-        )
+         )
 
         sample_logger_callback = SampleLoggerCallback()
 
@@ -84,8 +86,10 @@ class Trainer:
         model = PPO(
             MlpPolicy,
             raw_parallel_env,
+            n_steps=2048,
+            batch_size=32_768,  # Factor of 1,638,400; n_steps * num_envs (8) * n_possible_agents (100)
+            n_epochs=10,        # Default number of epochs
             verbose=0,  # 0 for no output, 1 for info messages, 2 for debug messages, 3 default
-            batch_size=256,
             tensorboard_log=self.output_directory + "/ppo_predprey_tensorboard/",
         )
 
