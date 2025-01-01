@@ -15,7 +15,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     parameter_variation_parameter_string = "is_torus"
-    parameter_variation_scenarios = [False, True]
+    parameter_variation_scenarios = [False]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
@@ -87,7 +87,8 @@ if __name__ == "__main__":
             **env_kwargs,
         )
         start_training_time = time.time()
-        trainer.train_parallel_wrapped_aec_env()
+        # Train with wrapped AEC environment
+        trainer.train(is_wrapped=True)
         end_training_time = time.time()
         training_time = end_training_time - start_training_time
 

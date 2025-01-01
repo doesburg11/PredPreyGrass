@@ -14,8 +14,8 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    parameter_variation_parameter_string = "energy_gain_per_step_predator"
-    parameter_variation_scenarios = [-0.15]
+    parameter_variation_parameter_string = "is_torus"
+    parameter_variation_scenarios = [False, True]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_parallel_v0
@@ -89,7 +89,8 @@ if __name__ == "__main__":
             **env_kwargs,
         )
         start_training_time = time.time()
-        trainer.train_unwrapped_parallel_env()
+        # Train with unwrapped parallel environment
+        trainer.train(is_wrapped=False)    
         end_training_time = time.time()
         training_time = end_training_time - start_training_time
 

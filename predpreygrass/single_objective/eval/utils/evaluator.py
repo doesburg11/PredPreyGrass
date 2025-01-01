@@ -87,6 +87,7 @@ class Evaluator:
             + self.is_torus
             + "\n"
             + "Learning algorithm: PPO"
+            + "\n"
             + "loaded_policy: "
             + self.loaded_policy
             + "\n"
@@ -498,7 +499,7 @@ class Evaluator:
         )
         env = parallel_to_aec(parallel_env)
 
-        env_base = parallel_env.predpreygrass
+        #env_base = parallel_env.predpreygrass
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()
@@ -657,8 +658,10 @@ class Evaluator:
             evaluation_file.close()
 
     def parallel_wrapped_aec_env_training_aec_evaluation(self):
-        env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
         model = PPO.load(self.loaded_policy)
+        env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
+
+
 
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
         print("Start evaluation on: " + self.destination_root_dir)
@@ -672,6 +675,7 @@ class Evaluator:
             )
             evaluation_file = open(saved_directory_and_evaluation_file_name, "w")
             evaluation_file.write(eval_header_text)  # write to file
+
         self.initialize_evaluation_metrics()
 
         env_base = env.predpreygrass

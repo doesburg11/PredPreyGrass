@@ -67,7 +67,8 @@ if __name__ == "__main__":
         **env_kwargs,
     )
     start_training_time = time.time()
-    trainer.train_unwrapped_parallel_env()
+    # Train with unwrapped parallel environment
+    trainer.train(is_wrapped=False)    
     end_training_time = time.time()
     training_time = end_training_time - start_training_time
     # append training time to training_file
