@@ -39,31 +39,31 @@ env_kwargs = dict(
     obs_range_prey=9,
     # action parameters
     motion_range = [
-        #[-2,-2],  # move left left up up
-        #[-2,-1],  # move left left up
-        #[-2, 0],  # move left left
-        #[-2, 1],  # move left left down
-        #[-2, 2],  # move left left down down 
-        #[-1,-2],  # move left up up
+        [-2,-2],  # move left left up up
+        [-2,-1],  # move left left up
+        [-2, 0],  # move left left
+        [-2, 1],  # move left left down
+        [-2, 2],  # move left left down down 
+        [-1,-2],  # move left up up
         [-1,-1],  # move left up
         [-1, 0],  # move left
         [-1, 1],  # move left down
-        #[-1, 2],  # move left down down
-        #[ 0,-2],  # move up up
+        [-1, 2],  # move left down down
+        [ 0,-2],  # move up up
         [ 0,-1],  # move up
         [ 0, 0],  # stay
         [ 0, 1],  # move down
-        #[ 0, 2],  # move down down
-        #[ 1,-2],  # move right up up
+        [ 0, 2],  # move down down
+        [ 1,-2],  # move right up up
         [ 1,-1],  # move right up
         [ 1, 0],  # move right
         [ 1, 1],  # move right down
-        #[ 1, 2],  # move right down down
-        #[ 2,-2],  # move right right up up
-        #[ 2,-1],  # move right right up
-        #[ 2, 0],  # move right right
-        #[ 2, 1],  # move right right down
-        #[ 2, 2],  # move rihgt right down down
+        [ 1, 2],  # move right down down
+        [ 2,-2],  # move right right up up
+        [ 2,-1],  # move right right up
+        [ 2, 0],  # move right right
+        [ 2, 1],  # move right right down
+        [ 2, 2],  # move rihgt right down down
     ],
     # energy parameters
     energy_gain_per_step_predator= -0.10, #-0.15,  # -0.15 # default

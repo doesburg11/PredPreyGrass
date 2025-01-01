@@ -1,5 +1,6 @@
 # discretionary libraries
-from predpreygrass.single_objective.utils.env import PredPreyGrassSuperBaseEnv
+#from predpreygrass.single_objective.utils.env import PredPreyGrassSuperBaseEnv
+from super_base_env import PredPreyGrassSuperBaseEnv
 
 # external libraries
 from typing import Dict
@@ -10,7 +11,7 @@ class PredPreyGrassBaseEnv(PredPreyGrassSuperBaseEnv):
     def process_engagements_agent(self):
         self._reset_rewards()
 
-        # 2] apply rules of engagement for all agents
+        # apply rules of engagement for all agents
         for predator_instance in self.active_agent_instance_list_type[self.predator_type_nr][:]:  
             if predator_instance.energy > 0:
                 # new is the position of the predator after the move
@@ -119,7 +120,7 @@ class PredPreyGrassAECEnv(PredPreyGrassBaseEnv):
     Pred/Prey/Grass PettingZoo multi-agent learning AEC environment. This environment 
     transfers the energy of eaten prey/grass to the predator/prey while the grass
     regrows over time. The environment is a 2D grid world where agents can move
-    in four cardinal directions. 
+    in four cardinal directions.
     """
   
     def step(self, action, agent_instance, is_last_step_of_cycle):
