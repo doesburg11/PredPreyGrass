@@ -660,9 +660,6 @@ class Evaluator:
     def parallel_wrapped_aec_env_training_aec_evaluation(self):
         model = PPO.load(self.loaded_policy)
         env = self.env_fn.env(render_mode=self.render_mode, **self.env_kwargs)
-
-
-
         cumulative_rewards = {agent: 0 for agent in env.possible_agents}
         print("Start evaluation on: " + self.destination_root_dir)
         eval_header_text = self.evaluation_header_text()

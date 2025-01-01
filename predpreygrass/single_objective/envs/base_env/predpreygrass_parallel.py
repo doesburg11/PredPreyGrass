@@ -1,5 +1,5 @@
 # discretionary libraries   
-from predpreygrass.single_objective.envs.base_env.predpreygrass_base import PredPreyGrassParallelEnv as predpreygrass
+from .predpreygrass_base import PredPreyGrassParallelEnv as predpreygrass
 
 # external libraries
 from pettingzoo import ParallelEnv

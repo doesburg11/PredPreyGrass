@@ -23,10 +23,8 @@ from os.path import dirname as up
 # Add the parent directory to sys.path
 sys.path.append(up(up(__file__)))
 
-# Import your external packages using absolute imports
 from envs import predpreygrass_aec_v0
 from config.config_predpreygrass import env_kwargs, training_steps_string
-
 from eval.utils.evaluator import Evaluator
 
 

@@ -93,7 +93,7 @@ class Trainer:
             total_timesteps = 10_470_4000
         elif num_cores == 8:  # Local Machine
             total_timesteps = self.steps
-        elif num_cores == 2:  # Google Cloud Platform (Small Instance)
+        elif num_cores == 2:  # Google Colab
             total_timesteps = 4_096_000
         else:  # Default
             total_timesteps = self.steps

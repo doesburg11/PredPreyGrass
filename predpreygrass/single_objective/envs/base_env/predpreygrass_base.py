@@ -1,6 +1,5 @@
 # discretionary libraries
-#from predpreygrass.single_objective.utils.env import PredPreyGrassSuperBaseEnv
-from super_base_env import PredPreyGrassSuperBaseEnv
+from .predpreygrass_super_base import PredPreyGrassSuperBaseEnv
 
 # external libraries
 from typing import Dict
