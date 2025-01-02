@@ -91,7 +91,7 @@ env_kwargs = dict(
     # environment parameters
     x_grid_size=x_grid_size,
     y_grid_size=y_grid_size,
-    is_torus=False,
+    is_torus=True,
     spawning_area_predator=dict(
         {
             "x_begin": 0,

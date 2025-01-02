@@ -14,17 +14,17 @@ import shutil
 from os.path import dirname as up
 
 if __name__ == "__main__":
-    parameter_variation_parameter_string = "is_torus"
-    parameter_variation_scenarios = [False]
+    # Define the parameter variation scenarios
+    parameter_variation_parameter_string = "energy_gain_per_step_predator"
+    parameter_variation_scenarios = [-0.16, -0.17, -0.18]
 
+    # Location saved parameter variation scenarios
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
     environment_name = str(env_fn.raw_env.metadata['name'])
     training_steps = int(training_steps_string)
     # Create model file name for saving
     model_file_name = f"{environment_name}_steps_{training_steps_string}"
-
-    # Parameter variation scenarios
     if len(parameter_variation_scenarios) > 1:
         destination_root_dir = (
             local_output_root + "/parameter_variation/"

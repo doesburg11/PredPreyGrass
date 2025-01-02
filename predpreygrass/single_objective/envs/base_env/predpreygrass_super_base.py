@@ -142,7 +142,6 @@ class PredPreyGrassSuperBaseEnv:
 
 
         self._initialize_variables()
-        # TODO implement in config
 
         # Create a Renderer instance if rendering is needed
         if self.render_mode is not None:
@@ -177,7 +176,40 @@ class PredPreyGrassSuperBaseEnv:
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
         # end actions
-  
+
+        # TODO: action mapping experiment
+        self.von_neumann = False
+        self.action_range = 3
+        self.motion_mapping = []
+
+        def generate_action_to_move_mapping(action_range):
+            """Generate motion range based on the action range."""
+            action_to_move_mapping = []
+            for dx in range(-action_range, action_range + 1):
+                for dy in range(-action_range, action_range + 1):
+                    #if abs(dx) + abs(dy) <= action_range:  # Limit the distance by action range
+                        action_to_move_mapping.append([dx, dy])
+            return action_to_move_mapping
+
+
+        if self.von_neumann:
+            # Von Neumann neighborhood
+            self.action_to_move_mapping =  np.array([
+                                    [-1, 0],  # move left
+                                    [0, -1],  # move up
+                                    [0, 0],   # stay
+                                    [0, 1],   # move down
+                                    [1, 0],   # move right
+                                ], dtype=np.int32)
+        else:
+            self.action_to_move_mapping = generate_action_to_move_mapping(self.action_range)
+
+        #print(f"self.action_to_move_mapping: {self.action_to_move_mapping}")
+        #print(f"len(self.action_to_move_mapping): {len(self.action_to_move_mapping)}")
+
+
+
+
     def reset(self) -> None:
         """
         Resets the environment to the initial state.
