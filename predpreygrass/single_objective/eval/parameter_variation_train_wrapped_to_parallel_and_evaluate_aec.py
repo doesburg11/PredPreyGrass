@@ -16,7 +16,7 @@ from os.path import dirname as up
 if __name__ == "__main__":
     # Define the parameter variation scenarios
     parameter_variation_parameter_string = "energy_gain_per_step_predator"
-    parameter_variation_scenarios = [-0.16, -0.17, -0.18]
+    parameter_variation_scenarios = [-0.19, -0.20]
 
     # Location saved parameter variation scenarios
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
