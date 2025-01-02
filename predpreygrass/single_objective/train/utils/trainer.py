@@ -90,11 +90,17 @@ class Trainer:
         num_cores = os.cpu_count()
         # Adjust training parameters based on available cores
         if num_cores == 128:  # Google Cloud Platform
-            total_timesteps = 10_470_4000
+            total_timesteps = 13_107_200
+            self.hyperparameters["n_steps"] = 1_024
+            self.hyperparameters["batch_size"] = 209_408
         elif num_cores == 8:  # Local Machine
             total_timesteps = self.steps
+            self.hyperparameters["n_steps"] = 2_048
+            self.hyperparameters["batch_size"] = 32_768
         elif num_cores == 2:  # Google Colab
             total_timesteps = 4_096_000
+            self.hyperparameters["n_steps"] = 2_048   
+            self.hyperparameters["batch_size"] = 8_192
         else:  # Default
             total_timesteps = self.steps
 
