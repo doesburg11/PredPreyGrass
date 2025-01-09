@@ -41,7 +41,7 @@ env_kwargs = dict(
     is_von_neumann_neighborhood=False,
     action_range = 5, # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3 
     # energy parameters
-    energy_gain_per_step_predator= -0.17, #-0.15,  # -0.15 # default
+    energy_gain_per_step_predator= -0.18, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.03, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
