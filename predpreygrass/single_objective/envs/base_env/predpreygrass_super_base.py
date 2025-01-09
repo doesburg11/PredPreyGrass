@@ -81,19 +81,10 @@ class PredPreyGrassSuperBaseEnv:
         num_episodes: int = 100,
         is_torus: bool = False,
         training_steps_string: str = "10_000_000",
-        motion_range: np.ndarray = np.array([
-            #[-1, -1],  # move up left
-            [-1, 0],  # move left
-            #[-1, 1],  # move down left
-            [0, -1],  # move up
-            [0, 0],   # stay
-            [0, 1],   # move down
-            #[1, -1],  # move up right
-            [1, 0],   # move right
-            #[1, 1],   # move down right
-        ], dtype=np.int32),
         write_evaluation_to_file: bool = False,
         motion_energy_per_distance_unit: float = 1.0,
+        action_range: int = 3,
+        is_von_neumann_neighborhood: bool = True,
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -136,13 +127,12 @@ class PredPreyGrassSuperBaseEnv:
         self.max_energy_level_grass = max_energy_level_grass
         self.is_torus = is_torus
         self.training_steps_string = training_steps_string
-        self.motion_range = motion_range
         self.write_evaluation_to_file = write_evaluation_to_file
         self.motion_energy_per_distance_unit = motion_energy_per_distance_unit
-
+        self.action_range = action_range
+        self.is_von_neumann_neigborhood = is_von_neumann_neighborhood
 
         self._initialize_variables()
-        # TODO implement in config
 
         # Create a Renderer instance if rendering is needed
         if self.render_mode is not None:
@@ -171,6 +161,40 @@ class PredPreyGrassSuperBaseEnv:
         )
         self.observation_space = [obs_space for _ in range(self.n_possible_agents)]
         # end observations
+
+        # TODO: action mapping experiment
+        self.action_range = 3 if self.is_von_neumann_neigborhood else action_range
+        self.motion_mapping = []
+        self.motion_range = []
+
+        def generate_action_to_move_mapping(action_range):
+            """Generate motion range based on the action range."""
+            act_range = action_range
+            act_offset = (act_range - 1) // 2
+
+            action_to_move_mapping = []
+            for dx in range(-act_offset, act_offset + 1):
+                for dy in range(-act_offset, act_offset + 1):
+                    action_to_move_mapping.append([dx, dy])
+            return action_to_move_mapping
+
+        if self.is_von_neumann_neigborhood:
+            # Von Neumann neighborhood
+            self.action_to_move_mapping =  np.array([
+                                    [-1, 0],  # move left
+                                    [0, -1],  # move up
+                                    [0, 0],   # stay
+                                    [0, 1],   # move down
+                                    [1, 0],   # move right
+                                ], dtype=np.int32)
+            self.motion_range = self.action_to_move_mapping
+        else:
+            self.action_to_move_mapping = generate_action_to_move_mapping(self.action_range)
+
+            self.motion_range = self.action_to_move_mapping
+        print(f"self.motion_range: {self.motion_range}")
+        print(f"len(self.motion_range): {len(self.motion_range)}")
+        print(f"self.action_range: {self.action_range}")
 
         # actions
         self.n_actions_agent: int = len(self.motion_range)

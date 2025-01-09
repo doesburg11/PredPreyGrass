@@ -15,7 +15,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     parameter_variation_parameter_string = "is_torus"
-    parameter_variation_scenarios = [False]
+    parameter_variation_scenarios = [True]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
