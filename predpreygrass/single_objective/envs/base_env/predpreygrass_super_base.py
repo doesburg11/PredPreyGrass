@@ -162,7 +162,7 @@ class PredPreyGrassSuperBaseEnv:
         self.observation_space = [obs_space for _ in range(self.n_possible_agents)]
         # end observations
 
-        # TODO: action mapping experiment
+        # action range and action space
         self.action_range = 3 if self.is_von_neumann_neigborhood else action_range
         self.motion_mapping = []
         self.motion_range = []
@@ -196,7 +196,6 @@ class PredPreyGrassSuperBaseEnv:
         print(f"len(self.motion_range): {len(self.motion_range)}")
         print(f"self.action_range: {self.action_range}")
 
-        # actions
         self.n_actions_agent: int = len(self.motion_range)
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
