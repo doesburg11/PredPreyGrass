@@ -1,5 +1,4 @@
 from predpreygrass.global_config import RESULTS_DIR
-import numpy as np
 
 local_output_root = RESULTS_DIR
 
@@ -39,7 +38,8 @@ env_kwargs = dict(
     obs_range_prey=9,
     # action parameters
     is_von_neumann_neighborhood=False,
-    action_range = 5, # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3 
+    random_action_prob=0.0,
+    action_range = 5, # obsolete if is_von_neumann_neighborhood = True: action_range = 3 
     # energy parameters
     energy_gain_per_step_predator= -0.19, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.03, #-0.05,  # -0.05 # default

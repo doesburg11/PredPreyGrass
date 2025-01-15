@@ -85,6 +85,7 @@ class PredPreyGrassSuperBaseEnv:
         motion_energy_per_distance_unit: float = 1.0,
         action_range: int = 3,
         is_von_neumann_neighborhood: bool = True,
+        random_action_prob: float = 0.1, 
     ):
         self.x_grid_size = x_grid_size
         self.y_grid_size = y_grid_size
@@ -131,6 +132,7 @@ class PredPreyGrassSuperBaseEnv:
         self.motion_energy_per_distance_unit = motion_energy_per_distance_unit
         self.action_range = action_range
         self.is_von_neumann_neigborhood = is_von_neumann_neighborhood
+        self.random_action_prob = random_action_prob
 
         self._initialize_variables()
 
@@ -232,7 +234,8 @@ class PredPreyGrassSuperBaseEnv:
                     initial_energy=self.initial_energy_type[agent_type_nr],
                     energy_gain_per_step=self.energy_gain_per_step_type[agent_type_nr],
                     is_torus=self.is_torus,
-                    motion_energy_per_distance_unit=self.motion_energy_per_distance_unit
+                    motion_energy_per_distance_unit=self.motion_energy_per_distance_unit,
+                    random_action_prob=self.random_action_prob,  
                                        
                 )
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
@@ -248,6 +251,8 @@ class PredPreyGrassSuperBaseEnv:
                 self.possible_agent_instance_list_type[agent_type_nr].append(
                     agent_instance
                 )
+
+
         # create lists of all possible agents and the subset active agents  
         for agent_type_nr in self.biotic_agent_types:
             # Copy possible agent instances to active agent instances
