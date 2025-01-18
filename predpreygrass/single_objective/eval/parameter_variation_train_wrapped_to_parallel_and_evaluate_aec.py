@@ -15,7 +15,7 @@ from os.path import dirname as up
 
 if __name__ == "__main__":
     parameter_variation_parameter_string = "random_action_prob"
-    parameter_variation_scenarios = [0.45, 0.50]
+    parameter_variation_scenarios = [0.55, 0.60, 0.65]
 
     time_stamp_string = str(time.strftime("%Y-%m-%d_%H:%M:%S"))
     env_fn = predpreygrass_aec_v0
