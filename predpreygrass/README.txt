@@ -1,7 +1,6 @@
 Structure of the respository
 
 predpreygrass/
-├── multi_objective/                                # UNDER CONSTRUCTION
 └── single_objective/                               # Directory for single-objective environments and related scripts
     ├── agents/
     │   ├── discrete_agent.py                       # Implementation of discrete agent for single-objective environment
