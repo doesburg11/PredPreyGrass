@@ -1,4 +1,4 @@
-[![Python 3.11.10](https://img.shields.io/badge/python-3.11.10-blue.svg)](https://www.python.org/downloads/release/python-31110/)
+[![Python 3.11.11](https://img.shields.io/badge/python-3.11.10-blue.svg)](https://www.python.org/downloads/release/python-31110/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
@@ -89,7 +89,7 @@ Adjust parameters accordingly in:
 
 In Visual Studio Code run:
 
-[```predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py)
+[```predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
 To evaluate and visualize after training follow instructions in:
 
