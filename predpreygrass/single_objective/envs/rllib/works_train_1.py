@@ -99,12 +99,10 @@ if __name__ == "__main__":
     env = PredPreyGrass()
     grid_size = (env.x_grid_size, env.y_grid_size)
     all_agents = env.possible_agents + env.grass_agents
-    #visualizer = GridVisualizer(grid_size, all_agents, trace_length=1)
 
     results = ppo.train()
     print(f"Training results: {results.keys()}")
  
     import time
-    time.sleep(2)
     ppo.stop()
     ray.shutdown()

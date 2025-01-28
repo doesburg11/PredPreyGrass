@@ -25,9 +25,11 @@ class EpisodeReturn(RLlibCallback):
 def env_creator(config):
     return PredPreyGrass(config)
 
-# Ensure the environment is registered only once
-if "PredPreyGrass" not in registry:
+# Register the environment
+try:
     register_env("PredPreyGrass", env_creator)
+except Exception as e:
+    print(f"Environment registration failed: {e}")
 
 def policy_mapping_fn(agent_id, episode):
     if "predator" in agent_id:
@@ -101,10 +103,24 @@ if __name__ == "__main__":
     all_agents = env.possible_agents + env.grass_agents
     #visualizer = GridVisualizer(grid_size, all_agents, trace_length=1)
 
-    results = ppo.train()
-    print(f"Training results: {results.keys()}")
+    # Train the algorithm
+    for i in range(1):  # Number of training iterations
+        results = ppo.train()
+        print(f"Iteration {i + 1}")
+        print()
+        print(f"Training results keys: {results.keys()}")
+        print()
+        print(f"results['learners']: {results['learners']}")
+        print()
+        print(f"results['learners']['prey_policy']['policy_loss']: {results['learners']['prey_policy']['policy_loss']}")
+        print(f"results['learners']['predator_policy']['policy_loss']: {results['learners']['predator_policy']['policy_loss']}")
+        print()
+        print(f"results['timers']: {results['timers']}")
+
+
+    #results = ppo.train()
+    #print(f"Training results: {results.keys()}")
  
     import time
-    time.sleep(2)
     ppo.stop()
     ray.shutdown()
