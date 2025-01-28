@@ -133,12 +133,8 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
-        observations, rewards = {}, {}
-        terminations, truncations, infos = {}, {}, {}
-
-        rewards = {}
-
-        # Process actions
+        observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+        # Process moves for each agent
         for agent, action in action_dict.items():
             # Process actions only for agents still in the environment
             print(f"{agent} : {self.agent_positions[agent]}", end=" -> ")
@@ -202,7 +198,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, rewards, terminations, truncations, infos
 
-    def _get_movement_energy_cost(self, agent, current_position, new_position, current_energy, distance_factor=0.1):
+    def _get_movement_energy_cost(self, agent, current_position, new_position, distance_factor=0.1):
         """
         Calculate the energy cost for moving an agent.
         
@@ -218,11 +214,18 @@ class PredPreyGrass(MultiAgentEnv):
             float: Energy cost of the move.
         """
         current_position = self.agent_positions[agent]
+        current_energy = self.agent_energies[agent]
         distance = np.linalg.norm(new_position - current_position)  # Euclidean distance
         
         # Calculate the energy cost
         energy_cost = distance * distance_factor * current_energy 
         return energy_cost
+
+    def _get_time_step_energy_cost(self, agent, step_factor=0.1):
+        """
+        Calculate the energy cost for a time step of the agent.
+        """
+        return step_factor * self.agent_energies[agent]
 
     def _get_move(self, agent, action) -> NDArray[np.int_]:
         """

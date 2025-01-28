@@ -33,6 +33,7 @@ if __name__ == "__main__":
     for step in range(1000):  # Arbitrary large number to test termination
         print(f"Step {step + 1}")
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
+        print(f"Action dict: {action_dict}")
         observations, rewards, terminations, truncations, info = env.step(action_dict)
 
         # Merge (learning) agent and (non-learning) grass positions
