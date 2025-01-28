@@ -10,7 +10,7 @@
 </br>
 
 ## Predator-Prey-Grass multi-agent reinforcement learning (MARL)
-Predator-Prey-Grass gridworld deploying multi-agent environments with dynamic deletion and spawning of partially observant agents, utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/).
+Predator-Prey-Grass gridworld deploying multi-agent environment with dynamic deletion and spawning of partially observant agents, utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/).
 
 </br>
 </br>
@@ -19,7 +19,17 @@ Predator-Prey-Grass gridworld deploying multi-agent environments with dynamic de
 </p>
 
 ## The environments
-[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): A (single-objective) multi-agent reinforcement learning (MARL) environment, [centralized trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_ppo_parallel_wrapped_aec_env.py) and [decentralized evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py) using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case, the agents obtain all the energy from the eaten Prey or Grass. Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
+[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): 
+A (single-objective) multi-agent reinforcement learning (MARL) environment, 
+[centralized trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py) 
+and [decentralized evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py) 
+using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). 
+Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. 
+Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case, the agents obtain all the energy from the eaten Prey or Grass. 
+Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. 
+The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. 
+Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment 
+to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
 
 
 ## Emergent Behaviors
@@ -40,7 +50,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ## Installation
 
-**Editor used:** Visual Studio Code 1.93.1 on Linux Mint 21.3 Cinnamon
+**Editor used:** Visual Studio Code 1.96.4 on Linux Mint 21.3 Cinnamon
 
 1. Clone the repository: 
    ```bash
