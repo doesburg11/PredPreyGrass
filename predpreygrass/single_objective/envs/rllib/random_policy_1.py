@@ -1,6 +1,6 @@
 
 from renderer import GridVisualizer
-from works_predpreygrass_10 import PredPreyGrass  # Import your custom environmfrom predpreygrass_11 import PredPreyGrass  # Import your custom environment
+from predpreygrass_11 import PredPreyGrass  # Import your custom environmfrom predpreygrass_11 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 
@@ -13,7 +13,7 @@ config = {
     "penalty_prey_caught": -20.0,
 }
 env = PredPreyGrass(config)
-grid_size = (env.x_grid_size, env.y_grid_size)
+grid_size = (env.grid_size, env.grid_size)
 
 
 
@@ -21,7 +21,7 @@ grid_size = (env.x_grid_size, env.y_grid_size)
 if __name__ == "__main__":
     # Reset the environment and get initial observations
     observations, _ = env.reset(seed=42)
-    print(f"Initial observation for predator_0: {observations['predator_0']}")
+    #print(f"Initial observation for predator_0: {observations['predator_0']}")
 
 
     # Combine predator, prey, and grass agents
@@ -34,10 +34,7 @@ if __name__ == "__main__":
         print(f"Step {step + 1}")
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
-        print(f"Step {step + 1}:")
-        print(f"  Rewards: {rewards}")
-        print(f"  Terminations: {terminations}")
-        print(f"  Truncations: {truncations}")
+
         # Merge (learning) agent and (non-learning) grass positions
         merged_positions = {**env.agent_positions, **env.grass_positions}
         # Update visualization
@@ -45,7 +42,7 @@ if __name__ == "__main__":
 
         # Debug information
         print(f"Number of prey left: {env.num_prey}")
-        print(f"Terminations: {terminations['__all__']}, Truncations: {truncations['__all__']}")
+        #print(f"Terminations: {terminations['__all__']}, Truncations: {truncations['__all__']}")
 
         # Check if the environment is properly terminating
         if terminations["__all__"]:
