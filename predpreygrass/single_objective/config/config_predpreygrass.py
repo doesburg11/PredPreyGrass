@@ -4,12 +4,12 @@ import numpy as np
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
-#training_steps_string= "1_638_400"
+training_steps_string= "1_638_400"
 #training_steps_string="2_293_760"
 #training_steps_string="4_587_520"
 #training_steps_string="6_881_280"
 #training_steps_string="9_175_040"
-training_steps_string="11_468_800"
+#training_steps_string="11_468_800"
 #training_steps_string="13_762_560"
 #training_steps_string="16_056_320"
 #training_steps_string="18_350_080"
@@ -58,8 +58,8 @@ env_kwargs = dict(
     y_pygame_window=0,
     has_energy_chart=True,
     # evaluation parameters
-    num_episodes=100,
-    watch_grid_model=False,
+    num_episodes=1,
+    watch_grid_model=True,
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,

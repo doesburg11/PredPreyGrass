@@ -1,5 +1,6 @@
 
-from renderer import GridVisualizer
+from predpreygrass.single_objective.utils.render_matplotlib import GridVisualizer
+
 from predpreygrass_11 import PredPreyGrass  # Import your custom environmfrom predpreygrass_11 import PredPreyGrass  # Import your custom environment
 
 from time import sleep

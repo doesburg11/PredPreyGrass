@@ -1,6 +1,6 @@
 # discretionary libraries
 from predpreygrass.single_objective.agents.discrete_agent import DiscreteAgent
-from predpreygrass.single_objective.utils.renderer import Renderer
+from predpreygrass.single_objective.utils.renderer import PyGameRenderer
 
 # external libraries
 from gymnasium.utils import seeding
@@ -135,7 +135,7 @@ class PredPreyGrassAECEnv():
 
         # Create a Renderer instance if rendering is needed
         if self.render_mode is not None:
-            self.renderer = Renderer(
+            self.renderer = PyGameRenderer(
                 env=self,
                 cell_scale=cell_scale,
                 has_energy_chart=has_energy_chart,
