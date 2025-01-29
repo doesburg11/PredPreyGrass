@@ -20,9 +20,8 @@ predpreygrass/
     │   └── utils/                                                              # Utility scripts for evaluation (details not provided)
     ├── train/
     │   ├── README.md                                                           # Documentation for training scripts
-    │   ├── train_ppo.py                                                        # Training script using PPO for single-objective environment
+    │   ├── train_sb3_ppo_parallel_wrapped_aec_env.py                                                        # Training script using PPO for single-objective environment
     │   └── utils/                                                              # Utility scripts for training (details not provided)
     └── utils/                                      
-        ├── env.py                                                              # General utility functions for the environment
         └── renderer.py                                                         # Utility script for rendering the environment
 
