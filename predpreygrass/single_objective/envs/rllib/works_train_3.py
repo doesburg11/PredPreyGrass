@@ -5,7 +5,9 @@ import gymnasium
 from gymnasium.envs.registration import registry
 from ray.rllib.callbacks.callbacks import RLlibCallback
 import warnings
-from predpreygrass_10 import PredPreyGrass  # Import your custom environment
+import numpy as np
+
+from works_predpreygrass_3 import PredPreyGrass  # Import your custom environment
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message="Could not create a Catalog object for your RLModule")
@@ -25,11 +27,9 @@ class EpisodeReturn(RLlibCallback):
 def env_creator(config):
     return PredPreyGrass(config)
 
-# Register the environment
-try:
+# Ensure the environment is registered only once
+if "PredPreyGrass" not in registry:
     register_env("PredPreyGrass", env_creator)
-except Exception as e:
-    print(f"Environment registration failed: {e}")
 
 def policy_mapping_fn(agent_id, episode):
     if "predator" in agent_id:
@@ -40,7 +40,7 @@ def policy_mapping_fn(agent_id, episode):
 
 if __name__ == "__main__":
     # Initialize Ray
-    ray.shutdown()
+    ray.shutdown()   
     ray.init(log_to_driver=True, logging_level="DEBUG", ignore_reinit_error=True, local_mode=True)
 
     # Configure PPO for RLlib
@@ -55,7 +55,7 @@ if __name__ == "__main__":
             policies={
                 "predator_policy": (
                     None,
-                    gymnasium.spaces.Box(low=-1.0, high=100.0, shape=(4, 7, 7)),
+                    gymnasium.spaces.Box(low=-1.0, high=100.0, shape=(4, 7, 7), dtype=np.float64),
                     gymnasium.spaces.Discrete(5),
                     {},
                 ),
@@ -75,11 +75,13 @@ if __name__ == "__main__":
         )
         .rl_module(
             model_config={
-                "conv_filters": [
+                "conv_filters": [  # Ensure CNN expects 4 input channels
                     [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
                     [32, [3, 3], 1],  # 32 filters, 3x3 kernel, stride 1
                     [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
-                ]
+                ],
+                "fcnet_hiddens": [256, 256],  # Fully connected layers
+                "fcnet_activation": "relu"
             }
         )
         .api_stack(
@@ -99,27 +101,11 @@ if __name__ == "__main__":
 
     # Visualization setup
     env = PredPreyGrass()
-    grid_size = (env.x_grid_size, env.y_grid_size)
+    grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
-    #visualizer = GridVisualizer(grid_size, all_agents, trace_length=1)
 
-    # Train the algorithm
-    for i in range(1):  # Number of training iterations
-        results = ppo.train()
-        print(f"Iteration {i + 1}")
-        print()
-        print(f"Training results keys: {results.keys()}")
-        print()
-        print(f"results['learners']: {results['learners']}")
-        print()
-        print(f"results['learners']['prey_policy']['policy_loss']: {results['learners']['prey_policy']['policy_loss']}")
-        print(f"results['learners']['predator_policy']['policy_loss']: {results['learners']['predator_policy']['policy_loss']}")
-        print()
-        print(f"results['timers']: {results['timers']}")
-
-
-    #results = ppo.train()
-    #print(f"Training results: {results.keys()}")
+    results = ppo.train()
+    print(f"Training results: {results.keys()}")
  
     import time
     ppo.stop()

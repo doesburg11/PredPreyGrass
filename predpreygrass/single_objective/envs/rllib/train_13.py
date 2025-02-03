@@ -5,7 +5,8 @@ import gymnasium
 from gymnasium.envs.registration import registry
 from ray.rllib.callbacks.callbacks import RLlibCallback
 import warnings
-from predpreygrass.single_objective.envs.rllib.works_predpreygrass_1 import PredPreyGrass  # Import your custom environment
+
+from predpreygrass_13 import PredPreyGrass  # Import your custom environment
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message="Could not create a Catalog object for your RLModule")
@@ -71,15 +72,16 @@ if __name__ == "__main__":
             gamma=0.99,
             lr=0.0003,
         )
-        .rl_module(
+        . rl_module(
             model_config={
-                "conv_filters": [
+                "conv_filters": [  # Ensure CNN expects 4 input channels
                     [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
                     [32, [3, 3], 1],  # 32 filters, 3x3 kernel, stride 1
                     [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
-                ]
+                ],
             }
         )
+
         .api_stack(
             enable_rl_module_and_learner=True,
             enable_env_runner_and_connector_v2=True
@@ -97,7 +99,7 @@ if __name__ == "__main__":
 
     # Visualization setup
     env = PredPreyGrass()
-    grid_size = (env.x_grid_size, env.y_grid_size)
+    grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
 
     results = ppo.train()
