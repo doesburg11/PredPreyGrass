@@ -41,7 +41,7 @@ if __name__ == "__main__":
         print("Accumulated rew:",{k: round(v, 1) for k, v in env.cumulative_rewards.items()})
         #print("Energies:",{k: round(v, 1) for k, v in env.agent_energies.items()})
         print()
-        print(f"Positions step {step+1}:")
+        print(f"Positions agents step {step+1}:")
         print(env.agent_positions)
         #print("Observations step:")
         #print(observations)
