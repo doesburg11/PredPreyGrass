@@ -5,7 +5,9 @@ import gymnasium
 from gymnasium.envs.registration import registry
 from ray.rllib.callbacks.callbacks import RLlibCallback
 import warnings
-from predpreygrass.single_objective.envs.rllib.works_predpreygrass_1 import PredPreyGrass  # Import your custom environment
+import numpy as np
+
+from predpreygrass_14 import PredPreyGrass  # Import your custom environment
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message="Could not create a Catalog object for your RLModule")
@@ -38,7 +40,7 @@ def policy_mapping_fn(agent_id, episode):
 
 if __name__ == "__main__":
     # Initialize Ray
-    ray.shutdown()
+    ray.shutdown()   
     ray.init(log_to_driver=True, logging_level="DEBUG", ignore_reinit_error=True, local_mode=True)
 
     # Configure PPO for RLlib
@@ -53,7 +55,7 @@ if __name__ == "__main__":
             policies={
                 "predator_policy": (
                     None,
-                    gymnasium.spaces.Box(low=-1.0, high=100.0, shape=(4, 7, 7)),
+                    gymnasium.spaces.Box(low=-1.0, high=100.0, shape=(4, 7, 7), dtype=np.float64),
                     gymnasium.spaces.Discrete(5),
                     {},
                 ),
@@ -73,11 +75,13 @@ if __name__ == "__main__":
         )
         .rl_module(
             model_config={
-                "conv_filters": [
+                "conv_filters": [  # Ensure CNN expects 4 input channels
                     [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
                     [32, [3, 3], 1],  # 32 filters, 3x3 kernel, stride 1
                     [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
-                ]
+                ],
+                "fcnet_hiddens": [256, 256],  # Fully connected layers
+                "fcnet_activation": "relu"
             }
         )
         .api_stack(
@@ -87,7 +91,7 @@ if __name__ == "__main__":
         .env_runners(
             num_envs_per_env_runner=1,  
             rollout_fragment_length=64,
-            sample_timeout_s=300,  # Increase timeout
+            sample_timeout_s=300,  # Increase timeout to 5 minutes
 
 
         )
@@ -97,10 +101,10 @@ if __name__ == "__main__":
 
     # Visualization setup
     env = PredPreyGrass()
-    grid_size = (env.x_grid_size, env.y_grid_size)
+    grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
-
-    results = ppo.train()
+    for _ in range(10):
+        results = ppo.train()
     print(f"Training results: {results.keys()}")
  
     import time

@@ -7,13 +7,7 @@ from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
 class PredPreyGrass(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
-        """
-        self.max_steps: int = config.get("max_steps", 200) if config else 200
-        self.reward_predator_catch: float = config.get("reward_predator_catch", 15.0)
-        self.reward_prey_survive : float= config.get("reward_prey_survive", 0.5)
-        self.penalty_predator_miss : float = config.get("penalty_predator_miss", -0.2)
-        self.penalty_prey_caught: float = config.get("penalty_prey_caught", -20.0)
-        """
+
         self.max_steps: int = 200
         self.reward_predator_catch: float = 15.0
         self.reward_prey_survive : float= 0.5
@@ -27,6 +21,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_num_prey: int = 4
         self.num_predators: int = 4
         self.num_prey: int = 4
+        self.initial_energy_predator: float = 5.0
+        self.initial_energy_prey: float = 3.0
+        self.energy_depletion_rate: float = 0.01
+
+        self.episode_rewards = {}  # Track total rewards per agent
+
         # self.num_agents: int = self.num_predators + self.num_prey  # read only property inherited from MultiAgentEnv
         self.possible_agents: List[AgentID] = [   # max_num of learning agents, placeholder inherited from MultiAgentEnv
             f"predator_{i}" for i in range(self.max_num_predators)
@@ -41,7 +41,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_agents: List[AgentID] = [f"grass_{k}" for k in range(self.max_num_grass)]
 
         # Grid and observation settings
-        self.grid_size: int = 5
+        self.grid_size: int = 10
         self.num_obs_channels: int = 4  # Border, Predator, Prey, Grass
         self.max_obs_range: int = 7
         self.max_obs_offset: int = (self.max_obs_range - 1) // 2
@@ -99,6 +99,18 @@ class PredPreyGrass(MultiAgentEnv):
             dtype=np.float64,
         )
 
+        self.agents = [f"predator_{i}" for i in range(4)] + [
+            f"prey_{j}" for j in range(4)
+        ]
+
+        # ✅ Reset agent positions and energies
+        self.agent_positions = {}
+        self.agent_energies = {}
+
+        # ✅ Reset Rewards
+        self.episode_rewards = {agent_id: 0 for agent_id in self.agents}
+
+
         # Place entities
         def place_entities(entity_list, grid_channel, energy_value=None) -> Tuple[Dict[str, NDArray[np.int_]], Dict[str, float]]:
             positions, energies = {}, {}
@@ -117,12 +129,12 @@ class PredPreyGrass(MultiAgentEnv):
         predator_positions, predator_energies = place_entities(
             [agent for agent in self.agents if "predator" in agent],
             grid_channel=1,
-            energy_value=5,
+            energy_value=self.initial_energy_predator,
         )
         prey_positions, prey_energies = place_entities(
             [agent for agent in self.agents if "prey" in agent],
             grid_channel=2,
-            energy_value=3,
+            energy_value=self.initial_energy_prey,
         )
         grass_positions, _ = place_entities(
             self.grass_agents,
@@ -134,81 +146,114 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_energies = {**predator_energies, **prey_energies}
         self.grass_positions = grass_positions
 
+
         # Generate observations
         observations = {agent: self._get_observation(agent) for agent in self.agents}
-
+        
         return observations, {}
 
     def step(self, action_dict):
-        observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-        # Process moves for each agent
+        """
+        Executes one step in the environment.
+
+        - Processes agent movements.
+        - Computes rewards before removing agents.
+        - Checks termination and truncation conditions.
+        """
+        #print("\n=== DEBUG: Actions Received ===")
         for agent, action in action_dict.items():
-            # Process actions only for agents still in the environment
-            #print(f"{agent} : {self.agent_positions[agent]}", end=" -> ")
-            self._apply_move(agent, action)
-            #print(f"{self.agent_positions[agent]}")
-         
-        # Check termination and truncation conditions
-        for agent in list(self.agents):
-            if agent not in self.agent_positions:  # Agent already removed
-                continue
-            agent_type_nr = 1 if "predator" in agent else 2
-            if self.agent_energies[agent] <= 0:
-                # Agent has no energy left
+            #print(f"Agent {agent}: Action {action}")
+            if "predator" in agent:
+                #print(f"Energies: {self.agent_energies}")
+                self.agent_energies[agent] -= self._get_time_step_energy_cost(agent,self.energy_depletion_rate)
+            elif "prey" in agent:
+                self.agent_energies[agent] -= self._get_time_step_energy_cost(agent,self.energy_depletion_rate) 
+
+
+        observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+
+        # Step 1: Process all movements before removing any agents
+        for agent, action in action_dict.items():
+            if agent in self.agent_positions:
+                new_position = self._get_move(agent, action)
+                self.agent_positions[agent] = new_position
+
+        # Step 2: Ensure every agent gets an observation
+        for agent in self.agents:
+            if agent in self.agent_positions:
                 observations[agent] = self._get_observation(agent)
-                rewards[agent] = self._get_reward(agent)
+            else:
+                observations[agent] = np.zeros((self.num_obs_channels, self.max_obs_range, self.max_obs_range))  # Placeholder observation
+
+        # Step 3: Assign rewards **before** removing agents
+        for agent in self.agents:
+            if agent in self.agent_positions:
+                step_reward = self._get_reward(agent)  
+                rewards[agent] = step_reward
+                self.episode_rewards[agent] += step_reward  # ✅ Accumulate total episode reward
+            else:
+                rewards[agent] = 0.0  # Prevent missing rewards
+
+        # Step 4: Handle agent removals (Prey caught, Energy depleted)
+        for agent in list(self.agents):
+            if agent not in self.agent_positions:
+                continue
+
+            # Check if energy is depleted
+            if self.agent_energies[agent] <= 0:
+                rewards[agent] = self._get_reward(agent)  # Assign reward before deletion
                 terminations[agent] = True
                 truncations[agent] = False
-                #print(f"Agent {agent} dies of lack of energy")
+
+                # Remove from the grid
                 x, y = self.agent_positions[agent]
-                self.grid[agent_type_nr, x, y] = 0  # Clear from grid
+                self.grid[1 if "predator" in agent else 2, x, y] = 0  
+
+                # Delete agent from state
                 del self.agent_positions[agent]
                 del self.agent_energies[agent]
+                self.agents.remove(agent)  # ✅ Ensures agent is removed safely
+                #print(f"[DEBUG] {agent} ran out of energy and was removed.")
+                if "predator" in agent:
+                    self.num_predators -= 1
+                elif "prey" in agent:
+                    self.num_prey -= 1
+
+            # Check if prey is caught (process rewards before removal)
             elif "prey" in agent:
-                # Check if any predator is on the same position as this prey
                 prey_position = self.agent_positions[agent]
                 for predator, predator_position in self.agent_positions.items():
                     if "predator" in predator and np.array_equal(predator_position, prey_position):
-                        # Prey is caught
+                        # Reward predator before removing prey
+                        rewards[predator] = self.reward_predator_catch
+                        #print(f"[DEBUG] Predator {predator} caught prey {agent}! Predator Reward: {self.reward_predator_catch}")
+
+                        # Assign penalty before removal
                         if agent in self.agent_positions:
-                            observations[agent] = self._get_observation(agent)
-                            del self.agent_positions[agent]
-                            rewards[agent] = self._get_reward(agent)
+                            rewards[agent] = self._get_reward(agent)  # Assign penalty
+                            #print(f"[DEBUG] Prey {agent} caught. Penalty: {self.penalty_prey_caught}")
+
+                            # Remove prey
                             terminations[agent] = True
                             truncations[agent] = False
-                            #print(f"Predator {predator} caught prey {agent}")
                             self.num_prey -= 1
+
+                            # Remove from grid and lists
                             x, y = prey_position
-                            self.grid[agent_type_nr, x, y] = 0  # Clear the prey from the grid (channel 2)
+                            self.grid[2, x, y] = 0  # Remove prey from the grid
                             del self.agent_energies[agent]
-                            del self.agents[self.agents.index(agent)]
-                        break
-                    else:
-                        # Prey survives
-                        observations[agent] = self._get_observation(agent)
-                        rewards[agent] = self._get_reward(agent)
-                        terminations[agent] = False
-                        truncations[agent] = False
-            elif self.current_step >= self.max_steps:
-                observations[agent] = self._get_observation(agent)  # Ensure last observation
-                rewards[agent] = 0.0
-                truncations[agent] = True
-                terminations[agent] = False
+                            del self.agent_positions[agent]
+                            self.agents.remove(agent)  # ✅ Ensures agent is removed safely
+                        break  # Stop checking after first predator catches prey
 
-            else:
-                observations[agent] = self._get_observation(agent)
-                rewards[agent] = self._get_reward(agent)
-                terminations[agent] = False
-                truncations[agent] = False
-        # Increment step counter
+        # Step 5: Global termination conditions
         self.current_step += 1
-
-        # Global termination and truncation
-        terminations["__all__"] = self.num_prey <= 0
-        if terminations["__all__"]:
-            print("All prey are gone. Environment is terminating.")
-
+        terminations["__all__"] = self.num_prey <= 0 or self.num_predators <= 0
         truncations["__all__"] = self.current_step >= self.max_steps
+
+
+        if terminations["__all__"] or truncations["__all__"]:
+            print(f"End of Episode: Total rewards: {self.episode_rewards}")
 
         return observations, rewards, terminations, truncations, infos
 
@@ -235,11 +280,14 @@ class PredPreyGrass(MultiAgentEnv):
         energy_cost = distance * distance_factor * current_energy 
         return energy_cost
 
-    def _get_time_step_energy_cost(self, agent, step_factor=0.1):
+    def _get_time_step_energy_cost(self, agent, step_factor=0.005):
         """
         Calculate the energy cost for a time step of the agent.
         """
-        return step_factor * self.agent_energies[agent]
+        if "predator" in agent:
+            return step_factor * self.initial_energy_predator
+        elif "prey" in agent:
+            return step_factor * self.initial_energy_prey
 
     def _get_move(self, agent, action) -> NDArray[np.int_]:
         """
@@ -251,6 +299,9 @@ class PredPreyGrass(MultiAgentEnv):
         move_vector = self.action_to_move[action]  # NDArray[np.int_]
         # Calculate new position as an np.array
         new_position = current_position + move_vector  # Element-wise addition
+        # ✅ Clip new position to stay within grid bounds
+        new_position = np.clip(new_position, 0, self.grid_size - 1)
+
         return new_position.astype(np.int_)  # Ensure dtype is np.int_
 
     def _apply_move(self, agent, action):
@@ -288,25 +339,37 @@ class PredPreyGrass(MultiAgentEnv):
         return observation
 
     def _get_reward(self, agent):
+        """
+        Compute the reward for the given agent.
+
+        - Predators are rewarded for catching prey.
+        - Predators are penalized for missing prey.
+        - Prey receive small survival rewards.
+        - Prey are penalized if caught.
+        """
         reward = 0.0
+
         if "predator" in agent:
-            # Positive reward for predator when catching prey
             prey_positions = [
                 self.agent_positions[prey] 
                 for prey in self.agents 
                 if "prey" in prey and prey in self.agent_positions
             ]
+
             if any(np.array_equal(self.agent_positions[agent], pos) for pos in prey_positions):
-                reward = self.reward_predator_catch  # Reward for catching prey
+                reward = self.reward_predator_catch
             else:
-                reward = self.penalty_predator_miss  # Penalty for not catching prey
+                reward = self.penalty_predator_miss
+
         elif "prey" in agent:
-            # Reward prey for survival
             if agent in self.agent_positions:
-                reward = self.reward_prey_survive  # Small reward for survival
+                reward = self.reward_prey_survive
             else:
-                reward = self.penalty_prey_caught  # Penalty for being caught
-        return reward
+                reward = self.penalty_prey_caught
+
+        return reward  # This now only returns the immediate reward
+
+
         
     def _obs_clip(self, x, y):
         """
