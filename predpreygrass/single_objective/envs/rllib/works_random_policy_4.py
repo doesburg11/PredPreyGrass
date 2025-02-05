@@ -19,10 +19,10 @@ if __name__ == "__main__":
     all_agents = env.agents + env.grass_agents
 
     # Initialize the visualizer
-    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=1)
+    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 
     for step in range(env.max_steps):  # Arbitrary large number to test termination
-        print(f"Step {step + 1}:")
+        print(f"Step {step}:")
         print("-----------------------------------------")
         print("Agents:")
         print(env.agents)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
         merged_positions = {**env.agent_positions, **env.grass_positions}
 
         # Update visualization
-        visualizer.update(merged_positions)
+        visualizer.update(merged_positions,step)
 
         # Debug information
         print(f"Number of predators left: {env.num_predators}")
