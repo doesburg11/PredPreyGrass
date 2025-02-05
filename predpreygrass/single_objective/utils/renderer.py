@@ -294,15 +294,19 @@ class MatPlotLibRenderer:
         self.prey_marker = "◆"
         self.grass_marker = "■"
 
-    def update(self, agent_positions):
+    def update(self, agent_positions, step):
         """
         Update the visualization with new agent positions.
 
         Args:
             agent_positions (dict): Dictionary of agent positions, e.g.,
                                     {"predator_0": [2, 3], "prey_0": [4, 5]}.
+            step (int): The current simulation step.
         """
         self.ax.clear()
+
+        # Update title with step count
+        self.ax.set_title(f"Environment - Step {step}", fontsize=14)
 
         # Redraw the grid
         self.ax.set_xlim(-0.5, self.grid_size[1] - 0.5)
