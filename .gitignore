@@ -1,5 +1,6 @@
 # Auxiliary folder
 output/
+# Rllib checkpoints
 checkpoints/
 
 # Byte-compiled / optimized / DLL files
