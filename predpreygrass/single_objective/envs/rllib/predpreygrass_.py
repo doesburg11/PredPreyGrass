@@ -119,6 +119,7 @@ class PredPreyGrass(MultiAgentEnv):
         Reset the environment to its initial state.
         """
         super().reset(seed=seed)
+        # ✅ Ensure `self.action_spaces` is reinitialized every reset
         self.current_step = 0
         self.rng = np.random.default_rng(seed)
 
