@@ -58,7 +58,7 @@ env_kwargs = dict(
     y_pygame_window=0,
     has_energy_chart=True,
     # evaluation parameters
-    num_episodes=100,
+    num_episodes=10,
     watch_grid_model=False,
     write_evaluation_to_file=True,
     # training parameters

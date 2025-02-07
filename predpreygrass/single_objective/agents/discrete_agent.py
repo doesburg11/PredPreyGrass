@@ -51,7 +51,7 @@ class DiscreteAgent:
         return np.random.randint(self.n_actions_agent)
 
     def step(self, action: int) -> np.ndarray:
-        if np.random.rand() < self.random_action_prob:
+        if np.random.rand() < self.random_action_prob and self.agent_id_nr == 2:
             action = self.random_action()  # Override action with random
 
         self.age += 1

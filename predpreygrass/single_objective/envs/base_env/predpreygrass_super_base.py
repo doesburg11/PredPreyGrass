@@ -241,7 +241,7 @@ class PredPreyGrassSuperBaseEnv:
                 #  choose a cell for the agent which is not yet occupied by another agent of the same type
                 #  and which is within the spawning area of the agent
                 xinit, yinit = self._get_new_allowed_position(
-                    agent_instance, self.spawning_area_list_type, self.model_state
+                    agent_instance, self.model_state
                 )
                 self.agent_name_to_instance_dict[agent_name] = agent_instance
                 agent_instance.is_active = True
@@ -465,7 +465,7 @@ class PredPreyGrassSuperBaseEnv:
         if (x, y) in self.available_cells_per_agent_type[agent_instance.agent_type_nr]:
             self.available_cells_per_agent_type[agent_instance.agent_type_nr].remove((x, y))
 
-    def _get_new_allowed_position(self, agent_instance, spawning_area_list_type, model_state) -> Tuple[int, int]:
+    def _get_new_allowed_position(self, agent_instance, model_state) -> Tuple[int, int]:
         """
         Get a new allowed position for the given agent within the spawning area.
 
