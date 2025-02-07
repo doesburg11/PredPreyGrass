@@ -1,4 +1,4 @@
-[![Python 3.11.11](https://img.shields.io/badge/python-3.11.10-blue.svg)](https://www.python.org/downloads/release/python-31110/)
+[![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
@@ -60,7 +60,7 @@ More emergent behavior and findings are described [on our website](https://www.b
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
    - Choose environment: Conda 
-   - Choose interpreter: Python 3.11.10 or higher
+   - Choose interpreter: Python 3.11.11 or higher
    - Open a new terminal
    - ```bash
      pip install -e .
