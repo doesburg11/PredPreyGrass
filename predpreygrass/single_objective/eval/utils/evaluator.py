@@ -677,7 +677,7 @@ class Evaluator:
 
         env_base = env.predpreygrass
         for i in range(self.num_episodes):
-            env.reset(seed=i)
+            env.reset(seed=42) 
             possible_predator_name_list = env_base.possible_agent_name_list_type[
                 env_base.predator_type_nr
             ]

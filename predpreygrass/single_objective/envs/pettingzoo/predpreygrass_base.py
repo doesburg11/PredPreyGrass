@@ -7,7 +7,6 @@ from gymnasium.utils import seeding
 from gymnasium import spaces
 import numpy as np
 from typing import Tuple, List, Optional
-import random
 
 class PredPreyGrassAECEnv():
     """
@@ -199,7 +198,6 @@ class PredPreyGrassAECEnv():
         action_space_agent = spaces.Discrete(self.n_actions_agent)
         self.action_space = [action_space_agent for _ in range(self.n_possible_agents)]
         # end actions
-
 
     def reset(self) -> None:
         """
@@ -403,8 +401,10 @@ class PredPreyGrassAECEnv():
             self.renderer.close()
 
     def _seed(self, seed=None):
-        self.np_random, seed_ = seeding.np_random(seed)
-        return [seed_]
+        print(f"seed: {seed} set in predpreygrass_aec.py seed")
+        #self.np_random, seed_ = seeding.np_random(seed)
+        self.np_random = np.random.default_rng(seed)  # Use NumPy's new random generator
+        return [seed]
 
     @property
     def is_no_grass(self):
@@ -602,7 +602,9 @@ class PredPreyGrassAECEnv():
         if not possible_positions:
             raise ValueError(f"No available positions left for spawning agent type {agent_type_nr}.")
 
-        new_position = random.choice(possible_positions)
+        #new_position = random.choice(possible_positions)
+        #new_position = self.random.choice(possible_positions)
+        new_position = tuple(self.np_random.choice(possible_positions))
 
         # Remove the position from available cells since it will now be occupied
         self.available_cells_per_agent_type[agent_type_nr].remove(new_position)
@@ -799,7 +801,7 @@ class PredPreyGrassAECEnv():
         )
 
         # Seed, file name, and cycle initialization
-        self._seed()
+        #self._seed(seed=42)
         self.file_name = 0
         self.n_cycles = 0
 
