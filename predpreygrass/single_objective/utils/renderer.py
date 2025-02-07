@@ -13,12 +13,12 @@ class PyGameRenderer:
         self.file_name = 0
 
         # Initialize the Pygame window position
-        os.environ["SDL_VIDEO_WINDOW_POS"] = "%d,%d" % (x_pygame_window, y_pygame_window)
+        os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0" 
 
         # Pygame screen settings
         self.width = env.x_grid_size * self.cell_scale
         self.height = env.y_grid_size * self.cell_scale
-        self.width_energy_chart = 2040 if has_energy_chart else 0
+        self.width_energy_chart = 1560 if has_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
         self.save_image_steps = False # TODO put into config file? 

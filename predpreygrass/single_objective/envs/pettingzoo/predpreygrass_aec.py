@@ -42,6 +42,7 @@ class raw_env(AECEnv):
     def reset(self, seed=None, options=None):
         if seed is not None:
             self.predpreygrass._seed(seed=seed)
+            print(f"Seed set to {seed}")
         self.steps = 0
         self.agents = self.possible_agents
         self.possible_agents = self.agents[:]
