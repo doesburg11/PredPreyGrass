@@ -50,7 +50,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ## Installation
 
-**Editor used:** Visual Studio Code 1.96.4 on Linux Mint 21.3 Cinnamon
+**Editor used:** Visual Studio Code 1.97.0 on Linux Mint 21.3 Cinnamon
 
 1. Clone the repository: 
    ```bash
