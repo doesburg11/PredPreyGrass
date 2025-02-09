@@ -546,7 +546,7 @@ class PredPreyGrassSuperBaseEnv:
         # activate a new agent
         new_agent_instance = non_active_agent_instance_list[-1]
         new_agent_instance.position = self._get_new_allowed_position(
-            new_agent_instance, self.spawning_area_list_type[new_agent_instance.agent_type_nr], self.model_state
+            new_agent_instance, self.model_state
         )
         self._activate_agent(new_agent_instance)
 

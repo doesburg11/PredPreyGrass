@@ -37,11 +37,11 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # action parameters
-    is_von_neumann_neighborhood=False,
+    is_von_neumann_neighborhood=True,
     random_action_prob=0.0,
-    action_range = 5, # obsolete if is_von_neumann_neighborhood = True: action_range = 3 
+    action_range = 3, # obsolete if is_von_neumann_neighborhood = True: action_range = 3 
     # energy parameters
-    energy_gain_per_step_predator= -0.19, #-0.15,  # -0.15 # default
+    energy_gain_per_step_predator= -0.12, #-0.15,  # -0.15 # default
     energy_gain_per_step_prey= -0.03, #-0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
@@ -58,7 +58,7 @@ env_kwargs = dict(
     y_pygame_window=0,
     has_energy_chart=True,
     # evaluation parameters
-    num_episodes=10,
+    num_episodes=100,
     watch_grid_model=False,
     write_evaluation_to_file=True,
     # training parameters
