@@ -4,7 +4,7 @@ from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
 
-from predpreygrass_ import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_7 import PredPreyGrass  # Import your custom environment
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):

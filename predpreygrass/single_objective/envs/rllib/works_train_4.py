@@ -7,7 +7,7 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 import warnings
 import numpy as np
 
-from predpreygrass_14 import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_4 import PredPreyGrass  # Import your custom environment
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message="Could not create a Catalog object for your RLModule")

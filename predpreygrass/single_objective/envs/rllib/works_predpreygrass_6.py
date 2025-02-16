@@ -11,20 +11,16 @@ class PredPreyGrass(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
 
-        self.verbose_engagement: bool = False
-        self.verbose_movement: bool = False
+        self.verbose: bool = False
 
         self.max_steps: int = 10000
         self.reward_predator_catch: float = 15.0
         self.reward_prey_eat_grass: float = 10.0
-        self.reward_prey_step: float = 0.0
-        self.reward_predator_step: float = 0.0
-        self.penalty_prey_caught: float = 0.0
+        self.reward_prey_step: float = 0.5
+        self.reward_predator_step: float = 0.3
+        self.penalty_prey_caught: float = -20.0
 
         self.current_step: int = 0
-
-        self.energy_loss_per_step_predator= 0.15  #-0.15,  # -0.15 # default
-        self.energy_loss_per_step_prey= 0.05 #-0.05,  # -0.05 # default
 
         # Learning agents
         self.max_num_predators: int = 6
@@ -36,6 +32,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.initial_energy_predator: float = 5.0
         self.initial_energy_prey: float = 3.0
+        self.energy_depletion_rate: float = 0.01
 
         self.cumulative_rewards = {}  # Track total rewards per agent
 
@@ -57,10 +54,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_num_grass: int = 30
         self.current_num_grass: int = 30
         self.initial_energy_grass: float = 2.0
+        self.energyaccumulation_rate: float = 0.1
         self.grass_agents: List[AgentID] = [
             f"grass_{k}" for k in range(self.initial_num_grass)
         ]
-        self.energy_gain_per_step_grass: float = 0.2
 
         # grid_world_state and observation settings
         self.grid_size: int = 10
@@ -128,13 +125,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Initialize grid_world_state
         self.grid_world_state = self.initial_grid_world_state.copy()
-
-        self.possible_agents: List[AgentID] = (
-            [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
-                f"predator_{i}" for i in range(self.max_num_predators)
-            ]
-            + [f"prey_{j}" for j in range(self.max_num_prey)]
-        )
         self.agents = [f"predator_{i}" for i in range(self.initial_num_predators)] + [
             f"prey_{j}" for j in range(self.initial_num_prey)
         ]
@@ -218,6 +208,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, {}
 
+
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # Step function in PredPreyGrass
@@ -229,14 +220,24 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 1: Process energy depletion due to time steps
         for agent, action in action_dict.items():
             energy_before[agent] = self.agent_energies[agent]
-            self.agent_energies[agent] -= self.energy_loss_per_step_predator if "predator" in agent else self.energy_loss_per_step_prey 
-
-        for grass, grass_position in self.grass_positions.items():
-            self.grass_energies[grass] = min(
-                self.grass_energies[grass] + self.energy_gain_per_step_grass, 
-                self.initial_energy_grass
+            self.agent_energies[agent] -= self._get_time_step_energy_cost(
+                agent, self.energy_depletion_rate
             )
-            self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+        for grass, grass_position in self.grass_positions.items():
+            self.grass_energies[grass] += 0.2 # TODO hardcoded
+            if (
+                self.grass_energies[grass] >= self.initial_energy_grass 
+                and grass not in self.grass_agents
+            ):
+                self.grass_agents.append(grass)
+                self.current_num_grass += 1
+                self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+            elif (
+                self.grass_energies[grass] >= self.initial_energy_grass
+                and grass in self.grass_agents
+            ):
+                self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+
 
         #print(f"---Agent energies after time step: {self.agent_energies}")
         #print()
@@ -257,8 +258,8 @@ class PredPreyGrass(MultiAgentEnv):
                 move_cost = self._get_movement_energy_cost(agent,old_position,new_position)
                 #print(f"movement cost {agent}: {move_cost}")
                 self.agent_energies[agent] -= move_cost
-                if self.verbose_movement:
-                    print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}.")             
+                if self.verbose:
+                    print(f"Agent {agent} moved: {old_position} -> {new_position}. Energy {round(energy_before[agent],2)} -> {round(self.agent_energies[agent],2)}")
                 self.grid_world_state[agent_type_nr, *new_position] = self.agent_energies[agent]
 
         #print(f"---Agent energies after move step: {self.agent_energies}")
@@ -272,8 +273,8 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
             # Agent has no energy left
             if self.agent_energies[agent] <= 0:
-                if self.verbose_movement:
-                    print(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
+                if self.verbose:
+                    print(f"[DEBUG] {agent} ran out of energy and is removed.")
                 observations[agent] = self._get_observation(agent) # Ensure last observation
                 rewards[agent] = 0  # TODO remove hardcoded
                 terminations[agent] = True
@@ -295,8 +296,8 @@ class PredPreyGrass(MultiAgentEnv):
                     if "prey" in prey and np.array_equal(predator_position, prey_position)), None
                 )
                 if caught_prey:
-                    if self.verbose_engagement:
-                        print(f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! Predator Reward: {self.reward_predator_catch}")
+                    if self.verbose:
+                        print(f"[DEBUG] {agent} caught {caught_prey}! Predator Reward: {self.reward_predator_catch}")
                     
                     # Assign rewards predator and penaly prey
                     rewards[agent] = self.reward_predator_catch
@@ -332,8 +333,8 @@ class PredPreyGrass(MultiAgentEnv):
                         if "grass" in grass and np.array_equal(prey_position, grass_position)), None
                     )
                     if caught_grass:
-                        if self.verbose_engagement:
-                            print(f"[ENGAGE] {agent} caught grass at {prey_position}! Prey Reward: {self.reward_prey_eat_grass}")
+                        if self.verbose:
+                            print(f"[DEBUG] {agent} caught grass! Prey Reward: {self.reward_prey_eat_grass}")
                         
                         # Reward prey for eating grass
                         rewards[agent] = self.reward_prey_eat_grass
@@ -343,10 +344,10 @@ class PredPreyGrass(MultiAgentEnv):
                         
                         # Remove grass from the cell
                         self.grid_world_state[3, *self.grass_positions[caught_grass]] = 0
-                        # del self.grass_positions[caught_grass]
+                        del self.grass_positions[caught_grass]
                         self.grass_energies[caught_grass] = 0
-                        # self.grass_agents.remove(caught_grass)
-                        # self.current_num_grass -= 1
+                        self.grass_agents.remove(caught_grass)
+                        self.current_num_grass -= 1
                     else:
                         rewards[agent] = self.reward_prey_step
                     
@@ -371,8 +372,8 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 4: Handle agent removals 
         for agent in self.agents[:]:
             if terminations[agent]:
-                if self.verbose_engagement:
-                    print(f"[ENGAGE] Agent {agent} terminated!")
+                if self.verbose:
+                    print(f"[DEBUG] Agent {agent} terminated")
                 self.agents.remove(agent)
 
         # Increment step counter
@@ -453,8 +454,18 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Calculate the energy cost
         energy_cost = distance * distance_factor * current_energy
-        return 0  # energy_cost
-     
+        return energy_cost
+
+    def _get_time_step_energy_cost(self, agent, energy_depletion_rate=0.01):
+        """
+        Calculate the energy cost for a time step of the agent.
+
+        """
+        if "predator" in agent:
+            return energy_depletion_rate * self.initial_energy_predator
+        elif "prey" in agent:
+            return energy_depletion_rate * self.initial_energy_prey
+        
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int,int]:
         """
         Get the new position of the agent based on the action.

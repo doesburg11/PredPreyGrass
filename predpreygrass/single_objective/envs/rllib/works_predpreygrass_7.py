@@ -34,6 +34,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_num_predators: int = 6
         self.current_num_prey: int = 8
 
+
+
         self.initial_energy_predator: float = 5.0
         self.initial_energy_prey: float = 3.0
 
@@ -46,21 +48,23 @@ class PredPreyGrass(MultiAgentEnv):
             ]
             + [f"prey_{j}" for j in range(self.max_num_prey)]
         )
+        
         self.agents: List[AgentID] = [
             # placeholder for learning agents, inherited from MultiAgentEnv
             f"predator_{i}" for i in range(self.initial_num_predators)
             ] + [f"prey_{j}" for j in range(self.initial_num_prey)
         ]
+        
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.max_num_grass: int = 30
         self.initial_num_grass: int = 30
         self.current_num_grass: int = 30
         self.initial_energy_grass: float = 2.0
+        self.energyaccumulation_rate: float = 0.1
         self.grass_agents: List[AgentID] = [
             f"grass_{k}" for k in range(self.initial_num_grass)
         ]
-        self.energy_gain_per_step_grass: float = 0.2
 
         # grid_world_state and observation settings
         self.grid_size: int = 10
@@ -218,6 +222,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, {}
 
+
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # Step function in PredPreyGrass
@@ -232,11 +237,20 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] -= self.energy_loss_per_step_predator if "predator" in agent else self.energy_loss_per_step_prey 
 
         for grass, grass_position in self.grass_positions.items():
-            self.grass_energies[grass] = min(
-                self.grass_energies[grass] + self.energy_gain_per_step_grass, 
-                self.initial_energy_grass
-            )
-            self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+            self.grass_energies[grass] += 0.2 # TODO hardcoded
+            if (
+                self.grass_energies[grass] >= self.initial_energy_grass 
+                and grass not in self.grass_agents
+            ):
+                self.grass_agents.append(grass)
+                self.current_num_grass += 1
+                self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+            elif (
+                self.grass_energies[grass] >= self.initial_energy_grass
+                and grass in self.grass_agents
+            ):
+                self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+
 
         #print(f"---Agent energies after time step: {self.agent_energies}")
         #print()
@@ -343,10 +357,10 @@ class PredPreyGrass(MultiAgentEnv):
                         
                         # Remove grass from the cell
                         self.grid_world_state[3, *self.grass_positions[caught_grass]] = 0
-                        # del self.grass_positions[caught_grass]
+                        del self.grass_positions[caught_grass]
                         self.grass_energies[caught_grass] = 0
-                        # self.grass_agents.remove(caught_grass)
-                        # self.current_num_grass -= 1
+                        self.grass_agents.remove(caught_grass)
+                        self.current_num_grass -= 1
                     else:
                         rewards[agent] = self.reward_prey_step
                     
@@ -454,7 +468,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Calculate the energy cost
         energy_cost = distance * distance_factor * current_energy
         return 0  # energy_cost
-     
+      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int,int]:
         """
         Get the new position of the agent based on the action.
