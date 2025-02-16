@@ -364,3 +364,204 @@ class MatPlotLibRenderer:
         Close the visualization.
         """
         plt.close(self.fig)
+
+
+from matplotlib.lines import Line2D
+
+class MatPlotLibRenderer2:
+    """
+    A class for visualizing a grid-based environment using Matplotlib.
+    """
+
+    def __init__(self, grid_size, agents, trace_length=5):
+        """
+        Initialize the visualizer.
+
+        Args:
+            grid_size (tuple): Size of the grid (rows, cols).
+            agents (list): List of agent names (e.g., ["predator_0", "prey_0"]).
+            trace_length (int): Number of steps to retain the movement trace.
+        """
+        self.grid_size = grid_size
+        self.agents = agents
+        self.trace_length = trace_length
+        self.agent_traces = {agent: [] for agent in agents}
+
+        # Set up the plot
+        self.fig, self.ax = plt.subplots(figsize=(6, 6))
+        self.ax.set_xlim(-0.5, grid_size[1] - 0.5)
+        self.ax.set_ylim(-0.5, grid_size[0] - 0.5)
+        self.ax.set_xticks(range(grid_size[1]))
+        self.ax.set_yticks(range(grid_size[0]))
+        self.ax.grid(True, linestyle="--", linewidth=0.5, color="gray")
+        self.ax.set_aspect("equal")
+
+        # Store agent markers
+        self.agent_texts = {}
+
+        # Store trace lines as Line2D objects
+        self.trace_lines = {}
+        for agent in agents:
+            color = "red" if "predator" in agent else "blue"
+            self.trace_lines[agent] = Line2D([], [], color=color, alpha=0.6, linewidth=1, linestyle="-")
+            self.ax.add_line(self.trace_lines[agent])
+
+        # Agent markers
+        self.predator_marker = "●"
+        self.prey_marker = "◆"
+        self.grass_marker = "■"
+
+    def update(self, agent_positions, step):
+        """
+        Update the visualization with new agent positions.
+
+        Args:
+            agent_positions (dict): Dictionary of agent positions, e.g.,
+                                    {"predator_0": [2, 3], "prey_0": [4, 5]}.
+            step (int): The current simulation step.
+        """
+        self.ax.set_title(f"Environment - Step {step}", fontsize=14)
+
+        # Remove old agent markers
+        for text in self.agent_texts.values():
+            text.remove()
+        self.agent_texts.clear()
+
+        # Update traces
+        for agent, position in agent_positions.items():
+            if "grass" in agent:
+                self.agent_texts[agent] = self.ax.text(
+                    position[1], position[0], self.grass_marker, color="green", fontsize=10, ha="center", va="center"
+                )
+                continue
+
+            # Maintain trace history
+            if len(self.agent_traces[agent]) >= self.trace_length:
+                self.agent_traces[agent].pop(0)
+            self.agent_traces[agent].append(position)
+
+            # Update Line2D traces
+            trace_array = np.array(self.agent_traces[agent])
+            if len(trace_array) > 1:
+                self.trace_lines[agent].set_data(trace_array[:, 1], trace_array[:, 0])
+
+        # Draw agents
+        for agent, (x, y) in agent_positions.items():
+            if "grass" in agent:
+                continue  # Grass agents are static
+            marker = self.predator_marker if "predator" in agent else self.prey_marker
+            color = "red" if "predator" in agent else "blue"
+            self.agent_texts[agent] = self.ax.text(
+                y, x, marker, color=color, fontsize=12, ha="center", va="center"
+            )
+
+        # Redraw only modified elements
+        plt.draw()
+        plt.pause(0.01)
+
+    def close(self):
+        """Close the visualization."""
+        plt.close(self.fig)
+
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
+class MatPlotLibRenderer3:
+    """
+    A class for visualizing a grid-based environment using Matplotlib.
+    """
+
+    def __init__(self, grid_size, agents, trace_length=5):
+        """
+        Initialize the visualizer.
+
+        Args:
+            grid_size (tuple): Size of the grid (rows, cols).
+            agents (list): List of agent names (e.g., ["predator_0", "prey_0"]).
+            trace_length (int): Number of steps to retain the movement trace.
+        """
+        self.grid_size = grid_size
+        self.agents = agents
+        self.trace_length = trace_length
+        self.agent_traces = {agent: [] for agent in agents}
+
+        # Set up the plot
+        self.fig, self.ax = plt.subplots(figsize=(6, 6))
+        self.ax.set_xlim(-0.5, grid_size[1] - 0.5)
+        self.ax.set_ylim(-0.5, grid_size[0] - 0.5)
+        self.ax.set_xticks(range(grid_size[1]))
+        self.ax.set_yticks(range(grid_size[0]))
+        self.ax.grid(True, linestyle="--", linewidth=0.5, color="gray")
+        self.ax.set_aspect("equal")
+
+        # Flip the y-axis so (0,0) is at the bottom-left
+        self.ax.invert_yaxis()
+
+        # Store agent markers
+        self.agent_texts = {}
+
+        # Store trace lines as Line2D objects
+        self.trace_lines = {}
+        for agent in agents:
+            color = "red" if "predator" in agent else "blue"
+            self.trace_lines[agent] = Line2D([], [], color=color, alpha=0.6, linewidth=1, linestyle="-")
+            self.ax.add_line(self.trace_lines[agent])
+
+        # Agent markers
+        self.predator_marker = "●"
+        self.prey_marker = "◆"
+        self.grass_marker = "■"
+
+    def update(self, agent_positions, step):
+        """
+        Update the visualization with new agent positions.
+
+        Args:
+            agent_positions (dict): Dictionary of agent positions, e.g.,
+                                    {"predator_0": [2, 3], "prey_0": [4, 5]}.
+            step (int): The current simulation step.
+        """
+        self.ax.set_title(f"Environment - Step {step}", fontsize=14)
+
+        # Remove old agent markers
+        for text in self.agent_texts.values():
+            text.remove()
+        self.agent_texts.clear()
+
+        # Update traces
+        for agent, position in agent_positions.items():
+            if "grass" in agent:
+                self.agent_texts[agent] = self.ax.text(
+                    position[1], position[0], self.grass_marker, color="green", fontsize=10, ha="center", va="center"
+                )
+                continue
+
+            # Maintain trace history
+            if len(self.agent_traces[agent]) >= self.trace_length:
+                self.agent_traces[agent].pop(0)
+            self.agent_traces[agent].append(position)
+
+            # Update Line2D traces
+            trace_array = np.array(self.agent_traces[agent])
+            if len(trace_array) > 1:
+                self.trace_lines[agent].set_data(trace_array[:, 1], trace_array[:, 0])
+
+        # Draw agents
+        for agent, (x, y) in agent_positions.items():
+            if "grass" in agent:
+                continue  # Grass agents are static
+            marker = self.predator_marker if "predator" in agent else self.prey_marker
+            color = "red" if "predator" in agent else "blue"
+            self.agent_texts[agent] = self.ax.text(
+                y, x, marker, color=color, fontsize=12, ha="center", va="center"
+            )
+
+        # Redraw only modified elements
+        plt.draw()
+        plt.pause(0.01)
+
+    def close(self):
+        """Close the visualization."""
+        plt.close(self.fig)
+
