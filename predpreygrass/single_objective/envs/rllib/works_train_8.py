@@ -4,19 +4,18 @@ from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
 
-from predpreygrass_ import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_8 import PredPreyGrass  # Import your custom environment
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
         super().__init__()
         # Keep some global state in between individual callback events.
         self.overall_sum_of_rewards = 0.0
-        self.num_episodes = 0
 
     def on_episode_end(self, *, episode, **kwargs):
-        self.num_episodes += 1
         self.overall_sum_of_rewards += episode.get_return()
-        print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
+        print(f"Episode done. R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
+
 
 def env_creator(config):
     return PredPreyGrass(config)
@@ -43,8 +42,6 @@ if __name__ == "__main__":
         #local_mode=True
     )
 
-    sample_env = env_creator({})  # Create a single instance
-
     # Configure PPO for RLlib
     ppo = (
         PPOConfig()
@@ -53,16 +50,43 @@ if __name__ == "__main__":
         # chatGPT
         .multi_agent(
             policies={
-                "predator_policy": (None, sample_env.observation_space, env_creator({}).action_space, {}),
-                "prey_policy": (None, sample_env.observation_space, env_creator({}).action_space, {}),
+                "predator_policy": (None, env_creator({}).observation_space, env_creator({}).action_space, {}),
+                "prey_policy": (None, env_creator({}).observation_space, env_creator({}).action_space, {}),
             },
             policy_mapping_fn=policy_mapping_fn,
         )
+       
+        """
+        # original
+        .multi_agent(
+            policies = {
+                "predator_policy",
+                "prey_policy",
+            },
+            policy_mapping_fn=policy_mapping_fn,
+        )
+        """
+        """
+        # original
+        .training(
+            train_batch_size=128,
+            gamma=0.99,
+            lr=0.0003,
+        )
+        """
         .training(
             # charGPT
-            train_batch_size=2048,  # 🔹 Search over batch sizes
+            train_batch_size=tune.choice([128, 256, 512, 1024, 2056]),  # 🔹 Search over batch sizes
             gamma=0.99, 
             lr=0.0003,
+        )
+        # chatGPT
+        .num_rollout_workers(7)  # Use max available CPUs - 1
+        # chatGPT
+        .resources(
+            num_gpus=0,
+            num_cpus_for_driver=1,
+            num_cpus_per_worker=1
         )
        .rl_module(
             model_config={
@@ -80,23 +104,18 @@ if __name__ == "__main__":
             enable_env_runner_and_connector_v2=True
         )
         .env_runners(
-            num_env_runners=6,  # Equivalent to num_rollout_workers
             num_envs_per_env_runner=1,  
-             num_cpus_per_env_runner=1,
-            rollout_fragment_length="auto",  
+            # chatGPT
+            rollout_fragment_length=tune.choice([64, 128, 256, 512]),
             sample_timeout_s=300,  # Increase timeout to 5 minutes
         )
-        .resources(
-            num_gpus=0,  # Set to 1 if using a GPU
-            num_cpus_for_main_process=2 ,
-        )
-       .callbacks(EpisodeReturn)
+        .callbacks(EpisodeReturn)
     )
 
     # Visualization setup
-    #env = PredPreyGrass()
-    grid_size = (sample_env.grid_size, sample_env.grid_size)
-    all_agents = sample_env.possible_agents + sample_env.grass_agents
+    env = PredPreyGrass()
+    grid_size = (env.grid_size, env.grid_size)
+    all_agents = env.possible_agents + env.grass_agents
     # Create a Tuner instance to manage the trials.
     tuner = tune.Tuner(
         ppo.algo_class,
@@ -104,8 +123,8 @@ if __name__ == "__main__":
         run_config=train.RunConfig(
             stop={"training_iteration": 5000},  # ✅ Corrected stopping criterion
             checkpoint_config=train.CheckpointConfig(
-                num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
-                checkpoint_frequency=50,  # Save every 10 iterations
+                num_to_keep=500,  # Keep only the last 5 checkpoints to save disk space
+                checkpoint_frequency=10,  # Save every 10 iterations
                 checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
             ),
         ),
@@ -113,5 +132,4 @@ if __name__ == "__main__":
 
     # Run the Tuner and capture the results.
     results = tuner.fit()
-    #print(f"Training results: {results}")
     ray.shutdown()

@@ -1,7 +1,7 @@
 #from works_renderer import GridVisualizer
-from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer3
+from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass_ import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_8 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     all_agents = env.agents + env.grass_agents
 
     # Initialize the visualizer
-    visualizer = MatPlotLibRenderer3(grid_size, all_agents, trace_length=5)
+    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 
     for step in range(env.max_steps):  # Arbitrary large number to test termination
         if verbose:
@@ -75,7 +75,6 @@ if __name__ == "__main__":
         # Check if the environment is properly terminating
         if terminations["__all__"]:
             print("Environment terminated properly by termination.")
-            print("Episode rewards: ", {k: round(v, 1) for k, v in env.cumulative_rewards.items()})
             break
         if truncations["__all__"]:
             print("Environment terminated properly by truncation.")

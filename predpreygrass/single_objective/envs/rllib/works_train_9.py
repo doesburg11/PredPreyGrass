@@ -82,13 +82,14 @@ if __name__ == "__main__":
         .env_runners(
             num_env_runners=6,  # Equivalent to num_rollout_workers
             num_envs_per_env_runner=1,  
-             num_cpus_per_env_runner=1,
+            # chatGPT
             rollout_fragment_length="auto",  
             sample_timeout_s=300,  # Increase timeout to 5 minutes
         )
         .resources(
             num_gpus=0,  # Set to 1 if using a GPU
-            num_cpus_for_main_process=2 ,
+            num_cpus_per_worker=1,  # Each rollout worker gets 1 CPU
+            num_cpus_for_local_worker=2  # Main trainer gets 2 CPUs
         )
        .callbacks(EpisodeReturn)
     )
