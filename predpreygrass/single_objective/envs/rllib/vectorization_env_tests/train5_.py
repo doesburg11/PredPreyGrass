@@ -4,7 +4,8 @@ from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
 
-from works_predpreygrass_9 import PredPreyGrass  # Import your custom environment
+from predpreygrass5_ import PredPreyGrass  # Import your custom environment
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -82,14 +83,13 @@ if __name__ == "__main__":
         .env_runners(
             num_env_runners=6,  # Equivalent to num_rollout_workers
             num_envs_per_env_runner=1,  
-            # chatGPT
+             num_cpus_per_env_runner=1,
             rollout_fragment_length="auto",  
             sample_timeout_s=300,  # Increase timeout to 5 minutes
         )
         .resources(
             num_gpus=0,  # Set to 1 if using a GPU
-            num_cpus_per_worker=1,  # Each rollout worker gets 1 CPU
-            num_cpus_for_local_worker=2  # Main trainer gets 2 CPUs
+            num_cpus_for_main_process=2 ,
         )
        .callbacks(EpisodeReturn)
     )
@@ -116,3 +116,53 @@ if __name__ == "__main__":
     results = tuner.fit()
     #print(f"Training results: {results}")
     ray.shutdown()
+
+
+from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
+from predpreygrass5_ import PredPreyGrass  # Import your custom environment
+from time import sleep
+
+verbose = False
+
+if __name__ == "__main__":
+    # Grid size
+    env = PredPreyGrass()
+    # Reset the environment and get initial observations
+    observations, _ = env.reset(seed=41)
+
+    print("\nRESET:")
+    env._print_grid_state()
+    env._print_grid_from_state()
+    
+    # Get the grid size
+    grid_size = (env.grid_size, env.grid_size)
+    
+    # Combine predator, prey, and grass agents
+    all_agents = env.agents + env.grass_agents
+    # Initialize the visualizer
+    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
+
+    step = 0
+    while env.agents:  # Stop when no agents are left
+        print(f"STEP {step}:")
+        action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
+        
+        observations, rewards, terminations, truncations, info = env.step(action_dict)
+
+        env._print_grid_state()
+        env._print_grid_from_state()
+
+        # Stop the loop if all agents are terminated
+        if all(terminations.values()):
+            print("All agents are terminated. Ending simulation.")
+            break
+
+        # Merge agent and grass positions for visualization
+        merged_positions = {**env.agent_positions, **env.grass_positions}
+        visualizer.update(merged_positions, step)
+        
+        sleep(0.1)  # Slow down visualization
+        step += 1
+
+    visualizer.close()
+

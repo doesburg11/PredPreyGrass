@@ -1,6 +1,6 @@
 import pygame
-from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
-from works_predpreygrass_7 import PredPreyGrass  # Import your custom environment
+from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer3
+from predpreygrass_10 import PredPreyGrass  # Import your custom environment
 import numpy as np
 
 # Ensure all elements are displayed
@@ -9,9 +9,13 @@ np.set_printoptions(threshold=np.inf)
 
 verbose = False
 
-def print_pretty_observations(observations):
+def print_pretty_observations(observations, agent_positions, step):
     for agent, data in observations.items():
-        print(f"\n{'='*20} {agent} {'='*20}\n")
+        if agent in agent_positions:
+            position = agent_positions[agent]
+        else:
+            position = "N/A"
+        print(f"\n{'='*20} {agent} {position} step {step} {'='*20}\n")
         for i, channel in enumerate(data):
             rounded_channel = np.round(channel, 2)  # Ensure rounding to 2 decimal places
             print(f"Observation Channel {i }:\n")
@@ -32,7 +36,7 @@ if __name__ == "__main__":
     #print(env.grid_world_state)
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.agents + env.grass_agents
-    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
+    visualizer = MatPlotLibRenderer3(grid_size, all_agents, trace_length=5)
 
     pygame.init()
     screen = pygame.display.set_mode((200, 200))  # Small window for event capturing
@@ -45,7 +49,12 @@ if __name__ == "__main__":
 
     for step in range(env.max_steps):
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
+        #print(f"Positions agents step {step}:")
+        #print(env.agent_positions)
         observations, rewards, terminations, truncations, info = env.step(action_dict)
+        rounded_observations = {k: np.round(obs, 2).tolist() for k, obs in observations.items()}
+        #print("Observations step:")
+        print_pretty_observations(observations, env.agent_positions, step)  
         #print(f"Agent energies after step: {step}")
         #print(env.agent_energies)
         #print()
@@ -53,11 +62,6 @@ if __name__ == "__main__":
         #print("Accumulated rew:",{k: round(v, 1) for k, v in env.cumulative_rewards.items()})
         #print("Energies:",{k: round(v, 1) for k, v in env.agent_energies.items()})
         #print()
-        #print(f"Positions agents step {step}:")
-        #print(env.agent_positions)
-        rounded_observations = {k: np.round(obs, 2).tolist() for k, obs in observations.items()}
-        #print("Observations step:")
-        #print_pretty_observations(observations)  
         #print("Grid World State:")
         #print(env.grid_world_state)
         #print("Rewards:")
@@ -77,11 +81,11 @@ if __name__ == "__main__":
                     waiting_for_click = False  # Proceed to the next step
         print("-----------------------------------------------------------------------------")
         print(f"Predators step: {step}")
-        print(np.array2string(np.round(env.grid_world_state[1], 2), separator='  ', threshold=np.inf, max_line_width=np.inf))
+        print(np.array2string(np.round(env.grid_world_state[1], 2), separator='    ', threshold=np.inf, max_line_width=np.inf))
         print(f"Prey step: {step}")
-        print(np.array2string(np.round(env.grid_world_state[2], 2), separator='  ', threshold=np.inf, max_line_width=np.inf))
+        print(np.array2string(np.round(env.grid_world_state[2], 2), separator='    ', threshold=np.inf, max_line_width=np.inf))
         print(f"Grass step: {step}")
-        print(np.array2string(np.round(env.grid_world_state[3], 2), separator='  ', threshold=np.inf, max_line_width=np.inf))
+        print(np.array2string(np.round(env.grid_world_state[3], 2), separator='    ', threshold=np.inf, max_line_width=np.inf))
         print("-----------------------------------------------------------------------------")
         if terminations["__all__"]:
             print("Environment terminated properly by termination. Steps:", step)

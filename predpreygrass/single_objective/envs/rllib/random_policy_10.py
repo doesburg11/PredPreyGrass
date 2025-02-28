@@ -1,7 +1,7 @@
 #from works_renderer import GridVisualizer
-from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer3
+from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass_ import PredPreyGrass  # Import your custom environment
+from predpreygrass_10 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     all_agents = env.agents + env.grass_agents
 
     # Initialize the visualizer
-    visualizer = MatPlotLibRenderer3(grid_size, all_agents, trace_length=5)
+    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 
     for step in range(env.max_steps):  # Arbitrary large number to test termination
         if verbose:

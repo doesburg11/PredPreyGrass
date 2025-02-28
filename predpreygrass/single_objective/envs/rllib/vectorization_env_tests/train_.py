@@ -4,7 +4,8 @@ from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
 
-from works_predpreygrass_9 import PredPreyGrass  # Import your custom environment
+from predpreygrass_ import PredPreyGrass  # Import your custom environment
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -82,14 +83,13 @@ if __name__ == "__main__":
         .env_runners(
             num_env_runners=6,  # Equivalent to num_rollout_workers
             num_envs_per_env_runner=1,  
-            # chatGPT
+             num_cpus_per_env_runner=1,
             rollout_fragment_length="auto",  
             sample_timeout_s=300,  # Increase timeout to 5 minutes
         )
         .resources(
             num_gpus=0,  # Set to 1 if using a GPU
-            num_cpus_per_worker=1,  # Each rollout worker gets 1 CPU
-            num_cpus_for_local_worker=2  # Main trainer gets 2 CPUs
+            num_cpus_for_main_process=2 ,
         )
        .callbacks(EpisodeReturn)
     )

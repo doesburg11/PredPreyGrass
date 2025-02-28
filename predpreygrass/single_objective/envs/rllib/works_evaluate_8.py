@@ -3,7 +3,7 @@ import torch
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 from works_predpreygrass_8 import PredPreyGrass  # Import the custom environment
-from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer3
+from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 import time
 
 # Initialize Ray
@@ -42,7 +42,7 @@ obs, _ = env.reset(seed=42)
 # intitialize matplot lib renderer
 grid_size = (env.grid_size, env.grid_size)
 all_agents = env.agents + env.grass_agents
-visualizer = MatPlotLibRenderer3(grid_size, all_agents, trace_length=5)
+visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 step=0
 
 done = False
