@@ -53,8 +53,8 @@ if __name__ == "__main__":
         # chatGPT
         .multi_agent(
             policies={
-                "predator_policy": (None, sample_env.observation_space, env_creator({}).action_space, {}),
-                "prey_policy": (None, sample_env.observation_space, env_creator({}).action_space, {}),
+                "predator_policy": (None, sample_env.observation_space, sample_env.action_space, {}),
+                "prey_policy": (None, sample_env.observation_space, sample_env.action_space, {}),
             },
             policy_mapping_fn=policy_mapping_fn,
         )
@@ -81,8 +81,7 @@ if __name__ == "__main__":
         )
         .env_runners(
             num_env_runners=6,  # Equivalent to num_rollout_workers
-            num_envs_per_env_runner=1,  
-            # chatGPT
+            num_envs_per_env_runner=4,  
             rollout_fragment_length="auto",  
             sample_timeout_s=300,  # Increase timeout to 5 minutes
         )
@@ -103,7 +102,7 @@ if __name__ == "__main__":
         ppo.algo_class,
         param_space=ppo,
         run_config=train.RunConfig(
-            stop={"training_iteration": 5000},  # ✅ Corrected stopping criterion
+            stop={"training_iteration": 5000},  
             checkpoint_config=train.CheckpointConfig(
                 num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
                 checkpoint_frequency=50,  # Save every 10 iterations
