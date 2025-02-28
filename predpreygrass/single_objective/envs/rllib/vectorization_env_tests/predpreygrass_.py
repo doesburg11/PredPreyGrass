@@ -103,10 +103,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_size,
             self.grid_size,
         )
-        self.initial_grid_world_state: NDArray[np.float64] = np.zeros(
+
+        self.grid_world_state: NDArray[np.float64] = np.zeros(
             self.grid_world_state_shape, dtype=np.float64
         )
-        self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
+
+
         # Mapping actions to movements
         self.action_to_move_tuple: Dict[int, Tuple[int, int]] = {
             0: (0,0),
@@ -126,7 +128,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.rng = np.random.default_rng(seed)
 
         # Initialize grid_world_state
-        self.grid_world_state = self.initial_grid_world_state.copy()
+        self.grid_world_state: NDArray[np.float64] = np.zeros(
+            self.grid_world_state_shape, dtype=np.float64
+        )
 
         self.possible_agents: List[AgentID] = (
             [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
@@ -274,7 +278,7 @@ class PredPreyGrass(MultiAgentEnv):
                 if self.verbose_movement:
                     print(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
                 observations[agent] = self._get_observation(agent) # Ensure last observation
-                rewards[agent] = 0  # TODO remove hardcoded
+                rewards[agent] = 0  # TODO remove hardcoded. penaly for dying?
                 terminations[agent] = True
                 truncations[agent] = False
                 if "predator" in agent:
@@ -374,6 +378,7 @@ class PredPreyGrass(MultiAgentEnv):
                     print(f"[ENGAGE] Agent {agent} terminated!")
                 self.agents.remove(agent)
 
+
         # Increment step counter
         self.current_step += 1
 
@@ -404,6 +409,12 @@ class PredPreyGrass(MultiAgentEnv):
 
         #print(f"[DEBUG] After step() - Agents: {self.agents}")
         #print(f"[DEBUG] After step() - Observations keys: {observations.keys()}")
+
+        observations ={}
+        observations = {agent: self._get_observation(agent) for agent in self.agents}
+        print("agents: ", self.agents)
+        print(f"Observations: {observations}")
+
 
         return observations, rewards, terminations, truncations, infos
   
