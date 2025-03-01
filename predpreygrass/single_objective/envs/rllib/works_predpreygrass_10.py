@@ -11,7 +11,7 @@ class PredPreyGrass(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
 
-        self.verbose_engagement: bool = True
+        self.verbose_engagement: bool = False
         self.verbose_movement: bool = False
 
         self.max_steps: int = 10000

@@ -1,7 +1,7 @@
 #from works_renderer import GridVisualizer
 from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass_10 import PredPreyGrass  # Import your custom environment
+from predpreygrass_11 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     #print(observations)   
     if verbose:
         print("\nRESET:")
-        env._print_grid_state()
+        env._print_grid_from_positions()
         env._print_grid_from_state()
 
     grid_size = (env.grid_size, env.grid_size)
@@ -35,7 +35,8 @@ if __name__ == "__main__":
         if verbose:
             print(f"Step {step}:")
             print("-----------------------------------------")
-            env._print_grid_state()
+            print(f"Actions: {action_dict}")
+            env._print_grid_from_positions()
             env._print_grid_from_state()
             print("-----------------------------------------")
 
