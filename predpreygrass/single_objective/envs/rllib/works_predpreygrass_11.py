@@ -14,7 +14,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_engagement: bool = False
         self.verbose_movement: bool = False
 
-        self.max_steps: int = 10
+        self.max_steps: int = 100000
         self.reward_predator_catch: float = 15.0
         self.reward_prey_eat_grass: float = 5.0
         self.reward_prey_step: float = 0.0
