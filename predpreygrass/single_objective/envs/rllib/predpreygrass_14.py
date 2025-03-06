@@ -18,11 +18,13 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_steps: int = 10000
         self.current_step: int = 0
         # rewards
-        self.reward_predator_catch_prey: float = 15.0
-        self.reward_prey_eat_grass: float = 5.0
+        self.reward_predator_catch_prey: float = 0.0
+        self.reward_prey_eat_grass: float = 0.0
         self.reward_predator_step: float = 0.0
         self.reward_prey_step: float = 0.0
         self.penalty_prey_caught: float = 0.0
+        self.reproduction_reward_predator:float = 10.0
+        self.reproduction_reward_prey: float = 10.0
 
         # Energy settings
         self.energy_loss_per_step_predator= 0.15  #-0.15,  # -0.15 # default
@@ -31,8 +33,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_creation_energy_threshold: float = 8.0
 
         # Learning agents
-        self.n_possible_predators: int = 12
-        self.n_possible_prey: int = 16
+        self.n_possible_predators: int = 50
+        self.n_possible_prey: int = 50
         self.n_initial_active_predator: int = 6
         self.n_initial_active_prey: int = 8
         self.current_num_predators: int = 6
@@ -57,9 +59,9 @@ class PredPreyGrass(MultiAgentEnv):
         ]
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
-        self.max_num_grass: int = 20
-        self.initial_num_grass: int = 20
-        self.current_num_grass: int = 20
+        self.max_num_grass: int = 30
+        self.initial_num_grass: int = 30
+        self.current_num_grass: int = 30
         self.initial_energy_grass: float = 2.0
         self.grass_agents: List[AgentID] = [
             f"grass_{k}" for k in range(self.initial_num_grass)
@@ -67,7 +69,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.energy_gain_per_step_grass: float = 0.2
 
          # grid_world_state and observation settings
-        self.grid_size: int = 10
+        self.grid_size: int = 25
         self.num_obs_channels: int = 4  # Border, Predator, Prey, Grass
         self.max_obs_range: int = 7
         self.max_obs_offset: int = (self.max_obs_range - 1) // 2
@@ -402,7 +404,9 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_predators += 1
                         rewards[new_agent] = 0
+                        rewards[agent] = self.reproduction_reward_predator
                         self.cumulative_rewards[new_agent] = 0
+                        self.cumulative_rewards[agent] += rewards[agent]
                         observations[new_agent] = self._get_observation(new_agent)
                         terminations[new_agent] = False
                         truncations[new_agent] = False
@@ -434,6 +438,8 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_prey += 1
                         rewards[new_agent] = 0
+                        rewards[agent] = self.reproduction_reward_prey
+                        self.cumulative_rewards[agent] += rewards[agent]
                         self.cumulative_rewards[new_agent] = 0
                         observations[new_agent] = self._get_observation(new_agent)
                         terminations[new_agent] = False
@@ -589,7 +595,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.current_num_prey -= 1
 
     def _print_grid_from_positions(self): 
-        print("\nCurrent Grid State (IDs):\n")
+        print(f"\nCurrent Grid State (IDs):  predators: {self.current_num_predators} prey: {self.current_num_prey}  \n")
 
         # Initialize empty grids (not transposed yet)
         predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
@@ -633,7 +639,7 @@ class PredPreyGrass(MultiAgentEnv):
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
     def _print_grid_from_state(self):
-        print("\nCurrent Grid State (Energy Levels):\n")
+        print(f"\nCurrent Grid State (Energy Levels):  predators: {self.current_num_predators} prey: {self.current_num_prey} \n")
 
         # Initialize empty grids
         predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
@@ -660,7 +666,7 @@ class PredPreyGrass(MultiAgentEnv):
         grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
 
         # Print Headers
-        print(f"{'Predators'.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}")
+        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}")
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
         # Print Transposed Grids (rows become columns)

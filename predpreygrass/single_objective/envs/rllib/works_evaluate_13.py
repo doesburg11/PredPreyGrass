@@ -2,7 +2,7 @@ import ray
 import torch
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
-from predpreygrass_13 import PredPreyGrass  # Import the custom environment
+from works_predpreygrass_13 import PredPreyGrass  # Import the custom environment
 from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 import time
 
@@ -28,7 +28,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     return None
 
 # Load trained model from checkpoint
-checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-01_23-47-11/PPO_PredPreyGrass_1ce2b_00000_0_2025-03-01_23-47-11/checkpoint_000034"  # Update as needed
+checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-04_22-49-40/PPO_PredPreyGrass_93400_00000_0_2025-03-04_22-49-40/checkpoint_000012"  # Update as needed
 
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
@@ -47,7 +47,7 @@ obs, _ = env.reset(seed=seed)
 
 # intitialize matplot lib renderer
 grid_size = (env.grid_size, env.grid_size)
-all_agents = env.agents + env.grass_agents
+all_agents = env.possible_agents + env.grass_agents
 visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 step=0
 
@@ -80,7 +80,7 @@ while not done:
     if verbose:
         print(f"Step {step}:")
         print("-----------------------------------------")
-        print(f"Actions: {action_dict}")
+        #print(f"Actions: {action_dict}")
         env._print_grid_from_positions()
         env._print_grid_from_state()
         print("-----------------------------------------")

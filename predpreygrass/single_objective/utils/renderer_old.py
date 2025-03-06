@@ -275,7 +275,7 @@ class MatPlotLibRenderer:
             trace_length (int): Number of steps to retain the movement trace.
         """
         self.grid_size = grid_size
-        self.agents = set(agents)
+        self.agents = agents
         self.trace_length = trace_length
         self.agent_traces = {agent: [] for agent in agents}
 
@@ -322,21 +322,7 @@ class MatPlotLibRenderer:
             text.remove()
         self.agent_texts.clear()
 
-        # Get current agent names
-        current_agents = set(agent_positions.keys())
-
-        # Remove traces of dead agents
-        dead_agents = self.agents - current_agents
-        for agent in dead_agents:
-            if agent in self.trace_lines:
-                self.trace_lines[agent].set_data([], [])  # Clear trace
-            if agent in self.agent_traces:
-                del self.agent_traces[agent]
-
-        # Update agent set
-        self.agents = current_agents
-
-        # Update traces for remaining agents
+        # Update traces
         for agent, position in agent_positions.items():
             if "grass" in agent:
                 self.agent_texts[agent] = self.ax.text(
@@ -345,8 +331,6 @@ class MatPlotLibRenderer:
                 continue
 
             # Maintain trace history
-            if agent not in self.agent_traces:
-                self.agent_traces[agent] = []
             if len(self.agent_traces[agent]) >= self.trace_length:
                 self.agent_traces[agent].pop(0)
             self.agent_traces[agent].append(position)
@@ -370,7 +354,7 @@ class MatPlotLibRenderer:
         plt.draw()
         plt.pause(0.01)
 
-
     def close(self):
         """Close the visualization."""
         plt.close(self.fig)
+
