@@ -1,13 +1,14 @@
 import pygame
 from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
-from predpreygrass_14 import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_14 import PredPreyGrass  # Import your custom environment
 import numpy as np
 
 # Ensure all elements are displayed
 np.set_printoptions(threshold=np.inf)
 
 
-verbose = True
+verbose_grid_state = True
+verbose_observation = False
 
 
 if __name__ == "__main__":
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     observations, _ = env.reset(seed=42)
 
     grid_size = (env.grid_size, env.grid_size)
-    all_agents = env.agents + env.grass_agents
+    all_agents = env.possible_agents + env.grass_agents
     visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 
     pygame.init()
@@ -44,7 +45,7 @@ if __name__ == "__main__":
                     exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     waiting_for_click = False  # Proceed to the next step
-        if verbose:
+        if verbose_grid_state:
             print(f"Step {step}:")
             print("-----------------------------------------")
             print("Actions :",list(action_dict.keys()))
@@ -53,10 +54,21 @@ if __name__ == "__main__":
             print("Reward  :", rewards)
             print("Terminations:", terminations)
             print("-----------------------------------------")
-
-
             env._print_grid_from_positions()
             env._print_grid_from_state()
+            print("-----------------------------------------")
+        if verbose_observation:
+            for agent in env.agents:
+                print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")
+                print("Wallls")
+                print(np.transpose(observations[agent][0]))
+                print("Predators")
+                print(np.transpose(observations[agent][1]))
+                print("Prey")
+                print(np.transpose(observations[agent][2]))
+                print("Grass")
+                print(np.transpose(observations[agent][3]))
+                print()
             print("-----------------------------------------")
 
         if terminations["__all__"]:
