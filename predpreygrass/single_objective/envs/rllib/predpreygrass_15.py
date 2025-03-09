@@ -5,43 +5,54 @@ from numpy.typing import NDArray
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
+from  config_env_15 import config_env
 
 
 class PredPreyGrass(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
+        config = config or config_env  # Use provided config or default config_env
 
-        self.verbose_engagement: bool = False
-        self.verbose_movement: bool = False
-        self.verbose_spawning: bool = False
+        self.verbose_engagement = config.get("verbose_engagement", False)
+        self.verbose_movement = config.get("verbose_movement", False)
+        self.verbose_spawning = config.get("verbose_spawning", False)
 
-        self.max_steps: int = 10000
-        self.current_step: int = 0
-        # rewards
-        self.reward_predator_catch_prey: float = 0.0
-        self.reward_prey_eat_grass: float = 0.0
-        self.reward_predator_step: float = 0.0
-        self.reward_prey_step: float = 0.0
-        self.penalty_prey_caught: float = 0.0
-        self.reproduction_reward_predator:float = 10.0
-        self.reproduction_reward_prey: float = 10.0
+        self.max_steps = config.get("max_steps", 10000)
+        
+        # Rewards
+        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = config.get("reward_predator_step", 0.0)
+        self.reward_prey_step = config.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
 
         # Energy settings
-        self.energy_loss_per_step_predator= 0.15  #-0.15,  # -0.15 # default
-        self.energy_loss_per_step_prey= 0.05 #-0.05,  # -0.05 # default
-        self.predator_creation_energy_threshold: float = 12.0
-        self.prey_creation_energy_threshold: float = 8.0
+        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
+        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
+        self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
+        self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
 
         # Learning agents
-        self.n_possible_predators: int = 50
-        self.n_possible_prey: int = 50
-        self.n_initial_active_predator: int = 6
-        self.n_initial_active_prey: int = 8
-        self.current_num_predators: int = 6
-        self.current_num_prey: int = 8
+        self.n_possible_predators = config.get("n_possible_predators", 50)
+        self.n_possible_prey = config.get("n_possible_prey", 50)
+        self.n_initial_active_predator = config.get("n_initial_active_predator", 6)
+        self.n_initial_active_prey = config.get("n_initial_active_prey", 8)
 
-        self.initial_energy_predator: float = 5.0
-        self.initial_energy_prey: float = 3.0
+        self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
+        self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
+
+        # Grid and Observation Settings
+        self.grid_size = config.get("grid_size", 10)
+        self.num_obs_channels = config.get("num_obs_channels", 4)
+        self.predator_obs_range = config.get("predator_obs_range", 7)
+        self.prey_obs_range = config.get("prey_obs_range", 5)
+
+        # Grass settings
+        self.initial_num_grass = config.get("initial_num_grass", 25)
+        self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
+        self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
 
         self.cumulative_rewards = {}  # Track total rewards per agent
 
@@ -59,33 +70,30 @@ class PredPreyGrass(MultiAgentEnv):
         ]
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
-        self.max_num_grass: int = 30
-        self.initial_num_grass: int = 30
-        self.current_num_grass: int = 30
-        self.initial_energy_grass: float = 2.0
         self.grass_agents: List[AgentID] = [
             f"grass_{k}" for k in range(self.initial_num_grass)
         ]
-        self.energy_gain_per_step_grass: float = 0.2
 
-         # grid_world_state and observation settings
-        self.grid_size: int = 25
-        self.num_obs_channels: int = 4  # Border, Predator, Prey, Grass
-        self.max_obs_range: int = 7
-        self.max_obs_offset: int = (self.max_obs_range - 1) // 2
 
-        # Spaces
-        obs_space_shape = (
-            self.num_obs_channels,
-            self.max_obs_range,
-            self.max_obs_range,
+       # Spaces
+       # Compute observation shapes
+        predator_obs_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+        prey_obs_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
+
+        # Define observation spaces
+        predator_obs_space = gymnasium.spaces.Box(
+            low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64
         )
-        observation_space = gymnasium.spaces.Box(
-            low=-1.0, high=100.0, shape=obs_space_shape, dtype=np.float64
+        prey_obs_space = gymnasium.spaces.Box(
+            low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64
         )
+
+        # Assign spaces based on agent type
         self.observation_spaces = {
-            agent: observation_space for agent in self.possible_agents
+            agent: predator_obs_space if "predator" in agent else prey_obs_space
+            for agent in self.possible_agents
         }
+
         action_space = gymnasium.spaces.Discrete(
             5
         )  # 0=Stay, 1=Up, 2=Down, 3=Left, 4=Right
@@ -173,7 +181,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             while len(positions) < num_positions:
                 pos = tuple(rng.integers(0, grid_size, size=2))
-                positions.add(pos)  # Ensures uniqueness
+                positions.add(pos)  # Ensures uniqueness because positions is a set
 
             return list(positions)
 
@@ -212,7 +220,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Store reverse lookup tables for predators and prey
         self.reversed_predator_positions = {pos: agent for agent, pos in self.agent_positions.items() if "predator" in agent}
         self.reversed_prey_positions = {pos: agent for agent, pos in self.agent_positions.items() if "prey" in agent}
-        #print(f"Agen positions: {self.agent_positions}")
+        #print(f"Agent positions: {self.agent_positions}")
         #print(f"Reversed predator positions: {self.reversed_predator_positions}")
         #print(f"Reversed prey positions: {self.reversed_prey_positions}")
 
@@ -234,7 +242,8 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[agent] = self._get_observation(agent)
                 else:  # Previously removed agents get a zero-filled observation
                     # according to chatgpt all agents previously ever active need a zero-filled observation and reward
-                    observations[agent] = np.zeros((self.num_obs_channels, self.max_obs_range, self.max_obs_range))
+                    observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+                    observations[agent] = np.zeros((self.num_obs_channels, observation_range, observation_range), dtype=np.float64)
                 rewards[agent] = 0.0
                 truncations[agent] = True
                 terminations[agent] = False  # Truncation is NOT a natural termination
@@ -399,7 +408,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.agent_positions[new_agent] = new_position
                         self.predator_positions[new_agent] = new_position
                         self.agent_energies[new_agent] = self.initial_energy_predator
-                        self.agent_energies[agent] -= self.predator_creation_energy_threshold
+                        self.agent_energies[agent] -= self.initial_energy_predator
                         self.grid_world_state[1, *self.agent_positions[new_agent]] = self.initial_energy_predator
                         self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_predators += 1
@@ -433,7 +442,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.agent_positions[new_agent] = new_position
                         self.prey_positions[new_agent] = new_position
                         self.agent_energies[new_agent] = self.initial_energy_prey
-                        self.agent_energies[agent] -= self.prey_creation_energy_threshold
+                        self.agent_energies[agent] -= self.initial_energy_prey
                         self.grid_world_state[2, *self.agent_positions[new_agent]] = self.initial_energy_prey
                         self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_prey += 1
@@ -525,12 +534,15 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Get the new position of the agent based on the action.
         """
+        agent_type_nr = 1 if "predator" in agent else 2
         current_position = self.agent_positions[agent]  # Tuple[int, int]
         # Movement vector from action
         move_vector = self.action_to_move_tuple[action]  # Tuple[int, int]
         new_position = (current_position[0] + move_vector[0], current_position[1] + move_vector[1])  # Element-wise addition
-        # ✅ Clip new position to stay within grid bounds
+        # Clip new position to stay within grid bounds
         new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
+        if self.grid_world_state[agent_type_nr, *new_position] > 0:
+            new_position = current_position
 
         return new_position
 
@@ -538,10 +550,11 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Generate an observation for the agent.
         """
+        observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
-        xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp)
+        xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
         observation = np.zeros(
-            (self.num_obs_channels, self.max_obs_range, self.max_obs_range),
+            (self.num_obs_channels, observation_range, observation_range),
             dtype=np.float64,
         )
         observation[0].fill(1)
@@ -552,20 +565,21 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observation
 
-    def _obs_clip(self, x, y):
+    def _obs_clip(self, x, y, observation_range):
         """
         Clip the observation window to the boundaries of the grid_world_state.
         """
-        xld, xhd = x - self.max_obs_offset, x + self.max_obs_offset
-        yld, yhd = y - self.max_obs_offset, y + self.max_obs_offset
+        observation_offset = (observation_range - 1) // 2
+        xld, xhd = x - observation_offset, x + observation_offset
+        yld, yhd = y - observation_offset, y + observation_offset
         xlo, xhi = np.clip(xld, 0, self.grid_size - 1), np.clip(
             xhd, 0, self.grid_size - 1
         )
         ylo, yhi = np.clip(yld, 0, self.grid_size - 1), np.clip(
             yhd, 0, self.grid_size - 1
         )
-        xolo, yolo = abs(np.clip(xld, -self.max_obs_offset, 0)), abs(
-            np.clip(yld, -self.max_obs_offset, 0)
+        xolo, yolo = abs(np.clip(xld, -observation_offset, 0)), abs(
+            np.clip(yld, -observation_offset, 0)
         )
         xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1

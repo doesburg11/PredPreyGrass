@@ -1,11 +1,13 @@
 #from works_renderer import GridVisualizer
 from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass_14 import PredPreyGrass  # Import your custom environment
+from predpreygrass_15 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
+import numpy as np
 
-verbose_grid_state = True
+verbose_grid_state = False
+verbose_observation = True
 
 if __name__ == "__main__":
     # Grid size
@@ -31,6 +33,19 @@ if __name__ == "__main__":
     for step in range(env.max_steps):  # Arbitrary large number to test termination
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
+        if verbose_observation:
+            for agent in env.agents:
+                print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")
+                print("Wallls")
+                print(observations[agent][0])
+                print("Predators")
+                print(observations[agent][1])
+                print("Prey")
+                print(observations[agent][2])
+                print("Grass")
+                print(observations[agent][3])
+                print()
+
         if verbose_grid_state:
             print(f"Step {step}:")
             print("-----------------------------------------")
