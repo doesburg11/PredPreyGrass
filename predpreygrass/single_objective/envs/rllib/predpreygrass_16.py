@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
-from  config_env_15 import config_env
+from  config_env_16 import config_env
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -105,11 +105,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_positions: Dict[AgentID, Tuple[int, int]]  = {}
         self.grass_positions: Dict[AgentID, Tuple[int, int]]  = {}
 
-        # TODO still to implement for reversed lookup
-        self.reversed_predator_positions: Dict[Tuple[int, int], AgentID]  = {}
-        self.reversed_prey_positions: Dict[Tuple[int, int], AgentID]  = {}
-        self.reversed_grass_positions: Dict[Tuple[int, int], AgentID]  = {}
-
         self.agent_energies: Dict[AgentID, float] = {}
         self.grass_energies: Dict[AgentID, float] = {}
         self.grid_world_state_shape: Tuple[int,int,int] = (
@@ -153,11 +148,6 @@ class PredPreyGrass(MultiAgentEnv):
         ]
         self.agent_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.agent_energies: Dict[AgentID, float] = {}
-
-        # TODO still to implement for reversed lookup
-        self.reversed_predator_positions: Dict[Tuple[int, int], AgentID]  = {}
-        self.reversed_prey_positions: Dict[Tuple[int, int], AgentID]  = {}
-        self.reversed_grass_positions: Dict[Tuple[int, int], AgentID]  = {}
 
         # Reset cumulative rewards to zero
         self.cumulative_rewards: Dict[AgentID, float] = {agent_id: 0 for agent_id in self.agents}
@@ -217,12 +207,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.grass_energies[grass] = self.initial_energy_grass
             self.grid_world_state[3, *grass_positions[i]] = self.initial_energy_grass
 
-        # Store reverse lookup tables for predators and prey
-        self.reversed_predator_positions = {pos: agent for agent, pos in self.agent_positions.items() if "predator" in agent}
-        self.reversed_prey_positions = {pos: agent for agent, pos in self.agent_positions.items() if "prey" in agent}
-        #print(f"Agent positions: {self.agent_positions}")
-        #print(f"Reversed predator positions: {self.reversed_predator_positions}")
-        #print(f"Reversed prey positions: {self.reversed_prey_positions}")
 
         self.current_num_prey = self.n_initial_active_prey
         self.current_num_predators = self.n_initial_active_predator
@@ -262,6 +246,28 @@ class PredPreyGrass(MultiAgentEnv):
             elif "prey" in agent:
                 self.agent_energies[agent] -= self.energy_loss_per_step_prey
                 self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
+
+
+        # step 1 vectorized:
+        # Step 1: Process energy depletion due to time steps
+        is_predator = np.array(["predator" in agent for agent in action_dict.keys()])
+        print(is_predator)
+        is_prey = ~is_predator  # The rest are prey
+
+        # Extract agent names and their positions
+        agent_names = np.array(list(action_dict.keys()))
+        print(agent_names)
+        agent_positions = np.array([self.agent_positions[agent] for agent in agent_names])
+        print(agent_positions)
+
+        # Decrease energy levels using vectorized operations
+        self.agent_energies[agent_names[is_predator]] -= self.energy_loss_per_step_predator
+        self.agent_energies[agent_names[is_prey]] -= self.energy_loss_per_step_prey
+
+        # Update grid world state
+        self.grid_world_state2[1, agent_positions[is_predator, 0], agent_positions[is_predator, 1]] = self.agent_energies[agent_names[is_predator]]
+        self.grid_world_state2[2, agent_positions[is_prey, 0], agent_positions[is_prey, 1]] = self.agent_energies[agent_names[is_prey]]
+
 
         for grass, grass_position in self.grass_positions.items():
             self.grass_energies[grass] = min(
@@ -484,27 +490,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, rewards, terminations, truncations, infos
   
-    def _update_agent_position(self, agent: AgentID, new_position: Tuple[int, int]):
-        """
-        Updates an agent's position and maintains reverse lookup dictionaries.
-        """
-        old_position = self.agent_positions[agent]
-        self.agent_positions[agent] = new_position
-
-        # Update predator/prey reverse lookup
-        if "predator" in agent:
-            print(f"Reversed predator positions: {self.reversed_predator_positions}")
-            print(f"REMOVE old reversed predator position: {old_position}")
-            del self.reversed_predator_positions[old_position]
-            print(f"ADD new reversed predator position: {new_position}")
-            self.reversed_predator_positions[new_position] = agent
-        elif "prey" in agent:
-            print(f"Reversed prey positions: {self.reversed_prey_positions}")
-            print(f"REMOVE old reversed prey position: {old_position}")
-            del self.reversed_prey_positions[old_position]
-            print(f"ADD new reversed prey position: {new_position}")
-            self.reversed_prey_positions[new_position] = agent
-
     def _get_movement_energy_cost(
         self, agent, current_position, new_position, distance_factor=0.1
     ):

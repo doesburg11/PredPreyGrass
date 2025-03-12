@@ -5,8 +5,8 @@ config_env = {
     # Grid and Observation Settings
     "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 15,
-    "prey_obs_range": 15,
+    "predator_obs_range": 7,
+    "prey_obs_range": 9,
     
     # Rewards
     "reward_predator_catch_prey": 0.0,
@@ -33,12 +33,12 @@ config_env = {
     "initial_energy_prey": 3.0,
         
     # Grass settings
-    "initial_num_grass": 25,
+    "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.2,
+    "energy_gain_per_step_grass": 0.04,
 
-    "verbose_engagement": True,
+    "verbose_engagement": False,
     "verbose_movement": False,
-    "verbose_spawning": True,
+    "verbose_spawning": False,
 
 }

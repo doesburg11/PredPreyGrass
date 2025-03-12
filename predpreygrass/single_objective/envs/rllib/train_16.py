@@ -4,28 +4,8 @@ from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
 
-from predpreygrass_15 import PredPreyGrass  # Import your custom environment
-from config_env_15 import config_env
-
-"""
-class EpisodeReturn(RLlibCallback):
-    def __init__(self):
-        super().__init__()
-        self.overall_sum_of_rewards = 0.0
-        self.num_episodes = 0
-
-    def on_episode_end(self, *, episode, **kwargs):
-        self.num_episodes += 1
-        self.overall_sum_of_rewards += episode.get_return()
-        print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
-
-        print("=== Episode Object get_rewards Attributes ===")
-        print(episode.get_rewards)  # Print all attributes/methods available in `episode`
-        print("=================================")
-
-"""
-
-
+from predpreygrass.single_objective.envs.rllib.predpreygrass_16 import PredPreyGrass  # Import your custom environment
+from config_env_16 import config_env
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
