@@ -22,31 +22,15 @@ The approach of the environment and algorithms is implemented in two seprate sol
 Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
 The approach of the environment and algorithms is implemented in two separate solutions:
 
-[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40" style="vertical-align: middle; display: inline-block; margin-bottom: -10px;">](https://pettingzoo.farama.org/) **environment** and **Stable-Baselines3 (PPO) algorithm**
+[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40" margin-bottom: -10px;">](https://pettingzoo.farama.org/) **environment** and **Stable-Baselines3 (PPO) algorithm**
 
-[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40" style="vertical-align: middle; display: inline-block; margin-bottom: -10px;">](https://docs.ray.io/en/master/rllib/index.html) **(new API stack) environment** and RLlib native PPO solution
-
-
-<ul>
-  <li>
-    <a href="https://pettingzoo.farama.org/">
-      <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" 
-           alt="PettingZoo" height="40" 
-           style="vertical-align: middle; margin-bottom: -15px;">
-    </a> 
-    <strong>PettingZoo environment</strong> and <strong>Stable-Baselines3 (PPO) algorithm</strong>
-  </li>
-  <li>
-    <a href="https://docs.ray.io/en/master/rllib/index.html">
-      <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" 
-           alt="RLlib" height="40" 
-           style="vertical-align: middle; margin-bottom: -15px;">
-    </a> 
-    <strong>RLlib (new API stack) environment</strong> and RLlib native PPO solution
-  </li>
-</ul>
+[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40" style="vertical-align: middle;">](https://docs.ray.io/en/master/rllib/index.html) **(new API stack) environment** and RLlib native PPO solution
 
 
+
+[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="" height="40">](https://pettingzoo.farama.org/) **PettingZoo environment** and **Stable-Baselines3 (PPO) algorithm**
+
+[<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="" height="40">](https://docs.ray.io/en/master/rllib/index.html) **RLlib (new API stack) environment** and RLlib native PPO solution
 
 </br>
 </br>
