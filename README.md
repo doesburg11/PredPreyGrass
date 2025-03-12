@@ -5,9 +5,6 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
-### <p align="center">PettingZoo environment with single network</p>
-#### <p align="center">(PPO algoritm from Stable Baselines3)</p>
-
 </br>
 
 <p align="center">
@@ -16,12 +13,6 @@
 
 </br>
 
-
-</br>
-<p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
-</p>
-</br>
 
 ## Predator-Prey-Grass Multi-Agent Reinforcement Learning (MARL)
 
@@ -32,6 +23,9 @@ The approach of the environment and algorithms is implemented in two separate so
 
 2. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40">](https://docs.ray.io/en/master/rllib/index.html) (new API stack) environment and the native [PPO solution](https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo)
 
+
+### <p align="center">PettingZoo environment with single network</p>
+#### <p align="center">(PPO algorithm from Stable Baselines3)</p>
 
 </br>
 </br>
