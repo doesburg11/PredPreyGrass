@@ -30,7 +30,7 @@ The approach of the environment and algorithms is implemented in two separate so
   <li>
     <a href="https://pettingzoo.farama.org/">
       <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" 
-           alt="PettingZoo" height="20" 
+           alt="PettingZoo" height="40" 
            style="vertical-align: middle; margin-right: 5px;">
     </a> 
     <strong>PettingZoo environment</strong> and <strong>Stable-Baselines3 (PPO) algorithm</strong>
@@ -38,7 +38,7 @@ The approach of the environment and algorithms is implemented in two separate so
   <li>
     <a href="https://docs.ray.io/en/master/rllib/index.html">
       <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" 
-           alt="RLlib" height="20" 
+           alt="RLlib" height="40" 
            style="vertical-align: middle; margin-right: 5px;">
     </a> 
     <strong>RLlib (new API stack) environment</strong> and RLlib native PPO solution
