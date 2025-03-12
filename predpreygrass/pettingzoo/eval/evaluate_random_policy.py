@@ -1,6 +1,6 @@
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_aec_v0
-from predpreygrass.single_objective.config.config_predpreygrass import env_kwargs
+from predpreygrass.pettingzoo.envs import predpreygrass_aec_v0
+from predpreygrass.pettingzoo.config.config_predpreygrass import env_kwargs
 
 seed=42
 env = predpreygrass_aec_v0.env(render_mode="human", **env_kwargs)

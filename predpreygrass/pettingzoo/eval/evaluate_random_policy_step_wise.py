@@ -1,6 +1,6 @@
 import pygame
-from predpreygrass.single_objective.envs.pettingzoo.predpreygrass_aec import env
-from predpreygrass.single_objective.config.config_predpreygrass import env_kwargs
+from predpreygrass.pettingzoo.envs.predpreygrass_aec import env
+from predpreygrass.pettingzoo.config.config_predpreygrass import env_kwargs
 
 # Initialize pygame
 pygame.init()
