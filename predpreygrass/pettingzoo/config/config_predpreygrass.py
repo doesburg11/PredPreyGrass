@@ -53,13 +53,13 @@ env_kwargs = dict(
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
     # visualization parameters
-    cell_scale=30, # 40
+    cell_scale=40, # 40
     x_pygame_window=0,
     y_pygame_window=0,
     has_energy_chart=True,
     # evaluation parameters
     num_episodes=10,
-    watch_grid_model=False,
+    watch_grid_model=True,
     write_evaluation_to_file=True,
     # training parameters
     max_cycles=10000,

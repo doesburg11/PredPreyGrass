@@ -13,7 +13,7 @@ After/during training, you can review the logs in TensorBoard
 
 """
 # Continue training for X steps and log the results to TensorBoard
-import predpreygrass.environments.predpreygrass as predpreygrass
+import predpreygrass.pettingzoo.envs.predpreygrass as predpreygrass
 from config.config_predpreygrass import env_kwargs, training_steps_string
 
 import os

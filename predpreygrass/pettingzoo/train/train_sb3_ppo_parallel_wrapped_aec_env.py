@@ -6,14 +6,14 @@ directory, for reuse and analysis.
 -The algorithm used is PPO from stable_baselines3. 
 """
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_aec_v0
-from predpreygrass.single_objective.config.config_predpreygrass import (
+from predpreygrass.pettingzoo.envs import predpreygrass_aec_v0
+from predpreygrass.pettingzoo.config.config_predpreygrass import (
     env_kwargs,
     local_output_root,
     training_steps_string
 )
-from predpreygrass.single_objective.train.utils.trainer import Trainer
-from predpreygrass.single_objective.train.utils.config_saver import ConfigSaver
+from predpreygrass.pettingzoo.train.utils.trainer import Trainer
+from predpreygrass.pettingzoo.train.utils.config_saver import ConfigSaver
 
 # external libraries
 import os

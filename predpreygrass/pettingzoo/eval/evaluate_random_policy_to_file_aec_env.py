@@ -1,6 +1,6 @@
 # discretionary libraries
-from predpreygrass.single_objective.envs import predpreygrass_aec_v0
-from predpreygrass.single_objective.config.config_predpreygrass import (
+from predpreygrass.pettingzoo.envs import predpreygrass_aec_v0
+from predpreygrass.pettingzoo.config.config_predpreygrass import (
     env_kwargs,
     local_output_root,
 )

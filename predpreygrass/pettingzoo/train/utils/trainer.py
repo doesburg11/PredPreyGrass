@@ -1,5 +1,5 @@
 # discretionar libraries
-from predpreygrass.single_objective.train.utils.logger import SampleLoggerCallback
+from predpreygrass.pettingzoo.train.utils.logger import SampleLoggerCallback
 
 # external libraries
 import os
