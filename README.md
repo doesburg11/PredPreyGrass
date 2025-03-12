@@ -11,12 +11,6 @@
 </p>
 </br>
 
-## Predator-Prey-Grass multi-agent reinforcement learning (MARL)
-Predator-Prey-Grass gridworld deploying multi-agent environment with dynamic deletion and spawning of partially observant agents. 
-The approach of the environment and algorithms is implemented in two seprate solutions:
-- PettingZoo environment and Stable-Baselines3 (PPO) algorithm
-- RLLib (new API stack) environment and 
-
 ## Predator-Prey-Grass Multi-Agent Reinforcement Learning (MARL)
 
 Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
