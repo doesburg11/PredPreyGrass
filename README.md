@@ -25,6 +25,8 @@ The approach of the environment and algorithms is implemented in two separate so
 - [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="30">](https://pettingzoo.farama.org/) environment** and  **Stable-Baselines3 (PPO) algorithm**
 - [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="30">](https://docs.ray.io/en/master/rllib/index.html) **(new API stack) environment** and RLlib native PPO solution
 
+- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/PettingZoo.svg" alt="PettingZoo" width="30" style="vertical-align: middle;"> **[PettingZoo](https://pettingzoo.farama.org/) environment** and **Stable-Baselines3 (PPO) algorithm**
+- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" width="30" style="vertical-align: middle;"> **RLlib (new API stack) environment** and RLlib native PPO solution
 
 </br>
 </br>
