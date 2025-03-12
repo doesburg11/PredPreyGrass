@@ -1,13 +1,13 @@
 #from works_renderer import GridVisualizer
 from predpreygrass.single_objective.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass_15 import PredPreyGrass  # Import your custom environment
+from works_predpreygrass_15 import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 import numpy as np
 
 verbose_grid_state = False
-verbose_observation = True
+verbose_observation = False
 
 if __name__ == "__main__":
     # Grid size

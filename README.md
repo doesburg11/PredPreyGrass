@@ -1,16 +1,30 @@
 [![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
+[![Stable-Baselines3](https://img.shields.io/github/v/release/DLR-RM/stable-baselines3?label=Stable-Baselines3)](https://github.com/DLR-RM/stable-baselines3/releases)
+[![RLlib](https://img.shields.io/badge/RLlib-v2.43.0-blue)](https://docs.ray.io/en/latest/rllib/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
-</br>
+</br>https://mail.google.com/mail/u/0/?pli=1#inbox
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>
 </br>
 
 ## Predator-Prey-Grass multi-agent reinforcement learning (MARL)
-Predator-Prey-Grass gridworld deploying multi-agent environment with dynamic deletion and spawning of partially observant agents, utilizing Farama's [PettingZoo](https://pettingzoo.farama.org/).
+Predator-Prey-Grass gridworld deploying multi-agent environment with dynamic deletion and spawning of partially observant agents. 
+The approach of the environment and algorithms is implemented in two seprate solutions:
+- PettingZoo environment and Stable-Baselines3 (PPO) algorithm
+- RLLib (new API stack) environment and 
+
+## Predator-Prey-Grass Multi-Agent Reinforcement Learning (MARL)
+
+Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
+The approach of the environment and algorithms is implemented in two separate solutions:
+
+- ![PettingZoo](./PettingZoo.svg) **[PettingZoo](https://pettingzoo.farama.org/) environment** and ![Stable-Baselines3](./logo.webp) **Stable-Baselines3 (PPO) algorithm**
+- ![RLlib](./rllib-logo.png) **RLlib (new API stack) environment** and RLlib native PPO solution
+
 
 </br>
 </br>
