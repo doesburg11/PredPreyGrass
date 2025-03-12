@@ -1,11 +1,23 @@
 [![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
 [![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
-[![Stable-Baselines3](https://img.shields.io/github/v/release/DLR-RM/stable-baselines3?label=Stable-Baselines3)](https://github.com/DLR-RM/stable-baselines3/releases)
+[![Stable Baselines3](https://img.shields.io/github/v/release/DLR-RM/stable-baselines3?label=Stable-Baselines3)](https://github.com/DLR-RM/stable-baselines3/releases)
 [![RLlib](https://img.shields.io/badge/RLlib-v2.43.0-blue)](https://docs.ray.io/en/latest/rllib/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
-</br>https://mail.google.com/mail/u/0/?pli=1#inbox
+### <p align="center">PettingZoo environment with single network</p>
+#### <p align="center">(PPO algoritm from Stable Baselines3)</p>
+
+</br>
+
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+</p>
+
+</br>
+
+
+</br>
 <p align="center">
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>

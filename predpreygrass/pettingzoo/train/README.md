@@ -2,7 +2,7 @@
  
 The Predators and Prey agents share a single PPO network during training. The training process has access to the observations, actions, and rewards of all agents, enabling a single coordinated policy optimization process.
 
-## Stablebaseline3 PPO in multi-agent setting
+## Stable Baselines3 PPO in multi-agent setting
 The training process utilizes the PPO algorithm from the external Stable Baselines3 library (SB3), which is designed primarily for single-agent environments, but can also be implemented in multi-agent setting. This is done by wrapping the multi-agent environment to appear as a single-agent. This involves:
 
 - Creating a wrapper that aggregates observations from all agents into a single observation space.
