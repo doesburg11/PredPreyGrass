@@ -22,7 +22,7 @@ The approach of the environment and algorithms is implemented in two seprate sol
 Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
 The approach of the environment and algorithms is implemented in two separate solutions:
 
-- ![PettingZoo](./PettingZoo.svg) **[PettingZoo](https://pettingzoo.farama.org/) environment** and ![Stable-Baselines3](./logo.webp) **Stable-Baselines3 (PPO) algorithm**
+- ![PettingZoo](./assets/images/icons/PettingZoo.svg/PettingZoo.svg) **[PettingZoo](https://pettingzoo.farama.org/) environment** and ![Stable-Baselines3](./logo.webp) **Stable-Baselines3 (PPO) algorithm**
 - ![RLlib](./rllib-logo.png) **RLlib (new API stack) environment** and RLlib native PPO solution
 
 
