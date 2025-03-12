@@ -81,17 +81,24 @@ More emergent behavior and findings are described [on our website](https://www.b
      ```
  3. Install the following requirements:  
     -   ```bash 
-        pip install supersuit==3.9.3 
+        pip install pettingzoo==1.24.3
+ 
         ```
     -   ```bash 
-        pip install tensorboard==2.18.0 
-        ```
-    -   ```bash 
-        pip install stable-baselines3[extra]==2.4.0
+        pip install stable-baselines3[extra]==2.5.0
  
         ```
     -   ```bash
         conda install -y -c conda-forge gcc=12.1.0
+        ```    
+    -   ```bash 
+        pip install supersuit==3.9.3 
+        ```
+    -   ```bash 
+        pip install ray[rllib]==2.43.0
+        ```
+    -   ```bash 
+        pip install tensorboard==2.18.0 
         ```
     
 ## Getting started
