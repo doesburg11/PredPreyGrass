@@ -22,8 +22,8 @@ The approach of the environment and algorithms is implemented in two seprate sol
 Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
 The approach of the environment and algorithms is implemented in two separate solutions:
 
-- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/PettingZoo.svg" alt="PettingZoo" width="20"> **[PettingZoo](https://pettingzoo.farama.org/) environment** and <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/sb3.webp" alt="Stable-Baselines3" width="20"> **Stable-Baselines3 (PPO) algorithm**
-- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" width="20"> **RLlib (new API stack) environment** and RLlib native PPO solution
+- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="20"> **[PettingZoo](https://pettingzoo.farama.org/) environment** and <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/sb3.webp" alt="Stable-Baselines3" height="20"> **Stable-Baselines3 (PPO) algorithm**
+- <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="20"> **RLlib (new API stack) environment** and RLlib native PPO solution
 
 
 </br>
