@@ -3,7 +3,7 @@ output/
 # Rllib checkpoints
 checkpoints/
 # Rllib archive
-predpreygrass/rllib/archive
+predpreygrass/rllib/archive/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
