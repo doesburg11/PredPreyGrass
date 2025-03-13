@@ -2,7 +2,7 @@ import ray
 import torch
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
-from predpreygrass.rllib.predpreygrass import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.utils.renderer import MatPlotLibRenderer
 import time
 
