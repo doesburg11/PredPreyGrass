@@ -26,36 +26,36 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
     <th width="70%" align="left">Solution</th>
   </tr>
   <tr>
-    <td align="left">
+    <td align="center">
       <a href="https://pettingzoo.farama.org/">
         <img src="./assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">
       </a><br>
       <a href="https://pettingzoo.farama.org/">PettingZoo Environment</a>
     </td>
     <td align="left">
-      <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
-        <strong>Stable-Baselines3 PPO Algorithm</strong>
-      </a><br>
-      External algorithm applied to the PettingZoo multi-agent environment.
-    </td>
+      Single network for all agents (centralized learning) utilizing <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
+        <strong>exteranal Stable-Baselines3 PPO Algorithm</strong>
+      </a> applied to the PettingZoo multi-agent environment (AECEnv).
   </tr>
   <tr>
-    <td align="left">
+    <td align="center">
       <a href="https://docs.ray.io/en/master/rllib/index.html">
         <img src="./assets/images/icons/rllib.png" alt="RLlib" height="40">
       </a><br>
-      <a href="https://docs.ray.io/en/master/rllib/index.html">RLlib (New API Stack)</a>
+      <a href="https://docs.ray.io/en/master/rllib/index.html">RLlib (New API Stack) multi-agent environment </a>
     </td>
     <td align="left">
-      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo">
-        <strong>Native PPO Solution</strong>
-      </a><br>
-      Built-in RLlib PPO solution integrated with the new API stack.
+      Dual network for Predator and Prey seperately (grouped learning) utilizing 
+      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithm/html#proximal-policy-optimization-ppo">
+        <strong>native RLlib PPO Solution</strong>
+      </a>
+      applied tot the RLlib new API stack multi0agent environment (MultiAgentEnv).
     </td>
   </tr>
 </table>
 
 
+<br>
 <p align="center">
     <strong>PettingZoo Environment with Single Network</strong>
     <em>(PPO from Stable Baselines3)</em>
