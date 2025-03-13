@@ -8,7 +8,7 @@
 </br>
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    <img src="https://raw.githubusercontent.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>
 
 </br>
@@ -19,16 +19,17 @@
 Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
 The approach of the environment and algorithms is implemented in two separate solutions:
 
-1. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">](https://pettingzoo.farama.org/) environment and the external [Stable-Baselines3 PPO algorithm](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+1. [<img src="https://raw.githubusercontent.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">](https://pettingzoo.farama.org/) environment and the external [Stable-Baselines3 PPO algorithm](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
 
-2. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40">](https://docs.ray.io/en/master/rllib/index.html) (new API stack) environment and the native [PPO solution](https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo)
+2. [<img src="hhttps://raw.githubusercontent.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40">](https://docs.ray.io/en/master/rllib/index.html)  (new API stack) environment and the native [PPO solution](https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo)
 
 
 
 <p align="center">
     <strong>PettingZoo Environment with Single Network</strong>
     <em>(PPO from Stable Baselines3)</em>
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
+    <img src="https://raw.githubusercontent.com/doesburg11/PredPreyGrass/main/assets/gif/predpreygrass.gif
+    " width="1000" height="200"/>
 </p>
 
 
@@ -56,7 +57,7 @@ Training the single objective environment [predpregrass_base.py](https://github.
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+    <img src="https://raw.githubusercontent.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
 More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
@@ -108,7 +109,7 @@ In Visual Studio Code run:
 ```predpreygrass/single_objective/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
+    <img src="https://raw.githubusercontent.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
 
