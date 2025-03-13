@@ -8,27 +8,58 @@
 </br>
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>
 
 </br>
 
 
-## Predator-Prey-Grass Multi-Agent Reinforcement Learning (MARL)
 
-Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents.  
-The approach of the environment and algorithms is implemented in two separate solutions:
+## Multi-Agent Reinforcement Learning (MARL)
 
-1. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">](https://pettingzoo.farama.org/) environment and the external [Stable-Baselines3 PPO algorithm](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html)
+Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. The approach of the environment and algorithms is implemented in two separate solutions:
 
-2. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40">](https://docs.ray.io/en/master/rllib/index.html)  (new API stack) environment and the native [PPO solution](https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo)
 
+<table align="center" width="100%">
+  <tr>
+    <th width="30%" align="left">Framework</th>
+    <th width="70%" align="left">Solution</th>
+  </tr>
+  <tr>
+    <td align="left">
+      <a href="https://pettingzoo.farama.org/">
+        <img src="./assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">
+      </a><br>
+      <a href="https://pettingzoo.farama.org/">PettingZoo Environment</a>
+    </td>
+    <td align="left">
+      <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
+        <strong>Stable-Baselines3 PPO Algorithm</strong>
+      </a><br>
+      External algorithm applied to the PettingZoo multi-agent environment.
+    </td>
+  </tr>
+  <tr>
+    <td align="left">
+      <a href="https://docs.ray.io/en/master/rllib/index.html">
+        <img src="./assets/images/icons/rllib.png" alt="RLlib" height="40">
+      </a><br>
+      <a href="https://docs.ray.io/en/master/rllib/index.html">RLlib (New API Stack)</a>
+    </td>
+    <td align="left">
+      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo">
+        <strong>Native PPO Solution</strong>
+      </a><br>
+      Built-in RLlib PPO solution integrated with the new API stack.
+    </td>
+  </tr>
+</table>
 
 
 <p align="center">
     <strong>PettingZoo Environment with Single Network</strong>
     <em>(PPO from Stable Baselines3)</em>
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
+    <img src="./assets/gif/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 
@@ -56,7 +87,7 @@ Training the single objective environment [predpregrass_base.py](https://github.
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
 
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+    <img src="./assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
 More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
