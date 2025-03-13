@@ -5,7 +5,8 @@
             "name": "Python: Launch File",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/predpreygrass/single_objective/envs/rllib/random_policy5_.py",
+            "cwd": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrass",
+            "program": "${workspaceFolder}/predpreygrass/rllib/random_policy.py",
             "console": "integratedTerminal"
         }
     ]
