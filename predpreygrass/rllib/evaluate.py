@@ -8,7 +8,7 @@ import time
 
 
 verbose_grid = False
-verbose_actions = True
+verbose_actions = False
 seed = None # 42 # for random intialization of the environment
 
 # Initialize Ray
