@@ -58,33 +58,29 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
 
 <br>
 <p align="center">
-    <strong>Evaluation PettingZoo Environment</strong>
-    <em>(parallel trained, AEC executed)</em>
     <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 
-[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): 
+[predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py): 
 A (single-objective) multi-agent reinforcement learning (MARL) environment, 
 [centralized trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py) 
 and [decentralized evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py) 
 using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). 
 Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. 
-Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. 
+Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource.
 Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. 
-The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. 
+The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. New created agents are placed randomly in the gridworld.
 Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment 
-to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
+to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. 
+
 
 ## The RLlib environment
 
-<br>
+
 <p align="center">
-    <strong>Evaluation RLlib Environment</strong>
-    <em>(parallel trained, parallel executed)</em>
     <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
 </p>
-
 
 
 ## Emergent Behaviors
@@ -105,7 +101,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ## Installation
 
-**Editor used:** Visual Studio Code 1.97.0 on Linux Mint 21.3 Cinnamon
+**Editor used:** Visual Studio Code 1.98.2 on Linux Mint 21.3 Cinnamon
 
 1. Clone the repository: 
    ```bash

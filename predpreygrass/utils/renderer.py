@@ -7,6 +7,9 @@ import numpy as np
 import os
 
 class PyGameRenderer:
+    """
+    A class for visualizing a grid-based environment using PyGame.
+    """
     def __init__(self, env, cell_scale=40, has_energy_chart=True, x_pygame_window=0, y_pygame_window=0):
         self.env = env
         self.cell_scale = cell_scale
