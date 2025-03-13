@@ -24,28 +24,11 @@ The approach of the environment and algorithms is implemented in two separate so
 2. [<img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/images/icons/rllib.png" alt="RLlib" height="40">](https://docs.ray.io/en/master/rllib/index.html) (new API stack) environment and the native [PPO solution](https://docs.ray.io/en/master/rllib/rllib-algorithms.html#proximal-policy-optimization-ppo)
 
 
-### <p align="center">PettingZoo environment with single network</p>
-#### <p align="center">(PPO algorithm from Stable Baselines3)</p>
-
-</br>
-</br>
-<p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
-</p>
-
-<h1 align="center">PettingZoo Environment with Single Network</h1>
-<h2 align="center">(PPO Algorithm from Stable Baselines3)</h2>
 
 <p align="center">
+    <strong>PettingZoo Environment with Single Network</strong>
+    <em>(PPO from Stable Baselines3)</em>
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
-</p>
-
-
-<p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
-    <br>
-    <strong>PettingZoo Environment with Single Network</strong><br>
-    <em>PPO Algorithm from Stable Baselines3</em>
 </p>
 
 
