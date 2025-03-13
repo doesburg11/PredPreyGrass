@@ -5,7 +5,7 @@ from numpy.typing import NDArray
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
-from  config_env_16 import config_env
+from  predpreygrass.rllib.config_env import config_env
 
 
 class PredPreyGrass(MultiAgentEnv):

@@ -2,7 +2,7 @@ import ray
 import torch
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
-from predpreygrass_16 import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.predpreygrass import PredPreyGrass  # Import the custom environment
 from predpreygrass.utils.renderer import MatPlotLibRenderer
 import time
 
@@ -29,7 +29,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     return None
 
 # Load trained model from checkpoint
-checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-09_00-10-13/PPO_PredPreyGrass_7d8fb_00000_0_2025-03-09_00-10-13/checkpoint_000009"  # Update as needed
+checkpoint_path = "/home/doesburg/ray_results/benchmarks/2/PPO_PredPreyGrass_d3d04_00000_0_2025-03-09_20-58-10/checkpoint_000032"  # Update as needed
 
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)

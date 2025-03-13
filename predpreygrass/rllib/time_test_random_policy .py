@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from predpreygrass.rllib.predpreygrass_16 import PredPreyGrass  
+from predpreygrass.rllib.predpreygrass import PredPreyGrass  
 
 n_steps = 1
 seed_value = 42  # Set seed for reproducibility

@@ -35,7 +35,7 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
     <td align="left">
       Single network for all agents (centralized learning) utilizing <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
         <strong>exteranal Stable-Baselines3 PPO Algorithm</strong>
-      </a> applied to the PettingZoo multi-agent environment (AECEnv).
+      </a> applied to the PettingZoo multi-agent environment (<a href="https://pettingzoo.farama.org/api/aec/"><strong>AECEnv</stromg></a>).
   </tr>
   <tr>
     <td align="center">
@@ -45,11 +45,11 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
       <a href="https://docs.ray.io/en/master/rllib/index.html">RLlib (New API Stack) multi-agent environment </a>
     </td>
     <td align="left">
-      Dual network for Predator and Prey seperately (grouped learning) utilizing 
+      Dual network for Predator and Prey seperately (decentralized learning) utilizing 
       <a href="https://docs.ray.io/en/master/rllib/rllib-algorithm/html#proximal-policy-optimization-ppo">
         <strong>native RLlib PPO Solution</strong>
       </a>
-      applied tot the RLlib new API stack multi0agent environment (MultiAgentEnv).
+      applied to the RLlib new API stack multi-agent environment (<a href="https://docs.ray.io/en/latest/rllib/package_ref/env/multi_agent_env.html"><strong>MultiAgentEnv</stromg></a>).
     </td>
   </tr>
 </table>
@@ -57,8 +57,8 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
 
 <br>
 <p align="center">
-    <strong>PettingZoo Environment with Single Network</strong>
-    <em>(PPO from Stable Baselines3)</em>
+    <strong>Evaluation PettingZoo Environment</strong>
+    <em>(parallel trained, AEC executed)</em>
     <img src="./assets/gif/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
@@ -70,7 +70,7 @@ A (single-objective) multi-agent reinforcement learning (MARL) environment,
 and [decentralized evaluated](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py) 
 using [Proximal Policy Optimization (PPO)](https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html). 
 Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. 
-Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. In the base case, the agents obtain all the energy from the eaten Prey or Grass. 
+Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. 
 Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. 
 The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. 
 Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment 
