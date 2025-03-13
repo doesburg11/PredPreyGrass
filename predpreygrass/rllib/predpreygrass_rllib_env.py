@@ -269,7 +269,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.grid_world_state2[2, agent_positions[is_prey, 0], agent_positions[is_prey, 1]] = self.agent_energies[agent_names[is_prey]]
         """
 
-
         for grass, grass_position in self.grass_positions.items():
             self.grass_energies[grass] = min(
                 self.grass_energies[grass] + self.energy_gain_per_step_grass, 
@@ -332,7 +331,7 @@ class PredPreyGrass(MultiAgentEnv):
                     if self.verbose_engagement:
                         print(f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! Predator Reward: {self.reward_predator_catch_prey}")
                     
-                    # Assign rewards predator and penaly prey
+                    # Assign rewards predator and penalty prey
                     rewards[agent] = self.reward_predator_catch_prey
                     self.cumulative_rewards[agent] += rewards[agent]
                     self.agent_energies[agent] += self.agent_energies[caught_prey]

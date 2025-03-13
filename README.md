@@ -54,16 +54,16 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
   </tr>
 </table>
 
+## The PettingZoo environment
 
 <br>
 <p align="center">
     <strong>Evaluation PettingZoo Environment</strong>
     <em>(parallel trained, AEC executed)</em>
-    <img src="./assets/gif/predpreygrass.gif" width="1000" height="200"/>
+    <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 
-## The environments
 [predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): 
 A (single-objective) multi-agent reinforcement learning (MARL) environment, 
 [centralized trained](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py) 
@@ -75,6 +75,16 @@ Predators die of starvation when their energy is zero, Prey die either of starva
 The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. 
 Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment 
 to maximize cumulative reward.In the base case, the single objective rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py) file. 
+
+## The RLlib environment
+
+<br>
+<p align="center">
+    <strong>Evaluation RLlib Environment</strong>
+    <em>(parallel trained, parallel executed)</em>
+    <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
+</p>
+
 
 
 ## Emergent Behaviors
@@ -139,7 +149,7 @@ In Visual Studio Code run:
 ```predpreygrass/single_objective/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
-    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass_random.gif" width="1000" height="200"/>
+    <img src="./assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
 
