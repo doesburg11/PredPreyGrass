@@ -33,6 +33,22 @@ The approach of the environment and algorithms is implemented in two separate so
     <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
+<h1 align="center">PettingZoo Environment with Single Network</h1>
+<h2 align="center">(PPO Algorithm from Stable Baselines3)</h2>
+
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
+</p>
+
+
+<p align="center">
+    <img src="https://github.com/doesburg11/PredPreyGrass/blob/main/assets/gif/predpreygrass.gif" width="1000" height="200"/>
+    <br>
+    <strong>PettingZoo Environment with Single Network</strong><br>
+    <em>PPO Algorithm from Stable Baselines3</em>
+</p>
+
+
 ## The environments
 [predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py): 
 A (single-objective) multi-agent reinforcement learning (MARL) environment, 
