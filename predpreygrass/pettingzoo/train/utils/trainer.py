@@ -68,7 +68,7 @@ class Trainer:
             batch_size=self.hyperparameters["batch_size"],
             n_epochs=self.hyperparameters["n_epochs"],
             verbose=self.hyperparameters["verbose"],
-            tensorboard_log=self.output_directory + "/ppo_predprey_tensorboard/",
+            tensorboard_log=self.output_directory + "/ppo_predpreygrass_tensorboard/",
         )
         sample_logger_callback = SampleLoggerCallback()
         model.learn(

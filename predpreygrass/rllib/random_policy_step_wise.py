@@ -1,6 +1,6 @@
 import pygame
 from predpreygrass.utils.renderer import MatPlotLibRenderer
-from predpreygrass.rllib.predpreygrass_16 import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.predpreygrass import PredPreyGrass  # Import your custom environment
 import numpy as np
 
 # Ensure all elements are displayed

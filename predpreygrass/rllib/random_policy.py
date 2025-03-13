@@ -1,7 +1,7 @@
 #from works_renderer import GridVisualizer
-from predpreygrass.utils.renderer import MatPlotLibRenderer
+from ...predpreygrass.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass.rllib.predpreygrass_16 import PredPreyGrass  # Import your custom environment
+from ...predpreygrass.rllib.predpreygrass import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 import numpy as np
