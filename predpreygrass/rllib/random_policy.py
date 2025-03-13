@@ -1,4 +1,3 @@
-#from works_renderer import GridVisualizer
 from predpreygrass.utils.renderer import MatPlotLibRenderer
 
 from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
