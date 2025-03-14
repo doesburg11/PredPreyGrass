@@ -9,9 +9,16 @@
 
 <p align="center">
     <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    
 </p>
 
 </br>
+
+
+<p align="center">
+    <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
+    <a>Evaluation trained dual policy using RLlib</a>
+</p>
 
 
 
@@ -34,8 +41,8 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
     </td>
     <td align="left">
       Single network for all agents (centralized learning) utilizing <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
-        <strong>exteranal Stable-Baselines3 PPO Algorithm</strong>
-      </a> applied to the PettingZoo multi-agent environment (<a href="https://pettingzoo.farama.org/api/aec/"><strong>AECEnv</stromg></a>).
+        <strong>external Stable-Baselines3 PPO Algorithm</strong>
+      </a> applied to the PettingZoo multi-agent environment (<a href="https://pettingzoo.farama.org/api/aec/"><strong>AECEnv</strong></a>).
   </tr>
   <tr>
     <td align="center">
@@ -49,7 +56,7 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
       <a href="https://docs.ray.io/en/master/rllib/rllib-algorithm/html#proximal-policy-optimization-ppo">
         <strong>native RLlib PPO Solution</strong>
       </a>
-      applied to the RLlib new API stack multi-agent environment (<a href="https://docs.ray.io/en/latest/rllib/package_ref/env/multi_agent_env.html"><strong>MultiAgentEnv</stromg></a>).
+      applied to the RLlib new API stack multi-agent environment (<a href="https://docs.ray.io/en/latest/rllib/package_ref/env/multi_agent_env.html"><strong>MultiAgentEnv</strong></a>).
     </td>
   </tr>
 </table>
@@ -65,7 +72,7 @@ The MARL environment [predpregrass_base.py](https://github.com/doesburg11/PredPr
 
 ### Environment dynamics
 Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource.
-Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain treshold by eating. In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment.
+Predators die of starvation when their energy is zero, Prey die either of starvation or when being eaten by a Predator. The agents asexually reproduce when energy levels of learning agents rise above a certain threshold by eating. In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to execute movement actions based on their partial observations (transparent red and blue squares respectively as depicted above) of the environment.
 
 ### Configuration
 Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. 
@@ -109,10 +116,10 @@ Obviously, using only one network has its limitations as Predators and Prey lack
 The environment dynamics are largely the same as in the PettingZoo environment. Newly spawned agents however are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld.
 
 ### Configuration
-Similiraly as in the PettingZoo environment, rewards can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/config_env.py) file. 
+Similarly as in the PettingZoo environment, rewards can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/config_env.py) file. 
 
 ### Training
-Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box then the PettingZoo/SB3 solution, but is much more applicable to MARL in general and especially decentralized training.
+Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but is much more applicable to MARL in general and especially decentralized training.
 
 
 ## Emergent Behaviors
