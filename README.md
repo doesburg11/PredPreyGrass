@@ -67,7 +67,7 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
 </p>
 
 ### Overview
-The MARL environment [predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. 
+The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. 
 
 ### Environment dynamics
 Learning agents Predators (red) and Prey (blue) both expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource.
@@ -82,7 +82,7 @@ Basically, Stable Baseline3 is originally designed for single-agent. This means 
 ### How SB3 PPO is used in the Predator-Prey-Grass a Multi-Agent Setting
 
 #### 1. PettingZoo AEC to Parallel Conversion
-- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** (`predpreygrass_aec.py`).
+- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** ( [`predpregrass_aec.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) which inherits from `predpregrass_base.py`).
 - It is wrapped and converted into a **Parallel Environment** using `aec_to_parallel()` inside `trainer.py`.
 - This conversion enables multiple agents to take actions simultaneously rather than sequentially.
 
