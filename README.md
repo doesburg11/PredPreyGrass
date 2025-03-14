@@ -17,7 +17,6 @@
 
 <p align="center">
     <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
-    <a>Evaluation trained dual policy using RLlib</a>
 </p>
 
 
