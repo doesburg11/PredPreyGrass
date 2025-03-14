@@ -16,7 +16,7 @@
 
 
 <p align="center">
-    <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
+    <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="600" height="400"/>
 </p>
 
 
