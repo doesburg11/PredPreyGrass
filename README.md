@@ -52,7 +52,7 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
     </td>
     <td align="left">
       Dual network for Predator and Prey seperately (decentralized learning) utilizing 
-      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithm/html#proximal-policy-optimization-ppo">
+      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithms.html#ppo">
         <strong>native RLlib PPO Solution</strong>
       </a>
       applied to the RLlib new API stack multi-agent environment (<a href="https://docs.ray.io/en/latest/rllib/package_ref/env/multi_agent_env.html"><strong>MultiAgentEnv</strong></a>).
@@ -111,17 +111,20 @@ Basically, Stable Baseline3 is originally designed for single-agent training. Th
 Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation, albeit at the cost of considerable more compute time.
 
 ### Environment dynamics
-The environment dynamics are largely the same as in the PettingZoo environment. Newly spawned agents however are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld.
+The environment dynamics of the RLlib environment ([`predpregrass_rllib_env.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/predpreygrass_rllib_env.py)) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing more array lists to store agent data rather than implementing a seperate agent class. This is largely a result of experimentation whith compute time of the `step` function.
 
 ### Configuration
-Similarly as in the PettingZoo environment, rewards can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/config_env.py) file. 
+Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/config_env.py) file. 
 
 ### Training
-Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but is much more applicable to MARL in general and especially decentralized training.
+Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
+<p align="center">
+    <img src="./assets/images/readme/multi_agent_setup.svg" width="300" height="300"/>
+</p>
 
 ## Emergent Behaviors
-Training the single objective environment [predpregrass_base.py](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py) with the PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
+Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py) with the PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
 - Predators hunting Prey 
 - Prey finding and eating grass 
 - Predators hovering around grass to catch Prey 
