@@ -120,7 +120,7 @@ Similarly as in the PettingZoo environment, rewards can be adjusted in a seperat
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
 <p align="center">
-    <img src="./assets/images/readme/multi_agent_setup.png" width="800" height="300"/>
+    <img src="./assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
 ## Emergent Behaviors
