@@ -123,8 +123,10 @@ Training is applied in accordance with the RLlib new API stack protocol. The tra
     <img src="./assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
-## Emergent Behaviors
-Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/envs/base_env/predpreygrass_base.py) with the PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
+A principle difference of the second solution (RLlib) with the first (PettingZoo/SB3) is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the first solution are (static) grass objects the environment dynamics of the second solution change dramatically. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.  
+
+## Emergent Behaviors from the PettingZoo/SB3 solution
+Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) with the SB3 PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py). Despite these relative sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
 - Predators hunting Prey 
 - Prey finding and eating grass 
 - Predators hovering around grass to catch Prey 
@@ -180,9 +182,9 @@ More emergent behavior and findings are described [on our website](https://www.b
     
 ## Getting started
 
-### Visualize a random policy
+### Visualize a random policy with the PettingZoo/SB3 solution
 In Visual Studio Code run:
-```predpreygrass/single_objective/eval/evaluate_random_policy.py```
+```predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
     <img src="./assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
@@ -193,19 +195,19 @@ In Visual Studio Code run:
 
 Adjust parameters accordingly in:
 
-[```predpreygrass/single_objective/config/config_predpreygrass.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/config/config_predpreygrass.py)
+[```predpreygrass/pettingzoo/config/config_predpreygrass.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py)
 
 In Visual Studio Code run:
 
-[```predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
+[```predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
 To evaluate and visualize after training follow instructions in:
 
-[```predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py)
+[```predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
 Batch training and evaluating in one go:
 
-[```predpreygrass/single_objective/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/single_objective/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
+[```predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
 
 ## References
 
