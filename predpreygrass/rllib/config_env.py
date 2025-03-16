@@ -1,6 +1,6 @@
 config_env = {
 
-    "max_steps": 250,
+    "max_steps": 10000,
 
     # Grid and Observation Settings
     "grid_size": 25,
@@ -33,9 +33,9 @@ config_env = {
     "initial_energy_prey": 3.0,
         
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 120,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04,
+    "energy_gain_per_step_grass": 0.03,
 
     "verbose_engagement": False,
     "verbose_movement": False,
