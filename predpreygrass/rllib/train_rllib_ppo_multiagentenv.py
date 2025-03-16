@@ -1,3 +1,4 @@
+# external libraries
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
@@ -5,9 +6,9 @@ from ray import tune
 from ray.tune.registry import register_env
 from ray.tune import RunConfig  
 
-from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
+# discretionary libraries
+from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  
 from predpreygrass.rllib.config_env import config_env
-
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -54,9 +55,6 @@ class EpisodeReturn(RLlibCallback):
 def env_creator(config):
     return PredPreyGrass(config or config_env)
 
-
-# env_creator is already a function that takes a config argument and returns an instance of PredPreyGrass
-# directly pass it without using lambda
 register_env("PredPreyGrass", env_creator)
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -74,7 +72,7 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-16_09-32-09"  # Set your actual checkpoint path
+    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25"  # Set your actual checkpoint path
     #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
