@@ -60,7 +60,7 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
   </tr>
 </table>
 
-## Predator-Prey-Grass MARL with SB3 PPO
+## Predator-Prey-Grass MARL with PettingZoo/SB3 PPO (centralized training)
 <br>
 <p align="center">
     <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
@@ -100,7 +100,7 @@ Basically, Stable Baseline3 is originally designed for single-agent training. Th
 - The training process treats the multi-agent setup as a **single centralized policy**, where PPO learns from the collective experiences of all agents.
 
 
-## The RLlib solution with decentralized traing
+##  Predator-Prey-Grass MARL with Rlib new API stack (⚠️) (decentralized training)
 
 
 <p align="center">
