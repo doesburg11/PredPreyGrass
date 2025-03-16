@@ -203,7 +203,7 @@ In Visual Studio Code run:
 
 To evaluate and visualize after training follow instructions in:
 
-[```predpreygrass/single_objective/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
+[```predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
 Batch training and evaluating in one go:
 
