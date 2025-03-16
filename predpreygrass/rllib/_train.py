@@ -3,9 +3,11 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray import train, tune
 from ray.rllib.callbacks.callbacks import RLlibCallback
+import torch
 
 from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
 from predpreygrass.rllib.config_env import config_env
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -49,6 +51,8 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
+
+
 def env_creator(config):
     return PredPreyGrass(config or config_env)
 
@@ -64,8 +68,41 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "prey_policy"
     return None
 
+    """
+    # old rl_module
+        .rl_module(
+            model_config_dict={
+                "conv_filters": [  # Ensure CNN expects 4 input channels
+                    [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
+                    [32, [3, 3], 1],  # 32 filters, 3x3 kernel, stride 1
+                    [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
+                ],
+                "fcnet_hiddens": [256, 256],  # Fully connected layers
+                "fcnet_activation": "relu"
+            },
+        )
+    """
+    """
+    # new rl_module
+        .rl_module(
+            model_config={
+                "conv_filters": [  # Ensure CNN expects 4 input channels
+                    [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
+                    [32, [3, 3], 2],  # 32 filters, 3x3 kernel, stride 2
+                    [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
+                ],
+                "use_lstm": True,
+                "fcnet_hiddens": [128, 128],  # Fully connected layers
+                "fcnet_activation": "relu"
+            },
+        )
+
+    """
+    
+
 if __name__ == "__main__":
     # Initialize Ray
+    num_gpus = 1 if torch.cuda.is_available() else 0  
     ray.shutdown()
     ray.init(
         num_cpus=8,
@@ -92,16 +129,19 @@ if __name__ == "__main__":
             train_batch_size=1024,
             gamma=0.99,
             lr=0.0003,
+            num_sgd_iter=10,  # NEW added: More training per batch
+            lambda_=0.95,  # MEW added: GAE smoothing
+            clip_param=0.2,  # NEW added: Stable PPO clipping
         )
         .rl_module(
-            model_config_dict={
+            model_config={
                 "conv_filters": [  # Ensure CNN expects 4 input channels
                     [16, [3, 3], 1],  # 16 filters, 3x3 kernel, stride 1
-                    [32, [3, 3], 1],  # 32 filters, 3x3 kernel, stride 1
+                    [32, [3, 3], 2],  # 32 filters, 3x3 kernel, stride 2
                     [64, [3, 3], 1],  # 64 filters, 3x3 kernel, stride 1
                 ],
-                "fcnet_hiddens": [256, 256],  # Fully connected layers
-                "fcnet_activation": "relu"
+                "fcnet_hiddens": [128, 128],  # Fully connected layers
+                "fcnet_activation": "relu",
             },
         )
         . env_runners(
@@ -112,7 +152,7 @@ if __name__ == "__main__":
             num_cpus_per_env_runner=1  
         )
         .resources(
-            num_gpus=0,  # Use GPU if available
+            num_gpus=num_gpus,  # Use GPU if available
             num_cpus_for_main_process=2  
         )       
         .callbacks(EpisodeReturn)
@@ -125,8 +165,8 @@ if __name__ == "__main__":
         run_config=train.RunConfig(
             stop={"training_iteration": 1000},
             checkpoint_config=train.CheckpointConfig(
-                num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
-                checkpoint_frequency=10,  # Save every 10 iterations
+                num_to_keep=10,  # Keep only the last 10 checkpoints to save disk space
+                checkpoint_frequency=5,  # Save every 5 iterations
                 checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
             ),
         ),
