@@ -1,10 +1,9 @@
 # external libraries
 import ray
+from ray import train, tune
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
-from ray import tune
 from ray.tune.registry import register_env
-from ray.tune import RunConfig  
 
 # discretionary libraries
 from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  
@@ -66,14 +65,15 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 if __name__ == "__main__":
     ray.shutdown()
+
     ray.init(
-        num_cpus=8,
+        #num_cpus=8,
         log_to_driver=True,
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25"  # Set your actual checkpoint path
-    #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
+    #checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-18_20-56-31"  # Set your actual checkpoint path
+    checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
 
@@ -89,15 +89,8 @@ if __name__ == "__main__":
         # Continue training
         results = restored_tuner.fit()
 
-    except Exception as e:
+    except:
         print(f"Starting new training experiment.")
-
-        # Define the checkpoint configuration for a new training session
-        checkpoint_config = tune.CheckpointConfig(
-            num_to_keep=100,
-            checkpoint_frequency=10,
-            checkpoint_at_end=True,
-        )
 
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
@@ -113,38 +106,30 @@ if __name__ == "__main__":
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=512,  # for memory overload: reduced batch size (was 1024)
-                minibatch_size=128,  # reduced minibatch size (was full batch)
-                num_epochs=5,  # reduce number of passes (was deafult)
+                train_batch_size=1024, 
                 gamma=0.99,
-                lr=0.0003,
-                lambda_=0.95,  # GAE smoothing
-                clip_param=0.2,  # stable PPO clipping
+                lr=0.0003,            
             )
             . rl_module(
                 model_config_dict={
                     "conv_filters": [
                         [16, [3, 3], 1],
-                        [32, [3, 3], 2],
+                        [32, [3, 3], 1],
                         [64, [3, 3], 1],
                     ],
-                    "fcnet_hiddens": [128, 128],
+                    "fcnet_hiddens": [256, 256],
                     "fcnet_activation": "relu",
                 },
-                catalog_class=None,  # ✅ Explicitly set catalog_class (prevents fallback)
-                observation_space=sample_env.observation_spaces["predator_0"],  # ✅ Explicitly set observation space
-                action_space=sample_env.action_spaces["predator_0"],  # ✅ Explicitly set action space
-                inference_only=False,  # ✅ Ensure training happens
             )
             . env_runners(
-                num_env_runners=4,  
+                num_env_runners=4,  # MOO: adjusted from 4 to 2
                 num_envs_per_env_runner=4,  
                 rollout_fragment_length="auto",
                 sample_timeout_s=600,  
                 num_cpus_per_env_runner=1  
             )
             .resources(
-                num_cpus_for_main_process=2  
+                num_cpus_for_main_process=2 
             )       
             .callbacks(EpisodeReturn)
         )
@@ -153,10 +138,13 @@ if __name__ == "__main__":
         tuner = tune.Tuner(
             ppo.algo_class,
             param_space=ppo,
-            run_config=RunConfig(
+            run_config=train.RunConfig(
                 stop={"training_iteration": 1000},
-                checkpoint_config=checkpoint_config,  # ✅ Use pre-defined checkpoint config
-                verbose=2,
+                checkpoint_config=train.CheckpointConfig(
+                    num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
+                    checkpoint_frequency=10,  # Save every 10 iterations
+                    checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
+                ),
             ),
         )
         # Run the Tuner and capture the results.
