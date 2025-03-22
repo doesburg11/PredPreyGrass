@@ -5,7 +5,9 @@ from numpy.typing import NDArray
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
+
 from  predpreygrass.rllib.config_env import config_env
+#from agents import DiscreteAgent
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -188,6 +190,19 @@ class PredPreyGrass(MultiAgentEnv):
         # Store agent positions and initialize energy
         for i, agent in enumerate(self.agents):
             if "predator" in agent:
+                """
+                agent_instance = DiscreteAgent(
+                    agent_name=agent,
+                    observation_range=self.predator_obs_range,
+                    action_range=self.num_actions,
+                    initial_energy=self.initial_energy_predator,
+                    position=predator_positions[i],
+                    energy_per_step=self.energy_loss_per_step_predator,
+                    energy_per_move=0.0,
+                )
+                """
+
+
                 self.agent_positions[agent] = predator_positions[i]
                 self.predator_positions[agent] = predator_positions[i]
                 self.agent_energies[agent] = self.initial_energy_predator

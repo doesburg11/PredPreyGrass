@@ -1,6 +1,6 @@
 from predpreygrass.utils.renderer import MatPlotLibRenderer
 
-from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.predpreygrass_rllib_env_moore_agent_class import PredPreyGrass  # Import your custom environment
 
 from time import sleep
 import numpy as np

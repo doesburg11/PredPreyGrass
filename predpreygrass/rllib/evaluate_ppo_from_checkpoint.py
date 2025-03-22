@@ -34,7 +34,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 # Load trained model from checkpoint
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029"  # Update as needed
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029/PPO_2025-03-15_10-05-54/PPO_PredPreyGrass_b39a3_00000_0_2025-03-15_10-05-54/checkpoint_000005"  # Update as needed
-checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000048"  # Update as needed
+checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-20_15-16-59/PPO_PredPreyGrass_fc60b_00000_0_2025-03-20_15-16-59/checkpoint_000024"  # Update as needed
 
 
 # Load RLlib Algorithm from checkpoint
@@ -60,6 +60,9 @@ step=0
 
 done = False
 total_reward = 0
+predator_counts = []
+prey_counts = []
+time_steps = []
 
 # Run one evaluation episode
 while not done:
@@ -103,6 +106,14 @@ while not done:
     merged_positions = {**env.agent_positions, **env.grass_positions}
     visualizer.update(merged_positions, step)
     step+=1
+    # Count current number of agents
+    num_predators = sum(1 for agent in env.agents if "predator" in agent)
+    num_prey = sum(1 for agent in env.agents if "prey" in agent)
+
+    # Store counts
+    time_steps.append(step)
+    predator_counts.append(num_predators)
+    prey_counts.append(num_prey)
 
     # Sum rewards
     total_reward += sum(rewards.values())
@@ -115,6 +126,40 @@ while not done:
     #print(f"Active Agents After Step: {env.agents}")  # Debugging
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
+# --- REWARD SUMMARY ---
+predator_rewards = []
+prey_rewards = []
+
+print("\n--- Reward Breakdown per Agent ---")
+for agent_id, reward in env.cumulative_rewards.items():
+    print(f"{agent_id:15}: {reward:.2f}")
+    if "predator" in agent_id:
+        predator_rewards.append(reward)
+    elif "prey" in agent_id:
+        prey_rewards.append(reward)
+
+total_predator_reward = sum(predator_rewards)
+total_prey_reward = sum(prey_rewards)
+total_reward_all = total_predator_reward + total_prey_reward
+
+print("\n--- Aggregated Rewards ---")
+print(f"Total number of steps: {step-1}")
+print(f"Total Predator Reward: {total_predator_reward:.2f}")
+print(f"Total Prey Reward:     {total_prey_reward:.2f}")
+print(f"Total All-Agent Reward:{total_reward_all:.2f}")
+
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(10, 5))
+plt.plot(time_steps, predator_counts, label='Predators', color='red')
+plt.plot(time_steps, prey_counts, label='Prey', color='blue')
+plt.xlabel('Time Step')
+plt.ylabel('Number of Agents')
+plt.title('Agent Population Over Time')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
 
 # Shutdown Ray after evaluation
 ray.shutdown()
