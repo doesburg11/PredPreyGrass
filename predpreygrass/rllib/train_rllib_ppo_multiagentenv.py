@@ -72,8 +72,8 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    #checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-18_20-56-31"  # Set your actual checkpoint path
-    checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
+    checkpoint_dir = "/home/doesburg/ray_results/benchmarks/1000"  # Set your actual checkpoint path
+    #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
 

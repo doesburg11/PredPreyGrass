@@ -1,12 +1,25 @@
-# external libraries
+"""
+This script trains a multi-agent environment with PPO using Ray RLlib ne API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+The environment is implemented in the file predpreygrass/rllib/predpreygrass_rllib_env_moore_speed.py.
+The environment configuration is in the file predpreygrass/rllib/config_env.py.
+
+This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
+"""
+#  external libraries
 import ray
 from ray import train, tune
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
+from ray.rllib.core.rl_module import RLModuleSpec
+from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
+from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 
 # discretionary libraries
-from predpreygrass.rllib.predpreygrass_rllib_env_moore import PredPreyGrass  
+from predpreygrass.rllib.predpreygrass_rllib_env_moore_speed import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
 from predpreygrass.rllib.config_env import config_env
 
 class EpisodeReturn(RLlibCallback):
@@ -67,15 +80,56 @@ if __name__ == "__main__":
     ray.shutdown()
 
     ray.init(
-        #num_cpus=8,+
+        #num_cpus=8,
         log_to_driver=True,
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "/home/doesburg/ray_results/benchmarks/moore/PPO_2025-03-21_21-48-35"  # Set your actual checkpoint dir
+    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-21_21-48-35"  # Set your actual checkpoint dir
     #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
+    # Observation/action spaces for the sample policies
+    obs_space_pred = sample_env.observation_spaces["predator_0"]
+    act_space_pred = sample_env.action_spaces["predator_0"]
+    obs_space_prey = sample_env.observation_spaces["prey_0"]
+    act_space_prey = sample_env.action_spaces["prey_0"]
+
+    multi_module_spec = MultiRLModuleSpec(
+        rl_module_specs={
+            "predator_policy": RLModuleSpec(
+                module_class=DefaultPPOTorchRLModule,
+                observation_space=obs_space_pred,
+                action_space=act_space_pred,
+                inference_only=False,
+                model_config={
+                    "conv_filters": [
+                        [16, [3, 3], 1],
+                        [32, [3, 3], 1],
+                        [64, [3, 3], 1],
+                    ],
+                   "fcnet_hiddens": [256, 256],
+                    "fcnet_activation": "relu",
+                },
+                catalog_class=None,
+            ),
+            "prey_policy": RLModuleSpec(
+                module_class=DefaultPPOTorchRLModule,
+                observation_space=obs_space_prey,
+                action_space=act_space_prey,
+                model_config={
+                    "conv_filters": [
+                        [16, [3, 3], 1],
+                        [32, [3, 3], 1],
+                        [64, [3, 3], 1],
+                    ],
+                    "fcnet_hiddens": [256, 256],
+                    "fcnet_activation": "relu",
+                },
+                catalog_class=None,
+            ),
+        }
+    )
 
     # Try restoring from an existing experiment if available
     try:
@@ -87,7 +141,7 @@ if __name__ == "__main__":
         print("Successfully restored training from checkpoint.")
 
         # Continue training
-        results = res3etored_tuner.fit()
+        results = restored_tuner.fit()
 
     except:
         print(f"Starting new training experiment.")
@@ -110,18 +164,10 @@ if __name__ == "__main__":
                 gamma=0.99,
                 lr=0.0003,            
             )
-            . rl_module(
-                model_config_dict={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                    "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
+            .rl_module(
+                rl_module_spec=multi_module_spec
             )
-            . env_runners(
+            .env_runners(
                 num_env_runners=4,  # MOO: adjusted from 4 to 2
                 num_envs_per_env_runner=4,  
                 rollout_fragment_length="auto",
