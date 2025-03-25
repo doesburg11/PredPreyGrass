@@ -70,22 +70,26 @@ def env_creator(config):
 register_env("PredPreyGrass", env_creator)
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    # Expected format: "predator_0_speed_1", "prey_5_speed_2"
     if "predator" in agent_id:
-        return "predator_policy"
+        speed = agent_id.split("_")[-1]
+        return f"predator_speed_{speed}"
     elif "prey" in agent_id:
-        return "prey_policy"
+        speed = agent_id.split("_")[-1]
+        return f"prey_speed_{speed}"
     return None
 
 if __name__ == "__main__":
     ray.shutdown()
 
     ray.init(
+        #address="192.168.2.21:6380",
         #num_cpus=8,
         log_to_driver=True,
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-21_21-48-35"  # Set your actual checkpoint dir
+    checkpoint_dir = "//home/doesburg/ray_results/PPO_2025-03-24_19-17-36"  # Set your actual checkpoint dir
     #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
@@ -95,41 +99,51 @@ if __name__ == "__main__":
     obs_space_prey = sample_env.observation_spaces["prey_0"]
     act_space_prey = sample_env.action_spaces["prey_0"]
 
-    multi_module_spec = MultiRLModuleSpec(
-        rl_module_specs={
-            "predator_policy": RLModuleSpec(
-                module_class=DefaultPPOTorchRLModule,
-                observation_space=obs_space_pred,
-                action_space=act_space_pred,
-                inference_only=False,
-                model_config={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                   "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
-                catalog_class=None,
-            ),
-            "prey_policy": RLModuleSpec(
-                module_class=DefaultPPOTorchRLModule,
-                observation_space=obs_space_prey,
-                action_space=act_space_prey,
-                model_config={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                    "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
-                catalog_class=None,
-            ),
-        }
-    )
+    predator_speeds = [1, 2, 3]
+    prey_speeds = [1, 2, 3]
+
+    module_specs = {}
+
+    for speed in predator_speeds:
+        policy_id = f"predator_speed_{speed}"
+        module_specs[policy_id] = RLModuleSpec(
+            module_class=DefaultPPOTorchRLModule,
+            observation_space=obs_space_pred,
+            action_space=act_space_pred,
+            inference_only=False,
+            model_config={
+                "conv_filters": [
+                    [16, [3, 3], 1],
+                    [32, [3, 3], 1],
+                    [64, [3, 3], 1],
+                ],
+                "fcnet_hiddens": [256, 256],
+                "fcnet_activation": "relu",
+            },
+            catalog_class=None,
+        )
+
+    for speed in prey_speeds:
+        policy_id = f"prey_speed_{speed}"
+        module_specs[policy_id] = RLModuleSpec(
+            module_class=DefaultPPOTorchRLModule,
+            observation_space=obs_space_prey,
+            action_space=act_space_prey,
+            inference_only=False,
+            model_config={
+                "conv_filters": [
+                    [16, [3, 3], 1],
+                    [32, [3, 3], 1],
+                    [64, [3, 3], 1],
+                ],
+                "fcnet_hiddens": [256, 256],
+                "fcnet_activation": "relu",
+            },
+            catalog_class=None,
+        )
+
+    multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
+
 
     # Try restoring from an existing experiment if available
     try:
@@ -153,10 +167,7 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies={
-                    "predator_policy": (None, sample_env.observation_spaces["predator_0"], sample_env.action_spaces["predator_0"], {}),
-                    "prey_policy": (None, sample_env.observation_spaces["prey_0"], sample_env.action_spaces["prey_0"], {}),
-                },
+                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs}
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(

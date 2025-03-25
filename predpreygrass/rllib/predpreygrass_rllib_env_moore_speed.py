@@ -57,18 +57,32 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.cumulative_rewards = {}  # Track total rewards per agent
 
+        self.predator_speeds = [1, 2, 3]
+        self.prey_speeds = [1, 2, 3]
+
+
         # self.num_agents: int = self.current_num_predators + self.current_num_prey  # read only property inherited from MultiAgentEnv
         self.possible_agents: List[AgentID] = (
-            [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
-                f"predator_{i}" for i in range(self.n_possible_predators)
+            [
+                f"predator_{i}_speed_{s}"
+                for s in self.predator_speeds
+                for i in range(self.n_possible_predators)
+            ] + [
+                f"prey_{j}_speed_{s}"
+                for s in self.prey_speeds
+                for j in range(self.n_possible_prey)
             ]
-            + [f"prey_{j}" for j in range(self.n_possible_prey)]
         )
-        self.agents: List[AgentID] = [
-            # placeholder for learning agents, inherited from MultiAgentEnv
-            f"predator_{i}" for i in range(self.n_initial_active_predator)
-            ] + [f"prey_{j}" for j in range(self.n_initial_active_prey)
-        ]
+
+        self.agents: List[AgentID] = (
+            [
+                f"predator_{i}_speed_{self.predator_speeds[0]}"
+                for i in range(self.n_initial_active_predator)
+            ] + [
+                f"prey_{j}_speed_{self.prey_speeds[0]}"
+                for j in range(self.n_initial_active_prey)
+            ]
+        )
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.grass_agents: List[AgentID] = [
