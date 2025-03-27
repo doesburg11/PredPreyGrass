@@ -262,7 +262,6 @@ class PyGameRenderer:
         if self.screen is not None:
             pygame.quit()
             self.screen = None
-
 class MatPlotLibRenderer:
     """
     A class for visualizing a grid-based environment using Matplotlib.
@@ -377,3 +376,224 @@ class MatPlotLibRenderer:
     def close(self):
         """Close the visualization."""
         plt.close(self.fig)
+
+class EvolutionVisualizer:
+    def __init__(self):
+        self.speed_counts_dict = {
+            'speed_1_predator': [],
+            'speed_2_predator': [],
+            'speed_1_prey': [],
+            'speed_2_prey': [],
+        }
+
+    def record_counts(self, active_agent_names):
+        s1_pred = sum(1 for name in active_agent_names if "speed_1_predator" in name)
+        s2_pred = sum(1 for name in active_agent_names if "speed_2_predator" in name)
+        s1_prey = sum(1 for name in active_agent_names if "speed_1_prey" in name)
+        s2_prey = sum(1 for name in active_agent_names if "speed_2_prey" in name)
+
+        self.speed_counts_dict['speed_1_predator'].append(s1_pred)
+        self.speed_counts_dict['speed_2_predator'].append(s2_pred)
+        self.speed_counts_dict['speed_1_prey'].append(s1_prey)
+        self.speed_counts_dict['speed_2_prey'].append(s2_prey)
+
+    def plot(self):
+        speed_counts_dict = self.speed_counts_dict
+        plt.figure(figsize=(14, 6))
+
+        # First subplot: Absolute counts
+        plt.subplot(1, 2, 1)
+        for label, counts in speed_counts_dict.items():
+            plt.plot(counts, label=label.replace("_", " ").capitalize())
+        plt.xlabel("Step")
+        plt.ylabel("Number of Agents")
+        plt.title("Agent Population by Speed (Absolute Count)")
+        plt.legend()
+        plt.grid(True)
+
+        # Second subplot: Proportions of speed_2 agents only
+        plt.subplot(1, 2, 2)
+        total_steps = len(next(iter(speed_counts_dict.values())))
+        speed_2_predator_props = []
+        speed_2_prey_props = []
+
+        for step in range(total_steps):
+            total_pred = sum(speed_counts_dict[k][step] for k in speed_counts_dict if "predator" in k)
+            total_prey = sum(speed_counts_dict[k][step] for k in speed_counts_dict if "prey" in k)
+
+            s2_pred = speed_counts_dict.get("speed_2_predator", [0]*total_steps)[step]
+            s2_prey = speed_counts_dict.get("speed_2_prey", [0]*total_steps)[step]
+
+            speed_2_predator_props.append(s2_pred / total_pred if total_pred > 0 else 0)
+            speed_2_prey_props.append(s2_prey / total_prey if total_prey > 0 else 0)
+
+        plt.plot(speed_2_predator_props, label="Speed 2 Predator Proportion")
+        plt.plot(speed_2_prey_props, label="Speed 2 Prey Proportion")
+
+        plt.xlabel("Step")
+        plt.ylabel("Proportion")
+        plt.title("Proportion of Speed 2 Agents")
+        plt.legend()
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+class AverageAgeVisualizer:
+    def __init__(self):
+        self.history = {
+            "speed_1_prey": [],
+            "speed_2_prey": [],
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+        }
+
+    def record(self, agent_internal_ids, agent_ages, agent_positions):
+        # Initialize sum and count per group
+        sums = {k: 0 for k in self.history}
+        counts = {k: 0 for k in self.history}
+
+        for agent_id, internal_id in agent_internal_ids.items():
+            if agent_id not in agent_positions:
+                continue  # Only include active agents
+
+            age = agent_ages.get(internal_id, 0)
+
+            if "speed_1_prey" in agent_id:
+                sums["speed_1_prey"] += age
+                counts["speed_1_prey"] += 1
+            elif "speed_2_prey" in agent_id:
+                sums["speed_2_prey"] += age
+                counts["speed_2_prey"] += 1
+            elif "speed_1_predator" in agent_id:
+                sums["speed_1_predator"] += age
+                counts["speed_1_predator"] += 1
+            elif "speed_2_predator" in agent_id:
+                sums["speed_2_predator"] += age
+                counts["speed_2_predator"] += 1
+
+        # Compute and record averages (0 if no agents)
+        for group in self.history:
+            avg = sums[group] / counts[group] if counts[group] > 0 else 0
+            self.history[group].append(avg)
+
+    def plot(self):
+        plt.figure(figsize=(10, 5))
+        for label, values in self.history.items():
+            plt.plot(values, label=label.replace("_", " ").capitalize())
+        plt.xlabel("Step")
+        plt.ylabel("Average Age")
+        plt.title("Average Age of Agent Groups Over Time")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
+class CombinedEvolutionVisualizer:
+    def __init__(self):
+        self.speed_counts_dict = {
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+            "speed_1_prey": [],
+            "speed_2_prey": []
+        }
+
+        self.average_ages = {
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+            "speed_1_prey": [],
+            "speed_2_prey": []
+        }
+
+    def record(self, agent_ids, internal_ids, agent_ages):
+        # Count agents
+        count_dict = {k: 0 for k in self.speed_counts_dict}
+        for agent_id in agent_ids:
+            for group in count_dict:
+                if group in agent_id:
+                    count_dict[group] += 1
+        for k in self.speed_counts_dict:
+            self.speed_counts_dict[k].append(count_dict[k])
+
+        # Average ages
+        age_sums = {k: 0 for k in self.average_ages}
+        age_counts = {k: 0 for k in self.average_ages}
+        for agent_id in agent_ids:
+            for group in self.average_ages:
+                if group in agent_id:
+                    internal_id = internal_ids[agent_id]
+                    age_sums[group] += agent_ages[internal_id]
+                    age_counts[group] += 1
+        for group in self.average_ages:
+            avg = age_sums[group] / age_counts[group] if age_counts[group] > 0 else 0
+            self.average_ages[group].append(avg)
+
+    def plot(self):
+        steps = range(len(next(iter(self.speed_counts_dict.values()))))
+        plt.figure(figsize=(18, 6))
+
+        # 1. Absolute counts
+        plt.subplot(1, 3, 1)
+        for group, counts in self.speed_counts_dict.items():
+            plt.plot(steps, counts, label=group.replace("_", " ").capitalize())
+        plt.title("Agent Count Over Time")
+        plt.xlabel("Step")
+        plt.ylabel("Count")
+        plt.legend()
+        plt.grid(True)
+
+        # 2. Proportions
+        plt.subplot(1, 3, 2)
+        predator_props = []
+        prey_props = []
+        for i in steps:
+            pred1 = self.speed_counts_dict["speed_1_predator"][i]
+            pred2 = self.speed_counts_dict["speed_2_predator"][i]
+            prey1 = self.speed_counts_dict["speed_1_prey"][i]
+            prey2 = self.speed_counts_dict["speed_2_prey"][i]
+            predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
+            prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
+
+        plt.plot(steps, predator_props, label="Speed 2 Predator %")
+        plt.plot(steps, prey_props, label="Speed 2 Prey %")
+        plt.title("Speed 2 Agent Proportion")
+        plt.xlabel("Step")
+        plt.ylabel("Proportion")
+        plt.legend()
+        plt.grid(True)
+
+        # 3. Average Age
+        plt.subplot(1, 3, 3)
+        for group, ages in self.average_ages.items():
+            plt.plot(steps, ages, label=group.replace("_", " ").capitalize())
+        plt.title("Average Age per Group")
+        plt.xlabel("Step")
+        plt.ylabel("Age")
+        plt.legend()
+        plt.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+class PopulationChart:
+    def __init__(self):
+        self.time_steps = []
+        self.predator_counts = []
+        self.prey_counts = []
+
+    def record(self, step, agents):
+        self.time_steps.append(step)
+        self.predator_counts.append(sum(1 for a in agents if "predator" in a))
+        self.prey_counts.append(sum(1 for a in agents if "prey" in a))
+
+    def plot(self):
+        plt.figure(figsize=(10, 5))
+        plt.plot(self.time_steps, self.predator_counts, label='Predators', color='red')
+        plt.plot(self.time_steps, self.prey_counts, label='Prey', color='blue')
+        plt.xlabel('Time Step')
+        plt.ylabel('Number of Agents')
+        plt.title('Agent Population Over Time')
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()

@@ -20,7 +20,7 @@ from ray.tune.registry import register_env
 
 # discretionary libraries
 from predpreygrass.rllib.predpreygrass_rllib_env_moore_speed import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
-from predpreygrass.rllib.config_env import config_env
+from predpreygrass.rllib.config_env_speed import config_env
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -70,14 +70,18 @@ def env_creator(config):
 register_env("PredPreyGrass", env_creator)
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    # Expected format: "predator_0_speed_1", "prey_5_speed_2"
-    if "predator" in agent_id:
-        speed = agent_id.split("_")[-1]
-        return f"predator_speed_{speed}"
-    elif "prey" in agent_id:
-        speed = agent_id.split("_")[-1]
-        return f"prey_speed_{speed}"
-    return None
+    # Expected format: "speed_1_predator_0", "speed_2_prey_5"
+    parts = agent_id.split("_")
+    # parts[0] = "speed"
+    # parts[1] = speed value
+    # parts[2] = role ("predator" or "prey")
+    # parts[3] = agent index (not needed)
+    speed = parts[1]
+    role = parts[2]
+    # Example output:
+    # "speed_1_predator_0" → "speed_1_predator"
+    # "speed_2_prey_5" → "speed_2_prey"
+    return f"speed_{speed}_{role}"
 
 if __name__ == "__main__":
     ray.shutdown()
@@ -89,23 +93,23 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "//home/doesburg/ray_results/PPO_2025-03-24_19-17-36"  # Set your actual checkpoint dir
+    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-26_00-25-03"  # Set your actual checkpoint dir
     #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
     
     sample_env = env_creator({})  # Create a single instance
     # Observation/action spaces for the sample policies
-    obs_space_pred = sample_env.observation_spaces["predator_0"]
-    act_space_pred = sample_env.action_spaces["predator_0"]
-    obs_space_prey = sample_env.observation_spaces["prey_0"]
-    act_space_prey = sample_env.action_spaces["prey_0"]
+    obs_space_pred = sample_env.observation_spaces["speed_1_predator_0"]
+    act_space_pred = sample_env.action_spaces["speed_1_predator_0"]
+    obs_space_prey = sample_env.observation_spaces["speed_1_prey_0"]
+    act_space_prey = sample_env.action_spaces["speed_1_prey_0"]
 
-    predator_speeds = [1, 2, 3]
-    prey_speeds = [1, 2, 3]
+    predator_speeds = [1, 2]
+    prey_speeds = [1, 2]
 
     module_specs = {}
 
     for speed in predator_speeds:
-        policy_id = f"predator_speed_{speed}"
+        policy_id = f"speed_{speed}_predator"
         module_specs[policy_id] = RLModuleSpec(
             module_class=DefaultPPOTorchRLModule,
             observation_space=obs_space_pred,
@@ -124,7 +128,7 @@ if __name__ == "__main__":
         )
 
     for speed in prey_speeds:
-        policy_id = f"prey_speed_{speed}"
+        policy_id = f"speed_{speed}_prey"
         module_specs[policy_id] = RLModuleSpec(
             module_class=DefaultPPOTorchRLModule,
             observation_space=obs_space_prey,
@@ -167,7 +171,7 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs}
+                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
