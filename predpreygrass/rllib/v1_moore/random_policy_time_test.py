@@ -1,4 +1,3 @@
-from predpreygrass.utils.renderer import MatPlotLibRenderer, PopulationChart
 from predpreygrass.rllib.v1_moore.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries

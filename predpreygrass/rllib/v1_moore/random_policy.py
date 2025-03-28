@@ -36,7 +36,7 @@ if __name__ == "__main__":
         if verbose_observation:
             for agent in env.agents:
                 print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")
-                print("Wallls")
+                print("Walls")
                 print(observations[agent][0])
                 print("Predators")
                 print(observations[agent][1])

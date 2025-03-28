@@ -8,6 +8,7 @@ from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 import torch
 import time
+import os
 
 verbose_grid = False
 verbose_actions = False
@@ -31,12 +32,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     return None
 
 # Load trained model from checkpoint
-#checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029"  # Update as needed
-#checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029/PPO_2025-03-15_10-05-54/PPO_PredPreyGrass_b39a3_00000_0_2025-03-15_10-05-54/checkpoint_000005"  # Update as needed
-checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-20_15-16-59/PPO_PredPreyGrass_fc60b_00000_0_2025-03-20_15-16-59/checkpoint_000024"  # Update as needed
-
-
-# Load RLlib Algorithm from checkpoint
+checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v1_moore/trained_model/PPO_PredPreyGrass_437b7_00000_0_2025-03-24_19-17-36/checkpoint_000029')}"
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
