@@ -1,9 +1,9 @@
 config_env = {
 
-    "max_steps": 250,
+    "max_steps": 1000,
 
     # Grid and Observation Settings
-    "grid_size": 25,
+    "grid_size": 30,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
     "predator_obs_range": 7,
     "prey_obs_range": 9,
@@ -24,14 +24,14 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     
     # Learning agents
-    "n_possible_speed_1_predators": 25,
-    "n_possible_speed_2_predators": 25,
-    "n_possible_speed_1_prey": 25,
-    "n_possible_speed_2_prey": 25,
-    "n_initial_active_speed_1_predator": 6,
-    "n_initial_active_speed_1_prey": 8,
-    "n_initial_active_speed_2_predator": 0,
-    "n_initial_active_speed_2_prey": 0,
+    "n_possible_speed_1_predators": 15,
+    "n_possible_speed_2_predators": 15,
+    "n_possible_speed_1_prey": 21,
+    "n_possible_speed_2_prey": 21,
+    "n_initial_active_speed_1_predator": 5,
+    "n_initial_active_speed_1_prey": 7,
+    "n_initial_active_speed_2_predator": 5,
+    "n_initial_active_speed_2_prey": 7,
     
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
@@ -43,6 +43,6 @@ config_env = {
 
     "verbose_engagement": False,
     "verbose_movement": False,
-    "verbose_spawning": True,
+    "verbose_spawning": False,
 
 }

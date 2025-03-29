@@ -25,7 +25,7 @@ if __name__ == "__main__":
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
 
-    grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
+    grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
     combined_evolution_visualizer = CombinedEvolutionVisualizer()
 
 
@@ -65,7 +65,6 @@ if __name__ == "__main__":
 
         if terminations["__all__"]:
             print("Environment terminated properly by termination.")
-            print("Episode rewards: ", {k: round(v, 1) for k, v in env.cumulative_rewards.items()})
             break
         if truncations["__all__"]:
             print("Environment terminated properly by truncation.")
@@ -73,8 +72,7 @@ if __name__ == "__main__":
 
         #sleep(0.1)
 
-    grid_visualizer.close()
     combined_evolution_visualizer.plot()
-    #average_age_visualizer.plot()
-    # Plot the evolution of agent types
-    #evolution_visualizer.plot()
+    grid_visualizer.close()
+
+

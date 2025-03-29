@@ -401,10 +401,7 @@ class PredPreyGrass(MultiAgentEnv):
 
                     observations[caught_prey] = self._get_observation(caught_prey)
                     rewards[caught_prey] = self.penalty_prey_caught
-                    self.cumulative_rewards.setdefault(agent, 0.0)
-                    self.cumulative_rewards.setdefault(caught_prey, 0.0)
-                    self.cumulative_rewards[agent] += rewards[agent]
-                    self.cumulative_rewards[caught_prey] += rewards[caught_prey]
+                    self.cumulative_rewards[caught_prey] += rewards[caught_prey]   
 
                     # Remove prey
                     terminations[caught_prey] = True

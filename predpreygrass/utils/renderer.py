@@ -267,7 +267,8 @@ class MatPlotLibRenderer:
     A class for visualizing a grid-based environment using Matplotlib.
     """
 
-    def __init__(self, grid_size, agents, trace_length=5):
+    #def __init__(self, grid_size, agents, trace_length=5):
+    def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0):
         """
         Initialize the visualizer.
 
@@ -280,14 +281,24 @@ class MatPlotLibRenderer:
         self.agents = set(agents)
         self.trace_length = trace_length
         self.agent_traces = {agent: [] for agent in agents}
+        self.show_gridlines = show_gridlines
+        self.scale = scale 
 
         # Set up the plot
-        self.fig, self.ax = plt.subplots(figsize=(6, 6))
+        self.fig, self.ax = plt.subplots(figsize=(6 * self.scale, 6 * self.scale))
+
         self.ax.set_xlim(-0.5, grid_size[1] - 0.5)
         self.ax.set_ylim(-0.5, grid_size[0] - 0.5)
-        self.ax.set_xticks(range(grid_size[1]))
-        self.ax.set_yticks(range(grid_size[0]))
-        self.ax.grid(True, linestyle="--", linewidth=0.5, color="gray")
+
+        if self.show_gridlines:
+            self.ax.set_xticks(range(grid_size[1]))
+            self.ax.set_yticks(range(grid_size[0]))
+            self.ax.grid(True, linestyle="--", linewidth=0.5, color="gray")
+        else:
+            self.ax.set_xticks([])
+            self.ax.set_yticks([])
+            self.ax.grid(False)
+
         self.ax.set_aspect("equal")
 
         # Flip the y-axis so (0,0) is at the bottom-left
@@ -309,14 +320,6 @@ class MatPlotLibRenderer:
         self.grass_marker = "■"
 
     def update(self, agent_positions, step):
-        """
-        Update the visualization with new agent positions.
-
-        Args:
-            agent_positions (dict): Dictionary of agent positions, e.g.,
-                                    {"predator_0": [2, 3], "prey_0": [4, 5]}.
-            step (int): The current simulation step.
-        """
         self.ax.set_title(f"Environment - Step {step}", fontsize=14)
 
         # Remove old agent markers
@@ -331,11 +334,9 @@ class MatPlotLibRenderer:
         dead_agents = self.agents - current_agents
         for agent in dead_agents:
             if agent in self.trace_lines:
-                self.trace_lines[agent].set_data([], [])  # Clear trace
+                self.trace_lines[agent].set_data([], [])
             if agent in self.agent_traces:
                 del self.agent_traces[agent]
-
-        # Update agent set
         self.agents = current_agents
 
         # Update traces for remaining agents
@@ -346,14 +347,12 @@ class MatPlotLibRenderer:
                 )
                 continue
 
-            # Maintain trace history
             if agent not in self.agent_traces:
                 self.agent_traces[agent] = []
             if len(self.agent_traces[agent]) >= self.trace_length:
                 self.agent_traces[agent].pop(0)
             self.agent_traces[agent].append(position)
 
-            # Update Line2D traces
             trace_array = np.array(self.agent_traces[agent])
             if len(trace_array) > 1:
                 self.trace_lines[agent].set_data(trace_array[:, 1], trace_array[:, 0])
@@ -361,14 +360,31 @@ class MatPlotLibRenderer:
         # Draw agents
         for agent, (x, y) in agent_positions.items():
             if "grass" in agent:
-                continue  # Grass agents are static
+                continue
+
+            # Determine marker
             marker = self.predator_marker if "predator" in agent else self.prey_marker
-            color = "red" if "predator" in agent else "blue"
+
+            # Determine color
+            if "speed_1_predator" in agent:
+                color = "#ff9999"  # light red
+            elif "speed_2_predator" in agent:
+                color = "#cc0000"  # dark red
+            elif "speed_1_prey" in agent:
+                color = "#9999ff"  # light blue
+            elif "speed_2_prey" in agent:
+                color = "#0000cc"  # dark blue
+            elif "predator" in agent:
+                color = "red"  # fallback for classic predator
+            elif "prey" in agent:
+                color = "blue"  # fallback for classic prey
+            else:
+                color = "black"  # unknown agent type fallback
+
             self.agent_texts[agent] = self.ax.text(
                 y, x, marker, color=color, fontsize=12, ha="center", va="center"
             )
 
-        # Redraw only modified elements
         plt.draw()
         plt.pause(0.01)
 

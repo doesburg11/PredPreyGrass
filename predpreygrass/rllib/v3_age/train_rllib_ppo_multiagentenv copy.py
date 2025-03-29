@@ -8,6 +8,9 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
+from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
+from predpreygrass.rllib.v3_age.config_env import config_env
+
 #  external libraries
 import ray
 from ray import train, tune
@@ -17,10 +20,9 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
+import os
 
 # discretionary libraries
-from predpreygrass.rllib.predpreygrass_rllib_env_moore_speed import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
-from predpreygrass.rllib.config_env_speed import config_env
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -93,58 +95,92 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    checkpoint_dir = "/home/doesburg/ray_results/PPO_2025-03-26_00-25-03"  # Set your actual checkpoint dir
-    #checkpoint_dir = "path_to_checkpoints_dir"  # Set your actual checkpoint path
-    
+    # Set your actual checkpoint path if you want to restore training
+    # checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_model/')}"
+    checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
+
     sample_env = env_creator({})  # Create a single instance
     # Observation/action spaces for the sample policies
-    obs_space_pred = sample_env.observation_spaces["speed_1_predator_0"]
-    act_space_pred = sample_env.action_spaces["speed_1_predator_0"]
-    obs_space_prey = sample_env.observation_spaces["speed_1_prey_0"]
-    act_space_prey = sample_env.action_spaces["speed_1_prey_0"]
+    obs_space_pred_s1 = sample_env.observation_spaces["speed_1_predator_0"]
+    act_space_pred_s1 = sample_env.action_spaces["speed_1_predator_0"]
+    obs_space_pred_s2 = sample_env.observation_spaces["speed_2_predator_0"]
+    act_space_pred_s2 = sample_env.action_spaces["speed_2_predator_0"]
 
-    predator_speeds = [1, 2]
-    prey_speeds = [1, 2]
+    obs_space_prey_s1 = sample_env.observation_spaces["speed_1_prey_0"]
+    act_space_prey_s1 = sample_env.action_spaces["speed_1_prey_0"]
+    obs_space_prey_s2 = sample_env.observation_spaces["speed_2_prey_0"]
+    act_space_prey_s2 = sample_env.action_spaces["speed_2_prey_0"]
 
     module_specs = {}
 
-    for speed in predator_speeds:
-        policy_id = f"speed_{speed}_predator"
-        module_specs[policy_id] = RLModuleSpec(
-            module_class=DefaultPPOTorchRLModule,
-            observation_space=obs_space_pred,
-            action_space=act_space_pred,
-            inference_only=False,
-            model_config={
-                "conv_filters": [
-                    [16, [3, 3], 1],
-                    [32, [3, 3], 1],
-                    [64, [3, 3], 1],
-                ],
-                "fcnet_hiddens": [256, 256],
-                "fcnet_activation": "relu",
-            },
-            catalog_class=None,
-        )
+    module_specs["speed_1_predator"] = RLModuleSpec(
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space_pred_s1,
+        action_space=act_space_pred_s1,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
+        catalog_class=None,
+    )
 
-    for speed in prey_speeds:
-        policy_id = f"speed_{speed}_prey"
-        module_specs[policy_id] = RLModuleSpec(
-            module_class=DefaultPPOTorchRLModule,
-            observation_space=obs_space_prey,
-            action_space=act_space_prey,
-            inference_only=False,
-            model_config={
-                "conv_filters": [
-                    [16, [3, 3], 1],
-                    [32, [3, 3], 1],
-                    [64, [3, 3], 1],
-                ],
-                "fcnet_hiddens": [256, 256],
-                "fcnet_activation": "relu",
-            },
-            catalog_class=None,
-        )
+    module_specs["speed_2_predator"] = RLModuleSpec(
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space_pred_s2,
+        action_space=act_space_pred_s2,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
+        catalog_class=None,
+    )
+
+    module_specs["speed_1_prey"] = RLModuleSpec(
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space_prey_s1,
+        action_space=act_space_prey_s1,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
+        catalog_class=None,
+    )
+
+    module_specs["speed_2_prey"] = RLModuleSpec(
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space_prey_s2,
+        action_space=act_space_prey_s2,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
+        catalog_class=None,
+    )
+
 
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
 

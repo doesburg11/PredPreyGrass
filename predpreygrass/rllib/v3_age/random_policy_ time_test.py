@@ -2,7 +2,7 @@ import time
 import numpy as np
 from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass  
 
-n_steps = 1
+n_steps = 1000
 seed_value = 42  # Set seed for reproducibility
 
 if __name__ == "__main__":
@@ -26,14 +26,11 @@ if __name__ == "__main__":
         step_end = time.time()  # End timing this step
         step_times.append(step_end - step_start)
 
-        #print(f"Step {step + 1} execution time: {step_end - step_start:.6f} seconds")
-
         if terminations["__all__"]:
-            print("Environment terminated properly by termination.")
-            print("Episode rewards: ", {k: round(v, 1) for k, v in env.cumulative_rewards.items()})
+            print("Environment terminated by termination.")
             break
         if truncations["__all__"]:
-            print("Environment terminated properly by truncation.")
+            print("Environment terminated by truncation.")
             break
 
     total_end_time = time.time()  # End timing the entire execution
@@ -41,6 +38,7 @@ if __name__ == "__main__":
 
     if step_times:
         average_step_time = sum(step_times) / len(step_times)
+        print(f"Steps executed: {len(step_times)}")
         print(f"Average step execution time: {average_step_time:.6f} seconds")
 
     print(f"Total execution time: {total_execution_time:.4f} seconds")

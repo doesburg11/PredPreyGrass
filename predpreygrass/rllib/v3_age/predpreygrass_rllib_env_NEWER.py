@@ -395,16 +395,15 @@ class PredPreyGrass(MultiAgentEnv):
                     rewards[agent] = self.reward_predator_catch_prey
                     self.cumulative_rewards.setdefault(agent, 0)
 
+                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards[agent] += rewards[agent]
                     self.agent_energies[agent] += self.agent_energies[caught_prey]
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
                     observations[caught_prey] = self._get_observation(caught_prey)
                     rewards[caught_prey] = self.penalty_prey_caught
-                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards.setdefault(caught_prey, 0.0)
-                    self.cumulative_rewards[agent] += rewards[agent]
-                    self.cumulative_rewards[caught_prey] += rewards[caught_prey]
+                    self.cumulative_rewards[caught_prey] += rewards[caught_prey]   
 
                     # Remove prey
                     terminations[caught_prey] = True
@@ -421,6 +420,7 @@ class PredPreyGrass(MultiAgentEnv):
                 observations[agent] = self._get_observation(agent)
                 self.cumulative_rewards.setdefault(agent, 0)
 
+                self.cumulative_rewards.setdefault(agent, 0.0)
                 self.cumulative_rewards[agent] += rewards[agent]
                 terminations[agent] = False
                 truncations[agent] = False
@@ -440,6 +440,7 @@ class PredPreyGrass(MultiAgentEnv):
                         rewards[agent] = self.reward_prey_eat_grass
                         self.cumulative_rewards.setdefault(agent, 0)
 
+                        self.cumulative_rewards.setdefault(agent, 0.0)
                         self.cumulative_rewards[agent] += rewards[agent]
                         self.agent_energies[agent] += self.grass_energies[caught_grass]
                         self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
@@ -454,6 +455,7 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[agent] = self._get_observation(agent)
                     self.cumulative_rewards.setdefault(agent, 0)
 
+                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards[agent] += rewards[agent]
                     terminations[agent] = False
                     truncations[agent] = False
@@ -513,6 +515,7 @@ class PredPreyGrass(MultiAgentEnv):
                     rewards[new_agent] = 0
                     rewards[agent] = self.reproduction_reward_predator
                     self.cumulative_rewards[new_agent] = 0
+                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards[agent] += rewards[agent]
 
                     observations[new_agent] = self._get_observation(new_agent)
@@ -571,6 +574,7 @@ class PredPreyGrass(MultiAgentEnv):
                     rewards[new_agent] = 0
                     rewards[agent] = self.reproduction_reward_prey
                     self.cumulative_rewards[new_agent] = 0
+                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards[agent] += rewards[agent]
 
                     observations[new_agent] = self._get_observation(new_agent)
