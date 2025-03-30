@@ -102,7 +102,6 @@ def build_module_spec(obs_space, act_space):
     )
 
 
-
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(

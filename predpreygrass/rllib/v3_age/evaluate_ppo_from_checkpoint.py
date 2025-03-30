@@ -39,8 +39,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 # Load trained model from checkpoint
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029"  # Update as needed
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029/PPO_2025-03-15_10-05-54/PPO_PredPreyGrass_b39a3_00000_0_2025-03-15_10-05-54/checkpoint_000005"  # Update as needed
-checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_model/PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000007')}"
-
+checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_1/PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026')}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
@@ -127,7 +126,7 @@ while not done:
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    time.sleep(0.1)
+    #time.sleep(0.1)
 
     # Print active agents after step
     #print(f"Active Agents After Step: {env.agents}")  # Debugging
