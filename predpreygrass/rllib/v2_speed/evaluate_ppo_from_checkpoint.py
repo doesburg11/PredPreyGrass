@@ -8,6 +8,8 @@ from ray.tune.registry import register_env
 import torch
 import os
 import time
+import os
+
 
 verbose_grid = False
 verbose_actions = False
@@ -22,7 +24,6 @@ def env_creator(config):
 
 register_env("PredPreyGrass", lambda config: env_creator(config))
 
-# Policy mapping function
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
     if "speed_1_predator" in agent_id:

@@ -61,6 +61,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
         self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
 
+        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
+        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
+
 
         self.cumulative_rewards = {}  # Track total rewards per agent
         self.predator_speeds = [1, 2]
@@ -472,7 +475,7 @@ class PredPreyGrass(MultiAgentEnv):
                     parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
                     
                     # Mutation: 10% chance to switch speed
-                    if self.rng.random() < 0.10:
+                    if self.rng.random() < self.mutation_rate_predator:
                         new_speed = 2 if parent_speed == 1 else 1
                     else:
                         new_speed = parent_speed
@@ -530,7 +533,7 @@ class PredPreyGrass(MultiAgentEnv):
                     parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
                     # Mutation: 10% chance to switch speed
-                    if self.rng.random() < 0.10:
+                    if self.rng.random() < self.mutation_rate_prey:
                         new_speed = 2 if parent_speed == 1 else 1
                     else:
                         new_speed = parent_speed

@@ -1,5 +1,5 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib ne API stack.
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
@@ -110,7 +110,7 @@ if __name__ == "__main__":
     )
     register_env("PredPreyGrass", env_creator)
     # Set your actual checkpoint path if you want to restore training
-    checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_model/')}"
+    checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_2')}"
     #checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
 
     sample_env = env_creator({})  # Create a single instance

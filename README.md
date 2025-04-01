@@ -5,14 +5,21 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
-</br>
 
-<p align="center">
-    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
-    
-</p>
+# Artifical Life Intelligence: Evolving Multi-Agent Intelligence in an Artificial Ecology
 
-</br>
+This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just trained—they are born, age, reproduce, and even mutate.
+
+We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via Proximal Policy Optimization). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation.
+
+## Key Features
+
+- **Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
+- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
+- **Multi-Policy Training**: Each agent type (e.g., speed-1 predator, speed-2 prey) is trained via its own policy module using `MultiRLModuleSpec`.
+- **Gridworld Ecology**: Agents observe their local neighborhood with species-specific ranges; prey seek grass, predators hunt prey.
+- **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
+- **Visual Diagnostics**: Integrated tools for population charts, evolution visualizers, and grid-based renderings.
 
 
 <p align="center">
@@ -61,6 +68,15 @@ Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic d
 </table>
 
 ## Pred-Prey-Grass MARL with PettingZoo/SB3 PPO (centralized training)
+</br>
+
+<p align="center">
+    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    
+</p>
+
+</br>
+
 <br>
 <p align="center">
     <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>

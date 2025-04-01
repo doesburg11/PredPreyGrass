@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 import os
+import csv
 
 class PyGameRenderer:
     """
@@ -262,6 +263,7 @@ class PyGameRenderer:
         if self.screen is not None:
             pygame.quit()
             self.screen = None
+
 class MatPlotLibRenderer:
     """
     A class for visualizing a grid-based environment using Matplotlib.
@@ -388,7 +390,6 @@ class MatPlotLibRenderer:
         plt.draw()
         plt.pause(0.01)
 
-
     def close(self):
         """Close the visualization."""
         plt.close(self.fig)
@@ -506,7 +507,8 @@ class AverageAgeVisualizer:
         plt.show()
 
 class CombinedEvolutionVisualizer:
-    def __init__(self):
+    def __init__(self, destination_path=None):
+        self.destination_path = destination_path
         self.speed_counts_dict = {
             "speed_1_predator": [],
             "speed_2_predator": [],
@@ -547,11 +549,19 @@ class CombinedEvolutionVisualizer:
     def plot(self):
         steps = range(len(next(iter(self.speed_counts_dict.values()))))
         plt.figure(figsize=(18, 6))
+        color_map = {
+            'speed_1_predator': "#ff9999",
+            'speed_2_predator': "red",
+            'speed_1_prey': "#9999ff",
+            'speed_2_prey': "blue"
+        }
 
         # 1. Absolute counts
         plt.subplot(1, 3, 1)
+
         for group, counts in self.speed_counts_dict.items():
-            plt.plot(steps, counts, label=group.replace("_", " ").capitalize())
+            plt.plot(steps, counts, label=group.replace("_", " ").capitalize(), color=color_map.get(group, "black"), linewidth=2)
+
         plt.title("Agent Count Over Time")
         plt.xlabel("Step")
         plt.ylabel("Count")
@@ -570,26 +580,64 @@ class CombinedEvolutionVisualizer:
             predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
             prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
 
-        plt.plot(steps, predator_props, label="Speed 2 Predator %")
-        plt.plot(steps, prey_props, label="Speed 2 Prey %")
+        plt.plot(steps, [p * 100 for p in predator_props], label="Speed 2 Predator %", color="#cc0000", linewidth=2)
+        plt.plot(steps, [p * 100 for p in prey_props], label="Speed 2 Prey %", color="#0000cc", linewidth=2)
+        plt.ylabel("Percentage (%)")
+        plt.ylim(0, 100)
         plt.title("Speed 2 Agent Proportion")
         plt.xlabel("Step")
-        plt.ylabel("Proportion")
         plt.legend()
         plt.grid(True)
 
         # 3. Average Age
         plt.subplot(1, 3, 3)
         for group, ages in self.average_ages.items():
-            plt.plot(steps, ages, label=group.replace("_", " ").capitalize())
+            plt.plot(steps, ages, label=group.replace("_", " ").capitalize(), color=color_map.get(group, "black"), linewidth=2)
+
         plt.title("Average Age per Group")
         plt.xlabel("Step")
         plt.ylabel("Age")
         plt.legend()
         plt.grid(True)
 
-        plt.tight_layout()
-        plt.show()
+        # --- Save before plt.show() ---
+        if self.destination_path is not None:
+            os.makedirs(os.path.join(self.destination_path, "plots"), exist_ok=True)
+            plot_path = os.path.join(self.destination_path, "plots", "evolution_summary.png")
+            plt.tight_layout()
+            plt.savefig(plot_path)
+            print(f"Plot saved to: {plot_path}")
+            plt.show()
+
+            # --- CSV Output ---
+            csv_path = os.path.join(self.destination_path, "csv", "evolution_data.csv")
+            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+            with open(csv_path, mode="w", newline="") as file:
+                writer = csv.writer(file)
+                writer.writerow([
+                    "Step",
+                    "Speed_1_Predator", "Speed_2_Predator",
+                    "Speed_1_Prey", "Speed_2_Prey",
+                    "Predator_Prop_Speed2", "Prey_Prop_Speed2"
+                    "Avg_Age_S1_Predator", "Avg_Age_S2_Predator",
+                    "Avg_Age_S1_Prey", "Avg_Age_S2_Prey"
+                ])
+                for i in steps:
+                    row = [
+                        i,
+                        self.speed_counts_dict["speed_1_predator"][i],
+                        self.speed_counts_dict["speed_2_predator"][i],
+                        self.speed_counts_dict["speed_1_prey"][i],
+                        self.speed_counts_dict["speed_2_prey"][i],
+                        predator_props[i],
+                        prey_props[i],
+                        self.average_ages["speed_1_predator"][i],
+                        self.average_ages["speed_2_predator"][i],
+                        self.average_ages["speed_1_prey"][i],
+                        self.average_ages["speed_2_prey"][i],
+                    ]
+                    writer.writerow(row)
+            print(f"CSV saved to: {csv_path}")
 
 class PopulationChart:
     def __init__(self):

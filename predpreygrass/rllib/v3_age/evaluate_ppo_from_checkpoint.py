@@ -35,11 +35,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-
-# Load trained model from checkpoint
-#checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029"  # Update as needed
-#checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029/PPO_2025-03-15_10-05-54/PPO_PredPreyGrass_b39a3_00000_0_2025-03-15_10-05-54/checkpoint_000005"  # Update as needed
-checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_1/PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026')}"
+    
+checkpoint_root = './predpreygrass/rllib/v3_age/trained_models/config_2/'
+chechpoint_file = 'PPO_PredPreyGrass_a6a66_00000_0_2025-03-30_23-40-51/checkpoint_000022'
+checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
@@ -58,8 +57,8 @@ obs, _ = env.reset(seed=seed)
 # intitialize matplot lib renderer
 grid_size = (env.grid_size, env.grid_size)
 all_agents = env.possible_agents + env.grass_agents
-grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
-combined_evolution_visualizer = CombinedEvolutionVisualizer()
+grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
+combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
 population_chart = PopulationChart()
 
 step=0
@@ -135,6 +134,11 @@ print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
 predator_rewards = []
 prey_rewards = []
+speed_1_predator_rewards = []
+speed_1_prey_rewards = []
+speed_2_predator_rewards = []
+speed_2_prey_rewards = []
+
 
 print("\n--- Reward Breakdown per Agent ---")
 for agent_id, reward in env.cumulative_rewards.items():
@@ -144,20 +148,42 @@ for agent_id, reward in env.cumulative_rewards.items():
     elif "prey" in agent_id:
         prey_rewards.append(reward)
 
+for agent_id, reward in env.cumulative_rewards.items():
+    print(f"{agent_id:15}: {reward:.2f}")
+    if "speed_1_predator" in agent_id:
+        speed_1_predator_rewards.append(reward)
+    elif "speed_2_predator" in agent_id:
+        speed_2_predator_rewards.append(reward)
+    elif "speed_1_prey" in agent_id:
+        speed_1_prey_rewards.append(reward)
+    elif "speed_2_prey" in agent_id:
+        speed_2_prey_rewards.append(reward)
+
+
 total_predator_reward = sum(predator_rewards)
 total_prey_reward = sum(prey_rewards)
 total_reward_all = total_predator_reward + total_prey_reward
+total_speed_1_predator_reward = sum(speed_1_predator_rewards)
+total_speed_1_prey_reward = sum(speed_1_prey_rewards)
+total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
+total_speed_2_predator_reward = sum(speed_2_predator_rewards)
+total_speed_2_prey_reward = sum(speed_2_prey_rewards)
+total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_reward
+
 
 print("\n--- Aggregated Rewards ---")
-print(f"Total number of steps: {step-1}")
-print(f"Total Predator Reward: {total_predator_reward:.2f}")
-print(f"Total Prey Reward:     {total_prey_reward:.2f}")
-print(f"Total All-Agent Reward:{total_reward_all:.2f}")
-
+print(f"Total number of steps          : {step-1}")
+print(f"Total Predator Reward          : {total_predator_reward:.2f}")
+print(f"Total Prey Reward              : {total_prey_reward:.2f}")
+print(f"Total All-Agent Reward         : {total_reward_all:.2f}")
+print(f"Total Speed 1 Predator Reward  : {total_speed_1_predator_reward:.2f}")
+print(f"Total Speed 1 Prey Reward      : {total_speed_1_prey_reward:.2f}")
+print(f"Total All-Agent Reward Speed 1 : {total_reward_all_speed_1:.2f}")
+print(f"Total Speed 2 Predator Reward  : {total_speed_2_predator_reward:.2f}")
+print(f"Total Speed 2 Prey Reward      : {total_speed_2_prey_reward:.2f}")
+print(f"Total All-Agent Reward Speed 2 : {total_reward_all_speed_2:.2f}")
 
 population_chart.plot()
 combined_evolution_visualizer.plot()
-
-
 # Shutdown Ray after evaluation
 ray.shutdown()
