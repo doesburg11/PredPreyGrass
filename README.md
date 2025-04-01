@@ -6,19 +6,20 @@
 
 
 
-# Artifical Life Intelligence: Evolving Multi-Agent Intelligence in an Artificial Ecology
+# Intelligent Artificial Life: Evolving Multi-Agent Intelligence in an Artificial Ecology
 
-This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just trained—they are born, age, reproduce, and even mutate.
+This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
 
-We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via Proximal Policy Optimization). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation.
+We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation.
 
 ## Key Features
 
 - **Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
 - **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
-- **Multi-Policy Training**: Each agent type (e.g., speed-1 predator, speed-2 prey) is trained via its own policy module using `MultiRLModuleSpec`.
+- **Multi-Policy Training**: Each agent type (e.g., speed-1 predator, speed-2 prey) is (decentralized) trained via its own policy module.
 - **Gridworld Ecology**: Agents observe their local neighborhood with species-specific ranges; prey seek grass, predators hunt prey.
 - **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
+- **Mutation and Selection**: When agents reproduce, they may randomly mutate (e.g., switching speed class). This introduces a natural selection pressure shaping the agent population over time.
 - **Visual Diagnostics**: Integrated tools for population charts, evolution visualizers, and grid-based renderings.
 
 
