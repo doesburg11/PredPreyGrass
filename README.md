@@ -6,7 +6,7 @@
 
 
 
-# Intelligent Artificial Life: Evolving Multi-Agent Intelligence in an Artificial Ecology
+# Intelligent Artificial Life: Multi-Agent Reiforcement Learning meets Natural Selection
 
 This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
 
