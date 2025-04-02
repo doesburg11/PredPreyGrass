@@ -5,7 +5,7 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 # Intelligent Artificial Life: 
-## On the Origins of Multi-Agent Reinforcement Learning by means of Artificial Selection
+### On the Origins of Multi-Agent Reinforcement Learning by means of Artificial Selection
 
 This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
 
