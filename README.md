@@ -220,7 +220,7 @@ More emergent behavior and findings are described [on our website](https://www.b
         pip install tensorboard==2.18.0 
         ```
     
-## Getting started
+## Getting started with the PettinfZoo/SB3 solution
 
 ### Visualize a random policy with the PettingZoo/SB3 solution
 In Visual Studio Code run:
