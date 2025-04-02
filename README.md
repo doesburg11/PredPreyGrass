@@ -23,6 +23,29 @@ We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dyn
 - **Visual Diagnostics**: Integrated tools for population charts, evolution visualizers, and grid-based renderings.
 
 
+## Emergent Evolutionary Dynamics
+
+This environment doesn't just support pre-programmed behavior—it gives rise to **emergent population dynamics** through mutation, inheritance, and selection.
+
+One striking observation:
+
+> When trained with a 50/50 mix of speed-1 and speed-2 predators and prey, and evaluated with an initial population of only speed-1 agents (mutation rate: 10%), the population consistently evolved toward ~90% speed-2 agents after a few hundred steps.
+
+This shift occurred **without any manual reward shaping** or explicit encouragement. Speed-2 agents—once introduced via mutation—were more successful at acquiring energy and reproducing. As a result, they rapidly overtook the population.
+
+This is a clear example of **natural selection** within an artificial system:  
+- **Variation**: Introduced by random mutation of inherited traits (speed class).  
+- **Inheritance**: Agents retain behavior linked to their speed class via pre-trained policies.  
+- **Differential Fitness**: Faster agents outperform slower ones under the same environmental constraints.  
+- **Selection**: Traits that increase survival and reproduction become dominant.
+
+### Co-Evolution and the Red Queen Effect
+
+The mutual shift of both **prey and predator populations toward speed-2 variants** reflects a classic **Red Queen dynamic**: each species evolves not to get ahead absolutely, but to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward.
+
+This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is perpetual.
+
+
 <p align="center">
     <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
 </p>
