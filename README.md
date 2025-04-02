@@ -6,7 +6,7 @@
 
 
 
-# Intelligent Artificial Life: Multi-Agent Reinforcement Learning meets Natural Selection
+# Intelligent Artificial Life: Multi-Agent Reinforcement Learning by means of Artificial Selection
 
 This project explores emergent behaviors in a dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a grid-world simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
 
@@ -19,7 +19,7 @@ We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dyn
 - **Multi-Policy Training**: Each agent type (e.g., speed-1 predator, speed-2 prey) is (decentralized) trained via its own policy module.
 - **Gridworld Ecology**: Agents observe their local neighborhood with species-specific ranges; prey seek grass, predators hunt prey.
 - **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
-- **Mutation and Selection**: When agents reproduce, they may randomly mutate (e.g., switching speed class). This introduces a natural selection pressure shaping the agent population over time.
+- **Mutation and Selection**: When agents reproduce, they may randomly mutate (e.g., switching speed class). This introduces a natural selection (or more precise: *artificial selection*) pressure shaping the agent population over time.
 - **Visual Diagnostics**: Integrated tools for population charts, evolution visualizers, and grid-based renderings.
 
 
