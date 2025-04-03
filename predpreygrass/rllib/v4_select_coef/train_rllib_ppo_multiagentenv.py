@@ -21,6 +21,7 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import os
+import torch
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -101,8 +102,15 @@ def build_module_spec(obs_space, act_space):
 
 
 if __name__ == "__main__":
+    print("===============================================================")
+    print(torch.cuda.is_available())  # Should be True
+    print(torch.cuda.get_device_name(0))  # Should show RTX 5070 Ti
+    print("===============================================================")
+
     ray.shutdown()
     ray.init(
+        num_cpus=32,
+        num_gpus=1,
         log_to_driver=True,
         ignore_reinit_error=True,
     )
@@ -157,17 +165,23 @@ if __name__ == "__main__":
                 rl_module_spec=multi_module_spec
             )
             .env_runners(
-                num_env_runners=4,  # MOO: adjusted from 4 to 2
+                num_env_runners=6,  # MOO: adjusted from 4 to 2
                 num_envs_per_env_runner=4,  
                 rollout_fragment_length="auto",
                 sample_timeout_s=600,  
-                num_cpus_per_env_runner=1  
+                num_cpus_per_env_runner=5  
             )
             .resources(
-                num_cpus_for_main_process=2 
+                num_cpus_for_main_process=2,
+                num_gpus=1  # Enables GPU usage
+
             )       
             .callbacks(EpisodeReturn)
         )
+        print(f"Using GPU: {torch.cuda.is_available()}")
+        print(torch.cuda.is_available())
+        print(torch.cuda.get_device_name(0))  # Only works if cuda is available
+
 
         # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
