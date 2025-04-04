@@ -147,8 +147,8 @@ More emergent behavior and findings are described [on our website](https://www.b
 The environment described above, wether it is centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups througout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a slow-speed and high-speed agent. A slow speed agent can move restricted to its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move restricted to its extendded Moore neighborhood with range *r*=2.
 
 <p align="center">
-    <p align="center">Action spaces</p>
     <img src="./assets/images/readme/high-low-speed-agent.png" width="450" height="270"/>
+    <p align="center">Action spaces</p>
 </p>
 
 
