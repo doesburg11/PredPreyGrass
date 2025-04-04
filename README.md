@@ -144,7 +144,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ### Introducing mutation with reproducing agents
 
-The environment described above, wether it is centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups througout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a slow-speed and high-speed agent. A slow speed agent can move restricted to its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move restricted to its extendded Moore neighborhood with range *r*=2.
+The environment described above, wether it is centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups througout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a slow-speed and high-speed agent. A slow speed agent can move restricted to its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move restricted to its extended Moore neighborhood with range *r*=2.
 
 <p align="center">
     <img src="./assets/images/readme/high-low-speed-agent.png" width="450" height="270"/>
@@ -152,20 +152,9 @@ The environment described above, wether it is centralized or decentralized train
 </p>
 
 
-The experiment is that by reproduction of agents, there is a small change (say 5%) of mutating from a low-speed agent to a high-speed agent (and vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that when we start with only low-speed-predators and low-speed-prey in our evaluation, eventually the population of low-speed agents is replaced by high-speed agents for predators as well as prey.
+The experiment is that by the reproduction of agents, there is a small change (say 5%) of mutating from a low-speed agent to a high-speed agent (and vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that when we start with only low-speed-predators and low-speed-prey in our evaluation, eventually the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
 
-
-
-
-
-Unlike traditional RL, which optimizes policies for a fixed task, OERL aims to foster lifelong adaptation, creativity, and emergent behaviors in agen 
-One striking observation:
-
-> When trained with a 50/50 mix of speed-1 and speed-2 predators and prey, and evaluated with an initial population of only speed-1 agents (mutation rate: 10%), the population consistently evolved toward ~90% speed-2 agents after a few hundred steps.
-
-
-
-This shift occurred **without any manual reward shaping** or explicit encouragement. Speed-2 agents—once introduced via mutation—were more successful at acquiring energy and reproducing. As a result, they rapidly overtook the population.
+This shift occurred **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—were more successful at acquiring energy and reproducing. As a result, they rapidly overtook the population.
 
 This is a clear example of **natural selection** within an artificial system:  
 - **Variation**: Introduced by random mutation of inherited traits (speed class).  
@@ -175,16 +164,13 @@ This is a clear example of **natural selection** within an artificial system:
 
 ### Co-Evolution and the Red Queen Effect
 
-The mutual shift of both **prey and predator populations toward speed-2 variants** reflects a classic **Red Queen dynamic**: each species evolves not to get ahead absolutely, but to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward.
+The mutual shift of both **prey and predator populations toward gigh-speed variants** reflects also a classic **Red Queen dynamic**: each species evolves not to get ahead absolutely, but to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward.
 
-This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is perpetual.
+This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is key.
 
-Notably, agents in our system lack direct access to each other’s heritable traits such as speed class. Observations are limited to localized energy maps for predators, prey, and grass, with no explicit encoding of whether an observed agent is fast or slow. Despite this, we observe a clear evolutionary shift toward higher-speed phenotypes in both predator and prey populations. This shift occurs even when speed-2 variants are initially absent and must arise through rare mutations, suggesting that selection is driven not by trait recognition but by differential survival and reproductive success. Faster agents outperform their slower counterparts in the competitive landscape created by evolving opponents, leading to a mutual escalation in speed. This dynamic constitutes an implicit form of co-evolution consistent with the Red Queen hypothesis: species must continuously adapt, not to gain an absolute advantage, but merely to maintain relative fitness in a co-adaptive system.
+Notably, agents in our system lack direct access to each other’s heritable traits such as speed class. Observations are limited to localized energy maps for predators, prey, and grass, with no explicit encoding of whether an observed agent is fast or slow. Despite this, we observe a clear evolutionary shift toward higher-speed phenotypes in both predator and prey populations. This shift occurs even when high-speed variants are initially absent and must arise through rare mutations, suggesting that selection is driven not by trait recognition but by differential survival and reproductive success. Faster agents outperform their slower counterparts in the competitive landscape created by evolving opponents, leading to a mutual escalation in speed. This dynamic constitutes an implicit form of co-evolution consistent with the Red Queen hypothesis: species must continuously adapt, not to gain an absolute advantage, but merely to maintain relative fitness in a co-adaptive system.
 
 The Red Queen hypothesis (Van Valen, 1973) posits that organisms must continuously adapt and evolve not necessarily to gain a reproductive advantage, but to keep pace with the evolution of interacting species within a changing environment. It is named after the Red Queen’s remark in Through the Looking-Glass by Lewis Carroll: “It takes all the running you can do, to stay in the same place.” In ecological and evolutionary systems, this concept often manifests as co-evolutionary arms races—for instance, between predators and prey—where reciprocal selective pressures drive ongoing adaptation without stable equilibria.
-
-
-
 
 
 ## Installation
