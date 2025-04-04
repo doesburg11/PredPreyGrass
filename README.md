@@ -148,7 +148,7 @@ The environment described above, wether it is centralized or decentralized train
 
 <p align="center">
     <img src="./assets/images/readme/high-low-speed-agent.png" width="450" height="270"/>
-    <p align="center">Action spaces</p>
+    <p align="center"><b>Action spaces of low- and high-speed agents</b></p>
 </p>
 
 
