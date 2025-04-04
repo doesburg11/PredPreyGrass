@@ -175,7 +175,7 @@ The Red Queen hypothesis (Van Valen, 1973) posits that organisms must continuous
 
 ## Installation
 
-**Editor used:** Visual Studio Code 1.98.2 on Linux Mint 21.3 Cinnamon
+**Editor used:** Visual Studio Code 1.99.0 on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository: 
    ```bash
