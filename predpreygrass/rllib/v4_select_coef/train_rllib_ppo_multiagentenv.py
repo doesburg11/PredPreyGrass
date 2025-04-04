@@ -103,13 +103,15 @@ def build_module_spec(obs_space, act_space):
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(
+        num_cpus=32,  # Reserve 2 for OS/system overhead
+        num_gpus=0,
         log_to_driver=True,
         ignore_reinit_error=True,
     )
     register_env("PredPreyGrass", env_creator)
     # Set your actual checkpoint path if you want to restore training
-    checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v4_select_coef/trained_models/config_2')}"
-    #checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
+    #checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v4_select_coef/trained_models/config_2')}"
+    checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
 
     sample_env = env_creator({})  # Create a single instance
     sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
@@ -157,14 +159,21 @@ if __name__ == "__main__":
                 rl_module_spec=multi_module_spec
             )
             .env_runners(
-                num_env_runners=4,  # MOO: adjusted from 4 to 2
-                num_envs_per_env_runner=4,  
+                num_env_runners=12,  
+                num_envs_per_env_runner=2,  
                 rollout_fragment_length="auto",
                 sample_timeout_s=600,  
-                num_cpus_per_env_runner=1  
+                num_cpus_per_env_runner=2 
+            )
+            .learners(
+                num_learners=1,
+                num_cpus_per_learner=6,
+                num_gpus_per_learner=0
             )
             .resources(
-                num_cpus_for_main_process=2 
+                num_cpus_for_main_process=2,
+                num_gpus=0  # Enables GPU usage
+
             )       
             .callbacks(EpisodeReturn)
         )

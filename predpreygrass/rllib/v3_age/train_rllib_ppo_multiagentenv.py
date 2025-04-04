@@ -1,4 +1,5 @@
 """
+LAPTOP COMPUTER
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
@@ -8,7 +9,7 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
+from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v3_age.config_env import config_env
 
 #  external libraries
@@ -21,8 +22,6 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import os
-
-# discretionary libraries
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -104,6 +103,8 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
+
+
     ray.init(
         log_to_driver=True,
         ignore_reinit_error=True,
@@ -139,7 +140,6 @@ if __name__ == "__main__":
 
     except:
         print(f"Starting new training experiment.")
-
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
             PPOConfig()
