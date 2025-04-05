@@ -147,23 +147,24 @@ More emergent behavior and findings are described [on our website](https://www.b
 The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood (with range *r*=2). Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
 
 <p align="center">
-    <img src="./assets/images/readme/high-low-speed-agent.png" width="450" height="270"/>
+    <img src="./assets/images/readme/high-low-speed-agent.png" width="300" height="135"/>
     <p align="center"><b>Action spaces of low- and high-speed agents</b></p>
 </p>
 
 
-The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (2.5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents first increase rappidly but taper off after some time. 
+The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (2.5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
 
 <p align="center">
-    <img src="./assets/images/readme/training_low_v_high_speed.png" width="450" height="150"/>
+    <img src="./assets/images/readme/training_low_v_high_speed.png" width="600" height="200"/>
     <p align="center"><b>Training rseults of low-speed and high-speed agents</b></p>
 </p>
 
+The training results suggests that the population of the low-speed agents diminishes relative to the population of high-speed agents, since (average) rewards are directly and solely linked to reproduction success for all agent groups. This crowding out of low-speed agents occurs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—apparently are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
 
+Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only low-speed-predators and low-speed-prey** in our evaluation, eventually the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
 
- it appears that when we start with only low-speed-predators and low-speed-prey in our evaluation, eventually the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
+[PICTURE]
 
-This crowding out of low-speed agents occurrs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
 
 This is a clear example of **natural selection** within an artificial system:  
 - **Variation**: Introduced by random mutation of inherited traits (speed class).  
@@ -177,12 +178,9 @@ The mutual shift of both **prey and predator populations toward high-speed varia
 
 This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is key.
 
-Notably, agents in our system lack direct access to each other’s heritable traits such as speed class. Observations are limited to localized energy maps for predators, prey, and grass, with no explicit encoding of whether an observed agent is fast or slow. Despite this, we observe a clear evolutionary shift toward higher-speed phenotypes in both predator and prey populations. This shift occurs even when high-speed variants are initially absent and must arise through rare mutations, suggesting that selection is driven not by trait recognition but by differential survival and reproductive success. Faster agents outperform their slower counterparts in the competitive landscape created by evolving opponents, leading to a mutual escalation in speed. This dynamic constitutes an implicit form of co-evolution consistent with the Red Queen hypothesis: species must continuously adapt, not to gain an absolute advantage, but merely to maintain relative fitness in a co-adaptive system.
+Notably, agents in this system lack direct access to each other’s heritable traits such as speed class. Observations are limited to localized energy maps for predators, prey, and grass, with no explicit encoding of whether an observed agent is fast or slow. Despite this, we observe a clear evolutionary shift toward higher-speed phenotypes in both predator and prey populations. This shift occurs even when high-speed variants are initially absent and must arise through rare mutations, suggesting that selection is driven not by trait recognition but by differential survival and reproductive success. Faster agents outperform their slower counterparts in the competitive landscape created by evolving opponents, leading to a mutual escalation in speed. This dynamic constitutes an implicit form of co-evolution consistent with the Red Queen hypothesis: species must continuously adapt, not to gain an absolute advantage, but merely to maintain relative fitness in a co-adaptive system.
 
-The Red Queen hypothesis (Van Valen, 1973) posits that organisms must continuously adapt and evolve not necessarily to gain a reproductive advantage, but to keep pace with the evolution of interacting species within a changing environment. It is named after the Red Queen’s remark in Through the Looking-Glass by Lewis Carroll: “It takes all the running you can do, to stay in the same place.” In ecological and evolutionary systems, this concept often manifests as co-evolutionary arms races—for instance, between predators and prey—where reciprocal selective pressures drive ongoing adaptation without stable equilibria.
-
-
-## Installation
+## Installation of the repository
 
 **Editor used:** Visual Studio Code 1.99.0 on Linux Mint 22.0 Cinnamon
 
@@ -215,40 +213,12 @@ The Red Queen hypothesis (Van Valen, 1973) posits that organisms must continuous
         pip install supersuit==3.9.3 
         ```
     -   ```bash 
-        pip install ray[rllib]==2.43.0
+        pip install ray[rllib]==2.44.1
         ```
     -   ```bash 
         pip install tensorboard==2.18.0 
         ```
     
-## Getting started with the PettinfZoo/SB3 solution
-
-### Visualize a random policy with the PettingZoo/SB3 solution
-In Visual Studio Code run:
-```predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
-</br>
-<p align="center">
-    <img src="./assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
-</p>
-
-
-### Training and visualize trained model using PPO from stable baselines3
-
-Adjust parameters accordingly in:
-
-[```predpreygrass/pettingzoo/config/config_predpreygrass.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py)
-
-In Visual Studio Code run:
-
-[```predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
-
-To evaluate and visualize after training follow instructions in:
-
-[```predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
-
-Batch training and evaluating in one go:
-
-[```predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
 
 ## References
 
