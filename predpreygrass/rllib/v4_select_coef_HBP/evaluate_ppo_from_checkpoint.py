@@ -61,6 +61,7 @@ all_agents = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
 combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
 
+
 step=0
 done = False
 total_reward = 0
@@ -74,7 +75,7 @@ while not done:
         # Get the RLModule (policy model) from the Learner Group
         policy_module = rl_modules[policy_id]
         # Convert observation to tensor format required for _forward_inference()
-        obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)  # Add batch dimension
+        obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)  # Convert obs to tensor
         # Use _forward_inference() to compute the next action
         with torch.no_grad():
             action_output = policy_module._forward_inference({"obs": obs_tensor})
@@ -87,7 +88,7 @@ while not done:
         action_dict[agent_id] = action
     if verbose_actions:
         print("----------------------------------------------------------------------------------")
-        print("Step:",step)
+        print("Step:", step)
         print("----------------------------------------------------------------------------------")
         print("Actions:", action_dict)
         print("----------------------------------------------------------------------------------")
@@ -103,29 +104,19 @@ while not done:
     if verbose_grid:
         print(f"Step {step}:")
         print("-----------------------------------------")
-        #print(f"Actions: {action_dict}")
         env._print_grid_from_positions()
         env._print_grid_from_state()
         print("-----------------------------------------")
 
-    # Print termination status for debugging
-    #print(f"Terminations: {terminations}")
+    # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
     grid_visualizer.update(merged_positions, step)
-    step+=1
-    # Count current number of agents
-    num_predators = sum(1 for agent in env.agents if "predator" in agent)
-    num_prey = sum(1 for agent in env.agents if "prey" in agent)
-
-    # Sum rewards
+    step += 1
     total_reward += sum(rewards.values())
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
     #time.sleep(0.1)
-
-    # Print active agents after step
-    #print(f"Active Agents After Step: {env.agents}")  # Debugging
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---

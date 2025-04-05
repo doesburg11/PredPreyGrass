@@ -24,12 +24,12 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     
     # Learning agents
-    "n_possible_speed_1_predators": 50,  #30
-    "n_possible_speed_2_predators": 50,  #30
-    "n_possible_speed_1_prey": 70,  #40
-    "n_possible_speed_2_prey": 70,  #40
-    "n_initial_active_speed_1_predator": 10,  # 5
-    "n_initial_active_speed_1_prey": 14,  # 7
+    "n_possible_speed_1_predators": 100,  #30
+    "n_possible_speed_2_predators": 100,  #30
+    "n_possible_speed_1_prey": 200,  #40
+    "n_possible_speed_2_prey": 200,  #40
+    "n_initial_active_speed_1_predator": 25,  # 5
+    "n_initial_active_speed_1_prey": 50,  # 7
     "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 0,  # 7
     

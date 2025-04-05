@@ -1,3 +1,6 @@
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.utils.renderer import MatPlotLibRenderer
+
 # external libraries
 import ray
 from ray.rllib.algorithms.algorithm import Algorithm
@@ -7,9 +10,6 @@ import time
 import cv2
 import os
 
-# discretionary libararies
-from predpreygrass.rllib.predpreygrass_rllib_env import PredPreyGrass  
-from predpreygrass.utils.renderer import MatPlotLibRenderer
 
 verbose_grid = False
 verbose_actions = False
