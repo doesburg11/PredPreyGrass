@@ -24,10 +24,10 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     
     # Learning agents
-    "n_possible_speed_1_predators": 30,
-    "n_possible_speed_2_predators": 30,
-    "n_possible_speed_1_prey": 40,
-    "n_possible_speed_2_prey": 40,
+    "n_possible_speed_1_predators": 15,
+    "n_possible_speed_2_predators": 15,
+    "n_possible_speed_1_prey": 21,
+    "n_possible_speed_2_prey": 21,
     "n_initial_active_speed_1_predator": 5,
     "n_initial_active_speed_1_prey": 7,
     "n_initial_active_speed_2_predator": 5,
@@ -37,8 +37,8 @@ config_env = {
     "initial_energy_prey": 3.0,
 
     # mutation settings
-    "mutation_rate_predator": 0.025,  # mutation probability from speed_1 to speed_2
-    "mutation_rate_prey": 0.025,      # and vice versa
+    "mutation_rate_predator": 0.1,  # mutation probability from speed_1 to speed_2
+    "mutation_rate_prey": 0.1,      # and vice versa
         
     # Grass settings
     "initial_num_grass": 100,

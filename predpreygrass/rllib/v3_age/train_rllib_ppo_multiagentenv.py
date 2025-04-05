@@ -103,8 +103,6 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
-
-
     ray.init(
         log_to_driver=True,
         ignore_reinit_error=True,
@@ -113,7 +111,6 @@ if __name__ == "__main__":
     # Set your actual checkpoint path if you want to restore training
     checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_2')}"
     #checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
-
     sample_env = env_creator({})  # Create a single instance
     sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
     module_specs = {}
