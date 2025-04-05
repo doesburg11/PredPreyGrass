@@ -29,7 +29,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 ## Starting point: MARL applied to a Predator-Prey-Grass environment
 
-Displayed on top is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (through eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
+Displayed above is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (through eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
 
 ## Centralized versus decentralized training
 The described environment and training concept is implemented in **centralized training** as well as **decentralized training** utilizing two separate framework solutions: on the one hand PettingZoo in combination with StableBaseline3 for centralized training and on the other hand the RLlib framework for decentralized training.
@@ -119,7 +119,7 @@ The environment described above, wether centralized or decentralized trained, es
 </p>
 
 
-The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (2.5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
+The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
 
 <p align="center">
     <img src="./assets/images/readme/training_low_v_high_speed.png" width="600" height="200"/>
@@ -128,11 +128,11 @@ The environment setup is changed to enable mutations with the reproduction of a 
 
 The training results suggests that the population of the low-speed agents diminishes relative to the population of high-speed agents, since (average) rewards are directly and solely linked to reproduction success for all agent groups. This crowding out of low-speed agents occurs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—apparently are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
 
-Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only low-speed-predators and low-speed-prey** in our evaluation, eventually the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
+Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
 
 <p align="center">
     <img src="./assets/images/readme/high_speed_agent_population_share.png" width="450" height="270"/>
-    <p align="center"><b>Low-speed agents replaced by High-Speed agents trough selection</b></p>
+    <p align="center"><b>Low-speed agents replaced by high-Speed agents trough selection</b></p>
 </p>
 
 
