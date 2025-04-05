@@ -68,44 +68,13 @@ The described environment and training concept is implemented in **centralized t
 </table>
 
 ### Centralized training: Pred-Prey-Grass MARL with PettingZoo/SB3 PPO 
-</br>
 
-<p align="center">
-    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
-    
-</p>
-
-</br>
-
-<br>
 <p align="center">
     <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 ### Configuration of centralized training
-The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. 
-
-### How SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
-
-#### 1. PettingZoo AEC to Parallel Conversion
-- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** ([`predpregrass_aec.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_aec.py) which inherits from [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py)).
-- It is wrapped and converted into a **Parallel Environment** using `aec_to_parallel()` inside [`trainer.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/utils/trainer.py).
-- This conversion enables multiple agents to take actions simultaneously rather than sequentially.
-
-#### 2. Treating Multi-Agent Learning as a Single-Agent Problem
-- SB3 PPO expects a **single-agent Gymnasium-style environment**.
-- The converted parallel environment **stacks observations and actions for all agents**, making it appear as a single large observation-action space.
-- PPO then treats the multi-agent problem as a **centralized learning problem**, where all agents share one policy.
-
-#### 3. Performance Optimization with Vectorized Environments
-- The environment is further wrapped using **SuperSuit**:
-  ```python
-  env = ss.pettingzoo_env_to_vec_env_v1(env)
-  env = ss.concat_vec_envs_v1(env, num_vec_envs, num_cpus=num_cores, base_class="stable_baselines3")
-  ```
-- This enables running multiple instances of the environment in parallel, significantly improving training efficiency.
-- The training process treats the multi-agent setup as a **single centralized policy**, where PPO learns from the collective experiences of all agents.
-
+The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See here how SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
 
 ### Decentralized tarining: Pred-Prey-Grass MARL with RLlib new API stack 
 
