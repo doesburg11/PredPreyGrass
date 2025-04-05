@@ -1,4 +1,4 @@
-from  predpreygrass.rllib.v4_select_coef.config_env import config_env
+from  predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
 
 # external libraries
 import gymnasium

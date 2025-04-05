@@ -9,8 +9,8 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v4_select_coef.config_env import config_env
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
 
 #  external libraries
 import ray

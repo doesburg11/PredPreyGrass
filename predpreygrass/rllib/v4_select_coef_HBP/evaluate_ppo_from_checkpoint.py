@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
 
 # external libraries
@@ -35,13 +35,17 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
+    
 checkpoint_root = '/home/doesburg/ray_results/'
-chechpoint_file = 'PPO_2025-04-03_21-48-39/PPO_PredPreyGrass_a3e02_00000_0_2025-04-03_21-48-39/checkpoint_000006'
+chechpoint_file = 'PPO_2025-04-04_17-20-08/PPO_PredPreyGrass_4b829_00000_0_2025-04-04_17-20-08/checkpoint_000024'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
+
+# Access RLModules from learner_group
+rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()
@@ -59,11 +63,6 @@ combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=che
 step=0
 done = False
 total_reward = 0
-
-# Start rollout
-terminated = {"__all__": False}
-total_reward = {aid: 0.0 for aid in obs}
-
 
 # Run one evaluation episode
 while not done:
@@ -129,8 +128,6 @@ while not done:
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
-predator_rewards = []
-prey_rewards = []
 speed_1_predator_rewards = []
 speed_1_prey_rewards = []
 speed_2_predator_rewards = []
@@ -150,9 +147,6 @@ for agent_id, reward in env.cumulative_rewards.items():
         speed_2_prey_rewards.append(reward)
 
 
-total_predator_reward = sum(predator_rewards)
-total_prey_reward = sum(prey_rewards)
-total_reward_all = total_predator_reward + total_prey_reward
 total_speed_1_predator_reward = sum(speed_1_predator_rewards)
 total_speed_1_prey_reward = sum(speed_1_prey_rewards)
 total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
