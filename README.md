@@ -117,7 +117,7 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
 </p>
 
 ### Configuration of decentralized training
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation, albeit at the cost of considerable more compute time. The environment dynamics of the RLlib environment ([`predpregrass_rllib_env.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/predpreygrass_rllib_env.py)) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing more array lists to store agent data rather than implementing a seperate agent class. This is largely a result of experimentation with compute time of the `step` function. Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/config_env.py) file. 
+Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation, albeit at the cost of considerable more compute time. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py). 
 
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
@@ -144,7 +144,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ### Introducing mutation with reproducing agents
 
-The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move within its extended Moore neighborhood (with range *r*=2). Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
+The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood (with range *r*=2). Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
 
 <p align="center">
     <img src="./assets/images/readme/high-low-speed-agent.png" width="450" height="270"/>
@@ -152,7 +152,12 @@ The environment described above, wether centralized or decentralized trained, es
 </p>
 
 
-The environment setup is changed too make mutations possible with the reproduction of a agents. When reproduction occurs, there is a small change (say 2.5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that 
+The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (2.5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents first increase rappidly but taper off after some time. 
+
+<p align="center">
+    <img src="./assets/images/readme/training_low_v_high_speed.png" width="450" height="150"/>
+    <p align="center"><b>Training rseults of low-speed and high-speed agents</b></p>
+</p>
 
 
 
