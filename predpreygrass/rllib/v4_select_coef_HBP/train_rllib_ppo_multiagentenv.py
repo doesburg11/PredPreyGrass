@@ -156,11 +156,11 @@ if __name__ == "__main__":
                 rl_module_spec=multi_module_spec
             )
             .env_runners(
-                num_env_runners=4,  
-                num_envs_per_env_runner=4,  
+                num_env_runners=5,  
+                num_envs_per_env_runner=2,  
                 rollout_fragment_length="auto",
                 sample_timeout_s=600,  
-                num_cpus_per_env_runner=1 
+                num_cpus_per_env_runner=2 
             )
             .resources(
                 num_cpus_for_main_process=2,

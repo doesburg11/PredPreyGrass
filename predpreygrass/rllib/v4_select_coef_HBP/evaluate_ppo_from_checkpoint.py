@@ -157,9 +157,6 @@ total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_re
 
 print("\n--- Aggregated Rewards ---")
 print(f"Total number of steps          : {step-1}")
-print(f"Total Predator Reward          : {total_predator_reward:.2f}")
-print(f"Total Prey Reward              : {total_prey_reward:.2f}")
-print(f"Total All-Agent Reward         : {total_reward_all:.2f}")
 print(f"Total Speed 1 Predator Reward  : {total_speed_1_predator_reward:.2f}")
 print(f"Total Speed 1 Prey Reward      : {total_speed_1_prey_reward:.2f}")
 print(f"Total All-Agent Reward Speed 1 : {total_reward_all_speed_1:.2f}")
