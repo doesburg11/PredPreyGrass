@@ -444,12 +444,12 @@ class EvolutionVisualizer:
             speed_2_predator_props.append(s2_pred / total_pred if total_pred > 0 else 0)
             speed_2_prey_props.append(s2_prey / total_prey if total_prey > 0 else 0)
 
-        plt.plot(speed_2_predator_props, label="Speed 2 Predator Proportion")
-        plt.plot(speed_2_prey_props, label="Speed 2 Prey Proportion")
+        plt.plot(speed_2_predator_props, label="High-Speed Predator Proportion")
+        plt.plot(speed_2_prey_props, label="High-Speed Prey Proportion")
 
         plt.xlabel("Step")
         plt.ylabel("Proportion")
-        plt.title("Proportion of Speed 2 Agents")
+        plt.title("Proportion of High-Speed Agents")
         plt.legend()
         plt.grid(True)
 
@@ -559,8 +559,10 @@ class CombinedEvolutionVisualizer:
         # 1. Absolute counts
         plt.subplot(1, 3, 1)
 
+        # 1. Absolute counts
         for group, counts in self.speed_counts_dict.items():
-            plt.plot(steps, counts, label=group.replace("_", " ").capitalize(), color=color_map.get(group, "black"), linewidth=2)
+            legend_label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
+            plt.plot(steps, counts, label=legend_label, color=color_map.get(group, "black"), linewidth=2)
 
         plt.title("Agent Count Over Time")
         plt.xlabel("Step")
@@ -580,11 +582,11 @@ class CombinedEvolutionVisualizer:
             predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
             prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
 
-        plt.plot(steps, [p * 100 for p in predator_props], label="Speed 2 Predator %", color="#cc0000", linewidth=2)
-        plt.plot(steps, [p * 100 for p in prey_props], label="Speed 2 Prey %", color="#0000cc", linewidth=2)
+        plt.plot(steps, [p * 100 for p in predator_props], label="High-Speed Predator %", color="#cc0000", linewidth=2)
+        plt.plot(steps, [p * 100 for p in prey_props], label="High-Speed Prey %", color="#0000cc", linewidth=2)
         plt.ylabel("Percentage (%)")
         plt.ylim(0, 100)
-        plt.title("Speed 2 Agent Proportion")
+        plt.title("High-Speed Agent Population Share")
         plt.xlabel("Step")
         plt.legend()
         plt.grid(True)
@@ -592,9 +594,11 @@ class CombinedEvolutionVisualizer:
         # 3. Average Age
         plt.subplot(1, 3, 3)
         for group, ages in self.average_ages.items():
-            plt.plot(steps, ages, label=group.replace("_", " ").capitalize(), color=color_map.get(group, "black"), linewidth=2)
+            legend_label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
+            plt.plot(steps, ages, label=legend_label, color=color_map.get(group, "black"), linewidth=2)
 
-        plt.title("Average Age per Group")
+
+        plt.title("Average Age per Agent Type")
         plt.xlabel("Step")
         plt.ylabel("Age")
         plt.legend()

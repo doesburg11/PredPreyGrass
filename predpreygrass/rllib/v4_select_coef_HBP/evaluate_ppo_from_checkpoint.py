@@ -36,7 +36,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
     
-checkpoint_root = '/home/doesburg/ray_results/'
+#checkpoint_root = '/home/doesburg/ray_results/'
+checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/rllib/'
 chechpoint_file = 'PPO_2025-04-04_17-20-08/PPO_PredPreyGrass_4b829_00000_0_2025-04-04_17-20-08/checkpoint_000024'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
@@ -156,13 +157,13 @@ total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_re
 
 
 print("\n--- Aggregated Rewards ---")
-print(f"Total number of steps          : {step-1}")
-print(f"Total Speed 1 Predator Reward  : {total_speed_1_predator_reward:.2f}")
-print(f"Total Speed 1 Prey Reward      : {total_speed_1_prey_reward:.2f}")
-print(f"Total All-Agent Reward Speed 1 : {total_reward_all_speed_1:.2f}")
-print(f"Total Speed 2 Predator Reward  : {total_speed_2_predator_reward:.2f}")
-print(f"Total Speed 2 Prey Reward      : {total_speed_2_prey_reward:.2f}")
-print(f"Total All-Agent Reward Speed 2 : {total_reward_all_speed_2:.2f}")
+print(f"Total number of steps            : {step-1}")
+print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
+print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
+print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
+print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
+print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
+print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
 
 
 combined_evolution_visualizer.plot()
