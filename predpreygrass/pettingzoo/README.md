@@ -1,12 +1,13 @@
 ## Getting started with the PettingZoo/SB3 framework
-</br>
+
 
 <p align="center">
-    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
-    
+    <img src="../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    assets/images/readme/predpreygrass.png
 </p>
 
-</br>
+
+/home/doesburg/Dropbox/03_marl_code/PredPreyGrass/assets/images/readme/predpreygrass.png
 
 
 ### Visualize a random policy with the PettingZoo/SB3 solution
@@ -14,7 +15,7 @@ In Visual Studio Code run:
 ```predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
-    <img src="./assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
+    <img src="../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
 
