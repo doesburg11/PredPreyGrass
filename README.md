@@ -9,7 +9,6 @@
 
 <p align="center">
     <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
-    <p align="center"><b>Trained Predator-Prey-Grass gridworld</b></p>
 </p>
 
 ## Overview
@@ -19,19 +18,19 @@ We combine **multi-agent reinforcement learning** (MARL) with **evolutionary dyn
 
 ## Key Features
 
-- **Modeling Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
+- **Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
 - **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
 - **Multi-Policy Training**: Predators and prey are seperatly (decentralized) trained via their own policy module.
 - **Gridworld Ecology**: Agents observe their local neighborhood with species-specific observation ranges; prey seek grass, predators hunt prey.
 - **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
-- **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
-
+- **Mutation and Selection**: When agents reproduce, they may randomly mutate (e.g., switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
+- **Visual Diagnostics**: Integrated tools for population charts, evolution visualizers, and grid-based renderings.
 
 ## Starting point: MARL applied to a Predator-Prey-Grass environment
 
 Displayed on top is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (by eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
 
-## Centralized versus decentralized training
+### Centralized versus decentralized training
 The described environment and training concept is implemented in **centralized training** as well as **decentralized training** utilizing two separate framework solutions: on the one hand PettingZoo in combination with StableBaseline3 for centralized training and on the other hand the RLlib framework for decentralized training.
 
 <table align="center" width="100%">
@@ -68,16 +67,48 @@ The described environment and training concept is implemented in **centralized t
   </tr>
 </table>
 
-## Centralized training: Pred-Prey-Grass MARL with PettingZoo/SB3 PPO 
+### Centralized training: Pred-Prey-Grass MARL with PettingZoo/SB3 PPO 
+</br>
 
+<p align="center">
+    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    
+</p>
+
+</br>
+
+<br>
 <p align="center">
     <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 ### Configuration of centralized training
-The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here](https://github.com/doesburg11/PredPreyGrass/tree/main/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
+The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. 
 
-## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack 
+### How SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
+
+#### 1. PettingZoo AEC to Parallel Conversion
+- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** ([`predpregrass_aec.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_aec.py) which inherits from [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py)).
+- It is wrapped and converted into a **Parallel Environment** using `aec_to_parallel()` inside [`trainer.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/utils/trainer.py).
+- This conversion enables multiple agents to take actions simultaneously rather than sequentially.
+
+#### 2. Treating Multi-Agent Learning as a Single-Agent Problem
+- SB3 PPO expects a **single-agent Gymnasium-style environment**.
+- The converted parallel environment **stacks observations and actions for all agents**, making it appear as a single large observation-action space.
+- PPO then treats the multi-agent problem as a **centralized learning problem**, where all agents share one policy.
+
+#### 3. Performance Optimization with Vectorized Environments
+- The environment is further wrapped using **SuperSuit**:
+  ```python
+  env = ss.pettingzoo_env_to_vec_env_v1(env)
+  env = ss.concat_vec_envs_v1(env, num_vec_envs, num_cpus=num_cores, base_class="stable_baselines3")
+  ```
+- This enables running multiple instances of the environment in parallel, significantly improving training efficiency.
+- The training process treats the multi-agent setup as a **single centralized policy**, where PPO learns from the collective experiences of all agents.
+
+
+### Decentralized tarining: Pred-Prey-Grass MARL with RLlib new API stack 
+
 
 <p align="center">
     <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
@@ -94,7 +125,7 @@ Training is applied in accordance with the RLlib new API stack protocol. The tra
 
 A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.  
 
-## Emergent Behaviors
+### Emergent Behaviors
 Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py) with the SB3 PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
 - Predators hunting Prey 
 - Prey finding and eating grass 
@@ -109,7 +140,7 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 
 More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
 
-## Introducing mutation with reproducing agents
+### Introducing mutation with reproducing agents
 
 The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood (with range *r*=2). Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
 
