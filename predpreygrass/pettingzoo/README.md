@@ -1,4 +1,13 @@
 ## Getting started with the PettingZoo/SB3 framework
+</br>
+
+<p align="center">
+    <img src="./assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    
+</p>
+
+</br>
+
 
 ### Visualize a random policy with the PettingZoo/SB3 solution
 In Visual Studio Code run:
