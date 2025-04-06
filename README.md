@@ -8,11 +8,10 @@
 ### Multi-Agent Reinforcement Learning and Artificial Selection
 
 
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
-    <div style="text-align: center;">
-        <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
-    </div>
-</div>
+
+  <div style="text-align: center;">
+      <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
+  </div>
 
 <div style="text-align: center;">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
