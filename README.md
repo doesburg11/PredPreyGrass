@@ -13,6 +13,7 @@
         <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
     </div>
 </div>
+
 <div style="text-align: center;">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
     <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
