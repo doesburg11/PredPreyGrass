@@ -10,13 +10,13 @@
 
 <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
     <div style="text-align: center;">
-        <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="100" height="75" />
-    </div>
-    <div style="text-align: center;">
         <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
-        <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
     </div>
 </div>
+    <div style="text-align: center;">
+        <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
+        <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
+    </div>
 
 
 ## Overview
