@@ -116,7 +116,7 @@ More emergent behavior and findings are described [on our website](https://www.b
 
 ## Introducing mutation with reproducing agents
 
-The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood (with range *r*=2). Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
+The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood with range *r*=2. Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
 
 <p align="center">
     <img src="./assets/images/readme/high-low-speed-agent.png" width="300" height="135"/>
@@ -124,7 +124,7 @@ The environment described above, wether centralized or decentralized trained, es
 </p>
 
 
-The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
+The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">
     <img src="./assets/images/readme/training_low_v_high_speed.png" width="800" height="160"/>
