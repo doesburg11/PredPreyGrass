@@ -124,16 +124,16 @@ The environment described above, wether centralized or decentralized trained, es
 </p>
 
 
-The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey, high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
+The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** (after about 50 time steps in this configuration as depicted below).The average rewards of the high-speed agents on the other hand stabilize at a high level after this inflection point.
 
 <p align="center">
-    <img src="./assets/images/readme/training_low_v_high_speed.png" width="600" height="200"/>
+    <img src="./assets/images/readme/training_low_v_high_speed.png" width="800" height="160"/>
     <p align="center"><b>Training results of low-speed and high-speed agents</b></p>
 </p>
 
 The training results suggests that the population of the low-speed agents diminishes relative to the population of high-speed agents, since (average) rewards are directly and solely linked to reproduction success for all agent groups. This crowding out of low-speed agents occurs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—apparently are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
 
-Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey.
+Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey as displayed below. Note that after this shift the low-speed agents are not fully eradicated, but temporarily pop up due to back mutation.
 
 <p align="center">
     <img src="./assets/images/readme/high_speed_agent_population_share.png" width="450" height="270"/>
@@ -149,7 +149,7 @@ This is a clear example of **natural selection** within an artificial system:
 
 ### Co-Evolution and the Red Queen Effect
 
-The mutual shift of both **prey and predator populations toward high-speed variants** reflects also a classic **Red Queen dynamic**: each species evolves not to get ahead absolutely, but also to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward.
+The mutual shift of both **prey and predator populations toward high-speed variants** reflects also a classic **Red Queen dynamic**: each species evolves not to get ahead absolutely, but also to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward. It is noteworthy that in this setup prey start to mutuate first.
 
 This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is key.
 
