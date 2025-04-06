@@ -28,7 +28,8 @@
 
 <p align="center">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
-    <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
+</p>
+<p align="center"><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b>
 </p>
 
 ## Overview
