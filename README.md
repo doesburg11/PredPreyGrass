@@ -7,21 +7,6 @@
 # Artificial Life and Intelligence
 ### Multi-Agent Reinforcement Learning and Artificial Selection
 
-
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
-      <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
-    </td>
-  </tr>
-</table>
-
 <p align="center">
      <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
 </p>
