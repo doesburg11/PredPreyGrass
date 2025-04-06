@@ -8,16 +8,19 @@
 ### Multi-Agent Reinforcement Learning and Artificial Selection
 
 
-
-<div style="text-align: center;">
-    <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
-</div>
-
-<div style="text-align: center;">
-    <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
-    <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
-</div>
-
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="400" height="60" />
+      <p><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
+    </td>
+  </tr>
+</table>
 
 ## Overview
 This project explores emergent behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
