@@ -37,8 +37,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return None
     
 #checkpoint_root = '/home/doesburg/ray_results/'
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/rllib/'
-chechpoint_file = 'PPO_2025-04-04_17-20-08/PPO_PredPreyGrass_4b829_00000_0_2025-04-04_17-20-08/checkpoint_000024'
+checkpoint_root = '/home/doesburg/ray_results'
+chechpoint_file = '/PPO_2025-04-05_12-16-36/PPO_PredPreyGrass_0eb78_00000_0_2025-04-05_12-16-36/checkpoint_000030'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
