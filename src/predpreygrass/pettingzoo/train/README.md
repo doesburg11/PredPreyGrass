@@ -28,7 +28,3 @@ The reasons for training in parallel are for efficiency and compatibility reason
 
 The function `train_parallel_wrapped_aec_env` from the `Trainer` class wraps the AEC environment to a parallel environment and uses the PPO algorithm from SB3 with an MLP policy to train a single model that handles actions and observations for all agents in the environment. This parallel training expects all agents to act simultaneously in the environment. In short, although the environment is multi-agent, the training loop treats it as a high-dimensional single-agent environment due to the transformations applied. This means the model learns to handle inputs and outputs for all agents simultaneously.
  
-
-### train_ppo_unwrapped_parallel_env.py
-
-The function `train_ppo_unwrapped_parallel_env` from the `Trainer` class utilizes the raw parallel environment and uses the PPO algorithm from SB3 with an MLP policy to train a single model that handles actions and observations for all agents in the environment (similarilly as the AEC environment which is wrapped to a parallel environment in `train_ppo_parallel_wrapped_aec_env.py`).
