@@ -1,8 +1,7 @@
 ## Getting started with the PettingZoo/SB3 framework
 
 <p align="center">
-    <img src="../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
-    assets/images/readme/predpreygrass.png
+    <img src="../../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>
 
 ### Visualize a random policy with the PettingZoo/SB3 solution
@@ -10,7 +9,7 @@ In Visual Studio Code run:
 ```predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
-    <img src="../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
+    <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
 
@@ -18,15 +17,15 @@ In Visual Studio Code run:
 
 Adjust parameters accordingly in:
 
-[```predpreygrass/pettingzoo/config/config_predpreygrass.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/config/config_predpreygrass.py)
+[```predpreygrass/pettingzoo/config/config_predpreygrass.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
 
 In Visual Studio Code run:
 
-[```predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](hhttps://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
+[```predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
 To evaluate and visualize after training follow instructions in:
 
-[```predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
+[```predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
 Batch training and evaluating in one go:
 
@@ -36,8 +35,8 @@ Batch training and evaluating in one go:
 ### How SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
 
 #### 1. PettingZoo AEC to Parallel Conversion
-- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** ([`predpregrass_aec.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_aec.py) which inherits from [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/envs/predpreygrass_base.py)).
-- It is wrapped and converted into a **Parallel Environment** using `aec_to_parallel()` inside [`trainer.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/pettingzoo/train/utils/trainer.py).
+- The environment is initially implemented as an **Agent-Environment-Cycle (AEC) environment** using **PettingZoo** ([`predpregrass_aec.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_aec.py) which inherits from [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py)).
+- It is wrapped and converted into a **Parallel Environment** using `aec_to_parallel()` inside [`trainer.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/utils/trainer.py).
 - This conversion enables multiple agents to take actions simultaneously rather than sequentially.
 
 #### 2. Treating Multi-Agent Learning as a Single-Agent Problem
