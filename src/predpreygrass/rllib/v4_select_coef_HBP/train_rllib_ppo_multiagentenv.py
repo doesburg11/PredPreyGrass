@@ -21,6 +21,8 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
+import torch
+torch.set_default_device("cuda")
 import os
 
 class EpisodeReturn(RLlibCallback):
@@ -142,6 +144,10 @@ if __name__ == "__main__":
             PPOConfig()
             .environment(env="PredPreyGrass")
             .framework("torch")
+            .learners(
+                num_gpus_per_learner=1,
+                num_learners=1,
+            )
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
                 policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
