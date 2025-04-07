@@ -1,0 +1,184 @@
+1
+00:00:00,080 --> 00:00:02,940
+Welcome to Predator Prey Grass
+
+2
+00:00:03,200 --> 00:00:05,760
+a multi agent simulation where survival
+
+3
+00:00:05,760 --> 00:00:06,480
+competition
+
+4
+00:00:06,480 --> 00:00:10,380
+and evolution play out in a dynamic digital ecosystem
+
+5
+00:00:10,800 --> 00:00:12,300
+In this grid world
+
+6
+00:00:12,360 --> 00:00:15,220
+two types of agents roam the environment
+
+7
+00:00:15,400 --> 00:00:19,420
+Red circles are predators and blue diamonds are prey
+
+8
+00:00:19,960 --> 00:00:22,780
+Green squares that's grass
+
+9
+00:00:22,880 --> 00:00:25,980
+the food source for prey And those arrows
+
+10
+00:00:26,040 --> 00:00:28,820
+they show each agent's direction of movement
+
+11
+00:00:28,880 --> 00:00:31,240
+Predators hunt prey pray
+
+12
+00:00:31,240 --> 00:00:32,540
+search for grass
+
+13
+00:00:32,760 --> 00:00:36,080
+Both learn to optimize their behavior using multi agent
+
+14
+00:00:36,080 --> 00:00:37,640
+reinforcement learning
+
+15
+00:00:37,640 --> 00:00:40,200
+a type of artificial intelligence
+
+16
+00:00:40,200 --> 00:00:42,260
+powered by neural networks
+
+17
+00:00:42,840 --> 00:00:45,040
+At first agents know nothing
+
+18
+00:00:45,040 --> 00:00:46,700
+They move randomly
+
+19
+00:00:46,720 --> 00:00:49,500
+driven only by the chance of reproduction
+
+20
+00:00:49,600 --> 00:00:52,400
+Reproduction happens when agents collect enough energy
+
+21
+00:00:52,400 --> 00:00:54,740
+by eating But be warned
+
+22
+00:00:55,120 --> 00:00:58,620
+energy is consumed with every move
+
+23
+00:00:58,800 --> 00:01:01,660
+and when energy runs out they die
+
+24
+00:01:02,280 --> 00:01:06,400
+Initially all agents can only move one step at a time
+
+25
+00:01:06,400 --> 00:01:08,500
+This creates a delicate balance
+
+26
+00:01:08,520 --> 00:01:12,180
+a dynamic tug of war between predators and prey
+
+27
+00:01:12,760 --> 00:01:16,520
+But evolution is in play With every reproduction
+
+28
+00:01:16,520 --> 00:01:18,620
+there's a tiny chance for mutation
+
+29
+00:01:18,840 --> 00:01:21,340
+creating a child that can move faster
+
+30
+00:01:21,800 --> 00:01:25,360
+These faster offspring gain a competitive edge
+
+31
+00:01:25,360 --> 00:01:26,240
+reaching prey
+
+32
+00:01:26,240 --> 00:01:29,260
+or grass more efficiently than their slower peers
+
+33
+00:01:29,840 --> 00:01:32,100
+Over time the trait spreads
+
+34
+00:01:32,320 --> 00:01:35,420
+You'll notice darker colored agents taking over
+
+35
+00:01:35,600 --> 00:01:37,620
+These are the faster mutants
+
+36
+00:01:37,960 --> 00:01:40,540
+Even with only a small chance of mutation
+
+37
+00:01:40,560 --> 00:01:42,820
+and equal odds of reverting to slow
+
+38
+00:01:43,160 --> 00:01:45,740
+the faster agents begin to dominate
+
+39
+00:01:46,360 --> 00:01:48,780
+No one tells agents what to do
+
+40
+00:01:49,560 --> 00:01:52,620
+Through rewards and consequences
+
+41
+00:01:52,680 --> 00:01:54,700
+they learn how to survive
+
+42
+00:01:54,880 --> 00:01:58,460
+What emerges is an open ended Evolutionary dance
+
+43
+00:01:58,520 --> 00:02:02,860
+complex unpredictable and endlessly fascinating
+
+44
+00:02:03,160 --> 00:02:07,560
+Curious to explore more Check out the Github repository
+
+45
+00:02:07,560 --> 00:02:10,840
+to see the code behind this evolving world
+
+46
+00:02:10,840 --> 00:02:13,540
+and maybe help shape the next emergent trait
+

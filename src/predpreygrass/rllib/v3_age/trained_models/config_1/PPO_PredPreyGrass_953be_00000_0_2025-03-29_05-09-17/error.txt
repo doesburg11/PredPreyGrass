@@ -1,0 +1,8 @@
+Failure # 1 (occurred at 2025-03-29_13-55-31)
+The actor died unexpectedly before finishing this task.
+	class_name: PPO
+	actor_id: 34c15cb5bd483ed4a9ed317d01000000
+	pid: 644912
+	namespace: 75343eaf-77bd-4bbd-a189-f4970fb02ede
+	ip: 192.168.2.21
+The actor is dead because its worker process has died. Worker exit type: SYSTEM_ERROR Worker exit detail: Worker unexpectedly exits with a connection error code 2. End of file. There are some potential root causes. (1) The process is killed by SIGKILL by OOM killer due to high memory usage. (2) ray stop --force is called. (3) The worker is crashed unexpectedly due to SIGSEGV or other unexpected errors.

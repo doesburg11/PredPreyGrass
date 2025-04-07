@@ -1,0 +1,41 @@
+Welcome to Predator–Prey–Grass — a multi-agent simulation where survival, competition, and evolution unfold in a dynamic digital ecosystem.
+
+In this gridworld, two types of agents roam the environment: red circles represent predators, and blue diamonds represent prey. The green, non-moving squares represent grass — the primary food source for prey.
+
+Agents need energy to stay alive. Predators hunt prey, and prey search for grass in order to survive. Ultimately, agents are rewarded when they reproduce. To achieve this, they learn to optimize their movement using Multi-Agent Reinforcement Learning — a type of artificial intelligence powered by neural networks. Reproduction occurs only when agents collect enough energy through eating.
+
+Initially, all agents can only move one step at a time. This creates a delicate balance — a dynamic tug-of-war between predators and prey.
+
+But evolution is in play. With every reproduction, there's a tiny chance of mutation — creating offspring that can move faster. These faster individuals gain a competitive edge — reaching prey or grass more efficiently than their slower peers.
+
+Over time, the trait spreads. You’ll notice darker-colored agents taking over — these are the faster mutants. Even with only a small chance of mutation — and equal odds of reverting to slow — the faster agents begin to dominate the populations of both predators and prey.
+
+This is a combination of learned behavior and genetic adaptation. Through rewards and consequences, agents learn how to survive. What emerges is an open-ended evolutionary arms race — complex, unpredictable, and endlessly fascinating.
+
+Curious to explore more?
+Check out the GitHub repository to see the code behind this evolving world — and maybe help shape the next emergent trait.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Youtube text:
+
+Title: Multi-Agent Reinforcement Learning and Artificial Life | Nature versus Nurture simulation
+
+Explore the simulation code at: https://github.com/doesburg11/PredPreyGrass
+
+This video showcases Artificial Life and Intelligence: Predator–Prey–Grass — a multi-agent reinforcement learning simulation where agents learn, evolve, adapt, and compete for survival. Modeling Nature versus Nurture using an AI ecosystem.
+
+Topics covered:
+- Multi-Agent Reinforcement Learning
+- Predator–Prey dynamics
+- Mutation and adaptation
+- Co-evolution 
+- Evolutionary arms race
+- RLlib 2.44.1
+
+Peter van Doesburg
+
+
+
+

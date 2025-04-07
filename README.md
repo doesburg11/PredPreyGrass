@@ -178,11 +178,11 @@ Notably, agents in this system lack direct access to each other’s heritable tr
  
         ```
     -   ```bash 
-        pip install stable-baselines3[extra]==2.5.0
+        pip install stable-baselines3[extra]==2.6.0
  
         ```
     -   ```bash
-        conda install -y -c conda-forge gcc=12.1.0
+        conda install -y -c conda-forge gcc=14.2.0
         ```    
     -   ```bash 
         pip install supersuit==3.9.3 
@@ -191,7 +191,7 @@ Notably, agents in this system lack direct access to each other’s heritable tr
         pip install ray[rllib]==2.44.1
         ```
     -   ```bash 
-        pip install tensorboard==2.18.0 
+        pip install tensorboard==2.19.0 
         ```
     
 
