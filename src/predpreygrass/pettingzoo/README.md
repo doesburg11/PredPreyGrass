@@ -6,13 +6,17 @@
 
 ### Visualize a random policy with the PettingZoo/SB3 solution
 In Visual Studio Code run:
-```predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
+```src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
 </br>
 <p align="center">
     <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
+Or in a a terminal:
 
+-   ```bash 
+    python src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py 
+    ```
 ### Training and visualize trained model using PPO from stable baselines3
 
 Adjust parameters accordingly in:
