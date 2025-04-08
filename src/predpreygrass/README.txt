@@ -1,8 +1,7 @@
 Structure of the respository
 
 ├── assets
-│   ├── images
-│   └── related_research
+│   └── images
 ├── CODE_OF_CONDUCT.md
 ├── LICENSE
 ├── PredPreyGrass.code-workspace
