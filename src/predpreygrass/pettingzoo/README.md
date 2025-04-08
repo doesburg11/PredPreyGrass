@@ -4,37 +4,40 @@
     <img src="../../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
 </p>
 
-### Visualize a random policy with the PettingZoo/SB3 solution
-In Visual Studio Code run:
-```src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py```
-</br>
+
+
 <p align="center">
     <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
-Or in a a terminal:
+### Visualize a random policy with the PettingZoo framework
+Option 1:
+- In Visual Studio Code Explorer select: 
+   [`src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py)
+- In the Visual Studio Code menu select: `Run/Run Withous Debugging`:
 
--   ```bash 
+Option2:
+- In a Visual Studio Code Terminal execute:
+   ```bash 
     python src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py 
     ```
-### Training and visualize trained model using PPO from stable baselines3
-
-Adjust parameters accordingly in:
-
-[```src/predpreygrass/pettingzoo/config/config_predpreygrass.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
-
-In the Visual Studio GUI Code run:
-
+### Training model using PPO from stable baselines3
+Option 1:
+- In Visual Studio Code Explorer select:
 [```src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
-Or in a a terminal:
-
--   ```bash 
-    python predpreygrass/pettingzoo/config/config_predpreygrass.py 
+Option 2:
+- In a Visual Studio Code Terminal execute:
+   ```bash 
+    python src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py 
     ```
 
+Optionally: In Visual Studio Code Explorer select to adjust environment paramers: 
+[`src/predpreygrass/pettingzoo/config/config_predpreygrass.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
 
-To evaluate and visualize after training follow instructions in:
+
+### Evaluate and visualize trained model
+Follow instructions in:
 
 [```src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
