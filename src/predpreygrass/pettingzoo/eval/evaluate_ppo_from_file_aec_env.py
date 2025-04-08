@@ -1,15 +1,14 @@
 """
-- to evaluate a ppo trained and saved model
+Instructions:for evaluating a ppo trained model from a file:
 - evaluation can be done with or without watching the grid
-instructions:
-- navigate with linux mint file-explorer to your local directory defined in:
-  "predpreygrass/aec_predpreygrass/config/config_predpreygrass.py"
+- navigate with linux mint file-explorer to your local directory as defined in:
+  `src/predpreygrass/global_config.py`
 - note that the entire file/directory structure of the project is copied 
   during training to the defined local directory
 - go to the directory with the appropriate time stamp of training and go 
   down the directory tree:
-  /eval/evaluate_ppo_from_file.py
-- right mouseclick "evaluate_ppo_rom_file.py" and:
+  predpreygrass/pettingzoo/eval/evaluate_ppo_from_file.py
+- right mouseclick "evaluate_ppo_from_file_aec_env.py" and:
 - select "Open with"
 - select "Visual Studio Code" 
 - select "Run without debugging"
