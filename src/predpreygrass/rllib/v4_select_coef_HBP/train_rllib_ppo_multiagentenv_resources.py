@@ -26,7 +26,7 @@ torch.set_default_device("cuda")
 import os
 
 #training
-train_batch_size=2048
+train_batch_size=1024
 
 # learners
 num_gpus_per_learner=1
