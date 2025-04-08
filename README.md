@@ -172,28 +172,13 @@ Notably, agents in this system lack direct access to each other’s heritable tr
    - ```bash
      pip install -e .
      ```
- 3. Install the following requirements:  
-    -   ```bash 
-        pip install pettingzoo==1.24.3
- 
-        ```
-    -   ```bash 
-        pip install stable-baselines3[extra]==2.6.0
- 
-        ```
+3. Install the additional system dependency:
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
         ```    
-    -   ```bash 
-        pip install supersuit==3.9.3 
-        ```
-    -   ```bash 
-        pip install ray[rllib]==2.44.1
-        ```
-    -   ```bash 
-        pip install tensorboard==2.19.0 
-        ```
-    
+## Running examples
+- [PettingZoo in combination with SB3](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#getting-started-with-the-pettingzoosb3-framework)
+
 
 ## References
 
