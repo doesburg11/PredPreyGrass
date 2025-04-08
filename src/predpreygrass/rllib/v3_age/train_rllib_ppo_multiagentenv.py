@@ -1,5 +1,5 @@
 """
-LAPTOP COMPUTER
+LAPTOP
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.

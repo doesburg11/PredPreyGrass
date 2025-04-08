@@ -1,5 +1,5 @@
 """
-LAPTOP COMPUTER
+HBP COMPUTER
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
@@ -9,8 +9,8 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_age.config_env import config_env
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
 
 #  external libraries
 import ray
@@ -21,7 +21,20 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
+import torch
 import os
+import multiprocessing
+import GPUtil
+
+torch.set_default_device("cuda")
+num_cpus = multiprocessing.cpu_count()
+
+gpus = GPUtil.getGPUs()
+num_gpus = len(gpus)
+gpu_names = [gpu.name for gpu in gpus]
+
+print(f"Detected {num_cpus} CPU cores")
+print(f"Detected {num_gpus} GPU(s): {gpu_names}")
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -103,17 +116,14 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
-
-
     ray.init(
         log_to_driver=True,
         ignore_reinit_error=True,
     )
     register_env("PredPreyGrass", env_creator)
     # Set your actual checkpoint path if you want to restore training
-    checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_2')}"
-    #checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
-
+    #checkpoint_dir = os.path.expanduser('~/ray_results/PPO_2025-04-04_12-10-30')
+    checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
     sample_env = env_creator({})  # Create a single instance
     sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
     module_specs = {}
@@ -145,6 +155,10 @@ if __name__ == "__main__":
             PPOConfig()
             .environment(env="PredPreyGrass")
             .framework("torch")
+            .learners(
+                num_gpus_per_learner=1,
+                num_learners=1,
+            )
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
                 policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
@@ -159,14 +173,14 @@ if __name__ == "__main__":
                 rl_module_spec=multi_module_spec
             )
             .env_runners(
-                num_env_runners=4,  # MOO: adjusted from 4 to 2
-                num_envs_per_env_runner=4,  
+                num_env_runners=5,  
+                num_envs_per_env_runner=2,  
                 rollout_fragment_length="auto",
                 sample_timeout_s=600,  
-                num_cpus_per_env_runner=1  
+                num_cpus_per_env_runner=2 
             )
             .resources(
-                num_cpus_for_main_process=2 
+                num_cpus_for_main_process=2,
             )       
             .callbacks(EpisodeReturn)
         )
