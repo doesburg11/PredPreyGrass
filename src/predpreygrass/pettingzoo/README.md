@@ -25,9 +25,9 @@ In the Visual Studio GUI Code run:
 
 Or in a a terminal:
 
-- ```bash 
-python predpreygrass/pettingzoo/config/config_predpreygrass.py
-```
+-   ```bash 
+    python predpreygrass/pettingzoo/config/config_predpreygrass.py 
+    ```
 
 
 To evaluate and visualize after training follow instructions in:
