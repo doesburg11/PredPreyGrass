@@ -22,8 +22,19 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import torch
-torch.set_default_device("cuda")
 import os
+import multiprocessing
+import GPUtil
+
+torch.set_default_device("cuda")
+num_cpus = multiprocessing.cpu_count()
+
+gpus = GPUtil.getGPUs()
+num_gpus = len(gpus)
+gpu_names = [gpu.name for gpu in gpus]
+
+print(f"Detected {num_cpus} CPU cores")
+print(f"Detected {num_gpus} GPU(s): {gpu_names}")
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
