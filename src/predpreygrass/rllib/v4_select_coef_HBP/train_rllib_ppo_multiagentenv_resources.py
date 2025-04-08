@@ -22,20 +22,26 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import torch
-import os
-import multiprocessing
-import GPUtil
-
 torch.set_default_device("cuda")
-num_cpus = multiprocessing.cpu_count()
+import os
 
-gpus = GPUtil.getGPUs()
-num_gpus = len(gpus)
-gpu_names = [gpu.name for gpu in gpus]
+#training
+train_batch_size=2048
 
-print(f"Detected {num_cpus} CPU cores")
-print(f"Detected {num_gpus} GPU(s): {gpu_names}")
+# learners
+num_gpus_per_learner=1
+num_learners=1
 
+# env_runners
+num_env_runners=7
+num_envs_per_env_runner=4
+rollout_fragment_length="auto"
+sample_timeout_s=600
+num_cpus_per_env_runner=4 
+
+#resources
+num_cpus_for_main_process=4
+    
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -162,7 +168,7 @@ if __name__ == "__main__":
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=1024, 
+                train_batch_size=train_batch_size, 
                 gamma=0.99,
                 lr=0.0003,            
             )
@@ -170,18 +176,18 @@ if __name__ == "__main__":
                 rl_module_spec=multi_module_spec
             )
             .learners(
-                num_gpus_per_learner=1,
-                num_learners=1,
+                num_gpus_per_learner=num_gpus_per_learner,
+                num_learners=num_learners,
             )
             .env_runners(
-                num_env_runners=5,  
-                num_envs_per_env_runner=2,  
-                rollout_fragment_length="auto",
-                sample_timeout_s=600,  
-                num_cpus_per_env_runner=2 
+                num_env_runners=num_env_runners,  
+                num_envs_per_env_runner=num_envs_per_env_runner,  
+                rollout_fragment_length=rollout_fragment_length,
+                sample_timeout_s=sample_timeout_s,  
+                num_cpus_per_env_runner=num_cpus_per_env_runner 
             )
             .resources(
-                num_cpus_for_main_process=2,
+                num_cpus_for_main_process=num_cpus_for_main_process,
             )       
             .callbacks(EpisodeReturn)
         )
