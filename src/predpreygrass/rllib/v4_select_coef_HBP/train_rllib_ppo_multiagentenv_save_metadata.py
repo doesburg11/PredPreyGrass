@@ -2,90 +2,78 @@
 HBP COMPUTER
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
-"""
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+The environment is implemented in the file predpreygrass/rllib/predpreygrass_rllib_env_moore_speed.py.
+The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
+This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
+"""
 from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
-from predpreygrass.rllib.utils.save_metadata import save_run_metadata_from_trial
 
-# External libraries
+#  external libraries
 import ray
 from ray import train, tune
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.algorithms.callbacks import DefaultCallbacks
+from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
-import torch
-torch.set_default_device("cuda")
 import os
-
-# Training parameters
-train_batch_size = 1024
-
-# Learners
-num_gpus_per_learner = 1
-num_learners = 1
-
-# Environment runners
-num_env_runners = 8
-num_envs_per_env_runner = 3
-rollout_fragment_length = "auto"
-sample_timeout_s = 600
-num_cpus_per_env_runner = 3
-
-# Other resources
-num_cpus_for_main_process = 4
+from datetime import datetime
+from pathlib import Path
+import json
 
 
-class EpisodeReturn(DefaultCallbacks):
+# hyperparameters
+# training
+train_batch_size=1024
+gamma=0.99
+lr=0.0003            
+
+# learners
+num_gpus_per_learner=1
+num_learners=1
+
+# env_runners
+num_env_runners=8
+num_envs_per_env_runner=3
+rollout_fragment_length="auto"
+sample_timeout_s=600
+num_cpus_per_env_runner=3 
+
+#resources
+num_cpus_for_main_process=4
+    
+
+class EpisodeReturn(RLlibCallback):
     def __init__(self):
         super().__init__()
         self.overall_sum_of_rewards = 0.0
         self.num_episodes = 0
-        self.metadata_saved = False
-
-    def on_algorithm_init(self, *, algorithm, **kwargs):
-        if not self.metadata_saved:
-            trial_dir = getattr(algorithm, "log_dir", None)
-            if trial_dir:
-                save_run_metadata_from_trial(
-                    config_env=config_env,
-                    ppo_config={
-                        "train_batch_size": train_batch_size,
-                        "gamma": 0.99,
-                        "lr": 0.0003,
-                        "rollout_fragment_length": rollout_fragment_length,
-                        "num_env_runners": num_env_runners,
-                        "num_envs_per_env_runner": num_envs_per_env_runner,
-                        "num_cpus_per_env_runner": num_cpus_per_env_runner,
-                        "num_gpus_per_learner": num_gpus_per_learner,
-                    },
-                    model_arch={
-                        "conv_filters": [
-                            [16, [3, 3], 1],
-                            [32, [3, 3], 1],
-                            [64, [3, 3], 1],
-                        ],
-                        "fcnet_hiddens": [256, 256],
-                    },
-                    trial=algorithm
-                )
-                self.metadata_saved = True
 
     def on_episode_end(self, *, episode, **kwargs):
+        """
+        Called at the end of each episode.
+        Logs the total and average rewards separately for predators and prey.
+        """
         self.num_episodes += 1
         self.overall_sum_of_rewards += episode.get_return()
 
+        # Initialize reward tracking
         predator_total_reward = 0.0
         prey_total_reward = 0.0
         predator_count = 0
         prey_count = 0
 
-        rewards = episode.get_rewards()
+        # Retrieve rewards
+        rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
+
         for agent_id, reward_list in rewards.items():
-            total_reward = sum(reward_list)
+            total_reward = sum(reward_list)  # Sum all rewards for the episode
+
             if "predator" in agent_id:
                 predator_total_reward += total_reward
                 predator_count += 1
@@ -93,106 +81,159 @@ class EpisodeReturn(DefaultCallbacks):
                 prey_total_reward += total_reward
                 prey_count += 1
 
+        # Compute average rewards (avoid division by zero)
         predator_avg_reward = predator_total_reward / predator_count if predator_count > 0 else 0
         prey_avg_reward = prey_total_reward / prey_count if prey_count > 0 else 0
 
+        # Print episode logs
         print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
-
 
 def env_creator(config):
     return PredPreyGrass(config or config_env)
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    # Expected format: "speed_1_predator_0", "speed_2_prey_5"
     parts = agent_id.split("_")
+    # parts[0] = "speed"
+    # parts[1] = speed value
+    # parts[2] = role ("predator" or "prey")
+    # parts[3] = agent index (not needed)
     speed = parts[1]
     role = parts[2]
+    # Example output:
+    # "speed_1_predator_0" → "speed_1_predator"
+    # "speed_2_prey_5" → "speed_2_prey"
     return f"speed_{speed}_{role}"
 
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-        module_class=DefaultPPOTorchRLModule,
-        observation_space=obs_space,
-        action_space=act_space,
-        inference_only=False,
-        model_config={
-            "conv_filters": [
-                [16, [3, 3], 1],
-                [32, [3, 3], 1],
-                [64, [3, 3], 1],
-            ],
-            "fcnet_hiddens": [256, 256],
-            "fcnet_activation": "relu",
-        },
-        catalog_class=None,
+                module_class=DefaultPPOTorchRLModule,
+                observation_space=obs_space,
+                action_space=act_space,
+                inference_only=False,
+                model_config={
+                    "conv_filters": [
+                        [16, [3, 3], 1],
+                        [32, [3, 3], 1],
+                        [64, [3, 3], 1],
+                    ],
+                    "fcnet_hiddens": [256, 256],
+                    "fcnet_activation": "relu",
+                },
+                catalog_class=None,
     )
 
 
 if __name__ == "__main__":
     ray.shutdown()
-    ray.init(log_to_driver=True, ignore_reinit_error=True)
-
+    ray.init(
+        log_to_driver=True,
+        ignore_reinit_error=True,
+    )
     register_env("PredPreyGrass", env_creator)
-    checkpoint_dir = "/checkpoint_dir"  # Change this if needed
-    sample_env = env_creator({})
-    sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
 
-    module_specs = {
-        policy_mapping_fn(agent): build_module_spec(
-            sample_env.observation_spaces[agent],
-            sample_env.action_spaces[agent]
-        ) for agent in sample_agents
-    }
+    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results"
+    checkpoint_dir = Path(ray_results_dir) / "PPO_2025-04-09_23-55-47/PPO_PredPreyGrass_64d1f_00000_0_2025-04-09_23-55-47/checkpoint_000001"  # or dynamically set
+    checkpoint_file = checkpoint_dir / "rllib_checkpoint.json"
 
-    multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
-
-    try:
+    # Try restoring from an existing experiment if available
+    if checkpoint_file.exists():
         restored_tuner = tune.Tuner.restore(
-            path=checkpoint_dir,
-            resume_errored=True,
-            trainable=PPOConfig().algo_class,
+            path=checkpoint_dir,  # The directory where Tune stores experiment results
+            resume_errored=True,  # Resume even if the last trial errored
+            trainable=PPOConfig().algo_class,  # The algorithm class used in the experiment
         )
         print("Successfully restored training from checkpoint.")
+
+        # Continue training
         results = restored_tuner.fit()
 
-    except:
-        print("Starting new training experiment.")
+    else:
+        print(f"Starting new training experiment.")
+        sample_env = env_creator({})  # Create a single instance
+        sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
+        module_specs = {}
+        for sample_agent in sample_agents:
+            policy = policy_mapping_fn(sample_agent)
+            module_specs[policy] = build_module_spec(
+                sample_env.observation_spaces[sample_agent],
+                sample_env.action_spaces[sample_agent]
+            )
+
+        multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
+        # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
             PPOConfig()
             .environment(env="PredPreyGrass")
             .framework("torch")
             .multi_agent(
-                policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+                # This ensures that each policy is trained on the right observation/action space.
+                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=train_batch_size,
-                gamma=0.99,
-                lr=0.0003,
+                train_batch_size=train_batch_size, 
+                gamma=gamma,
+                lr=lr,            
             )
-            .rl_module(rl_module_spec=multi_module_spec)
+            .rl_module(
+                rl_module_spec=multi_module_spec
+            )
             .learners(
                 num_gpus_per_learner=num_gpus_per_learner,
                 num_learners=num_learners,
             )
             .env_runners(
-                num_env_runners=num_env_runners,
-                num_envs_per_env_runner=num_envs_per_env_runner,
+                num_env_runners=num_env_runners,  
+                num_envs_per_env_runner=num_envs_per_env_runner,  
                 rollout_fragment_length=rollout_fragment_length,
-                sample_timeout_s=sample_timeout_s,
-                num_cpus_per_env_runner=num_cpus_per_env_runner,
+                sample_timeout_s=sample_timeout_s,  
+                num_cpus_per_env_runner=num_cpus_per_env_runner 
             )
             .resources(
                 num_cpus_for_main_process=num_cpus_for_main_process,
-            )
+            )       
             .callbacks(EpisodeReturn)
         )
 
+        # Results dir
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        experiment_name = f"PPO_{timestamp}"
+        trial_dir = Path(ray_results_dir) / experiment_name / "PPO_PredPreyGrass_00000"
+        trial_dir = trial_dir.expanduser()
+        trial_dir.mkdir(parents=True, exist_ok=True)
+
+
+
+        # Prepare and save config metadata before training
+        config_metadata = {
+            "config_env": config_env,
+            "ppo_config": {
+                "train_batch_size": train_batch_size,
+                "gamma": gamma,
+                "lr": lr,
+                "rollout_fragment_length": rollout_fragment_length,
+                "num_env_runners": num_env_runners,
+                "num_envs_per_env_runner": num_envs_per_env_runner,
+                "num_cpus_per_env_runner": num_cpus_per_env_runner,
+                "num_gpus_per_learner": num_gpus_per_learner,
+            },
+        }
+
+        with open(trial_dir / "run_config.json", "w") as f:
+            json.dump(config_metadata, f, indent=4)
+
+        print(f"Saved config to: {trial_dir/'run_config.json'}")
+
+        # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
             ppo.algo_class,
             param_space=ppo,
             run_config=train.RunConfig(
+                name=experiment_name,
+                storage_path=os.path.expanduser(ray_results_dir),
                 stop={"training_iteration": 1000},
                 checkpoint_config=train.CheckpointConfig(
                     num_to_keep=100,
@@ -201,6 +242,6 @@ if __name__ == "__main__":
                 ),
             ),
         )
+        # Run the Tuner and capture the results.
         results = tuner.fit()
-
     ray.shutdown()
