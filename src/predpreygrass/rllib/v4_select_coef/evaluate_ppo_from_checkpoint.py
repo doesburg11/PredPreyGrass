@@ -33,13 +33,15 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-checkpoint_root = '/home/doesburg/ray_results/'
-chechpoint_file = 'PPO_2025-04-03_21-48-39/PPO_PredPreyGrass_a3e02_00000_0_2025-04-03_21-48-39/checkpoint_000006'
+checkpoint_root = './src/predpreygrass/rllib/v4_select_coef/trained_models/config_1/'
+chechpoint_file = 'PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
+# Access RLModules from learner_group
+rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()
@@ -58,9 +60,6 @@ step = 0
 done = False
 total_reward = 0
 
-# Start rollout
-terminated = {"__all__": False}
-total_reward = {aid: 0.0 for aid in obs}
 
 
 # Run one evaluation episode

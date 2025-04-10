@@ -35,7 +35,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-checkpoint_root = './predpreygrass/rllib/v3_age/trained_models/config_1/'
+checkpoint_root = './src/predpreygrass/rllib/v3_age/trained_models/config_1/'
 # Load trained model from checkpoint
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029"  # Update as needed
 #checkpoint_path = "/home/doesburg/ray_results/PPO_2025-03-14_11-46-25/PPO_PredPreyGrass_93c99_00000_0_2025-03-14_11-46-25/checkpoint_000029/PPO_2025-03-15_10-05-54/PPO_PredPreyGrass_b39a3_00000_0_2025-03-15_10-05-54/checkpoint_000005"  # Update as needed

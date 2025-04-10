@@ -36,7 +36,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
     
-checkpoint_root = './predpreygrass/rllib/v3_age/trained_models/config_2/'
+checkpoint_root = './src/predpreygrass/rllib/v3_age/trained_models/config_2/'
 chechpoint_file = 'PPO_PredPreyGrass_a6a66_00000_0_2025-03-30_23-40-51/checkpoint_000022'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
