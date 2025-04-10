@@ -27,7 +27,7 @@ from pathlib import Path
 import json
 
 
-# hyperparameters
+# ======= hyperparameters =======
 # training
 train_batch_size=1024
 gamma=0.99
@@ -134,14 +134,17 @@ if __name__ == "__main__":
     )
     register_env("PredPreyGrass", env_creator)
 
+    """================= Create you own Ray Result output directory here ==================="""
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results"
-    checkpoint_dir = Path(ray_results_dir) / "PPO_2025-04-09_23-55-47/PPO_PredPreyGrass_64d1f_00000_0_2025-04-09_23-55-47/checkpoint_000001"  # or dynamically set
-    checkpoint_file = checkpoint_dir / "rllib_checkpoint.json"
+    ray_results_path = Path(ray_results_dir).expanduser()
+    existing_experiment_dir = "PPO_2025-04-10_12-15-07/"
+    checkpoint_path = Path(ray_results_dir+existing_experiment_dir).expanduser()
 
-    # Try restoring from an existing experiment if available
-    if checkpoint_file.exists():
+
+    # === Checkpoint restore path (full experiment folder!) ===
+    if (checkpoint_path / "tuner.pkl").exists():
         restored_tuner = tune.Tuner.restore(
-            path=checkpoint_dir,  # The directory where Tune stores experiment results
+            path=str(checkpoint_path),  # The directory where Tune stores experiment results
             resume_errored=True,  # Resume even if the last trial errored
             trainable=PPOConfig().algo_class,  # The algorithm class used in the experiment
         )
@@ -151,7 +154,15 @@ if __name__ == "__main__":
         results = restored_tuner.fit()
 
     else:
+        print(" === No checkpoint found, start a new experiment === ")
         print(f"Starting new training experiment.")
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        experiment_name = f"PPO_{timestamp}"
+
+        trial_dir = ray_results_path / experiment_name / "PPO_PredPreyGrass_00000"
+        trial_dir.mkdir(parents=True, exist_ok=True)
+
+        # Sample env for observation/action space setup
         sample_env = env_creator({})  # Create a single instance
         sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
         module_specs = {}
@@ -162,7 +173,38 @@ if __name__ == "__main__":
                 sample_env.action_spaces[sample_agent]
             )
 
+        # alternative
+        """
+        module_specs = {
+            policy_mapping_fn(agent): build_module_spec(
+                sample_env.observation_spaces[agent],
+                sample_env.action_spaces[agent]
+            ) for agent in sample_agents
+        }
+        """
+
         multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
+
+       # Prepare and save config metadata before training
+        config_metadata = {
+            "config_env": config_env,
+            "ppo_config": {
+                "train_batch_size": train_batch_size,
+                "gamma": gamma,
+                "lr": lr,
+                "rollout_fragment_length": rollout_fragment_length,
+                "num_env_runners": num_env_runners,
+                "num_envs_per_env_runner": num_envs_per_env_runner,
+                "num_cpus_per_env_runner": num_cpus_per_env_runner,
+                "num_gpus_per_learner": num_gpus_per_learner,
+            },
+        }
+
+        with open(trial_dir / "run_config.json", "w") as f:
+            json.dump(config_metadata, f, indent=4)
+
+        print(f"Saved config to: {trial_dir/'run_config.json'}")
+
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
             PPOConfig()
@@ -198,35 +240,7 @@ if __name__ == "__main__":
             .callbacks(EpisodeReturn)
         )
 
-        # Results dir
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        experiment_name = f"PPO_{timestamp}"
-        trial_dir = Path(ray_results_dir) / experiment_name / "PPO_PredPreyGrass_00000"
-        trial_dir = trial_dir.expanduser()
-        trial_dir.mkdir(parents=True, exist_ok=True)
-
-
-
-        # Prepare and save config metadata before training
-        config_metadata = {
-            "config_env": config_env,
-            "ppo_config": {
-                "train_batch_size": train_batch_size,
-                "gamma": gamma,
-                "lr": lr,
-                "rollout_fragment_length": rollout_fragment_length,
-                "num_env_runners": num_env_runners,
-                "num_envs_per_env_runner": num_envs_per_env_runner,
-                "num_cpus_per_env_runner": num_cpus_per_env_runner,
-                "num_gpus_per_learner": num_gpus_per_learner,
-            },
-        }
-
-        with open(trial_dir / "run_config.json", "w") as f:
-            json.dump(config_metadata, f, indent=4)
-
-        print(f"Saved config to: {trial_dir/'run_config.json'}")
-
+ 
         # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
             ppo.algo_class,
