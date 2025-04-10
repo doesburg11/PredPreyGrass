@@ -128,17 +128,22 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
+
+    # Global PyTorch fix for foreach bug (applies to all Ray subprocesses)
+    import os
+    os.environ["TORCH_GLOBAL_FOREACH"] = "0"
+ 
     ray.init(
-        log_to_driver=True,
-        ignore_reinit_error=True,
-    )
+            log_to_driver=True,
+            ignore_reinit_error=True,
+        )
     register_env("PredPreyGrass", env_creator)
 
     """================= Create you own Ray Result output directory here ==================="""
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results"
+    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
-    existing_experiment_dir = "PPO_2025-04-10_12-15-07/"
-    experiment_path = Path(ray_results_dir+existing_experiment_dir).expanduser()
+    existing_experiment_dir = "PPO_2025-04-10_15-12-05"
+    experiment_path = ray_results_path / existing_experiment_dir
 
     # === Checkpoint restore path (full experiment folder!) ===
     if (experiment_path / "tuner.pkl").exists():
