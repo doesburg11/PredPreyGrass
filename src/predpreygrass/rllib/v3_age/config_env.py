@@ -30,8 +30,8 @@ config_env = {
     "n_possible_speed_2_prey": 21,
     "n_initial_active_speed_1_predator": 5,
     "n_initial_active_speed_1_prey": 7,
-    "n_initial_active_speed_2_predator": 5,
-    "n_initial_active_speed_2_prey": 7,
+    "n_initial_active_speed_2_predator": 0,
+    "n_initial_active_speed_2_prey": 0,
     
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
