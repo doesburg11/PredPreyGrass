@@ -138,13 +138,12 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results"
     ray_results_path = Path(ray_results_dir).expanduser()
     existing_experiment_dir = "PPO_2025-04-10_12-15-07/"
-    checkpoint_path = Path(ray_results_dir+existing_experiment_dir).expanduser()
-
+    experiment_path = Path(ray_results_dir+existing_experiment_dir).expanduser()
 
     # === Checkpoint restore path (full experiment folder!) ===
-    if (checkpoint_path / "tuner.pkl").exists():
+    if (experiment_path / "tuner.pkl").exists():
         restored_tuner = tune.Tuner.restore(
-            path=str(checkpoint_path),  # The directory where Tune stores experiment results
+            path=str(experiment_path),  # The directory where Tune stores experiment results
             resume_errored=True,  # Resume even if the last trial errored
             trainable=PPOConfig().algo_class,  # The algorithm class used in the experiment
         )
