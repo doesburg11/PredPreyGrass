@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
 
 # external libraries
@@ -9,7 +9,6 @@ import torch
 import time
 import os
 
-
 verbose_grid = False
 verbose_actions = False
 seed = None # 42 # for random intialization of the environment
@@ -17,7 +16,6 @@ seed = None # 42 # for random intialization of the environment
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
 
-# Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
@@ -56,7 +54,7 @@ all_agents = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
 combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
 
-step=0
+step = 0
 done = False
 total_reward = 0
 
@@ -70,7 +68,7 @@ while not done:
     action_dict = {}
 
     for agent_id in env.agents:
-        policy_id = policy_mapping_fn(agent_id)  # Determine policy for each agent
+        policy_id = policy_mapping_fn(agent_id) # Determine policy for each agent
         # Get the RLModule (policy model) from the Learner Group
         policy_module = rl_modules[policy_id]
         # Convert observation to tensor format required for _forward_inference()

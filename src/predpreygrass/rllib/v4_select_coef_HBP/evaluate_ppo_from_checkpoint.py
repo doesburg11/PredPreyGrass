@@ -9,7 +9,6 @@ import torch
 import time
 import os
 
-
 verbose_grid = False
 verbose_actions = False
 seed = None # 42 # for random intialization of the environment
@@ -17,7 +16,6 @@ seed = None # 42 # for random intialization of the environment
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
 
-# Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
@@ -36,9 +34,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
     
-#checkpoint_root = '/home/doesburg/ray_results/'
-checkpoint_root = '/home/doesburg/ray_results'
-chechpoint_file = '/PPO_2025-04-05_12-16-36/PPO_PredPreyGrass_0eb78_00000_0_2025-04-05_12-16-36/checkpoint_000030'
+checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
+#checkpoint_root = '/home/doesburg/ray_results'
+# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
+chechpoint_file = '/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
@@ -46,7 +45,7 @@ print("Checkpoint loaded successfully!")
 
 
 # Access RLModules from learner_group
-rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
+policy = trained_algo.get_policy(policy_id)
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()
