@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries
 import time

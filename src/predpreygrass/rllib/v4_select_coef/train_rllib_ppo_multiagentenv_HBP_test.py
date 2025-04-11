@@ -1,5 +1,4 @@
 """
-HBP COMPUTER
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
@@ -9,8 +8,8 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
+from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v4_select_coef.config_env import config_env
 
 #  external libraries
 import ray
@@ -22,31 +21,6 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import os
-from datetime import datetime
-from pathlib import Path
-import json
-
-
-# ======= hyperparameters =======
-# training
-train_batch_size=1024
-gamma=0.99
-lr=0.0003            
-
-# learners
-num_gpus_per_learner=1
-num_learners=1
-
-# env_runners
-num_env_runners=8
-num_envs_per_env_runner=3
-rollout_fragment_length="auto"
-sample_timeout_s=600
-num_cpus_per_env_runner=3 
-
-#resources
-num_cpus_for_main_process=4
-    
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -128,24 +102,33 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
-
-
     ray.init(
-            log_to_driver=True,
-            ignore_reinit_error=True,
-        )
+        num_cpus=32,  # Reserve 2 for OS/system overhead
+        num_gpus=0,
+        log_to_driver=True,
+        ignore_reinit_error=True,
+    )
     register_env("PredPreyGrass", env_creator)
+    # Set your actual checkpoint path if you want to restore training
+    #checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v4_select_coef/trained_models/config_2')}"
+    checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
 
-    """================= Create you own Ray Result output directory here ==================="""
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    ray_results_path = Path(ray_results_dir).expanduser()
-    existing_experiment_dir = "PPO_2025-04-10_15-12-05"
-    experiment_path = ray_results_path / existing_experiment_dir
+    sample_env = env_creator({})  # Create a single instance
+    sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
+    module_specs = {}
+    for sample_agent in sample_agents:
+        policy = policy_mapping_fn(sample_agent)
+        module_specs[policy] = build_module_spec(
+            sample_env.observation_spaces[sample_agent],
+            sample_env.action_spaces[sample_agent]
+        )
 
-    # === Checkpoint restore path (full experiment folder!) ===
-    if (experiment_path / "tuner.pkl").exists():
+    multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
+
+    # Try restoring from an existing experiment if available
+    try:
         restored_tuner = tune.Tuner.restore(
-            path=str(experiment_path),  # The directory where Tune stores experiment results
+            path=checkpoint_dir,  # The directory where Tune stores experiment results
             resume_errored=True,  # Resume even if the last trial errored
             trainable=PPOConfig().algo_class,  # The algorithm class used in the experiment
         )
@@ -154,57 +137,8 @@ if __name__ == "__main__":
         # Continue training
         results = restored_tuner.fit()
 
-    else:
-        print(" === No checkpoint found, start a new experiment === ")
+    except:
         print(f"Starting new training experiment.")
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        experiment_name = f"PPO_{timestamp}"
-
-        trial_dir = ray_results_path / experiment_name / "PPO_PredPreyGrass_00000"
-        trial_dir.mkdir(parents=True, exist_ok=True)
-
-        # Sample env for observation/action space setup
-        sample_env = env_creator({})  # Create a single instance
-        sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
-        module_specs = {}
-        for sample_agent in sample_agents:
-            policy = policy_mapping_fn(sample_agent)
-            module_specs[policy] = build_module_spec(
-                sample_env.observation_spaces[sample_agent],
-                sample_env.action_spaces[sample_agent]
-            )
-
-        # alternative
-        """
-        module_specs = {
-            policy_mapping_fn(agent): build_module_spec(
-                sample_env.observation_spaces[agent],
-                sample_env.action_spaces[agent]
-            ) for agent in sample_agents
-        }
-        """
-
-        multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
-
-       # Prepare and save config metadata before training
-        config_metadata = {
-            "config_env": config_env,
-            "ppo_config": {
-                "train_batch_size": train_batch_size,
-                "gamma": gamma,
-                "lr": lr,
-                "rollout_fragment_length": rollout_fragment_length,
-                "num_env_runners": num_env_runners,
-                "num_envs_per_env_runner": num_envs_per_env_runner,
-                "num_cpus_per_env_runner": num_cpus_per_env_runner,
-                "num_gpus_per_learner": num_gpus_per_learner,
-            },
-        }
-
-        with open(trial_dir / "run_config.json", "w") as f:
-            json.dump(config_metadata, f, indent=4)
-
-        print(f"Saved config to: {trial_dir/'run_config.json'}")
 
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
@@ -217,46 +151,47 @@ if __name__ == "__main__":
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=train_batch_size, 
-                gamma=gamma,
-                lr=lr,            
+                train_batch_size=1024, 
+                gamma=0.99,
+                lr=0.0003,            
             )
             .rl_module(
                 rl_module_spec=multi_module_spec
             )
-            .learners(
-                num_gpus_per_learner=num_gpus_per_learner,
-                num_learners=num_learners,
-            )
             .env_runners(
-                num_env_runners=num_env_runners,  
-                num_envs_per_env_runner=num_envs_per_env_runner,  
-                rollout_fragment_length=rollout_fragment_length,
-                sample_timeout_s=sample_timeout_s,  
-                num_cpus_per_env_runner=num_cpus_per_env_runner 
+                num_env_runners=12,  
+                num_envs_per_env_runner=2,  
+                rollout_fragment_length="auto",
+                sample_timeout_s=600,  
+                num_cpus_per_env_runner=2 
+            )
+            .learners(
+                num_learners=1,
+                num_cpus_per_learner=6,
+                num_gpus_per_learner=0
             )
             .resources(
-                num_cpus_for_main_process=num_cpus_for_main_process,
+                num_cpus_for_main_process=2,
+                num_gpus=0  # Enables GPU usage
+
             )       
             .callbacks(EpisodeReturn)
         )
 
- 
         # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
             ppo.algo_class,
             param_space=ppo,
             run_config=train.RunConfig(
-                name=experiment_name,
-                storage_path=os.path.expanduser(ray_results_dir),
                 stop={"training_iteration": 1000},
                 checkpoint_config=train.CheckpointConfig(
-                    num_to_keep=100,
-                    checkpoint_frequency=10,
-                    checkpoint_at_end=True,
+                    num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
+                    checkpoint_frequency=10,  # Save every 10 iterations
+                    checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
                 ),
             ),
         )
         # Run the Tuner and capture the results.
         results = tuner.fit()
+    #print(f"Training results: {results}")
     ray.shutdown()

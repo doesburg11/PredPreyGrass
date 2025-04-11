@@ -224,10 +224,6 @@ if __name__ == "__main__":
             .rl_module(
                 rl_module_spec=multi_module_spec
             )
-            .learners(
-                num_gpus_per_learner=num_gpus_per_learner,
-                num_learners=num_learners,
-            )
             .env_runners(
                 num_env_runners=num_env_runners,  
                 num_envs_per_env_runner=num_envs_per_env_runner,  
