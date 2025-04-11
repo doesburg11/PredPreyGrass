@@ -3,7 +3,7 @@ from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVi
 
 # external libraries
 import ray
-from ray.rllib.algorithms.algorithm import Algorithm
+from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import torch
 import time
@@ -33,20 +33,26 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-    
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
-#checkpoint_root = '/home/doesburg/ray_results'
+
+# === Set checkpoint paths ===
 # /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
-chechpoint_file = '/PPO_2025-04-11_17-15-57/PPO_PredPreyGrass_de94b_00000_0_2025-04-11_17-15-57/checkpoint_000000'
-# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/PPO_2025-04-11_17-15-57/PPO_PredPreyGrass_de94b_00000_0_2025-04-11_17-15-57/checkpoint_000001
-checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
+# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/checkpoint_000000
+checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
+chechpoint_file = '/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/checkpoint_000000'
+checkpoint_path = os.path.abspath(checkpoint_root + chechpoint_file)
+
+
 # Load RLlib Algorithm from checkpoint
-trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
+print("Checkpoint directory:", checkpoint_path)
 
 
-# Access RLModules from learner_group
-rl_modules = trained_algo.learner_group._learner.module
+# Load RLModules directly from subfolders
+module_paths = {
+    pid: os.path.join(checkpoint_path, 'learner_group', 'learner', 'rl_module', pid)
+    for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]
+}
+rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()
