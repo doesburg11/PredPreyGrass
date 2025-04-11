@@ -18,7 +18,7 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,
+    "energy_loss_per_step_predator": 0.07,
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
@@ -37,11 +37,11 @@ config_env = {
     "initial_energy_prey": 3.0,
 
     # mutation settings
-    "mutation_rate_predator": 0.025,  # mutation probability from speed_1 to speed_2
-    "mutation_rate_prey": 0.025,      # and vice versa
+    "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
+    "mutation_rate_prey": 0.00,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 35,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.04,
 
