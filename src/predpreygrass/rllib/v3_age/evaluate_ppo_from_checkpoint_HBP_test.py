@@ -1,5 +1,5 @@
-from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
+from predpreygrass.rllib.v3_age.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PopulationChart
 
 # external libraries
 import ray
@@ -9,6 +9,7 @@ import torch
 import time
 import os
 
+
 verbose_grid = False
 verbose_actions = False
 seed = None # 42 # for random intialization of the environment
@@ -16,6 +17,7 @@ seed = None # 42 # for random intialization of the environment
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
 
+# Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
@@ -33,19 +35,14 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-    
-# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
-
-
-
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/'
-chechpoint_file = 'PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039'
-#checkpoint_root = './src/predpreygrass/rllib/v4_select_coef/trained_models/config_1/'
-#chechpoint_file = 'PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026'
+# /home/doesburg/ray_results/PPO_2025-04-11_15-03-24/PPO_PredPreyGrass_5a2b9_00000_0_2025-04-11_15-03-24/checkpoint_000000
+checkpoint_root = '/home/doesburg/ray_results/'
+chechpoint_file = 'PPO_2025-04-11_15-03-24/PPO_PredPreyGrass_5a2b9_00000_0_2025-04-11_15-03-24/checkpoint_000000'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
+
 
 # Access RLModules from learner_group
 rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
@@ -62,19 +59,18 @@ grid_size = (env.grid_size, env.grid_size)
 all_agents = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
 combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
+population_chart = PopulationChart()
 
-step = 0
+step=0
 done = False
 total_reward = 0
-
-
 
 # Run one evaluation episode
 while not done:
     action_dict = {}
 
     for agent_id in env.agents:
-        policy_id = policy_mapping_fn(agent_id) # Determine policy for each agent
+        policy_id = policy_mapping_fn(agent_id)  # Determine policy for each agent
         # Get the RLModule (policy model) from the Learner Group
         policy_module = rl_modules[policy_id]
         # Convert observation to tensor format required for _forward_inference()
@@ -121,6 +117,9 @@ while not done:
     num_predators = sum(1 for agent in env.agents if "predator" in agent)
     num_prey = sum(1 for agent in env.agents if "prey" in agent)
 
+    # Store counts
+    population_chart.record(step, env.agents)
+
     # Sum rewards
     total_reward += sum(rewards.values())
 
@@ -142,6 +141,13 @@ speed_2_prey_rewards = []
 
 
 print("\n--- Reward Breakdown per Agent ---")
+for agent_id, reward in env.cumulative_rewards.items():
+    print(f"{agent_id:15}: {reward:.2f}")
+    if "predator" in agent_id:
+        predator_rewards.append(reward)
+    elif "prey" in agent_id:
+        prey_rewards.append(reward)
+
 for agent_id, reward in env.cumulative_rewards.items():
     print(f"{agent_id:15}: {reward:.2f}")
     if "speed_1_predator" in agent_id:
@@ -177,7 +183,7 @@ print(f"Total Speed 2 Predator Reward  : {total_speed_2_predator_reward:.2f}")
 print(f"Total Speed 2 Prey Reward      : {total_speed_2_prey_reward:.2f}")
 print(f"Total All-Agent Reward Speed 2 : {total_reward_all_speed_2:.2f}")
 
-
+population_chart.plot()
 combined_evolution_visualizer.plot()
 # Shutdown Ray after evaluation
 ray.shutdown()

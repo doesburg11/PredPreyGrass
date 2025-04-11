@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
 
 # external libraries
@@ -34,21 +34,20 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
     
+checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
+#checkpoint_root = '/home/doesburg/ray_results'
 # /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
+#chechpoint_file = '/PPO_2025-04-11_16-03-18/PPO_PredPreyGrass_b8745_00000_0_2025-04-11_16-03-18/checkpoint_000001'
+chechpoint_file = '/PPO_2025-04-11_17-15-57/PPO_PredPreyGrass_de94b_00000_0_2025-04-11_17-15-57/checkpoint_000000'
 
-
-
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/'
-chechpoint_file = 'PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039'
-#checkpoint_root = './src/predpreygrass/rllib/v4_select_coef/trained_models/config_1/'
-#chechpoint_file = 'PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
-# Access RLModules from learner_group
-rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
+# ✅ Access RLModules from LearnerGroup
+rl_modules = trained_algo.learner_group._learner.module
+
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()
@@ -63,22 +62,22 @@ all_agents = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
 combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
 
-step = 0
+
+step=0
 done = False
 total_reward = 0
-
-
 
 # Run one evaluation episode
 while not done:
     action_dict = {}
 
     for agent_id in env.agents:
-        policy_id = policy_mapping_fn(agent_id) # Determine policy for each agent
+        policy_id = policy_mapping_fn(agent_id)  # Determine policy for each agent
         # Get the RLModule (policy model) from the Learner Group
         policy_module = rl_modules[policy_id]
         # Convert observation to tensor format required for _forward_inference()
-        obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)  # Add batch dimension
+
+        obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)  # Convert obs to tensor
         # Use _forward_inference() to compute the next action
         with torch.no_grad():
             action_output = policy_module._forward_inference({"obs": obs_tensor})
@@ -91,7 +90,7 @@ while not done:
         action_dict[agent_id] = action
     if verbose_actions:
         print("----------------------------------------------------------------------------------")
-        print("Step:",step)
+        print("Step:", step)
         print("----------------------------------------------------------------------------------")
         print("Actions:", action_dict)
         print("----------------------------------------------------------------------------------")
@@ -107,34 +106,22 @@ while not done:
     if verbose_grid:
         print(f"Step {step}:")
         print("-----------------------------------------")
-        #print(f"Actions: {action_dict}")
         env._print_grid_from_positions()
         env._print_grid_from_state()
         print("-----------------------------------------")
 
-    # Print termination status for debugging
-    #print(f"Terminations: {terminations}")
+    # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
     grid_visualizer.update(merged_positions, step)
-    step+=1
-    # Count current number of agents
-    num_predators = sum(1 for agent in env.agents if "predator" in agent)
-    num_prey = sum(1 for agent in env.agents if "prey" in agent)
-
-    # Sum rewards
+    step += 1
     total_reward += sum(rewards.values())
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
     #time.sleep(0.1)
 
-    # Print active agents after step
-    #print(f"Active Agents After Step: {env.agents}")  # Debugging
-
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
-predator_rewards = []
-prey_rewards = []
 speed_1_predator_rewards = []
 speed_1_prey_rewards = []
 speed_2_predator_rewards = []
@@ -154,9 +141,6 @@ for agent_id, reward in env.cumulative_rewards.items():
         speed_2_prey_rewards.append(reward)
 
 
-total_predator_reward = sum(predator_rewards)
-total_prey_reward = sum(prey_rewards)
-total_reward_all = total_predator_reward + total_prey_reward
 total_speed_1_predator_reward = sum(speed_1_predator_rewards)
 total_speed_1_prey_reward = sum(speed_1_prey_rewards)
 total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
@@ -166,16 +150,13 @@ total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_re
 
 
 print("\n--- Aggregated Rewards ---")
-print(f"Total number of steps          : {step-1}")
-print(f"Total Predator Reward          : {total_predator_reward:.2f}")
-print(f"Total Prey Reward              : {total_prey_reward:.2f}")
-print(f"Total All-Agent Reward         : {total_reward_all:.2f}")
-print(f"Total Speed 1 Predator Reward  : {total_speed_1_predator_reward:.2f}")
-print(f"Total Speed 1 Prey Reward      : {total_speed_1_prey_reward:.2f}")
-print(f"Total All-Agent Reward Speed 1 : {total_reward_all_speed_1:.2f}")
-print(f"Total Speed 2 Predator Reward  : {total_speed_2_predator_reward:.2f}")
-print(f"Total Speed 2 Prey Reward      : {total_speed_2_prey_reward:.2f}")
-print(f"Total All-Agent Reward Speed 2 : {total_reward_all_speed_2:.2f}")
+print(f"Total number of steps            : {step-1}")
+print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
+print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
+print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
+print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
+print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
+print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
 
 
 combined_evolution_visualizer.plot()

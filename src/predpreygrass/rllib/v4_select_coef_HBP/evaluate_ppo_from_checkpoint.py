@@ -37,7 +37,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 #checkpoint_root = '/home/doesburg/ray_results'
 # /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
-chechpoint_file = '/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039'
+chechpoint_file = '/PPO_2025-04-11_17-15-57/PPO_PredPreyGrass_de94b_00000_0_2025-04-11_17-15-57/checkpoint_000000'
+# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/PPO_2025-04-11_17-15-57/PPO_PredPreyGrass_de94b_00000_0_2025-04-11_17-15-57/checkpoint_000001
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
@@ -45,7 +46,7 @@ print("Checkpoint loaded successfully!")
 
 
 # Access RLModules from learner_group
-policy = trained_algo.get_policy(policy_id)
+rl_modules = trained_algo.learner_group._learner.module
 
 # Initialize the environment
 env = env_creator({}) # PredPreyGrass()

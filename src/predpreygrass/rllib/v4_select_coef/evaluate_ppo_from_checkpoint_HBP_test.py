@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v4_select_coef.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
 
 # external libraries
@@ -34,12 +34,9 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
     
-# /home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039
-
-
-
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/400/'
-chechpoint_file = 'PPO_PredPreyGrass_d39e3_00000_0_2025-04-08_23-31-26/checkpoint_000039'
+# /home/doesburg/ray_results/PPO_2025-04-11_14-32-23/PPO_PredPreyGrass_04a23_00000_0_2025-04-11_14-32-23/checkpoint_000000
+checkpoint_root = '/home/doesburg/ray_results/'
+chechpoint_file = 'PPO_2025-04-11_14-32-23/PPO_PredPreyGrass_04a23_00000_0_2025-04-11_14-32-23/checkpoint_000000'
 #checkpoint_root = './src/predpreygrass/rllib/v4_select_coef/trained_models/config_1/'
 #chechpoint_file = 'PPO_PredPreyGrass_953be_00000_0_2025-03-29_05-09-17/checkpoint_000026'
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
