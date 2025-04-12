@@ -73,6 +73,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_instance_counter: int = 0
         self.agent_internal_ids: Dict[AgentID, int] = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
         self.agent_ages: Dict[AgentID, int] = {}
+        # Tracking causes of death prey
+        self.death_cause_prey: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
+
 
         # POSSIBLE agents (all agents that *could* exist)
         self.possible_agents = []
@@ -199,6 +202,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_instance_counter = 0
         self.agent_ages = {}  # Maps internal ID -> age
         self.agent_internal_ids = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
+
+        self.death_cause_prey = {}  # key = internal ID, value = "eaten" or "starved"        
 
         # construct agent lists based on speed-aware config ---
         self.agents = []
@@ -377,6 +382,9 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grid_world_state[1,*self.agent_positions[agent]] = 0
                     del self.predator_positions[agent]
                 elif "prey" in agent:
+                    # Cause of death tracking prey
+                    internal_id = self.agent_internal_ids[agent]
+                    self.death_cause_prey[internal_id] = "starved"
                     self.current_num_prey -= 1
                     self.grid_world_state[2,*self.agent_positions[agent]] = 0
                     del self.prey_positions[agent]
@@ -408,6 +416,9 @@ class PredPreyGrass(MultiAgentEnv):
                     self.cumulative_rewards.setdefault(caught_prey, 0.0)
                     self.cumulative_rewards[agent] += rewards[agent]
                     self.cumulative_rewards[caught_prey] += rewards[caught_prey]
+                    # cause of death tracking prey
+                    internal_id = self.agent_internal_ids[caught_prey]
+                    self.death_cause_prey[internal_id] = "eaten"
 
                     # Remove prey
                     terminations[caught_prey] = True
