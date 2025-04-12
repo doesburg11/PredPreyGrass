@@ -38,8 +38,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 # === Set checkpoint paths ===
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
-checkpoint_root = '/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/'
-checkpoint_dir = 'checkpoint_000000'
+checkpoint_root = '/PPO_2025-04-12_00-49-18/PPO_PredPreyGrass_33a72_00000_0_2025-04-12_00-49-18/'
+checkpoint_dir = 'checkpoint_000099'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 
 # === Get training directory and prepare eval output dir ===
@@ -78,9 +78,6 @@ grid_visualizer = MatPlotLibRenderer(
     destination_path=None, # save to: eval_output_dir
 )
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
-    destination_path=eval_output_dir
-)
-population_chart = PopulationChart(
     destination_path=eval_output_dir
 )
 
@@ -122,8 +119,6 @@ while not done:
     merged_positions = {**env.agent_positions, **env.grass_positions}
     grid_visualizer.update(merged_positions, step)
     grid_visualizer.save_frame(step) 
-
-    population_chart.record(step, env.agents)
 
     step += 1
     total_reward += sum(rewards.values())
@@ -181,6 +176,5 @@ with open(reward_log_path, "w") as f:
 
 
 combined_evolution_visualizer.plot()
-population_chart.plot()
 # Shutdown Ray after evaluation
 ray.shutdown()

@@ -345,8 +345,13 @@ class MatPlotLibRenderer:
         # Update traces for remaining agents
         for agent, position in agent_positions.items():
             if "grass" in agent:
+                # Use the same font scaling for grass
+                cell_size = min(self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
+                                self.fig.get_figheight() * self.fig.dpi / self.grid_size[0])
+                font_size = cell_size * 0.6
+
                 self.agent_texts[agent] = self.ax.text(
-                    position[1], position[0], self.grass_marker, color="green", fontsize=10, ha="center", va="center"
+                    position[1], position[0], self.grass_marker, color="green", fontsize=font_size, ha="center", va="center"
                 )
                 continue
 
@@ -384,8 +389,13 @@ class MatPlotLibRenderer:
             else:
                 color = "black"  # unknown agent type fallback
 
+            # Scale font to cell size
+            cell_size = min(self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
+                            self.fig.get_figheight() * self.fig.dpi / self.grid_size[0])
+            font_size = cell_size * 0.6  # 60% of the cell size for padding
+
             self.agent_texts[agent] = self.ax.text(
-                y, x, marker, color=color, fontsize=12, ha="center", va="center"
+                y, x, marker, color=color, fontsize=font_size, ha="center", va="center"
             )
 
         plt.draw()
@@ -531,143 +541,6 @@ class AverageAgeVisualizer:
         plt.tight_layout()
         plt.show()
 
-class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None):
-        self.destination_path = destination_path
-        self.speed_counts_dict = {
-            "speed_1_predator": [],
-            "speed_2_predator": [],
-            "speed_1_prey": [],
-            "speed_2_prey": []
-        }
-
-        self.average_ages = {
-            "speed_1_predator": [],
-            "speed_2_predator": [],
-            "speed_1_prey": [],
-            "speed_2_prey": []
-        }
-
-    def record(self, agent_ids, internal_ids, agent_ages):
-        # Count agents
-        count_dict = {k: 0 for k in self.speed_counts_dict}
-        for agent_id in agent_ids:
-            for group in count_dict:
-                if group in agent_id:
-                    count_dict[group] += 1
-        for k in self.speed_counts_dict:
-            self.speed_counts_dict[k].append(count_dict[k])
-
-        # Average ages
-        age_sums = {k: 0 for k in self.average_ages}
-        age_counts = {k: 0 for k in self.average_ages}
-        for agent_id in agent_ids:
-            for group in self.average_ages:
-                if group in agent_id:
-                    internal_id = internal_ids[agent_id]
-                    age_sums[group] += agent_ages[internal_id]
-                    age_counts[group] += 1
-        for group in self.average_ages:
-            avg = age_sums[group] / age_counts[group] if age_counts[group] > 0 else 0
-            self.average_ages[group].append(avg)
-
-    def plot(self):
-        steps = range(len(next(iter(self.speed_counts_dict.values()))))
-        plt.figure(figsize=(18, 6))
-        color_map = {
-            'speed_1_predator': "#ff9999",
-            'speed_2_predator': "red",
-            'speed_1_prey': "#9999ff",
-            'speed_2_prey': "blue"
-        }
-
-        # 1. Absolute counts
-        plt.subplot(1, 3, 1)
-
-        # 1. Absolute counts
-        for group, counts in self.speed_counts_dict.items():
-            legend_label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
-            plt.plot(steps, counts, label=legend_label, color=color_map.get(group, "black"), linewidth=2)
-
-        plt.title("Agent Count Over Time")
-        plt.xlabel("Step")
-        plt.ylabel("Count")
-        plt.legend()
-        plt.grid(True)
-
-        # 2. Proportions
-        plt.subplot(1, 3, 2)
-        predator_props = []
-        prey_props = []
-        for i in steps:
-            pred1 = self.speed_counts_dict["speed_1_predator"][i]
-            pred2 = self.speed_counts_dict["speed_2_predator"][i]
-            prey1 = self.speed_counts_dict["speed_1_prey"][i]
-            prey2 = self.speed_counts_dict["speed_2_prey"][i]
-            predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
-            prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
-
-        plt.plot(steps, [p * 100 for p in predator_props], label="High-Speed Predator %", color="#cc0000", linewidth=2)
-        plt.plot(steps, [p * 100 for p in prey_props], label="High-Speed Prey %", color="#0000cc", linewidth=2)
-        plt.ylabel("Percentage (%)")
-        plt.ylim(0, 100)
-        plt.title("High-Speed Agent Population Share")
-        plt.xlabel("Step")
-        plt.legend()
-        plt.grid(True)
-
-        # 3. Average Age
-        plt.subplot(1, 3, 3)
-        for group, ages in self.average_ages.items():
-            legend_label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
-            plt.plot(steps, ages, label=legend_label, color=color_map.get(group, "black"), linewidth=2)
-
-
-        plt.title("Average Age per Agent Type")
-        plt.xlabel("Step")
-        plt.ylabel("Age")
-        plt.legend()
-        plt.grid(True)
-
-        # --- Save before plt.show() ---
-        if self.destination_path is not None:
-            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            plot_path = os.path.join(self.destination_path, "summary_plots", "evolution_summary.png")
-            plt.tight_layout()
-            plt.savefig(plot_path)
-            # print(f"Plot saved to: {plot_path}")
-            plt.show()
-
-            # --- CSV Output ---
-            csv_path = os.path.join(self.destination_path, "csv", "evolution_data.csv")
-            os.makedirs(os.path.dirname(csv_path), exist_ok=True)
-            with open(csv_path, mode="w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow([
-                    "Step",
-                    "Speed_1_Predator", "Speed_2_Predator",
-                    "Speed_1_Prey", "Speed_2_Prey",
-                    "Predator_Prop_Speed2", "Prey_Prop_Speed2"
-                    "Avg_Age_S1_Predator", "Avg_Age_S2_Predator",
-                    "Avg_Age_S1_Prey", "Avg_Age_S2_Prey"
-                ])
-                for i in steps:
-                    row = [
-                        i,
-                        self.speed_counts_dict["speed_1_predator"][i],
-                        self.speed_counts_dict["speed_2_predator"][i],
-                        self.speed_counts_dict["speed_1_prey"][i],
-                        self.speed_counts_dict["speed_2_prey"][i],
-                        predator_props[i],
-                        prey_props[i],
-                        self.average_ages["speed_1_predator"][i],
-                        self.average_ages["speed_2_predator"][i],
-                        self.average_ages["speed_1_prey"][i],
-                        self.average_ages["speed_2_prey"][i],
-                    ]
-                    writer.writerow(row)
-            # print(f"CSV saved to: {csv_path}")
-
 class PopulationChart:
     def __init__(self, destination_path=None):
         self.destination_path = destination_path
@@ -699,3 +572,129 @@ class PopulationChart:
             # print(f"Population chart saved to: {filepath}")
         else:
             plt.show()
+
+class CombinedEvolutionVisualizer:
+    def __init__(self, destination_path=None):
+        self.destination_path = destination_path
+
+        # Population counts
+        self.time_steps = []
+        self.predator_counts = []
+        self.prey_counts = []
+
+        # Speed-based counts
+        self.speed_counts_dict = {
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+            "speed_1_prey": [],
+            "speed_2_prey": []
+        }
+
+        # Age tracking
+        self.average_ages = {
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+            "speed_1_prey": [],
+            "speed_2_prey": []
+        }
+
+    def record(self, agent_ids, internal_ids, agent_ages):
+        step = len(self.time_steps)
+        self.time_steps.append(step)
+        self.predator_counts.append(sum(1 for a in agent_ids if "predator" in a))
+        self.prey_counts.append(sum(1 for a in agent_ids if "prey" in a))
+
+        # Speed counts
+        count_dict = {k: 0 for k in self.speed_counts_dict}
+        for agent_id in agent_ids:
+            for group in count_dict:
+                if group in agent_id:
+                    count_dict[group] += 1
+        for k in self.speed_counts_dict:
+            self.speed_counts_dict[k].append(count_dict[k])
+
+        # Average ages
+        age_sums = {k: 0 for k in self.average_ages}
+        age_counts = {k: 0 for k in self.average_ages}
+        for agent_id in agent_ids:
+            for group in self.average_ages:
+                if group in agent_id:
+                    internal_id = internal_ids[agent_id]
+                    age_sums[group] += agent_ages[internal_id]
+                    age_counts[group] += 1
+        for group in self.average_ages:
+            avg = age_sums[group] / age_counts[group] if age_counts[group] > 0 else 0
+            self.average_ages[group].append(avg)
+
+    def plot(self):
+        steps = self.time_steps
+        plt.figure(figsize=(24, 6))
+        color_map = {
+            'speed_1_predator': "#ff9999",
+            'speed_2_predator': "red",
+            'speed_1_prey': "#9999ff",
+            'speed_2_prey': "blue"
+        }
+
+        # 1. Total predator and prey count
+        plt.subplot(1, 4, 1)
+        plt.plot(steps, self.predator_counts, label="Predators", color="red", linewidth=2)
+        plt.plot(steps, self.prey_counts, label="Prey", color="blue", linewidth=2)
+        plt.title("Agent Population by Type")
+        plt.xlabel("Step")
+        plt.ylabel("Count")
+        plt.legend()
+        plt.grid(True)
+
+        # 2. Speed-specific counts
+        plt.subplot(1, 4, 2)
+        for group, counts in self.speed_counts_dict.items():
+            label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
+            plt.plot(steps, counts, label=label, color=color_map.get(group, "black"), linewidth=2)
+        plt.title("Agent Population by Speed Type")
+        plt.xlabel("Step")
+        plt.ylabel("Count")
+        plt.legend()
+        plt.grid(True)
+
+        # 3. High-speed proportions
+        plt.subplot(1, 4, 3)
+        predator_props, prey_props = [], []
+        for i in steps:
+            pred1 = self.speed_counts_dict["speed_1_predator"][i]
+            pred2 = self.speed_counts_dict["speed_2_predator"][i]
+            prey1 = self.speed_counts_dict["speed_1_prey"][i]
+            prey2 = self.speed_counts_dict["speed_2_prey"][i]
+            predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
+            prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
+
+        plt.plot(steps, [p * 100 for p in predator_props], label="High-Speed Predator %", color="#cc0000", linewidth=2)
+        plt.plot(steps, [p * 100 for p in prey_props], label="High-Speed Prey %", color="#0000cc", linewidth=2)
+        plt.title("High-Speed Agent Proportion")
+        plt.ylabel("Percentage (%)")
+        plt.xlabel("Step")
+        plt.ylim(0, 100)
+        plt.legend()
+        plt.grid(True)
+
+        # 4. Average ages
+        plt.subplot(1, 4, 4)
+        for group, ages in self.average_ages.items():
+            label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
+            plt.plot(steps, ages, label=label, color=color_map.get(group, "black"), linewidth=2)
+        plt.title("Average Age per Agent Type")
+        plt.xlabel("Step")
+        plt.ylabel("Age")
+        plt.legend()
+        plt.grid(True)
+
+        plt.tight_layout()
+
+        if self.destination_path:
+            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
+            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary.png")
+            plt.savefig(path)
+            plt.show()
+        else:
+            plt.show()
+
