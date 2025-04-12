@@ -7,8 +7,9 @@ import ray
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import torch
-import time
+from datetime import datetime
 import os
+import json
 
 verbose_grid = False
 verbose_actions = False
@@ -40,11 +41,15 @@ checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/
 chechpoint_file = '/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/checkpoint_000000'
 checkpoint_path = os.path.abspath(checkpoint_root + chechpoint_file)
 
+# === Get training directory and prepare eval output dir ===
+training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
+now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+eval_output_dir = os.path.join(training_dir, f"eval_{now}")
+os.makedirs(eval_output_dir, exist_ok=True)
 
-# Load RLlib Algorithm from checkpoint
-print("Checkpoint loaded successfully!")
-print("Checkpoint directory:", checkpoint_path)
-
+# === Save config_env.json ===
+with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+    json.dump(config_env, f, indent=4)
 
 # Load RLModules directly from subfolders
 module_paths = {
@@ -91,12 +96,6 @@ while not done:
             raise KeyError(f"Unexpected output structure: {action_output}")
         # Store the computed action
         action_dict[agent_id] = action
-    if verbose_actions:
-        print("----------------------------------------------------------------------------------")
-        print("Step:", step)
-        print("----------------------------------------------------------------------------------")
-        print("Actions:", action_dict)
-        print("----------------------------------------------------------------------------------")
 
     # Step the environment with computed actions
     obs, rewards, terminations, truncations, _ = env.step(action_dict)
@@ -105,13 +104,6 @@ while not done:
         internal_ids=env.agent_internal_ids,
         agent_ages=env.agent_ages
     )
-
-    if verbose_grid:
-        print(f"Step {step}:")
-        print("-----------------------------------------")
-        env._print_grid_from_positions()
-        env._print_grid_from_state()
-        print("-----------------------------------------")
 
     # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
@@ -125,41 +117,50 @@ while not done:
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
-speed_1_predator_rewards = []
-speed_1_prey_rewards = []
-speed_2_predator_rewards = []
-speed_2_prey_rewards = []
+reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
+with open(reward_log_path, "w") as f:
+    f.write(f"Total Reward: {total_reward}\n")
+    f.write("\n--- Reward Breakdown per Agent ---\n")
+    speed_1_predator_rewards = []
+    speed_2_predator_rewards = []
+    speed_1_prey_rewards = []
+    speed_2_prey_rewards = []
+    for agent_id, reward in env.cumulative_rewards.items():
+        f.write(f"{agent_id:15}: {reward:.2f}\n")
+        if "speed_1_predator" in agent_id:
+            speed_1_predator_rewards.append(reward)
+        elif "speed_2_predator" in agent_id:
+            speed_2_predator_rewards.append(reward)
+        elif "speed_1_prey" in agent_id:
+            speed_1_prey_rewards.append(reward)
+        elif "speed_2_prey" in agent_id:
+            speed_2_prey_rewards.append(reward)
+
+    total_speed_1_predator_reward = sum(speed_1_predator_rewards)
+    total_speed_1_prey_reward = sum(speed_1_prey_rewards)
+    total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
+    total_speed_2_predator_reward = sum(speed_2_predator_rewards)
+    total_speed_2_prey_reward = sum(speed_2_prey_rewards)
+    total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_reward
+
+    f.write("\n--- Aggregated Rewards ---\n")
+    f.write(f"Total number of steps            : {step-1}\n")
+    f.write(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}\n")
+    f.write(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}\n")
+    f.write(f"Total Low-Speed Agent Reward     : {total_speed_1_predator_reward + total_speed_1_prey_reward:.2f}\n")
+    f.write(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}\n")
+    f.write(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}\n")
+    f.write(f"Total High-Speed Agent Reward    : {total_speed_2_predator_reward + total_speed_2_prey_reward:.2f}\n")
 
 
-print("\n--- Reward Breakdown per Agent ---")
-for agent_id, reward in env.cumulative_rewards.items():
-    print(f"{agent_id:15}: {reward:.2f}")
-    if "speed_1_predator" in agent_id:
-        speed_1_predator_rewards.append(reward)
-    elif "speed_2_predator" in agent_id:
-        speed_2_predator_rewards.append(reward)
-    elif "speed_1_prey" in agent_id:
-        speed_1_prey_rewards.append(reward)
-    elif "speed_2_prey" in agent_id:
-        speed_2_prey_rewards.append(reward)
-
-
-total_speed_1_predator_reward = sum(speed_1_predator_rewards)
-total_speed_1_prey_reward = sum(speed_1_prey_rewards)
-total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
-total_speed_2_predator_reward = sum(speed_2_predator_rewards)
-total_speed_2_prey_reward = sum(speed_2_prey_rewards)
-total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_reward
-
-
-print("\n--- Aggregated Rewards ---")
-print(f"Total number of steps            : {step-1}")
-print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
-print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
-print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
-print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
-print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
-print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
+    print("\n--- Aggregated Rewards ---")
+    print(f"Total number of steps            : {step-1}")
+    print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
+    print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
+    print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
+    print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
+    print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
+    print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
 
 
 combined_evolution_visualizer.plot()
