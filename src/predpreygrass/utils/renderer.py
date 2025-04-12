@@ -9,7 +9,7 @@ import csv
 
 class PyGameRenderer:
     """
-    A class for visualizing a grid-based environment using PyGame.
+    A class for visualizing a grid-based environment using PyGame. Is used in the PettingZoo framework.
     """
     def __init__(self, env, cell_scale=40, has_energy_chart=True, x_pygame_window=0, y_pygame_window=0):
         self.env = env
@@ -256,7 +256,7 @@ class PyGameRenderer:
 
     def _save_image(self):
         self.file_name += 1
-        print(f"{self.file_name}.png saved")
+        # print(f"{self.file_name}.png saved")
         pygame.image.save(self.screen, f"./assets/images/{self.file_name}.png")
 
     def close(self):
@@ -266,11 +266,11 @@ class PyGameRenderer:
 
 class MatPlotLibRenderer:
     """
-    A class for visualizing a grid-based environment using Matplotlib.
+    A class for visualizing a grid-based environment using Matplotlib. Is used in the RLLib framework.
     """
 
     #def __init__(self, grid_size, agents, trace_length=5):
-    def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0):
+    def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0, destination_path=None):
         """
         Initialize the visualizer.
 
@@ -278,6 +278,7 @@ class MatPlotLibRenderer:
             grid_size (tuple): Size of the grid (rows, cols).
             agents (list): List of agent names (e.g., ["predator_0", "prey_0"]).
             trace_length (int): Number of steps to retain the movement trace.
+            destination_path (str): Directory to save plots. If None, plots are not saved automatically.
         """
         self.grid_size = grid_size
         self.agents = set(agents)
@@ -285,10 +286,10 @@ class MatPlotLibRenderer:
         self.agent_traces = {agent: [] for agent in agents}
         self.show_gridlines = show_gridlines
         self.scale = scale 
+        self.destination_path = destination_path
 
         # Set up the plot
         self.fig, self.ax = plt.subplots(figsize=(6 * self.scale, 6 * self.scale))
-
         self.ax.set_xlim(-0.5, grid_size[1] - 0.5)
         self.ax.set_ylim(-0.5, grid_size[0] - 0.5)
 
@@ -389,6 +390,30 @@ class MatPlotLibRenderer:
 
         plt.draw()
         plt.pause(0.01)
+
+    def save_frame(self, step, prefix="grid_step"):
+        """
+        Save the current grid as an image file with the step number in the filename.
+        """
+        if self.destination_path:
+            save_dir = os.path.join(self.destination_path, "grid_step_plots")
+            os.makedirs(save_dir, exist_ok=True)
+            filename = f"{prefix}_{step:04d}.png"
+            filepath = os.path.join(save_dir, filename)
+            self.fig.savefig(filepath)
+            # print(f"Saved grid frame: {filepath}")
+
+    def plot(self, save_name="grid_summary.png"):
+        """Save the final plot summary."""
+        if self.destination_path:
+            os.makedirs(self.destination_path, exist_ok=True)
+            path = os.path.join(self.destination_path, save_name)
+            self.fig.savefig(path)
+            # print(f"Saved final grid plot: {path}")
+        else:
+            # Display the population chart plot to the user
+            plt.show()
+
 
     def close(self):
         """Close the visualization."""
@@ -606,11 +631,11 @@ class CombinedEvolutionVisualizer:
 
         # --- Save before plt.show() ---
         if self.destination_path is not None:
-            os.makedirs(os.path.join(self.destination_path, "plots"), exist_ok=True)
-            plot_path = os.path.join(self.destination_path, "plots", "evolution_summary.png")
+            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
+            plot_path = os.path.join(self.destination_path, "summary_plots", "evolution_summary.png")
             plt.tight_layout()
             plt.savefig(plot_path)
-            print(f"Plot saved to: {plot_path}")
+            # print(f"Plot saved to: {plot_path}")
             plt.show()
 
             # --- CSV Output ---
@@ -641,10 +666,11 @@ class CombinedEvolutionVisualizer:
                         self.average_ages["speed_2_prey"][i],
                     ]
                     writer.writerow(row)
-            print(f"CSV saved to: {csv_path}")
+            # print(f"CSV saved to: {csv_path}")
 
 class PopulationChart:
-    def __init__(self):
+    def __init__(self, destination_path=None):
+        self.destination_path = destination_path
         self.time_steps = []
         self.predator_counts = []
         self.prey_counts = []
@@ -664,4 +690,12 @@ class PopulationChart:
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
-        plt.show()
+
+        if self.destination_path:
+            plot_dir = os.path.join(self.destination_path, "summary_plots")
+            os.makedirs(plot_dir, exist_ok=True)
+            filepath = os.path.join(plot_dir, "population_chart.png")
+            plt.savefig(filepath)
+            # print(f"Population chart saved to: {filepath}")
+        else:
+            plt.show()

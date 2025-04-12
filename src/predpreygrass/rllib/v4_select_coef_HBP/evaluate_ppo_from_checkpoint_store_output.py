@@ -1,6 +1,6 @@
 from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
-from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
+from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PopulationChart
 
 # external libraries
 import ray
@@ -37,14 +37,15 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return None
 
 # === Set checkpoint paths ===
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
-chechpoint_file = '/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/checkpoint_000000'
-checkpoint_path = os.path.abspath(checkpoint_root + chechpoint_file)
+ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
+checkpoint_root = '/PPO_2025-04-11_23-05-24/PPO_PredPreyGrass_aff5f_00000_0_2025-04-11_23-05-24/'
+checkpoint_dir = 'checkpoint_000000'
+checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-eval_output_dir = os.path.join(training_dir, f"eval_{now}")
+eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
 os.makedirs(eval_output_dir, exist_ok=True)
 
 # === Save config_env.json ===
@@ -68,8 +69,20 @@ obs, _ = env.reset(seed=seed)
 # intitialize matplot lib renderer
 grid_size = (env.grid_size, env.grid_size)
 all_agents = env.possible_agents + env.grass_agents
-grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
-combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
+grid_visualizer = MatPlotLibRenderer(
+    grid_size, 
+    all_agents, 
+    trace_length=5, 
+    show_gridlines=False, 
+    scale=2,
+    destination_path=None, # save to: eval_output_dir
+)
+combined_evolution_visualizer = CombinedEvolutionVisualizer(
+    destination_path=eval_output_dir
+)
+population_chart = PopulationChart(
+    destination_path=eval_output_dir
+)
 
 
 step=0
@@ -108,6 +121,10 @@ while not done:
     # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
     grid_visualizer.update(merged_positions, step)
+    grid_visualizer.save_frame(step) 
+
+    population_chart.record(step, env.agents)
+
     step += 1
     total_reward += sum(rewards.values())
 
@@ -164,5 +181,6 @@ with open(reward_log_path, "w") as f:
 
 
 combined_evolution_visualizer.plot()
+population_chart.plot()
 # Shutdown Ray after evaluation
 ray.shutdown()
