@@ -1,6 +1,6 @@
 config_env = {
 
-    "max_steps": 1000,
+    "max_steps": 100,
 
     # Grid and Observation Settings
     "grid_size": 50,
@@ -28,7 +28,7 @@ config_env = {
     "n_possible_speed_2_predators": 300,  #30
     "n_possible_speed_1_prey": 400,  #40
     "n_possible_speed_2_prey": 400,  #40
-    "n_initial_active_speed_1_predator": 70,  # 5
+    "n_initial_active_speed_1_predator": 7,  # 5
     "n_initial_active_speed_1_prey": 70,  # 7
     "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 0,  # 7
@@ -41,7 +41,7 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 200,
+    "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.1,
 
