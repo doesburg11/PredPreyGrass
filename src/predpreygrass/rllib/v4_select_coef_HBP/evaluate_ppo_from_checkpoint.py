@@ -1,6 +1,6 @@
 from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
-from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PopulationChart
+from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
 import ray
@@ -80,6 +80,9 @@ grid_visualizer = MatPlotLibRenderer(
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
     destination_path=eval_output_dir
 )
+prey_death_cause_visualizer = PreyDeathCauseVisualizer(
+    destination_path=eval_output_dir
+)
 
 
 step=0
@@ -114,6 +117,7 @@ while not done:
         internal_ids=env.agent_internal_ids,
         agent_ages=env.agent_ages
     )
+    prey_death_cause_visualizer.record(env.death_cause_prey)
 
     # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
@@ -128,6 +132,22 @@ while not done:
     #time.sleep(0.1)
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
+# --- PREY DEATH CAUSE SUMMARY ---
+death_log_path = os.path.join(eval_output_dir, "prey_death_causes.txt")
+death_stats = {"eaten": 0, "starved": 0}
+
+with open(death_log_path, "w") as f:
+    f.write("--- Prey Death Causes ---\n")
+    for internal_id, cause in env.death_cause_prey.items():
+        f.write(f"Prey internal_id {internal_id:4d}: {cause}\n")
+        if cause in death_stats:
+            death_stats[cause] += 1
+    f.write("\n--- Summary ---\n")
+    f.write(f"Total prey eaten   : {death_stats['eaten']}\n")
+    f.write(f"Total prey starved : {death_stats['starved']}\n")
+
+print(f"Prey death summary written to: {death_log_path}")
+
 # --- REWARD SUMMARY ---
 reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
 with open(reward_log_path, "w") as f:
@@ -176,5 +196,7 @@ with open(reward_log_path, "w") as f:
 
 
 combined_evolution_visualizer.plot()
+prey_death_cause_visualizer.plot()
+
 # Shutdown Ray after evaluation
 ray.shutdown()

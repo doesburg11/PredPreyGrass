@@ -670,7 +670,7 @@ class CombinedEvolutionVisualizer:
 
         plt.plot(steps, [p * 100 for p in predator_props], label="High-Speed Predator %", color="#cc0000", linewidth=2)
         plt.plot(steps, [p * 100 for p in prey_props], label="High-Speed Prey %", color="#0000cc", linewidth=2)
-        plt.title("High-Speed Agent Proportion")
+        plt.title("High-Speed Agent Relative")
         plt.ylabel("Percentage (%)")
         plt.xlabel("Step")
         plt.ylim(0, 100)
@@ -698,3 +698,37 @@ class CombinedEvolutionVisualizer:
         else:
             plt.show()
 
+class PreyDeathCauseVisualizer:
+    def __init__(self, destination_path=None):
+        self.destination_path = destination_path
+        self.time_steps = []
+        self.starved_ratio = []
+        self.eaten_ratio = []
+
+    def record(self, death_cause_prey):
+        step = len(self.time_steps)
+        self.time_steps.append(step)
+        starved = sum(1 for cause in death_cause_prey.values() if cause == "starved")
+        eaten = sum(1 for cause in death_cause_prey.values() if cause == "eaten")
+        total = starved + eaten
+        self.starved_ratio.append(starved / total if total > 0 else 0)
+        self.eaten_ratio.append(eaten / total if total > 0 else 0)
+
+    def plot(self):
+        plt.figure(figsize=(8, 5))
+        plt.plot(self.time_steps, [s * 100 for s in self.starved_ratio], label="Starved Prey %", color="blue", linewidth=2)
+        #plt.plot(self.time_steps, [e * 100 for e in self.eaten_ratio], label="Eaten Prey %", color="black", linestyle="--", linewidth=2)
+        plt.title("Prey Death Cause Starvation Relative")
+        plt.xlabel("Step")
+        plt.ylabel("Percentage (%)")
+        #plt.ylim(0, 100)
+        plt.legend()
+        plt.grid(True)
+
+        if self.destination_path:
+            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
+            path = os.path.join(self.destination_path, "summary_plots", "prey_death_cause_plot.png")
+            plt.savefig(path)
+            plt.show()
+        else:
+            plt.show()
