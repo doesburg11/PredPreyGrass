@@ -6,7 +6,7 @@ config_env = {
     "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
     "predator_obs_range": 9,
-    "prey_obs_range": 9,
+    "prey_obs_range": 7,
     
     # Rewards
     "reward_predator_catch_prey": 0.0,
