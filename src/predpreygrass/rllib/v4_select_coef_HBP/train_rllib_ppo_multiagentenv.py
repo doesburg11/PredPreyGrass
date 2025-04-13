@@ -26,10 +26,13 @@ from pathlib import Path
 import json
 import os
 
-if os.cpu_count() == 8:
-    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_cpu_only import config_ppo
-elif os.cpu_count() == 32:
-    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo import config_ppo
+
+if os.cpu_count() == 32:
+    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_gpu import config_ppo
+elif os.cpu_count() == 8:
+    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_cpu import config_ppo
+elif os.cpu_count() == 2:
+    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_colab import config_ppo
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
