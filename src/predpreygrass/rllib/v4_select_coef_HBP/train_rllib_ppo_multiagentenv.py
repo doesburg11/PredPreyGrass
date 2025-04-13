@@ -11,6 +11,7 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 """
 from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
+from predpreygrass.rllib.v4_select_coef_HBP.config_ppo import config_ppo
 
 #  external libraries
 import ray
@@ -25,28 +26,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-
-
-# ======= hyperparameters =======
-# training
-train_batch_size=1024
-gamma=0.99
-lr=0.0003            
-
-# learners
-num_gpus_per_learner=1
-num_learners=1
-
-# env_runners
-num_env_runners=8
-num_envs_per_env_runner=3
-rollout_fragment_length="auto"
-sample_timeout_s=600
-num_cpus_per_env_runner=3 
-
-#resources
-num_cpus_for_main_process=4
-    
+  
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -114,7 +94,6 @@ def build_module_spec(obs_space, act_space):
                     "fcnet_hiddens": [256, 256],
                     "fcnet_activation": "relu",
                 },
-                catalog_class=None,
     )
 
 
@@ -156,16 +135,7 @@ if __name__ == "__main__":
        # Prepare and save config metadata before training
         config_metadata = {
             "config_env": config_env,
-            "ppo_config": {
-                "train_batch_size": train_batch_size,
-                "gamma": gamma,
-                "lr": lr,
-                "rollout_fragment_length": rollout_fragment_length,
-                "num_env_runners": num_env_runners,
-                "num_envs_per_env_runner": num_envs_per_env_runner,
-                "num_cpus_per_env_runner": num_cpus_per_env_runner,
-                "num_gpus_per_learner": num_gpus_per_learner,
-            },
+            "config_ppo": config_ppo,
         }
         with open(trial_dir / "run_config.json", "w") as f:
             json.dump(config_metadata, f, indent=4)
@@ -181,26 +151,26 @@ if __name__ == "__main__":
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=train_batch_size, 
-                gamma=gamma,
-                lr=lr,            
+                train_batch_size=config_ppo["train_batch_size"], 
+                gamma=config_ppo["gamma"],
+                lr=config_ppo["lr"],            
             )
             .rl_module(
                 rl_module_spec=multi_module_spec
             )
             .learners(
-                num_gpus_per_learner=num_gpus_per_learner,
-                num_learners=num_learners,
+                num_gpus_per_learner=config_ppo["num_gpus_per_learner"],
+                num_learners=config_ppo["num_learners"],
             )
             .env_runners(
-                num_env_runners=num_env_runners,  
-                num_envs_per_env_runner=num_envs_per_env_runner,  
-                rollout_fragment_length=rollout_fragment_length,
-                sample_timeout_s=sample_timeout_s,  
-                num_cpus_per_env_runner=num_cpus_per_env_runner 
+                num_env_runners=config_ppo["num_env_runners"],  
+                num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],  
+                rollout_fragment_length=config_ppo["rollout_fragment_length"],
+                sample_timeout_s=config_ppo["sample_timeout_s"],  
+                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"] 
             )
             .resources(
-                num_cpus_for_main_process=num_cpus_for_main_process,
+                num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
             )       
             .callbacks(EpisodeReturn)
         )
