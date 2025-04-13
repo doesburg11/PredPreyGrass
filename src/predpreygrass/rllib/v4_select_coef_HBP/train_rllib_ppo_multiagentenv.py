@@ -1,5 +1,4 @@
 """
-HBP COMPUTER
 This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
@@ -11,7 +10,6 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 """
 from predpreygrass.rllib.v4_select_coef_HBP.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v4_select_coef_HBP.config_env import config_env
-from predpreygrass.rllib.v4_select_coef_HBP.config_ppo import config_ppo
 
 #  external libraries
 import ray
@@ -26,7 +24,12 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-  
+import os
+
+if os.cpu_count() == 8:
+    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_cpu_only import config_ppo
+elif os.cpu_count() == 32:
+    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo import config_ppo
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
