@@ -1,11 +1,11 @@
 config_env = {
 
-    "max_steps": 100,
+    "max_steps": 1000,
 
     # Grid and Observation Settings
-    "grid_size": 50,
+    "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 7,
+    "predator_obs_range": 9,
     "prey_obs_range": 9,
     
     # Rewards
@@ -18,20 +18,20 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.08,
+    "energy_loss_per_step_predator": 0.15,
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     
     # Learning agents
-    "n_possible_speed_1_predators": 300,  #30
-    "n_possible_speed_2_predators": 300,  #30
-    "n_possible_speed_1_prey": 400,  #40
-    "n_possible_speed_2_prey": 400,  #40
-    "n_initial_active_speed_1_predator": 7,  # 5
-    "n_initial_active_speed_1_prey": 70,  # 7
-    "n_initial_active_speed_2_predator": 0,  # 5
-    "n_initial_active_speed_2_prey": 0,  # 7
+    "n_possible_speed_1_predators": 30,  #30
+    "n_possible_speed_2_predators": 30,  #30
+    "n_possible_speed_1_prey": 40,  #40
+    "n_possible_speed_2_prey": 40,  #40
+    "n_initial_active_speed_1_predator": 5,  # 5
+    "n_initial_active_speed_1_prey": 7,  # 7
+    "n_initial_active_speed_2_predator": 5,  # 5
+    "n_initial_active_speed_2_prey": 7,  # 7
     
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
@@ -43,7 +43,7 @@ config_env = {
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.1,
+    "energy_gain_per_step_grass": 0.04,
 
     "verbose_engagement": False,
     "verbose_movement": False,
