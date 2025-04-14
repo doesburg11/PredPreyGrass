@@ -25,14 +25,31 @@ from datetime import datetime
 from pathlib import Path
 import json
 import os
+import time
 
+def get_config_ppo():
+    """
+    ADjust to your systems.
+    Dynamically select the appropriate PPO config based on system resources.
+    Returns:
+        config_ppo (dict): The selected PPO config module.
+    Raises:
+        RuntimeError if no suitable config is matched.
+    """
+    num_cpus = os.cpu_count()
 
-if os.cpu_count() == 32:
-    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_gpu import config_ppo
-elif os.cpu_count() == 8:
-    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_cpu import config_ppo
-elif os.cpu_count() == 2:
-    from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_colab import config_ppo
+    num_cpus = os.cpu_count()
+    if num_cpus == 32:
+        from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_gpu import config_ppo
+    elif num_cpus == 8:
+        from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_cpu import config_ppo
+    elif num_cpus == 2:
+        from predpreygrass.rllib.v4_select_coef_HBP.config_ppo_colab import config_ppo
+    else:
+        raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
+
+    return config_ppo
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -75,6 +92,25 @@ class EpisodeReturn(RLlibCallback):
         print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
+
+    def on_train_result(self, *, result, **kwargs):
+        # Current time
+        now = time.time()
+        total_elapsed = now - self.start_time
+        iter_num = result["training_iteration"]
+        avg_time_per_iter = total_elapsed / iter_num
+
+        iter_time = now - self.last_iteration_time
+        self.last_iteration_time = now
+
+        print(f"[Timing] Iteration {iter_num} | This Iter: {iter_time:.2f}s | Avg: {avg_time_per_iter:.2f}s | Total: {total_elapsed:.1f}s")
+
+        # Optional: store in result dict so it's logged to TensorBoard
+        result["timing/iter_seconds"] = iter_time
+        result["timing/avg_seconds_per_iter"] = avg_time_per_iter
+        result["timing/avg_minutes_per_iter"] = avg_time_per_iter / 60.0
+        result["timing/total_elapsed"] = total_elapsed
+
 
 def env_creator(config):
     return PredPreyGrass(config or config_env)
@@ -138,7 +174,8 @@ if __name__ == "__main__":
                 sample_env.action_spaces[sample_agent]
             )
         multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
-       # Prepare and save config metadata before training
+        # Prepare and save config metadata before training
+        config_ppo = get_config_ppo() # ppo config depending on system
         config_metadata = {
             "config_env": config_env,
             "config_ppo": config_ppo,
