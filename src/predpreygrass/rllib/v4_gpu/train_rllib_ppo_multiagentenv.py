@@ -110,13 +110,10 @@ class EpisodeReturn(RLlibCallback):
         iter_time = now - self.last_iteration_time
         self.last_iteration_time = now
 
-        print(f"[Timing] Iteration {iter_num} | This Iter: {iter_time:.2f}s | Avg: {avg_time_per_iter:.2f}s | Total: {total_elapsed:.1f}s")
-
         # Log to TensorBoard
-        result["timing/iter_seconds"] = iter_time
-        result["timing/avg_seconds_per_iter"] = avg_time_per_iter
+        result["timing/iter_minutes"] = iter_time / 60.0 
         result["timing/avg_minutes_per_iter"] = avg_time_per_iter / 60.0
-        result["timing/total_elapsed"] = total_elapsed
+        result["timing/total_minutes_elapsed"] = total_elapsed / 60.0
 
 
 def env_creator(config):
