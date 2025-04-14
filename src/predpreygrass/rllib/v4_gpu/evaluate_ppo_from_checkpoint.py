@@ -1,3 +1,13 @@
+"""
+Evaluation code for evaluating a trained PPO agent from a checkpoint
+Improvement over the previous version:
+- Added a function to save the environment configuration to a JSON file.
+- Added a function to save the reward summary to a text file.
+- Added a function to save the prey death cause summary to a text file.
+- Added a function to plot the combined evolution of agents.
+- Added a function to plot the prey death cause
+
+"""
 from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v4_gpu.config_env import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer

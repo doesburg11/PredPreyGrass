@@ -1,3 +1,9 @@
+"""
+Predator-Prey Grass RLlib Environment
+Imporvement versus former version:
+-Keeping track of caus of death of prey [eaten/starved]
+"""
+
 from  predpreygrass.rllib.v4_gpu.config_env import config_env
 
 # external libraries

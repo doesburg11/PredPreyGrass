@@ -97,18 +97,22 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
     def on_train_result(self, *, result, **kwargs):
-        # Current time
+        # Lazy initialization: ensures timing vars exist in all worker contexts
+        if not hasattr(self, "start_time"):
+            self.start_time = time.time()
+            self.last_iteration_time = self.start_time
+
         now = time.time()
         total_elapsed = now - self.start_time
         iter_num = result["training_iteration"]
-        avg_time_per_iter = total_elapsed / iter_num
+        avg_time_per_iter = total_elapsed / iter_num if iter_num > 0 else 0
 
         iter_time = now - self.last_iteration_time
         self.last_iteration_time = now
 
         print(f"[Timing] Iteration {iter_num} | This Iter: {iter_time:.2f}s | Avg: {avg_time_per_iter:.2f}s | Total: {total_elapsed:.1f}s")
 
-        # Optional: store in result dict so it's logged to TensorBoard
+        # Log to TensorBoard
         result["timing/iter_seconds"] = iter_time
         result["timing/avg_seconds_per_iter"] = avg_time_per_iter
         result["timing/avg_minutes_per_iter"] = avg_time_per_iter / 60.0
