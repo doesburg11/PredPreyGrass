@@ -5,7 +5,7 @@ config_env = {
     # Grid and Observation Settings
     "grid_size": 30,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 7,
+    "predator_obs_range": 5,
     "prey_obs_range": 9,
     
     # Rewards
