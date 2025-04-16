@@ -3,10 +3,10 @@ config_env = {
     "max_steps": 1000,
 
     # Grid and Observation Settings
-    "grid_size": 30,
+    "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 5,
-    "prey_obs_range": 9,
+    "predator_obs_range": 5,  # 7
+    "prey_obs_range": 9,  # 9
     
     # Rewards
     "reward_predator_catch_prey": 0.0,
@@ -28,10 +28,10 @@ config_env = {
     "n_possible_speed_2_predators": 30,  #30
     "n_possible_speed_1_prey": 40,  #40
     "n_possible_speed_2_prey": 40,  #40
-    "n_initial_active_speed_1_predator": 5,  # 5
-    "n_initial_active_speed_1_prey": 7,  # 7
-    "n_initial_active_speed_2_predator": 5,  # 5
-    "n_initial_active_speed_2_prey": 7,  # 7
+    "n_initial_active_speed_1_predator": 10,  # 5
+    "n_initial_active_speed_1_prey": 14,  # 7
+    "n_initial_active_speed_2_predator": 0,  # 5
+    "n_initial_active_speed_2_prey": 0,  # 7
     
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
