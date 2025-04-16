@@ -22,7 +22,8 @@ config_env = {
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    
+    "move_energy_cost_factor": 0.1,  # energy cost = distance * factor * current_energy
+
     # Learning agents
     "n_possible_speed_1_predators": 30,  #30
     "n_possible_speed_2_predators": 30,  #30
