@@ -368,7 +368,7 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grid_world_state[2, *new_position] = self.agent_energies[agent]
 
                 if self.verbose_movement:
-                    print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}. Energy cost: {move_cost:.2f}")
+                    print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}.")             
 
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:
@@ -628,15 +628,27 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, rewards, terminations, truncations, infos
   
-    def _get_movement_energy_cost(self, agent, current_position, new_position):
+    def _get_movement_energy_cost(
+        self, agent, current_position, new_position, distance_factor=0.1
+    ):
         """
-        Calculate energy cost for movement based on distance and a configurable factor.
+        Calculate the energy cost for moving an agent.
+
+        Args:
+            current_position (np.array): Current position of the agent [x, y].
+            new_position (np.array): New position of the agent [x, y].
+            current_energy (float): Current energy level of the agent.
+            distance_factor (float): Scaling factor for the movement energy cost based on distance.
+
+        Returns:
+            float: Energy cost of the move.
         """
-        distance_factor = self.config.get("move_energy_cost_factor", 0.1)
         current_energy = self.agent_energies[agent]
         distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
+
+        # Calculate the energy cost
         energy_cost = distance * distance_factor * current_energy
-        return energy_cost
+        return 0  # energy_cost
      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
         """
