@@ -7,7 +7,7 @@ import numpy as np
 verbose_grid_state = False
 verbose_observation = False
 
-seed_value = 42  # Set seed for reproducibility
+seed_value = None # 42  # Set seed for reproducibility
 
 if __name__ == "__main__":
     env = PredPreyGrass()

@@ -11,8 +11,8 @@ Improvements versus v3_age:
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v4_gpu.config_env import config_env
+from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v5_move_energy.config_env import config_env
 
 #  external libraries
 import ray
@@ -43,11 +43,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v4_gpu.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v4_gpu.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v4_gpu.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 

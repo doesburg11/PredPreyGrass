@@ -1,5 +1,5 @@
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
-from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass
 
 from time import sleep
 import numpy as np

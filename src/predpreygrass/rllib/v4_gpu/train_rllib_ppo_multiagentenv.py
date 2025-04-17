@@ -150,7 +150,7 @@ if __name__ == "__main__":
             ignore_reinit_error=True,
         )
     register_env("PredPreyGrass", env_creator)
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/4_gpu/pred_obs_range/grass_50"
     ray_results_path = Path(ray_results_dir).expanduser()
     existing_experiment_dir = "PPO_2025-04-10_15-12-05"
     experiment_path = ray_results_path / existing_experiment_dir

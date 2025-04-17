@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries
 import time
