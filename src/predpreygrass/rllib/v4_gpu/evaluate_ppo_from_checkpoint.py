@@ -52,7 +52,7 @@ ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/
 #checkpoint_root = '/1000_pred_obs_range_7/PPO_PredPreyGrass_33a72_00000_0_2025-04-12_00-49-18/'
 checkpoint_root = '/PPO_2025-04-17_15-35-55/PPO_PredPreyGrass_e34fd_00000_0_2025-04-17_15-35-55/'
 #checkpoint_root = '/1000_pred_obs_range_11/PPO_PredPreyGrass_20d50_00000_0_2025-04-14_14-58-14/'
-checkpoint_dir = 'checkpoint_000019'
+checkpoint_dir = 'checkpoint_000099'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 
 # === Get training directory and prepare eval output dir ===
