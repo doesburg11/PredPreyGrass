@@ -18,7 +18,11 @@ config_env = {
     "reproduction_reward_prey": 1.0,
     
     # Energy settings
+<<<<<<< HEAD
     "energy_loss_per_step_predator": 0.15, # 0.15
+=======
+    "energy_loss_per_step_predator": 0.15, # experimental with respect to energy_move_cost # 0.15
+>>>>>>> d19fc837 (Update energy loss settings and adjust move energy cost factor in environment configuration)
     "energy_loss_per_step_prey": 0.05, # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
