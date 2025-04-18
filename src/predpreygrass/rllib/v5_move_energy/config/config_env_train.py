@@ -5,7 +5,7 @@ config_env = {
     # Grid and Observation Settings
     "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 9,  # 7
+    "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
     
     # Rewards
@@ -42,7 +42,7 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 50,  # 100
+    "initial_num_grass": 75,  # 100
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,  # 0.04
 
