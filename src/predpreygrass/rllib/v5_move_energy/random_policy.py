@@ -1,5 +1,6 @@
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
 from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v5_move_energy.config.config_env_step_wise import config_env
 
 from time import sleep
 import numpy as np
@@ -7,10 +8,10 @@ import numpy as np
 verbose_grid_state = False
 verbose_observation = False
 
-seed_value = 42  # Set seed for reproducibility
+seed_value = None # 42  # Set seed for reproducibility
 
 if __name__ == "__main__":
-    env = PredPreyGrass()
+    env = PredPreyGrass(config=config_env)
 
     for agent in env.agents:
         env.action_spaces[agent].seed(seed_value)

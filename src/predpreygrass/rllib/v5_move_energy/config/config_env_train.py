@@ -18,11 +18,11 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.05, # experimental with respect to energy_move_cost # 0.15
-    "energy_loss_per_step_prey": 0.05, # 0.05
+    "energy_loss_per_step_predator": 0.1, # experimental with respect to energy_move_cost # 0.15
+    "energy_loss_per_step_prey": 0.03, # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
+    "move_energy_cost_factor": 0.005,  # energy cost = distance * factor * current_energy
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  #30

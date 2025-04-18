@@ -1,7 +1,7 @@
 import pygame
 from predpreygrass.utils.renderer import MatPlotLibRenderer
 from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
-from predpreygrass.rllib.v5_move_energy.config_env_step_wise import config_env
+from predpreygrass.rllib.v5_move_energy.config.config_env_step_wise import config_env
 import numpy as np
 
 # Ensure all elements are displayed

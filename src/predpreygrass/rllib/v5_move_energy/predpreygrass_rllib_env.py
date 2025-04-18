@@ -331,6 +331,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Step 1: Process energy depletion due to time steps and update age
         for agent, action in action_dict.items():
+            if self.verbose_movement:
+                print("----------------------------------------------------------------------------------------------------------")
+                print(f"[DEPLETE] {agent} energy:  {self.agent_energies[agent]} -> ", end="")
             if "predator" in agent:
                 self.agent_energies[agent] -= self.energy_loss_per_step_predator
                 self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -338,6 +341,9 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agent_energies[agent] -= self.energy_loss_per_step_prey
                 self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
+            if self.verbose_movement:
+                print(f"{self.agent_energies[agent]}")
+                print("----------------------------------------------------------------------------------------------------------")
             # Update age
             internal_id = self.agent_internal_ids.get(agent)
             if internal_id is not None:
@@ -368,7 +374,10 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grid_world_state[2, *new_position] = self.agent_energies[agent]
 
                 if self.verbose_movement:
-                    print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}. Energy cost: {move_cost:.2f}")
+                    print("----------------------------------------------------------------------------------------------------------")
+                    print(f"[MOVE] {agent} moved: {old_position} -> {new_position}. Energy cost: {move_cost:.2f}")
+                    print(f"[MOVE] {agent} new position: {self.agent_positions[agent]} with energy: {self.agent_energies[agent]:.2f}")
+                    print("----------------------------------------------------------------------------------------------------------")
 
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:
@@ -633,9 +642,14 @@ class PredPreyGrass(MultiAgentEnv):
         Calculate energy cost for movement based on distance and a configurable factor.
         """
         distance_factor = self.config.get("move_energy_cost_factor", 0.1)
+        #print(f"Distance factor: {distance_factor}")
         current_energy = self.agent_energies[agent]
+        #print(f"Current energy: {current_energy}")
+        # distance gigh speed =[0.00,1.00, 1.41, 2.00, 2.24, 2.83]
         distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
+        #print (f"Distance: {distance}")
         energy_cost = distance * distance_factor * current_energy
+        
         return energy_cost
      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
