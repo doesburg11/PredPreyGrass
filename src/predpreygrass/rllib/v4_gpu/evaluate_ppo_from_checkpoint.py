@@ -9,7 +9,7 @@ Improvement over the previous version:
 
 """
 from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v4_gpu.config_env import config_env
+from predpreygrass.rllib.v4_gpu.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
@@ -47,12 +47,12 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return None
 
 # === Set checkpoint paths ===
-ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/4_gpu/pred_obs_range/grass_100'
+ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/4_gpu/pred_obs_range/grass_50'
 #checkpoint_root = '/1000_pred_obs__range_5/PPO_PredPreyGrass_38a67_00000_0_2025-04-15_16-45-06/'
 #checkpoint_root = '/1000_pred_obs_range_7/PPO_PredPreyGrass_33a72_00000_0_2025-04-12_00-49-18/'
-checkpoint_root = '/1000_pred_obs_range_9/PPO_PredPreyGrass_0ea58_00000_0_2025-04-13_19-30-56/'
+checkpoint_root = '/PPO_2025-04-17_15-35-55/PPO_PredPreyGrass_e34fd_00000_0_2025-04-17_15-35-55/'
 #checkpoint_root = '/1000_pred_obs_range_11/PPO_PredPreyGrass_20d50_00000_0_2025-04-14_14-58-14/'
-checkpoint_dir = 'checkpoint_000099'
+checkpoint_dir = 'checkpoint_000019'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 
 # === Get training directory and prepare eval output dir ===
@@ -73,7 +73,7 @@ module_paths = {
 rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
 # Initialize the environment
-env = env_creator({}) # PredPreyGrass()
+env = env_creator(config=config_env) # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)

@@ -73,7 +73,7 @@ module_paths = {
 rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
 # Initialize the environment
-env = env_creator({}) # PredPreyGrass()
+env = env_creator(config=config_env) # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)
