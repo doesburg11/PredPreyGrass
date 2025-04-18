@@ -1,11 +1,11 @@
 config_env = {
 
-    "max_steps": 1000,
+    "max_steps": 500,
 
     # Grid and Observation Settings
     "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 7,  # 7
+    "predator_obs_range": 9,  # 7
     "prey_obs_range": 9,  # 9
     
     # Rewards
@@ -18,8 +18,8 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.05, # 0.15
-    "energy_loss_per_step_prey": 0.05,
+    "energy_loss_per_step_predator": 0.05, # experimental with respect to energy_move_cost # 0.15
+    "energy_loss_per_step_prey": 0.05, # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
@@ -42,9 +42,9 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 50,  # 100
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04,
+    "energy_gain_per_step_grass": 0.08,  # 0.04
 
     "verbose_engagement": False,
     "verbose_movement": False,

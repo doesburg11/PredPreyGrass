@@ -12,7 +12,7 @@ Improvements versus v3_age:
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
 from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v5_move_energy.config_env import config_env
+from predpreygrass.rllib.v5_move_energy.config.config_env_train import config_env
 
 #  external libraries
 import ray
@@ -43,11 +43,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v5_move_energy.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v5_move_energy.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v5_move_energy.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v5_move_energy.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 
@@ -166,9 +166,9 @@ if __name__ == "__main__":
         print(" === Start a new experiment === ")
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         experiment_name = f"PPO_{timestamp}"
-        trial_dir = ray_results_path / experiment_name / "PPO_PredPreyGrass_00000"
+        trial_dir = ray_results_path / experiment_name / "meta_config_train"
         trial_dir.mkdir(parents=True, exist_ok=True)
-        sample_env = env_creator({})  # Sample env for observation/action space setup
+        sample_env = env_creator(config=config_env)  # Sample env for observation/action space setup
         sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
         module_specs = {}
         for sample_agent in sample_agents:
