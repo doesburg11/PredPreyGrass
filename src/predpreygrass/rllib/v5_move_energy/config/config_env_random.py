@@ -42,7 +42,7 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 25,
+    "initial_num_grass": 50,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,
 
