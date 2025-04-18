@@ -47,7 +47,7 @@ config_env = {
     "energy_gain_per_step_grass": 0.08,
 
     "verbose_engagement": False,
-    "verbose_movement": True,
+    "verbose_movement": False,
     "verbose_spawning": False,
 
 }
