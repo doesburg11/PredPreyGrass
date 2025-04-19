@@ -9,7 +9,7 @@ Improvement over the previous version:
 
 """
 from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v5_move_energy.config_env import config_env
+from predpreygrass.rllib.v5_move_energy.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
@@ -48,13 +48,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 # === Set checkpoint paths ===
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
-checkpoint_root = '/1000_pred_obs__range_5/PPO_PredPreyGrass_38a67_00000_0_2025-04-15_16-45-06/'
-#checkpoint_root = '/1000_pred_obs_range_7/PPO_PredPreyGrass_33a72_00000_0_2025-04-12_00-49-18/'
-#checkpoint_root = '/1000_pred_obs_range_9/PPO_PredPreyGrass_0ea58_00000_0_2025-04-13_19-30-56/'
-#checkpoint_root = '/1000_pred_obs_range_11/PPO_PredPreyGrass_20d50_00000_0_2025-04-14_14-58-14/'
-checkpoint_dir = 'checkpoint_000099'
+# 
+checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
+checkpoint_dir = 'checkpoint_000028'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
-
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
