@@ -649,7 +649,6 @@ class PredPreyGrass(MultiAgentEnv):
         distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
         #print (f"Distance: {distance}")
         energy_cost = distance * distance_factor * current_energy
-        
         return energy_cost
      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
