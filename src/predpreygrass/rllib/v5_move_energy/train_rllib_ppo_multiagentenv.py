@@ -3,14 +3,12 @@ This script trains a multi-agent environment with PPO using Ray RLlib new API st
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
-Improvements versus v3_age: 
-- Abiltity to utilize GPU and afjust learner in PPO configurtation
-- Hardware detecting and selecting the appropriate PPO config
-- Expanded callback to log the total average training time per iteration during run
-- Saving Evaluation timestamped results and chart and ppo an env config 
-
-This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
+Improvements versus v4_age: 
+- externalized PPO config to config_ppo.py
+- added RLlibCallback to log episode returns externally
+- implemented energy move cost to the environment
 """
+
 from predpreygrass.rllib.v5_move_energy.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v5_move_energy.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
@@ -19,7 +17,6 @@ from predpreygrass.utils.episode_return_callback import EpisodeReturn
 import ray
 from ray import train, tune
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
