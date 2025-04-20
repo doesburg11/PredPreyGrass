@@ -8,7 +8,7 @@ class EpisodeReturn(RLlibCallback):
         self.overall_sum_of_rewards = 0.0
         self.num_episodes = 0
 
-    def on_episode_end(self, *, episode, **kwargs):
+    def on_episode_end(self, *, episode, env, env_index, **kwargs):
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -21,6 +21,7 @@ class EpisodeReturn(RLlibCallback):
         prey_total_reward = 0.0
         predator_count = 0
         prey_count = 0
+
 
         # Retrieve rewards
         rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
@@ -44,6 +45,7 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
+      
     def on_train_result(self, *, result, **kwargs):
         # Lazy initialization: ensures timing vars exist in all worker contexts
         if not hasattr(self, "start_time"):
