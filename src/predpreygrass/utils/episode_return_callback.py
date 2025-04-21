@@ -11,7 +11,7 @@ class EpisodeReturn(RLlibCallback):
         self._pending_episode_metrics = []
         self.start_time = time.time()
         self.last_iteration_time = self.start_time
-        self.episode_lengths = {}  # manual episode length tracking
+        self.episode_lengths = []  # manual episode length tracking
 
     def on_episode_step(self, *, episode, **kwargs):
         eid = episode.id_
@@ -60,34 +60,19 @@ class EpisodeReturn(RLlibCallback):
         for group, totals in group_rewards.items():
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
-        # Store both avg rewards and episode length
-        self._pending_episode_metrics.append({
-            "length": episode_length,
-        })
+        # ✅ Log episode length as a custom metric (safe across processes)
+        episode.custom_metrics["episode_length"] = episode_length
 
       
     def on_train_result(self, *, result, **kwargs):
-        if self._pending_episode_metrics:
-            group_sums = defaultdict(float)
-            group_counts = defaultdict(int)
-            episode_lengths = []
+        print(f"[DEBUG] Number of pending episode metrics: {len(self._pending_episode_metrics)}")
 
-            for episode_metrics in self._pending_episode_metrics:
-                for group, value in episode_metrics.items():
-                    group_sums[group] += value
-                    group_counts[group] += 1
-                episode_lengths.append(episode_metrics["length"])
+        if "custom_metrics" in result and "episode_length_mean" in result["custom_metrics"]:
+            avg_length = result["custom_metrics"]["episode_length_mean"]
+            result["custom/episode_length_avg"] = avg_length
+            print(f"[DEBUG] Logging to TensorBoard: custom/episode_length_avg = {avg_length}")
 
-            for group in group_sums:
-                result[f"custom/{group}_avg_reward"] = group_sums[group] / group_counts[group]
-                result[f"custom/{group}_total_reward"] = group_sums[group]
-
-            if episode_lengths:
-                avg_length = sum(episode_lengths) / len(episode_lengths)
-                result["custom/episode_length_avg"] = avg_length
-
-            self._pending_episode_metrics.clear()
-
+        # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time
         iter_num = result.get("training_iteration", 1)
@@ -97,3 +82,5 @@ class EpisodeReturn(RLlibCallback):
         result["timing/iter_minutes"] = iter_time / 60.0
         result["timing/avg_minutes_per_iter"] = total_elapsed / 60.0 / iter_num
         result["timing/total_hours_elapsed"] = total_elapsed / 3600.0
+
+        print("[DEBUG] Keys written to result:", list(result.keys()))
