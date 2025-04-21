@@ -11,7 +11,11 @@ class EpisodeReturn(RLlibCallback):
         self._pending_episode_metrics = []
         self.start_time = time.time()
         self.last_iteration_time = self.start_time
+        self.episode_lengths = {}  # manual episode length tracking
 
+    def on_episode_step(self, *, episode, **kwargs):
+        eid = episode.id_
+        self.episode_lengths[eid] = self.episode_lengths.get(eid, 0) + 1
 
     def on_episode_end(self, *, episode, **kwargs):
         """
@@ -20,7 +24,12 @@ class EpisodeReturn(RLlibCallback):
         """
         self.num_episodes += 1
         episode_return = episode.get_return()
+        episode_id = episode.id_
+        episode_length = self.episode_lengths.pop(episode_id, 0)
         self.overall_sum_of_rewards += episode_return
+
+        print(f"Episode {self.num_episodes} ended with return: {episode_return:.2f} | Length: {episode_length}")
+        #print(f"[DEBUG] episode dir: {dir(episode)}")
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -42,37 +51,40 @@ class EpisodeReturn(RLlibCallback):
                     group_rewards[group].append(total)
                     break
 
-        # Compute average rewards (avoid division by zero)
-        predator_avg = predator_total / predator_count if predator_count else 0.0
-        prey_avg = prey_total / prey_count if prey_count else 0.0
-
         # Episode summary log
+        print(f"Episode {self.num_episodes} ended with return: {episode_return:.2f} | Length: {episode_length}")
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
-        print(f"  - Predators: Total = {predator_total:.2f}, Avg = {predator_avg:.2f}")
-        print(f"  - Prey:      Total = {prey_total:.2f}, Avg = {prey_avg:.2f}")
+        print(f"  - Predators: Total = {predator_total:.2f}")
+        print(f"  - Prey:      Total = {prey_total:.2f}")
 
-        avg_metrics = {}
         for group, totals in group_rewards.items():
-            avg = sum(totals) / len(totals) if totals else 0.0
-            avg_metrics[group] = avg
-            print(f"  - {group}: Total = {sum(totals):.2f}, Avg = {avg:.2f},  Agents = {len(totals)}")
+            print(f"  - {group}: Total = {sum(totals):.2f}")
 
-        self._pending_episode_metrics.append(avg_metrics)
+        # Store both avg rewards and episode length
+        self._pending_episode_metrics.append({
+            "length": episode_length,
+        })
 
       
     def on_train_result(self, *, result, **kwargs):
         if self._pending_episode_metrics:
             group_sums = defaultdict(float)
             group_counts = defaultdict(int)
+            episode_lengths = []
 
             for episode_metrics in self._pending_episode_metrics:
                 for group, value in episode_metrics.items():
                     group_sums[group] += value
                     group_counts[group] += 1
+                episode_lengths.append(episode_metrics["length"])
 
             for group in group_sums:
                 result[f"custom/{group}_avg_reward"] = group_sums[group] / group_counts[group]
                 result[f"custom/{group}_total_reward"] = group_sums[group]
+
+            if episode_lengths:
+                avg_length = sum(episode_lengths) / len(episode_lengths)
+                result["custom/episode_length_avg"] = avg_length
 
             self._pending_episode_metrics.clear()
 
