@@ -79,10 +79,7 @@ def build_module_spec(obs_space, act_space):
 
 if __name__ == "__main__":
     ray.shutdown()
-    ray.init(
-            log_to_driver=True,
-            ignore_reinit_error=True,
-        )
+    ray.init(log_to_driver=True, ignore_reinit_error=True)
     register_env("PredPreyGrass", env_creator)
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
