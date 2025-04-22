@@ -69,5 +69,3 @@ class EpisodeReturn(RLlibCallback):
         result["timing/iter_minutes"] = iter_time / 60.0
         result["timing/avg_minutes_per_iter"] = total_elapsed / 60.0 / iter_num
         result["timing/total_hours_elapsed"] = total_elapsed / 3600.0
-
-        print("[DEBUG] Keys written to result:", list(result.keys()))
