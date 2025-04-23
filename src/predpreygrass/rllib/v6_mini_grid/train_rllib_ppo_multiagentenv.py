@@ -8,9 +8,6 @@ Improvements versus v4_age:
 - added RLlibCallback to log episode returns externally
 - implemented energy move cost to the environment
 """
-import os
-os.environ["TORCH_GLOBAL_FOREACH"] = "0"
-
 from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v6_mini_grid.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
