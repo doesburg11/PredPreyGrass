@@ -8,6 +8,8 @@ Improvements versus v4_age:
 - added RLlibCallback to log episode returns externally
 - implemented energy move cost to the environment
 """
+import os
+os.environ["TORCH_GLOBAL_FOREACH"] = "0"
 
 from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass 
 from predpreygrass.rllib.v6_mini_grid.config.config_env_train import config_env
@@ -25,7 +27,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-import os
+
 
 def get_config_ppo():
     """
@@ -78,7 +80,6 @@ def build_module_spec(obs_space, act_space):
 
 
 if __name__ == "__main__":
-    ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
     register_env("PredPreyGrass", env_creator)
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
