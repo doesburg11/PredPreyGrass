@@ -8,8 +8,8 @@ Improvement over the previous version:
 - Added a function to plot the prey death cause
 
 """
-from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env_NCE import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v5_reward_scaling.config.config_env_eval import config_env
+from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env_NCE import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v6_mini_grid.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries

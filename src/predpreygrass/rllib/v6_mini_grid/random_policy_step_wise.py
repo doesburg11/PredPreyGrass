@@ -1,7 +1,7 @@
 import pygame
 from predpreygrass.utils.renderer import MatPlotLibRenderer
-from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
-from predpreygrass.rllib.v5_reward_scaling.config.config_env_step_wise import config_env
+from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.v6_mini_grid.config.config_env_step_wise import config_env
 import numpy as np
 
 # Ensure all elements are displayed
