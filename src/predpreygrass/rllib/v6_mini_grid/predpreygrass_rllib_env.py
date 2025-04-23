@@ -1,10 +1,12 @@
 """
 Predator-Prey Grass RLlib Environment
 Imporvement versus former version:
--Keeping track of caus of death of prey [eaten/starved]
+-Keeping track of caus- of death of prey [eaten/starved]
+-reward scaling experiments
+
 """
 
-from  predpreygrass.rllib.v5_reward.config.config_env import config_env
+from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
 
 # external libraries
 import gymnasium
@@ -311,8 +313,6 @@ class PredPreyGrass(MultiAgentEnv):
 
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-        self.last_captures_this_step = []
-
         # step 0: check for truncation
         if self.current_step >= self.max_steps:
             for agent in self.possible_agents:
@@ -436,7 +436,6 @@ class PredPreyGrass(MultiAgentEnv):
                     # cause of death tracking prey
                     internal_id = self.agent_internal_ids[caught_prey]
                     self.death_cause_prey[internal_id] = "eaten"
-                    self.last_captures_this_step.append((agent, caught_prey))
 
                     # Remove prey
                     terminations[caught_prey] = True

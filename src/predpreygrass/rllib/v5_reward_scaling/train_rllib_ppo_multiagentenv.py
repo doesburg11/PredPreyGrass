@@ -9,8 +9,8 @@ Improvements versus v4_age:
 - implemented energy move cost to the environment
 """
 
-from predpreygrass.rllib.v5_reward.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v5_reward.config.config_env_train import config_env
+from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v5_reward_scaling.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
@@ -27,17 +27,6 @@ from pathlib import Path
 import json
 import os
 
-
-class CustomPPOTorchRLModule(DefaultPPOTorchRLModule):
-    def __init__(self, observation_space, action_space, inference_only, model_config, catalog_class=None):
-        super().__init__(
-            observation_space=observation_space,
-            action_space=action_space,
-            inference_only=inference_only,
-            model_config=model_config,
-            catalog_class=catalog_class,  # Important: pass this through
-        )
-
 def get_config_ppo():
     """
     ADjust to your systems.
@@ -51,11 +40,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v5_reward.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v5_reward.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v5_reward.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 
@@ -72,21 +61,21 @@ def policy_mapping_fn(agent_id, *args, **kwargs):  # Expected format: "speed_1_p
 
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-            module_class=CustomPPOTorchRLModule,
-            observation_space=obs_space,
-            action_space=act_space,
-            inference_only=False,
-            model_config={
-                "conv_filters": [
-                    [16, [3, 3], 1],
-                    [32, [3, 3], 1],
-                    [64, [3, 3], 1],
-                ],
-                "fcnet_hiddens": [256, 256],
-                "fcnet_activation": "relu",
-            },
-        )
-    
+                module_class=DefaultPPOTorchRLModule,
+                observation_space=obs_space,
+                action_space=act_space,
+                inference_only=False,
+                model_config={
+                    "conv_filters": [
+                        [16, [3, 3], 1],
+                        [32, [3, 3], 1],
+                        [64, [3, 3], 1],
+                    ],
+                    "fcnet_hiddens": [256, 256],
+                    "fcnet_activation": "relu",
+                },
+    )
+
 
 if __name__ == "__main__":
     ray.shutdown()
@@ -138,7 +127,6 @@ if __name__ == "__main__":
                 # This ensures that each policy is trained on the right observation/action space.
                 policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
                 policy_mapping_fn=policy_mapping_fn,
-                policies_to_train=list(module_specs.keys())  # <--- This locks it down!
             )
             .training(
                 train_batch_size=config_ppo["train_batch_size"], 

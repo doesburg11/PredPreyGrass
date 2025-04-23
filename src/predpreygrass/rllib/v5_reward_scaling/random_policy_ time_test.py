@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v5_reward.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries
 import time

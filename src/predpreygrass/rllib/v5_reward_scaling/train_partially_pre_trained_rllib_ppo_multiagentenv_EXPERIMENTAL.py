@@ -9,8 +9,8 @@ Improvements versus v5_move_energy:
 - The RLModuleSpec is built for speed_2 agents.
 """
 
-from predpreygrass.rllib.v5_reward.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v5_reward.config.config_env_train import config_env
+from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v5_reward_scaling.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
