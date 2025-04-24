@@ -3,7 +3,7 @@ config_env = {
     "max_steps": 1000,
 
     # Grid and Observation Settings
-    "grid_size": 25,
+    "grid_size": 20,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
     "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
@@ -25,12 +25,12 @@ config_env = {
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy
 
     # Learning agents
-    "n_possible_speed_1_predators": 30,  #30
-    "n_possible_speed_2_predators": 30,  #30
+    "n_possible_speed_1_predators":30,  #30
+    "n_possible_speed_2_predators":30,  #30
     "n_possible_speed_1_prey": 40,  #40
     "n_possible_speed_2_prey": 40,  #40
-    "n_initial_active_speed_1_predator": 20,  # 5
-    "n_initial_active_speed_1_prey": 20,  # 7
+    "n_initial_active_speed_1_predator": 8,  # 5
+    "n_initial_active_speed_1_prey": 12,  # 7
     "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 0,  # 7
     
@@ -42,7 +42,7 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 50,  # 100
+    "initial_num_grass": 20,  # 100
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,  # 0.04
 
