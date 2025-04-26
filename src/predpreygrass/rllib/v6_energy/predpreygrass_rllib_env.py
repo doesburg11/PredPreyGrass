@@ -1,12 +1,11 @@
 """
 Predator-Prey Grass RLlib Environment
-Imporvement versus former version:
--Keeping track of caus- of death of prey [eaten/starved]
--reward scaling experiments
+Improvement versus former version:
+-improved efficiency of energy decay 
 
 """
 
-from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
+from  predpreygrass.rllib.v6_energy.config.config_env import config_env
 
 # external libraries
 import gymnasium
@@ -331,17 +330,18 @@ class PredPreyGrass(MultiAgentEnv):
             terminations["__all__"] = False
             return observations, rewards, terminations, truncations, infos
 
-        # Step 1: Process energy depletion due to time steps and update age
+
         # Precompute agent types to avoid repeated string checks
         agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         if self.verbose_movement:
             sep_line = "-" * 110  # Cache verbose separator once
+        # Step 1: Process energy depletion due to time steps and update age
         for agent, action in action_dict.items():
             agent_type = agent_types[agent]
 
             if self.verbose_movement:
                 print(sep_line)
-                print(f"[DEPLETE] {agent} energy: {self.agent_energies[agent]} -> ", end="")
+                print(f"[ENERGY DECAY] {agent} energy: {self.agent_energies[agent]} -> ", end="")
 
             if agent_type == "predator":
                 self.agent_energies[agent] -= self.energy_loss_per_step_predator
@@ -369,26 +369,35 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Step 2: Process movements
         for agent, action in action_dict.items():
-            if agent in self.agent_positions:
-                old_position = self.agent_positions[agent]
-                new_position = self._get_move(agent, action)
-                self.agent_positions[agent] = new_position
-                move_cost = self._get_movement_energy_cost(agent,old_position,new_position)
-                self.agent_energies[agent] -= move_cost
-                if "predator" in agent:
-                    self.predator_positions[agent] = new_position
-                    self.grid_world_state[1,  *old_position] = 0 
-                    self.grid_world_state[1, *new_position] = self.agent_energies[agent]
-                elif "prey" in agent:
-                    self.prey_positions[agent] = new_position
-                    self.grid_world_state[2,  *old_position] = 0
-                    self.grid_world_state[2, *new_position] = self.agent_energies[agent]
+            if agent not in self.agent_positions:
+                continue
 
-                if self.verbose_movement:
-                    print("----------------------------------------------------------------------------------------------------------")
-                    print(f"[MOVE] {agent} moved: {old_position} -> {new_position}. Energy cost: {move_cost:.2f}")
-                    print(f"[MOVE] {agent} new position: {self.agent_positions[agent]} with energy: {self.agent_energies[agent]:.2f}")
-                    print("----------------------------------------------------------------------------------------------------------")
+            old_position = self.agent_positions[agent]
+            new_position = self._get_move(agent, action)
+            self.agent_positions[agent] = new_position
+            move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
+            self.agent_energies[agent] -= move_cost
+
+            agent_type = agent_types[agent]
+
+            if agent_type == "predator":
+                self.predator_positions[agent] = new_position
+                self.grid_world_state[1, *old_position] = 0
+                self.grid_world_state[1, *new_position] = self.agent_energies[agent]
+            else:  # prey
+                self.prey_positions[agent] = new_position
+                self.grid_world_state[2, *old_position] = 0
+                self.grid_world_state[2, *new_position] = self.agent_energies[agent]
+
+            if self.verbose_movement:
+                print(sep_line)
+                print(
+                    f"[MOVE] {agent} moved: {old_position} -> {new_position}. "
+                    f"Energy cost: {move_cost:.2f}\n"
+                    f"[MOVE] {agent} new position: {new_position} "
+                    f"with energy: {self.agent_energies[agent]:.2f}"
+                )
+                print(sep_line)
 
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:
