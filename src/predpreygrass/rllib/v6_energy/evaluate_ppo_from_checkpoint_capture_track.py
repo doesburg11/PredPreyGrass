@@ -1,16 +1,15 @@
 """
 Evaluation code for evaluating a trained PPO agent from a checkpoint
 Improvement over the previous version:
-- Added a function to save the environment configuration to a JSON file.
-- Added a function to save the reward summary to a text file.
-- Added a function to save the prey death cause summary to a text file.
-- Added a function to plot the combined evolution of agents.
-- Added a function to plot the prey death cause
+- Contextual Capture Efficiency (CCE)
+
 
 """
-from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v6_mini_grid.config.config_env_eval import config_env
+from predpreygrass.rllib.v6_energy.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v6_energy.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+#from predpreygrass.utils.capture_trackers import ContextualCaptureTracker 
+from predpreygrass.utils.capture_trackers import FocusedPursuitTracker 
 
 # external libraries
 import ray
@@ -24,25 +23,21 @@ import json
 verbose_grid = False
 verbose_actions = False
 seed = None # 42 # Optional: set to integer for reproducibility
+#capture_tracker = ContextualCaptureTracker(max_window_steps=5)  
+pursuit_tracker = FocusedPursuitTracker(max_window_steps=3)
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
 
-def env_creator(config):
-    return PredPreyGrass(config)
-
+def env_creator(config): return PredPreyGrass(config)
 register_env("PredPreyGrass", lambda config: env_creator(config))
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    if "speed_1_predator" in agent_id:
-        return "speed_1_predator"
-    elif "speed_2_predator" in agent_id:
-        return "speed_2_predator"
-    elif "speed_1_prey" in agent_id:
-        return "speed_1_prey"
-    elif "speed_2_prey" in agent_id:
-        return "speed_2_prey"
+    if "speed_1_predator" in agent_id: return "speed_1_predator"
+    elif "speed_2_predator" in agent_id: return "speed_2_predator"
+    elif "speed_1_prey" in agent_id: return "speed_1_prey"
+    elif "speed_2_prey" in agent_id: return "speed_2_prey"
     else:
         return None
 
@@ -50,8 +45,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 #checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 #checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/PPO_2025-04-23_23-01-18/PPO_PredPreyGrass_1a62d_00000_0_2025-04-23_23-01-18/'
-checkpoint_dir = 'checkpoint_000040'
+checkpoint_root = '/v5_move_energy/reward_10.0/obs_range_Pred_7_Prey_9/PPO_PredPreyGrass_aa713_00000_0_2025-04-19_20-25-26/'
+checkpoint_dir = 'checkpoint_000084'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
@@ -60,7 +55,7 @@ eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
 os.makedirs(eval_output_dir, exist_ok=True)
 
 # === Save config_env.json ===
-with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+with open(os.path.join(eval_output_dir, "config_env_eval.json"), "w") as f:
     json.dump(config_env, f, indent=4)
 
 # Load RLModules directly from subfolders
@@ -79,10 +74,10 @@ obs, _ = env.reset(seed=seed)
 
 # intitialize matplot lib renderer
 grid_size = (env.grid_size, env.grid_size)
-all_agents = env.possible_agents + env.grass_agents
+all_entities = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(
     grid_size, 
-    all_agents, 
+    all_entities, 
     trace_length=5, 
     show_gridlines=False, 
     scale=2,
@@ -113,16 +108,51 @@ while not done:
         # Use _forward_inference() to compute the next action
         with torch.no_grad():
             action_output = policy_module._forward_inference({"obs": obs_tensor})
-        # Extract the action correctly
-        if "action_dist_inputs" in action_output:
-            action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
-        else:
-            raise KeyError(f"Unexpected output structure: {action_output}")
+        action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
         # Store the computed action
         action_dict[agent_id] = action
+    """
+    # === Log visibility of prey for each predator in observation ===
+    for predator_id in [a for a in env.agents if "predator" in a]:
+        visible_prey = [
+            prey_id for prey_id in env.agents if "prey" in prey_id
+            and prey_id in env.agent_positions
+            and torch.any(torch.tensor(obs[predator_id])[2] > 0)
+        ]
+        capture_tracker.log_visibility(predator_id, visible_prey, step)
+    """
+    # EXPERIMENTAL
+    for predator_id in [aid for aid in env.agents if "predator" in aid]:
+        if predator_id not in env.agent_positions:
+            continue
+
+        visible_prey = {
+            prey_id: env.agent_positions[prey_id]
+            for prey_id in env.agents
+            if "prey" in prey_id
+            and prey_id in env.agent_positions
+            and torch.any(torch.tensor(obs[predator_id])[2] > 0)
+        }
+        pursuit_tracker.log_focus(
+            predator_id=predator_id,
+            predator_pos=env.agent_positions[predator_id],
+            visible_prey_positions=visible_prey,
+            current_step=step
+        )
 
     # Step the environment with computed actions
     obs, rewards, terminations, truncations, _ = env.step(action_dict)
+    """
+    # === Log captures ===
+    if hasattr(env, "last_captures_this_step"):
+        for predator_id, prey_id in env.last_captures_this_step:
+            capture_tracker.log_capture(predator_id, prey_id, step)
+    """
+    # EXPERIMENTAL
+    if hasattr(env, "last_captures_this_step"):
+        for predator_id, prey_id in env.last_captures_this_step:
+            pursuit_tracker.log_capture(predator_id, prey_id, step)
+
     combined_evolution_visualizer.record(
         agent_ids=env.agents,
         internal_ids=env.agent_internal_ids,
@@ -143,7 +173,16 @@ while not done:
     #time.sleep(0.1)
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
-# --- PREY DEATH CAUSE SUMMARY ---
+"""
+# === CCE Summary ===
+print("\n--- CONTEXTUAL CAPTURE EFFICIENCY ---")
+capture_tracker.print_summary()
+"""
+print("\n--- FOCUSED PURSUIT EFFICIENCY ---")
+pursuit_tracker.print_summary()
+
+
+# === Prey Death Cause Summary ===
 death_log_path = os.path.join(eval_output_dir, "prey_death_causes.txt")
 death_stats = {"eaten": 0, "starved": 0}
 
@@ -159,7 +198,7 @@ with open(death_log_path, "w") as f:
 
 print(f"Prey death summary written to: {death_log_path}")
 
-# --- REWARD SUMMARY ---
+# --- Reward Summary ---
 reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
 with open(reward_log_path, "w") as f:
     f.write(f"Total Reward: {total_reward}\n")

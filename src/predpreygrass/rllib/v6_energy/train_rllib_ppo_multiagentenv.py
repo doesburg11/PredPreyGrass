@@ -8,8 +8,9 @@ Improvements versus v4_age:
 - added RLlibCallback to log episode returns externally
 - implemented energy move cost to the environment
 """
-from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v6_mini_grid.config.config_env_train import config_env
+
+from predpreygrass.rllib.v6_energy.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v6_energy.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
@@ -24,7 +25,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-
+import os
 
 def get_config_ppo():
     """
@@ -39,11 +40,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v6_mini_grid.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v6_energy.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v6_mini_grid.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v6_energy.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v6_mini_grid.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v6_energy.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 
@@ -77,11 +78,12 @@ def build_module_spec(obs_space, act_space):
 
 
 if __name__ == "__main__":
+    ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
     register_env("PredPreyGrass", env_creator)
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
-    existing_experiment_dir = "PPO_2025-04-23_21-51-36"
+    existing_experiment_dir = "PPO_2025-04-10_15-12-05"
     experiment_path = ray_results_path / existing_experiment_dir
     if (experiment_path / "tuner.pkl").exists():
         restored_tuner = tune.Tuner.restore(

@@ -6,7 +6,7 @@ Imporvement versus former version:
 
 """
 
-from  predpreygrass.rllib.v6_mini_grid.config.config_env import config_env
+from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
 
 # external libraries
 import gymnasium

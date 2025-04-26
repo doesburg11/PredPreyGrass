@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v6_mini_grid.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v6_energy.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries
 import time
