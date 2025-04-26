@@ -320,6 +320,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.grass_energies[grass] = self.initial_energy_grass
             self.grid_world_state[3, *pos] = self.initial_energy_grass
 
+        # Prepare static grass arrays for efficient batch updates
+        self.grass_pos_array = np.array([pos for pos in self.grass_positions.values()], dtype=np.int32)
+        self.grass_energy_array = np.full(len(self.grass_pos_array), self.initial_energy_grass, dtype=np.float32)
 
         # Track counts
         self.active_num_predators = len(self.predator_positions)
@@ -332,8 +335,10 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
+        # ======================================================================
+        # Step 0: Environment setup (initialize structures for the new step)
+        # ======================================================================
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-        # step 0: check for truncation
         if self.current_step >= self.max_steps:
             for agent in self.possible_agents:
                 if agent in self.agents:  # Active agents get a real observation
@@ -351,33 +356,40 @@ class PredPreyGrass(MultiAgentEnv):
             terminations["__all__"] = False
             return observations, rewards, terminations, truncations, infos
 
-        # Precompute agent types 
-        agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         if self.verbose_movement:
             sep_line = "-" * 110  
 
-        # Process grass energy regeneration
-        energy_gain = self.energy_gain_per_step_grass
-        energy_cap = self.initial_energy_grass
+        # Step 1: Grass energy regeneration (fully batched)
 
-        for grass, pos in self.grass_positions.items():
-            new_energy = min(self.grass_energies[grass] + energy_gain, energy_cap)
-            self.grass_energies[grass] = new_energy
-            self.grid_world_state[3, *pos] = new_energy
+        if self.grass_pos_array.size > 0:
+            # Regenerate energies
+            self.grass_energy_array += self.energy_gain_per_step_grass
+            np.clip(self.grass_energy_array, 0, self.initial_energy_grass, out=self.grass_energy_array)
 
-        # Step 1: Process agent movement, combined energy decay, and aging
+            # Update grid world in batch
+            self.grid_world_state[3, self.grass_pos_array[:, 0], self.grass_pos_array[:, 1]] = self.grass_energy_array
+
+
+
+        # Step 2: Process agent movement, combined energy decay, and aging
+
+        # Precompute agent types 
+        agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         for agent, action in action_dict.items():
             if agent not in self.agent_positions:
                 continue
 
+            # 1. Physics update: move agent
             old_position = self.agent_positions[agent]
             new_position = self._get_move(agent, action)
             self.agent_positions[agent] = new_position
+
+            # 2. Energy update: cost of moving
             move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
             self.agent_energies[agent] -= move_cost
 
+            # 3. State update: update grid
             agent_type = agent_types[agent]
-
             if agent_type == "predator":
                 self.predator_positions[agent] = new_position
                 self.grid_world_state[1, *old_position] = 0
@@ -387,6 +399,12 @@ class PredPreyGrass(MultiAgentEnv):
                 self.grid_world_state[2, *old_position] = 0
                 self.grid_world_state[2, *new_position] = self.agent_energies[agent]
 
+            # 4. Age update: increment agent's age
+            internal_id = self.agent_internal_ids.get(agent)
+            if internal_id is not None:
+                self.agent_ages[internal_id] += 1
+
+            # 5. Verbose movement logging
             if self.verbose_movement:
                 print(sep_line)
                 print(
@@ -396,12 +414,9 @@ class PredPreyGrass(MultiAgentEnv):
                     f"with energy: {self.agent_energies[agent]:.2f}"
                 )
                 print(sep_line)
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
 
 
-        # Step 2: Prepare agent removals (Prey caught, Energy depleted)
+        # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:
             # Agent not active
             if agent not in self.agent_positions:  
@@ -509,14 +524,14 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[agent] = False
                     truncations[agent] = False
  
-        # Step 3: Handle agent removals 
+        # Step 4: Handle agent removals 
         for agent in self.agents[:]:
             if terminations[agent]:
                 if self.verbose_engagement:
                     print(f"[ENGAGE] Agent {agent} terminated!")
                 self.agents.remove(agent)
 
-        # Step 4: Spawning of new agents
+        # Step 5: Spawning of new agents
         for agent in self.agents[:]:
             if "predator" in agent:
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
@@ -640,7 +655,7 @@ class PredPreyGrass(MultiAgentEnv):
                         if self.verbose_spawning:
                             print("No new prey agents available for spawning")
         
-        # step 5: Generate observations for all agents AFTER all engagements in the step
+        # step 6: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
             if agent in self.agent_positions:
                 observations[agent] = self._get_observation(agent)
