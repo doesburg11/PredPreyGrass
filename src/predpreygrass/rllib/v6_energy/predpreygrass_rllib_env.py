@@ -75,6 +75,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.cumulative_rewards = {}  # Track total rewards per agent
         self.predator_speeds = [1, 2]
         self.prey_speeds = [1, 2]
+        # for optimizing _get_move
+        self.agent_speeds = {}
+        self.agent_type_numbers = {}
 
         # Age tracking dictionary
         self.agent_instance_counter: int = 0
@@ -282,6 +285,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
             self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.agent_speeds[agent] = "speed_1" if "speed_1" in agent else "speed_2"
+            self.agent_type_numbers[agent] = 1
 
         # Assign prey positions and energy
         for i, agent in enumerate([a for a in self.agents if "prey" in a]):
@@ -290,6 +295,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.prey_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
+            self.agent_speeds[agent] = "speed_1" if "speed_1" in agent else "speed_2"
+            self.agent_type_numbers[agent] = 2
         
 
         # Assign grass positions and energy
@@ -330,11 +337,10 @@ class PredPreyGrass(MultiAgentEnv):
             terminations["__all__"] = False
             return observations, rewards, terminations, truncations, infos
 
-
-        # Precompute agent types to avoid repeated string checks
+        # Precompute agent types 
         agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         if self.verbose_movement:
-            sep_line = "-" * 110  # Cache verbose separator once
+            sep_line = "-" * 110  
         # Step 1: Process energy depletion due to time steps and update age
         for agent, action in action_dict.items():
             agent_type = agent_types[agent]
@@ -544,6 +550,9 @@ class PredPreyGrass(MultiAgentEnv):
                     self.agent_ages[self.agent_instance_counter] = 0
                     self.agent_instance_counter += 1
 
+                    self.agent_speeds[new_agent] = "speed_1" if "speed_1" in new_agent else "speed_2"
+                    self.agent_type_numbers[new_agent] = 1  # Predator (for predator spawn)
+
                     # Spawn position
                     occupied_positions = set(self.agent_positions.values())
                     new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
@@ -601,6 +610,9 @@ class PredPreyGrass(MultiAgentEnv):
                     self.agent_internal_ids[new_agent] = self.agent_instance_counter
                     self.agent_ages[self.agent_instance_counter] = 0
                     self.agent_instance_counter += 1
+
+                    self.agent_speeds[new_agent] = "speed_1" if "speed_1" in new_agent else "speed_2"
+                    self.agent_type_numbers[new_agent] = 2  # Prey (for prey spawn)
 
                     # Spawn position
                     occupied_positions = set(self.agent_positions.values())
@@ -672,30 +684,24 @@ class PredPreyGrass(MultiAgentEnv):
         return energy_cost
      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
-        """
-        Get the new position of the agent based on the action and its speed.
-        """
         current_position = self.agent_positions[agent]
 
-        # Choose the appropriate movement dictionary based on agent speed
-        if "speed_1" in agent:
+        agent_speed = self.agent_speeds[agent]  # "speed_1" or "speed_2"
+        agent_type_nr = self.agent_type_numbers[agent]  # 1 for predator, 2 for prey
+
+        if agent_speed == "speed_1":
             move_vector = self.action_to_move_tuple_speed1[action]
-        elif "speed_2" in agent:
+        elif agent_speed == "speed_2":
             move_vector = self.action_to_move_tuple_speed2[action]
         else:
-            raise ValueError(f"Unknown speed for agent: {agent}")
+            raise ValueError(f"Unknown speed for agent: {agent_speed}")
 
-        new_position = (
-            current_position[0] + move_vector[0],
-            current_position[1] + move_vector[1],
-        )
+        # Manual clip without numpy
+        new_x = min(max(current_position[0] + move_vector[0], 0), self.grid_size - 1)
+        new_y = min(max(current_position[1] + move_vector[1], 0), self.grid_size - 1)
+        new_position = (new_x, new_y)
 
-        # Clip new position to stay within grid bounds
-        new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
-
-        agent_type_nr = 1 if "predator" in agent else 2
         if self.grid_world_state[agent_type_nr, *new_position] > 0:
-            # Collision with another same-type agent — stay in place
             new_position = current_position
 
         return new_position
