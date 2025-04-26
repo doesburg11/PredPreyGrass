@@ -14,8 +14,8 @@ config_env = {
     "reward_predator_step": 0.0,
     "reward_prey_step": 0.0,
     "penalty_prey_caught": 0.0,
-    "reproduction_reward_predator": 25.0,
-    "reproduction_reward_prey": 25.0,
+    "reproduction_reward_predator": 10.0,
+    "reproduction_reward_prey": 10.0,
     
     # Energy settings
     "energy_loss_per_step_predator": 0.15, # experimental with respect to energy_move_cost # 0.15
