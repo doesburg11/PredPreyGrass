@@ -377,7 +377,7 @@ class PredPreyGrass(MultiAgentEnv):
         agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         for agent, action in action_dict.items():
             if agent not in self.agent_positions:
-                continue
+                continue # in case a dead agent still contains action
 
             # 1. Physics update: move agent
             old_position = self.agent_positions[agent]
