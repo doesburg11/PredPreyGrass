@@ -48,7 +48,8 @@ config_env = {
 
     "verbose_engagement": False,
     "verbose_movement": False,
-    "verbose_reproduction": True,
+    "verbose_reproduction": False,
+    "verbose_termination": True,
     "debug_mode": False,
 
 }
