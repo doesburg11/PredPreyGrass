@@ -37,10 +37,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_movement = config.get("verbose_movement", self.debug_mode)
         self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
         self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+        self.verbose_termination = config.get("verbose_termination", self.debug_mode)
 
-
-
-        self.max_steps = config.get("max_steps", 10000)
+        self.max_steps = config.get("max_steps", 1000)
         
         # Rewards
         self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
@@ -348,9 +347,7 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
-        # ======================================================================
         # Step 0: Environment setup (initialize structures for the new step)
-        # ======================================================================
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         if self.current_step >= self.max_steps:
             for agent in self.possible_agents:
@@ -370,7 +367,6 @@ class PredPreyGrass(MultiAgentEnv):
             return observations, rewards, terminations, truncations, infos
 
         # Step 1: Grass energy regeneration (fully batched)
-
         if self.grass_pos_array.size > 0:
             # Regenerate energies
             self.grass_energy_array += self.energy_gain_per_step_grass
@@ -379,26 +375,22 @@ class PredPreyGrass(MultiAgentEnv):
             # Update grid world in batch
             self.grid_world_state[3, self.grass_pos_array[:, 0], self.grass_pos_array[:, 1]] = self.grass_energy_array
 
-
-
         # Step 2: Process agent movement, combined energy decay, and aging
-
-        # Precompute agent types 
         agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         for agent, action in action_dict.items():
             if agent not in self.agent_positions:
                 continue # in case adead agent still contains action
 
-            # 1. Physics update: move agent
+            # 2.1. Physics update: move agent
             old_position = self.agent_positions[agent]
             new_position = self._get_move(agent, action)
             self.agent_positions[agent] = new_position
 
-            # 2. Energy update: cost of moving
+            # 2.2. Energy update: cost of moving
             move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
             self.agent_energies[agent] -= move_cost
 
-            # 3. State update: update grid
+            # 2.3. State update: update grid
             agent_type = agent_types[agent]
             if agent_type == "predator":
                 self.predator_positions[agent] = new_position
@@ -409,12 +401,12 @@ class PredPreyGrass(MultiAgentEnv):
                 self.grid_world_state[2, *old_position] = 0
                 self.grid_world_state[2, *new_position] = self.agent_energies[agent]
 
-            # 4. Age update: increment agent's age
+            # 2.4. Age update: increment agent's age
             internal_id = self.agent_internal_ids.get(agent)
             if internal_id is not None:
                 self.agent_ages[internal_id] += 1
 
-            # 5. Verbose movement logging
+            # 2.5. Verbose movement logging
             if self.verbose_movement:
                 self._log(
                     f"[MOVE] {agent} moved: {old_position} -> {new_position}. "
@@ -423,172 +415,178 @@ class PredPreyGrass(MultiAgentEnv):
                     f"with energy: {self.agent_energies[agent]:.2f}"
                 )
 
-
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
+        # Precompute lookup tables
+        position_to_prey = {tuple(pos): prey for prey, pos in self.agent_positions.items() if "prey" in prey}
+        position_to_grass = {tuple(pos): grass for grass, pos in self.grass_positions.items()}
+
         for agent in self.agents:
             # Agent not active
             if agent not in self.agent_positions:  
                 continue
+
             # Agent has no energy left
             if self.agent_energies[agent] <= 0:
                 if self.verbose_movement:
-                    self._log(
-                        f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed."
-                        )
-                observations[agent] = self._get_observation(agent) # Ensure last observation
-                rewards[agent] = 0  # TODO remove hardcoded
+                    self._log(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
+
+                observations[agent] = self._get_observation(agent)  # Ensure last observation
+                rewards[agent] = 0
                 terminations[agent] = True
                 truncations[agent] = False
+
                 if "predator" in agent:
                     self.active_num_predators -= 1
-                    self.grid_world_state[1,*self.agent_positions[agent]] = 0
+                    self.grid_world_state[1, *self.agent_positions[agent]] = 0
                     del self.predator_positions[agent]
                 elif "prey" in agent:
-                    # Cause of death tracking prey
                     internal_id = self.agent_internal_ids[agent]
                     self.death_cause_prey[internal_id] = "starved"
                     self.active_num_prey -= 1
-                    self.grid_world_state[2,*self.agent_positions[agent]] = 0
+                    self.grid_world_state[2, *self.agent_positions[agent]] = 0
                     del self.prey_positions[agent]
+
                 del self.agent_positions[agent]
                 del self.agent_energies[agent]
-                continue
-            elif "predator" in agent:
+                continue  # Move to next agent after removal
+
+            # Predator behavior
+            if "predator" in agent:
                 predator_position = self.agent_positions[agent]
-                # Find the first prey at the same position
-                caught_prey = next(
-                    (prey for prey, prey_position in self.agent_positions.items()
-                    if "prey" in prey and np.array_equal(predator_position, prey_position)), None
-                )
+                caught_prey = position_to_prey.get(tuple(predator_position))
+
                 if caught_prey:
                     if self.verbose_engagement:
                         self._log(
                             f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! Predator Reward: {self.reward_predator_catch_prey}",
                             color="red"
                         )
-                    
-                    # Assign rewards predator and penalty prey
+
                     rewards[agent] = self.reward_predator_catch_prey
                     self.cumulative_rewards.setdefault(agent, 0)
-
                     self.cumulative_rewards[agent] += rewards[agent]
+
                     self.agent_energies[agent] += self.agent_energies[caught_prey]
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
                     observations[caught_prey] = self._get_observation(caught_prey)
                     rewards[caught_prey] = self.penalty_prey_caught
-                    self.cumulative_rewards.setdefault(agent, 0.0)
                     self.cumulative_rewards.setdefault(caught_prey, 0.0)
-                    self.cumulative_rewards[agent] += rewards[agent]
                     self.cumulative_rewards[caught_prey] += rewards[caught_prey]
-                    # cause of death tracking prey
+
                     internal_id = self.agent_internal_ids[caught_prey]
                     self.death_cause_prey[internal_id] = "eaten"
 
-                    # Remove prey
                     terminations[caught_prey] = True
                     truncations[caught_prey] = False
                     self.active_num_prey -= 1
+
                     self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
                     del self.agent_positions[caught_prey]
                     del self.prey_positions[caught_prey]
                     del self.agent_energies[caught_prey]
+
                 else:
-                    # Predator did not catch prey
                     rewards[agent] = self.reward_predator_step
 
                 observations[agent] = self._get_observation(agent)
                 self.cumulative_rewards.setdefault(agent, 0)
-
                 self.cumulative_rewards[agent] += rewards[agent]
                 terminations[agent] = False
                 truncations[agent] = False
+
+            # Prey behavior
             elif "prey" in agent:
+                # Only process living prey
                 if terminations.get(agent) is None or not terminations[agent]:
                     prey_position = self.agent_positions[agent]
-                    # Check if prey is on the same cell as grass
-                    caught_grass = next(
-                        (grass for grass, grass_position in self.grass_positions.items()
-                        if "grass" in grass and np.array_equal(prey_position, grass_position)), None
-                    )
+                    caught_grass = position_to_grass.get(tuple(prey_position))
+
                     if caught_grass:
                         if self.verbose_engagement:
                             self._log(
                                 f"[ENGAGE] {agent} caught grass at {prey_position}! Prey Reward: {self.reward_prey_eat_grass}",
                                 color="red"
                             )
-                        
-                        # Reward prey for eating grass
+
                         rewards[agent] = self.reward_prey_eat_grass
                         self.cumulative_rewards.setdefault(agent, 0)
-
                         self.cumulative_rewards[agent] += rewards[agent]
+
                         self.agent_energies[agent] += self.grass_energies[caught_grass]
                         self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
-                        
-                        # Remove grass from the gridworld cell
+
+                        # Remove grass
                         self.grid_world_state[3, *self.grass_positions[caught_grass]] = 0
                         self.grass_energies[caught_grass] = 0
 
                     else:
                         rewards[agent] = self.reward_prey_step
-                    
+
                     observations[agent] = self._get_observation(agent)
                     self.cumulative_rewards.setdefault(agent, 0)
-
                     self.cumulative_rewards[agent] += rewards[agent]
                     terminations[agent] = False
                     truncations[agent] = False
  
-        # Step 4: Handle agent removals 
-        for agent in self.agents[:]:
-            if terminations[agent]:
-                if self.verbose_engagement:
-                    self._log(
-                        f"[ENGAGE] Agent {agent} terminated!",
-                        color="red"
-                    )
-                self.agents.remove(agent)
+        # Step 4: Handle agent removals (ultra-clean)
+        self.agents = [
+            agent for agent in self.agents
+            if not terminations.get(agent, False) or self._log(f"[TERMINATION] Agent {agent} terminated!", color="red")
+        ]
 
-        # Step 5: Spawning of new agents
-        for agent in self.agents[:]:
+        # Step 5: Spawning of new agents (optimized)
+
+        # Precompute available IDs once
+        available_predator_ids = [
+            f"speed_{speed}_predator_{i}"
+            for speed in [1, 2]
+            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 25))
+            if f"speed_{speed}_predator_{i}" not in self.agents
+        ]
+        available_prey_ids = [
+            f"speed_{speed}_prey_{i}"
+            for speed in [1, 2]
+            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 25))
+            if f"speed_{speed}_prey_{i}" not in self.agents
+        ]
+
+        # Precompute occupied positions once
+        occupied_positions = set(self.agent_positions.values())
+
+        for agent in self.agents[:]:  # Safe copy for iteration
             if "predator" in agent:
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
                     parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
-                    
-                    # Mutation: 10% chance to switch speed
+
+                    # Mutation chance
                     if self.rng.random() < self.mutation_rate_predator:
                         new_speed = 2 if parent_speed == 1 else 1
                     else:
                         new_speed = parent_speed
 
-                    # Find available new agent ID
-                    potential_new_ids = [
-                        f"speed_{new_speed}_predator_{i}"
-                        for i in range(config_env.get(f"n_possible_speed_{new_speed}_predators", 25))
-                        if f"speed_{new_speed}_predator_{i}" not in self.agents
-                    ]
-                    if not potential_new_ids:
+                    # Find available ID
+                    candidate_ids = [id_ for id_ in available_predator_ids if f"speed_{new_speed}_" in id_]
+                    if not candidate_ids:
                         if self.verbose_reproduction:
-                            self._log(
-                                f"No available predator slots at speed {new_speed}",
-                                color="red"
-                            )
+                            self._log(f"No available predator slots at speed {new_speed}", color="red")
                         continue
 
-                    new_agent = potential_new_ids[0]
+                    new_agent = candidate_ids.pop(0)
+                    available_predator_ids.remove(new_agent)  # Ensure ID cannot be reused
                     self.agents.append(new_agent)
 
+                    # Update internal data
                     self.agent_internal_ids[new_agent] = self.agent_instance_counter
                     self.agent_ages[self.agent_instance_counter] = 0
                     self.agent_instance_counter += 1
 
                     self.agent_speeds[new_agent] = "speed_1" if "speed_1" in new_agent else "speed_2"
-                    self.agent_type_numbers[new_agent] = 1  # Predator (for predator spawn)
+                    self.agent_type_numbers[new_agent] = 1  # Predator
 
-                    # Spawn position
-                    occupied_positions = set(self.agent_positions.values())
+                    # Find spawn position
                     new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+                    occupied_positions.add(new_position)
 
                     self.agent_positions[new_agent] = new_position
                     self.predator_positions[new_agent] = new_position
@@ -600,7 +598,7 @@ class PredPreyGrass(MultiAgentEnv):
 
                     self.active_num_predators += 1
 
-                    # Rewards and tracking
+                    # Rewards
                     rewards[new_agent] = 0
                     rewards[agent] = self.reproduction_reward_predator
                     self.cumulative_rewards[new_agent] = 0
@@ -611,54 +609,40 @@ class PredPreyGrass(MultiAgentEnv):
                     truncations[new_agent] = False
 
                     if self.verbose_reproduction:
-                        self._log(
-                            f"Predator {agent} spawned {new_agent} at {new_position}",
-                            color="green"
-                        )
-                    else:
-                        if self.verbose_reproduction:
-                            self._log(
-                                "No new predator agents available for spawning",
-                                color="red"
-                            )
-                    
+                        self._log(f"Predator {agent} spawned {new_agent} at {new_position}", color="green")
+
             elif "prey" in agent:
                 if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
                     parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
-                    # Mutation: 10% chance to switch speed
+                    # Mutation chance
                     if self.rng.random() < self.mutation_rate_prey:
                         new_speed = 2 if parent_speed == 1 else 1
                     else:
                         new_speed = parent_speed
 
-                    # Find available new agent ID
-                    potential_new_ids = [
-                        f"speed_{new_speed}_prey_{i}"
-                        for i in range(config_env.get(f"n_possible_speed_{new_speed}_prey", 25))
-                        if f"speed_{new_speed}_prey_{i}" not in self.agents
-                    ]
-                    if not potential_new_ids:
+                    # Find available ID
+                    candidate_ids = [id_ for id_ in available_prey_ids if f"speed_{new_speed}_" in id_]
+                    if not candidate_ids:
                         if self.verbose_reproduction:
-                            self._log(
-                                f"No available prey slots at speed {new_speed}",
-                                color="red"
-                            )
+                            self._log(f"No available prey slots at speed {new_speed}", color="red")
                         continue
 
-                    new_agent = potential_new_ids[0]
+                    new_agent = candidate_ids.pop(0)
+                    available_prey_ids.remove(new_agent)
                     self.agents.append(new_agent)
 
+                    # Update internal data
                     self.agent_internal_ids[new_agent] = self.agent_instance_counter
                     self.agent_ages[self.agent_instance_counter] = 0
                     self.agent_instance_counter += 1
 
                     self.agent_speeds[new_agent] = "speed_1" if "speed_1" in new_agent else "speed_2"
-                    self.agent_type_numbers[new_agent] = 2  # Prey (for prey spawn)
+                    self.agent_type_numbers[new_agent] = 2  # Prey
 
-                    # Spawn position
-                    occupied_positions = set(self.agent_positions.values())
+                    # Find spawn position
                     new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+                    occupied_positions.add(new_position)
 
                     self.agent_positions[new_agent] = new_position
                     self.prey_positions[new_agent] = new_position
@@ -670,7 +654,7 @@ class PredPreyGrass(MultiAgentEnv):
 
                     self.active_num_prey += 1
 
-                    # Rewards and tracking
+                    # Rewards
                     rewards[new_agent] = 0
                     rewards[agent] = self.reproduction_reward_prey
                     self.cumulative_rewards[new_agent] = 0
@@ -681,17 +665,10 @@ class PredPreyGrass(MultiAgentEnv):
                     truncations[new_agent] = False
 
                     if self.verbose_reproduction:
-                        self._log(
-                            f"Prey {agent} spawned {new_agent} at {new_position}",
-                            color="green"
-                        )
-                    else:
-                        if self.verbose_reproduction:
-                            self._log(
-                                "No new prey agents available for spawning",
-                                color="red"
-                            )
-        
+                        self._log(f"Prey {agent} spawned {new_agent} at {new_position}", color="green")
+
+
+
         # step 6: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
             if agent in self.agent_positions:
