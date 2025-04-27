@@ -4,7 +4,7 @@ Imporvement versus former version:
 -Keeping track of caus of death of prey [eaten/starved]
 """
 
-from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
+from  predpreygrass.rllib.v6_energy.config.config_env import config_env
 
 # external libraries
 import gymnasium
