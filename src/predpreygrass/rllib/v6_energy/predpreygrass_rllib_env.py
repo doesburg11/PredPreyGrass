@@ -25,7 +25,16 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.verbose_engagement = config.get("verbose_engagement", False)
         self.verbose_movement = config.get("verbose_movement", False)
-        self.verbose_spawning = config.get("verbose_spawning", False)
+        self.verbose_reproduction = config.get("verbose_reproduction", False)
+
+        # Debug and verbosity controls
+        """
+        self.debug_mode = config.get("debug_mode", False)
+        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
+        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
+        self.verbose_death = config.get("verbose_death", self.debug_mode)
+        self.verbose_grass = config.get("verbose_grass", self.debug_mode)
+        """
 
         self.max_steps = config.get("max_steps", 10000)
         
@@ -377,7 +386,7 @@ class PredPreyGrass(MultiAgentEnv):
         agent_types = {agent: ("predator" if "predator" in agent else "prey") for agent in action_dict}
         for agent, action in action_dict.items():
             if agent not in self.agent_positions:
-                continue # in case a dead agent still contains action
+                continue # in case adead agent still contains action
 
             # 1. Physics update: move agent
             old_position = self.agent_positions[agent]
@@ -550,7 +559,7 @@ class PredPreyGrass(MultiAgentEnv):
                         if f"speed_{new_speed}_predator_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
-                        if self.verbose_spawning:
+                        if self.verbose_reproduction:
                             print(f"No available predator slots at speed {new_speed}")
                         continue
 
@@ -588,10 +597,10 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[new_agent] = False
                     truncations[new_agent] = False
 
-                    if self.verbose_spawning:
+                    if self.verbose_reproduction:
                         print(f"Predator {agent} spawned {new_agent} at {new_position}")
                     else:
-                        if self.verbose_spawning:
+                        if self.verbose_reproduction:
                             print("No new predator agents available for spawning")
                     
             elif "prey" in agent:
@@ -611,7 +620,7 @@ class PredPreyGrass(MultiAgentEnv):
                         if f"speed_{new_speed}_prey_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
-                        if self.verbose_spawning:
+                        if self.verbose_reproduction:
                             print(f"No available prey slots at speed {new_speed}")
                         continue
 
@@ -649,10 +658,10 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[new_agent] = False
                     truncations[new_agent] = False
 
-                    if self.verbose_spawning:
+                    if self.verbose_reproduction:
                         print(f"Prey {agent} spawned {new_agent} at {new_position}")
                     else:
-                        if self.verbose_spawning:
+                        if self.verbose_reproduction:
                             print("No new prey agents available for spawning")
         
         # step 6: Generate observations for all agents AFTER all engagements in the step
