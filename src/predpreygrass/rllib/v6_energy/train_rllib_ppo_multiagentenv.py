@@ -1,12 +1,10 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
-It uses a custom environment that simulates a predator-prey-grass ecosystem.
-The environment is a grid world where predators and prey move around.
-Predators try to catch prey, and prey try to eat grass.
-Improvements versus v4_age: 
-- externalized PPO config to config_ppo.py
-- added RLlibCallback to log episode returns externally
-- implemented energy move cost to the environment
+Predator-Prey Grass RLlib Environment
+Major Improvements over previous version:
+- Combined fixed and movement-based energy decay into a single pass
+- Precomputed distance lookup for faster movement energy calculation
+- Merged agent aging into main movement loop
+- Optimized step function: faster and cleaner agent updates
 """
 
 from predpreygrass.rllib.v6_energy.predpreygrass_rllib_env import PredPreyGrass 
