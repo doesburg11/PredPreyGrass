@@ -187,6 +187,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_speeds = {}
         self.agent_type_numbers = {}
 
+        self.move_energy_cost_factor = self.config.get("move_energy_cost_factor", 0.1)
+
+        self.movement_distance_lookup = {}
+        for dx in range(-2, 3):  # Assuming maximum move range is -2..2 (for speed_2)
+            for dy in range(-2, 3):
+                if dx == 0 and dy == 0:
+                    self.movement_distance_lookup[(0, 0)] = 0.0
+                else:
+                    self.movement_distance_lookup[(dx, dy)] = math.sqrt(dx ** 2 + dy ** 2)
 
     def reset(self, *, seed=None, options=None):
         """
@@ -346,30 +355,6 @@ class PredPreyGrass(MultiAgentEnv):
         if self.verbose_movement:
             sep_line = "-" * 110
 
-        # Step 1: Process energy depletion due to time steps and update age
-        for agent, action in action_dict.items():
-            agent_type = agent_types[agent]
-
-            if self.verbose_movement:
-                print(sep_line)
-                print(f"[ENERGY DECAY] {agent} energy: {self.agent_energies[agent]} -> ", end="")
-
-            if agent_type == "predator":
-                self.agent_energies[agent] -= self.energy_loss_per_step_predator
-                self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
-            else:  # prey
-                self.agent_energies[agent] -= self.energy_loss_per_step_prey
-                self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
-
-            if self.verbose_movement:
-                print(f"{self.agent_energies[agent]}")
-                print(sep_line)
-
-            # Update age
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
-
         # Process grass energy regeneration
         energy_gain = self.energy_gain_per_step_grass
         energy_cap = self.initial_energy_grass
@@ -400,6 +385,11 @@ class PredPreyGrass(MultiAgentEnv):
                 self.prey_positions[agent] = new_position
                 self.grid_world_state[2, *old_position] = 0
                 self.grid_world_state[2, *new_position] = self.agent_energies[agent]
+
+            # Update age
+            internal_id = self.agent_internal_ids.get(agent)
+            if internal_id is not None:
+                self.agent_ages[internal_id] += 1
 
             if self.verbose_movement:
                 print(sep_line)
@@ -675,19 +665,22 @@ class PredPreyGrass(MultiAgentEnv):
 
         return observations, rewards, terminations, truncations, infos
   
-    def _get_movement_energy_cost(self, agent, current_position, new_position):
+    def _get_movement_energy_cost(self, agent: AgentID, current_position: Tuple[int, int], new_position: Tuple[int, int]) -> float:
         """
-        Calculate energy cost for movement based on distance and a configurable factor.
+        Calculate combined energy cost for an agent, including:
+        - Fixed per time step decay
+        - Movement-dependent decay based on precomputed distance
         """
-        distance_factor = self.config.get("move_energy_cost_factor", 0.1)
-        #print(f"Distance factor: {distance_factor}")
+        fixed_loss = self.energy_loss_per_step_predator if "predator" in agent else self.energy_loss_per_step_prey
         current_energy = self.agent_energies[agent]
-        #print(f"Current energy: {current_energy}")
-        # distance gigh speed =[0.00,1.00, 1.41, 2.00, 2.24, 2.83]
-        distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
-        #print (f"Distance: {distance}")
-        energy_cost = distance * distance_factor * current_energy
-        return energy_cost
+
+        dx = new_position[0] - current_position[0]
+        dy = new_position[1] - current_position[1]
+        move_distance = self.movement_distance_lookup.get((dx, dy), 0.0)
+
+        total_loss = fixed_loss + (move_distance * self.move_energy_cost_factor * current_energy)
+        return total_loss
+
      
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
         current_position = self.agent_positions[agent]
