@@ -7,11 +7,9 @@ import numpy as np
 # Ensure all elements are displayed
 np.set_printoptions(threshold=np.inf)
 
-
 verbose_grid_state = True
 verbose_observation = False
-
-
+1
 if __name__ == "__main__":
     env = PredPreyGrass(config=config_env)
     observations, _ = env.reset(seed=42)
