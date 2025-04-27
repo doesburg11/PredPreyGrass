@@ -23,18 +23,19 @@ class PredPreyGrass(MultiAgentEnv):
         config = config or config_env  # Use provided config or default config_env
         self.config = config
 
+        """
         self.verbose_engagement = config.get("verbose_engagement", False)
         self.verbose_movement = config.get("verbose_movement", False)
         self.verbose_reproduction = config.get("verbose_reproduction", False)
+        """
 
         # Debug and verbosity controls
-        """
         self.debug_mode = config.get("debug_mode", False)
         self.verbose_movement = config.get("verbose_movement", self.debug_mode)
         self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
-        self.verbose_death = config.get("verbose_death", self.debug_mode)
-        self.verbose_grass = config.get("verbose_grass", self.debug_mode)
-        """
+        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+
+
 
         self.max_steps = config.get("max_steps", 10000)
         

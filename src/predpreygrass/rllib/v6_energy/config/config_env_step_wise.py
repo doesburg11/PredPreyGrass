@@ -49,5 +49,6 @@ config_env = {
     "verbose_engagement": True,
     "verbose_movement": True,
     "verbose_reproduction": True,
+    "debug_mode": False,
 
 }
