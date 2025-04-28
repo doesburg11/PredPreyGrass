@@ -1,14 +1,16 @@
 """
-Predator-Prey Grass RLlib Environment
-Major Improvements over previous version:
-- Combined fixed and movement-based energy decay into a single pass
-- Precomputed distance lookup for faster movement energy calculation
-- Merged agent aging into main movement loop
-- Optimized step function: faster and cleaner agent updates
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+Improvements versus v4_age: 
+- externalized PPO config to config_ppo.py
+- added RLlibCallback to log episode returns externally
+- implemented energy move cost to the environment
 """
 
-from predpreygrass.rllib.v6_energy.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v6_energy.config.config_env_train import config_env
+from predpreygrass.rllib.v6_logging.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v6_logging.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
@@ -38,11 +40,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v6_energy.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v6_logging.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v6_energy.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v6_logging.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v6_energy.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v6_logging.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 
