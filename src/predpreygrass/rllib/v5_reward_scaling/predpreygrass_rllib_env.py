@@ -3,7 +3,9 @@ Predator-Prey Grass RLlib Environment
 Imporvement versus former version:
 -Keeping track of caus- of death of prey [eaten/starved]
 -reward scaling experiments
-
+-Futile attempt to measure capture efficiency predators
+--src/predpreygrass/rllib/v5_reward_scaling/predpreygrass_rllib_env_NCE.py
+--src/predpreygrass/rllib/v5_reward_scaling/predpreygrass_rllib_env_capture_track.py
 """
 
 from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
