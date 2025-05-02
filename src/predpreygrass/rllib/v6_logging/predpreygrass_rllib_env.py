@@ -368,6 +368,7 @@ class PredPreyGrass(MultiAgentEnv):
                 move_cost = self._get_movement_energy_cost(agent,old_position,new_position)
                 self.agent_energies[agent] -= move_cost
                 if "predator" in agent:
+                    
                     self.predator_positions[agent] = new_position
                     self.grid_world_state[1,  *old_position] = 0 
                     self.grid_world_state[1, *new_position] = self.agent_energies[agent]
