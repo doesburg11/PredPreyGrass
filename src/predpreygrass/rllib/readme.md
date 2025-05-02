@@ -20,11 +20,14 @@ Step 2: Agent Movement, Energy Cost, Aging
 ────────────────────────────────────────────────────────────────────
 - For each agent action:
     - If agent alive:
-        - Move agent based on action
-        - Subtract movement energy cost
-        - Update agent position in grid world
-        - Increment agent age
-        - (Optional) Print movement log if enabled
+        1 Move all agents based on action --> susbstract (fixed and variable) movement cost. icrement agent age
+        2 Handle Wall collosions --> put agents back on the border, substract variable movement cost
+        3 Handle intra species colissions:
+            - Put lowest energy agent at nearest spot (same routine as spawning)
+            - Substract both fighting energy cost
+            - substract variable movement cost for loosing (smaller) agents 
+            - Update agent positios in gridworld
+        5 (Optional) Print movement log if enabled
 
 ────────────────────────────────────────────────────────────────────
 Step 3: Check for Dead Agents
