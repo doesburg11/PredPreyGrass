@@ -3,9 +3,9 @@ config_env = {
     "max_steps": 1000,
 
     # Grid and Observation Settings
-    "grid_size": 25,
+    "grid_size": 10,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 7,  # 7
+    "predator_obs_range": 9,  # 7
     "prey_obs_range": 9,  # 9
     
     # Rewards
@@ -14,15 +14,15 @@ config_env = {
     "reward_predator_step": 0.0,
     "reward_prey_step": 0.0,
     "penalty_prey_caught": 0.0,
-    "reproduction_reward_predator": 10.0,
-    "reproduction_reward_prey": 10.0,
+    "reproduction_reward_predator": 1.0,
+    "reproduction_reward_prey": 1.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.05, # 0.15
+    "energy_loss_per_step_predator": 0.15,
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
+    "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  #30
@@ -42,13 +42,15 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 25,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04,
+    "energy_gain_per_step_grass": 0.08,
 
-    "verbose_engagement": False,
-    "verbose_movement": False,
-    "verbose_decay": False,
-    "verbose_reproduction": False,
-    "debug_mode": False,
+    "verbose_engagement": True,
+    "verbose_movement": True,
+    "verbose_decay": True,
+    "verbose_reproduction": True,
+    "debug_mode": True,
 }
+
+

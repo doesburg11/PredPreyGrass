@@ -18,11 +18,11 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
-    "energy_loss_per_step_predator": 0.05, # 0.15
+    "energy_loss_per_step_predator": 0.15,
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
+    "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  #30
@@ -31,7 +31,7 @@ config_env = {
     "n_possible_speed_2_prey": 40,  #40
     "n_initial_active_speed_1_predator": 5,  # 5
     "n_initial_active_speed_1_prey": 7,  # 7
-    "n_initial_active_speed_2_predator": 5,  # 5
+    "n_initial_active_speed_2_predator": 7,  # 5
     "n_initial_active_speed_2_prey": 7,  # 7
     
     "initial_energy_predator": 5.0,
@@ -42,9 +42,9 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
         
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 50, # 50
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04,
+    "energy_gain_per_step_grass": 0.08,
 
     "verbose_engagement": False,
     "verbose_movement": False,
