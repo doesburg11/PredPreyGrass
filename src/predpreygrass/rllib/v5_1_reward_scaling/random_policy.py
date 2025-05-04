@@ -1,6 +1,6 @@
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer
-from predpreygrass.rllib.v7_move.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v7_move.config.config_env_random import config_env
+from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v5_reward_scaling.config.config_env_random import config_env
 
 from time import sleep
 import numpy as np
@@ -8,7 +8,7 @@ import numpy as np
 verbose_grid_state = False
 verbose_observation = False
 
-seed_value = 42 # 42  # Set seed for reproducibility
+seed_value = None # 42  # Set seed for reproducibility
 
 if __name__ == "__main__":
     env = PredPreyGrass(config=config_env)
