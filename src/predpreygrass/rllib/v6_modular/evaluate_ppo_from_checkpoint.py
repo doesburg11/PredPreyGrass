@@ -8,8 +8,8 @@ Improvement over the previous version:
 - Added a function to plot the prey death cause
 
 """
-from predpreygrass.rllib.v5_1_reward_scaling.predpreygrass_rllib_env_NCE import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v5_1_reward_scaling.config.config_env_eval import config_env
+from predpreygrass.rllib.v6_modular.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v6_modular.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
@@ -50,8 +50,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 #checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 #checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/PPO_2025-04-22_08-44-20/PPO_PredPreyGrass_38293_00000_0_2025-04-22_08-44-20/'
-checkpoint_dir = 'checkpoint_000084'
+checkpoint_root = '/PPO_2025-05-04_22-52-53/PPO_PredPreyGrass_bf9c4_00000_0_2025-05-04_22-52-53/'
+checkpoint_dir = 'checkpoint_000034'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
@@ -89,24 +89,18 @@ grid_visualizer = MatPlotLibRenderer(
     destination_path=None, # save to: eval_output_dir
 )
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
-    destination_path=eval_output_dir
+    destination_path=eval_output_dir,
+    timestamp=now,
 )
 prey_death_cause_visualizer = PreyDeathCauseVisualizer(
-    destination_path=eval_output_dir
+    destination_path=eval_output_dir,
+    timestamp=now,
 )
 
 
 step=0
 done = False
 total_reward = 0
-
-# === Initialize per-step NCE stats ===
-nce_stats = {
-    "s1p_s1r": [],
-    "s1p_s2r": [],
-    "s2p_s1r": [],
-    "s2p_s2r": [],
-}
 
 # Run one evaluation episode
 while not done:
@@ -122,53 +116,15 @@ while not done:
         with torch.no_grad():
             action_output = policy_module._forward_inference({"obs": obs_tensor})
         # Extract the action correctly
-        action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
+        if "action_dist_inputs" in action_output:
+            action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
+        else:
+            raise KeyError(f"Unexpected output structure: {action_output}")
         # Store the computed action
         action_dict[agent_id] = action
 
     # Step the environment with computed actions
     obs, rewards, terminations, truncations, _ = env.step(action_dict)
-
-
-    # === Compute NCE by predator/prey type ===
-    pred_s1 = [a for a in env.agents if "speed_1_predator" in a]
-    pred_s2 = [a for a in env.agents if "speed_2_predator" in a]
-    prey_s1 = [a for a in env.agents if "speed_1_prey" in a]
-    prey_s2 = [a for a in env.agents if "speed_2_prey" in a]
-    """
-    if hasattr(env, "last_captures_this_step") and env.last_captures_this_step:
-        print(f"[STEP {step}] Captures this step: {env.last_captures_this_step}")
-        print(f"  Predators: {len(pred_s1)} (s1), {len(pred_s2)} (s2) | Prey: {len(prey_s1)} (s1), {len(prey_s2)} (s2)")
-    """
-    prey_eaten_by_combo = {
-        "s1p_s1r": 0,
-        "s1p_s2r": 0,
-        "s2p_s1r": 0,
-        "s2p_s2r": 0,
-    }
-
-    if hasattr(env, "last_captures_this_step"):
-        for predator_id, prey_id in env.last_captures_this_step:
-            if "speed_1_predator" in predator_id and "speed_1_prey" in prey_id:
-                prey_eaten_by_combo["s1p_s1r"] += 1
-            elif "speed_1_predator" in predator_id and "speed_2_prey" in prey_id:
-                prey_eaten_by_combo["s1p_s2r"] += 1
-            elif "speed_2_predator" in predator_id and "speed_1_prey" in prey_id:
-                prey_eaten_by_combo["s2p_s1r"] += 1
-            elif "speed_2_predator" in predator_id and "speed_2_prey" in prey_id:
-                prey_eaten_by_combo["s2p_s2r"] += 1
-
-    denoms = {
-        "s1p_s1r": len(pred_s1) * len(prey_s1),
-        "s1p_s2r": len(pred_s1) * len(prey_s2),
-        "s2p_s1r": len(pred_s2) * len(prey_s1),
-        "s2p_s2r": len(pred_s2) * len(prey_s2),
-    }
-
-    for key in nce_stats:
-        if denoms[key] > 0:
-            nce_stats[key].append(prey_eaten_by_combo[key] / denoms[key])
-
     combined_evolution_visualizer.record(
         agent_ids=env.agents,
         internal_ids=env.agent_internal_ids,
@@ -251,20 +207,6 @@ with open(reward_log_path, "w") as f:
     print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
     print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
 
-# === Print NCE results ===
-print("\n--- NORMALIZED CAPTURE EFFICIENCY BY TYPE ---")
-labels = {
-    "s1p_s1r": "Speed_1 Predators → Speed_1 Prey",
-    "s1p_s2r": "Speed_1 Predators → Speed_2 Prey",
-    "s2p_s1r": "Speed_2 Predators → Speed_1 Prey",
-    "s2p_s2r": "Speed_2 Predators → Speed_2 Prey",
-}
-for key, values in nce_stats.items():
-    if values:
-        avg_nce = sum(values) / len(values)
-        print(f"{labels[key]:35}: {avg_nce:.20f} (avg over {len(values)} steps)")
-    else:
-        print(f"{labels[key]:35}: N/A (no valid steps)")
 
 combined_evolution_visualizer.plot()
 prey_death_cause_visualizer.plot()

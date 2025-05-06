@@ -27,6 +27,7 @@ from pathlib import Path
 import json
 import os
 
+
 def get_config_ppo():
     """
     ADjust to your systems.
@@ -40,11 +41,11 @@ def get_config_ppo():
 
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v5_1_reward_scaling.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v5_1_reward_scaling.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v5_reward_scaling.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v5_1_reward_scaling.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
 
@@ -129,9 +130,9 @@ if __name__ == "__main__":
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=config_ppo["train_batch_size"], 
+                train_batch_size=config_ppo["train_batch_size"],
                 gamma=config_ppo["gamma"],
-                lr=config_ppo["lr"],            
+                lr=config_ppo["lr"],
             )
             .rl_module(
                 rl_module_spec=multi_module_spec

@@ -1,10 +1,8 @@
 """
 Predator-Prey Grass RLlib Environment
-Imporvement versus former version:
--Keeping track of caus of death of prey [eaten/starved]
 """
 
-from  predpreygrass.rllib.v5_reward_scaling.config.config_env import config_env
+from  predpreygrass.rllib.v6_modular.config.config_env import config_env
 
 # external libraries
 import gymnasium
@@ -21,11 +19,15 @@ class PredPreyGrass(MultiAgentEnv):
         config = config or config_env  # Use provided config or default config_env
         self.config = config
 
-        self.verbose_engagement = config.get("verbose_engagement", False)
-        self.verbose_movement = config.get("verbose_movement", False)
-        self.verbose_spawning = config.get("verbose_spawning", False)
+        self.debug_mode = config.get("debug_mode", False)
+        # Set specific verbose flags based on debug mode
+        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
+        self.verbose_decay = config.get("verbose_decay", self.debug_mode)
+        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
+        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
 
         self.max_steps = config.get("max_steps", 10000)
+        self.rng = np.random.default_rng(config.get("seed", 42))
         
         # Rewards
         self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
@@ -310,7 +312,6 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
-        self.last_captures_this_step = []  # ← Experimental: Add this line at the very start
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # step 0: check for truncation
         if self.current_step >= self.max_steps:
@@ -332,9 +333,11 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Step 1: Process energy depletion due to time steps and update age
         for agent, action in action_dict.items():
-            if self.verbose_movement:
-                print("----------------------------------------------------------------------------------------------------------")
-                print(f"[DEPLETE] {agent} energy:  {self.agent_energies[agent]} -> ", end="")
+            self._log(
+                self.verbose_decay,
+                f"[DECAY] {agent} energy:  {round(self.agent_energies[agent],2)} -> {round(self.agent_energies[agent] - self.energy_loss_per_step_predator,2) if 'predator' in agent else round(self.agent_energies[agent] - self.energy_loss_per_step_prey,2)}", 
+                "red"
+            )
             if "predator" in agent:
                 self.agent_energies[agent] -= self.energy_loss_per_step_predator
                 self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -342,9 +345,6 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agent_energies[agent] -= self.energy_loss_per_step_prey
                 self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-            if self.verbose_movement:
-                print(f"{self.agent_energies[agent]}")
-                print("----------------------------------------------------------------------------------------------------------")
             # Update age
             internal_id = self.agent_internal_ids.get(agent)
             if internal_id is not None:
@@ -374,11 +374,11 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grid_world_state[2,  *old_position] = 0
                     self.grid_world_state[2, *new_position] = self.agent_energies[agent]
 
-                if self.verbose_movement:
-                    print("----------------------------------------------------------------------------------------------------------")
-                    print(f"[MOVE] {agent} moved: {old_position} -> {new_position}. Energy cost: {move_cost:.2f}")
-                    print(f"[MOVE] {agent} new position: {self.agent_positions[agent]} with energy: {self.agent_energies[agent]:.2f}")
-                    print("----------------------------------------------------------------------------------------------------------")
+                self._log(
+                    self.verbose_movement,
+                    f"[MOVE] {agent} moved: {tuple(map(int, old_position))} -> {tuple(map(int, new_position))}. Move energy: {move_cost:.2f} Energy level: {self.agent_energies[agent]:.2f} \n",
+                    "blue"
+                )
 
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:
@@ -387,8 +387,11 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
             # Agent has no energy left
             if self.agent_energies[agent] <= 0:
-                if self.verbose_movement:
-                    print(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
+                self._log(
+                    self.verbose_decay,
+                    f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.",
+                    "red"
+                )
                 observations[agent] = self._get_observation(agent) # Ensure last observation
                 rewards[agent] = 0  # TODO remove hardcoded
                 terminations[agent] = True
@@ -415,8 +418,11 @@ class PredPreyGrass(MultiAgentEnv):
                     if "prey" in prey and np.array_equal(predator_position, prey_position)), None
                 )
                 if caught_prey:
-                    if self.verbose_engagement:
-                        print(f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! Predator Reward: {self.reward_predator_catch_prey}")
+                    self._log(
+                        self.verbose_engagement,
+                        f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}",
+                        "white"
+                    )
                     
                     # Assign rewards predator and penalty prey
                     rewards[agent] = self.reward_predator_catch_prey
@@ -435,7 +441,6 @@ class PredPreyGrass(MultiAgentEnv):
                     # cause of death tracking prey
                     internal_id = self.agent_internal_ids[caught_prey]
                     self.death_cause_prey[internal_id] = "eaten"
-                    self.last_captures_this_step.append((agent, caught_prey))  # ← Experimental: Log for CCE
 
                     # Remove prey
                     terminations[caught_prey] = True
@@ -464,8 +469,11 @@ class PredPreyGrass(MultiAgentEnv):
                         if "grass" in grass and np.array_equal(prey_position, grass_position)), None
                     )
                     if caught_grass:
-                        if self.verbose_engagement:
-                            print(f"[ENGAGE] {agent} caught grass at {prey_position}! Prey Reward: {self.reward_prey_eat_grass}")
+                        self._log(
+                            self.verbose_engagement,
+                            f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}",
+                            "white"
+                        )
                         
                         # Reward prey for eating grass
                         rewards[agent] = self.reward_prey_eat_grass
@@ -492,8 +500,11 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 4: Handle agent removals 
         for agent in self.agents[:]:
             if terminations[agent]:
-                if self.verbose_engagement:
-                    print(f"[ENGAGE] Agent {agent} terminated!")
+                self._log(
+                    self.verbose_engagement,
+                    f"[TERMINATED] Agent {agent} terminated!",
+                    "red"
+                )
                 self.agents.remove(agent)
 
         # Step 5: Spawning of new agents
@@ -515,8 +526,15 @@ class PredPreyGrass(MultiAgentEnv):
                         if f"speed_{new_speed}_predator_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
-                        if self.verbose_spawning:
-                            print(f"No available predator slots at speed {new_speed}")
+                        # Always grant reproduction reward, even if no slot available
+                        rewards[agent] = self.reproduction_reward_predator
+                        self.cumulative_rewards.setdefault(agent, 0)
+                        self.cumulative_rewards[agent] += rewards[agent]
+                        self._log(
+                            self.verbose_reproduction,
+                            f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning"
+                            "red"
+                        )
                         continue
 
                     new_agent = potential_new_ids[0]
@@ -549,12 +567,11 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[new_agent] = self._get_observation(new_agent)
                     terminations[new_agent] = False
                     truncations[new_agent] = False
-
-                    if self.verbose_spawning:
-                        print(f"Predator {agent} spawned {new_agent} at {new_position}")
-                    else:
-                        if self.verbose_spawning:
-                            print("No new predator agents available for spawning")
+                    self._log(
+                        self.verbose_reproduction,
+                        f"[REPRODUCTION] Predator {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                        "green"
+                    )                        
                     
             elif "prey" in agent:
                 if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
@@ -573,8 +590,15 @@ class PredPreyGrass(MultiAgentEnv):
                         if f"speed_{new_speed}_prey_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
-                        if self.verbose_spawning:
-                            print(f"No available prey slots at speed {new_speed}")
+                        # Always grant reproduction reward, even if no slot available
+                        rewards[agent] = self.reproduction_reward_prey
+                        self.cumulative_rewards.setdefault(agent, 0)
+                        self.cumulative_rewards[agent] += rewards[agent]
+                        self._log(
+                            self.verbose_reproduction,
+                            f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
+                            "red"
+                        )
                         continue
 
                     new_agent = potential_new_ids[0]
@@ -607,12 +631,11 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[new_agent] = self._get_observation(new_agent)
                     terminations[new_agent] = False
                     truncations[new_agent] = False
-
-                    if self.verbose_spawning:
-                        print(f"Prey {agent} spawned {new_agent} at {new_position}")
-                    else:
-                        if self.verbose_spawning:
-                            print("No new prey agents available for spawning")
+                    self._log(
+                        self.verbose_reproduction,
+                        f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                        "green"
+                    )
         
         # 6: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
@@ -914,3 +937,39 @@ class PredPreyGrass(MultiAgentEnv):
             return free_positions[self.rng.integers(len(free_positions))]
 
         return None  # No available position found
+
+    def _log(self, verbose: bool, message: str, color: str = None):
+        """
+        Log with sharp 90° box-drawing borders (Unicode), optional color.
+
+        Args:
+            verbose (bool): Whether to log this message (per category).
+            message (str): Message text (can be multi-line).
+            color (str, optional): One of red, green, yellow, blue, magenta, cyan.
+        """
+        if not getattr(self, "debug_mode", True):
+            return
+        if not verbose:
+            return
+
+        colors = {
+            "red": "\033[91m",
+            "green": "\033[92m",
+            "yellow": "\033[93m",
+            "blue": "\033[94m",
+            "magenta": "\033[95m",
+            "cyan": "\033[96m",
+            "reset": "\033[0m",
+        }
+
+        prefix = colors.get(color, "")
+        suffix = colors["reset"] if color else ""
+
+        lines = message.strip().split("\n")
+        max_width = max(len(line) for line in lines)
+        border = "─" * (max_width + 2)
+
+        print(f"┌{border}┐")
+        for line in lines:
+            print(f"│ {prefix}{line.ljust(max_width)}{suffix} │")
+        print(f"└{border}┘")

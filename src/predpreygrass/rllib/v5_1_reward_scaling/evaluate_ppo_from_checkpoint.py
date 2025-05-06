@@ -8,8 +8,8 @@ Improvement over the previous version:
 - Added a function to plot the prey death cause
 
 """
-from predpreygrass.rllib.v5_reward_scaling.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v5_reward_scaling.config.config_env_eval import config_env
+from predpreygrass.rllib.v5_1_reward_scaling.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v5_1_reward_scaling.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
@@ -50,8 +50,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 #checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 #checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/v5_reward_scaling/reward_10.0/obs_range_Pred_7_Prey_9/PPO_PredPreyGrass_aa713_00000_0_2025-04-19_20-25-26/'
-checkpoint_dir = 'checkpoint_000084'
+checkpoint_root = '/PPO_2025-05-04_22-52-53/PPO_PredPreyGrass_bf9c4_00000_0_2025-05-04_22-52-53/'
+checkpoint_dir = 'checkpoint_000034'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))

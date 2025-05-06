@@ -30,6 +30,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_spawning = config.get("verbose_spawning", False)
 
         self.max_steps = config.get("max_steps", 10000)
+        self.rng = np.random.default_rng(config.get("seed", 42))
         
         # Rewards
         self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)

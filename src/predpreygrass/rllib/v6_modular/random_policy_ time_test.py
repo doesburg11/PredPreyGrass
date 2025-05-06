@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v7_move.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v6_modular.predpreygrass_rllib_env import PredPreyGrass  
 
 # external libraries
 import time

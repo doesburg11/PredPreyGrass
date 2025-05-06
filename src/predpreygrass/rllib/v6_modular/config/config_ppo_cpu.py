@@ -18,5 +18,4 @@ config_ppo = {
     # Resources
     "num_cpus_for_main_process": 2,
 
-
 }
