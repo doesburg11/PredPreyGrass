@@ -2,8 +2,6 @@
 Predator-Prey Grass RLlib Environment
 """
 
-from  predpreygrass.rllib.v6_logging.config.config_env import config_env
-
 # external libraries
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
@@ -16,7 +14,8 @@ import math
 class PredPreyGrass(MultiAgentEnv):
     def __init__(self, config=None):
         super().__init__()
-        config = config or config_env  # Use provided config or default config_env
+        if config is None:
+            raise ValueError("Environment config must be provided explicitly.")
         self.config = config
 
         self.debug_mode = config.get("debug_mode", False)
@@ -522,7 +521,7 @@ class PredPreyGrass(MultiAgentEnv):
                     # Find available new agent ID
                     potential_new_ids = [
                         f"speed_{new_speed}_predator_{i}"
-                        for i in range(config_env.get(f"n_possible_speed_{new_speed}_predators", 25))
+                        for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
                         if f"speed_{new_speed}_predator_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
@@ -586,7 +585,7 @@ class PredPreyGrass(MultiAgentEnv):
                     # Find available new agent ID
                     potential_new_ids = [
                         f"speed_{new_speed}_prey_{i}"
-                        for i in range(config_env.get(f"n_possible_speed_{new_speed}_prey", 25))
+                        for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
                         if f"speed_{new_speed}_prey_{i}" not in self.agents
                     ]
                     if not potential_new_ids:
