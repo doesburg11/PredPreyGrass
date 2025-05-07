@@ -2,7 +2,7 @@
 Predator-Prey Grass RLlib Environment
 """
 
-from  predpreygrass.rllib.v6_modular.config.config_env import config_env
+from  predpreygrass.rllib.v6_logging.config.config_env import config_env
 
 # external libraries
 import gymnasium
