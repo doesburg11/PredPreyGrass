@@ -7,6 +7,12 @@ config_env = {
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
     "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
+
+    # Action space settings
+    "speed_1_prey_action_range": 3,
+    "speed_2_prey_action_range": 5,
+    "speed_1_predator_action_range": 3,
+    "speed_2_predator_action_range": 5,
     
     # Rewards
     "reward_predator_catch_prey": 0.0,

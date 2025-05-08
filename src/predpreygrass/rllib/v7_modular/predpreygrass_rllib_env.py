@@ -128,18 +128,24 @@ class PredPreyGrass(MultiAgentEnv):
             low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64
         )
 
+        def _generate_action_map(range_size: int) -> dict[int, tuple[int, int]]:
+            delta = (range_size - 1) // 2
+            return {
+                i: (dx, dy)
+                for i, (dx, dy) in enumerate(
+                    (dx, dy)
+                    for dx in range(-delta, delta + 1)
+                    for dy in range(-delta, delta + 1)
+                )
+            }
+
         # Define two speed levels of action space
-        moore_actions = {
-            0: (-1, -1), 1: (-1, 0), 2: (-1, 1),
-            3: (0, -1),  4: (0, 0),  5: (0, 1),
-            6: (1, -1),  7: (1, 0),  8: (1, 1)
-        }
-        speed2_actions = {
-            i: (dx, dy)
-            for i, (dx, dy) in enumerate([
-                (dx, dy) for dx in range(-2, 3) for dy in range(-2, 3)
-            ])
-        }
+        moore_actions = _generate_action_map(
+            self.config.get("speed_1_prey_action_range", 3)
+        )
+        speed2_actions = _generate_action_map(
+            self.config.get("speed_2_prey_action_range", 5)
+        )
 
         # Save both dictionaries for later lookup
         self.action_to_move_tuple_speed1 = moore_actions
