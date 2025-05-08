@@ -129,6 +129,16 @@ class PredPreyGrass(MultiAgentEnv):
         )
 
         def _generate_action_map(range_size: int) -> dict[int, tuple[int, int]]:
+            """
+            Generate a mapping of action indices to movement vectors.
+            The movement vectors are defined as (dx, dy) pairs, where dx and dy
+            are the changes in x and y coordinates, respectively.
+
+            Args:
+                range_size (int): The size of the action range.
+            Returns:
+                dict[int, tuple[int, int]]: A dictionary mapping action indices to movement vectors.
+            """
             delta = (range_size - 1) // 2
             return {
                 i: (dx, dy)
@@ -139,21 +149,20 @@ class PredPreyGrass(MultiAgentEnv):
                 )
             }
 
-        # Define two speed levels of action space
-        moore_actions = _generate_action_map(
-            self.config.get("speed_1_prey_action_range", 3)
-        )
-        speed2_actions = _generate_action_map(
-            self.config.get("speed_2_prey_action_range", 5)
-        )
+        # Generate action maps for both speed levels
+        speed_1_act_range = self.config.get("speed_1_action_range", 3)
+        speed_2_act_range = self.config.get("speed_2_action_range", 5)
+
+        n_speed_1_actions = speed_1_act_range ** 2
+        n_speed_2_actions = speed_2_act_range ** 2
 
         # Save both dictionaries for later lookup
-        self.action_to_move_tuple_speed1 = moore_actions
-        self.action_to_move_tuple_speed2 = speed2_actions
+        self.action_to_move_tuple_speed_1_agents = _generate_action_map(speed_1_act_range)
+        self.action_to_move_tuple_speed_2_agents = _generate_action_map(speed_2_act_range)
 
         # Create action space objects
-        action_space_speed1 = gymnasium.spaces.Discrete(len(moore_actions))
-        action_space_speed2 = gymnasium.spaces.Discrete(len(speed2_actions))
+        speed_1_action_space = gymnasium.spaces.Discrete(n_speed_1_actions)
+        speed_2_action_space = gymnasium.spaces.Discrete(n_speed_2_actions)
 
         # Assign spaces per agent ID
         self.observation_spaces = {}
@@ -167,9 +176,9 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Set action space depending on speed string in agent ID
             if "speed_1" in agent:
-                self.action_spaces[agent] = action_space_speed1
+                self.action_spaces[agent] = speed_1_action_space
             elif "speed_2" in agent:
-                self.action_spaces[agent] = action_space_speed2
+                self.action_spaces[agent] = speed_2_action_space
 
         # Initialize grid_world_state and agent positions
         self.agent_positions: Dict[AgentID, Tuple[int,int]] = {}
@@ -689,9 +698,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Choose the appropriate movement dictionary based on agent speed
         if "speed_1" in agent:
-            move_vector = self.action_to_move_tuple_speed1[action]
+            move_vector = self.action_to_move_tuple_speed_1_agents[action]
         elif "speed_2" in agent:
-            move_vector = self.action_to_move_tuple_speed2[action]
+            move_vector = self.action_to_move_tuple_speed_2_agents[action]
         else:
             raise ValueError(f"Unknown speed for agent: {agent}")
 

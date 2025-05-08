@@ -1,4 +1,5 @@
 from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v7_modular.config.config_env_random import config_env
 
 # external libraries
 import time
@@ -8,7 +9,7 @@ n_steps = 1000
 seed_value = 42  # Set seed for reproducibility
 
 if __name__ == "__main__":
-    env = PredPreyGrass()
+    env = PredPreyGrass(config=config_env)
 
     observations, _ = env.reset(seed=seed_value)
 
