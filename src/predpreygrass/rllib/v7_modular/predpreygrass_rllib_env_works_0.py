@@ -5,7 +5,7 @@ Predator-Prey Grass RLlib Environment
 # external libraries
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from ray.rllib.utils.typing import AgentID, Dict, List, Tuple, Optional
+from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 import math
@@ -327,16 +327,42 @@ class PredPreyGrass(MultiAgentEnv):
 
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
-        # step 0: check for truncation; steps > max_steps
-        truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
-        if truncation_result is not None:
-            return truncation_result
+        # step 0: check for truncation
+        if self.current_step >= self.max_steps:
+            for agent in self.possible_agents:
+                if agent in self.agents:  # Active agents get a real observation
+                    observations[agent] = self._get_observation(agent)
+                else:  # Previously removed agents get a zero-filled observation
+                    # according to chatgpt all agents previously ever active need a zero-filled observation and reward
+                    observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+                    observations[agent] = np.zeros((self.num_obs_channels, observation_range, observation_range), dtype=np.float64)
+                rewards[agent] = 0.0
+                truncations[agent] = True
+                terminations[agent] = False  # Truncation is NOT a natural termination
+            
+            # Mark global truncation and return immediately
+            truncations["__all__"] = True
+            terminations["__all__"] = False
+            return observations, rewards, terminations, truncations, infos
 
-        # Step 1: If not truncated; process energy depletion due to time steps and update age
-        self._apply_energy_decay_per_step(action_dict)
+        # Step 1: Process energy depletion due to time steps and update age
+        for agent, action in action_dict.items():
+            self._log(
+                self.verbose_decay,
+                f"[DECAY] {agent} energy:  {round(self.agent_energies[agent],2)} -> {round(self.agent_energies[agent] - self.energy_loss_per_step_predator,2) if 'predator' in agent else round(self.agent_energies[agent] - self.energy_loss_per_step_prey,2)}", 
+                "red"
+            )
+            if "predator" in agent:
+                self.agent_energies[agent] -= self.energy_loss_per_step_predator
+                self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
+            elif "prey" in agent:
+                self.agent_energies[agent] -= self.energy_loss_per_step_prey
+                self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-        # Update ages of all agents who act
-        self._apply_age_update(action_dict)
+            # Update age
+            internal_id = self.agent_internal_ids.get(agent)
+            if internal_id is not None:
+                self.agent_ages[internal_id] += 1
 
         for grass, grass_position in self.grass_positions.items():
             self.grass_energies[grass] = min(
@@ -961,65 +987,3 @@ class PredPreyGrass(MultiAgentEnv):
         for line in lines:
             print(f"│ {prefix}{line.ljust(max_width)}{suffix} │")
         print(f"└{border}┘")
-
-    def _check_truncation_and_early_return(
-        self, observations, rewards, terminations, truncations, infos
-    ) -> Optional[Tuple[dict, dict, dict, dict, dict]]:
-        """
-        If episode step limit is reached, populate termination info and return early.
-        Otherwise, return None.
-        """
-        if self.current_step < self.max_steps:
-            return None
-
-        for agent in self.possible_agents:
-            if agent in self.agents:
-                observations[agent] = self._get_observation(agent)
-            else:
-                obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float64)
-            rewards[agent] = 0.0
-            truncations[agent] = True
-            terminations[agent] = False
-
-        truncations["__all__"] = True
-        terminations["__all__"] = False
-
-        return observations, rewards, terminations, truncations, infos
-
-    def _apply_energy_decay_per_step(self, action_dict):
-        """
-        Apply fixed per-step energy decay to all agents based on type.
-        """
-        for agent in action_dict:
-            if agent not in self.agent_positions:
-                continue
-
-            old_energy = self.agent_energies[agent]
-
-            if "predator" in agent:
-                decay = self.energy_loss_per_step_predator
-                layer = 1
-            elif "prey" in agent:
-                decay = self.energy_loss_per_step_prey
-                layer = 2
-            else:
-                continue
-
-            self.agent_energies[agent] -= decay
-            self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
-
-            self._log(
-                self.verbose_decay,
-                f"[DECAY] {agent} energy: {round(old_energy, 2)} -> {round(self.agent_energies[agent], 2)}",
-                "red"
-            )
-
-    def _apply_age_update(self, action_dict):
-        """
-        Increment the age of each active agent by one step.
-        """
-        for agent in action_dict:
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
