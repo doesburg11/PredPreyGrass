@@ -1,6 +1,6 @@
 """
 Predator-Prey Grass RLlib Environment
-experimental_1
+experimenta_0
 """
 
 # external libraries
@@ -333,14 +333,31 @@ class PredPreyGrass(MultiAgentEnv):
         if truncation_result is not None:
             return truncation_result
 
-        # Step 1: If not truncated; process energy depletion due to time steps and update age
-        self._apply_energy_decay_per_step(action_dict)
+        # Step 1: Process energy depletion due to time steps and update age
+        for agent, action in action_dict.items():
+            self._log(
+                self.verbose_decay,
+                f"[DECAY] {agent} energy:  {round(self.agent_energies[agent],2)} -> {round(self.agent_energies[agent] - self.energy_loss_per_step_predator,2) if 'predator' in agent else round(self.agent_energies[agent] - self.energy_loss_per_step_prey,2)}", 
+                "red"
+            )
+            if "predator" in agent:
+                self.agent_energies[agent] -= self.energy_loss_per_step_predator
+                self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
+            elif "prey" in agent:
+                self.agent_energies[agent] -= self.energy_loss_per_step_prey
+                self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-        # Step 2: Update ages of all agents who act
-        self._apply_age_update(action_dict)
+            # Update age
+            internal_id = self.agent_internal_ids.get(agent)
+            if internal_id is not None:
+                self.agent_ages[internal_id] += 1
 
-        # Step 3: Regenerate grass energy
-        self._regenerate_grass_energy()
+        for grass, grass_position in self.grass_positions.items():
+            self.grass_energies[grass] = min(
+                self.grass_energies[grass] + self.energy_gain_per_step_grass, 
+                self.initial_energy_grass
+            )
+            self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
 
         # Step 2: Process movements
         for agent, action in action_dict.items():
