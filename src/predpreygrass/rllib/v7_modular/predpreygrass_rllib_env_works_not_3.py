@@ -333,54 +333,17 @@ class PredPreyGrass(MultiAgentEnv):
         if truncation_result is not None:
             return truncation_result
 
-        # Step 1: Process energy depletion due to time steps and update age
-        for agent, action in action_dict.items():
-            self._log(
-                self.verbose_decay,
-                f"[DECAY] {agent} energy:  {round(self.agent_energies[agent],2)} -> {round(self.agent_energies[agent] - self.energy_loss_per_step_predator,2) if 'predator' in agent else round(self.agent_energies[agent] - self.energy_loss_per_step_prey,2)}", 
-                "red"
-            )
-            if "predator" in agent:
-                self.agent_energies[agent] -= self.energy_loss_per_step_predator
-                self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
-            elif "prey" in agent:
-                self.agent_energies[agent] -= self.energy_loss_per_step_prey
-                self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
+        # Step 1: If not truncated; process energy depletion due to time steps and update age
+        self._apply_energy_decay_per_step(action_dict)
 
-            # Update age
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
+        # Step 2: Update ages of all agents who act
+        self._apply_age_update(action_dict)
 
-        for grass, grass_position in self.grass_positions.items():
-            self.grass_energies[grass] = min(
-                self.grass_energies[grass] + self.energy_gain_per_step_grass, 
-                self.initial_energy_grass
-            )
-            self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
+        # Step 3: Regenerate grass energy
+        self._regenerate_grass_energy()
 
-        # Step 2: Process movements
-        for agent, action in action_dict.items():
-            if agent in self.agent_positions:
-                old_position = self.agent_positions[agent]
-                new_position = self._get_move(agent, action)
-                self.agent_positions[agent] = new_position
-                move_cost = self._get_movement_energy_cost(agent,old_position,new_position)
-                self.agent_energies[agent] -= move_cost
-                if "predator" in agent:
-                    self.predator_positions[agent] = new_position
-                    self.grid_world_state[1,  *old_position] = 0 
-                    self.grid_world_state[1, *new_position] = self.agent_energies[agent]
-                elif "prey" in agent:
-                    self.prey_positions[agent] = new_position
-                    self.grid_world_state[2,  *old_position] = 0
-                    self.grid_world_state[2, *new_position] = self.agent_energies[agent]
-
-                self._log(
-                    self.verbose_movement,
-                    f"[MOVE] {agent} moved: {tuple(map(int, old_position))} -> {tuple(map(int, new_position))}. Move energy: {move_cost:.2f} Energy level: {self.agent_energies[agent]:.2f} \n",
-                    "blue"
-                )
+        # Step 4: process agent movements
+        self._process_agent_movements(action_dict)
 
         # Step 3: Prepare agent removals (Prey caught, Energy depleted)
         for agent in self.agents:

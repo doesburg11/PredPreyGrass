@@ -1,6 +1,6 @@
 """
 Predator-Prey Grass RLlib Environment
-experimenta_0
+experimental_1
 """
 
 # external libraries
