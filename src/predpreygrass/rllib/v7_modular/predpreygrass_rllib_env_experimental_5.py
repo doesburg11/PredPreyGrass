@@ -1,9 +1,10 @@
 """
 Predator-Prey Grass RLlib Environment
-experimental_4 - process movements externalization
-because original externalization failed during training (_3),
-this externalization of movement agents is as close as 
-possible to the original code (_2)
+experimental_5 - process movements externalization
+more or less succeeded in (_4). It seems that memory problems
+negatively affect training. Those menory problems likely due to
+other use of the (laptop) computer.
+Externalize Handle agent engagements (depletion and  consuming)
 """
 
 # external libraries
@@ -348,124 +349,18 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 4: process agent movements
         self._process_agent_movements(action_dict)
 
-        # Step 3: Prepare agent removals (Prey caught, Energy depleted)
+        # Step 5: Handle agent engagements
         for agent in self.agents:
-            # Agent not active
-            if agent not in self.agent_positions:  
+            if agent not in self.agent_positions:
                 continue
-            # Agent has no energy left
             if self.agent_energies[agent] <= 0:
-                self._log(
-                    self.verbose_decay,
-                    f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.",
-                    "red"
-                )
-                observations[agent] = self._get_observation(agent) # Ensure last observation
-                rewards[agent] = 0  # TODO remove hardcoded
-                terminations[agent] = True
-                truncations[agent] = False
-                if "predator" in agent:
-                    self.active_num_predators -= 1
-                    self.grid_world_state[1,*self.agent_positions[agent]] = 0
-                    del self.predator_positions[agent]
-                elif "prey" in agent:
-                    # Cause of death tracking prey
-                    internal_id = self.agent_internal_ids[agent]
-                    self.death_cause_prey[internal_id] = "starved"
-                    self.active_num_prey -= 1
-                    self.grid_world_state[2,*self.agent_positions[agent]] = 0
-                    del self.prey_positions[agent]
-                del self.agent_positions[agent]
-                del self.agent_energies[agent]
-                continue
+                self._handle_energy_depletion(agent, observations, rewards, terminations, truncations)
             elif "predator" in agent:
-                predator_position = self.agent_positions[agent]
-                # Find the first prey at the same position
-                caught_prey = next(
-                    (prey for prey, prey_position in self.agent_positions.items()
-                    if "prey" in prey and np.array_equal(predator_position, prey_position)), None
-                )
-                if caught_prey:
-                    self._log(
-                        self.verbose_engagement,
-                        f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}",
-                        "white"
-                    )
-                    
-                    # Assign rewards predator and penalty prey
-                    rewards[agent] = self.reward_predator_catch_prey
-                    self.cumulative_rewards.setdefault(agent, 0)
-
-                    self.cumulative_rewards[agent] += rewards[agent]
-                    self.agent_energies[agent] += self.agent_energies[caught_prey]
-                    self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
-
-                    observations[caught_prey] = self._get_observation(caught_prey)
-                    rewards[caught_prey] = self.penalty_prey_caught
-                    self.cumulative_rewards.setdefault(agent, 0.0)
-                    self.cumulative_rewards.setdefault(caught_prey, 0.0)
-                    self.cumulative_rewards[agent] += rewards[agent]
-                    self.cumulative_rewards[caught_prey] += rewards[caught_prey]
-                    # cause of death tracking prey
-                    internal_id = self.agent_internal_ids[caught_prey]
-                    self.death_cause_prey[internal_id] = "eaten"
-
-                    # Remove prey
-                    terminations[caught_prey] = True
-                    truncations[caught_prey] = False
-                    self.active_num_prey -= 1
-                    self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-                    del self.agent_positions[caught_prey]
-                    del self.prey_positions[caught_prey]
-                    del self.agent_energies[caught_prey]
-                else:
-                    # Predator did not catch prey
-                    rewards[agent] = self.reward_predator_step
-
-                observations[agent] = self._get_observation(agent)
-                self.cumulative_rewards.setdefault(agent, 0)
-
-                self.cumulative_rewards[agent] += rewards[agent]
-                terminations[agent] = False
-                truncations[agent] = False
+                self._handle_predator_engagement(agent, observations, rewards, terminations, truncations)
             elif "prey" in agent:
-                if terminations.get(agent) is None or not terminations[agent]:
-                    prey_position = self.agent_positions[agent]
-                    # Check if prey is on the same cell as grass
-                    caught_grass = next(
-                        (grass for grass, grass_position in self.grass_positions.items()
-                        if "grass" in grass and np.array_equal(prey_position, grass_position)), None
-                    )
-                    if caught_grass:
-                        self._log(
-                            self.verbose_engagement,
-                            f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}",
-                            "white"
-                        )
-                        
-                        # Reward prey for eating grass
-                        rewards[agent] = self.reward_prey_eat_grass
-                        self.cumulative_rewards.setdefault(agent, 0)
+                self._handle_prey_engagement(agent, observations, rewards, terminations, truncations)
 
-                        self.cumulative_rewards[agent] += rewards[agent]
-                        self.agent_energies[agent] += self.grass_energies[caught_grass]
-                        self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
-                        
-                        # Remove grass from the gridworld cell
-                        self.grid_world_state[3, *self.grass_positions[caught_grass]] = 0
-                        self.grass_energies[caught_grass] = 0
-
-                    else:
-                        rewards[agent] = self.reward_prey_step
-                    
-                    observations[agent] = self._get_observation(agent)
-                    self.cumulative_rewards.setdefault(agent, 0)
-
-                    self.cumulative_rewards[agent] += rewards[agent]
-                    terminations[agent] = False
-                    truncations[agent] = False
- 
-        # Step 4: Handle agent removals 
+        # Step 6: Handle agent removals 
         for agent in self.agents[:]:
             if terminations[agent]:
                 self._log(
@@ -475,7 +370,7 @@ class PredPreyGrass(MultiAgentEnv):
                 )
                 self.agents.remove(agent)
 
-        # Step 5: Spawning of new agents
+        # Step 7: Spawning of new agents
         for agent in self.agents[:]:
             if "predator" in agent:
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
