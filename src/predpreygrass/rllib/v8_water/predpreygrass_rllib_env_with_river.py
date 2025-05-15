@@ -205,9 +205,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
 
         # River configuration
-        self.river_max_width = config.get("river_max_width", 3)
+        self.river_max_width = config.get("river_max_width", 1)
         self.river_cells = set()
         self.river_centerline = {}
+        self.n_steps_river_change = config.get("n_steps_river_change", 10)
 
         # Add 1 channel for river
         self.num_obs_channels += 1
@@ -542,7 +543,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agents.sort()  # Sort agents 
 
-        if self.current_step % 100 == 0:
+        if self.current_step % self.n_steps_river_change == 0:
             self._change_river_course()
 
         # Increment step counter
