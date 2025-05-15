@@ -1,5 +1,6 @@
 """
 Predator-Prey Grass RLlib Environment
+v8_water: simulate river meandering over time
 experimental_5 - process movements externalization
 more or less succeeded in (_4). It seems that memory problems
 negatively affect training. Those menory problems likely due to
