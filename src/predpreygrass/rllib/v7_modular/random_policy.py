@@ -28,7 +28,6 @@ if __name__ == "__main__":
     grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
     combined_evolution_visualizer = CombinedEvolutionVisualizer()
 
-
     for step in range(env.max_steps):
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
