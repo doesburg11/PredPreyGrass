@@ -381,7 +381,6 @@ class PredPreyGrass(MultiAgentEnv):
             elif "prey" in agent:
                 self._handle_prey_reproduction(agent, rewards, observations, terminations, truncations)
 
-
         # Step 8: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
             if agent in self.agent_positions:
@@ -406,7 +405,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step += 1
 
         return observations, rewards, terminations, truncations, infos
-  
+
     def _get_movement_energy_cost(self, agent, current_position, new_position):
         """
         Calculate energy cost for movement based on distance and a configurable factor.
@@ -420,7 +419,7 @@ class PredPreyGrass(MultiAgentEnv):
         #print (f"Distance: {distance}")
         energy_cost = distance * distance_factor * current_energy
         return energy_cost
-     
+
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
         """
         Get the new position of the agent based on the action and its speed.
@@ -487,7 +486,7 @@ class PredPreyGrass(MultiAgentEnv):
         )
         xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
-    
+
     def _print_grid_from_positions(self): 
         print(f"\nCurrent Grid State (IDs):  predators: {self.active_num_predators} prey: {self.active_num_prey}  \n")
 
@@ -643,7 +642,7 @@ class PredPreyGrass(MultiAgentEnv):
             for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
             if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size  # Stay in bounds
         ]
-        
+     
         # Filter for unoccupied positions
         valid_positions = [pos for pos in potential_positions if pos not in occupied_positions]
 
@@ -872,7 +871,7 @@ class PredPreyGrass(MultiAgentEnv):
         prey_position = self.agent_positions[agent]
         caught_grass = next(
             (g for g, pos in self.grass_positions.items()
-            if "grass" in g and np.array_equal(prey_position, pos)),
+                if "grass" in g and np.array_equal(prey_position, pos)),
             None
         )
 
