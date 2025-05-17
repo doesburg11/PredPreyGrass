@@ -234,7 +234,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_ages = {}  # Maps internal ID -> age
         self.agent_internal_ids = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
 
-        self.death_cause_prey = {}  # key = internal ID, value = "eaten" or "starved"        
+        self.death_cause_prey = {}  # key = internal ID, value = "eaten" or "starved"
 
         # construct agent lists based on speed-aware config ---
         self.agents = []
@@ -314,7 +314,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.prey_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
-        
 
         # Assign grass positions and energy
         for i, grass in enumerate(self.grass_agents):
@@ -364,7 +363,7 @@ class PredPreyGrass(MultiAgentEnv):
             elif "prey" in agent:
                 self._handle_prey_engagement(agent, observations, rewards, terminations, truncations)
 
-        # Step 6: Handle agent removals 
+        # Step 6: Handle agent removals
         for agent in self.agents[:]:
             if terminations[agent]:
                 self._log(
@@ -399,7 +398,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Global termination and truncation
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
 
-        self.agents.sort()  # Sort agents 
+        self.agents.sort()  # Sort agents
 
         # Increment step counter
         self.current_step += 1
@@ -487,7 +486,7 @@ class PredPreyGrass(MultiAgentEnv):
         xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
 
-    def _print_grid_from_positions(self): 
+    def _print_grid_from_positions(self):
         print(f"\nCurrent Grid State (IDs):  predators: {self.active_num_predators} prey: {self.active_num_prey}  \n")
 
         # Initialize empty grids (not transposed yet)
@@ -546,9 +545,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Fill the grid (storing values in original order)
         for y in range(self.grid_size):
             for x in range(self.grid_size):
-                predator_energy = self.grid_world_state[1, x, y]  
+                predator_energy = self.grid_world_state[1, x, y]
                 prey_energy = self.grid_world_state[2, x, y]      
-                grass_energy = self.grid_world_state[3, x, y]     
+                grass_energy = self.grid_world_state[3, x, y]
 
                 if predator_energy > 0:
                     predator_grid[y][x] = f"{predator_energy:4.2f}".center(5)
