@@ -321,19 +321,28 @@ class MatPlotLibRenderer:
         self.prey_marker = "◆"
         self.grass_marker = "■"
 
+        self.river_patches = []
+
     def update(self, agent_positions, step, grid_world_state=None):
         self.ax.set_title(f"Environment - Step {step}", fontsize=14)
 
 
-        # Draw river background
+        # Remove old river patches
+        for patch in self.river_patches:
+            patch.remove()
+        self.river_patches.clear()
+
+        # Draw new river patches
         if grid_world_state is not None and grid_world_state.shape[0] > 4:
             for x in range(self.grid_size[0]):
                 for y in range(self.grid_size[1]):
                     if grid_world_state[4, x, y] > 0:
-                        self.ax.add_patch(plt.Rectangle(
+                        patch = plt.Rectangle(
                             (y - 0.5, x - 0.5), 1, 1,
-                            color="#cceeff", zorder=0  # light blue
-                        ))
+                            color="#cceeff", zorder=0
+                        )
+                        self.ax.add_patch(patch)
+                        self.river_patches.append(patch)
 
         # Remove old agent markers
         for text in self.agent_texts.values():
