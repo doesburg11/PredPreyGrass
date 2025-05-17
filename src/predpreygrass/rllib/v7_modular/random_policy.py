@@ -68,7 +68,7 @@ if __name__ == "__main__":
             print("Environment terminated by truncation.")
             break
 
-        #sleep(0.1)
+        # sleep(0.1)
 
     combined_evolution_visualizer.plot()
     grid_visualizer.close()
