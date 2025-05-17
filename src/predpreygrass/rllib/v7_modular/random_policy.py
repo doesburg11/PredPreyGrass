@@ -72,5 +72,3 @@ if __name__ == "__main__":
 
     combined_evolution_visualizer.plot()
     grid_visualizer.close()
-
-
