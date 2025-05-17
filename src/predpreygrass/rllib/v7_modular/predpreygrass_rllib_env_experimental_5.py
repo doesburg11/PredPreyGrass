@@ -376,7 +376,7 @@ class PredPreyGrass(MultiAgentEnv):
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
                     parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
                     
-                    # Mutation: 10% chance to switch speed
+                    # Mutation: chance to switch speed
                     if self.rng.random() < self.mutation_rate_predator:
                         new_speed = 2 if parent_speed == 1 else 1
                     else:
