@@ -1017,104 +1017,130 @@ class PredPreyGrass(MultiAgentEnv):
         truncations[agent] = False
 
     def _handle_predator_reproduction(self, agent, rewards, observations, terminations, truncations):
-        if self.agent_energies[agent] < self.predator_creation_energy_threshold:
-            return
+        if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
+            
+            # Mutation: chance (self.mutation_rate_predator) to switch speed
+            if self.rng.random() < self.mutation_rate_predator:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
 
-        parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_predator and parent_speed == 1) else \
-                    1 if parent_speed == 2 else parent_speed
+            # Find available new agent ID
+            potential_new_ids = [
+                f"speed_{new_speed}_predator_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
+                if f"speed_{new_speed}_predator_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
+                rewards[agent] = self.reproduction_reward_predator
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning"
+                    "red"
+                )
+                return
+                # TODO continue is left out because it's it a lop anymmore, check outside of function
+                # if potential_new_ids still available
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
 
-        potential_new_ids = [
-            f"speed_{new_speed}_predator_{i}"
-            for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
-            if f"speed_{new_speed}_predator_{i}" not in self.agents
-        ]
+            self.agent_internal_ids[new_agent] = self.agent_instance_counter
+            self.agent_ages[self.agent_instance_counter] = 0
+            self.agent_instance_counter += 1
 
-        rewards[agent] = self.reproduction_reward_predator
-        self.cumulative_rewards.setdefault(agent, 0)
-        self.cumulative_rewards[agent] += rewards[agent]
+            # Spawn position
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
 
-        if not potential_new_ids:
-            self._log(self.verbose_reproduction,
-                    f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning",
-                    "red")
-            return
+            self.agent_positions[new_agent] = new_position
+            self.predator_positions[new_agent] = new_position
+            self.agent_energies[new_agent] = self.initial_energy_predator
+            self.agent_energies[agent] -= self.initial_energy_predator
 
-        new_agent = potential_new_ids[0]
-        self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=True,
-            initial_energy=self.initial_energy_predator,
-            observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
-        )
-        self.active_num_predators += 1
+            self.grid_world_state[1, *new_position] = self.initial_energy_predator
+            self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
+
+            self.active_num_predators += 1
+
+            # Rewards and tracking
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_predator
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
+            self._log(
+                self.verbose_reproduction,
+                f"[REPRODUCTION] Predator {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
 
     def _handle_prey_reproduction(self, agent, rewards, observations, terminations, truncations):
-        if self.agent_energies[agent] < self.prey_creation_energy_threshold:
-            return
+        if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
-        parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_prey and parent_speed == 1) else \
-                    1 if parent_speed == 2 else parent_speed
+            # Mutation: 10% chance to switch speed
+            if self.rng.random() < self.mutation_rate_prey:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
 
-        potential_new_ids = [
-            f"speed_{new_speed}_prey_{i}"
-            for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
-            if f"speed_{new_speed}_prey_{i}" not in self.agents
-        ]
-
-        rewards[agent] = self.reproduction_reward_prey
-        self.cumulative_rewards.setdefault(agent, 0)
-        self.cumulative_rewards[agent] += rewards[agent]
-
-        if not potential_new_ids:
-            self._log(self.verbose_reproduction,
+            # Find available new agent ID
+            potential_new_ids = [
+                f"speed_{new_speed}_prey_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
+                if f"speed_{new_speed}_prey_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
+                rewards[agent] = self.reproduction_reward_prey
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
                     f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
-                    "red")
-            return
+                    "red"
+                )
+                return
 
-        new_agent = potential_new_ids[0]
-        self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=False,
-            initial_energy=self.initial_energy_prey,
-            observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
-        )
-        self.active_num_prey += 1
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
 
-    def _spawn_agent(self, new_agent, parent_agent, speed, is_predator, initial_energy,
-                    observation_fn, rewards, observations, terminations, truncations):
-        self.agents.append(new_agent)
-        self.agent_internal_ids[new_agent] = self.agent_instance_counter
-        self.agent_ages[self.agent_instance_counter] = 0
-        self.agent_instance_counter += 1
+            self.agent_internal_ids[new_agent] = self.agent_instance_counter
+            self.agent_ages[self.agent_instance_counter] = 0
+            self.agent_instance_counter += 1
 
-        occupied_positions = set(self.agent_positions.values())
-        new_position = self._find_available_spawn_position(self.agent_positions[parent_agent], occupied_positions)
+            # Spawn position
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
 
-        self.agent_positions[new_agent] = new_position
-        self.agent_energies[new_agent] = initial_energy
-        self.agent_energies[parent_agent] -= initial_energy
-
-        layer = 1 if is_predator else 2
-        self.grid_world_state[layer, *new_position] = initial_energy
-        self.grid_world_state[layer, *self.agent_positions[parent_agent]] = self.agent_energies[parent_agent]
-
-        if is_predator:
-            self.predator_positions[new_agent] = new_position
-        else:
+            self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
+            self.agent_energies[new_agent] = self.initial_energy_prey
+            self.agent_energies[agent] -= self.initial_energy_prey
 
-        rewards[new_agent] = 0
-        self.cumulative_rewards[new_agent] = 0
-        observations[new_agent] = observation_fn(new_agent)
-        terminations[new_agent] = False
-        truncations[new_agent] = False
+            self.grid_world_state[2, *new_position] = self.initial_energy_prey
+            self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-        self._log(
-            self.verbose_reproduction,
-            f"[REPRODUCTION] {'Predator' if is_predator else 'Prey'} {parent_agent} spawned {new_agent} at {tuple(map(int, new_position))}",
-            "green"
-        )
+            self.active_num_prey += 1
+
+            # Rewards and tracking
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_prey
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
+            self._log(
+                self.verbose_reproduction,
+                f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
