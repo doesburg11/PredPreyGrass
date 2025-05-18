@@ -76,7 +76,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
         self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
 
-
         self.cumulative_rewards = {}  # Track total rewards per agent
         self.predator_speeds = [1, 2]
         self.prey_speeds = [1, 2]

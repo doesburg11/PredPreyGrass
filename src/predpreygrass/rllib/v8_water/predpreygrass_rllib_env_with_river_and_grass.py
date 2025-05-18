@@ -916,6 +916,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_energies = new_grass_energies
 
     def _load_config(self, config):
+        """
+        Load the environment configuration from a dictionary.
+        Args:
+            config (dict): Configuration dictionary.
+        """
+        # Check if config is provided
         if config is None:
             raise ValueError("Environment config must be provided explicitly.")
         self.config = config
