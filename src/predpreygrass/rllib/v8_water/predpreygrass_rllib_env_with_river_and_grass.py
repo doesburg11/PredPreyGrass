@@ -35,99 +35,30 @@ class PredPreyGrass(MultiAgentEnv):
         Reset the environment to its initial state.
         """
         super().reset(seed=seed)
+
+        self._initialization()
         self.current_step = 0
         self.rng = np.random.default_rng(seed)
-
-        # Initialize grid_world_state
         self.grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
-
         # reset entities (agents+grass) positions and energies
-        self.river_cells, self.river_centerline = self._generate_variable_width_river()
-        for pos in self.river_cells:
-            self.grid_world_state[4, *pos] = 1.0
-        self.agent_positions = {}
-        self.predator_positions = {}
-        self.prey_positions = {}
-        self.grass_positions = {}
+        self._create_learning_agent_lists()
 
-        self.agent_energies = {}
-        self.grass_energies = {}
-        self.cumulative_rewards = {agent: 0 for agent in self.agents}
+        # Generate random positions for learning agents on grid
+        n_active_agents = len(self.agents)
+        active_agents_positions = self._generate_random_positions(self.grid_size, n_active_agents, seed=seed)
 
-        # reset age tracking logic
-        self.agent_instance_counter = 0
-        self.agent_ages = {}  # Maps internal ID -> age
-        self.agent_internal_ids = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
+        # Assign positions to learning agents
+        predator_positions = active_agents_positions[:len([a for a in self.agents if "predator" in a])]
+        prey_positions = active_agents_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
+        # grass_positions = active_agents_positions[len(predator_positions) + len(prey_positions):]
 
-        self.death_cause_prey = {}  # key = internal ID, value = "eaten" or "starved"
-
-        # construct agent lists based on speed-aware config ---
-        self.agents = []
-        self.possible_agents = []
-
-        # Add all possible speed-1 and speed-2 predator agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
-                self.possible_agents.append(f"speed_{speed}_predator_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
-                agent_id = f"speed_{speed}_predator_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-        # Add all possible speed-1 and speed-2 prey agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
-                self.possible_agents.append(f"speed_{speed}_prey_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
-                agent_id = f"speed_{speed}_prey_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-        # Grass agent IDs (unchanged)
-        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
-
-        def generate_random_positions(grid_size: int, num_positions: int):
-            """
-            Generate unique random positions on a grid.
-
-            Args:
-                grid_size (int): The size of the grid (assumes square grid).
-                num_positions (int): The number of unique positions to generate.
-
-            Returns:
-                List[Tuple[int, int]]: A list of unique (x, y) position tuples.
-            """
-            if num_positions > grid_size * grid_size:
-                raise ValueError("Cannot place more unique positions than grid cells.")
-
-            rng = np.random.default_rng(seed)
-            positions = set()
-
-            while len(positions) < num_positions:
-                pos = tuple(rng.integers(0, grid_size, size=2))
-                positions.add(pos)  # Ensures uniqueness because positions is a set
-
-            return list(positions)
-
-        # Place agents and grass
-        total_entities = len(self.agents)
-        all_positions = generate_random_positions(self.grid_size, total_entities)
-
-        # Assign positions
-        predator_positions = all_positions[:len([a for a in self.agents if "predator" in a])]
-        prey_positions = all_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
-        # grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
-
-        # Assign predator positions and energy
+        # Assign predator positions, energy and water
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
             pos = predator_positions[i]
             self.agent_positions[agent] = pos
             self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
+            self.agent_water[agent] = self.initial_water_predator
             self.grid_world_state[1, *pos] = self.initial_energy_predator
 
         # Assign prey positions and energy
@@ -136,7 +67,16 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[agent] = pos
             self.prey_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_prey
+            self.agent_water[agent] = self.initial_water_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
+
+        # Grass agent IDs
+        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
+
+        # Water agent cells
+        self.river_cells, self.river_centerline = self._generate_variable_width_river()
+        for pos in self.river_cells:
+            self.grid_world_state[4, *pos] = 1.0
 
         # Assign grass positions and energy
         # Place grass near river
@@ -493,8 +433,8 @@ class PredPreyGrass(MultiAgentEnv):
             return valid_positions[0]  # Prefer adjacent position if available
 
         # Fallback: Find any random unoccupied position
-        all_positions = {(i, j) for i in range(self.grid_size) for j in range(self.grid_size)}
-        free_positions = list(all_positions - occupied_positions)
+        active_agents_positions = {(i, j) for i in range(self.grid_size) for j in range(self.grid_size)}
+        free_positions = list(active_agents_positions - occupied_positions)
 
         if free_positions:
             return free_positions[self.rng.integers(len(free_positions))]
@@ -572,22 +512,31 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
 
             old_energy = self.agent_energies[agent]
+            old_water = self.agent_water[agent]
 
             if "predator" in agent:
-                decay = self.energy_loss_per_step_predator
+                energy_decay = self.energy_loss_per_step_predator
+                water_decay = self.water_loss_per_step_predator
                 layer = 1
             elif "prey" in agent:
-                decay = self.energy_loss_per_step_prey
+                energy_decay = self.energy_loss_per_step_prey
+                water_decay = self.water_loss_per_step_prey
                 layer = 2
             else:
                 continue
 
-            self.agent_energies[agent] -= decay
+            self.agent_energies[agent] -= energy_decay
+            self.agent_water[agent] -= water_decay
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self._log(
                 self.verbose_decay,
-                f"[DECAY] {agent} energy: {round(old_energy, 2)} -> {round(self.agent_energies[agent], 2)}",
+                f"[ENERGY DECAY] {agent} energy: {round(old_energy, 2)} -> {round(self.agent_energies[agent], 2)}",
+                "red"
+            )
+            self._log(
+                self.verbose_decay,
+                f"[WATER DECAY] {agent} water: {round(old_water, 2)} -> {round(self.agent_water[agent], 2)}",
                 "red"
             )
 
@@ -602,10 +551,8 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _regenerate_grass_energy(self):
         for grass, pos in self.grass_positions.items():
-            distance = self._distance_to_river(pos)
-            rate = 0.2 * np.exp(-0.4 * distance)  # exponential decay from river
             self.grass_energies[grass] = min(
-                self.grass_energies[grass] + rate,
+                self.grass_energies[grass] + self.energy_gain_per_step_grass,
                 self.initial_energy_grass
             )
             self.grid_world_state[3, *pos] = self.grass_energies[grass]
@@ -704,6 +651,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
+            del self.agent_water[caught_prey]
         else:
             rewards[agent] = self.reward_predator_step
 
@@ -751,111 +699,135 @@ class PredPreyGrass(MultiAgentEnv):
         truncations[agent] = False
 
     def _handle_predator_reproduction(self, agent, rewards, observations, terminations, truncations):
-        if self.agent_energies[agent] < self.predator_creation_energy_threshold:
-            return
+        if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
+            
+            # Mutation: chance (self.mutation_rate_predator) to switch speed
+            if self.rng.random() < self.mutation_rate_predator:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
 
-        parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_predator and parent_speed == 1) else \
-            1 if parent_speed == 2 else parent_speed
+            # Find available new agent ID
+            potential_new_ids = [
+                f"speed_{new_speed}_predator_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
+                if f"speed_{new_speed}_predator_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
+                rewards[agent] = self.reproduction_reward_predator
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning"
+                    "red"
+                )
+                return
+                # TODO continue is left out because it's it a lop anymmore, check outside of function
+                # if potential_new_ids still available
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
 
-        potential_new_ids = [
-            f"speed_{new_speed}_predator_{i}"
-            for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
-            if f"speed_{new_speed}_predator_{i}" not in self.agents
-        ]
+            self.agent_internal_ids[new_agent] = self.agent_instance_counter
+            self.agent_ages[self.agent_instance_counter] = 0
+            self.agent_instance_counter += 1
 
-        rewards[agent] = self.reproduction_reward_predator
-        self.cumulative_rewards.setdefault(agent, 0)
-        self.cumulative_rewards[agent] += rewards[agent]
+            # Spawn position
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
 
-        if not potential_new_ids:
+            self.agent_positions[new_agent] = new_position
+            self.predator_positions[new_agent] = new_position
+            self.agent_energies[new_agent] = self.initial_energy_predator
+            self.agent_water[new_agent] = self.initial_water_predator
+            self.agent_energies[agent] -= self.initial_energy_predator
+
+            self.grid_world_state[1, *new_position] = self.initial_energy_predator
+            self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
+
+            self.active_num_predators += 1
+
+            # Rewards and tracking
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_predator
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
             self._log(
                 self.verbose_reproduction,
-                f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning",
-                "red"
-                )
-            return
-
-        new_agent = potential_new_ids[0]
-        self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=True,
-            initial_energy=self.initial_energy_predator,
-            observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
-        )
-        self.active_num_predators += 1
+                f"[REPRODUCTION] Predator {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
 
     def _handle_prey_reproduction(self, agent, rewards, observations, terminations, truncations):
-        if self.agent_energies[agent] < self.prey_creation_energy_threshold:
-            return
+        if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
-        parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_prey and parent_speed == 1) else \
-            1 if parent_speed == 2 else parent_speed
+            # Mutation: 10% chance to switch speed
+            if self.rng.random() < self.mutation_rate_prey:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
 
-        potential_new_ids = [
-            f"speed_{new_speed}_prey_{i}"
-            for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
-            if f"speed_{new_speed}_prey_{i}" not in self.agents
-        ]
+            # Find available new agent ID
+            potential_new_ids = [
+                f"speed_{new_speed}_prey_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
+                if f"speed_{new_speed}_prey_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
+                rewards[agent] = self.reproduction_reward_prey
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
+                    "red"
+                )
+                return
 
-        rewards[agent] = self.reproduction_reward_prey
-        self.cumulative_rewards.setdefault(agent, 0)
-        self.cumulative_rewards[agent] += rewards[agent]
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
 
-        if not potential_new_ids:
+            self.agent_internal_ids[new_agent] = self.agent_instance_counter
+            self.agent_ages[self.agent_instance_counter] = 0
+            self.agent_instance_counter += 1
+
+            # Spawn position
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+
+            self.agent_positions[new_agent] = new_position
+            self.prey_positions[new_agent] = new_position
+            self.agent_energies[new_agent] = self.initial_energy_prey
+            self.agent_water[new_agent] = self.initial_water_prey
+            self.agent_energies[agent] -= self.initial_energy_prey
+
+            self.grid_world_state[2, *new_position] = self.initial_energy_prey
+            self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
+
+            self.active_num_prey += 1
+
+            # Rewards and tracking
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_prey
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
             self._log(
                 self.verbose_reproduction,
-                f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
-                "red"
-                )
-            return
-
-        new_agent = potential_new_ids[0]
-        self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=False,
-            initial_energy=self.initial_energy_prey,
-            observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
-        )
-        self.active_num_prey += 1
-
-    def _spawn_agent(self, new_agent, parent_agent, speed, is_predator, initial_energy,
-                     observation_fn, rewards, observations, terminations, truncations):
-        self.agents.append(new_agent)
-        self.agent_internal_ids[new_agent] = self.agent_instance_counter
-        self.agent_ages[self.agent_instance_counter] = 0
-        self.agent_instance_counter += 1
-
-        occupied_positions = set(self.agent_positions.values())
-        new_position = self._find_available_spawn_position(self.agent_positions[parent_agent], occupied_positions)
-
-        self.agent_positions[new_agent] = new_position
-        self.agent_energies[new_agent] = initial_energy
-        self.agent_energies[parent_agent] -= initial_energy
-
-        layer = 1 if is_predator else 2
-        self.grid_world_state[layer, *new_position] = initial_energy
-        self.grid_world_state[layer, *self.agent_positions[parent_agent]] = self.agent_energies[parent_agent]
-
-        if is_predator:
-            self.predator_positions[new_agent] = new_position
-        else:
-            self.prey_positions[new_agent] = new_position
-
-        rewards[new_agent] = 0
-        self.cumulative_rewards[new_agent] = 0
-        observations[new_agent] = observation_fn(new_agent)
-        terminations[new_agent] = False
-        truncations[new_agent] = False
-
-        self._log(
-            self.verbose_reproduction,
-            f"[REPRODUCTION] {'Predator' if is_predator else 'Prey'} {parent_agent} spawned {new_agent} at {tuple(map(int, new_position))}",
-            "green"
-        )
+                f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
 
     def _generate_variable_width_river(self):
         river_cells = set()
@@ -878,13 +850,13 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[4, *pos] = 1.0
 
         # Adjust grass based on new river layout
-        self._fade_and_add_new_grass_near_river()
+        self._clear_and_add_new_grass_near_river()
 
-    def _fade_and_add_new_grass_near_river(self):
+    def _clear_and_add_new_grass_near_river(self):
         """
-        Gradually fade out existing grass and add new grass near the river.
-        Old grass energies decay, and new grass is added near water (north, south, east, west).
+        Clear existing grass and add new grass near the new river.
         """
+        self.grid_world_state[3, :, :] = 0  # Clear entire grass energy layer
         new_grass_positions = {}
         new_grass_energies = {}
         added = 0
@@ -967,6 +939,14 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
         self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
 
+        # Water
+        self.initial_water_predator = config.get("initial_water_predator", 5.0)
+        self.initial_water_prey = config.get("initial_water_prey", 3.0)
+        self.water_loss_per_step_predator = config.get("water_loss_per_step_predator", 0.00015)
+        self.water_loss_per_step_prey = config.get("water_loss_per_step_prey", 0.00005)
+        self.max_water_predator = config.get("max_water_predator", 12.0)
+        self.max_water_prey = config.get("max_water_prey", 8.0)
+
         # Grid & obs
         self.grid_size = config.get("grid_size", 10)
         self.num_obs_channels = config.get("num_obs_channels", 4)
@@ -992,28 +972,30 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _create_learning_agent_lists(self):
         # create list of al possible learning agents
+        self.agents = []
         self.possible_agents = []
 
-        for i in range(self.n_possible_speed_1_predators):
-            self.possible_agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_possible_speed_2_predators):
-            self.possible_agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_possible_speed_1_prey):
-            self.possible_agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_possible_speed_2_prey):
-            self.possible_agents.append(f"speed_2_prey_{j}")
+        # Add all possible speed-1 and speed-2 predator agents
+        for speed in [1, 2]:
+            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
+                self.possible_agents.append(f"speed_{speed}_predator_{i}")
+            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
+                agent_id = f"speed_{speed}_predator_{i}"
+                self.agents.append(agent_id)
+                self.agent_internal_ids[agent_id] = self.agent_instance_counter
+                self.agent_ages[self.agent_instance_counter] = 0
+                self.agent_instance_counter += 1
 
-        # create list of initially learning agents (subset of possible learning agent list)
-        self.agents = []
-
-        for i in range(self.n_initial_active_speed_1_predator):
-            self.agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_initial_active_speed_2_predator):
-            self.agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_initial_active_speed_1_prey):
-            self.agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_initial_active_speed_2_prey):
-            self.agents.append(f"speed_2_prey_{j}")
+        # Add all possible speed-1 and speed-2 prey agents
+        for speed in [1, 2]:
+            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
+                self.possible_agents.append(f"speed_{speed}_prey_{i}")
+            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
+                agent_id = f"speed_{speed}_prey_{i}"
+                self.agents.append(agent_id)
+                self.agent_internal_ids[agent_id] = self.agent_instance_counter
+                self.agent_ages[self.agent_instance_counter] = 0
+                self.agent_instance_counter += 1
 
     def _create_spaces(self):
         # Spaces
@@ -1097,7 +1079,31 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.grass_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.agent_energies: Dict[AgentID, float] = {}
+        self.agent_water: Dict[AgentID, float] = {}
         self.grass_energies: Dict[AgentID, float] = {}
         # River configuration
         self.river_cells = set()
         self.river_centerline = {}
+
+    def _generate_random_positions(self, grid_size: int, num_positions: int, seed: int = None) -> List[Tuple[int, int]]:
+        """
+        Generate unique random positions on a grid.
+
+        Args:
+            grid_size (int): The size of the grid (assumes square grid).
+            num_positions (int): The number of unique positions to generate.
+
+        Returns:
+            List[Tuple[int, int]]: A list of unique (x, y) position tuples.
+        """
+        if num_positions > grid_size * grid_size:
+            raise ValueError("Cannot place more unique positions than grid cells.")
+
+        rng = np.random.default_rng(seed)
+        positions = set()
+
+        while len(positions) < num_positions:
+            pos = tuple(rng.integers(0, grid_size, size=2))
+            positions.add(pos)  # Ensures uniqueness because positions is a set
+
+        return list(positions)

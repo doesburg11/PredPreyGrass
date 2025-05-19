@@ -1,10 +1,10 @@
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
-import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 
 class PyGameRenderer:
     """
@@ -17,7 +17,7 @@ class PyGameRenderer:
         self.file_name = 0
 
         # Initialize the Pygame window position
-        os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0" 
+        os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"
 
         # Pygame screen settings
         self.width = env.x_grid_size * self.cell_scale
@@ -25,7 +25,7 @@ class PyGameRenderer:
         self.width_energy_chart = 1560 if has_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
-        self.save_image_steps = False # TODO put into config file? 
+        self.save_image_steps = False  # TODO put into config file? 
 
         # BAR CHART POSITION
         self.y_position_predator_chart = 300
@@ -95,7 +95,10 @@ class PyGameRenderer:
             for pos_x, pos_y in positions:
                 self.screen.blit(
                     patch,
-                    (self.cell_scale * (pos_x - offset + 0.5), self.cell_scale * (pos_y - offset + 0.5))
+                    (
+                        self.cell_scale * (pos_x - offset + 0.5),
+                        self.cell_scale * (pos_y - offset + 0.5)
+                    )
                 )
 
     def _get_torus_positions(self, x, y, observation_range):
@@ -143,7 +146,7 @@ class PyGameRenderer:
     def _draw_energy_label_predator(self, x_pos, y_pos):
         predator_label_font = pygame.font.Font(None, 35)
         predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
-        self.screen.blit(predator_label, (x_pos, self.y_position_predator_chart+ 180))
+        self.screen.blit(predator_label, (x_pos, self.y_position_predator_chart + 180))
 
     def _draw_energy_label_prey(self, x_pos, y_pos):
         prey_label_font = pygame.font.Font(None, 35)
@@ -263,12 +266,11 @@ class PyGameRenderer:
             pygame.quit()
             self.screen = None
 
+
 class MatPlotLibRenderer:
     """
     A class for visualizing a grid-based environment using Matplotlib. Is used in the RLLib framework.
     """
-
-    #def __init__(self, grid_size, agents, trace_length=5):
     def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0, destination_path=None):
         """
         Initialize the visualizer.
@@ -326,7 +328,6 @@ class MatPlotLibRenderer:
     def update(self, agent_positions, step, grid_world_state=None):
         self.ax.set_title(f"Environment - Step {step}", fontsize=14)
 
-
         # Remove old river patches
         for patch in self.river_patches:
             patch.remove()
@@ -370,7 +371,13 @@ class MatPlotLibRenderer:
                 font_size = cell_size * 0.6
 
                 self.agent_texts[agent] = self.ax.text(
-                    position[1], position[0], self.grass_marker, color="green", fontsize=font_size, ha="center", va="center"
+                    position[1],
+                    position[0],
+                    self.grass_marker,
+                    color="green",
+                    fontsize=font_size,
+                    ha="center",
+                    va="center"
                 )
                 continue
 
@@ -443,10 +450,10 @@ class MatPlotLibRenderer:
             # Display the population chart plot to the user
             plt.show()
 
-
     def close(self):
         """Close the visualization."""
         plt.close(self.fig)
+
 
 class EvolutionVisualizer:
     def __init__(self):
@@ -510,6 +517,7 @@ class EvolutionVisualizer:
         plt.tight_layout()
         plt.show()
 
+
 class AverageAgeVisualizer:
     def __init__(self):
         self.history = {
@@ -560,6 +568,7 @@ class AverageAgeVisualizer:
         plt.tight_layout()
         plt.show()
 
+
 class PopulationChart:
     def __init__(self, destination_path=None):
         self.destination_path = destination_path
@@ -591,6 +600,7 @@ class PopulationChart:
             # print(f"Population chart saved to: {filepath}")
         else:
             plt.show()
+
 
 class CombinedEvolutionVisualizer:
     def __init__(self, destination_path=None, timestamp=None):
@@ -717,6 +727,7 @@ class CombinedEvolutionVisualizer:
             plt.show()
         else:
             plt.show()
+
 
 class PreyDeathCauseVisualizer:
     def __init__(self, destination_path=None, timestamp=None):

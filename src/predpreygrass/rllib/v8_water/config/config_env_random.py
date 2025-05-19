@@ -5,7 +5,7 @@ config_env = {
 
     # Grid and Observation Settings
     "grid_size": 25,
-    "num_obs_channels": 5,  # Border, Predator, Prey, Grass
+    "num_obs_channels": 5,  # Wall, Predator, Prey, Grass, Water
     "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
     
@@ -23,11 +23,21 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     
     # Energy settings
+    "initial_energy_predator": 5.0,
+    "initial_energy_prey": 3.0,
     "energy_loss_per_step_predator": 0.00015,  # 0.15
     "energy_loss_per_step_prey": 0.00005,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
+
+    # Water settings
+    "initial_water_predator": 5.0,
+    "initial_water_prey": 3.0,
+    "water_loss_per_step_predator": 0.00015,  # 0.15
+    "water_loss_per_step_prey": 0.00005,  # 0.05
+    "max_water_predator": 12.0,
+    "max_water_prey": 8.0,
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
@@ -39,9 +49,6 @@ config_env = {
     "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 0,  # 7
     
-    "initial_energy_predator": 5.0,
-    "initial_energy_prey": 3.0,
-
     # mutation settings
     "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
     "mutation_rate_prey": 0.05,      # and vice versa

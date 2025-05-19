@@ -1,7 +1,7 @@
 import pygame
-from predpreygrass.utils.renderer import MatPlotLibRenderer
+from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer
 from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import your custom environment
-from predpreygrass.rllib.v7_modular.config.config_env_step_wise import config_env
+from predpreygrass.rllib.v8_water.config.config_env_step_wise import config_env
 import numpy as np
 
 # Ensure all elements are displayed
@@ -18,7 +18,10 @@ if __name__ == "__main__":
 
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
-    visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
+    grid_visualizer = MatPlotLibRenderer(
+        grid_size,
+        all_agents,
+        trace_length=5)
 
     pygame.init()
     screen = pygame.display.set_mode((200, 200))  # Small window for event capturing
@@ -35,7 +38,11 @@ if __name__ == "__main__":
         rounded_observations = {k: np.round(obs, 2).tolist() for k, obs in observations.items()}
 
         merged_positions = {**env.agent_positions, **env.grass_positions}
-        visualizer.update(merged_positions, step)
+        grid_visualizer.update(
+            merged_positions,
+            step,
+            grid_world_state=env.grid_world_state
+            )
 
         # Wait for a mouse click to proceed
         waiting_for_click = True
@@ -53,10 +60,14 @@ if __name__ == "__main__":
             # print('Agents  :',env.agents)
             # print("Obs     :", list(observations.keys()))
             # print("Reward  :", rewards)
-            print("Energy:", env.agent_energies)
+            # print("Energy:", env.agent_energies)
             print("Energy:")
             for agent, energy in env.agent_energies.items():
                 print(f"{agent}: {energy:.2f}")
+            print("-----------------------------------------")
+            print("Water:")
+            for agent, water in env.agent_water.items():
+                print(f"{agent}: {water:.2f}")
             print("-----------------------------------------")
             env._print_grid_from_positions()
             env._print_grid_from_state()
@@ -82,5 +93,5 @@ if __name__ == "__main__":
             print("Environment terminated properly by truncation.")
             break
 
-    visualizer.close()
+    grid_visualizer.close()
     pygame.quit()
