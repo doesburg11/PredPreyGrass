@@ -665,7 +665,7 @@ class PredPreyGrass(MultiAgentEnv):
             # rewards[agent] = self.reward_predator_drink_water
             # self.cumulative_rewards.setdefault(agent, 0)
             # self.cumulative_rewards[agent] += rewards[agent]
-            self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator) # TODO remove hardcoded value
+            self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)  # TODO remove hardcoded value
         # Check if predator caught prey
         caught_prey = next(
             (

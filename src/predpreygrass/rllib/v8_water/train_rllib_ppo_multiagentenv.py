@@ -3,14 +3,14 @@ This script trains a multi-agent environment with PPO using Ray RLlib new API st
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
-Improvements versus v6_logging: 
+Improvements versus v6_logging:
 - remove fallback config_env.py
 - generalize action spaces
 """
 
 
-from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass 
-from predpreygrass.rllib.v7_modular.config.config_env_train import config_env
+from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass
+from predpreygrass.rllib.v8_water.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
@@ -25,7 +25,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-import os
+
 
 def get_config_ppo():
     """
@@ -50,14 +50,17 @@ def get_config_ppo():
 
     return config_ppo
 
+
 def env_creator(config):
     return PredPreyGrass(config or config_env)
+
 
 def policy_mapping_fn(agent_id, *args, **kwargs):  # Expected format: "speed_1_predator_0", "speed_2_prey_5"
     parts = agent_id.split("_")
     speed = parts[1]
     role = parts[2]
     return f"speed_{speed}_{role}"
+
 
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
@@ -110,7 +113,7 @@ if __name__ == "__main__":
             )
         multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
         # Prepare and save config metadata before training
-        config_ppo = get_config_ppo() # ppo config depending on system
+        config_ppo = get_config_ppo()  # ppo config depending on system
         config_metadata = {
             "config_env": config_env,
             "config_ppo": config_ppo,
@@ -125,7 +128,7 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+                policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
@@ -141,19 +144,18 @@ if __name__ == "__main__":
                 num_learners=config_ppo["num_learners"],
             )
             .env_runners(
-                num_env_runners=config_ppo["num_env_runners"],  
-                num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],  
+                num_env_runners=config_ppo["num_env_runners"],
+                num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],
                 rollout_fragment_length=config_ppo["rollout_fragment_length"],
-                sample_timeout_s=config_ppo["sample_timeout_s"],  
-                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"] 
+                sample_timeout_s=config_ppo["sample_timeout_s"],
+                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"]
             )
             .resources(
                 num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
-            )       
+            )
             .callbacks(EpisodeReturn)
         )
 
- 
         # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
             ppo.algo_class,
