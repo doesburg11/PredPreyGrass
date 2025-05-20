@@ -61,17 +61,19 @@ if __name__ == "__main__":
             # print("Obs     :", list(observations.keys()))
             # print("Reward  :", rewards)
             # print("Energy:", env.agent_energies)
+            """
             print("Energy:")
             for agent, energy in env.agent_energies.items():
                 print(f"{agent}: {energy:.2f}")
             print("-----------------------------------------")
-            print("Water:")
-            for agent, water in env.agent_water.items():
+            print("Hydration:")
+            for agent, water in env.agent_hydration.items():
                 print(f"{agent}: {water:.2f}")
-            print("-----------------------------------------")
-            env._print_grid_from_positions()
-            env._print_grid_from_state()
-            print("-----------------------------------------")
+            """
+            # print("-----------------------------------------")
+            # env._print_grid_from_positions()
+            # env._print_grid_from_state()
+            # print("-----------------------------------------")
         if verbose_observation:
             for agent in env.agents:
                 print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")
@@ -83,6 +85,8 @@ if __name__ == "__main__":
                 print(np.transpose(observations[agent][2]))
                 print("Grass")
                 print(np.transpose(observations[agent][3]))
+                print("Water")
+                print(np.transpose(observations[agent][4]))
                 print()
             print("-----------------------------------------")
 

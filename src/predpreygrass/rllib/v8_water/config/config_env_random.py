@@ -32,10 +32,10 @@ config_env = {
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
 
     # Water settings
-    "initial_water_predator": 5.0,
-    "initial_water_prey": 3.0,
-    "water_loss_per_step_predator": 0.00015,  # 0.15
-    "water_loss_per_step_prey": 0.00005,  # 0.05
+    "initial_hydration_predator": 3.0,
+    "initial_hydration_prey": 2.0,
+    "dehydration_per_step_predator": 0.1,  # 0.15
+    "dehydration_per_step_prey": 0.05,  # 0.05
     "max_water_predator": 12.0,
     "max_water_prey": 8.0,
 
@@ -62,6 +62,6 @@ config_env = {
     "verbose_movement": False,
     "verbose_decay": False,
     "verbose_reproduction": True,
-    "debug_mode": False,
+    "debug_mode": True,
 
 }

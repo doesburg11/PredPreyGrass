@@ -58,23 +58,23 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[agent] = pos
             self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
-            self.agent_water[agent] = self.initial_water_predator
+            self.agent_hydration[agent] = self.initial_hydration_predator
             self.grid_world_state[1, *pos] = self.initial_energy_predator
 
-        # Assign prey positions and energy
+        # Assign prey positions, energy and water
         for i, agent in enumerate([a for a in self.agents if "prey" in a]):
             pos = prey_positions[i]
             self.agent_positions[agent] = pos
             self.prey_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_prey
-            self.agent_water[agent] = self.initial_water_prey
+            self.agent_hydration[agent] = self.initial_hydration_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
 
         # Grass agent IDs
         self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
         # Water agent cells
-        self.river_cells, self.river_centerline = self._generate_variable_width_river()
+        self.river_cells = self._generate_river()
         for pos in self.river_cells:
             self.grid_world_state[4, *pos] = 1.0
 
@@ -94,7 +94,6 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grass_energies[f"grass_{count}"] = self.initial_energy_grass
                     self.grid_world_state[3, x, y] = self.initial_energy_grass
                     count += 1
-
         # Track counts
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
@@ -113,7 +112,7 @@ class PredPreyGrass(MultiAgentEnv):
             return truncation_result
 
         # Step 1: If not truncated; process energy depletion due to time steps and update age
-        self._apply_energy_decay_per_step(action_dict)
+        self._apply_homeostatic_loss(action_dict)
 
         # Step 2: Update ages of all agents who act
         self._apply_age_update(action_dict)
@@ -128,8 +127,10 @@ class PredPreyGrass(MultiAgentEnv):
         for agent in self.agents:
             if agent not in self.agent_positions:
                 continue
-            if self.agent_energies[agent] <= 0:
-                self._handle_energy_depletion(agent, observations, rewards, terminations, truncations)
+            starvation = self.agent_energies[agent] <= 0
+            dehydration = self.agent_hydration[agent] <= 0
+            if starvation or dehydration:
+                self._handle_homeostatic_depletion(agent, starvation, dehydration, observations, rewards, terminations, truncations)
             elif "predator" in agent:
                 self._handle_predator_engagement(agent, observations, rewards, terminations, truncations)
             elif "prey" in agent:
@@ -139,7 +140,7 @@ class PredPreyGrass(MultiAgentEnv):
         for agent in self.agents[:]:
             if terminations[agent]:
                 self._log(
-                    self.verbose_engagement,
+                    self.verbose_termination,
                     f"[TERMINATED] Agent {agent} terminated!",
                     "red"
                 )
@@ -326,6 +327,7 @@ class PredPreyGrass(MultiAgentEnv):
         predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
         prey_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
         grass_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        water_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
 
         # Fill the grid (storing values in original order)
         for y in range(self.grid_size):
@@ -333,6 +335,7 @@ class PredPreyGrass(MultiAgentEnv):
                 predator_energy = self.grid_world_state[1, x, y]
                 prey_energy = self.grid_world_state[2, x, y]
                 grass_energy = self.grid_world_state[3, x, y]
+                water_quantity = self.grid_world_state[4, x, y]
 
                 if predator_energy > 0:
                     predator_grid[y][x] = f"{predator_energy:4.2f}".center(5)
@@ -340,24 +343,28 @@ class PredPreyGrass(MultiAgentEnv):
                     prey_grid[y][x] = f"{prey_energy:4.2f}".center(5)
                 if grass_energy > 0:
                     grass_grid[y][x] = f"{grass_energy:4.2f}".center(5)
+                if water_quantity > 0:
+                    water_grid[y][x] = f"{water_quantity:4.2f}".center(5)
 
         # Transpose the grids (swap rows and columns)
         predator_grid = [[predator_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
         prey_grid = [[prey_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
         grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+        water_grid = [[water_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
 
         # Print Headers
-        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}")
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}  {'Water'.center(self.grid_size * 6)}")
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
         # Print Transposed Grids (rows become columns)
         for x in range(self.grid_size):  # Now iterating over transposed rows (original columns)
             predator_row = " ".join(predator_grid[x])
             prey_row = " ".join(prey_grid[x])
             grass_row = " ".join(grass_grid[x])
-            print(f"{predator_row}     {prey_row}     {grass_row}")
+            water_row = " ".join(water_grid[x])
+            print(f"{predator_row}     {prey_row}     {grass_row}    {water_row}")
 
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
     def _print_movement_table(self, action_dict, predator_position_after_action, prey_new_unresolved_positions, resolved_positions, colliding_predator_agents, colliding_prey_agents):
         """
@@ -503,30 +510,30 @@ class PredPreyGrass(MultiAgentEnv):
 
         return None
 
-    def _apply_energy_decay_per_step(self, action_dict):
+    def _apply_homeostatic_loss(self, action_dict):
         """
-        Apply fixed per-step energy decay to all agents based on type.
+        Apply fixed per-step energy and hydration loss to in a restig state, based on agent type.
         """
         for agent in action_dict:
             if agent not in self.agent_positions:
                 continue
 
             old_energy = self.agent_energies[agent]
-            old_water = self.agent_water[agent]
+            old_water = self.agent_hydration[agent]
 
             if "predator" in agent:
                 energy_decay = self.energy_loss_per_step_predator
-                water_decay = self.water_loss_per_step_predator
+                water_decay = self.dehydration_per_step_predator
                 layer = 1
             elif "prey" in agent:
                 energy_decay = self.energy_loss_per_step_prey
-                water_decay = self.water_loss_per_step_prey
+                water_decay = self.dehydration_per_step_prey
                 layer = 2
             else:
                 continue
 
             self.agent_energies[agent] -= energy_decay
-            self.agent_water[agent] -= water_decay
+            self.agent_hydration[agent] -= water_decay
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self._log(
@@ -536,7 +543,7 @@ class PredPreyGrass(MultiAgentEnv):
             )
             self._log(
                 self.verbose_decay,
-                f"[WATER DECAY] {agent} water: {round(old_water, 2)} -> {round(self.agent_water[agent], 2)}",
+                f"[WATER DECAY] {agent} water: {round(old_water, 2)} -> {round(self.agent_hydration[agent], 2)}",
                 "red"
             )
 
@@ -588,10 +595,10 @@ class PredPreyGrass(MultiAgentEnv):
                     "blue"
                 )
 
-    def _handle_energy_depletion(self, agent, observations, rewards, terminations, truncations):
+    def _handle_homeostatic_depletion(self, agent, starvation, dehydration, observations, rewards, terminations, truncations):
         self._log(
             self.verbose_decay,
-            f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.",
+            f"[DECAY] {agent} at {self.agent_positions[agent]} starved {starvation} or dehydrated {dehydration} and is removed.",
             "red"
         )
         observations[agent] = self._get_observation(agent)
@@ -605,17 +612,61 @@ class PredPreyGrass(MultiAgentEnv):
         if "predator" in agent:
             self.active_num_predators -= 1
             del self.predator_positions[agent]
+            internal_id = self.agent_internal_ids[agent]
+            if starvation:
+                self.death_cause_predator[internal_id] = "starved"
+            elif dehydration:
+                self.death_cause_predator[internal_id] = "dehydrated"
+            else:
+                self.death_cause_predator[internal_id] = "starved and dehydrated"
         else:
             self.active_num_prey -= 1
             del self.prey_positions[agent]
             internal_id = self.agent_internal_ids[agent]
-            self.death_cause_prey[internal_id] = "starved"
+            if starvation:
+                self.death_cause_prey[internal_id] = "starved"
+            elif dehydration:
+                self.death_cause_prey[internal_id] = "dehydrated"
+            else:
+                self.death_cause_prey[internal_id] = "starved and dehydrated"
 
         del self.agent_positions[agent]
         del self.agent_energies[agent]
+        del self.agent_hydration[agent]
 
     def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
         predator_position = self.agent_positions[agent]
+        if self.grid_world_state[4, *predator_position] > 0:
+            # Predators drowns
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} drowned at {tuple(map(int, predator_position))}",
+                "red"
+            )
+            rewards[agent] = 0
+            terminations[agent] = True
+            truncations[agent] = False
+            self.grid_world_state[1, *predator_position] = 0
+            self.active_num_predators -= 1
+            del self.predator_positions[agent]
+            internal_id = self.agent_internal_ids[agent]
+            self.death_cause_predator[internal_id] = "drowned"
+            del self.agent_positions[agent]
+            del self.agent_energies[agent]
+            del self.agent_hydration[agent]
+            return
+        # Check if predator can drink water in adjacent cell (Moore neighborhood)
+        if self._is_water_nearby(predator_position):
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} drank water at {tuple(map(int, predator_position))}",
+                "blue"
+            )
+            # rewards[agent] = self.reward_predator_drink_water
+            # self.cumulative_rewards.setdefault(agent, 0)
+            # self.cumulative_rewards[agent] += rewards[agent]
+            self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator) # TODO remove hardcoded value
+        # Check if predator caught prey
         caught_prey = next(
             (
                 prey for prey, pos in self.agent_positions.items()
@@ -651,7 +702,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
-            del self.agent_water[caught_prey]
+            del self.agent_hydration[caught_prey]
         else:
             rewards[agent] = self.reward_predator_step
 
@@ -664,8 +715,38 @@ class PredPreyGrass(MultiAgentEnv):
     def _handle_prey_engagement(self, agent, observations, rewards, terminations, truncations):
         if terminations.get(agent):
             return
-
         prey_position = self.agent_positions[agent]
+        if self.grid_world_state[4, *prey_position] > 0:
+            # Prey drowns
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} drowned at {tuple(map(int, prey_position))}",
+                "red"
+            )
+            rewards[agent] = 0
+            terminations[agent] = True
+            truncations[agent] = False
+            self.grid_world_state[2, *prey_position] = 0
+            self.active_num_prey -= 1
+            del self.prey_positions[agent]
+            internal_id = self.agent_internal_ids[agent]
+            self.death_cause_prey[internal_id] = "drowned"
+            del self.agent_positions[agent]
+            del self.agent_energies[agent]
+            del self.agent_hydration[agent]
+            return
+        # Check if prey can drink water in adjacent cell (Moore neighborhood)
+        if self._is_water_nearby(prey_position):
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} drank water at {tuple(map(int, prey_position))}",
+                "blue"
+            )
+            # rewards[agent] = self.reward_prey_drink_water
+            # self.cumulative_rewards.setdefault(agent, 0)
+            # self.cumulative_rewards[agent] += rewards[agent]
+            self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)  # TODO remove hardcoded value
+        # Check if prey caught grass
         caught_grass = next(
             (
                 g for g, pos in self.grass_positions.items()
@@ -701,7 +782,6 @@ class PredPreyGrass(MultiAgentEnv):
     def _handle_predator_reproduction(self, agent, rewards, observations, terminations, truncations):
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
-            
             # Mutation: chance (self.mutation_rate_predator) to switch speed
             if self.rng.random() < self.mutation_rate_predator:
                 new_speed = 2 if parent_speed == 1 else 1
@@ -741,7 +821,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
             self.agent_energies[new_agent] = self.initial_energy_predator
-            self.agent_water[new_agent] = self.initial_water_predator
+            self.agent_hydration[new_agent] = self.initial_hydration_predator
             self.agent_energies[agent] -= self.initial_energy_predator
 
             self.grid_world_state[1, *new_position] = self.initial_energy_predator
@@ -806,7 +886,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
             self.agent_energies[new_agent] = self.initial_energy_prey
-            self.agent_water[new_agent] = self.initial_water_prey
+            self.agent_hydration[new_agent] = self.initial_hydration_prey
             self.agent_energies[agent] -= self.initial_energy_prey
 
             self.grid_world_state[2, *new_position] = self.initial_energy_prey
@@ -829,23 +909,21 @@ class PredPreyGrass(MultiAgentEnv):
                 "green"
             )
 
-    def _generate_variable_width_river(self):
+    def _generate_river(self):
         river_cells = set()
-        river_centerline = {}
         x = self.grid_size // 2
         for y in range(self.grid_size):
             x = np.clip(x + self.rng.integers(-1, 2), 0, self.grid_size - 1)
-            river_centerline[y] = x
             width = self.rng.integers(1, self.river_max_width + 1)
             for dx in range(-(width // 2), (width // 2) + 1):
                 xx = np.clip(x + dx, 0, self.grid_size - 1)
                 river_cells.add((xx, y))
-        return river_cells, river_centerline
+        return river_cells
 
     def _change_river_course(self):
         for pos in self.river_cells:
             self.grid_world_state[4, *pos] = 0
-        self.river_cells, self.river_centerline = self._generate_variable_width_river()
+        self.river_cells = self._generate_river()
         for pos in self.river_cells:
             self.grid_world_state[4, *pos] = 1.0
 
@@ -906,6 +984,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_decay = config.get("verbose_decay", self.debug_mode)
         self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
         self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+        self.verbose_termination = config.get("verbose_termination", self.debug_mode)
 
         # epsiode
         self.max_steps = config.get("max_steps", 10000)
@@ -940,18 +1019,18 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
 
         # Water
-        self.initial_water_predator = config.get("initial_water_predator", 5.0)
-        self.initial_water_prey = config.get("initial_water_prey", 3.0)
-        self.water_loss_per_step_predator = config.get("water_loss_per_step_predator", 0.00015)
-        self.water_loss_per_step_prey = config.get("water_loss_per_step_prey", 0.00005)
-        self.max_water_predator = config.get("max_water_predator", 12.0)
-        self.max_water_prey = config.get("max_water_prey", 8.0)
+        self.initial_hydration_predator = config.get("initial_hydration_predator", 3.0)
+        self.initial_hydration_prey = config.get("initial_hydration_prey", 2.0)
+        self.dehydration_per_step_predator = config.get("dehydration_per_step_predator", 0.1)
+        self.dehydration_per_step_prey = config.get("dehydration_per_step_prey", 0.05)
+        self.max_hydration_predator = config.get("max_hydration_predator", 4.0)
+        self.max_hydration_prey = config.get("max_hydration_prey", 3.0)
 
         # Grid & obs
         self.grid_size = config.get("grid_size", 10)
-        self.num_obs_channels = config.get("num_obs_channels", 4)
+        self.num_obs_channels = config.get("num_obs_channels", 5)
         self.predator_obs_range = config.get("predator_obs_range", 7)
-        self.prey_obs_range = config.get("prey_obs_range", 5)
+        self.prey_obs_range = config.get("prey_obs_range", 9)
 
         # Action range
         self.speed_1_act_range = config.get("speed_1_action_range", 3)
@@ -1073,17 +1152,17 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_internal_ids: Dict[AgentID, int] = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
         self.agent_ages: Dict[AgentID, int] = {}
         self.death_cause_prey: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
+        self.death_cause_predator: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
         # Initialize grid_world_state and agent positions
         self.agent_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.predator_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.prey_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.grass_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.agent_energies: Dict[AgentID, float] = {}
-        self.agent_water: Dict[AgentID, float] = {}
+        self.agent_hydration: Dict[AgentID, float] = {}
         self.grass_energies: Dict[AgentID, float] = {}
         # River configuration
         self.river_cells = set()
-        self.river_centerline = {}
 
     def _generate_random_positions(self, grid_size: int, num_positions: int, seed: int = None) -> List[Tuple[int, int]]:
         """
@@ -1107,3 +1186,22 @@ class PredPreyGrass(MultiAgentEnv):
             positions.add(pos)  # Ensures uniqueness because positions is a set
 
         return list(positions)
+
+    def _is_water_nearby(self, agent_id):
+        """
+        Check if water is in the Moore neighborhood (8 adjacent tiles) of the given agent.
+        Returns True if water is found, False otherwise.
+        """
+        if agent_id not in self.agent_positions:
+            return False  # Agent not on grid
+
+        x, y = self.agent_positions[agent_id]
+        for dx in [-1, 0, 1]:
+            for dy in [-1, 0, 1]:
+                if dx == 0 and dy == 0:
+                    continue  # Skip center tile
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size:
+                    if (nx, ny) in self.river_cells:
+                        return True
+        return False

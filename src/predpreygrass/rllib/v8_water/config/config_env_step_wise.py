@@ -29,6 +29,15 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
 
+    # Water
+    "initial_hydration_predator": 3.0,
+    "initial_hydration_prey": 2.0,
+    "dehydration_per_step_predator": 0.1,
+    "dehydration_per_step_prey": 0.05,
+    "max_hydration_predator": 4.0,
+    "max_hydration_prey": 3.0,
+
+
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
     "n_possible_speed_2_predators": 30,  # 30
@@ -52,9 +61,10 @@ config_env = {
     "energy_gain_per_step_grass": 0.08,
 
     "verbose_engagement": True,
+    "verbose_termination": False,
     "verbose_movement": False,
     "verbose_decay": False,
-    "verbose_reproduction": False,
+    "verbose_reproduction": True,
     "debug_mode": True,
 
 }
