@@ -8,9 +8,9 @@ Improvement over the previous version:
 - Added a function to plot the prey death cause
 
 """
-from predpreygrass.rllib.v8_water.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v8_water.config.config_env_eval import config_env
-from predpreygrass.utils.renderer import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 
 # external libraries
 import ray
@@ -23,15 +23,18 @@ import json
 
 verbose_grid = False
 verbose_actions = False
-seed = None # 42 # Optional: set to integer for reproducibility
+seed = None  # 42 # Optional: set to integer for reproducibility
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
 
+
 def env_creator(config):
     return PredPreyGrass(config)
 
+
 register_env("PredPreyGrass", lambda config: env_creator(config))
+
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -46,13 +49,14 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     else:
         return None
 
+
 # === Set checkpoint paths ===
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
-#checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-#checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/PPO_2025-05-04_22-52-53/PPO_PredPreyGrass_bf9c4_00000_0_2025-05-04_22-52-53/'
-checkpoint_dir = 'checkpoint_000034'
-checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root+ checkpoint_dir)
+# checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
+# checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
+checkpoint_root = '/PPO_2025-05-21_01-24-40/PPO_PredPreyGrass_9a5ea_00000_0_2025-05-21_01-24-40/'
+checkpoint_dir = 'checkpoint_000063'
+checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -71,7 +75,7 @@ module_paths = {
 rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
 # Initialize the environment
-env = env_creator(config=config_env) # PredPreyGrass()
+env = env_creator(config=config_env)  # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)
@@ -81,12 +85,12 @@ obs, _ = env.reset(seed=seed)
 grid_size = (env.grid_size, env.grid_size)
 all_agents = env.possible_agents + env.grass_agents
 grid_visualizer = MatPlotLibRenderer(
-    grid_size, 
-    all_agents, 
-    trace_length=5, 
-    show_gridlines=False, 
+    grid_size,
+    all_agents,
+    trace_length=5,
+    show_gridlines=False,
     scale=2,
-    destination_path=None, # save to: eval_output_dir
+    destination_path=None,  # save to: eval_output_dir
 )
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
     destination_path=eval_output_dir,
@@ -97,8 +101,7 @@ prey_death_cause_visualizer = PreyDeathCauseVisualizer(
     timestamp=now,
 )
 
-
-step=0
+step = 0
 done = False
 total_reward = 0
 
@@ -134,15 +137,15 @@ while not done:
 
     # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
-    grid_visualizer.update(merged_positions, step)
-    grid_visualizer.save_frame(step) 
+    grid_visualizer.update(merged_positions, step,  grid_world_state=env.grid_world_state)
+    grid_visualizer.save_frame(step)
 
     step += 1
     total_reward += sum(rewards.values())
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    #time.sleep(0.1)
+    # time.sleep(0.1)
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- PREY DEATH CAUSE SUMMARY ---
@@ -196,7 +199,6 @@ with open(reward_log_path, "w") as f:
     f.write(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}\n")
     f.write(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}\n")
     f.write(f"Total High-Speed Agent Reward    : {total_speed_2_predator_reward + total_speed_2_prey_reward:.2f}\n")
-
 
     print("\n--- Aggregated Rewards ---")
     print(f"Total number of steps            : {step-1}")
