@@ -642,30 +642,7 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
         predator_position = self.agent_positions[agent]
-        if self.grid_world_state[4, *predator_position] > 0:
-            # Predators drowns
-            self._log(
-                self.verbose_engagement,
-                f"[ENGAGE] {agent} died at {tuple(map(int, predator_position))}",
-                "red"
-            )
-            rewards[agent] = 0
-            terminations[agent] = True
-            truncations[agent] = False
-            self.grid_world_state[1, *predator_position] = 0
-            self.active_num_predators -= 1
-            del self.predator_positions[agent]
-            internal_id = self.agent_internal_ids[agent]
-            self.death_cause_predator[internal_id] = "drowned"
-            del self.agent_positions[agent]
-            del self.agent_energies[agent]
-            del self.agent_hydration[agent]
-            self._log(
-                self.verbose_death_cause,
-                f"[CAUSE OF DEATH] {agent} : {self.death_cause_predator[internal_id]}",
-                "red"
-            )
-            return
+
         # Check if predator can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(predator_position):
             self._log(
@@ -732,30 +709,6 @@ class PredPreyGrass(MultiAgentEnv):
         if terminations.get(agent):
             return
         prey_position = self.agent_positions[agent]
-        if self.grid_world_state[4, *prey_position] > 0:
-            # Prey drowns
-            self._log(
-                self.verbose_engagement,
-                f"[ENGAGE] {agent} died at {tuple(map(int, prey_position))}",
-                "red"
-            )
-            rewards[agent] = 0
-            terminations[agent] = True
-            truncations[agent] = False
-            self.grid_world_state[2, *prey_position] = 0
-            self.active_num_prey -= 1
-            del self.prey_positions[agent]
-            internal_id = self.agent_internal_ids[agent]
-            self.death_cause_prey[internal_id] = "drowned"
-            del self.agent_positions[agent]
-            del self.agent_energies[agent]
-            del self.agent_hydration[agent]
-            self._log(
-                self.verbose_death_cause,
-                f"[CAUSE OF DEATH] {agent} : {self.death_cause_prey[internal_id]}",
-                "red"
-            )
-            return
         # Check if prey can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(prey_position):
             self._log(
