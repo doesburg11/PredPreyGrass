@@ -630,6 +630,12 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 self.death_cause_prey[internal_id] = "starved and dehydrated"
 
+        self._log(
+            self.verbose_death_cause,
+            f"[CAUSE OF DEATH] {agent} : {self.death_cause_predator[internal_id] if 'predator' in agent else self.death_cause_prey[internal_id]}",
+            "red"
+        )
+
         del self.agent_positions[agent]
         del self.agent_energies[agent]
         del self.agent_hydration[agent]
@@ -640,7 +646,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Predators drowns
             self._log(
                 self.verbose_engagement,
-                f"[ENGAGE] {agent} drowned at {tuple(map(int, predator_position))}",
+                f"[ENGAGE] {agent} died at {tuple(map(int, predator_position))}",
                 "red"
             )
             rewards[agent] = 0
@@ -654,6 +660,11 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_positions[agent]
             del self.agent_energies[agent]
             del self.agent_hydration[agent]
+            self._log(
+                self.verbose_death_cause,
+                f"[CAUSE OF DEATH] {agent} : {self.death_cause_predator[internal_id]}",
+                "red"
+            )
             return
         # Check if predator can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(predator_position):
@@ -703,6 +714,11 @@ class PredPreyGrass(MultiAgentEnv):
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
             del self.agent_hydration[caught_prey]
+            self._log(
+                self.verbose_death_cause,
+                f"[CAUSE OF DEATH] {agent} : {self.death_cause_prey[internal_id]}",
+                "red"
+            )
         else:
             rewards[agent] = self.reward_predator_step
 
@@ -720,7 +736,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Prey drowns
             self._log(
                 self.verbose_engagement,
-                f"[ENGAGE] {agent} drowned at {tuple(map(int, prey_position))}",
+                f"[ENGAGE] {agent} died at {tuple(map(int, prey_position))}",
                 "red"
             )
             rewards[agent] = 0
@@ -734,6 +750,11 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_positions[agent]
             del self.agent_energies[agent]
             del self.agent_hydration[agent]
+            self._log(
+                self.verbose_death_cause,
+                f"[CAUSE OF DEATH] {agent} : {self.death_cause_prey[internal_id]}",
+                "red"
+            )
             return
         # Check if prey can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(prey_position):
@@ -985,6 +1006,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
         self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
         self.verbose_termination = config.get("verbose_termination", self.debug_mode)
+        self.verbose_death_cause = config.get("verbose_death_cause", self.debug_mode)
 
         # epsiode
         self.max_steps = config.get("max_steps", 10000)

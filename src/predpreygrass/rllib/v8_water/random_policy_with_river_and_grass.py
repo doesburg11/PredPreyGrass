@@ -1,7 +1,5 @@
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer
 from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass
-# If you get a ModuleNotFoundError, check that the file 'predpreygrass_rllib_env_with_river_and_grass.py' exists in 'predpreygrass/rllib/v8_water'
-# and that it defines the 'PredPreyGrass' class.
 from predpreygrass.rllib.v8_water.config.config_env_random import config_env
 # from time import sleep
 

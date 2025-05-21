@@ -32,8 +32,8 @@ config_env = {
     # Water
     "initial_hydration_predator": 3.0,
     "initial_hydration_prey": 2.0,
-    "dehydration_per_step_predator": 0.1,
-    "dehydration_per_step_prey": 0.05,
+    "dehydration_per_step_predator": 0.05,  # 0.1
+    "dehydration_per_step_prey": 0.025,  # 0.05
     "max_hydration_predator": 4.0,
     "max_hydration_prey": 3.0,
 
@@ -60,9 +60,11 @@ config_env = {
     "energy_gain_per_step_grass": 0.08,  # 0.04
 
     "verbose_engagement": False,
+    "verbose_termination": False,
     "verbose_movement": False,
     "verbose_decay": False,
     "verbose_reproduction": False,
+    "verbose_death_cause": False,
     "debug_mode": False,
 
 }
