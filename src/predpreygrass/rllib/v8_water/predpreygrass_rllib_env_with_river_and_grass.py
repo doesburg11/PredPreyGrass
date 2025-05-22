@@ -649,10 +649,10 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[ENGAGE] {agent} stepped into river at {tuple(map(int, predator_position))}",
                 "blue"
             )
-            self.agent_energies[agent] -= self.energy_loss_staying_in_river_predator  
+            self.agent_energies[agent] -= self.energy_loss_staying_in_river_predator
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
             # no hydration, just a bad move
-            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)  
+            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)
         # Check if predator can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(predator_position):
             self._log(
@@ -729,7 +729,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] -= self.energy_loss_staying_in_river_prey
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
             # no hydration, just a bad move
-            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_prey)  
+            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_prey)
         # Check if prey can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(prey_position):
             self._log(
