@@ -642,7 +642,17 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
         predator_position = self.agent_positions[agent]
-
+        # Check if predator steps into in river
+        if self.grid_world_state[4, *predator_position] > 0:
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} stepped into river at {tuple(map(int, predator_position))}",
+                "blue"
+            )
+            self.agent_energies[agent] -= self.energy_loss_staying_in_river_predator  
+            self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
+            # no hydration, just a bad move
+            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)  
         # Check if predator can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(predator_position):
             self._log(
@@ -709,6 +719,17 @@ class PredPreyGrass(MultiAgentEnv):
         if terminations.get(agent):
             return
         prey_position = self.agent_positions[agent]
+        # Check if predator steps into in river
+        if self.grid_world_state[4, *prey_position] > 0:
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} stepped into river at {tuple(map(int, prey_position))}",
+                "blue"
+            )
+            self.agent_energies[agent] -= self.energy_loss_staying_in_river_prey
+            self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
+            # no hydration, just a bad move
+            # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_prey)  
         # Check if prey can drink water in adjacent cell (Moore neighborhood)
         if self._is_water_nearby(prey_position):
             self._log(
@@ -988,6 +1009,8 @@ class PredPreyGrass(MultiAgentEnv):
         # Energy
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
         self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
+        self.energy_loss_staying_in_river_predator = config.get("energy_loss_staying_in_river", 0.15)
+        self.energy_loss_staying_in_river_prey = config.get("energy_loss_staying_in_river", 0.05)
         self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
         self.initial_energy_predator = config.get("initial_energy_predator", 5.0)

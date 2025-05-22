@@ -1,9 +1,7 @@
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer
 from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v7_modular.config.config_env_random import config_env
-
-from time import sleep
-import numpy as np
+# from time import sleep
 
 verbose_grid_state = False
 verbose_observation = False
