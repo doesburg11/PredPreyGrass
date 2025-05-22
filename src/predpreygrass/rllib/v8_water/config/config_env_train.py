@@ -23,7 +23,7 @@ config_env = {
     "reproduction_reward_prey": 10.0,
 
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,  # experimental with respect to energy_move_cost # 0.15
+    "energy_loss_per_step_predator": 0.25,  # experimental with respect to energy_move_cost # 0.15
     "energy_loss_per_step_prey": 0.05,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
@@ -32,7 +32,7 @@ config_env = {
     # Water
     "initial_hydration_predator": 3.0,
     "initial_hydration_prey": 2.0,
-    "dehydration_per_step_predator": 0.05,  # 0.1
+    "dehydration_per_step_predator": 0.1,  # 0.1
     "dehydration_per_step_prey": 0.025,  # 0.05
     "max_hydration_predator": 4.0,
     "max_hydration_prey": 3.0,
