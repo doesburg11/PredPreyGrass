@@ -68,12 +68,13 @@ class PyGameRenderer:
         return np.transpose(new_observation, axes=(1, 0, 2)) if self.env.render_mode == "rgb_array" else None
 
     def _draw_grid(self):
+        back_ground_color = (255, 255, 255)
         for x in range(self.env.x_grid_size):
             for y in range(self.env.y_grid_size):
                 cell_rect = pygame.Rect(
                     self.cell_scale * x, self.cell_scale * y, self.cell_scale, self.cell_scale
                 )
-                pygame.draw.rect(self.screen, (255, 255, 255), cell_rect)
+                pygame.draw.rect(self.screen, back_ground_color, cell_rect)
                 pygame.draw.rect(self.screen, (192, 192, 192), cell_rect, 1)
         border_rect = pygame.Rect(0, 0, self.cell_scale * self.env.x_grid_size, self.cell_scale * self.env.y_grid_size)
         pygame.draw.rect(self.screen, (255, 0, 0), border_rect, 5)
@@ -291,6 +292,7 @@ class MatPlotLibRenderer:
 
         # Set up the plot
         self.fig, self.ax = plt.subplots(figsize=(6 * self.scale, 6 * self.scale))
+        self.ax.set_facecolor("#edd9af")  # sand-colored hex value
         self.ax.set_xlim(-0.5, grid_size[1] - 0.5)
         self.ax.set_ylim(-0.5, grid_size[0] - 0.5)
 
