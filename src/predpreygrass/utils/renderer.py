@@ -1,10 +1,10 @@
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
 import pygame
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
-import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
 
 class PyGameRenderer:
     """
@@ -17,7 +17,7 @@ class PyGameRenderer:
         self.file_name = 0
 
         # Initialize the Pygame window position
-        os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0" 
+        os.environ["SDL_VIDEO_WINDOW_POS"] = "0,0"
 
         # Pygame screen settings
         self.width = env.x_grid_size * self.cell_scale
@@ -25,7 +25,7 @@ class PyGameRenderer:
         self.width_energy_chart = 1560 if has_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
-        self.save_image_steps = False # TODO put into config file? 
+        self.save_image_steps = False  # TODO put into config file?
 
         # BAR CHART POSITION
         self.y_position_predator_chart = 300
@@ -143,7 +143,7 @@ class PyGameRenderer:
     def _draw_energy_label_predator(self, x_pos, y_pos):
         predator_label_font = pygame.font.Font(None, 35)
         predator_label = predator_label_font.render("Predators", True, (255, 0, 0))
-        self.screen.blit(predator_label, (x_pos, self.y_position_predator_chart+ 180))
+        self.screen.blit(predator_label, (x_pos, self.y_position_predator_chart + 180))
 
     def _draw_energy_label_prey(self, x_pos, y_pos):
         prey_label_font = pygame.font.Font(None, 35)
@@ -176,9 +176,9 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
         self._draw_energy_title(x_pos + 750, 20)
         self._draw_energy_bars_predators(
-            x_pos + 100, 
-            50, 
-            self.width_energy_chart - 100, 
+            x_pos + 100,
+            50,
+            self.width_energy_chart - 100,
             400)
         self._draw_energy_label_predator(x_pos + 100, 585)
 
@@ -187,22 +187,17 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
         self._draw_energy_title(x_pos + 750, 20)
         self._draw_energy_bars_prey(
-            x_pos + 100, 
-            100+self.y_position_prey_chart, 
-            self.width_energy_chart - 100, 
+            x_pos + 100,
+            100+self.y_position_prey_chart,
+            self.width_energy_chart - 100,
             self.y_position_prey_chart
             )
         self._draw_energy_label_prey(x_pos + 100, self.y_position_prey_chart+550)
 
-    def _draw_energy_title(self, x_pos, y_pos):
-        title_font = pygame.font.Font(None, 40)
-        title = title_font.render("Energy Level Agents", True, (0, 0, 0))
-        self.screen.blit(title, (x_pos, y_pos))
-
     def _draw_energy_bars_predators(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
+        bar_width, offset, max_energy, red = 10, 14, 50, (255, 0, 0)
+        y_axis_x = x_pos - 20
+        x_axis_y = y_pos + height
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos, 5, height))
@@ -227,9 +222,9 @@ class PyGameRenderer:
                 self.screen.blit(label, (y_axis_x - 35, tick_y - 5))
 
     def _draw_energy_bars_prey(self, x_pos, y_pos, width, height):
-        bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
+        bar_width, offset, max_energy, blue = 10, 14, 50, (0, 0, 255)
+        y_axis_x = x_pos - 20
+        x_axis_y = y_pos + height
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos+0, 5, height))
@@ -263,12 +258,13 @@ class PyGameRenderer:
             pygame.quit()
             self.screen = None
 
+
 class MatPlotLibRenderer:
     """
     A class for visualizing a grid-based environment using Matplotlib. Is used in the RLLib framework.
     """
 
-    #def __init__(self, grid_size, agents, trace_length=5):
+    # def __init__(self, grid_size, agents, trace_length=5):
     def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0, destination_path=None):
         """
         Initialize the visualizer.
@@ -284,7 +280,7 @@ class MatPlotLibRenderer:
         self.trace_length = trace_length
         self.agent_traces = {agent: [] for agent in agents}
         self.show_gridlines = show_gridlines
-        self.scale = scale 
+        self.scale = scale
         self.destination_path = destination_path
 
         # Set up the plot
@@ -423,10 +419,10 @@ class MatPlotLibRenderer:
             # Display the population chart plot to the user
             plt.show()
 
-
     def close(self):
         """Close the visualization."""
         plt.close(self.fig)
+
 
 class EvolutionVisualizer:
     def __init__(self):
@@ -490,6 +486,7 @@ class EvolutionVisualizer:
         plt.tight_layout()
         plt.show()
 
+
 class AverageAgeVisualizer:
     def __init__(self):
         self.history = {
@@ -540,6 +537,7 @@ class AverageAgeVisualizer:
         plt.tight_layout()
         plt.show()
 
+
 class PopulationChart:
     def __init__(self, destination_path=None):
         self.destination_path = destination_path
@@ -571,6 +569,7 @@ class PopulationChart:
             # print(f"Population chart saved to: {filepath}")
         else:
             plt.show()
+
 
 class CombinedEvolutionVisualizer:
     def __init__(self, destination_path=None, timestamp=None):
@@ -698,6 +697,7 @@ class CombinedEvolutionVisualizer:
         else:
             plt.show()
 
+
 class PreyDeathCauseVisualizer:
     def __init__(self, destination_path=None, timestamp=None):
         self.timestamp = timestamp
@@ -718,11 +718,11 @@ class PreyDeathCauseVisualizer:
     def plot(self):
         plt.figure(figsize=(8, 5))
         plt.plot(self.time_steps, [s * 100 for s in self.starved_ratio], label="Starved Prey %", color="blue", linewidth=2)
-        #plt.plot(self.time_steps, [e * 100 for e in self.eaten_ratio], label="Eaten Prey %", color="black", linestyle="--", linewidth=2)
+        # plt.plot(self.time_steps, [e * 100 for e in self.eaten_ratio], label="Eaten Prey %", color="black", linestyle="--", linewidth=2)
         plt.title("Prey Death Cause Starvation Relative")
         plt.xlabel("Step")
         plt.ylabel("Percentage (%)")
-        #plt.ylim(0, 100)
+        # plt.ylim(0, 100)
         plt.legend()
         plt.grid(True)
 
