@@ -703,7 +703,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_hydration[caught_prey]
             self._log(
                 self.verbose_death_cause,
-                f"[CAUSE OF DEATH] {agent} : {self.death_cause_prey[internal_id]}",
+                f"[CAUSE OF DEATH] {caught_prey} {self.death_cause_prey[internal_id]} by {agent}",
                 "red"
             )
         else:
