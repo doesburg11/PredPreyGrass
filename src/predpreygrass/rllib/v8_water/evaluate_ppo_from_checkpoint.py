@@ -23,7 +23,7 @@ import json
 
 verbose_grid = False
 verbose_actions = False
-seed = 5  # 42 # Optional: set to integer for reproducibility # candidates 4
+seed = 4  # 42 # Optional: set to integer for reproducibility # candidates 4
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
@@ -54,7 +54,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/PPO_2025-05-22_16-51-06/PPO_PredPreyGrass_30e9e_00000_0_2025-05-22_16-51-06/'
+checkpoint_root = '/v8_water/water_intolerrant/PPO_PredPreyGrass_30e9e_00000_0_2025-05-22_16-51-06/'
 checkpoint_dir = 'checkpoint_000097'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 # === Get training directory and prepare eval output dir ===x
@@ -90,7 +90,7 @@ grid_visualizer = MatPlotLibRenderer(
     trace_length=5,
     show_gridlines=False,
     scale=2,
-    destination_path=None,  # save to: eval_output_dir
+    destination_path=eval_output_dir,  # save to: eval_output_dir
 )
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
     destination_path=eval_output_dir,

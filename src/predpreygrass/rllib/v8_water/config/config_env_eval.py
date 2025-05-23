@@ -1,6 +1,6 @@
 config_env = {
 
-    "max_steps": 1000,
+    "max_steps": 500,
     "seed": 42,
 
     # Grid and Observation Settings
