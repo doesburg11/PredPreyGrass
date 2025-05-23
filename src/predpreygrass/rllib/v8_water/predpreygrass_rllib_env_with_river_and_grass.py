@@ -649,7 +649,7 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[ENGAGE] {agent} stepped into river at {tuple(map(int, predator_position))}",
                 "blue"
             )
-            self.agent_energies[agent] -= self.energy_loss_staying_in_river_predator
+            self.agent_energies[agent] = max(self.agent_energies[agent] - self.energy_loss_staying_in_river_predator, 0)
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
             # no hydration, just a bad move
             # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_predator)
@@ -726,7 +726,7 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[ENGAGE] {agent} stepped into river at {tuple(map(int, prey_position))}",
                 "blue"
             )
-            self.agent_energies[agent] -= self.energy_loss_staying_in_river_prey
+            self.agent_energies[agent] = max(self.agent_energies[agent] - self.energy_loss_staying_in_river_prey, 0)
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
             # no hydration, just a bad move
             # self.agent_hydration[agent] = min(self.agent_hydration[agent] + 1, self.max_hydration_prey)
