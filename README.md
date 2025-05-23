@@ -9,6 +9,9 @@
 ### Multi-Agent Reinforcement Learning and Artificial Selection
 
 <p align="center">
+     <img src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
+</p>
+<p align="center">
      <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
 </p>
 
@@ -19,7 +22,7 @@
 </p>
 
 ## Overview
-This project explores emergent behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
+This congiguration explores emergent behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
 
 We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 
