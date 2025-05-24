@@ -6,14 +6,19 @@
 [![YouTube](https://img.shields.io/badge/YouTube-Video-blue?logo=youtube)](https://www.youtube.com/watch?v=wdKX4vv8vk0)
 
 # Artificial Life and Intelligence
-### Multi-Agent Reinforcement Learning and Artificial Selection
+### Multi-Agent Reinforcement Learning, adaptation and Artificial Selection
 
 <p align="center">
-     <img src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
+    <b>Changing random resources positioning; river and grass</b></p>
+<p align="center">     
+    <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
 </p>
 <p align="center">
-     <img src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
+    <b>Fixed resources positioning; grass only</b></p>
+<p align="center">     
+    <img align="center" src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
 </p>
+
 
 <p align="center">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="260" height="40" />
@@ -22,7 +27,7 @@
 </p>
 
 ## Overview
-This congiguration explores emergent behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate*.
+These congigurations above explore emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, and even *mutate* in a continuously changing environment.
 
 We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 

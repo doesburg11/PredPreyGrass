@@ -31,13 +31,14 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy # 0.1
 
-    # Water settings
+    # Water
     "initial_hydration_predator": 3.0,
     "initial_hydration_prey": 2.0,
-    "dehydration_per_step_predator": 0.01,  # 0.1
-    "dehydration_per_step_prey": 0.0025,  # 0.05
-    "max_water_predator": 12.0,
-    "max_water_prey": 8.0,
+    "dehydration_per_step_predator": 0.1,
+    "dehydration_per_step_prey": 0.025,
+    "max_hydration_predator": 4.0,
+    "max_hydration_prey": 3.0,
+    "n_steps_river_change": 50,  # number of steps before rivers change
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30

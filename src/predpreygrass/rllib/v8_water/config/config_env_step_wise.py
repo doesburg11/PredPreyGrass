@@ -33,10 +33,10 @@ config_env = {
     "initial_hydration_predator": 3.0,
     "initial_hydration_prey": 2.0,
     "dehydration_per_step_predator": 0.1,
-    "dehydration_per_step_prey": 0.05,
+    "dehydration_per_step_prey": 0.025,
     "max_hydration_predator": 4.0,
     "max_hydration_prey": 3.0,
-
+    "n_steps_river_change": 50,  # number of steps before rivers change
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
