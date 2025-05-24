@@ -54,8 +54,8 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/v8_water/water_intolerrant/PPO_PredPreyGrass_30e9e_00000_0_2025-05-22_16-51-06/'
-checkpoint_dir = 'checkpoint_000097'
+checkpoint_root = '/PPO_2025-05-23_20-01-32/PPO_PredPreyGrass_f5558_00000_0_2025-05-23_20-01-32/'
+checkpoint_dir = 'checkpoint_000080'
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 # === Get training directory and prepare eval output dir ===x
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
