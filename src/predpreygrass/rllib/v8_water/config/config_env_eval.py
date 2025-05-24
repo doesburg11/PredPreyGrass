@@ -30,6 +30,7 @@ config_env = {
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy
+    "n_steps_river_change": 50,  # number of steps before rivers change
 
     # Water
     "initial_hydration_predator": 3.0,

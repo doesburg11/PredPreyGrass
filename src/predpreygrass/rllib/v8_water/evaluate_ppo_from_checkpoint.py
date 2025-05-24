@@ -23,7 +23,7 @@ import json
 
 verbose_grid = False
 verbose_actions = False
-seed = 4  # 42 # Optional: set to integer for reproducibility # candidates 4
+seed = 8  # 42 # Optional: set to integer for reproducibility # candidates 4
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
@@ -90,7 +90,7 @@ grid_visualizer = MatPlotLibRenderer(
     trace_length=5,
     show_gridlines=False,
     scale=2,
-    destination_path=eval_output_dir,  # save to: eval_output_dir
+    destination_path=None,  # save to: eval_output_dir
 )
 combined_evolution_visualizer = CombinedEvolutionVisualizer(
     destination_path=eval_output_dir,
