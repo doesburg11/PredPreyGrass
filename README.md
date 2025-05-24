@@ -9,7 +9,7 @@
 ### Multi-Agent Reinforcement Learning, adaptation and Artificial Selection
 
 <p align="center">
-    <b>Afdapting to a changing environment through selection and learning</b></p>
+    <b>Populations adapting to a changing environment by selection and learning</b></p>
 <p align="center">     
     <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
 </p>
