@@ -97,8 +97,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Track counts
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
-        self.current_num_grass = len(self.grass_positions)
-
         # Generate observations
         observations = {agent: self._get_observation(agent) for agent in self.agents}
 
