@@ -1,13 +1,5 @@
 """
-Predator-Prey Grass RLlib Environment
-experimental_6 - process movements externalization
-more or less succeeded in (_4). It seems that memory problems
-negatively affect training. Those menory problems likely due to
-other use of the (laptop) computer. This is very sensitive: any
-additional use of computer (Chrome, etc.) seems to cause problems.
-Restart computer seems necessary to get rid of the problems.
-Experimental_6:
--Externalize Spawning of new agents
+exp-1: add water
 
 """
 
@@ -26,6 +18,14 @@ class PredPreyGrass(MultiAgentEnv):
         if config is None:
             raise ValueError("Environment config must be provided explicitly.")
         self.config = config
+
+        self.use_water = config.get("use_water", False)
+        self.river_cells = set()
+        if self.use_water:
+            self.river_max_width = config.get("river_max_width", 1)
+            self.n_steps_river_change = config.get("n_steps_river_change", 10)
+
+        self.num_obs_channels = 5 if self.use_water else 4
 
         self.debug_mode = config.get("debug_mode", False)
         # Set specific verbose flags based on debug mode
@@ -68,7 +68,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Grid and Observation Settings
         self.grid_size = config.get("grid_size", 10)
-        self.num_obs_channels = config.get("num_obs_channels", 4)
+        self.num_obs_channels = 5 if self.use_water else 4
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 5)
 
@@ -77,12 +77,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
         self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
 
-        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
-        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
+        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.05)
+        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.05)
 
         self.cumulative_rewards = {}  # Track total rewards per agent
-        self.predator_speeds = [1, 2]
-        self.prey_speeds = [1, 2]
 
         # Age tracking dictionary
         self.agent_instance_counter: int = 0
@@ -91,29 +89,28 @@ class PredPreyGrass(MultiAgentEnv):
         # Tracking causes of death prey
         self.death_cause_prey: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
 
+        self.predator_speeds = [1, 2]
+        self.prey_speeds = [1, 2]
+
         # POSSIBLE agents (all agents that *could* exist)
         self.possible_agents = []
-
-        for i in range(self.n_possible_speed_1_predators):
-            self.possible_agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_possible_speed_2_predators):
-            self.possible_agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_possible_speed_1_prey):
-            self.possible_agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_possible_speed_2_prey):
-            self.possible_agents.append(f"speed_2_prey_{j}")
-
-        # INITIALLY ACTIVE agents (subset of possible_agents)
         self.agents = []
 
-        for i in range(self.n_initial_active_speed_1_predator):
-            self.agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_initial_active_speed_2_predator):
-            self.agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_initial_active_speed_1_prey):
-            self.agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_initial_active_speed_2_prey):
-            self.agents.append(f"speed_2_prey_{j}")
+        for role in ["predator", "prey"]:
+            speeds = getattr(self, f"{role}_speeds")
+            for speed in speeds:
+                # Add all possible agents
+                n_possible = getattr(self, f"n_possible_speed_{speed}_{role}s")
+                self.possible_agents.extend(
+                    [f"speed_{speed}_{role}_{i}" for i in range(n_possible)]
+                )
+
+                # Add initial active agents (subset)
+                n_initial = getattr(self, f"n_initial_active_speed_{speed}_{role}")
+                self.agents.extend(
+                    [f"speed_{speed}_{role}_{i}" for i in range(n_initial)]
+                )
+
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.grass_agents: List[AgentID] = [
