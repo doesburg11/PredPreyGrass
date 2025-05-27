@@ -1,6 +1,6 @@
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer
-from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass
-from predpreygrass.rllib.v8_water.config.config_env_random import config_env
+from predpreygrass.rllib.v9_optionalized.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass
+from predpreygrass.rllib.v9_optionalized.config.config_env_random import config_env
 # from time import sleep
 
 verbose_grid_state = False

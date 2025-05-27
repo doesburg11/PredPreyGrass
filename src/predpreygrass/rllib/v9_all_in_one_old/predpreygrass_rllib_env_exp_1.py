@@ -986,8 +986,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.rng = np.random.default_rng(config.get("seed", 42))
 
         # Learning agents
-        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
-        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_predator = config.get("n_possible_speed_1_predator", 25)
+        self.n_possible_speed_2_predator = config.get("n_possible_speed_2_predator", 25)
         self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
         self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
 
@@ -1048,30 +1048,25 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _create_learning_agent_lists(self):
         # create list of al possible learning agents
+        self.predator_speeds = [1, 2]  # TODO: make configurable
+        self.prey_speeds = [1, 2]
         self.agents = []
         self.possible_agents = []
 
-        # Add all possible speed-1 and speed-2 predator agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
-                self.possible_agents.append(f"speed_{speed}_predator_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
-                agent_id = f"speed_{speed}_predator_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
+        for role in ["predator", "prey"]:
+            speeds = getattr(self, f"{role}_speeds")
+            for speed in speeds:
+                # Add all possible agents
+                n_possible = getattr(self, f"n_possible_speed_{speed}_{role}")
+                self.possible_agents.extend(
+                    [f"speed_{speed}_{role}_{i}" for i in range(n_possible)]
+                )
 
-        # Add all possible speed-1 and speed-2 prey agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
-                self.possible_agents.append(f"speed_{speed}_prey_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
-                agent_id = f"speed_{speed}_prey_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
+                # Add initial active agents (subset)
+                n_initial = getattr(self, f"n_initial_active_speed_{speed}_{role}")
+                self.agents.extend(
+                    [f"speed_{speed}_{role}_{i}" for i in range(n_initial)]
+                )
 
     def _create_spaces(self):
         # Spaces

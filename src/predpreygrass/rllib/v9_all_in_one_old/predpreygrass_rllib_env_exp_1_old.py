@@ -53,8 +53,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
 
         # Learning agents
-        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
-        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_predator = config.get("n_possible_speed_1_predator", 25)
+        self.n_possible_speed_2_predator = config.get("n_possible_speed_2_predator", 25)
         self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
         self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
 
@@ -100,7 +100,7 @@ class PredPreyGrass(MultiAgentEnv):
             speeds = getattr(self, f"{role}_speeds")
             for speed in speeds:
                 # Add all possible agents
-                n_possible = getattr(self, f"n_possible_speed_{speed}_{role}s")
+                n_possible = getattr(self, f"n_possible_speed_{speed}_{role}")
                 self.possible_agents.extend(
                     [f"speed_{speed}_{role}_{i}" for i in range(n_possible)]
                 )
@@ -110,7 +110,6 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agents.extend(
                     [f"speed_{speed}_{role}_{i}" for i in range(n_initial)]
                 )
-
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.grass_agents: List[AgentID] = [
@@ -125,7 +124,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Define observation space per agent
         predator_obs_space = gymnasium.spaces.Box(
             low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64
-        )
+        )  # TODO remove hardcode low/high values
         prey_obs_space = gymnasium.spaces.Box(
             low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64
         )
@@ -235,7 +234,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Add all possible speed-1 and speed-2 predator agents
         for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
+            for i in range(self.config.get(f"n_possible_speed_{speed}_predator", 0)):
                 self.possible_agents.append(f"speed_{speed}_predator_{i}")
             for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
                 agent_id = f"speed_{speed}_predator_{i}"
@@ -256,7 +255,7 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agent_instance_counter += 1
 
         # Grass agent IDs (unchanged)
-        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
+        self.grass_agents: List[AgentID] = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
         def generate_random_positions(grid_size: int, num_positions: int):
             """
