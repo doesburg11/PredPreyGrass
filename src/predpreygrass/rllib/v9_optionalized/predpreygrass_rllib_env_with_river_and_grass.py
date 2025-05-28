@@ -25,6 +25,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._create_grid_world()
         self._create_spaces()
 
+
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.grass_agents: List[AgentID] = [
             f"grass_{k}" for k in range(self.initial_num_grass)
@@ -40,8 +41,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step = 0
         self.rng = np.random.default_rng(seed)
         self.grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
-        # reset entities (agents+grass) positions and energies
+        # Reset learning agent
         self._create_learning_agent_lists()
+
+        # create grass agent list
+        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
         # Generate random positions for learning agents on grid
         n_active_agents = len(self.agents)
@@ -52,7 +56,22 @@ class PredPreyGrass(MultiAgentEnv):
         prey_positions = active_agents_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
         # grass_positions = active_agents_positions[len(predator_positions) + len(prey_positions):]
 
-        # Assign predator positions, energy and water
+        # Assign predators
+        for i, agent in enumerate([a for a in self.agents if "predator" in a]):
+            pos = predator_positions[i]
+            self.predator_positions[agent] = pos
+            self._place_agent(agent, pos, self.initial_energy_predator, self.initial_hydration_predator, layer_index=1)
+
+        # Assign prey
+        for i, agent in enumerate([a for a in self.agents if "prey" in a]):
+            pos = prey_positions[i]
+            self.prey_positions[agent] = pos
+            self._place_agent(agent, pos, self.initial_energy_prey, self.initial_hydration_prey, layer_index=2)
+
+
+
+        """
+        # Assign predator positions, energy-level and hydration-level
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
             pos = predator_positions[i]
             self.agent_positions[agent] = pos
@@ -69,15 +88,18 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] = self.initial_energy_prey
             self.agent_hydration[agent] = self.initial_hydration_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
+        """
 
-        # Grass agent IDs
-        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
         # Water agent cells
         self.river_cells = self._generate_river()
         for pos in self.river_cells:
             self.grid_world_state[4, *pos] = 1.0
 
+        # Assign grass positions and energy
+        self._place_grass_near_river()
+
+        """
         # Assign grass positions and energy
         # Place grass near river
         self.grass_positions = {}
@@ -94,6 +116,8 @@ class PredPreyGrass(MultiAgentEnv):
                     self.grass_energies[f"grass_{count}"] = self.initial_energy_grass
                     self.grid_world_state[3, x, y] = self.initial_energy_grass
                     count += 1
+        """
+
         # Track counts
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
@@ -565,6 +589,40 @@ class PredPreyGrass(MultiAgentEnv):
     def _distance_to_river(self, pos):
         x, y = pos
         return min([abs(x - rx) + abs(y - ry) for (rx, ry) in self.river_cells]) if self.river_cells else self.grid_size
+
+    def _place_grass_near_river(self):
+        """
+        Populate grass positions and energy near the river during reset.
+        """
+        self.grass_positions = {}
+        self.grass_energies = {}
+        added = 0
+        max_grass = self.initial_num_grass
+        all_grass_candidates = set()
+
+        for river_cell in self.river_cells:
+            neighbors = self._get_spawnable_positions(
+                center=river_cell,
+                avoid_layers=[1, 2, 3, 4],  # avoid agents, grass, water
+                radius=2,
+                exclude_center=False
+            )
+            all_grass_candidates.update(neighbors)
+
+        all_grass_candidates = list(all_grass_candidates)
+        self.rng.shuffle(all_grass_candidates)
+
+        for pos in all_grass_candidates:
+            if added >= max_grass:
+                break
+            grass_id = f"grass_{added}"
+            self.grass_positions[grass_id] = pos
+            self.grass_energies[grass_id] = self.initial_energy_grass
+            self.grid_world_state[3, *pos] = self.initial_energy_grass
+            added += 1
+
+
+
 
     def _process_agent_movements(self, action_dict):
         """
@@ -1047,8 +1105,6 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _create_learning_agent_lists(self):
         # create list of al possible learning agents
-        self.predator_speeds = [1, 2]  # TODO: make configurable
-        self.prey_speeds = [1, 2]
         self.agents = []
         self.possible_agents = []
 
@@ -1147,6 +1203,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_ages: Dict[AgentID, int] = {}
         self.death_cause_prey: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
         self.death_cause_predator: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
+        self.predator_speeds = [1, 2]  # TODO: make configurable
+        self.prey_speeds = [1, 2]
         # Initialize grid_world_state and agent positions
         self.agent_positions: Dict[AgentID, Tuple[int, int]] = {}
         self.predator_positions: Dict[AgentID, Tuple[int, int]] = {}
@@ -1199,3 +1257,91 @@ class PredPreyGrass(MultiAgentEnv):
                     if (nx, ny) in self.river_cells:
                         return True
         return False
+
+    def _get_available_positions_from_layer(self, layer_index: int, occupied_threshold: float = 0.0) -> List[Tuple[int, int]]:
+        """
+        Return a list of (x, y) positions where the given layer is unoccupied.
+
+        Args:
+            layer_index (int): Index into grid_world_state (e.g., 1=predator, 2=prey, 3=grass, 4=water).
+            occupied_threshold (float): Values > this threshold are considered occupied.
+
+        Returns:
+            List[Tuple[int, int]]: List of available (x, y) coordinates.
+        """
+        occupied_mask = self.grid_world_state[layer_index] > occupied_threshold
+        available_mask = ~occupied_mask  # Invert mask
+        available_positions = np.argwhere(available_mask)
+        return [tuple(pos) for pos in available_positions]
+
+    def _get_occupied_positions_from_layers(self, layer_indices: List[int], threshold: float = 0.0) -> set[Tuple[int, int]]:
+        """
+        Combine masks from multiple layers to find all occupied cells.
+
+        Args:
+            layer_indices (List[int]): List of layer indices to check (e.g., [1, 2, 3]).
+            threshold (float): Minimum value considered as occupied.
+
+        Returns:
+            Set[Tuple[int, int]]: Set of (x, y) positions that are occupied in any of the layers.
+        """
+        occupied = np.zeros((self.grid_size, self.grid_size), dtype=bool)
+        for idx in layer_indices:
+            occupied |= self.grid_world_state[idx] > threshold
+        return set(map(tuple, np.argwhere(occupied)))
+
+    def _get_spawnable_positions(
+        self,
+        center: Tuple[int, int],
+        avoid_layers: List[int],
+        radius: int = 1,
+        exclude_center: bool = True,
+    ) -> List[Tuple[int, int]]:
+        """
+        Return a list of spawnable positions within a square region (Moore-like neighborhood)
+        around a center point, excluding any positions occupied in the given grid layers.
+
+        Args:
+            center: (x, y) position to search around.
+            avoid_layers: List of grid layers to treat as occupied (e.g., [1, 2, 3]).
+            radius: Neighborhood radius (1 = Moore neighborhood, 2 = wider area).
+            exclude_center: Whether to exclude the center cell itself.
+
+        Returns:
+            List of (x, y) tuples that are unoccupied and within radius.
+        """
+        cx, cy = center
+        occupied = self._get_occupied_positions_from_layers(avoid_layers)
+
+        candidates = []
+        for dx in range(-radius, radius + 1):
+            for dy in range(-radius, radius + 1):
+                nx, ny = cx + dx, cy + dy
+                if 0 <= nx < self.grid_size and 0 <= ny < self.grid_size:
+                    pos = (nx, ny)
+                    if exclude_center and pos == center:
+                        continue
+                    if pos not in occupied:
+                        candidates.append(pos)
+
+        return candidates
+
+    def _place_agent(self, agent_id: str, position: Tuple[int, int], energy: float, hydration: float = None, layer_index: int = None):
+        """
+        Assign an agent to a position on the grid and set its energy and hydration values.
+
+        Args:
+            agent_id (str): The agent's identifier (e.g., "speed_1_predator_0").
+            position (Tuple[int, int]): (x, y) grid position to place the agent.
+            energy (float): Initial energy level to assign.
+            hydration (float, optional): Initial hydration level to assign.
+            layer_index (int, optional): Grid layer index to mark the energy value (1=predator, 2=prey).
+        """
+        self.agent_positions[agent_id] = position
+        self.agent_energies[agent_id] = energy
+
+        if hydration is not None:
+            self.agent_hydration[agent_id] = hydration
+
+        if layer_index is not None:
+            self.grid_world_state[layer_index, *position] = energy
