@@ -1,7 +1,7 @@
 import pygame
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer
-from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import your custom environment
-from predpreygrass.rllib.v8_water.config.config_env_step_wise import config_env
+from predpreygrass.rllib.v9_optionalized.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.v9_optionalized.config.config_env_step_wise import config_env
 import numpy as np
 
 # Ensure all elements are displayed
@@ -70,10 +70,10 @@ if __name__ == "__main__":
             for agent, water in env.agent_hydration.items():
                 print(f"{agent}: {water:.2f}")
             """
-            # print("-----------------------------------------")
-            # env._print_grid_from_positions()
-            # env._print_grid_from_state()
-            # print("-----------------------------------------")
+            print("-----------------------------------------")
+            env._print_grid_from_positions()
+            env._print_grid_from_state()
+            print("-----------------------------------------")
         if verbose_observation:
             for agent in env.agents:
                 print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")

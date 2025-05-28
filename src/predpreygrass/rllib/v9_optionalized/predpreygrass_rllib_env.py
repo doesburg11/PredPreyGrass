@@ -261,7 +261,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Grass agent IDs (unchanged)
         self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
-
         def generate_random_positions(grid_size: int, num_positions: int):
             """
             Generate unique random positions on a grid.

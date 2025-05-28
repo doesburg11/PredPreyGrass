@@ -25,6 +25,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._create_grid_world()
         self._create_spaces()
 
+        self.is_grass_near_river = False  # Flag to check if grass is near the river
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
         self.grass_agents: List[AgentID] = [
@@ -51,10 +52,30 @@ class PredPreyGrass(MultiAgentEnv):
         n_active_agents = len(self.agents)
         active_agents_positions = self._generate_random_positions(self.grid_size, n_active_agents, seed=seed)
 
-        # Assign positions to learning agents
-        predator_positions = active_agents_positions[:len([a for a in self.agents if "predator" in a])]
-        prey_positions = active_agents_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
-        # grass_positions = active_agents_positions[len(predator_positions) + len(prey_positions):]
+        if self.is_grass_near_river:
+            # Generate random positions for learning agents on grid
+            n_active_agents = len(self.agents)
+            active_agents_positions = self._generate_random_positions(self.grid_size, n_active_agents, seed=seed)
+            # Assign positions to learning agents
+            predator_positions = active_agents_positions[:len([a for a in self.agents if "predator" in a])]
+            prey_positions = active_agents_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
+            # grass_positions = active_agents_positions[len(predator_positions) + len(prey_positions):]
+        else:
+            # Generate random positions for learning agents on grid
+            n_active_entities = len(self.agents) + len(self.grass_agents)
+            active_entities_positions = self._generate_random_positions(self.grid_size, n_active_entities, seed=seed)
+            #print(f"Active entities positions: {active_entities_positions}")
+            print(f"Number of active entities: {n_active_entities}")
+
+            # Assign positions to learning agents
+            predator_positions = active_entities_positions[:len([a for a in self.agents if "predator" in a])]
+            #print(f"Predator positions: {predator_positions}")
+            print(f"Number of predators: {len(predator_positions)}")
+            prey_positions = active_entities_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
+            #print(f"Prey positions: {prey_positions}")
+            print(f"Number of prey: {len(prey_positions)}")
+            grass_positions = active_entities_positions[len(predator_positions) + len(prey_positions):]
+            print(f"Grass positions: {grass_positions}")
 
         # Assign predators
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
@@ -68,28 +89,13 @@ class PredPreyGrass(MultiAgentEnv):
             self.prey_positions[agent] = pos
             self._place_agent(agent, pos, self.initial_energy_prey, self.initial_hydration_prey, layer_index=2)
 
-
-
-        """
-        # Assign predator positions, energy-level and hydration-level
-        for i, agent in enumerate([a for a in self.agents if "predator" in a]):
-            pos = predator_positions[i]
-            self.agent_positions[agent] = pos
-            self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator
-            self.agent_hydration[agent] = self.initial_hydration_predator
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-
-        # Assign prey positions, energy and water
-        for i, agent in enumerate([a for a in self.agents if "prey" in a]):
-            pos = prey_positions[i]
-            self.agent_positions[agent] = pos
-            self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.agent_hydration[agent] = self.initial_hydration_prey
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-        """
-
+        if not self.is_grass_near_river:
+            # Assign random grass positions and energy
+            for i, grass in enumerate(self.grass_agents):
+                pos = grass_positions[i]
+                self.grass_positions[grass] = pos
+                self.grass_energies[grass] = self.initial_energy_grass
+                self.grid_world_state[3, *pos] = self.initial_energy_grass
 
         # Water agent cells
         self.river_cells = self._generate_river()
@@ -97,26 +103,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[4, *pos] = 1.0
 
         # Assign grass positions and energy
-        self._place_grass_near_river()
-
-        """
-        # Assign grass positions and energy
-        # Place grass near river
-        self.grass_positions = {}
-        self.grass_energies = {}
-        count = 0
-        max_grass = 30
-        for x in range(self.grid_size):
-            for y in range(self.grid_size):
-                if count >= max_grass:
-                    break
-                dist = self._distance_to_river((x, y))
-                if dist <= 2 and self.rng.random() < 0.7:  # favor close to water
-                    self.grass_positions[f"grass_{count}"] = (x, y)
-                    self.grass_energies[f"grass_{count}"] = self.initial_energy_grass
-                    self.grid_world_state[3, x, y] = self.initial_energy_grass
-                    count += 1
-        """
+        if self.is_grass_near_river:
+            self._place_grass_near_river()
 
         # Track counts
         self.active_num_predators = len(self.predator_positions)
@@ -341,7 +329,7 @@ class PredPreyGrass(MultiAgentEnv):
             print(f"{predator_row}     {prey_row}     {grass_row}")
 
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-
+    """
     def _print_grid_from_state(self):
         print(f"\nCurrent Grid State (Energy Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
 
@@ -387,6 +375,119 @@ class PredPreyGrass(MultiAgentEnv):
             print(f"{predator_row}     {prey_row}     {grass_row}    {water_row}")
 
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+
+        print(f"\nCurrent Grid State (Hydration Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
+
+        # Initialize empty grids
+        predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        prey_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        grass_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        water_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+
+        # Fill the grid (storing values in original order)
+        for y in range(self.grid_size):
+            for x in range(self.grid_size):
+                predator_energy = self.grid_world_state[1, x, y]
+                prey_energy = self.grid_world_state[2, x, y]
+                grass_energy = self.grid_world_state[3, x, y]
+                water_quantity = self.grid_world_state[4, x, y]
+
+                if predator_energy > 0:
+                    predator_grid[y][x] = f"{predator_energy:4.2f}".center(5)
+                if prey_energy > 0:
+                    prey_grid[y][x] = f"{prey_energy:4.2f}".center(5)
+                if grass_energy > 0:
+                    grass_grid[y][x] = f"{grass_energy:4.2f}".center(5)
+                if water_quantity > 0:
+                    water_grid[y][x] = f"{water_quantity:4.2f}".center(5)
+
+        # Transpose the grids (swap rows and columns)
+        predator_grid = [[predator_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+        prey_grid = [[prey_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+        grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+        water_grid = [[water_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+
+        # Print Headers
+        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}  {'Water'.center(self.grid_size * 6)}")
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+
+        # Print Transposed Grids (rows become columns)
+        for x in range(self.grid_size):  # Now iterating over transposed rows (original columns)
+            predator_row = " ".join(predator_grid[x])
+            prey_row = " ".join(prey_grid[x])
+            grass_row = " ".join(grass_grid[x])
+            water_row = " ".join(water_grid[x])
+            print(f"{predator_row}     {prey_row}     {grass_row}    {water_row}")
+
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+        """
+
+    def _print_grid_from_state(self):
+        print(f"\nCurrent Grid State (Energy & Hydration Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
+
+        # Initialize empty grids
+        predator_energy_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        prey_energy_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        grass_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        water_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        predator_hydration_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+        prey_hydration_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
+
+        # Fill the grids
+        for agent, pos in self.predator_positions.items():
+            x, y = pos
+            energy = self.agent_energies.get(agent, 0)
+            hydration = self.agent_hydration.get(agent, 0)
+            predator_energy_grid[y][x] = f"{energy:4.2f}".center(5)
+            predator_hydration_grid[y][x] = f"{hydration:4.2f}".center(5)
+
+        for agent, pos in self.prey_positions.items():
+            x, y = pos
+            energy = self.agent_energies.get(agent, 0)
+            hydration = self.agent_hydration.get(agent, 0)
+            prey_energy_grid[y][x] = f"{energy:4.2f}".center(5)
+            prey_hydration_grid[y][x] = f"{hydration:4.2f}".center(5)
+
+        for agent, pos in self.grass_positions.items():
+            x, y = pos
+            energy = self.grass_energies.get(agent, 0)
+            grass_grid[y][x] = f"{energy:4.2f}".center(5)
+
+        for (x, y) in self.river_cells:
+            water_grid[y][x] = f"{1.00:4.2f}".center(5)
+
+        # Transpose grids for column-wise display
+        def transpose(g):
+            return [[g[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
+        predator_energy_grid = transpose(predator_energy_grid)
+        prey_energy_grid = transpose(prey_energy_grid)
+        grass_grid = transpose(grass_grid)
+        water_grid = transpose(water_grid)
+        predator_hydration_grid = transpose(predator_hydration_grid)
+        prey_hydration_grid = transpose(prey_hydration_grid)
+
+        # Print headers
+        print(f"{'Pred_E'.center(self.grid_size * 6)}   {'Prey_E'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}   {'Water'.center(self.grid_size * 6)}")
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+
+        for row in range(self.grid_size):
+            pe = " ".join(predator_energy_grid[row])
+            pr = " ".join(prey_energy_grid[row])
+            gr = " ".join(grass_grid[row])
+            wa = " ".join(water_grid[row])
+            print(f"{pe}     {pr}     {gr}     {wa}")
+
+        print("\n" + "-" * (self.grid_size * 6 * 4))
+
+        print(f"{'Pred_H'.center(self.grid_size * 6)}   {'Prey_H'.center(self.grid_size * 6)}")
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
+
+        for row in range(self.grid_size):
+            ph = " ".join(predator_hydration_grid[row])
+            prh = " ".join(prey_hydration_grid[row])
+            print(f"{ph}     {prh}")
+
+        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
     def _print_movement_table(self, action_dict, predator_position_after_action, prey_new_unresolved_positions, resolved_positions, colliding_predator_agents, colliding_prey_agents):
         """
@@ -979,7 +1080,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[4, *pos] = 1.0
 
         # Adjust grass based on new river layout
-        self._clear_and_add_new_grass_near_river()
+        if self.is_grass_near_river:
+            self._clear_and_add_new_grass_near_river()
 
     def _clear_and_add_new_grass_near_river(self):
         """
