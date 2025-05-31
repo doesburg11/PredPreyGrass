@@ -4,7 +4,7 @@ config_env = {
     "seed": 42,
 
     # Grid and Observation Settings
-    "grid_size": 25,
+    "grid_size": 10,
     "num_obs_channels": 5,  # Wall, Predator, Prey, Grass, Water
     "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
@@ -45,8 +45,8 @@ config_env = {
     "n_possible_speed_2_predator": 30,  # 30
     "n_possible_speed_1_prey": 40,  # 40
     "n_possible_speed_2_prey": 40,  # 40
-    "n_initial_active_speed_1_predator": 20,  # 5
-    "n_initial_active_speed_1_prey": 20,  # 7
+    "n_initial_active_speed_1_predator": 5,  # 5
+    "n_initial_active_speed_1_prey": 5,  # 7
     "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 0,  # 7
 
@@ -55,7 +55,7 @@ config_env = {
     "mutation_rate_prey": 0.05,      # and vice versa
 
     # Grass settings
-    "initial_num_grass": 50,  # 50
+    "initial_num_grass": 10,  # 50
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,
 

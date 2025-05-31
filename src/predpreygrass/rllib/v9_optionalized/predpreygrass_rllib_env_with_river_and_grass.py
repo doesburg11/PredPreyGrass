@@ -1355,7 +1355,7 @@ class PredPreyGrass(MultiAgentEnv):
         if layer_index is not None:
             self.grid_world_state[layer_index, *position] = energy
 
-    def _export_grid_to_json(self, grid_state: np.ndarray, step: int, export_dir: str = "godot_json_exports"):
+    def _export_grid_to_json(self, grid_state: np.ndarray, step: int, export_dir: str = "unity_json_exports"):
         """Save the 3D grid_world_state as a JSON file for external visualization (e.g., in Godot)."""
         os.makedirs(export_dir, exist_ok=True)
 
