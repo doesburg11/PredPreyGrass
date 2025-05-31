@@ -188,9 +188,6 @@ class PredPreyGrass(MultiAgentEnv):
         if self.current_step % self.n_steps_river_change == 0:
             self._change_river_course()
 
-        if self.current_step % 1 == 0:
-            self._export_grid_to_file(self.grid_world_state, self.current_step)
-
         # Increment step counter
         self.current_step += 1
 
@@ -334,98 +331,6 @@ class PredPreyGrass(MultiAgentEnv):
             print(f"{predator_row}     {prey_row}     {grass_row}")
 
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-    """
-    def _print_grid_from_state(self):
-        print(f"\nCurrent Grid State (Energy Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
-
-        # Initialize empty grids
-        predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        prey_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        grass_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        water_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-
-        # Fill the grid (storing values in original order)
-        for y in range(self.grid_size):
-            for x in range(self.grid_size):
-                predator_energy = self.grid_world_state[1, x, y]
-                prey_energy = self.grid_world_state[2, x, y]
-                grass_energy = self.grid_world_state[3, x, y]
-                water_quantity = self.grid_world_state[4, x, y]
-
-                if predator_energy > 0:
-                    predator_grid[y][x] = f"{predator_energy:4.2f}".center(5)
-                if prey_energy > 0:
-                    prey_grid[y][x] = f"{prey_energy:4.2f}".center(5)
-                if grass_energy > 0:
-                    grass_grid[y][x] = f"{grass_energy:4.2f}".center(5)
-                if water_quantity > 0:
-                    water_grid[y][x] = f"{water_quantity:4.2f}".center(5)
-
-        # Transpose the grids (swap rows and columns)
-        predator_grid = [[predator_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        prey_grid = [[prey_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        water_grid = [[water_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-
-        # Print Headers
-        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}  {'Water'.center(self.grid_size * 6)}")
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-
-        # Print Transposed Grids (rows become columns)
-        for x in range(self.grid_size):  # Now iterating over transposed rows (original columns)
-            predator_row = " ".join(predator_grid[x])
-            prey_row = " ".join(prey_grid[x])
-            grass_row = " ".join(grass_grid[x])
-            water_row = " ".join(water_grid[x])
-            print(f"{predator_row}     {prey_row}     {grass_row}    {water_row}")
-
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-
-        print(f"\nCurrent Grid State (Hydration Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
-
-        # Initialize empty grids
-        predator_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        prey_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        grass_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-        water_grid = [["  .  " for _ in range(self.grid_size)] for _ in range(self.grid_size)]
-
-        # Fill the grid (storing values in original order)
-        for y in range(self.grid_size):
-            for x in range(self.grid_size):
-                predator_energy = self.grid_world_state[1, x, y]
-                prey_energy = self.grid_world_state[2, x, y]
-                grass_energy = self.grid_world_state[3, x, y]
-                water_quantity = self.grid_world_state[4, x, y]
-
-                if predator_energy > 0:
-                    predator_grid[y][x] = f"{predator_energy:4.2f}".center(5)
-                if prey_energy > 0:
-                    prey_grid[y][x] = f"{prey_energy:4.2f}".center(5)
-                if grass_energy > 0:
-                    grass_grid[y][x] = f"{grass_energy:4.2f}".center(5)
-                if water_quantity > 0:
-                    water_grid[y][x] = f"{water_quantity:4.2f}".center(5)
-
-        # Transpose the grids (swap rows and columns)
-        predator_grid = [[predator_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        prey_grid = [[prey_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-        water_grid = [[water_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
-
-        # Print Headers
-        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}  {'Water'.center(self.grid_size * 6)}")
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-
-        # Print Transposed Grids (rows become columns)
-        for x in range(self.grid_size):  # Now iterating over transposed rows (original columns)
-            predator_row = " ".join(predator_grid[x])
-            prey_row = " ".join(prey_grid[x])
-            grass_row = " ".join(grass_grid[x])
-            water_row = " ".join(water_grid[x])
-            print(f"{predator_row}     {prey_row}     {grass_row}    {water_row}")
-
-        print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
-        """
 
     def _print_grid_from_state(self):
         print(f"\nCurrent Grid State (Energy & Hydration Levels):  predators: {self.active_num_predators} prey: {self.active_num_prey} \n")
@@ -1449,6 +1354,21 @@ class PredPreyGrass(MultiAgentEnv):
 
         if layer_index is not None:
             self.grid_world_state[layer_index, *position] = energy
+
+    def _export_grid_to_json(self, grid_state: np.ndarray, step: int, export_dir: str = "godot_json_exports"):
+        """Save the 3D grid_world_state as a JSON file for external visualization (e.g., in Godot)."""
+        os.makedirs(export_dir, exist_ok=True)
+
+        # Convert to nested Python list for JSON serialization
+        grid_as_list = grid_state.tolist()
+
+        filename = f"grid_step_{step:05d}.json"
+        path = os.path.join(export_dir, filename)
+
+        with open(path, "w") as f:
+            json.dump(grid_as_list, f)
+
+        print(f"[✓] Exported grid to JSON: {path}")
 
     def _export_grid_to_file(self, grid_state, step, export_dir="unity_viewer_exports"):
         """
