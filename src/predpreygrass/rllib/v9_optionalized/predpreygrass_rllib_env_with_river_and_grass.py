@@ -13,6 +13,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
 import numpy as np
 import math
+import os
+import json
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -64,15 +66,15 @@ class PredPreyGrass(MultiAgentEnv):
             # Generate random positions for learning agents on grid
             n_active_entities = len(self.agents) + len(self.grass_agents)
             active_entities_positions = self._generate_random_positions(self.grid_size, n_active_entities, seed=seed)
-            #print(f"Active entities positions: {active_entities_positions}")
+            # print(f"Active entities positions: {active_entities_positions}")
             print(f"Number of active entities: {n_active_entities}")
 
             # Assign positions to learning agents
             predator_positions = active_entities_positions[:len([a for a in self.agents if "predator" in a])]
-            #print(f"Predator positions: {predator_positions}")
+            # print(f"Predator positions: {predator_positions}")
             print(f"Number of predators: {len(predator_positions)}")
             prey_positions = active_entities_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
-            #print(f"Prey positions: {prey_positions}")
+            # print(f"Prey positions: {prey_positions}")
             print(f"Number of prey: {len(prey_positions)}")
             grass_positions = active_entities_positions[len(predator_positions) + len(prey_positions):]
             print(f"Grass positions: {grass_positions}")
@@ -185,6 +187,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         if self.current_step % self.n_steps_river_change == 0:
             self._change_river_course()
+
+        if self.current_step % 1 == 0:
+            self._export_grid_to_file(self.grid_world_state, self.current_step)
 
         # Increment step counter
         self.current_step += 1
@@ -721,9 +726,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.grass_energies[grass_id] = self.initial_energy_grass
             self.grid_world_state[3, *pos] = self.initial_energy_grass
             added += 1
-
-
-
 
     def _process_agent_movements(self, action_dict):
         """
@@ -1447,3 +1449,23 @@ class PredPreyGrass(MultiAgentEnv):
 
         if layer_index is not None:
             self.grid_world_state[layer_index, *position] = energy
+
+    def _export_grid_to_file(self, grid_state, step, export_dir="unity_viewer_exports"):
+        """
+        Export the grid state to a JSON file, rotating each channel 90° counter-clockwise
+        to align with Unity's coordinate system (origin bottom-left).
+        
+        Assumes grid_state shape: [channels, width, height] (CHW).
+        """
+        os.makedirs(export_dir, exist_ok=True)
+        filepath = os.path.join(export_dir, f"grid_step_{step:05d}.json")
+
+        # Rotate each 2D layer
+        rotated_layers = [np.rot90(grid_state[i], k=3) for i in range(grid_state.shape[0])]
+
+        # Convert to list-of-lists format
+        grid_as_list = [layer.tolist() for layer in rotated_layers]
+
+        # Save as JSON
+        with open(filepath, "w") as f:
+            json.dump(grid_as_list, f)
