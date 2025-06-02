@@ -6,7 +6,7 @@ from predpreygrass.rllib.v9_optionalized.config.config_env_random import config_
 verbose_grid_state = False
 verbose_observation = False
 
-seed_value = 2  # config_env.get("seed", 42)
+seed_value = 4  # config_env.get("seed", 42)
 
 if __name__ == "__main__":
     env = PredPreyGrass(config=config_env)

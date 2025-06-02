@@ -13,6 +13,8 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
 import numpy as np
 import math
+import os
+import json
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -176,6 +178,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Increment step counter
         self.current_step += 1
+
+        self._export_grid_to_file(self.grid_world_state, self.current_step)
 
         return observations, rewards, terminations, truncations, infos
 
@@ -1201,3 +1205,22 @@ class PredPreyGrass(MultiAgentEnv):
                     if (nx, ny) in self.river_cells:
                         return True
         return False
+
+    def _export_grid_to_file(self, grid_state, step, export_dir="/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Assets/StreamingAssets/unity_viewer_exports"):
+        """
+        Export the grid state to a JSON file, rotating each channel 90° counter-clockwise
+        to align with Unity's coordinate system (origin bottom-left).
+        Assumes grid_state shape: [channels, width, height] (CHW).
+        """
+        os.makedirs(export_dir, exist_ok=True)
+        filepath = os.path.join(export_dir, f"grid_step_{step:05d}.json")
+
+        # Rotate each 2D layer
+        rotated_layers = [np.rot90(grid_state[i], k=3) for i in range(grid_state.shape[0])]
+
+        # Convert to list-of-lists format
+        grid_as_list = [layer.tolist() for layer in rotated_layers]
+
+        # Save as JSON
+        with open(filepath, "w") as f:
+            json.dump(grid_as_list, f)

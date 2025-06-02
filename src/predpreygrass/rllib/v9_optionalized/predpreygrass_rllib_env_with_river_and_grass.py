@@ -191,6 +191,8 @@ class PredPreyGrass(MultiAgentEnv):
         # Increment step counter
         self.current_step += 1
 
+        self._export_grid_to_file(self.grid_world_state, self.current_step)
+
         return observations, rewards, terminations, truncations, infos
 
     def _get_movement_energy_cost(self, agent, current_position, new_position):
@@ -1374,7 +1376,6 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Export the grid state to a JSON file, rotating each channel 90° counter-clockwise
         to align with Unity's coordinate system (origin bottom-left).
-        
         Assumes grid_state shape: [channels, width, height] (CHW).
         """
         os.makedirs(export_dir, exist_ok=True)
