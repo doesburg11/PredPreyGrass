@@ -8,7 +8,7 @@ config_env = {
     "num_obs_channels": 5,  # Wall, Predator, Prey, Grass, Water
     "predator_obs_range": 7,  # 7
     "prey_obs_range": 9,  # 9
-    
+
     # Action space settings
     "speed_1_action_range": 3,
     "speed_2_action_range": 5,
@@ -21,7 +21,7 @@ config_env = {
     "penalty_prey_caught": 0.0,
     "reproduction_reward_predator": 10.0,
     "reproduction_reward_prey": 10.0,
-    
+
     # Energy settings
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,

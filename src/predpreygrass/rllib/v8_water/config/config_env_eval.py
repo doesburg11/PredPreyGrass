@@ -25,8 +25,8 @@ config_env = {
     # Energy settings
     "energy_loss_per_step_predator": 0.25,  # experimental with respect to energy_move_cost # 0.15
     "energy_loss_per_step_prey": 0.05,  # 0.05
-    #"energy_loss_staying_in_river_predator": 0.2,  # 0.15
-    #"energy_loss_staying_in_river_prey": 0.3,  # 0.05
+    # "energy_loss_staying_in_river_predator": 0.2,  # 0.15
+    # "energy_loss_staying_in_river_prey": 0.3,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy
@@ -38,7 +38,7 @@ config_env = {
     "dehydration_per_step_prey": 0.025,
     "max_hydration_predator": 4.0,
     "max_hydration_prey": 3.0,
-    #"n_steps_river_change": 10,  # number of steps before rivers change
+    # "n_steps_river_change": 10,  # number of steps before rivers change
 
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
