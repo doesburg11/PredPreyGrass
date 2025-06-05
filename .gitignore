@@ -227,3 +227,6 @@ exported_grid_states/
 *.npy
 *.json
 *.csv
+bfg.jar
+blobs.txt
+.bfg-report/
