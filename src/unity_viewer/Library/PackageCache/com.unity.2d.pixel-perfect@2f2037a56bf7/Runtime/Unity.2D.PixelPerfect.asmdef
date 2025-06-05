@@ -1,0 +1,19 @@
+{
+    "name": "Unity.2D.PixelPerfect",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "1.0.0",
+            "define": "ENABLE_URP"
+        }
+    ],
+    "noEngineReferences": false
+}

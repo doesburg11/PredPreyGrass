@@ -1,0 +1,25 @@
+{
+    "name": "FromAssetBundle",
+    "rootNamespace": "",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.modules.unitywebrequestassetbundle",
+            "expression": "0.0.1",
+            "define": "ENABLE_WEB_REQUEST_ASSET_BUNDLE"
+        },
+        {
+            "name": "com.unity.modules.assetbundle",
+            "expression": "0.0.1",
+            "define": "ASSETBUNDLE_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
+}

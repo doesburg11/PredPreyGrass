@@ -1,0 +1,47 @@
+* {
+    display: flex;
+}
+
+Foldout > Toggle.unity-foldout__toggle {
+    -unity-font-style: bold;
+    border-top-width: 1px;
+    margin: 0;
+}
+
+Foldout > VisualElement {
+    margin-right: 15px;
+}
+
+Foldout VisualElement Label {
+    font-size: 12px;
+}
+
+Foldout>Toggle.asepriteImporter-editor-dark {
+    background-color: #323232;
+    border-top-color: #1f1f1f;
+}
+
+Foldout>Toggle.asepriteImporter-editor-light {
+    background-color: #d3d3d3;
+    border-top-color: #999999;
+}
+
+Button {
+    align-self: flex-end;
+}
+
+.HiddenElement {
+    display: none;
+}
+
+.PaddingElement {
+    padding-bottom: 5px;
+}
+
+.SubElement {
+    margin-left: 15px;
+}
+
+.SubSubElement {
+    margin-left: 30px;
+}

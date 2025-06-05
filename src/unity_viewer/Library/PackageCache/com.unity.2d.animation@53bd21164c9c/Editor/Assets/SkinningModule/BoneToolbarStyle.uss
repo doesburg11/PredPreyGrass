@@ -1,0 +1,51 @@
+/**********************************************************************************************************************/
+/* BoneToolbar                                                                                                         */
+/**********************************************************************************************************************/
+
+#EditJointsImage {
+    background-image: url("../EditorIcons/Light/Edit_Joints.png");
+}
+
+#CreateBoneImage {
+    background-image: url("../EditorIcons/Light/Create Bones.png");
+}
+
+#SplitBoneImage {
+    background-image: url("../EditorIcons/Light/Split Bones.png");
+}
+
+#BoneReparentImage {
+    background-image: url("../EditorIcons/Light/Parent_Bone.png");
+}
+
+.Dark #EditJointsImage {
+    background-image: url("../EditorIcons/Dark/d_Edit_Joints.png");
+}
+
+.Dark #CreateBoneImage {
+    background-image: url("../EditorIcons/Dark/d_Create Bones.png");
+}
+
+.Dark #SplitBoneImage {
+    background-image: url("../EditorIcons/Dark/d_Split Bones.png");
+}
+
+.Dark #BoneReparentImage {
+    background-image: url("../EditorIcons/Dark/d_Parent_Bone.png");
+}
+
+.Checked #EditJointsImage {
+    background-image: url("../EditorIcons/Selected/Edit_Joints.png");
+}
+
+.Checked #CreateBoneImage {
+    background-image: url("../EditorIcons/Selected/Create Bones.png");
+}
+
+.Checked #SplitBoneImage {
+    background-image: url("../EditorIcons/Selected/Split Bones.png");
+}
+
+.Checked #BoneReparentImage {
+    background-image: url("../EditorIcons/Selected/Parent_Bone.png");
+}

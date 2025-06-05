@@ -1,0 +1,544 @@
+{
+  "context": {
+    "projectPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Packages",
+    "unityVersion": "6000.1.5f1"
+  },
+  "inputs": [
+    "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Packages/manifest.json",
+    "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Packages/packages-lock.json",
+    "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/BuiltInPackagesCombined.sha1"
+  ],
+  "outputs": {
+    "com.unity.collab-proxy@2.8.2": {
+      "name": "com.unity.collab-proxy",
+      "displayName": "Version Control",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.collab-proxy@c854d1f7d97f",
+      "fingerprint": "c854d1f7d97fbe1905f3e3591ded6fe77d96e654",
+      "editorCompatibility": "2021.3.0f1",
+      "version": "2.8.2",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.feature.2d@2.0.1": {
+      "name": "com.unity.feature.2d",
+      "displayName": "2D",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.feature.2d@dd1ea8910f12",
+      "fingerprint": "dd1ea8910f12f021c166e8d0d78de44f1390ff6b",
+      "version": "2.0.1",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.ide.rider@3.0.36": {
+      "name": "com.unity.ide.rider",
+      "displayName": "JetBrains Rider Editor",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.ide.rider@4d374c7eb6db",
+      "fingerprint": "4d374c7eb6db6907c7e6925e3086c3c73f926e13",
+      "editorCompatibility": "2019.4.6f1",
+      "version": "3.0.36",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.ide.visualstudio@2.0.23": {
+      "name": "com.unity.ide.visualstudio",
+      "displayName": "Visual Studio Editor",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.ide.visualstudio@198cdf337d13",
+      "fingerprint": "198cdf337d13c83ca953581515630d66b779e92b",
+      "editorCompatibility": "2019.4.25f1",
+      "version": "2.0.23",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.inputsystem@1.14.0": {
+      "name": "com.unity.inputsystem",
+      "displayName": "Input System",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.inputsystem@7fe8299111a7",
+      "fingerprint": "7fe8299111a78212d8968229ab41a82e4991ba25",
+      "editorCompatibility": "2021.3.0a1",
+      "version": "1.14.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.multiplayer.center@1.0.0": {
+      "name": "com.unity.multiplayer.center",
+      "displayName": "Multiplayer Center",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.multiplayer.center@f5e57a8bed06",
+      "fingerprint": "f5e57a8bed0637672c58142b1bfd7e6fea03746c",
+      "editorCompatibility": "6000.0.0a1",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.test-framework@1.5.1": {
+      "name": "com.unity.test-framework",
+      "displayName": "Test Framework",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.test-framework@cbf6445a296c",
+      "fingerprint": "cbf6445a296c37a8b4336cd212d6d5a2d36571c5",
+      "editorCompatibility": "2022.3.0a1",
+      "version": "1.5.1",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.timeline@1.8.7": {
+      "name": "com.unity.timeline",
+      "displayName": "Timeline",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.timeline@c58b4ee65782",
+      "fingerprint": "c58b4ee65782ad38338e29f7ee67787cb6998f04",
+      "editorCompatibility": "2019.3.0a1",
+      "version": "1.8.7",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.ugui@2.0.0": {
+      "name": "com.unity.ugui",
+      "displayName": "Unity UI",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.ugui@9ea0a199b1b3",
+      "fingerprint": "9ea0a199b1b3a31ad5341157f23d9ad30cb68b05",
+      "editorCompatibility": "2019.2.0a1",
+      "version": "2.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.visualscripting@1.9.7": {
+      "name": "com.unity.visualscripting",
+      "displayName": "Visual Scripting",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.visualscripting@6279e2b7c485",
+      "fingerprint": "6279e2b7c4858e56cca7f367cd38c49ef66778c9",
+      "editorCompatibility": "2021.3.0a1",
+      "version": "1.9.7",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.modules.accessibility@1.0.0": {
+      "name": "com.unity.modules.accessibility",
+      "displayName": "Accessibility",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.accessibility",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.ai@1.0.0": {
+      "name": "com.unity.modules.ai",
+      "displayName": "AI",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ai",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.androidjni@1.0.0": {
+      "name": "com.unity.modules.androidjni",
+      "displayName": "Android JNI",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.androidjni",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.animation@1.0.0": {
+      "name": "com.unity.modules.animation",
+      "displayName": "Animation",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.animation",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.assetbundle@1.0.0": {
+      "name": "com.unity.modules.assetbundle",
+      "displayName": "Asset Bundle",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.assetbundle",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.audio@1.0.0": {
+      "name": "com.unity.modules.audio",
+      "displayName": "Audio",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.audio",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.cloth@1.0.0": {
+      "name": "com.unity.modules.cloth",
+      "displayName": "Cloth",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.cloth",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.director@1.0.0": {
+      "name": "com.unity.modules.director",
+      "displayName": "Director",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.director",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.imageconversion@1.0.0": {
+      "name": "com.unity.modules.imageconversion",
+      "displayName": "Image Conversion",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imageconversion",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.imgui@1.0.0": {
+      "name": "com.unity.modules.imgui",
+      "displayName": "IMGUI",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imgui",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.jsonserialize@1.0.0": {
+      "name": "com.unity.modules.jsonserialize",
+      "displayName": "JSONSerialize",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.jsonserialize",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.particlesystem@1.0.0": {
+      "name": "com.unity.modules.particlesystem",
+      "displayName": "Particle System",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.particlesystem",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.physics@1.0.0": {
+      "name": "com.unity.modules.physics",
+      "displayName": "Physics",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.physics2d@1.0.0": {
+      "name": "com.unity.modules.physics2d",
+      "displayName": "Physics 2D",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics2d",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.screencapture@1.0.0": {
+      "name": "com.unity.modules.screencapture",
+      "displayName": "Screen Capture",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.screencapture",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.terrain@1.0.0": {
+      "name": "com.unity.modules.terrain",
+      "displayName": "Terrain",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrain",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.terrainphysics@1.0.0": {
+      "name": "com.unity.modules.terrainphysics",
+      "displayName": "Terrain Physics",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrainphysics",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.tilemap@1.0.0": {
+      "name": "com.unity.modules.tilemap",
+      "displayName": "Tilemap",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.tilemap",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.ui@1.0.0": {
+      "name": "com.unity.modules.ui",
+      "displayName": "UI",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ui",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.uielements@1.0.0": {
+      "name": "com.unity.modules.uielements",
+      "displayName": "UIElements",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.uielements",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.umbra@1.0.0": {
+      "name": "com.unity.modules.umbra",
+      "displayName": "Umbra",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.umbra",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unityanalytics@1.0.0": {
+      "name": "com.unity.modules.unityanalytics",
+      "displayName": "Unity Analytics",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unityanalytics",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unitywebrequest@1.0.0": {
+      "name": "com.unity.modules.unitywebrequest",
+      "displayName": "Unity Web Request",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequest",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unitywebrequestassetbundle@1.0.0": {
+      "name": "com.unity.modules.unitywebrequestassetbundle",
+      "displayName": "Unity Web Request Asset Bundle",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestassetbundle",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unitywebrequestaudio@1.0.0": {
+      "name": "com.unity.modules.unitywebrequestaudio",
+      "displayName": "Unity Web Request Audio",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestaudio",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unitywebrequesttexture@1.0.0": {
+      "name": "com.unity.modules.unitywebrequesttexture",
+      "displayName": "Unity Web Request Texture",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequesttexture",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.unitywebrequestwww@1.0.0": {
+      "name": "com.unity.modules.unitywebrequestwww",
+      "displayName": "Unity Web Request WWW",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestwww",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.vehicles@1.0.0": {
+      "name": "com.unity.modules.vehicles",
+      "displayName": "Vehicles",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vehicles",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.video@1.0.0": {
+      "name": "com.unity.modules.video",
+      "displayName": "Video",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.video",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.vr@1.0.0": {
+      "name": "com.unity.modules.vr",
+      "displayName": "VR",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vr",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.wind@1.0.0": {
+      "name": "com.unity.modules.wind",
+      "displayName": "Wind",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.wind",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.xr@1.0.0": {
+      "name": "com.unity.modules.xr",
+      "displayName": "XR",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.xr",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.nuget.newtonsoft-json@3.0.2": {
+      "name": "com.unity.nuget.newtonsoft-json",
+      "displayName": "Newtonsoft Json",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.nuget.newtonsoft-json@eebc3d041427",
+      "fingerprint": "eebc3d04142789d84e13afbe98e55f9be569a33d",
+      "editorCompatibility": "2018.4.0a1",
+      "version": "3.0.2",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.modules.subsystems@1.0.0": {
+      "name": "com.unity.modules.subsystems",
+      "displayName": "Subsystems",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.subsystems",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.modules.hierarchycore@1.0.0": {
+      "name": "com.unity.modules.hierarchycore",
+      "displayName": "Hierarchy Core",
+      "resolvedPath": "/home/doesburg/Unity/Hub/Editor/6000.1.5f1/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.hierarchycore",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.ext.nunit@2.0.5": {
+      "name": "com.unity.ext.nunit",
+      "displayName": "Custom NUnit",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.ext.nunit@b16e6d09cd93",
+      "fingerprint": "b16e6d09cd93f527249a1f05a86ef45695dc934b",
+      "editorCompatibility": "2019.4.0a1",
+      "version": "2.0.5",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.2d.animation@10.2.0": {
+      "name": "com.unity.2d.animation",
+      "displayName": "2D Animation",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.animation@53bd21164c9c",
+      "fingerprint": "53bd21164c9caf4b4a6656d91a22d3ee19d17a42",
+      "editorCompatibility": "6000.0.0a1",
+      "version": "10.2.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.pixel-perfect@5.1.0": {
+      "name": "com.unity.2d.pixel-perfect",
+      "displayName": "2D Pixel Perfect",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.pixel-perfect@2f2037a56bf7",
+      "fingerprint": "2f2037a56bf7822af81e9898037a0aac12686533",
+      "editorCompatibility": "2021.3.0a1",
+      "version": "5.1.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.psdimporter@10.1.0": {
+      "name": "com.unity.2d.psdimporter",
+      "displayName": "2D PSD Importer",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.psdimporter@7cfb89931061",
+      "fingerprint": "7cfb899310610d953ec91c380a5a83dbbc5eabff",
+      "editorCompatibility": "6000.1.0a9",
+      "version": "10.1.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.sprite@1.0.0": {
+      "name": "com.unity.2d.sprite",
+      "displayName": "2D Sprite",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.sprite@8c6d3844adbf",
+      "fingerprint": "8c6d3844adbf2b7671de20dc0ff9ff06c11948c1",
+      "editorCompatibility": "2019.2.0a1",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.2d.spriteshape@10.1.0": {
+      "name": "com.unity.2d.spriteshape",
+      "displayName": "2D SpriteShape",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.spriteshape@49c1d1a01890",
+      "fingerprint": "49c1d1a01890c6450aa2753c572ad04566abe2b7",
+      "editorCompatibility": "6000.0.0a1",
+      "version": "10.1.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.tilemap@1.0.0": {
+      "name": "com.unity.2d.tilemap",
+      "displayName": "2D Tilemap Editor",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.tilemap@3eb0072b2107",
+      "fingerprint": "3eb0072b2107dfb9969eee8106e113eff17f9839",
+      "editorCompatibility": "2019.2.0a1",
+      "version": "1.0.0",
+      "source": "builtin",
+      "testable": false
+    },
+    "com.unity.2d.tilemap.extras@4.3.0": {
+      "name": "com.unity.2d.tilemap.extras",
+      "displayName": "2D Tilemap Extras",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.tilemap.extras@eefc9f6533f8",
+      "fingerprint": "eefc9f6533f8872d0ba5aef24ef69a5698b05bed",
+      "editorCompatibility": "6000.1.0a9",
+      "version": "4.3.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.aseprite@1.2.4": {
+      "name": "com.unity.2d.aseprite",
+      "displayName": "2D Aseprite Importer",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.aseprite@85ecd97bb34e",
+      "fingerprint": "85ecd97bb34ef7d790218acdd7941ef669c08e9a",
+      "editorCompatibility": "6000.1.0a9",
+      "version": "1.2.4",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.2d.common@9.1.0": {
+      "name": "com.unity.2d.common",
+      "displayName": "2D Common",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.2d.common@2df623fe8b00",
+      "fingerprint": "2df623fe8b00fbc13c20621a43a73b66163de860",
+      "editorCompatibility": "6000.0.0a1",
+      "version": "9.1.0",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.mathematics@1.3.2": {
+      "name": "com.unity.mathematics",
+      "displayName": "Mathematics",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.mathematics@8017b507cc74",
+      "fingerprint": "8017b507cc74bf0a1dd14b18aa860569f807314d",
+      "editorCompatibility": "2021.3.0a1",
+      "version": "1.3.2",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.collections@2.5.1": {
+      "name": "com.unity.collections",
+      "displayName": "Collections",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.collections@56bff8827a7e",
+      "fingerprint": "56bff8827a7ef6d44fcee4f36e558a74da89c1a0",
+      "editorCompatibility": "2022.3.11f1",
+      "version": "2.5.1",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.burst@1.8.21": {
+      "name": "com.unity.burst",
+      "displayName": "Burst",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.burst@59eb6f11d242",
+      "fingerprint": "59eb6f11d2422f95682320d9daa3e79fdb076744",
+      "editorCompatibility": "2020.3.0a1",
+      "version": "1.8.21",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.nuget.mono-cecil@1.11.4": {
+      "name": "com.unity.nuget.mono-cecil",
+      "displayName": "Mono Cecil",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.nuget.mono-cecil@d6f9955a5d5f",
+      "fingerprint": "d6f9955a5d5f84d45442ff1ad0fb694cc6e2fd62",
+      "editorCompatibility": "2018.4.0a1",
+      "version": "1.11.4",
+      "source": "registry",
+      "testable": false
+    },
+    "com.unity.test-framework.performance@3.1.0": {
+      "name": "com.unity.test-framework.performance",
+      "displayName": "Performance testing API",
+      "resolvedPath": "/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Library/PackageCache/com.unity.test-framework.performance@92d1d09a72ed",
+      "fingerprint": "92d1d09a72ed696fa23fd76c675b29d211664b50",
+      "editorCompatibility": "2020.3.0a1",
+      "version": "3.1.0",
+      "source": "registry",
+      "testable": false
+    }
+  }
+}

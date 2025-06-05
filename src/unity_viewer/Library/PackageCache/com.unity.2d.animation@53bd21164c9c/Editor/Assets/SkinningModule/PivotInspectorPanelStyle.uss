@@ -1,0 +1,43 @@
+/**********************************************************************************************************************/
+/* BoneInspectorPanel                                                                                                 */
+/**********************************************************************************************************************/
+
+#PivotInspectorPanel {
+  height : 80px;
+}
+
+#PivotInspectorPanel EnumField > Label {
+  min-width: auto;
+}
+
+#PivotInspectorPanel EnumField > VisualElement {
+  margin-left: -465px;
+}
+
+#PivotInspectorPanel EnumField {
+  margin-right : 6px;
+  padding-right : 0px;
+  margin-left : 0px;
+  padding-left : 0px;
+  flex: 1 0 auto;
+}
+
+#PivotInspectorPanel Vector2Field FloatField > Label {
+  max-width : 10px;
+}
+
+#PivotInspectorPanel Vector2Field {
+  margin-right : 0px;
+  padding-right : 0px;
+  margin-left : 0px;
+  padding-left : 0px;
+}
+
+#PivotInspectorPanel #BonePositionField FloatInput {
+  margin-right : 0px;
+  padding-right : 0px;
+}
+
+.unity-composite-field__field-spacer {
+  width: 0px;
+}

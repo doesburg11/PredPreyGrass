@@ -1,0 +1,10 @@
+{
+  "ErrorExceptions":
+  [
+    {
+      "ValidationTest": "API Validation",
+      "ExceptionMessage": "Assembly \"Unity.InternalAPIEditorBridge.001\" no longer exists or is no longer included in build. This change requires a new major version.",
+      "PackageVersion": "1.2.4"
+    }
+  ]
+}

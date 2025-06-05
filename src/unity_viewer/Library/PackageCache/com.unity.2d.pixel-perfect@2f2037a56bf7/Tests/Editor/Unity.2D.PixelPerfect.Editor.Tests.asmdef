@@ -1,0 +1,22 @@
+{
+    "name": "Unity.2D.PixelPerfect.Editor.Tests",
+    "rootNamespace": "",
+    "references": [
+        "GUID:2543b18169f9e4044a266a0bf35fe4cf"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

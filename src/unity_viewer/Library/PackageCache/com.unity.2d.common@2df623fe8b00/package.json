@@ -1,0 +1,41 @@
+{
+  "name": "com.unity.2d.common",
+  "displayName": "2D Common",
+  "version": "9.1.0",
+  "unity": "6000.0",
+  "description": "2D Common is a package that contains shared functionalities that are used by most of the other 2D packages.",
+  "keywords": [
+    "2d"
+  ],
+  "category": "2D",
+  "dependencies": {
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.mathematics": "1.1.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.burst": "1.8.4"
+  },
+  "samples": [
+    {
+      "displayName": "Sprite Atlas Samples",
+      "description": "Samples to get started with SpriteAtlas",
+      "path": "Samples~/SpriteAtlas"
+    }
+  ],
+  "relatedPackages": {
+    "com.unity.2d.common.tests": "9.1.0"
+  },
+  "_upm": {
+    "changelog": "### Changed\n- Update minimum Unity version.\n\n### Fixed\n- DANB-811 Fix blurry Sprite Atlas Sample variant scene sprites\n- DANB-794 Fixed case where editing the Closed and Open Sprite Shapes is choppy"
+  },
+  "upmCi": {
+    "footprint": "06c7dde83c4ee10b476d1df7f11ed3280a5bae3f"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.common@9.1/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/2d.git",
+    "type": "git",
+    "revision": "94a6127c9283f843ec1c9482222d58cde9b291e9"
+  },
+  "_fingerprint": "2df623fe8b00fbc13c20621a43a73b66163de860"
+}

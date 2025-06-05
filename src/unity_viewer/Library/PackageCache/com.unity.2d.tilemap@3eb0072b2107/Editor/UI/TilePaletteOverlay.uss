@@ -1,0 +1,415 @@
+#titleLabel {
+    font-size: 19px;
+    -unity-font-style: bold;
+    padding-top: 0px;
+    padding-left: 2px;
+    padding-right: 2px;
+    padding-bottom: 2px;
+}
+
+.unity-tilepalette-focus-dropdown {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.unity-tilepalette-brushes-button{
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.unity-tilepalette-toolbar-strip {
+    flex-grow: 1;
+    flex-direction: row;
+}
+
+.unity-tilepalette-splitview {
+    flex: 1;
+    background-color: var(--unity-colors-inspector_titlebar-background);
+}
+
+.unity-tilepalette-splitview .unity-tilepalette-splitview-brushes {
+    flex-grow: 1;
+    flex-direction: column;
+}
+
+.unity-tilepalette-element {
+    padding-top: 2px;
+    padding-bottom: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-top-width: 1px;
+    border-top-color: #000000;
+    overflow: hidden;
+    flex-grow: 1;
+    background-color: var(--unity-colors-window-background);
+}
+
+.overlay--floating .unity-tilepalette-element-resizable {
+    cursor: resize-up-left;
+}
+
+.unity-tilepalette-element-toolbar {
+    flex-direction: row;
+    overflow: hidden;
+    min-height: 24px;
+}
+
+.unity-tilepalette-element-toolbar-right {
+    overflow: hidden;
+    flex-grow: 1;
+    flex-direction: row-reverse;
+}
+
+.unity-tilepalette-clipboard-element {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.unity-tilepalette-clipboard-firstuser-element {
+    flex-grow: 1;
+    overflow: hidden;
+    justify-content: center;
+}
+
+.unity-tilepalette-clipboard-error-element {
+    flex-grow: 1;
+    overflow: hidden;
+    justify-content: center;
+}
+
+.unity-tilepalette-clipboard-error-element .unity-label {
+    align-self: center;
+}
+
+.unity-toolbar-overlay {
+    flex-direction: row;
+    align-items: center;
+}
+
+.unity-tilepalette-element .unity-tilepalette-element-brushelement {
+    visibility: hidden;
+    position: absolute;
+}
+
+.unity-tilepalette-brushes-icon {
+    margin: 2px;
+    min-width: 16px;
+}
+
+.unity-tilepalette-brushes-field__label {
+    min-width: 40px;
+    width: 40px;
+    max-width: 40px;
+}
+
+.unity-tilepalette-brushes-field__input {
+    min-width: 150px;
+    width: 150px;
+    max-width: 150px;
+}
+
+.unity-tilepalette-brushes-label {
+    margin: 2px;
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+.unity-tilepalette-activepalette-icon {
+    margin: 2px;
+    width: 16px;
+    height: 16px;
+}
+
+.unity-tilepalette-activepalettes-field__label {
+    min-width: 50px;
+    width: 50px;
+    max-width: 50px;
+}
+
+.unity-tilepalette-activepalettes-field__input {
+    min-width: 156px;
+    flex-grow: 1;
+}
+
+.unity-tilepalette-activetargets {
+    flex-direction: column;
+}
+
+.unity-tilepalette-activetargets-popup {
+    flex-direction: row;
+    border-width: 1px;
+}
+
+.unity-tilepalette-activetargets-info {
+    flex-direction: row;
+    border-width: 1px;
+    border-radius: 2px;
+    border-color: var(--unity-colors-helpbox-border);
+    background-color: var(--unity-colors-helpbox-background);
+    padding: 1px;
+    margin: 1px;
+}
+
+.unity-tilepalette-activetargets-info > .unity-label {
+    align-self: center;
+}
+
+.unity-tilepalette-activetargets-info__create {
+    margin-left: 2px;
+    margin-right: 2px;
+    min-height: 16px;
+    height: 16px;
+    min-width: 16px;
+    width: 16px;
+    background-image: resource("console.infoicon.sml");
+}
+
+.unity-tilepalette-activetargets-field {
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 0;
+    margin-bottom: 0;
+    align-items: center;
+}
+
+.unity-tilepalette-activetargets-field__label {
+    min-width: 90px;
+    width: 90px;
+    max-width: 90px;
+}
+
+.unity-tilepalette-activetargets-icon {
+    margin: 2px;
+    width: 16px;
+    height: 16px;
+}
+
+.unity-tilepalette-activetargets-field__input {
+    min-width: 200px;
+    width: 200px;
+    padding-left: 3px;
+    padding-right: 3px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+
+.unity-tilepalette-activetargets-field__warning {
+    margin-left: 2px;
+    margin-right: 2px;
+    min-height: 16px;
+    height: 16px;
+    min-width: 16px;
+    width: 16px;
+    background-image: resource("console.warnicon.sml");
+}
+
+.unity-tilepalette-brushesdropdown-toggle {
+    min-height: 16px;
+    min-width: 16px;
+}
+
+.unity-tilepalette-brushinspector {
+    flex-grow: 1;
+}
+
+.unity-overlay .unity-tilepalette-brushinspector {
+    width: 290px;
+    max-height: 400px;
+}
+
+.unity-tilepalette-brushinspectorpopup {
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-bottom-width: 1px;
+    border-top-width: 1px;
+}
+
+.unity-tilepalette-brushinspectorpopup__horizontal {
+    flex-direction: row;
+}
+
+.unity-tilepalette-brushinspectorpopup__right {
+    overflow: hidden;
+    flex-grow: 1;
+    flex-direction: row-reverse;
+}
+
+.unity-tilepalette-brushinspectorpopup .unity-label {
+    -unity-font-style: bold;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar {
+    min-height: 24px;
+    height: 24px;
+    flex-direction: row;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar-right {
+    overflow: hidden;
+    flex-grow: 1;
+    flex-direction: row-reverse;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle {
+    border-width: 0px;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle:checked {
+    border-bottom-width: 2px;
+    border-bottom-color: darkcyan;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle > .unity-text-element {
+    -unity-text-align: middle-center;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle > .unity-label {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.unity-tilepalette-brushpick-item__icon {
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    bottom: 0;
+    right: 0;
+    border-width: 1px;
+}
+
+.unity-tilepalette-brushpick-type__icon {
+    height: 16px;
+    width: 16px;
+}
+
+.unity-list-view {
+    flex-grow: 1;
+}
+
+.unity-list-view .unity-tilepalette-brushpick-type {
+    flex-grow: 1;
+    flex-direction: row;
+    align-items: center;
+}
+
+.unity-list-view .unity-tilepalette-brushpick-type .unity-label{
+    margin-left: 2px;
+}
+
+.unity-list-view .unity-tilepalette-brushpick-item {
+    flex-direction: row;
+    align-items: center;
+}
+
+.unity-list-view .unity-tilepalette-brushpick-item .unity-label{
+    margin-left: 4px;
+}
+
+.unity-list-view .unity-tilepalette-brushpick-item__icon {
+    visibility: hidden;
+}
+
+.unity-grid-view__item .unity-image {
+    flex-grow: 1;
+    background-color: #525252;
+}
+
+.unity-grid-view__item--selected.unity-image {
+    border-color: #3A72B0;
+    border-width: 2px;
+}
+
+.unity-grid-view__item--selected.u2d-renameable-label {
+    background-color: #3A72B0;
+}
+
+.unity-tilepalette-brushpick-view-toolbar {
+    flex-direction: row;
+    min-height: 24px;
+}
+
+.unity-tilepalette-brushpick {
+    flex-grow: 1;
+}
+
+.overlay--floating .unity-tilepalette-brushpick {
+    border-bottom-width: 5px;
+    border-left-width: 5px;
+    border-right-width: 5px;
+}
+
+.unity-tilepalette-brushpick > .unity-tilepalette-label-toolbar {
+    border-width: 1px;
+    min-height: 24px;
+    max-height: 24px;
+    flex-direction: row;
+}
+
+.unity-tilepalette-brushpick > .unity-tilepalette-label-toolbar > .unity-label {
+    font-size: 12px;
+    -unity-text-align: middle-left;
+    margin-left: 2px;
+}
+
+.unity-overlay .unity-tilepalette-brushpick > .unity-tilepalette-label-toolbar .unity-toolbar-search-field {
+    flex-shrink: 6;
+}
+
+.unity-overlay .unity-tilepalette-brushpick > .unity-tilepalette-label-toolbar .unity-toolbar-search-field > .unity-button {
+    background-color: transparent;
+    min-height: initial;
+    left: initial;
+    border-width: initial;
+}
+
+.unity-overlay .unity-tilepalette-brushpick .unity-scroller--horizontal {
+    height: 0px;
+    visibility: hidden;
+}
+
+.unity-tilepalette-brushpick .unity-search-field-base {
+    flex-grow: 0.2;
+    width: 160px;
+}
+
+.unity-tilepalette-brushpick-view-toolbar .unity-slider {
+    flex-grow: 0.2;
+}
+
+.unity-tilepalette-brushpick-view-toolbar > .unity-toolbar-toggle {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    width: 20px;
+    margin-left: 1px;
+    margin-right: 1px;
+}
+
+.unity-tilepalette-brushpick .unity-tilepalette-brushpick-emptyview {
+    flex-grow: 1;
+    align-self: center;
+    justify-content: center;
+}
+
+.unity-tilepalette-brushpick .unity-tilepalette-brushpick-emptyview .unity-label {
+    margin: 2px;
+    font-size: 16px;
+    white-space: normal;
+}
+
+.unity-tilepalette-brushpick .unity-grid-view {
+    flex-grow: 1;
+}
+
+.unity-tilepalette-brushpick-lastused {
+    position: absolute;
+    visibility: hidden;
+}
+
+.unity-overlay .unity-tilepalette-brushpick-type .unity-label {
+    position: absolute;
+    visibility: hidden;
+}

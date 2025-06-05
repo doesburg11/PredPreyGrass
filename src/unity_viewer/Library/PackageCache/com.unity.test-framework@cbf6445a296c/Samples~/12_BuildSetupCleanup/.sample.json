@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 12: Build Setup and Cleanup",        
+     "description": "This section will introduce you to the hooks in the test framework for before and after the player build.",
+     "interactiveImport": true
+}

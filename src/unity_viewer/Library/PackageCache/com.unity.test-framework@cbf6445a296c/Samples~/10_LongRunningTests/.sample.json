@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 10: Long Running Tests",        
+     "description": "This exercise will cover best practices and pitfalls for tests that have a long runtime, such as tests yielding back a WaitForSeconds.",
+     "interactiveImport": true
+}

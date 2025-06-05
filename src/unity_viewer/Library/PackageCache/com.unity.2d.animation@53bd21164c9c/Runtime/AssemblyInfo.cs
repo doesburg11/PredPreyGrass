@@ -1,0 +1,11 @@
+using System.Runtime.CompilerServices;
+[assembly: InternalsVisibleTo("Unity.2D.Animation.Tests.EditorTests")]
+[assembly: InternalsVisibleTo("Unity.2D.Animation.Tests.RuntimeTests")]
+[assembly: InternalsVisibleTo("Unity.2D.Animation.Tests.RuntimePerf")]
+[assembly: InternalsVisibleTo("Unity.2D.Animation.Editor")]
+[assembly: InternalsVisibleTo("Unity.2D.IK.Runtime")]
+[assembly: InternalsVisibleTo("Unity.2D.IK.Editor")]
+[assembly: InternalsVisibleTo("Unity.2D.IK.Tests.RuntimeTests")]
+[assembly: InternalsVisibleTo("Unity.2D.PsdImporter.Editor")]
+[assembly: InternalsVisibleTo("Unity.2D.Psdimporter.Tests.EditorTests")]
+[assembly: InternalsVisibleTo("Unity.RenderPipelines.Universal.2D.Runtime")]

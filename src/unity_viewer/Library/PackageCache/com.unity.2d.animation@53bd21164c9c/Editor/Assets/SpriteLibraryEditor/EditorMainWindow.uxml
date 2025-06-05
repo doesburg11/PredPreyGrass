@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
+    <ui:Template name="CategoriesTab" src="CategoriesTab.uxml" />
+    <ui:Template name="LabelsTab" src="LabelsTab.uxml" />
+    <UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorMainWindow name="EditorMainWindow" >
+            <UnityEngine.UIElements.TwoPaneSplitView fixed-pane-index="0" orientation="Horizontal" class="sprite-library-editor-window__split-view">
+                <ui:Instance template="CategoriesTab" name="CategoriesTab"/>
+                <ui:Instance template="LabelsTab" name="LabelsTab" />
+            </UnityEngine.UIElements.TwoPaneSplitView>
+    </UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorMainWindow>
+</ui:UXML>

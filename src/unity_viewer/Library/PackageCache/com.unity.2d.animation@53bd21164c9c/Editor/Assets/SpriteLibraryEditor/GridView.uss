@@ -1,0 +1,19 @@
+.unity2d-grid-view {
+}
+
+.unity2d-grid-view__row {
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    justify-content: space-around;
+}
+
+.unity2d-grid-view__item {
+    border-color: rgba(11, 124, 213, 0);
+    border-width: 3px;
+    margin: 1px;
+}
+
+.unity2d-grid-view__item--selected {
+}

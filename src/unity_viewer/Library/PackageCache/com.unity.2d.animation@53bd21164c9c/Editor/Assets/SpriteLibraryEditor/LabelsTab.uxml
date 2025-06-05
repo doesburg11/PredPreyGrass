@@ -1,0 +1,8 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
+    <UnityEditor.U2D.Animation.SpriteLibraryEditor.LabelsTab name="LabelsTab">
+        <Style src="LabelsTab.uss"/>
+        <ui:Template name="EditorTabHeader" src="EditorTabHeader.uxml" />
+        <ui:Instance template="EditorTabHeader" name="EditorTabHeader" pickingMode="Ignore" />
+        <ui:VisualElement name="LabelsContainer" />
+    </UnityEditor.U2D.Animation.SpriteLibraryEditor.LabelsTab>
+</ui:UXML>

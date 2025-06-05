@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 9: UnityTest Attribute",        
+     "description": "This section will introduce you to the custom UnityTest Attribute, which allows for creating test that runs over multiple frames.",
+     "interactiveImport": true
+}

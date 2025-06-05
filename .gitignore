@@ -185,3 +185,7 @@ unity_viewer/*.csproj
 unity_viewer/*.sln
 unity_viewer/*.user
 unity_viewer/Library/
+
+
+unity_viewer/Temp/
+src/unity_viewer/Temp/

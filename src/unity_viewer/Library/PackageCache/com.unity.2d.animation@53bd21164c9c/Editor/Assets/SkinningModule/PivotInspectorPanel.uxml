@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML xmlns:ui="UnityEngine.UIElements" xmlns:eui="UnityEditor.UIElements" xmlns:aui="UnityEditor.U2D.Animation">
+  <aui:PivotInspectorPanel name="PivotInspectorPanel" text="Pivot Inspector" picking-mode="Ignore">
+    <ui:PopupWindow name="PivotInspectorPopupWindow" text="Pivot">
+      <ui:VisualElement name="PivotEnum" class="form-row">
+        <eui:EnumField name = "pivotField" label = "Pivot" class="unity-enum-field"/>
+      </ui:VisualElement>
+      <ui:VisualElement name="PivotPosition" class="form-row">
+        <ui:Label name="PivotPositionLabel" text="Position" tooltip ="Position of the bone"/>
+        <eui:Vector2Field name="PivotPositionField" class="form-editor"/>
+      </ui:VisualElement>
+    </ui:PopupWindow>
+  </aui:PivotInspectorPanel>
+</UXML>

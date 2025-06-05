@@ -1,0 +1,3 @@
+﻿.unity-grid-paint-palette-window {
+    --unity-overlay-buttons-on-color: #46607C;
+}

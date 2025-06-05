@@ -1,0 +1,9 @@
+{
+    "name": "TestNewCustomAssembly",
+    "references": [],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

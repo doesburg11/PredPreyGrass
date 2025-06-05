@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 14: Solution",        
+     "description": "This section will cover how to let variables and information in your tests survive domain reloads using serialization.",
+     "interactiveImport": true
+}

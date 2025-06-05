@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
+    <UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorTopToolbar class="sprite-library-editor-window__top-toolbar">
+        <ui:VisualElement name="TopRow">
+            <ui:Image name="SpriteLibraryIcon"/>
+            <uie:ToolbarBreadcrumbs name ="LibraryBreadcrumbs" />
+            <ui:VisualElement name="Saving" >
+                <ui:Button text="Revert" name="RevertButton" />
+                <ui:Button text="Save" name="SaveButton" />
+                <ui:Toggle text="Auto Save" name="AutoSaveToggle" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="BottomRow">
+            <uie:ObjectField name="MainLibraryReference" label="Main Library"/>
+            <ui:VisualElement name="SearchBar">
+                <ui:VisualElement name="SearchController"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorTopToolbar>
+</ui:UXML>

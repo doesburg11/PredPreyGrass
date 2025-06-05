@@ -1,0 +1,42 @@
+{
+  "name": "com.unity.2d.psdimporter",
+  "version": "10.1.0",
+  "unity": "6000.1",
+  "unityRelease": "0a9",
+  "displayName": "2D PSD Importer",
+  "description": "A ScriptedImporter for importing Adobe Photoshop PSB (Photoshop Big) file format. The ScriptedImporter is currently targeted for users who wants to create multi Sprite character animation using Unity 2D Animation Package.",
+  "keywords": [
+    "2d",
+    "psdimporter",
+    "assetimporter"
+  ],
+  "category": "2D",
+  "dependencies": {
+    "com.unity.2d.common": "9.1.0",
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0"
+  },
+  "relatedPackages": {
+    "com.unity.2d.psdimporter.tests": "10.1.0"
+  },
+  "samples": [
+    {
+      "displayName": "Samples",
+      "description": "Samples for using PSDImporter.",
+      "path": "Samples~/PSDImporterSamples"
+    }
+  ],
+  "_upm": {
+    "changelog": "### Fixed\n- DANB-848 Fixed case where scroll down problems occur and the \"Apply\" button cannot be pressed when the \"Advanced\" tab is expanded\n- Properly expose Tilemap related APIs in the PSDImporter."
+  },
+  "upmCi": {
+    "footprint": "034a86d3bc4fe0582544c943621efeac421d157c"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.psdimporter@10.1/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/2d.git",
+    "type": "git",
+    "revision": "94a6127c9283f843ec1c9482222d58cde9b291e9"
+  },
+  "_fingerprint": "7cfb899310610d953ec91c380a5a83dbbc5eabff"
+}

@@ -1,0 +1,47 @@
+.unity-tilepalette-brushinspectorpopup
+{
+    border-left-color: rgb(112, 112, 112);
+    border-right-color: rgb(112, 112, 112);
+    border-top-color: rgb(112, 112, 112);
+    border-bottom-color: rgb(112, 112, 112);
+}
+
+.unity-tilepalette-brushpick > .unity-tilepalette-label-toolbar {
+    background-color: #414141;
+    border-color: black;
+}
+
+.unity-tilepalette-brushpick .list-button
+{
+    background-image: resource('d_ListView');
+}
+
+.unity-tilepalette-brushpick .grid-button
+{
+    background-image: resource('d_GridView');
+}
+
+.unity-tilepalette-brushpick-item__icon {
+    background-color: #3C3C3C;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle > .unity-text-element {
+    color: #999999;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle:hover > .unity-text-element{
+    color: #D2D2D2;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle:checked {
+    border-bottom-width: 2px;
+    border-bottom-color: #DEDEDE;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle:checked > .unity-text-element {
+    color: #DEDEDE;
+}
+
+.unity-tilepalette-splitview-brushes-toolbar > .unity-toolbar-toggle:checked:hover > .unity-text-element {
+    color: #FFFFFF;
+}

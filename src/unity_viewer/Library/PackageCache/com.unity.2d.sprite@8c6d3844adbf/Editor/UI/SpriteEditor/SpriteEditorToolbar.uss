@@ -1,0 +1,66 @@
+/* Toolbar */
+#spriteEditorWindowToolbarContainer{
+    width: 100%;
+    flex-direction: row;
+    height: 21px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--unity-colors-toolbar-border);
+    background-color: var(--unity-colors-toolbar-background);
+}
+
+/* Sprite Editor Window Module Drop Down*/
+#spriteEditorWindowModuleDropDown{
+    flex: 0 0 auto;
+    width: 120px;
+    height:100%;
+    margin: 0 0 0 0;
+    border-width: 0 1px 0 0;
+    border-color: var(--unity-colors-toolbar-border);
+    background-color: var(--unity-colors-toolbar-background);
+}
+
+#spriteEditorWindowModuleDropDown > .unity-base-popup-field__input{
+    border-width: 0 0 0 0;
+}
+
+#spriteEditorWindowModuleDropDown .unity-base-field__input {
+    background-color: var(--unity-colors-toolbar-background);
+}
+
+#spriteEditorWindowModuleDropDown PopupTextElement {
+    text-overflow: ellipsis;
+    background-color: var(--unity-colors-toolbar-background);
+}
+
+#spriteEditorWindowModuleDropDown .unity-base-popup-field__arrow {
+    background-color: var(--unity-colors-toolbar-background);
+}
+
+/* Module IMGUI Toolbar for backward compatibility*/
+#spriteEditorWindowModuleToolbarIMGUI{
+    height : 21px;
+    flex: 1 1 0;
+    margin-top : 0;
+    border-right-width: 1px;
+    border-right-color: var(--unity-colors-toolbar-border);
+    overflow: hidden;
+}
+
+/* Module UI-Toolkit Toolbar */
+#spriteEditorWindowModuleToolbarContainer{
+    overflow: hidden;
+    flex-direction: row;
+}
+
+/* Toolbar Apply and Revert button  */
+#spriteEditorWindowApplyRevert{
+    flex: 0 0 auto;
+    overflow: hidden;
+}
+
+/* Toolbar Alpha And Zoom IMGUI  */
+#spriteEditorWindowAlphaZoom{
+    flex: 0 0 auto;
+    width:170px;
+    overflow: hidden;
+}

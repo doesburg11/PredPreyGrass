@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
+    <UnityEditor.U2D.Animation.SpriteLibraryEditor.CategoriesTab name="CategoriesTab">
+        <Style src="CategoriesTab.uss" />
+        <ui:Template name="EditorTabHeader" src="EditorTabHeader.uxml" />
+        <ui:Instance template="EditorTabHeader" name="EditorTabHeader" pickingMode="Ignore" />
+        <ui:ScrollView name="CategoryListsScrollView">
+        </ui:ScrollView>
+    </UnityEditor.U2D.Animation.SpriteLibraryEditor.CategoriesTab>
+</ui:UXML>

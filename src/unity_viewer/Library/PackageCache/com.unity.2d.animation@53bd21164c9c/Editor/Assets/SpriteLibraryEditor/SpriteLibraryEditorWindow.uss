@@ -1,0 +1,223 @@
+/* *** Variables *** */
+
+:root {
+    --spritelib-drag-overlay-border-color: rgba(43, 129, 190, 0.5);
+    --spritelib-drag-overlay-color: rgba(43, 129, 190, 0.3);
+    --spriteLib-view-button-size: 16px;
+}
+
+/* *** General *** */
+
+#EditorWindowRoot {
+    display: flex;
+    flex-grow: 1;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#EditorMainWindow {
+    flex-grow: 1;
+}
+
+#CreateNewAssetButton {
+
+    align-self: center;
+    max-width: 200px;
+}
+
+#EditorTopToolbar {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+#EditorBottomToolbar {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+.unity-two-pane-split-view__dragline-anchor {
+    background-color: var(--unity-colors-button-border-pressed);
+}
+
+.sprite-library-editor-window__top-bar {
+    flex-direction: row;
+    align-items: center;
+    background-color: var(--unity-colors-window-background);
+    border-color: var(--unity-colors-button-border-pressed);
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    background-color: var(--unity-colors-window-background);
+}
+
+.sprite-library-editor-window__top-toolbar {
+    min-height: 55px;
+    height: 55px;
+    flex-shrink: 0;
+    justify-content: space-between;
+}
+
+.sprite-library-editor-window__add-button {
+    flex-grow: 0;
+    min-height: 20px;
+    min-width: 20px;
+    max-height: 20px;
+    max-width: 20px;
+}
+
+.sprite-library-editor-window__override {
+    border-left-width: 2px;
+    border-color: var(--unity-colors-label-text);
+}
+
+.sprite-library-editor-window__description-text {
+    color: var(--unity-colors-label-text);
+    align-self: center;
+    margin-left: 10%;
+    margin-right: 10%;
+    white-space: normal;
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+}
+
+.sprite-library-editor-window__asset-not-selected-text {
+    color: var(--unity-colors-label-text);
+    align-self: flex-start;
+    padding: 10px;
+    white-space: normal;
+    font-size: 12px;
+    -unity-font-style: bold;
+    -unity-text-align: lower-left;
+}
+
+.sprite-library-editor-window__bottom-toolbar {
+    flex-shrink: 0;
+    border-top-width: 1px;
+    align-items: center;
+    flex-direction: row;
+    justify-content: flex-end;
+    min-height: 25px;
+    background-color: var(--unity-colors-default-background);
+    border-color: var(--unity-colors-button-border-pressed);
+}
+
+.sprite-library-editor-window__drag-over-add {
+    border-width: 2px;
+    border-color: var(--spritelib-drag-overlay-border-color);
+    background-color: var(--spritelib-drag-overlay-color);
+}
+
+.sprite-library-editor-window__split-view {
+    min-width: 100px;
+    min-height: 100px;
+}
+
+#ListButton {
+    width: var(--spriteLib-view-button-size);
+    max-width: var(--spriteLib-view-button-size);
+    height: var(--spriteLib-view-button-size);
+    max-height: var(--spriteLib-view-button-size);
+    background-image: resource('ListView');
+    background-color: rgba(0,0,0,0);
+}
+
+.Dark #ListButton {
+    background-image: resource('d_ListView');
+}
+
+#GridButton {
+    width: var(--spriteLib-view-button-size);
+    max-width: var(--spriteLib-view-button-size);
+    height: var(--spriteLib-view-button-size);
+    max-height: var(--spriteLib-view-button-size);
+    background-image: resource('GridView');
+    background-color: rgba(0,0,0,0);
+}
+
+.Dark #GridButton {
+    background-image: resource('d_GridView');
+}
+
+#SizeSlider {
+    width: 150px;
+    padding-bottom: 4px;
+}
+
+#TopRow {
+    margin-top: 3px;
+}
+
+#BottomRow {
+    margin-bottom: 5px;
+}
+
+#SpriteLibraryIcon {
+    margin-left: 5px;
+    align-self: center;
+}
+
+.sprite-library-editor-window__add-button {
+    background-color: transparent;
+}
+
+/*Top Toolbar*/
+
+.sprite-library-editor-window__top-toolbar {
+    flex-shrink: 0;
+}
+#SpriteLibraryIcon {
+    flex-shrink: 0;
+    min-width: 18px;
+}
+#TopRow {
+    flex-direction: row;
+    justify-content: space-between;
+}
+#BottomRow {
+    flex-direction: row;
+    justify-content: space-between;
+}
+.unity-toolbar-breadcrumbs {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+    min-width: 50px;
+    max-height: 20px;
+}
+.unity-toolbar-breadcrumbs__item {
+    max-height: 20px;
+    flex-wrap: initial;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+#Saving {
+    flex-direction: row;
+    align-self: flex-end;
+}
+#RevertButton {
+    max-height: 18px;
+    flex-grow: 0;
+}
+#SaveButton {
+    max-height: 18px;
+    flex-grow: 0;
+}
+
+#AutoSaveToggle {
+    max-height: 20px;
+}
+
+#SearchBar {
+    min-width: 150px;
+    max-height: 20px;
+    align-self: flex-end;
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+#MainLibraryReference {
+    min-width: 300px;
+    max-width: 350px;
+    flex-shrink: 0;
+}

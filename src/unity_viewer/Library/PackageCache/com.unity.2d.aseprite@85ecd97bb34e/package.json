@@ -1,0 +1,39 @@
+{
+  "name": "com.unity.2d.aseprite",
+  "version": "1.2.4",
+  "unity": "6000.1",
+  "unityRelease": "0a9",
+  "displayName": "2D Aseprite Importer",
+  "description": "2D Aseprite Importer is a package which enables the import of .aseprite files from the Pixel Art tool Aseprite.",
+  "keywords": [
+    "2d",
+    "Aseprite",
+    "Pixel",
+    "Art",
+    "assetimporter"
+  ],
+  "category": "2D",
+  "dependencies": {
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.2d.common": "6.0.6",
+    "com.unity.mathematics": "1.2.6",
+    "com.unity.modules.animation": "1.0.0"
+  },
+  "relatedPackages": {
+    "com.unity.2d.aseprite.tests": "1.2.0"
+  },
+  "_upm": {
+    "changelog": "### Fixed\n- Fixed an issue where going from Import Mode: Individual Layers to Import Mode: Merge Frame would cause the importer to fail the import. (DANB-875)\n- Fixed an issue where the content in the Aseprite's Preference menu were misaligned. (DANB-880)\n- Fixed an issue where some elements in the Aseprite Importer inspector could not be edited when in Debug mode. (DANB-863)"
+  },
+  "upmCi": {
+    "footprint": "44c0a33983e10b4f4a6b031c4ceec63076e4a41b"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.aseprite@1.2/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/AsepriteImporter.git",
+    "type": "git",
+    "revision": "95000ec3a4319ed3fba90ba18cf6b0ac1803c0aa"
+  },
+  "_fingerprint": "85ecd97bb34ef7d790218acdd7941ef669c08e9a"
+}

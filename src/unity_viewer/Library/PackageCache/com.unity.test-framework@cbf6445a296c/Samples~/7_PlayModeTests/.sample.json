@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 7: PlayMode Tests",        
+     "description": "This exercise introduces the concept of PlayMode tests and will teach you when to use PlayMode tests, how to set up assembly definition for PlayMode tests, and how to run tests in PlayMode.",
+     "interactiveImport": true
+}

@@ -1,0 +1,44 @@
+{
+  "name": "com.unity.2d.animation",
+  "version": "10.2.0",
+  "unity": "6000.0",
+  "displayName": "2D Animation",
+  "description": "2D Animation provides all the necessary tooling and runtime components for skeletal animation using Sprites.",
+  "keywords": [
+    "2d",
+    "animation"
+  ],
+  "category": "2D",
+  "dependencies": {
+    "com.unity.2d.common": "9.1.0",
+    "com.unity.2d.sprite": "1.0.0",
+    "com.unity.collections": "1.2.4",
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0"
+  },
+  "relatedPackages": {
+    "com.unity.2d.animation.tests": "10.2.0",
+    "com.unity.2d.common.tests": "9.1.0",
+    "com.unity.2d.psdimporter": "9.0.3"
+  },
+  "samples": [
+    {
+      "displayName": "Samples",
+      "description": "Various 2D Animation sample scenes to show different usage of the 2D Animation tooling for various outcomes.",
+      "path": "Samples~/AnimationSamples"
+    }
+  ],
+  "_upm": {
+    "changelog": "### Changed\n- Update minimum Unity version.\n\n### Fixed\n- Sprite Skin's test instability. (DANB-772) \n- Sprite Skin's null ref exception when HDRP is present in the project. (DANB-785)\n- Updating Skinning Plugin to work on Ubuntu versions >= 20.\n- Skinning Editor style fixes. (DANB-804)\n- Reset TransformAccessJob's cache. (DANB-807)\n- Asset Upgrader icons. (DANB-802)"
+  },
+  "upmCi": {
+    "footprint": "fad7738a9d4095965f66366ac2b446e40db04a36"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.animation@10.2/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/2d.git",
+    "type": "git",
+    "revision": "94a6127c9283f843ec1c9482222d58cde9b291e9"
+  },
+  "_fingerprint": "53bd21164c9caf4b4a6656d91a22d3ee19d17a42"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "com.unity.burst",
+  "displayName": "Burst",
+  "version": "1.8.21",
+  "unity": "2020.3",
+  "description": "Burst is a compiler that translates from IL/.NET bytecode to highly optimized native code using LLVM.",
+  "dependencies": {
+    "com.unity.mathematics": "1.2.1",
+    "com.unity.modules.jsonserialize": "1.0.0"
+  },
+  "relatedPackages": {
+    "com.unity.burst.tests": "1.8.21"
+  },
+  "_upm": {
+    "changelog": "- update EmbeddedLinux argument syntax to support newer clang versions\n\n### Added\n- Added LLVM 19 Support\n- Added stack protector AOT settings options.\n\n### Removed\n\n### Fixed\n- Fixed hashing error that could occur when an assembly contained a type reference with a \"module\" resolution scope\n- Fixed internal compiler error when using a `FixedStringNBytes` value in an interpolated string\n- Fixed a crash caused by assigning `null` to a `Span`\n- Fixed \"Unable to resolve the method\" error that occurred when two or more methods had the same name, one of the methods contained a generic parameter, and the generic parameter type had two or more generic arguments\n- Fixed handling of `stackalloc`ed arrays with initial values for newer versions of Visual Studio\n- When building for Android with the Mono scripting backend, arm64-v8a symbols could be incorrectly included in the output, even though Mono for Android only supports armv7. This is now fixed.\n- Fixed compiler crash that could happen when using an interface method that had a default implementation defined in another interface\n- Fixed cropping of tooltips in the inspector.\n- Fixed rare \"Unhandled exception. System.InvalidCastException: Unable to cast object of type 'System.IO.MemoryStream' to type 'System.Text.StringBuilder'\" error that could occur during Burst compilation\n- Fixed a `BC1054` error that could occur if a struct with a pointer-to-generic-parameter-typed field was used as a generic argument to an interface type\n- Fixed compiler crash when trying to use the `Span<T>(T[])` or `Span<T>(T[],int,int)` constructors\n\n### Changed\n- EmbeddedLinux SSE4 default\n\n### Known Issues\n- With LLVM 19, Burst's alias analysis is more conservative than it needs to be which may result in performance reductions in Burst compiled code. This is will be addressed in the next Burst release. Note that at this time, Burst by default uses LLVM 18."
+  },
+  "upmCi": {
+    "footprint": "f6fc7e3683fe3bdffe17eb189ccf80b36f52566c"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.burst@1.8/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/burst.git",
+    "type": "git",
+    "revision": "941bff0925baa46012a2eff522313c170bf36c7a"
+  },
+  "_fingerprint": "59eb6f11d2422f95682320d9daa3e79fdb076744"
+}

@@ -1,0 +1,50 @@
+{
+  "name": "com.unity.2d.tilemap.extras",
+  "displayName": "2D Tilemap Extras",
+  "version": "4.3.0",
+  "unity": "6000.1",
+  "unityRelease": "0a9",
+  "description": "2D Tilemap Extras is a package that contains extra scripts for use with 2D Tilemap features in Unity. These include custom Tiles and Brushes for the Tilemap feature.\n\nThe following are included in the package:\nBrushes: GameObject Brush, Group Brush, Line Brush, Random Brush\nTiles: Animated Tile, Rule Tile, Rule Override Tile\nOther: Grid Information, Custom Rules for Rule Tile",
+  "keywords": [
+    "2d"
+  ],
+  "category": "2D",
+  "dependencies": {
+    "com.unity.modules.tilemap": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0",
+    "com.unity.modules.jsonserialize": "1.0.0"
+  },
+  "relatedPackages": {
+    "com.unity.2d.tilemap.extras.tests": "4.3.0"
+  },
+  "samples": [
+    {
+      "displayName": "Waterfall Animated Tile",
+      "description": "An example implementation of an Animated Tile.",
+      "path": "Samples~/WaterfallAnimatedTile"
+    },
+    {
+      "displayName": "Pipe Rule Tile",
+      "description": "An example implementation of a Rule Tile with rules matching four-way orthogonal neighbors.",
+      "path": "Samples~/PipeRuleTile"
+    },
+    {
+      "displayName": "Dungeon Rule Tile",
+      "description": "An example implementation of a Rule Tile with rules matching eight-way orthogonal and diagonal neighbors.",
+      "path": "Samples~/DungeonRuleTile"
+    }
+  ],
+  "_upm": {
+    "changelog": "### Fixed\n\n- [AutoTile] Add AutoTile to Table of Contents\n- [AutoTile] Add warning when loading an asset which is not an AutoTileTemplate when loading an AutoTileTemplate\n- [AutoTileEditor] Set better limits for Texture Scale depending on size of original Texture\n- [AutoTileEditor] Save set Texture Scale\n- [RuleTileEditor] Set expansion limits for TilingRule to a maximum of 10\n- [RuleTileEditor] Set default properties to TilingRule when adding a new TilingRule\n- [Editor] Set an upper limit of 1000 for editable collection sizes"
+  },
+  "upmCi": {
+    "footprint": "6f0936fb872451cfba19f31bbc2a019b34561197"
+  },
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.2d.tilemap.extras@4.3/manual/index.html",
+  "repository": {
+    "url": "https://github.cds.internal.unity3d.com/unity/2d.git",
+    "type": "git",
+    "revision": "94a6127c9283f843ec1c9482222d58cde9b291e9"
+  },
+  "_fingerprint": "eefc9f6533f8872d0ba5aef24ef69a5698b05bed"
+}

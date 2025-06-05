@@ -1,0 +1,113 @@
+/* *** General *** */
+#LabelsTab {
+    padding-left: 1px;
+    flex-grow: 1;
+}
+
+/* *** Container *** */
+
+.unity-list-view__empty-label {
+    display: none;
+}
+
+.unity-base-text-field__input {
+    /* Align the TextField input */
+    align-self: center;
+}
+
+#LabelsContainer {
+    flex-grow: 1;
+    background-color: var(--unity-colors-default-background);
+}
+
+/* *** ListView *** */
+
+#LabelListView {
+}
+
+#ListElementParent {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#ListSpriteSlot {
+    flex-shrink: 0;
+    margin: 3px;
+}
+
+.sprite-library-editor-window__label-list-label {
+    flex-grow: 2;
+    flex-shrink: 2;
+    padding-left: 5px;
+}
+
+.sprite-library-editor-window__label-list-text {
+    flex-grow: 2;
+    flex-shrink: 2;
+}
+
+#LabelSpriteObjectField {
+    flex-grow: 3;
+    max-width: 40%;
+    align-self: center;
+}
+
+
+/* *** GridView *** */
+
+#LabelGridView {
+    flex-direction: row;
+}
+
+#GridElementParent {
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+#GridElementImage {
+    margin-top: 3%;
+    width: 80%;
+    height: 80%;
+    flex-shrink: 0;
+    background-color: var(--unity-colors-inspector_titlebar-background);
+}
+
+.unity2d-grid-view__item--selected #GridElementImage  {
+    background-color: var(--unity-colors-inspector_titlebar-background-hover);
+}
+
+.unity2d-grid-view__item--selected #DragOverlay  {
+    border-width: 2px;
+    border-color: var(--unity-colors-highlight-background);
+}
+
+.sprite-library-editor-window__label-grid-label {
+    font-size: 12px;
+    flex-grow: 0;
+    align-self: center;
+    overflow: scroll;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.unity2d-grid-view__item--selected .sprite-library-editor-window__label-grid-label {
+    color: var(--unity-colors-highlight-text-inactive);
+    background-color: var(--unity-colors-highlight-background);
+    border-radius: 5px;
+}
+
+.sprite-library-editor-window__label-grid-text {
+    font-size: 12px;
+    align-self: center;
+    width: 100%;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.GridElementsDragOver {
+    border-width: 1px;
+    border-color:  deepskyblue;
+}

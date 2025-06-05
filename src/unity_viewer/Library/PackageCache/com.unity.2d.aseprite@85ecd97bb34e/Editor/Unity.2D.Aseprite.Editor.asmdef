@@ -1,0 +1,36 @@
+{
+    "name": "Unity.2D.Aseprite.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Unity.InternalAPIEditorBridge.001",
+        "Unity.2D.Sprite.Editor",
+        "Unity.2D.Tilemap.Editor",
+        "Unity.2D.Aseprite.Common",
+        "Unity.Burst",
+        "Unity.Mathematics",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.universal",
+            "expression": "1.0.0",
+            "define": "ENABLE_URP"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.1.0b9",
+            "define": "ENABLE_TILEMAP_API"
+        }
+    ],
+    "noEngineReferences": false
+}

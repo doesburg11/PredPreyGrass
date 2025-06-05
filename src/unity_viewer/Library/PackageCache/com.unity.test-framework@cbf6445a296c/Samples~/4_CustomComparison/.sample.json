@@ -1,0 +1,5 @@
+{
+     "displayName": "Exercise 4: Custom Comparison",        
+     "description": "This exercise will cover the custom equality comparers included in UTF, such as Vector3EqualityComparer. These are used to assert on e.g. Vectors.",
+     "interactiveImport": true
+}
