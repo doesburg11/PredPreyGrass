@@ -1,4 +1,0 @@
-apiRules:
-  - exclude:
-      uidRegex: ^UnityEngine\.U2D\.Animation\.SpriteSkin\.OnPreviewUpdate.*$
-      type: Method

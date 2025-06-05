@@ -1,5 +1,0 @@
-{
-     "displayName": "Exercise 6: Solution",        
-     "description": "In this exercise, you will get practical experience in using the NUnit attributes [SetUp] and [TearDown] in order to reduce code duplication in your tests.",
-     "interactiveImport": true
-}

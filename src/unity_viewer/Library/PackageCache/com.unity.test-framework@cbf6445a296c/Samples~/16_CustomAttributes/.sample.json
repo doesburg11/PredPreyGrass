@@ -1,5 +1,0 @@
-{
-     "displayName": "Exercise 16: Custom Attributes",        
-     "description": "In this section we will look at some ways of implementing custom NUnit attributes, which can be used to alter test execution.",
-     "interactiveImport": true
-}

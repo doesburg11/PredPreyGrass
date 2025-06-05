@@ -1,5 +1,0 @@
-{
-     "displayName": "Exercise 14: Preserve Test State",        
-     "description": "This section will cover how to let variables and information in your tests survive domain reloads using serialization.",
-     "interactiveImport": true
-}

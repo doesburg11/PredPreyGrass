@@ -166,6 +166,35 @@ Notably, agents in this system lack direct access to each other’s heritable tr
 
 ## Installation of the repository
 
+### Git LFS Installation (Required)
+
+This repository uses [Git Large File Storage (LFS)](https://git-lfs.github.com/) to manage large files like `.npy`, `.json`, and simulation outputs.
+
+To install and initialize Git LFS:
+
+```bash
+# Install Git LFS (Ubuntu/Debian)
+sudo apt install git-lfs
+
+# One-time setup (required after install)
+git lfs install
+
+```
+
+After cloning the repository or pulling changes:
+```bash
+git lfs pull
+```
+
+Required Unity version: `Unity 6.1 (2D Core Template)`  
+To open the Unity project:
+
+1. Open **Unity Hub**
+2. Click **Add Project** → select `src/unity_viewer/`
+3. Unity will auto-rebuild the `Library/` and other cache folders
+
+
+
 **Editor used:** Visual Studio Code 1.99.0 on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository: 
@@ -197,3 +226,155 @@ Notably, agents in this system lack direct access to each other’s heritable tr
 
 
 
+# 🦊 PredPreyGrass Simulation
+
+Multi-agent predator-prey simulation with reinforcement learning, Unity visualization, and Git LFS integration for large data.
+
+---
+
+## 📦 Installation & Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/<your-name>/PredPreyGrass.git
+cd PredPreyGrass
+```
+
+---
+
+### 2. Install Git LFS (**Required**)
+
+```bash
+# Ubuntu/Debian
+sudo apt install git-lfs
+
+# One-time init
+git lfs install
+```
+
+### 3. Pull LFS Files
+
+```bash
+git lfs pull
+```
+
+> ⚠️ Required to download `.npy`, `.json`, and simulation outputs.
+
+---
+
+### 4. Python Setup (RLlib Simulation)
+
+```bash
+# With Conda
+conda create -n predpreygrass python=3.10 -y
+conda activate predpreygrass
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run training or evaluation
+python train.py          # PPO training
+python evaluate.py       # Export JSON for Unity
+```
+
+> Simulation output: `exported_grid_states/`
+
+---
+
+### 5. Unity Viewer Setup (Optional)
+
+This repo includes a Unity frontend in:
+
+```
+src/unity_viewer/
+```
+
+#### Open the Unity Project:
+
+1. Open Unity Hub
+2. Add `src/unity_viewer/`
+3. Open with **Unity 6.1 (2D Core Template)**
+
+> Unity will rebuild `Library/` and temp folders automatically.
+
+---
+
+## 🛠 Developer Notes
+
+### Clean Clone on a New Machine
+
+```bash
+git clone https://github.com/<your-name>/PredPreyGrass.git
+cd PredPreyGrass
+
+git lfs install
+git lfs pull
+```
+
+If needed:
+
+```bash
+git reset --hard origin/main
+```
+
+---
+
+## 📂 Repo Structure (Simplified)
+
+```
+predpreygrass/
+├── src/unity_viewer/         # Unity visualization project
+│   ├── Assets/
+│   ├── ProjectSettings/
+│   └── Packages/
+├── exported_grid_states/     # RL-generated .json/.npy files (LFS)
+├── predpreygrass/            # Python env + RLlib config
+├── requirements.txt
+├── .gitignore
+├── .gitattributes
+└── README.md
+```
+
+---
+
+## ✅ Git LFS Tracking (via .gitattributes)
+
+```text
+*.npy  filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+*.csv  filter=lfs diff=lfs merge=lfs -text
+*.png  filter=lfs diff=lfs merge=lfs -text
+*.mp4  filter=lfs diff=lfs merge=lfs -text
+```
+
+---
+
+## 🧹 Ignored Files (via .gitignore)
+
+```text
+# Unity auto-generated
+src/unity_viewer/Library/
+src/unity_viewer/Temp/
+src/unity_viewer/Obj/
+src/unity_viewer/Build/
+src/unity_viewer/Logs/
+*.dll
+*.dylib
+*.so
+
+# Python & exports
+__pycache__/
+*.pyc
+exported_grid_states/
+```
+
+---
+
+## 🧠 Credits
+
+This project uses:
+
+* Ray RLlib for reinforcement learning
+* Unity 2D for visualization
+* Git LFS for scalable data versioning

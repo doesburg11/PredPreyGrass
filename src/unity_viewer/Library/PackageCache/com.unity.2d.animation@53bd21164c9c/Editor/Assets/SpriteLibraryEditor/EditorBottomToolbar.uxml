@@ -1,7 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
-    <UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorBottomToolbar class="sprite-library-editor-window__bottom-toolbar">
-        <ui:Slider picking-mode="Ignore" value="0" high-value="1" name="SizeSlider" />
-        <ui:Button display-tooltip-when-elided="true" name="ListButton"  />
-        <ui:Button display-tooltip-when-elided="true" name="GridButton"  />
-    </UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorBottomToolbar>
-</ui:UXML>

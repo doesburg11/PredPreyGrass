@@ -1,8 +1,0 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements" eui="UnityEditor.UIElements" aui="UnityEditor.U2D.Animation.SpriteLibraryEditor">
-    <UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorTabHeader name="EditorTabHeader" pickingMode="Ignore" >
-        <ui:VisualElement name="TopBar" class="sprite-library-editor-window__top-bar" pickingMode="Ignore" >
-            <ui:Button name="AddButton" class="sprite-library-editor-window__add-button"/>
-            <ui:Label text="Label"/>
-        </ui:VisualElement>
-    </UnityEditor.U2D.Animation.SpriteLibraryEditor.EditorTabHeader>
-</ui:UXML>
