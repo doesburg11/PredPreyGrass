@@ -189,3 +189,9 @@ unity_viewer/Library/
 
 unity_viewer/Temp/
 src/unity_viewer/Temp/
+
+# Prevent future Unity cache bloat
+src/unity_viewer/Library/
+*.dll
+*.dylib
+*.so
