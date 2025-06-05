@@ -23,7 +23,7 @@ import json
 
 verbose_grid = False
 verbose_actions = False
-seed = None  # 42 # Optional: set to integer for reproducibility # candidates 4
+seed = 4  # 42 # Optional: set to integer for reproducibility # candidates 4
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
