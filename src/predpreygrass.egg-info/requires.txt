@@ -1,0 +1,8 @@
+
+[dev]
+pytest
+black
+ipykernel
+jupyter
+mypy
+flake8

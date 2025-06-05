@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5d29c660961bc1140af039c2a9c4f791
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - borderPrefab: {fileID: 2289572148308277341, guid: d009b5e3530707e55bdfe9b2dc38d85b, type: 3}
+  - predatorPrefab: {fileID: 4897100546552632529, guid: aa610b29e3edbecbcbf36fc6dc765805, type: 3}
+  - preyPrefab: {fileID: 3576446974957724867, guid: 5937c90c0fdcbe83392c904c2c5919bd, type: 3}
+  - grassPrefab: {fileID: 1010296733515658630, guid: 58693f4e34e951ba5ab0cde6275559d8, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
