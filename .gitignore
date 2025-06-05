@@ -195,3 +195,35 @@ src/unity_viewer/Library/
 *.dll
 *.dylib
 *.so
+# === Unity auto-generated folders ===
+src/unity_viewer/Library/
+src/unity_viewer/Temp/
+src/unity_viewer/Obj/
+src/unity_viewer/Build/
+src/unity_viewer/Logs/
+src/unity_viewer/UserSettings/
+src/unity_viewer/.vs/
+
+# === Unity build and IDE files ===
+*.csproj
+*.sln
+*.user
+*.pidb
+*.booproj
+
+# === Binary files that should NEVER be in Git ===
+*.dll
+*.dylib
+*.so
+
+# === Python junk ===
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# === Simulation exports ===
+exported_grid_states/
+*.npy
+*.json
+*.csv
