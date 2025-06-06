@@ -13,21 +13,21 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
     <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
-### Visualization of a random policy with the PettingZoo framework
+#### Visualization of a random policy with the PettingZoo framework
 - [`src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py)
 
-### Training model using PPO from stable baselines3
+#### Training model using PPO from stable baselines3
 - [```src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
 
-### Configuration environment parameters
+#### Configuration environment parameters
 - [`src/predpreygrass/pettingzoo/config/config_predpreygrass.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
 
 
-### Evaluate and visualize trained model
+#### Evaluate and visualize trained model
 - [```src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
-### Batch training and evaluating in one go:
+#### Batch training and evaluating in one go:
 - [```src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
 
 
@@ -58,3 +58,17 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
     <img src="../../../assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
+## Emergent Behaviors
+Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) with the SB3 PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
+- Predators hunting Prey 
+- Prey finding and eating grass 
+- Predators hovering around grass to catch Prey 
+- Prey trying to escape Predators
+
+Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
+
+<p align="center">
+    <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+</p>
+
+More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
