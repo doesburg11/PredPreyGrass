@@ -1,3 +1,5 @@
+[![PettingZoo version dependency](https://img.shields.io/badge/PettingZoo-v1.24.3-blue)]()
+[![Stable Baselines3](https://img.shields.io/github/v/release/DLR-RM/stable-baselines3?label=Stable-Baselines3)](https://github.com/DLR-RM/stable-baselines3/releases)
 ## Legacy framework: PettingZoo & Stable Baselines3 framework
 
 ### Centralized training, decentralized evaluation
