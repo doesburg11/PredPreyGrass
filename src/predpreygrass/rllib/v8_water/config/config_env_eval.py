@@ -62,11 +62,11 @@ config_env = {
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,  # 0.04
 
-    "verbose_engagement": False,
-    "verbose_termination": False,
-    "verbose_movement": False,
-    "verbose_decay": False,
-    "verbose_reproduction": False,
+    "verbose_engagement": True,
+    "verbose_termination": True,
+    "verbose_movement": True,
+    "verbose_decay": True,
+    "verbose_reproduction": True,
     "verbose_death_cause": True,
     "debug_mode": True,
 
