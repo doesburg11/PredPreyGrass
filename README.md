@@ -4,31 +4,20 @@
 
 
 # Artificial Life and Intelligence
-### Multi-Agent Reinforcement Learning, adaptation and Artificial Selection
+### Learning and Artificial Selection in a Predator-Prey-Grass gridworld
+
+We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 
 <p align="center">
-    <b>Populations adapting to a changing environment by selection and learning</b></p>
-<p align="center">     
-    <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
-</p>
-<p align="center">
-    <b>Fixed resources positioning; grass only</b></p>
+    <b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
 <p align="center">     
     <img align="center" src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
 </p>
-
-
 <p align="center">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="260" height="40" />
 </p>
 <p align="center"><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b>
 </p>
-
-## Overview
-These congigurations above explore emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
-
-We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to investigate the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
-
 ## Key Features:
 
 - **Modeling Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
@@ -39,6 +28,15 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 - **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
 
 
+
+## Overview
+These congigurations above explore emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+
+
+
+
+
+
 ## Starting point: MARL applied to a Predator-Prey-Grass environment
 
 Displayed above is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (through eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
@@ -46,45 +44,15 @@ Displayed above is a Predator-Prey-Grass gridworld deploying a multi-agent envir
 ## Centralized versus decentralized training
 The described environment and training concept is implemented in **centralized training** as well as **decentralized training** utilizing two separate framework solutions: on the one hand PettingZoo in combination with StableBaseline3 for centralized training and on the other hand the RLlib framework for decentralized training.
 
-<table align="center" width="100%">
-  <tr>
-    <th width="30%" align="left">Framework</th>
-    <th width="70%" align="left">Solution</th>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://pettingzoo.farama.org/">
-        <img src="./assets/images/icons/pettingzoo.png" alt="PettingZoo" height="40">
-      </a><br>
-      <a href="https://pettingzoo.farama.org/">PettingZoo Environment</a>
-    </td>
-    <td align="left">
-      Single network for all agents (centralized learning) utilizing <a href="https://stable-baselines3.readthedocs.io/en/master/modules/ppo.html">
-        <strong>Stable-Baselines3 PPO Algorithm</strong>
-      </a> applied to a customized PettingZoo multi-agent environment (<a href="https://pettingzoo.farama.org/api/aec/"><strong>AECEnv</strong></a>).
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://docs.ray.io/en/master/rllib/index.html">
-        <img src="./assets/images/icons/rllib.png" alt="RLlib" height="40">
-      </a><br>
-      <a href="https://docs.ray.io/en/master/rllib/index.html">RLlib (New API Stack) multi-agent environment </a>
-    </td>
-    <td align="left">
-      Dual network for Predator and Prey seperately (decentralized learning) utilizing 
-      <a href="https://docs.ray.io/en/master/rllib/rllib-algorithms.html#ppo">
-        <strong>native RLlib PPO Solution</strong>
-      </a>
-      applied to the RLlib new API stack multi-agent environment (<a href="https://docs.ray.io/en/latest/rllib/package_ref/env/multi_agent_env.html"><strong>MultiAgentEnv</strong></a>).
-    </td>
-  </tr>
-</table>
 
-## Centralized training: Pred-Prey-Grass MARL with PettingZoo/SB3 PPO 
+
 
 <p align="center">
-    <img src="./assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
+    <b>Populations adapting to a changing environment by selection and learning</b></p>
+<p align="center">     
+    <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
 </p>
+
 
 ### Configuration of centralized training
 The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
