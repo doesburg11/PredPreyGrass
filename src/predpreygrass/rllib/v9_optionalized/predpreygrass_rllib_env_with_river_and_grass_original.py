@@ -1,10 +1,8 @@
 """
 Predator-Prey Grass RLlib Environment
-v8_water:
+v8_water + optionalized so that it can go back to v7_modular (without river an without moving grass)
 -simulate river meandering over time from east to west
 -include grass agents who grow near the river
-Modualized code for all steps in the step function
-(like experimental_6 from v7_modular)
 """
 
 # external libraries
