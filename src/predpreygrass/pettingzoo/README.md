@@ -71,4 +71,3 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
     <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
-More emergent behavior and findings are described [on our website](https://www.behaviorpatterns.info/predator-prey-grass-project/).
