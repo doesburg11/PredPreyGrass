@@ -3,8 +3,8 @@
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
-# Artificial Life and Intelligence
-### Learning and Artificial Selection in a Predator-Prey-Grass gridworld
+# Predator-Prey-Grass
+### Learning and adaptation in a multi-agent gridworld
 
 We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 
@@ -16,8 +16,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 <p align="center">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="260" height="40" />
 </p>
-<p align="center"><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b>
-</p>
+
 
 ## Key Features:
 
@@ -31,14 +30,10 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 
 ## Overview
-These congigurations above explore emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 
-
-
-
-
-## Starting point: MARL applied to a Predator-Prey-Grass environment
+### Starting point: MARL applied to a Predator-Prey-Grass environment
 
 Displayed above is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (through eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
 
