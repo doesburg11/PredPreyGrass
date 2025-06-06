@@ -1,4 +1,7 @@
-## Getting started with the PettingZoo/SB3 framework
+## Legacy framework: PettingZoo & Stable Baselines3 framework
+
+### Centralized training, decentralized evaluation
+The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and **centralized training**. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Stable Baseline3 is originally designed for single-agent training. This means that in this solution, training utilizes only one unified network for Predators as well Prey. See further below how SB3 PPO is used in this centralilzed trained Predator-Prey-Grass multi-agent setting.
 
 <p align="center">
     <img src="../../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
@@ -10,40 +13,22 @@
     <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
-### Visualize a random policy with the PettingZoo framework
-Option 1:
-- In Visual Studio Code Explorer select: 
-   [`src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py)
-- In the Visual Studio Code menu select: `Run/Run Withous Debugging`:
+### Visualization of a random policy with the PettingZoo framework
+- [`src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py)
 
-Option2:
-- In a Visual Studio Code Terminal execute:
-   ```bash 
-    python src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py 
-    ```
 ### Training model using PPO from stable baselines3
-Option 1:
-- In Visual Studio Code Explorer select:
-[```src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
+- [```src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py)
 
-Option 2:
-- In a Visual Studio Code Terminal execute:
-   ```bash 
-    python src/predpreygrass/pettingzoo/train/train_sb3_ppo_parallel_wrapped_aec_env.py 
-    ```
 
-Optionally: In Visual Studio Code Explorer select to adjust environment paramers: 
-[`src/predpreygrass/pettingzoo/config/config_predpreygrass.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
+### Configuration environment parameters
+- [`src/predpreygrass/pettingzoo/config/config_predpreygrass.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py)
 
 
 ### Evaluate and visualize trained model
-Follow instructions in:
+- [```src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
 
-[```src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_ppo_from_file_aec_env.py)
-
-Batch training and evaluating in one go:
-
-[```src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
+### Batch training and evaluating in one go:
+- [```src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py```](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py)
 
 
 ### How SB3 PPO is used in the Predator-Prey-Grass Multi-Agent Setting
@@ -66,3 +51,10 @@ Batch training and evaluating in one go:
   ```
 - This enables running multiple instances of the environment in parallel, significantly improving training efficiency.
 - The training process treats the multi-agent setup as a **single centralized policy**, where PPO learns from the collective experiences of all agents.
+
+### Centralized training and decentralized evaluation 
+
+<p align="center">
+    <img src="../../../assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
+</p>
+
