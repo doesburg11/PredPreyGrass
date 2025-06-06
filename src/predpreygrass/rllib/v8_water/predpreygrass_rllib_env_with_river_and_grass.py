@@ -1206,7 +1206,7 @@ class PredPreyGrass(MultiAgentEnv):
                         return True
         return False
 
-    def _export_grid_to_file(self, grid_state, step, export_dir="/home/doesburg/Dropbox/03_marl_code/PredPreyGrassViewer/Assets/StreamingAssets/unity_viewer_exports"):
+    def _export_grid_to_file(self, grid_state, step, export_dir="./src/unity_viewer/Assets/StreamingAssets/unity_viewer_exports"):
         """
         Export the grid state to a JSON file, rotating each channel 90° counter-clockwise
         to align with Unity's coordinate system (origin bottom-left).
