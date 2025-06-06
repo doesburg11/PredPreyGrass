@@ -18,6 +18,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 </p>
 <p align="center"><b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b>
 </p>
+
 ## Key Features:
 
 - **Modeling Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
@@ -59,9 +60,7 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
 
 ## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack 
 
-<p align="center">
-    <img src="./assets/images/gifs/rlllib_evaluation_250.gif" width="300" height="300"/>
-</p>
+
 
 ### Configuration of decentralized training
 Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py). 
