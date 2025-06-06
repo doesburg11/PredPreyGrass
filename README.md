@@ -33,15 +33,40 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 
-### Starting point: MARL applied to a Predator-Prey-Grass environment
+### The Predator-Prey-Grass base-environment
 
-Displayed above is a Predator-Prey-Grass gridworld deploying a multi-agent environment with dynamic deletion and spawning of partially observant agents. Learning agents Predators (red) and Prey (blue) both sequentially expend energy moving around, and replenish it by eating. Prey eat Grass (green), and Predators eat Prey if they end up on the same grid cell. The agents obtain all the energy from the eaten resource. Predators die of starvation when their energy is run out, Prey die either of starvation or when being eaten by a Predator. Both learning agents asexually reproduce when energy levels exceed a certain threshold (through eating). In the base configuration, newly created agents are placed at random over the entire gridworld. Learning agents learn to move based on their partial observations of the environment.
+* At startup Predator, Prey and Grass are randomly positioned.
+* Agents are **dynamically spawned and deleted** over time.
+* There are two learning agent types:
+
+  * **Predators** (red)
+  * **Prey** (blue)
+
+Learning agents **learn movement strategies** based on their **partial observations**.
+* Learning agents expend **energy** as they move around the grid.
+* Learning agents **replenish energy by eating**:
+
+  * **Prey** eat **Grass** (green).
+  * **Predators** eat **Prey** by moving onto the same grid cell.
+
+* **Predator death conditions**:
+
+  * Starvation (when energy runs out).
+* **Prey death conditions**:
+
+  * Starvation.
+  * Being eaten by a Predator.
+* **Reproduction**:
+
+  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold (through eating).
+  * New agents are spawned at **random locations** on the grid in the base configuration.
+* Grass agents regenerate at the same spot after being eaten by Prey.
+
+
+
 
 ## Centralized versus decentralized training
-The described environment and training concept is implemented in **centralized training** as well as **decentralized training** utilizing two separate framework solutions: on the one hand PettingZoo in combination with StableBaseline3 for centralized training and on the other hand the RLlib framework for decentralized training.
-
-
-
+The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework.
 
 <p align="center">
     <b>Populations adapting to a changing environment by selection and learning</b></p>

@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # initialize the grid_visualizer
     grid_size = (env.grid_size, env.grid_size)
     all_entities = env.possible_agents + env.grass_agents
-    grid_visualizer = MatPlotLibRenderer(grid_size, all_entities, trace_length=5)
+    grid_visualizer = MatPlotLibRenderer(grid_size, all_entities, trace_length=5, show_gridlines=False)
 
     population_chart = PopulationChart()
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             print("Environment terminated by truncation.")
             break
 
-        sleep(0.1)  # Slow down visualization
+        # sleep(0.1)  # Slow down visualization
         pass
     
     population_chart.plot()

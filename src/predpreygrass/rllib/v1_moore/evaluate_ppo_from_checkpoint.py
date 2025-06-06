@@ -32,7 +32,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     return None
 
 # Load trained model from checkpoint
-checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v1_moore/trained_model/PPO_PredPreyGrass_437b7_00000_0_2025-03-24_19-17-36/checkpoint_000029')}"
+checkpoint_path = f"file://{os.path.abspath('./predpreygrass/rllib/v1/trained_model/PPO_PredPreyGrass_437b7_00000_0_2025-03-24_19-17-36/checkpoint_000029')}"
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
