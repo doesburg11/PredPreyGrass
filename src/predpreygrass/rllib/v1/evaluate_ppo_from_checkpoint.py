@@ -1,6 +1,6 @@
 # discretionary libararies
 from predpreygrass.rllib.v1.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.utils.renderer import MatPlotLibRenderer
+from predpreygrass.utils.pygame_renderer import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -10,6 +10,7 @@ import torch
 # import time
 import os
 import matplotlib.pyplot as plt
+import pygame
 
 verbose_grid = False
 verbose_actions = False
@@ -52,80 +53,87 @@ env = env_creator({})  # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)
-
-
-# intitialize matplot lib renderer
+# Initialize PyGameRenderer
 grid_size = (env.grid_size, env.grid_size)
-all_agents = env.possible_agents + env.grass_agents
-visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False)
-step = 0
+visualizer = PyGameRenderer(grid_size)
 
-done = False
+# Initialize viewer control + loop helper
+control = ViewerControlHelper()
+loop_helper = LoopControlHelper()
+
+# Optional: frame rate control
+clock = pygame.time.Clock()
+target_fps = 10  # Adjust as desired
+
+step = 0
 total_reward = 0
 predator_counts = []
 prey_counts = []
 time_steps = []
 
 # Run one evaluation episode
-while not done:
-    action_dict = {}
+while not loop_helper.simulation_terminated:
+    control.handle_events()
 
-    for agent_id in env.agents:
-        policy_id = policy_mapping_fn(agent_id)  # Determine policy for each agent
-        # Get the RLModule (policy model) from the Learner Group
-        policy_module = rl_modules[policy_id]
-        # Convert observation to tensor format required for _forward_inference()
-        obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)  # Add batch dimension
-        # Use _forward_inference() to compute the next action
-        with torch.no_grad():
-            action_output = policy_module._forward_inference({"obs": obs_tensor})
-        # Extract the action correctly
-        if "action_dist_inputs" in action_output:
-            action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
-        else:
-            raise KeyError(f"Unexpected output structure: {action_output}")
-        # Store the computed action
-        action_dict[agent_id] = action
-    if verbose_actions:
-        print("----------------------------------------------------------------------------------")
-        print("Step:", step)
-        print("----------------------------------------------------------------------------------")
-        print("Actions:", action_dict)
-        print("----------------------------------------------------------------------------------")
+    if loop_helper.should_step(control):
+        # Build action dict from PPO policy
+        action_dict = {}
+        for agent_id in env.agents:
+            policy_id = policy_mapping_fn(agent_id)
+            policy_module = rl_modules[policy_id]
 
-    # Step the environment with computed actions
-    obs, rewards, terminations, truncations, _ = env.step(action_dict)
-    if verbose_grid:
-        print(f"Step {step}:")
-        print("-----------------------------------------")
-        # print(f"Actions: {action_dict}")
-        env._print_grid_from_positions()
-        env._print_grid_from_state()
-        print("-----------------------------------------")
+            obs_tensor = torch.tensor(obs[agent_id]).float().unsqueeze(0)
+            with torch.no_grad():
+                action_output = policy_module._forward_inference({"obs": obs_tensor})
 
-    # Print termination status for debugging
-    # print(f"Terminations: {terminations}")
-    merged_positions = {**env.agent_positions, **env.grass_positions}
-    visualizer.update(merged_positions, step)
-    step += 1
-    # Count current number of agents
-    num_predators = sum(1 for agent in env.agents if "predator" in agent)
-    num_prey = sum(1 for agent in env.agents if "prey" in agent)
+            if "action_dist_inputs" in action_output:
+                action = torch.argmax(action_output["action_dist_inputs"], dim=-1).item()
+            else:
+                raise KeyError(f"Unexpected output structure: {action_output}")
 
-    # Store counts
-    time_steps.append(step)
-    predator_counts.append(num_predators)
-    prey_counts.append(num_prey)
+            action_dict[agent_id] = action
 
-    # Sum rewards
-    total_reward += sum(rewards.values())
+        # Step env
+        obs, rewards, terminations, truncations, _ = env.step(action_dict)
 
-    # Check if episode is done
-    done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    # time.sleep(0.1)
+        # Update viewer
+        visualizer.update(
+            agent_positions=env.agent_positions,
+            grass_positions=env.grass_positions,
+            agent_energies=env.agent_energies,
+            grass_energies=env.grass_energies,
+            step=step
+        )
 
-    # Print active agents after step
-    # print(f"Active Agents After Step: {env.agents}")  # Debugging
+        # Update loop control termination flag
+        loop_helper.update_simulation_terminated(terminations, truncations)
+
+        # Reset step_once
+        control.step_once = False
+
+        # Frame rate control
+        clock.tick(target_fps)
+
+        # Track stats
+        step += 1
+        num_predators = sum(1 for agent in env.agents if "predator" in agent)
+        num_prey = sum(1 for agent in env.agents if "prey" in agent)
+
+        time_steps.append(step)
+        predator_counts.append(num_predators)
+        prey_counts.append(num_prey)
+        total_reward += sum(rewards.values())
+
+    else:
+        # While paused → update viewer so tooltips work
+        visualizer.update(
+            agent_positions=env.agent_positions,
+            grass_positions=env.grass_positions,
+            agent_energies=env.agent_energies,
+            grass_energies=env.grass_energies,
+            step=step
+        )
+        pygame.time.wait(50)
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
@@ -161,5 +169,5 @@ plt.grid(True)
 plt.tight_layout()
 plt.show()
 
-# Shutdown Ray after evaluation
 ray.shutdown()
+visualizer.close()
