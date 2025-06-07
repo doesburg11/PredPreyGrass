@@ -7,21 +7,22 @@ import ray
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 import torch
-import time
+# import time
 import os
+import matplotlib.pyplot as plt
 
 verbose_grid = False
 verbose_actions = False
-seed = None # 42 # for random intialization of the environment
+seed = 42  # 42 # for random intialization of the environment
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
+
 
 # Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
-register_env("PredPreyGrass", lambda config: env_creator(config))
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -31,9 +32,14 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "prey_policy"
     return None
 
+
+register_env("PredPreyGrass", lambda config: env_creator(config))
+
+
 # Load trained model from checkpoint
-# src/predpreygrass/rllib/v1/trained_model/PPO_PredPreyGrass_437b7_00000_0_2025-03-24_19-17-36/checkpoint_000029
-checkpoint_path = f"file://{os.path.abspath('./src/predpreygrass/rllib/v1/trained_model/PPO_PredPreyGrass_437b7_00000_0_2025-03-24_19-17-36/checkpoint_000029')}"
+root = "./src/predpreygrass/rllib/"
+path = "v1/trained_policy/PPO_2025-06-06_21-34-53/PPO_PredPreyGrass_52139_00000_0_2025-06-06_21-34-53/checkpoint_000030"
+checkpoint_path = f"file://{os.path.abspath(root+path)}"
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
 print("Checkpoint loaded successfully!")
 
@@ -42,7 +48,7 @@ print("Checkpoint loaded successfully!")
 rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
 
 # Initialize the environment
-env = env_creator({}) # PredPreyGrass()
+env = env_creator({})  # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)
@@ -52,7 +58,7 @@ obs, _ = env.reset(seed=seed)
 grid_size = (env.grid_size, env.grid_size)
 all_agents = env.possible_agents + env.grass_agents
 visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False)
-step=0
+step = 0
 
 done = False
 total_reward = 0
@@ -82,7 +88,7 @@ while not done:
         action_dict[agent_id] = action
     if verbose_actions:
         print("----------------------------------------------------------------------------------")
-        print("Step:",step)
+        print("Step:", step)
         print("----------------------------------------------------------------------------------")
         print("Actions:", action_dict)
         print("----------------------------------------------------------------------------------")
@@ -92,16 +98,16 @@ while not done:
     if verbose_grid:
         print(f"Step {step}:")
         print("-----------------------------------------")
-        #print(f"Actions: {action_dict}")
+        # print(f"Actions: {action_dict}")
         env._print_grid_from_positions()
         env._print_grid_from_state()
         print("-----------------------------------------")
 
     # Print termination status for debugging
-    #print(f"Terminations: {terminations}")
+    # print(f"Terminations: {terminations}")
     merged_positions = {**env.agent_positions, **env.grass_positions}
     visualizer.update(merged_positions, step)
-    step+=1
+    step += 1
     # Count current number of agents
     num_predators = sum(1 for agent in env.agents if "predator" in agent)
     num_prey = sum(1 for agent in env.agents if "prey" in agent)
@@ -116,10 +122,10 @@ while not done:
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    time.sleep(0.1)
+    # time.sleep(0.1)
 
     # Print active agents after step
-    #print(f"Active Agents After Step: {env.agents}")  # Debugging
+    # print(f"Active Agents After Step: {env.agents}")  # Debugging
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---
@@ -143,8 +149,6 @@ print(f"Total number of steps: {step-1}")
 print(f"Total Predator Reward: {total_predator_reward:.2f}")
 print(f"Total Prey Reward:     {total_prey_reward:.2f}")
 print(f"Total All-Agent Reward:{total_reward_all:.2f}")
-
-import matplotlib.pyplot as plt
 
 plt.figure(figsize=(10, 5))
 plt.plot(time_steps, predator_counts, label='Predators', color='red')
