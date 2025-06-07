@@ -58,7 +58,7 @@ if __name__ == "__main__":
         merged_positions = {**env.agent_positions, **env.grass_positions}
 
         # Update grid visualization
-        grid_visualizer.update(merged_positions,step)
+        grid_visualizer.update(merged_positions, step)
         # Update population chart data
         population_chart.record(step, env.agents)
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
         # sleep(0.1)  # Slow down visualization
         pass
-    
+
     population_chart.plot()
     grid_visualizer.close()
     env.close()
