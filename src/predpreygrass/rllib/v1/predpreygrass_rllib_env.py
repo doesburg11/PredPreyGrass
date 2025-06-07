@@ -226,7 +226,6 @@ class PredPreyGrass(MultiAgentEnv):
                 if agent in self.agents:  # Active agents get a real observation
                     observations[agent] = self._get_observation(agent)
                 else:  # Previously removed agents get a zero-filled observation
-                    # according to chatgpt all agents previously ever active need a zero-filled observation and reward
                     observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
                     observations[agent] = np.zeros((self.num_obs_channels, observation_range, observation_range), dtype=np.float64)
                 rewards[agent] = 0.0
