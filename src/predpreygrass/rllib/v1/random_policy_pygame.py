@@ -1,8 +1,9 @@
-from predpreygrass.utils.renderer import MatPlotLibRenderer, PopulationChart
+# from predpreygrass.utils.renderer import MatPlotLibRenderer, PopulationChart
 from predpreygrass.rllib.v1.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.utils.simple_pygame_renderer import SimplePyGameRenderer
 
 # external libraries
-# from time import sleep
+from time import sleep
 
 verbose_grid_state = False
 verbose_observation = False
@@ -25,9 +26,10 @@ if __name__ == "__main__":
     # initialize the grid_visualizer
     grid_size = (env.grid_size, env.grid_size)
     all_entities = env.possible_agents + env.grass_agents
-    grid_visualizer = MatPlotLibRenderer(grid_size, all_entities, trace_length=5, show_gridlines=False)
+    # grid_visualizer = MatPlotLibRenderer(grid_size, all_entities, trace_length=5, show_gridlines=False)
+    live_viewer = SimplePyGameRenderer(grid_size)
 
-    population_chart = PopulationChart()
+    # population_chart = PopulationChart()
 
     for step in range(env.max_steps):  # Arbitrary large number to test termination
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
@@ -54,13 +56,13 @@ if __name__ == "__main__":
             env._print_grid_from_state()
             print("-----------------------------------------")
 
-        # Merge agent and grass positions
-        merged_positions = {**env.agent_positions, **env.grass_positions}
-
-        # Update grid visualization
-        grid_visualizer.update(merged_positions, step)
-        # Update population chart data
-        population_chart.record(step, env.agents)
+        # Update viewer
+        live_viewer.update(
+            agent_positions=env.agent_positions,
+            grass_positions=env.grass_positions,
+            agent_energies=env.agent_energies,
+            step=step
+            )
 
         if terminations["__all__"]:
             print("Environment terminated by termination.")
@@ -70,9 +72,10 @@ if __name__ == "__main__":
             print("Environment terminated by truncation.")
             break
 
-        # sleep(0.1)  # Slow down visualization
+        sleep(1)  # Slow down visualization
         pass
 
-    population_chart.plot()
-    grid_visualizer.close()
+    # population_chart.plot()
+    # grid_visualizer.close()
+    live_viewer.close()
     env.close()
