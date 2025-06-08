@@ -45,6 +45,7 @@ if __name__ == "__main__":
                 grass_positions=env.grass_positions,
                 agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies,
+                agents_just_ate=env.agents_just_ate,
                 step=step
             )
             # Update termination flag AFTER env.step
@@ -60,6 +61,7 @@ if __name__ == "__main__":
                 grass_positions=env.grass_positions,
                 agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies,
+                agents_just_ate=env.agents_just_ate,
                 step=step
             )
             # Small sleep to avoid CPU busy loop

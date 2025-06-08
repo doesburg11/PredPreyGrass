@@ -10,8 +10,8 @@ class GuiStyle:
     margin_bottom: int = 10
     legend_spacing: int = 30
     legend_font_size: int = 28
-    legend_circle_radius: int = 8
-    legend_square_size: int = 16
+    legend_circle_radius: int = 10
+    legend_square_size: int = 20
     tooltip_font_size: int = 28
     tooltip_padding: int = 4
 
@@ -20,9 +20,9 @@ class GuiStyle:
     grass_color: tuple = (0, 128, 0)
     grid_color: tuple = (200, 200, 200)
     background_color: tuple = (255, 255, 255)
-    halo_reproduction_color: tuple = (255, 215, 0)  # Gold
+    halo_reproduction_color: tuple = (255, 0, 0)  # Gold
     halo_eating_color: tuple = (0, 128, 0)  # Bright green
-    halo_reproduction_thickness: int = 4
+    halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
 
 
@@ -129,7 +129,7 @@ class PyGameRenderer:
 
             pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
-            # Draw green ring if agent.just_ate (stable for 2 steps)
+            # Draw green ring if agent.just_ate
             if agent_id in agents_just_ate:
                 pygame.draw.circle(
                     self.screen,
@@ -212,7 +212,7 @@ class PyGameRenderer:
             self.screen,
             self.gui_style.halo_reproduction_color,
             (x + r, y + r),
-            r + 3,
+            r + 2,
             width=self.gui_style.halo_reproduction_thickness
         )
         self.screen.blit(font.render("Close to reproduction", True, (0, 0, 0)), (x + 30, y))
@@ -222,7 +222,7 @@ class PyGameRenderer:
             self.screen,
             self.gui_style.halo_eating_color,
             (x + r, y + r),
-            r + 5,
+            r + 2,
             width=self.gui_style.halo_eating_thickness
         )
         self.screen.blit(font.render("Eating", True, (0, 0, 0)), (x + 30, y))
@@ -257,6 +257,7 @@ class ViewerControlHelper:
     def __init__(self, initial_paused=False):
         self.paused = initial_paused
         self.step_once = False
+        self.step_backward = False
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -279,6 +280,11 @@ class ViewerControlHelper:
                     self.paused = True
                     self.step_once = True
                     print("[ViewerControl] Single Step")
+
+                elif event.key == pygame.K_LEFT:
+                    self.paused = True
+                    self.step_backward = True
+                    print("[ViewerControl] Step Backward")
 
 
 class LoopControlHelper:
