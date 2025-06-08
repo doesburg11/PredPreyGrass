@@ -128,6 +128,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
         # Mapping actions to movements
         self.num_actions = len(self.action_to_move_tuple)
+        self.agent_just_ate_steps = {}  # agent_id → frames left to show green ring
 
     def reset(self, *, seed=None, options=None):
         """
@@ -237,6 +238,12 @@ class PredPreyGrass(MultiAgentEnv):
             terminations["__all__"] = False
             return observations, rewards, terminations, truncations, infos
 
+        # Decrease just_ate steps: for stepwise display eating in grid
+        for agent_id in list(self.agent_just_ate_steps.keys()):
+            self.agent_just_ate_steps[agent_id] -= 1
+            if self.agent_just_ate_steps[agent_id] <= 0:
+                del self.agent_just_ate_steps[agent_id]
+
         # Step 1: Process energy depletion due to time steps
         for agent, action in action_dict.items():
             if "predator" in agent:
@@ -311,6 +318,7 @@ class PredPreyGrass(MultiAgentEnv):
                             f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! "
                             f"Predator Reward: {self.reward_predator_catch_prey}"
                         )
+                    self.agent_just_ate_steps[agent] = 1  # Show green ring for next 1 step
 
                     # Assign rewards predator and penalty prey
                     rewards[agent] = self.reward_predator_catch_prey
@@ -350,6 +358,7 @@ class PredPreyGrass(MultiAgentEnv):
                     if caught_grass:
                         if self.verbose_engagement:
                             print(f"[ENGAGE] {agent} caught grass at {prey_position}! Prey Reward: {self.reward_prey_eat_grass}")
+                        self.agent_just_ate_steps[agent] = 1  # Show green ring for next 1 step
 
                         # Reward prey for eating grass
                         rewards[agent] = self.reward_prey_eat_grass

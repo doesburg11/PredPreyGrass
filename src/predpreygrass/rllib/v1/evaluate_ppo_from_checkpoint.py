@@ -97,12 +97,15 @@ while not loop_helper.simulation_terminated:
         obs, rewards, terminations, truncations, _ = env.step(action_dict)
 
         # Update viewer
+        agents_just_ate = set(env.agent_just_ate_steps.keys())
+
         visualizer.update(
             agent_positions=env.agent_positions,
             grass_positions=env.grass_positions,
             agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
-            step=step
+            step=step,
+            agents_just_ate=set(env.agent_just_ate_steps.keys())
         )
 
         # Update loop control termination flag
@@ -125,13 +128,15 @@ while not loop_helper.simulation_terminated:
         total_reward += sum(rewards.values())
 
     else:
+        agents_just_ate = set(env.agent_just_ate_steps.keys())
         # While paused → update viewer so tooltips work
         visualizer.update(
             agent_positions=env.agent_positions,
             grass_positions=env.grass_positions,
             agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
-            step=step
+            step=step,
+            agents_just_ate=set(env.agent_just_ate_steps.keys())
         )
         pygame.time.wait(50)
 
