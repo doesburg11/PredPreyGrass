@@ -63,7 +63,6 @@ loop_helper = LoopControlHelper()
 clock = pygame.time.Clock()
 target_fps = 10  # Adjust as desired
 
-step = 0
 total_reward = 0
 predator_counts = []
 prey_counts = []
@@ -85,8 +84,15 @@ while not loop_helper.simulation_terminated:
             snapshots.pop()  # Discard current step
             env.restore_state_snapshot(snapshots[-1])
             print(f"[ViewerControl] Step Backward → Step {env.current_step}")
+
             # --- REGENERATE obs to match restored state ---
             obs = {agent: env._get_observation(agent) for agent in env.agents}
+
+            # --- Also rewind history lists ---
+            if len(time_steps) > 0:
+                time_steps.pop()
+                predator_counts.pop()
+                prey_counts.pop()
 
             visualizer.update(
                 agent_positions=env.agent_positions,
@@ -146,11 +152,10 @@ while not loop_helper.simulation_terminated:
         clock.tick(target_fps)
 
         # Track stats
-        step += 1
         num_predators = sum(1 for agent in env.agents if "predator" in agent)
         num_prey = sum(1 for agent in env.agents if "prey" in agent)
 
-        time_steps.append(step)
+        time_steps.append(env.current_step)
         predator_counts.append(num_predators)
         prey_counts.append(num_prey)
         total_reward += sum(rewards.values())
@@ -188,7 +193,7 @@ total_prey_reward = sum(prey_rewards)
 total_reward_all = total_predator_reward + total_prey_reward
 
 print("\n--- Aggregated Rewards ---")
-print(f"Total number of steps: {step-1}")
+print(f"Total number of steps: {env.current_step-1}")
 print(f"Total Predator Reward: {total_predator_reward:.2f}")
 print(f"Total Prey Reward:     {total_prey_reward:.2f}")
 print(f"Total All-Agent Reward:{total_reward_all:.2f}")
