@@ -13,9 +13,6 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 <p align="center">     
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="400" height="400" />
 </p>
-<p align="center">
-    <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="260" height="40" />
-</p>
 
 
 ## Key Features:
