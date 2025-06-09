@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class GuiStyle:
     margin_left: int = 10
     margin_top: int = 10
-    margin_right: int = 250
+    margin_right: int = 280
     margin_bottom: int = 10
     legend_spacing: int = 30
     legend_font_size: int = 28
