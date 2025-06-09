@@ -10,8 +10,22 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 
+def random_policy_pi(agent_id, env):
+    """
+    Sample a random action for the given agent using the environment's action space.
+
+    Args:
+        agent_id (str): The agent's ID.
+        env: The environment instance (must provide env.action_spaces[agent_id]).
+
+    Returns:
+        int: A randomly sampled action.
+    """
+    return env.action_spaces[agent_id].sample()
+
+
 if __name__ == "__main__":
-    seed = 42  # set seed for reproducibility
+    seed = 3  # set seed for reproducibility
     env = env_creator({})
     # reset the environment and get initial observations
     observations, _ = env.reset(seed=seed)
@@ -69,7 +83,11 @@ if __name__ == "__main__":
             control.step_backward = False
         # Normal step forward
         if loop_helper.should_step(control):
-            action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
+            action_dict = {
+                agent_id: random_policy_pi(agent_id, env)
+                for agent_id in env.agents
+            }
+
             # Run one env step
             observations, rewards, terminations, truncations, info = env.step(action_dict)
             # Save snapshot AFTER step
