@@ -1,9 +1,5 @@
 # Auxiliary folder
 output/
-# Rllib checkpoints
-checkpoints/
-# RLlib simulation results
-simulation_frames/ 
 # Rllib archive files
 predpreygrass/rllib/archive/
 # Byte-compiled / optimized / DLL files
