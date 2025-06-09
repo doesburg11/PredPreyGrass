@@ -11,7 +11,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 <p align="center">
     <b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
 <p align="center">     
-    <img align="center" src="./assets/images/gifs/two_speed_evolution.gif" width="400" height="400" />
+    <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="400" height="400" />
 </p>
 <p align="center">
     <img src="./assets/images/readme/legend_two_speed_gridworld.png" width="260" height="40" />
