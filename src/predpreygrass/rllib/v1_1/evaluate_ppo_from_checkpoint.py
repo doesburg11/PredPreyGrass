@@ -10,6 +10,12 @@ import torch
 import os
 import matplotlib.pyplot as plt
 import pygame
+import cv2
+import numpy as np
+
+SAVE_MOVIE = True  # Set to False if you do not want to save movie
+MOVIE_FILENAME = "simulation.mp4"
+MOVIE_FPS = 10
 
 
 # Define environment registration
@@ -78,6 +84,13 @@ if __name__ == "__main__":
     # Initialize PyGameRenderer
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(grid_size)
+    
+    # Create movie
+    if SAVE_MOVIE:
+        screen_width = visualizer.screen.get_width()
+        screen_height = visualizer.screen.get_height()
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
 
     # Initialize viewer control + loop helper
     control = ViewerControlHelper()
@@ -155,6 +168,11 @@ if __name__ == "__main__":
                 agents_just_ate=env.agents_just_ate,
                 step=env.current_step,
             )
+            if SAVE_MOVIE:
+                frame = pygame.surfarray.array3d(visualizer.screen)
+                frame = np.transpose(frame, (1, 0, 2))  # Convert (width, height, channels) → (height, width, channels)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Pygame uses RGB, OpenCV uses BGR
+                video_writer.write(frame)
 
             # Update loop control termination flag
             loop_helper.update_simulation_terminated(terminations, truncations)
@@ -223,6 +241,10 @@ if __name__ == "__main__":
     plt.grid(True)
     plt.tight_layout()
     plt.show()
+
+    if SAVE_MOVIE:
+        video_writer.release()
+        print(f"[VideoWriter] Saved movie to {MOVIE_FILENAME}")
 
     # Shutdown
     ray.shutdown()

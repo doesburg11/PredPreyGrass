@@ -196,6 +196,11 @@ class PyGameRenderer:
         s = self.gui_style.legend_square_size
         font = self.tooltip_font
 
+        # Draw legend title
+        title_surface = font.render("Agent size energy related", True, (0, 0, 0))
+        self.screen.blit(title_surface, (x, y))
+
+        y += spacing  # Move down after title
         pygame.draw.circle(self.screen, self.gui_style.predator_color, (x + r, y + r), r)
         self.screen.blit(font.render("Predator", True, (0, 0, 0)), (x + 30, y))
 
@@ -215,7 +220,7 @@ class PyGameRenderer:
             r + 2,
             width=self.gui_style.halo_reproduction_thickness
         )
-        self.screen.blit(font.render("Close to reproduction", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Reproduction halo", True, (0, 0, 0)), (x + 30, y))
 
         y += spacing
         pygame.draw.circle(
@@ -225,7 +230,7 @@ class PyGameRenderer:
             r + 2,
             width=self.gui_style.halo_eating_thickness
         )
-        self.screen.blit(font.render("Eating", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
 
     def close(self):
         pygame.quit()
