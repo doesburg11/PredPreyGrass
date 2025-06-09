@@ -9,7 +9,7 @@
 We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 
 <p align="center">
-    <b>Evolution towards faster moving agents in a Predator-Prey-Grass gridworld</b></p>
+    <b>Dual policy PPO trained Predator and Prey</b></p>
 <p align="center">     
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="500" height="400" />
 </p>
