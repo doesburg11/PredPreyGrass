@@ -1,6 +1,5 @@
 [![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/doesburg11/PredPreyGrass/blob/main/predpreygrass.ipynb)
 
 
 # Predator-Prey-Grass
@@ -14,13 +13,37 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
+### The Predator-Prey-Grass base-environment
 
-<table>
-<tr>
-<td><iimg align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500"/></td>
-<td>Your text goes here.<br/>You can have <b>HTML</b> or Markdown text here.</td>
-</tr>
-</table>
+* At startup Predator, Prey and Grass are randomly positioned.
+* Agents are **dynamically spawned and deleted** over time.
+* There are two learning agent types:
+
+  * **Predators** (red)
+  * **Prey** (blue)
+
+* Learning agents **learn movement strategies** based on their **partial observations**.
+* Learning agents expend **energy** as they move around the grid.
+* Learning agents **replenish energy by eating**:
+
+  * **Prey** eat **Grass** (green).
+  * **Predators** eat **Prey** by moving onto the same grid cell.
+
+* **Predator death conditions**:
+
+  * Starvation (when energy runs out).
+* **Prey death conditions**:
+
+  * Starvation.
+  * Being eaten by a Predator.
+* **Reproduction**:
+
+  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold (through eating).
+  * New agents are spawned close near their parents.
+
+Environment [here].
+Configuration [here].
+
 
 
 ## Key Features:
@@ -38,34 +61,6 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 
-### The Predator-Prey-Grass base-environment
-
-* At startup Predator, Prey and Grass are randomly positioned.
-* Agents are **dynamically spawned and deleted** over time.
-* There are two learning agent types:
-
-  * **Predators** (red)
-  * **Prey** (blue)
-
-Learning agents **learn movement strategies** based on their **partial observations**.
-* Learning agents expend **energy** as they move around the grid.
-* Learning agents **replenish energy by eating**:
-
-  * **Prey** eat **Grass** (green).
-  * **Predators** eat **Prey** by moving onto the same grid cell.
-
-* **Predator death conditions**:
-
-  * Starvation (when energy runs out).
-* **Prey death conditions**:
-
-  * Starvation.
-  * Being eaten by a Predator.
-* **Reproduction**:
-
-  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold (through eating).
-  * New agents are spawned at **random locations** on the grid in the base configuration.
-* Grass agents regenerate at the same spot after being eaten by Prey.
 
 
 
