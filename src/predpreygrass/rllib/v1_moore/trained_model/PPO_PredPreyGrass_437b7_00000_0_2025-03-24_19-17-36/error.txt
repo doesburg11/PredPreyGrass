@@ -1,8 +1,0 @@
-Failure # 1 (occurred at 2025-03-24_21-51-22)
-The actor died unexpectedly before finishing this task.
-	class_name: PPO
-	actor_id: 8afd76e24ce91109a03623bc01000000
-	pid: 2369773
-	namespace: f7a2b476-504b-4d94-915c-a8f9bd0c8e97
-	ip: 192.168.2.21
-The actor is dead because its owner has died. Owner Id: 01000000ffffffffffffffffffffffffffffffffffffffffffffffff Owner Ip address: 192.168.2.21 Owner worker exit type: SYSTEM_ERROR Worker exit detail: Owner's node has crashed.
