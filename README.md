@@ -42,15 +42,17 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 * Grass agents regenerate at the same spot after being eaten by Prey.
 
-### [Code base](src/predpreygrass/rllib/v1_0)
+### Environments:
 
-* [Environment](src/predpreygrass/rllib/v1_0/predpreygrass_rllib_env.py)
+* [Base environnment](src/predpreygrass/rllib/v1_0)
 
-* [Configuration](src/predpreygrass/rllib/v1_0/config_env.py)
+* [Mutating agents](src/predpreygrass/rllib/v2_0)
 
-* [Training](src/predpreygrass/rllib/v1_0/train_rllib_ppo_multiagent_env.py)
+* [Changing river]()
 
-* [Evaluation](src/predpreygrass/rllib/v1_0/evaluate_ppo_from_checkpoint.py)
+
+### Environment:
+* Base environment
 
 
 ## Installation of the repository
