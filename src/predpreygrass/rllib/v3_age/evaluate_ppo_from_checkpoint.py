@@ -6,22 +6,24 @@ import ray
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 import torch
-import time
 import os
 
 
 verbose_grid = False
 verbose_actions = False
-seed = None # 42 # for random intialization of the environment
+seed = None  # 42 # for random intialization of the environment
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
+
 
 # Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
+
 register_env("PredPreyGrass", lambda config: env_creator(config))
+
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -35,9 +37,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-    
-checkpoint_root = './src/predpreygrass/rllib/v3_age/trained_models/config_2/'
-chechpoint_file = 'PPO_PredPreyGrass_a6a66_00000_0_2025-03-30_23-40-51/checkpoint_000022'
+
+
+checkpoint_root = "./src/predpreygrass/rllib/v3_age/trained_models/config_2/"
+chechpoint_file = "PPO_PredPreyGrass_a6a66_00000_0_2025-03-30_23-40-51/checkpoint_000022"
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
@@ -48,7 +51,7 @@ print("Checkpoint loaded successfully!")
 rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
 
 # Initialize the environment
-env = env_creator({}) # PredPreyGrass()
+env = env_creator({})  # PredPreyGrass()
 
 # Reset environment and get initial observations
 obs, _ = env.reset(seed=seed)
@@ -61,7 +64,7 @@ grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show
 combined_evolution_visualizer = CombinedEvolutionVisualizer(destination_path=checkpoint_root)
 population_chart = PopulationChart()
 
-step=0
+step = 0
 done = False
 total_reward = 0
 
@@ -87,32 +90,28 @@ while not done:
         action_dict[agent_id] = action
     if verbose_actions:
         print("----------------------------------------------------------------------------------")
-        print("Step:",step)
+        print("Step:", step)
         print("----------------------------------------------------------------------------------")
         print("Actions:", action_dict)
         print("----------------------------------------------------------------------------------")
 
     # Step the environment with computed actions
     obs, rewards, terminations, truncations, _ = env.step(action_dict)
-    combined_evolution_visualizer.record(
-        agent_ids=env.agents,
-        internal_ids=env.agent_internal_ids,
-        agent_ages=env.agent_ages
-    )
+    combined_evolution_visualizer.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
 
     if verbose_grid:
         print(f"Step {step}:")
         print("-----------------------------------------")
-        #print(f"Actions: {action_dict}")
+        # print(f"Actions: {action_dict}")
         env._print_grid_from_positions()
         env._print_grid_from_state()
         print("-----------------------------------------")
 
     # Print termination status for debugging
-    #print(f"Terminations: {terminations}")
+    # print(f"Terminations: {terminations}")
     merged_positions = {**env.agent_positions, **env.grass_positions}
     grid_visualizer.update(merged_positions, step)
-    step+=1
+    step += 1
     # Count current number of agents
     num_predators = sum(1 for agent in env.agents if "predator" in agent)
     num_prey = sum(1 for agent in env.agents if "prey" in agent)
@@ -125,10 +124,10 @@ while not done:
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    #time.sleep(0.1)
+    # time.sleep(0.1)
 
     # Print active agents after step
-    #print(f"Active Agents After Step: {env.agents}")  # Debugging
+    # print(f"Active Agents After Step: {env.agents}")  # Debugging
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 # --- REWARD SUMMARY ---

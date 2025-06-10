@@ -51,11 +51,11 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # === Set checkpoint paths ===
-ray_results_dir = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results'
+ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = '/PPO_2025-05-23_20-01-32/PPO_PredPreyGrass_f5558_00000_0_2025-05-23_20-01-32/'
-checkpoint_dir = 'checkpoint_000080'
+checkpoint_root = "/PPO_2025-05-23_20-01-32/PPO_PredPreyGrass_f5558_00000_0_2025-05-23_20-01-32/"
+checkpoint_dir = "checkpoint_000080"
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 # === Get training directory and prepare eval output dir ===x
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
@@ -69,7 +69,7 @@ with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
 
 # Load RLModules directly from subfolders
 module_paths = {
-    pid: os.path.join(checkpoint_path, 'learner_group', 'learner', 'rl_module', pid)
+    pid: os.path.join(checkpoint_path, "learner_group", "learner", "rl_module", pid)
     for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]
 }
 rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
@@ -128,16 +128,12 @@ while not done:
 
     # Step the environment with computed actions
     obs, rewards, terminations, truncations, _ = env.step(action_dict)
-    combined_evolution_visualizer.record(
-        agent_ids=env.agents,
-        internal_ids=env.agent_internal_ids,
-        agent_ages=env.agent_ages
-    )
+    combined_evolution_visualizer.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
     prey_death_cause_visualizer.record(env.death_cause_prey)
 
     # Merge agent and grass positions for rendering
     merged_positions = {**env.agent_positions, **env.grass_positions}
-    grid_visualizer.update(merged_positions, step,  grid_world_state=env.grid_world_state)
+    grid_visualizer.update(merged_positions, step, grid_world_state=env.grid_world_state)
     grid_visualizer.save_frame(step)
 
     step += 1

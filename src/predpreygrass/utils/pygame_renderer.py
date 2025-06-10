@@ -51,15 +51,7 @@ class PyGameRenderer:
 
         self.previous_agent_energies = {}
 
-    def update(
-        self,
-        agent_positions,
-        grass_positions,
-        agent_energies=None,
-        grass_energies=None,
-        step=0,
-        agents_just_ate=None
-    ):
+    def update(self, agent_positions, grass_positions, agent_energies=None, grass_energies=None, step=0, agents_just_ate=None):
         if agents_just_ate is None:
             agents_just_ate = set()
 
@@ -84,7 +76,8 @@ class PyGameRenderer:
                 rect = pygame.Rect(
                     self.gui_style.margin_left + x * self.cell_size,
                     self.gui_style.margin_top + y * self.cell_size,
-                    self.cell_size, self.cell_size
+                    self.cell_size,
+                    self.cell_size,
                 )
                 pygame.draw.rect(self.screen, self.gui_style.grid_color, rect, 1)
 
@@ -97,12 +90,7 @@ class PyGameRenderer:
             size_factor = min(energy / self.reference_energy_grass, 1.0)
             base_rect_size = self.cell_size * 0.8
             rect_size = base_rect_size * size_factor
-            rect = pygame.Rect(
-                x_pix - rect_size // 2,
-                y_pix - rect_size // 2,
-                rect_size,
-                rect_size
-            )
+            rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
             pygame.draw.rect(self.screen, color, rect)
 
     def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
@@ -136,7 +124,7 @@ class PyGameRenderer:
                     self.gui_style.halo_eating_color,  # Bright green
                     (x_pix, y_pix),
                     max(radius + 5, 6),
-                    width=self.gui_style.halo_eating_thickness
+                    width=self.gui_style.halo_eating_thickness,
                 )
 
             # Draw reproduction halo
@@ -146,7 +134,7 @@ class PyGameRenderer:
                     self.gui_style.halo_reproduction_color,
                     (x_pix, y_pix),
                     max(radius + 5, 6),
-                    width=self.gui_style.halo_reproduction_thickness
+                    width=self.gui_style.halo_reproduction_thickness,
                 )
 
     def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
@@ -177,12 +165,7 @@ class PyGameRenderer:
             height = tooltip_line1.get_height() + tooltip_line2.get_height()
             tooltip_x = mouse_x + 10
             tooltip_y = mouse_y + 10
-            bg_rect = pygame.Rect(
-                tooltip_x - padding,
-                tooltip_y - padding,
-                width + 2 * padding,
-                height + 2 * padding
-            )
+            bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
             pygame.draw.rect(self.screen, (255, 255, 200), bg_rect)
             pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
             self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
@@ -218,17 +201,13 @@ class PyGameRenderer:
             self.gui_style.halo_reproduction_color,
             (x + r, y + r),
             r + 2,
-            width=self.gui_style.halo_reproduction_thickness
+            width=self.gui_style.halo_reproduction_thickness,
         )
         self.screen.blit(font.render("Reproduction halo", True, (0, 0, 0)), (x + 30, y))
 
         y += spacing
         pygame.draw.circle(
-            self.screen,
-            self.gui_style.halo_eating_color,
-            (x + r, y + r),
-            r + 2,
-            width=self.gui_style.halo_eating_thickness
+            self.screen, self.gui_style.halo_eating_color, (x + r, y + r), r + 2, width=self.gui_style.halo_eating_thickness
         )
         self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
 

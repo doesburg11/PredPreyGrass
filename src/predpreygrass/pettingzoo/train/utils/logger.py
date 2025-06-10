@@ -1,6 +1,7 @@
 # external libraries
 from stable_baselines3.common.callbacks import BaseCallback
 
+
 class SampleLoggerCallback(BaseCallback):
     def __init__(self, verbose=0):
         super().__init__(verbose)
@@ -16,4 +17,3 @@ class SampleLoggerCallback(BaseCallback):
             self.logger.record("train/episode_length", self.current_episode_length)
             self.current_episode_length = 0
         return True  # Continue training
-

@@ -1,8 +1,7 @@
 from predpreygrass.utils.renderer import MatPlotLibRenderer, PopulationChart
-from predpreygrass.rllib.v1_moore.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v1_moore.predpreygrass_rllib_env import PredPreyGrass
 
 # external libraries
-from time import sleep
 
 verbose_grid_state = False
 verbose_observation = False
@@ -58,7 +57,7 @@ if __name__ == "__main__":
         merged_positions = {**env.agent_positions, **env.grass_positions}
 
         # Update grid visualization
-        grid_visualizer.update(merged_positions,step)
+        grid_visualizer.update(merged_positions, step)
         # Update population chart data
         population_chart.record(step, env.agents)
 
@@ -72,7 +71,7 @@ if __name__ == "__main__":
 
         # sleep(0.1)  # Slow down visualization
         pass
-    
+
     population_chart.plot()
     grid_visualizer.close()
     env.close()

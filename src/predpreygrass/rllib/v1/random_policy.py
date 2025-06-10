@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies,
                 agents_just_ate=env.agents_just_ate,
-                step=step
+                step=step,
             )
             # Update termination flag AFTER env.step
             loop_helper.update_simulation_terminated(terminations, truncations)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
                 agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies,
                 agents_just_ate=env.agents_just_ate,
-                step=step
+                step=step,
             )
             # Small sleep to avoid CPU busy loop
             pygame.time.wait(50)

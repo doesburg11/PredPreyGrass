@@ -23,7 +23,7 @@ Structure of the respository
     │   ├── __init__.py
     │   ├── pettingzoo
     │   │   ├── agents
-    │   │   │   ├── 
+    │   │   │   ├──
     │   │   │   └── discrete_agent.py
     │   │   ├── config
     │   │   │   ├── config_predpreygrass.py
@@ -120,4 +120,3 @@ Structure of the respository
         ├── requires.txt
         ├── SOURCES.txt
         └── top_level.txt
-

@@ -25,7 +25,7 @@ Step 2: Agent Movement, Energy Cost, Aging
         3 Handle intra species colissions:
             - Put lowest energy agent at nearest spot (same routine as spawning)
             - Substract both fighting energy cost
-            - substract variable movement cost for loosing (smaller) agents 
+            - substract variable movement cost for loosing (smaller) agents
             - Update agent positios in gridworld
         5 (Optional) Print movement log if enabled
 

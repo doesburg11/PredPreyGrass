@@ -63,7 +63,6 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 if __name__ == "__main__":
-
     ray.init(ignore_reinit_error=True)
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
@@ -84,12 +83,12 @@ if __name__ == "__main__":
     # Initialize PyGameRenderer
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(grid_size)
-    
+
     # Create movie
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
 
     # Initialize viewer control + loop helper
@@ -147,7 +146,7 @@ if __name__ == "__main__":
                 agent_id: policy_pi(
                     observations[agent_id],
                     rl_modules[policy_mapping_fn(agent_id)],
-                    deterministic=True  # or False if you want stochastic behavior
+                    deterministic=True,  # or False if you want stochastic behavior
                 )
                 for agent_id in env.agents
             }
@@ -232,11 +231,11 @@ if __name__ == "__main__":
 
     # --- Plot ---
     plt.figure(figsize=(10, 5))
-    plt.plot(time_steps, predator_counts, label='Predators', color='red')
-    plt.plot(time_steps, prey_counts, label='Prey', color='blue')
-    plt.xlabel('Time Step')
-    plt.ylabel('Number of Agents')
-    plt.title('Agent Population Over Time')
+    plt.plot(time_steps, predator_counts, label="Predators", color="red")
+    plt.plot(time_steps, prey_counts, label="Prey", color="blue")
+    plt.xlabel("Time Step")
+    plt.ylabel("Number of Agents")
+    plt.title("Agent Population Over Time")
     plt.legend()
     plt.grid(True)
     plt.tight_layout()

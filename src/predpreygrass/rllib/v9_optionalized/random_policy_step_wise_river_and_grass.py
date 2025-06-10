@@ -1,6 +1,8 @@
 import pygame
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer
-from predpreygrass.rllib.v9_optionalized.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.v9_optionalized.predpreygrass_rllib_env_with_river_and_grass import (
+    PredPreyGrass,
+)  # Import your custom environment
 from predpreygrass.rllib.v9_optionalized.config.config_env_step_wise import config_env
 import numpy as np
 
@@ -18,10 +20,7 @@ if __name__ == "__main__":
 
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
-    grid_visualizer = MatPlotLibRenderer(
-        grid_size,
-        all_agents,
-        trace_length=5)
+    grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5)
 
     pygame.init()
     screen = pygame.display.set_mode((200, 200))  # Small window for event capturing
@@ -38,11 +37,7 @@ if __name__ == "__main__":
         rounded_observations = {k: np.round(obs, 2).tolist() for k, obs in observations.items()}
 
         merged_positions = {**env.agent_positions, **env.grass_positions}
-        grid_visualizer.update(
-            merged_positions,
-            step,
-            grid_world_state=env.grid_world_state
-            )
+        grid_visualizer.update(merged_positions, step, grid_world_state=env.grid_world_state)
 
         # Wait for a mouse click to proceed
         waiting_for_click = True

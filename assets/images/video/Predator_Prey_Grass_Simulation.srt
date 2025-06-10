@@ -185,4 +185,3 @@ to see the code behind this evolving world
 47
 00:02:08,840 --> 00:02:11,540
 and maybe help shape the next emergent trait
-

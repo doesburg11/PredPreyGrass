@@ -13,16 +13,19 @@ import os
 
 verbose_grid = False
 verbose_actions = False
-seed = None  # 42 
+seed = None  # 42
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
+
 
 # Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
+
 register_env("PredPreyGrass", lambda config: env_creator(config))
+
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -31,6 +34,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     elif "prey" in agent_id:
         return "prey_policy"
     return None
+
 
 # Load trained model from checkpoint
 checkpoint_path = "/home/doesburg/ray_results/benchmarks/2/PPO_PredPreyGrass_d3d04_00000_0_2025-03-09_20-58-10/checkpoint_000032"
@@ -100,7 +104,7 @@ while not done:
 
     # Save frame from Matplotlib Renderer
     frame_filename = os.path.join(frame_dir, f"frame_{step:04d}.png")
-    visualizer.fig.savefig(frame_filename, bbox_inches='tight')
+    visualizer.fig.savefig(frame_filename, bbox_inches="tight")
     frame_paths.append(frame_filename)
 
     step += 1
@@ -123,7 +127,7 @@ for frame_file in frame_paths:
 
 if frame_array:
     height, width, layers = frame_array[0].shape
-    out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height))
+    out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*"mp4v"), 10, (width, height))
     for frame in frame_array:
         out.write(frame)
     out.release()

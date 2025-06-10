@@ -64,19 +64,19 @@ def policy_mapping_fn(agent_id, *args, **kwargs):  # Expected format: "speed_1_p
 
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-                module_class=DefaultPPOTorchRLModule,
-                observation_space=obs_space,
-                action_space=act_space,
-                inference_only=False,
-                model_config={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                    "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space,
+        action_space=act_space,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
     )
 
 
@@ -109,8 +109,7 @@ if __name__ == "__main__":
         for sample_agent in sample_agents:
             policy = policy_mapping_fn(sample_agent)
             module_specs[policy] = build_module_spec(
-                sample_env.observation_spaces[sample_agent],
-                sample_env.action_spaces[sample_agent]
+                sample_env.observation_spaces[sample_agent], sample_env.action_spaces[sample_agent]
             )
         multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
         # Prepare and save config metadata before training
@@ -129,7 +128,9 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+                policies={
+                    pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs
+                },
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
@@ -137,9 +138,7 @@ if __name__ == "__main__":
                 gamma=config_ppo["gamma"],
                 lr=config_ppo["lr"],
             )
-            .rl_module(
-                rl_module_spec=multi_module_spec
-            )
+            .rl_module(rl_module_spec=multi_module_spec)
             .learners(
                 num_gpus_per_learner=config_ppo["num_gpus_per_learner"],
                 num_learners=config_ppo["num_learners"],
@@ -149,7 +148,7 @@ if __name__ == "__main__":
                 num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],
                 rollout_fragment_length=config_ppo["rollout_fragment_length"],
                 sample_timeout_s=config_ppo["sample_timeout_s"],
-                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"]
+                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
             )
             .resources(
                 num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],

@@ -6,7 +6,7 @@
 The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and **centralized training**. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Stable Baseline3 is originally designed for single-agent training. This means that in this solution, training utilizes only one unified network for Predators as well Prey. See further below how SB3 PPO is used in this centralilzed trained Predator-Prey-Grass multi-agent setting.
 
 <p align="center">
-    <img src="../../../assets/images/readme/predpreygrass.png" width="700" height="80"/> 
+    <img src="../../../assets/images/readme/predpreygrass.png" width="700" height="80"/>
 </p>
 
 
@@ -54,17 +54,17 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
 - This enables running multiple instances of the environment in parallel, significantly improving training efficiency.
 - The training process treats the multi-agent setup as a **single centralized policy**, where PPO learns from the collective experiences of all agents.
 
-### Centralized training and decentralized evaluation 
+### Centralized training and decentralized evaluation
 
 <p align="center">
     <img src="../../../assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
 ## Emergent Behaviors
-Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) with the SB3 PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as: 
-- Predators hunting Prey 
-- Prey finding and eating grass 
-- Predators hovering around grass to catch Prey 
+Training the single objective environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) with the SB3 PPO algorithm is an example of how elaborate behaviors can emerge from simple rules in agent-based models. In the above displayed MARL example, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as:
+- Predators hunting Prey
+- Prey finding and eating grass
+- Predators hovering around grass to catch Prey
 - Prey trying to escape Predators
 
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level. The trained agents are displaying a classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
@@ -72,4 +72,3 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 <p align="center">
     <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
-

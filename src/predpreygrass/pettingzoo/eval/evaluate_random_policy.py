@@ -2,7 +2,7 @@
 from predpreygrass.pettingzoo.envs import predpreygrass_aec_v0
 from predpreygrass.pettingzoo.config.config_predpreygrass import env_kwargs
 
-seed=42
+seed = 42
 env = predpreygrass_aec_v0.env(render_mode="human", **env_kwargs)
 env.reset(seed=seed)
 
@@ -14,7 +14,7 @@ for agent in env.agent_iter():
         action = None
     else:
         action = env.action_space(agent).sample()  # random policy
-        #print(f"agent: {agent}, action: {action}")
+        # print(f"agent: {agent}, action: {action}")
 
     env.step(action)
 env.close()

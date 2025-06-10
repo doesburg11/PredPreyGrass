@@ -1,12 +1,13 @@
 from collections import defaultdict
 import math
 
+
 class ContextualCaptureTracker:
     def __init__(self, max_window_steps=5):
         self.max_window_steps = max_window_steps
         self.visibility_log = defaultdict(list)  # (pred_id) -> list of (prey_id, step_seen)
-        self.captures = defaultdict(int)        # (pred_id) -> contextual captures
-        self.total_visible = defaultdict(int)   # (pred_id) -> total prey seen
+        self.captures = defaultdict(int)  # (pred_id) -> contextual captures
+        self.total_visible = defaultdict(int)  # (pred_id) -> total prey seen
 
     def log_visibility(self, predator_id, visible_prey_ids, current_step):
         for prey_id in visible_prey_ids:
@@ -36,6 +37,7 @@ class ContextualCaptureTracker:
             efficiency = captured / seen if seen > 0 else 0
             print(f"{speed.upper()} Contextual Capture Efficiency: {captured}/{seen} = {efficiency:.2%}")
 
+
 class FocusedPursuitTracker:
     def __init__(self, max_window_steps=5):
         self.max_window_steps = max_window_steps
@@ -48,10 +50,7 @@ class FocusedPursuitTracker:
             return
 
         # Choose the closest prey (simple heuristic for intent)
-        closest_prey_id = min(
-            visible_prey_positions,
-            key=lambda pid: self._distance(predator_pos, visible_prey_positions[pid])
-        )
+        closest_prey_id = min(visible_prey_positions, key=lambda pid: self._distance(predator_pos, visible_prey_positions[pid]))
         self.attempts[predator_id] = (closest_prey_id, current_step)
         self.total_attempts[predator_id] += 1
 
@@ -81,4 +80,4 @@ class FocusedPursuitTracker:
 
     @staticmethod
     def _distance(pos1, pos2):
-        return math.sqrt((pos1[0] - pos2[0])**2 + (pos1[1] - pos2[1])**2)
+        return math.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2)

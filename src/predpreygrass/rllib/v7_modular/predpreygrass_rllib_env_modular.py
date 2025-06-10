@@ -107,9 +107,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents.append(f"speed_2_prey_{j}")
 
         # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
-        self.grass_agents: List[AgentID] = [
-            f"grass_{k}" for k in range(self.initial_num_grass)
-        ]
+        self.grass_agents: List[AgentID] = [f"grass_{k}" for k in range(self.initial_num_grass)]
 
         # Spaces
         # Compute observation shapes
@@ -117,12 +115,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_obs_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
 
         # Define observation space per agent
-        predator_obs_space = gymnasium.spaces.Box(
-            low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64
-        )
-        prey_obs_space = gymnasium.spaces.Box(
-            low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64
-        )
+        predator_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64)
+        prey_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64)
 
         def _generate_action_map(range_size: int) -> dict[int, tuple[int, int]]:
             """
@@ -138,19 +132,15 @@ class PredPreyGrass(MultiAgentEnv):
             delta = (range_size - 1) // 2
             return {
                 i: (dx, dy)
-                for i, (dx, dy) in enumerate(
-                    (dx, dy)
-                    for dx in range(-delta, delta + 1)
-                    for dy in range(-delta, delta + 1)
-                )
+                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
             }
 
         # Generate action maps for both speed levels
         speed_1_act_range = self.config.get("speed_1_action_range", 3)
         speed_2_act_range = self.config.get("speed_2_action_range", 5)
 
-        n_speed_1_actions = speed_1_act_range ** 2
-        n_speed_2_actions = speed_2_act_range ** 2
+        n_speed_1_actions = speed_1_act_range**2
+        n_speed_2_actions = speed_2_act_range**2
 
         # Save both dictionaries for later lookup
         self.action_to_move_tuple_speed_1_agents = _generate_action_map(speed_1_act_range)
@@ -189,9 +179,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_size,
             self.grid_size,
         )
-        self.initial_grid_world_state: NDArray[np.float64] = np.zeros(
-            self.grid_world_state_shape, dtype=np.float64
-        )
+        self.initial_grid_world_state: NDArray[np.float64] = np.zeros(self.grid_world_state_shape, dtype=np.float64)
         self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
         # Mapping actions to movements
 
@@ -280,9 +268,11 @@ class PredPreyGrass(MultiAgentEnv):
         all_positions = generate_random_positions(self.grid_size, total_entities)
 
         # Assign positions
-        predator_positions = all_positions[:len([a for a in self.agents if "predator" in a])]
-        prey_positions = all_positions[len(predator_positions):len(predator_positions) + len([a for a in self.agents if "prey" in a])]
-        grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
+        predator_positions = all_positions[: len([a for a in self.agents if "predator" in a])]
+        prey_positions = all_positions[
+            len(predator_positions) : len(predator_positions) + len([a for a in self.agents if "prey" in a])
+        ]
+        grass_positions = all_positions[len(predator_positions) + len(prey_positions) :]
 
         # Assign predator positions and energy
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
@@ -350,11 +340,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 6: Handle agent removals
         for agent in self.agents[:]:
             if terminations[agent]:
-                self._log(
-                    self.verbose_engagement,
-                    f"[TERMINATED] Agent {agent} terminated!",
-                    "red"
-                )
+                self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
 
         # Step 7: Spawning of new agents
@@ -445,9 +431,7 @@ class PredPreyGrass(MultiAgentEnv):
         )
         observation[0].fill(1)
         observation[0, xolo:xohi, yolo:yohi] = 0
-        observation[1:, xolo:xohi, yolo:yohi] = self.grid_world_state[
-            1:, xlo:xhi, ylo:yhi
-        ]
+        observation[1:, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
 
         return observation
 
@@ -458,15 +442,9 @@ class PredPreyGrass(MultiAgentEnv):
         observation_offset = (observation_range - 1) // 2
         xld, xhd = x - observation_offset, x + observation_offset
         yld, yhd = y - observation_offset, y + observation_offset
-        xlo, xhi = np.clip(xld, 0, self.grid_size - 1), np.clip(
-            xhd, 0, self.grid_size - 1
-        )
-        ylo, yhi = np.clip(yld, 0, self.grid_size - 1), np.clip(
-            yhd, 0, self.grid_size - 1
-        )
-        xolo, yolo = abs(np.clip(xld, -observation_offset, 0)), abs(
-            np.clip(yld, -observation_offset, 0)
-        )
+        xlo, xhi = np.clip(xld, 0, self.grid_size - 1), np.clip(xhd, 0, self.grid_size - 1)
+        ylo, yhi = np.clip(yld, 0, self.grid_size - 1), np.clip(yhd, 0, self.grid_size - 1)
+        xolo, yolo = abs(np.clip(xld, -observation_offset, 0)), abs(np.clip(yld, -observation_offset, 0))
         xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
         return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
 
@@ -505,7 +483,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Populate Predator Grid
         for agent, pos in self.predator_positions.items():
             x, y = pos
-            parts = agent.split('_')  # ['speed', '1', 'predator', '11']
+            parts = agent.split("_")  # ['speed', '1', 'predator', '11']
             speed = parts[1]
             agent_num = parts[3]
             predator_grid[y][x] = f"{speed}_{agent_num}".center(5)
@@ -513,7 +491,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Populate Prey Grid
         for agent, pos in self.prey_positions.items():
             x, y = pos
-            parts = agent.split('_')  # ['speed', '1', 'prey', '11']
+            parts = agent.split("_")  # ['speed', '1', 'prey', '11']
             speed = parts[1]
             agent_num = parts[3]
             prey_grid[y][x] = f"{speed}_{agent_num}".center(5)
@@ -521,7 +499,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Populate Grass Grid
         for agent, pos in self.grass_positions.items():
             x, y = pos
-            agent_num = int(agent.split('_')[1])
+            agent_num = int(agent.split("_")[1])
             grass_grid[y][x] = f"G{agent_num:02d}".center(5)
 
         # Transpose the grids (rows become columns)
@@ -530,7 +508,9 @@ class PredPreyGrass(MultiAgentEnv):
         grass_grid = list(map(list, zip(*grass_grid)))
 
         # Print Headers
-        print(f"{'Predators'.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}")
+        print(
+            f"{'Predators'.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}"
+        )
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
         # Print Transposed Grids
@@ -570,7 +550,9 @@ class PredPreyGrass(MultiAgentEnv):
         grass_grid = [[grass_grid[x][y] for x in range(self.grid_size)] for y in range(self.grid_size)]
 
         # Print Headers
-        print(f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}")
+        print(
+            f"{'Predator '.center(self.grid_size * 6)}   {'Prey'.center(self.grid_size * 6)}   {'Grass'.center(self.grid_size * 6)}"
+        )
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
         # Print Transposed Grids (rows become columns)
@@ -582,15 +564,25 @@ class PredPreyGrass(MultiAgentEnv):
 
         print("=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6, "  ", "=" * self.grid_size * 6)
 
-    def _print_movement_table(self, action_dict, predator_position_after_action, prey_new_unresolved_positions, resolved_positions, colliding_predator_agents, colliding_prey_agents):
+    def _print_movement_table(
+        self,
+        action_dict,
+        predator_position_after_action,
+        prey_new_unresolved_positions,
+        resolved_positions,
+        colliding_predator_agents,
+        colliding_prey_agents,
+    ):
         """
         Prints the movement table for predators and prey, including actions, positions, and energy levels.
         """
 
         print("\nPredator Position Table:")
-        print("{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
-            "Agent", "Tuple", "Energy",  "Array", "Action", "Action Array", "New", "Resolved"
-        ))
+        print(
+            "{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
+                "Agent", "Tuple", "Energy", "Array", "Action", "Action Array", "New", "Resolved"
+            )
+        )
         print("-" * 120)
 
         for i, (agent, position) in enumerate(self.predator_positions.items()):
@@ -601,10 +593,18 @@ class PredPreyGrass(MultiAgentEnv):
             resolved_position = resolved_positions[agent]  # Position after collision resolution
             energy = self.agent_energies[agent]
 
-            print("{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
-                agent, str(position), f"{energy:.2f}", str(array_position), action_number, str(action_array),
-                str(new_position), str(resolved_position)
-            ))
+            print(
+                "{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
+                    agent,
+                    str(position),
+                    f"{energy:.2f}",
+                    str(array_position),
+                    action_number,
+                    str(action_array),
+                    str(new_position),
+                    str(resolved_position),
+                )
+            )
 
         print("-" * 120)
         print()
@@ -612,9 +612,11 @@ class PredPreyGrass(MultiAgentEnv):
         print()
 
         print("\nPrey Position Table:")
-        print("{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
-            "Agent", "Tuple", "Energy", "Array", "Action", "Action Array", "New", "Resolved"
-        ))
+        print(
+            "{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
+                "Agent", "Tuple", "Energy", "Array", "Action", "Action Array", "New", "Resolved"
+            )
+        )
         print("-" * 120)
 
         for i, (agent, position) in enumerate(self.prey_positions.items()):
@@ -625,10 +627,18 @@ class PredPreyGrass(MultiAgentEnv):
             resolved_position = resolved_positions[agent]  # Position after collision resolution
             energy = self.agent_energies[agent]
 
-            print("{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
-                agent, str(position), f"{energy:.2f}", str(array_position), action_number, str(action_array),
-                str(new_position), str(resolved_position)
-            ))
+            print(
+                "{:<12} {:<15} {:<15} {:<10} {:<15} {:<15} {:<15} {:<20}".format(
+                    agent,
+                    str(position),
+                    f"{energy:.2f}",
+                    str(array_position),
+                    action_number,
+                    str(action_array),
+                    str(new_position),
+                    str(resolved_position),
+                )
+            )
 
         print("-" * 120)
         print()
@@ -752,7 +762,7 @@ class PredPreyGrass(MultiAgentEnv):
             self._log(
                 self.verbose_decay,
                 f"[DECAY] {agent} energy: {round(old_energy, 2)} -> {round(self.agent_energies[agent], 2)}",
-                "red"
+                "red",
             )
 
     def _apply_age_update(self, action_dict):
@@ -769,10 +779,7 @@ class PredPreyGrass(MultiAgentEnv):
         Increase energy of all grass patches, capped at initial energy value.
         """
         for grass, pos in self.grass_positions.items():
-            new_energy = min(
-                self.grass_energies[grass] + self.energy_gain_per_step_grass,
-                self.initial_energy_grass
-            )
+            new_energy = min(self.grass_energies[grass] + self.energy_gain_per_step_grass, self.initial_energy_grass)
             self.grass_energies[grass] = new_energy
             self.grid_world_state[3, *pos] = new_energy
 
@@ -807,15 +814,11 @@ class PredPreyGrass(MultiAgentEnv):
                 self.verbose_movement,
                 f"[MOVE] {agent} moved: {tuple(map(int, old_position))} -> {tuple(map(int, new_position))}. "
                 f"Move energy: {move_cost:.2f} Energy level: {self.agent_energies[agent]:.2f}\n",
-                "blue"
+                "blue",
             )
 
     def _handle_energy_depletion(self, agent, observations, rewards, terminations, truncations):
-        self._log(
-            self.verbose_decay,
-            f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.",
-            "red"
-        )
+        self._log(self.verbose_decay, f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.", "red")
         observations[agent] = self._get_observation(agent)
         rewards[agent] = 0
         terminations[agent] = True
@@ -839,18 +842,12 @@ class PredPreyGrass(MultiAgentEnv):
     def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
         predator_position = self.agent_positions[agent]
         caught_prey = next(
-            (
-                prey for prey, pos in self.agent_positions.items()
-                if "prey" in prey and np.array_equal(predator_position, pos)
-            ),
-            None
+            (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
 
         if caught_prey:
             self._log(
-                self.verbose_engagement,
-                f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}",
-                "white"
+                self.verbose_engagement, f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}", "white"
             )
 
             rewards[agent] = self.reward_predator_catch_prey
@@ -890,19 +887,11 @@ class PredPreyGrass(MultiAgentEnv):
 
         prey_position = self.agent_positions[agent]
         caught_grass = next(
-            (
-                g for g, pos in self.grass_positions.items()
-                if "grass" in g and np.array_equal(prey_position, pos)
-            ),
-            None
+            (g for g, pos in self.grass_positions.items() if "grass" in g and np.array_equal(prey_position, pos)), None
         )
 
         if caught_grass:
-            self._log(
-                self.verbose_engagement,
-                f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}",
-                "white"
-            )
+            self._log(self.verbose_engagement, f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}", "white")
             rewards[agent] = self.reward_prey_eat_grass
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
@@ -926,8 +915,13 @@ class PredPreyGrass(MultiAgentEnv):
             return
 
         parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_predator and parent_speed == 1) else \
-            1 if parent_speed == 2 else parent_speed
+        new_speed = (
+            2
+            if (self.rng.random() < self.mutation_rate_predator and parent_speed == 1)
+            else 1
+            if parent_speed == 2
+            else parent_speed
+        )
 
         potential_new_ids = [
             f"speed_{new_speed}_predator_{i}"
@@ -941,19 +935,22 @@ class PredPreyGrass(MultiAgentEnv):
 
         if not potential_new_ids:
             self._log(
-                self.verbose_reproduction,
-                f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning",
-                "red"
+                self.verbose_reproduction, f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning", "red"
             )
             return
 
         new_agent = potential_new_ids[0]
         self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=True,
+            new_agent,
+            agent,
+            new_speed,
+            is_predator=True,
             initial_energy=self.initial_energy_predator,
             observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
+            rewards=rewards,
+            observations=observations,
+            terminations=terminations,
+            truncations=truncations,
         )
         self.active_num_predators += 1
 
@@ -962,8 +959,9 @@ class PredPreyGrass(MultiAgentEnv):
             return
 
         parent_speed = int(agent.split("_")[1])
-        new_speed = 2 if (self.rng.random() < self.mutation_rate_prey and parent_speed == 1) else \
-            1 if parent_speed == 2 else parent_speed
+        new_speed = (
+            2 if (self.rng.random() < self.mutation_rate_prey and parent_speed == 1) else 1 if parent_speed == 2 else parent_speed
+        )
 
         potential_new_ids = [
             f"speed_{new_speed}_prey_{i}"
@@ -976,26 +974,37 @@ class PredPreyGrass(MultiAgentEnv):
         self.cumulative_rewards[agent] += rewards[agent]
 
         if not potential_new_ids:
-            self._log(
-                self.verbose_reproduction,
-                f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
-                "red"
-            )
+            self._log(self.verbose_reproduction, f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning", "red")
             return
 
         new_agent = potential_new_ids[0]
         self._spawn_agent(
-            new_agent, agent, new_speed, is_predator=False,
+            new_agent,
+            agent,
+            new_speed,
+            is_predator=False,
             initial_energy=self.initial_energy_prey,
             observation_fn=self._get_observation,
-            rewards=rewards, observations=observations,
-            terminations=terminations, truncations=truncations
+            rewards=rewards,
+            observations=observations,
+            terminations=terminations,
+            truncations=truncations,
         )
         self.active_num_prey += 1
 
     def _spawn_agent(
-            self, new_agent, parent_agent, speed, is_predator, initial_energy,
-            observation_fn, rewards, observations, terminations, truncations):
+        self,
+        new_agent,
+        parent_agent,
+        speed,
+        is_predator,
+        initial_energy,
+        observation_fn,
+        rewards,
+        observations,
+        terminations,
+        truncations,
+    ):
         self.agents.append(new_agent)
         self.agent_internal_ids[new_agent] = self.agent_instance_counter
         self.agent_ages[self.agent_instance_counter] = 0
@@ -1026,5 +1035,5 @@ class PredPreyGrass(MultiAgentEnv):
         self._log(
             self.verbose_reproduction,
             f"[REPRODUCTION] {'Predator' if is_predator else 'Prey'} {parent_agent} spawned {new_agent} at {tuple(map(int, new_position))}",
-            "green"
+            "green",
         )

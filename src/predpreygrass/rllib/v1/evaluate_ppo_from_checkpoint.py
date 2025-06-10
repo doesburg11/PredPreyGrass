@@ -7,6 +7,7 @@ import ray
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 import torch
+
 # import time
 import os
 import matplotlib.pyplot as plt
@@ -103,7 +104,7 @@ while not loop_helper.simulation_terminated:
             agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
             step=step,
-            agents_just_ate=env.agents_just_ate
+            agents_just_ate=env.agents_just_ate,
         )
 
         # Update loop control termination flag
@@ -133,7 +134,7 @@ while not loop_helper.simulation_terminated:
             agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
             step=step,
-            agents_just_ate=env.agents_just_ate
+            agents_just_ate=env.agents_just_ate,
         )
         pygame.time.wait(50)
 
@@ -161,11 +162,11 @@ print(f"Total Prey Reward:     {total_prey_reward:.2f}")
 print(f"Total All-Agent Reward:{total_reward_all:.2f}")
 
 plt.figure(figsize=(10, 5))
-plt.plot(time_steps, predator_counts, label='Predators', color='red')
-plt.plot(time_steps, prey_counts, label='Prey', color='blue')
-plt.xlabel('Time Step')
-plt.ylabel('Number of Agents')
-plt.title('Agent Population Over Time')
+plt.plot(time_steps, predator_counts, label="Predators", color="red")
+plt.plot(time_steps, prey_counts, label="Prey", color="blue")
+plt.xlabel("Time Step")
+plt.ylabel("Number of Agents")
+plt.title("Agent Population Over Time")
 plt.legend()
 plt.grid(True)
 plt.tight_layout()

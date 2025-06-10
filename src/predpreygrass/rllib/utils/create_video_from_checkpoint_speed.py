@@ -6,23 +6,25 @@ import ray
 from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
 import torch
-import time
 import cv2
 import os
 
 
 verbose_grid = False
 verbose_actions = False
-seed = None  # 42 
+seed = None  # 42
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
+
 
 # Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
+
 register_env("PredPreyGrass", lambda config: env_creator(config))
+
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -36,10 +38,11 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
         return "speed_2_prey"
     else:
         return None
-    
-#checkpoint_root = '/home/doesburg/ray_results/'
-checkpoint_root = '/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/rllib/'
-chechpoint_file = 'PPO_2025-04-04_17-20-08/PPO_PredPreyGrass_4b829_00000_0_2025-04-04_17-20-08/checkpoint_000024'
+
+
+# checkpoint_root = '/home/doesburg/ray_results/'
+checkpoint_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/rllib/"
+chechpoint_file = "PPO_2025-04-04_17-20-08/PPO_PredPreyGrass_4b829_00000_0_2025-04-04_17-20-08/checkpoint_000024"
 checkpoint_path = f"file://{os.path.abspath(checkpoint_root+chechpoint_file)}"
 # Load RLlib Algorithm from checkpoint
 trained_algo = Algorithm.from_checkpoint(checkpoint_path)
@@ -112,7 +115,7 @@ while not done:
 
     # Save frame from Matplotlib Renderer
     frame_filename = os.path.join(frame_dir, f"frame_{step:04d}.png")
-    grid_visualizer.fig.savefig(frame_filename, bbox_inches='tight')
+    grid_visualizer.fig.savefig(frame_filename, bbox_inches="tight")
     frame_paths.append(frame_filename)
 
     step += 1
@@ -120,7 +123,7 @@ while not done:
 
     # Check if episode is done
     done = terminations.get("__all__", False) or truncations.get("__all__", False)
-    #time.sleep(0.1)
+    # time.sleep(0.1)
 
 print(f"Evaluation complete! Total Reward: {total_reward}")
 
@@ -135,7 +138,7 @@ for frame_file in frame_paths:
 
 if frame_array:
     height, width, layers = frame_array[0].shape
-    out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 10, (width, height))
+    out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*"mp4v"), 10, (width, height))
     for frame in frame_array:
         out.write(frame)
     out.release()

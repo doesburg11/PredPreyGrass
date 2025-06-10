@@ -2,20 +2,13 @@ from predpreygrass.rllib.v2_speed.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.utils.renderer import MatPlotLibRenderer, EvolutionVisualizer
 
 # External libraries
-from time import sleep
-import numpy as np
 
 verbose_grid_state = False
 verbose_observation = False
 seed_value = 7  # Set seed for reproducibility
 
 # Initialize tracking dictionary
-speed_counts = {
-    "speed_1_predator": [],
-    "speed_2_predator": [],
-    "speed_1_prey": [],
-    "speed_2_prey": []
-}
+speed_counts = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
 
 if __name__ == "__main__":
     env = PredPreyGrass()
@@ -73,7 +66,7 @@ if __name__ == "__main__":
             print("Environment terminated properly by truncation.")
             break
 
-        #sleep(0.1)
+        # sleep(0.1)
 
     grid_visualizer.close()
     # Plot the evolution of agent types

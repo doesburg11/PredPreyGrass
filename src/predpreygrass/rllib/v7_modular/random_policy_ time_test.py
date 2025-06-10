@@ -1,9 +1,8 @@
-from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v7_modular.config.config_env_random import config_env
 
 # external libraries
 import time
-import numpy as np
 
 n_steps = 1000
 seed_value = 42  # Set seed for reproducibility
@@ -20,9 +19,9 @@ if __name__ == "__main__":
     step_times = []
     total_start_time = time.time()  # Start timing the entire execution
 
-    for step in range(n_steps):  
+    for step in range(n_steps):
         step_start = time.time()  # Start timing this step
-        
+
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
 

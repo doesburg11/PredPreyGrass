@@ -1,6 +1,7 @@
 from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer
 from predpreygrass.rllib.v9_optionalized.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass
 from predpreygrass.rllib.v9_optionalized.config.config_env_random import config_env
+
 # from time import sleep
 
 verbose_grid_state = False
@@ -24,23 +25,13 @@ if __name__ == "__main__":
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
 
-    grid_visualizer = MatPlotLibRenderer(
-        grid_size,
-        all_agents,
-        trace_length=5,
-        show_gridlines=False,
-        scale=2
-    )
+    grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
     combined_evolution_visualizer = CombinedEvolutionVisualizer()
 
     for step in range(env.max_steps):
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
-        combined_evolution_visualizer.record(
-            agent_ids=env.agents,
-            internal_ids=env.agent_internal_ids,
-            agent_ages=env.agent_ages
-        )
+        combined_evolution_visualizer.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
 
         if verbose_observation:
             for agent in env.agents:

@@ -8,7 +8,9 @@ The environment configuration is in the file predpreygrass/rllib/config_env.py.
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v1_moore.predpreygrass_rllib_env import PredPreyGrass  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed 
+from predpreygrass.rllib.v1_moore.predpreygrass_rllib_env import (
+    PredPreyGrass,
+)  # MOO: changed from predpreygrass_rllib_env_moore to predpreygrass_rllib_env_moore_speed
 from predpreygrass.rllib.v1_moore.config_env import config_env
 
 #  external libraries
@@ -21,6 +23,7 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
 import os
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -64,8 +67,10 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
+
 def env_creator(config):
     return PredPreyGrass(config or config_env)
+
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
     if "predator" in agent_id:
@@ -73,6 +78,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     elif "prey" in agent_id:
         return "prey_policy"
     return None
+
 
 if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
@@ -83,7 +89,7 @@ if __name__ == "__main__":
     )
     # Set your actual checkpoint path if you want to restore training
     checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v1_moore/trained_model/')}"
-    
+
     sample_env = env_creator({})  # Create a single instance
     # Observation/action spaces for the sample policies
     obs_space_pred = sample_env.observation_spaces["predator_0"]
@@ -104,7 +110,7 @@ if __name__ == "__main__":
                         [32, [3, 3], 1],
                         [64, [3, 3], 1],
                     ],
-                   "fcnet_hiddens": [256, 256],
+                    "fcnet_hiddens": [256, 256],
                     "fcnet_activation": "relu",
                 },
                 catalog_class=None,
@@ -142,7 +148,7 @@ if __name__ == "__main__":
 
     except:
         print("No checkpoint found. Starting new training experiment.")
-        print(f"Starting new training experiment.")
+        print("Starting new training experiment.")
 
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
@@ -152,29 +158,30 @@ if __name__ == "__main__":
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
                 policies={
-                    "predator_policy": (None, sample_env.observation_spaces["predator_0"], sample_env.action_spaces["predator_0"], {}),
+                    "predator_policy": (
+                        None,
+                        sample_env.observation_spaces["predator_0"],
+                        sample_env.action_spaces["predator_0"],
+                        {},
+                    ),
                     "prey_policy": (None, sample_env.observation_spaces["prey_0"], sample_env.action_spaces["prey_0"], {}),
                 },
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=1024, 
+                train_batch_size=1024,
                 gamma=0.99,
-                lr=0.0003,            
+                lr=0.0003,
             )
-            .rl_module(
-                rl_module_spec=multi_module_spec
-            )
+            .rl_module(rl_module_spec=multi_module_spec)
             .env_runners(
                 num_env_runners=4,  # MOO: adjusted from 4 to 2
-                num_envs_per_env_runner=4,  
+                num_envs_per_env_runner=4,
                 rollout_fragment_length="auto",
-                sample_timeout_s=600,  
-                num_cpus_per_env_runner=1  
+                sample_timeout_s=600,
+                num_cpus_per_env_runner=1,
             )
-            .resources(
-                num_cpus_for_main_process=2 
-            )       
+            .resources(num_cpus_for_main_process=2)
             .callbacks(EpisodeReturn)
         )
 
@@ -193,5 +200,5 @@ if __name__ == "__main__":
         )
         # Run the Tuner and capture the results.
         results = tuner.fit()
-    #print(f"Training results: {results}")
+    # print(f"Training results: {results}")
     ray.shutdown()

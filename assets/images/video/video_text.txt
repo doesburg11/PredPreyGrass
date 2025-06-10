@@ -30,12 +30,8 @@ Topics covered:
 - Multi-Agent Reinforcement Learning
 - Predator–Prey dynamics
 - Mutation and adaptation
-- Co-evolution 
+- Co-evolution
 - Evolutionary arms race
 - RLlib 2.44.1
 
 Peter van Doesburg
-
-
-
-

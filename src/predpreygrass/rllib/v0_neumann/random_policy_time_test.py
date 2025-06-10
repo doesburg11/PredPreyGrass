@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v0_neumann.predpreygrass_rllib_env import PredPreyGrass  
+from predpreygrass.rllib.v0_neumann.predpreygrass_rllib_env import PredPreyGrass
 
 # external libraries
 import time

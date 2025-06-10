@@ -3,13 +3,15 @@ import pygame
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 
 class PyGameRenderer:
     """
     A class for visualizing a grid-based environment using PyGame. Is used in the PettingZoo framework.
     """
+
     def __init__(self, env, cell_scale=40, has_energy_chart=True, x_pygame_window=0, y_pygame_window=0):
         self.env = env
         self.cell_scale = cell_scale
@@ -25,7 +27,7 @@ class PyGameRenderer:
         self.width_energy_chart = 1560 if has_energy_chart else 0
         self.height_energy_chart: int = self.cell_scale * self.env.y_grid_size
 
-        self.save_image_steps = False  # TODO put into config file? 
+        self.save_image_steps = False  # TODO put into config file?
 
         # BAR CHART POSITION
         self.y_position_predator_chart = 300
@@ -71,9 +73,7 @@ class PyGameRenderer:
         back_ground_color = (255, 255, 255)
         for x in range(self.env.x_grid_size):
             for y in range(self.env.y_grid_size):
-                cell_rect = pygame.Rect(
-                    self.cell_scale * x, self.cell_scale * y, self.cell_scale, self.cell_scale
-                )
+                cell_rect = pygame.Rect(self.cell_scale * x, self.cell_scale * y, self.cell_scale, self.cell_scale)
                 pygame.draw.rect(self.screen, back_ground_color, cell_rect)
                 pygame.draw.rect(self.screen, (192, 192, 192), cell_rect, 1)
         border_rect = pygame.Rect(0, 0, self.cell_scale * self.env.x_grid_size, self.cell_scale * self.env.y_grid_size)
@@ -94,13 +94,7 @@ class PyGameRenderer:
                 positions = self._get_torus_positions(x, y, instance.observation_range)
 
             for pos_x, pos_y in positions:
-                self.screen.blit(
-                    patch,
-                    (
-                        self.cell_scale * (pos_x - offset + 0.5),
-                        self.cell_scale * (pos_y - offset + 0.5)
-                    )
-                )
+                self.screen.blit(patch, (self.cell_scale * (pos_x - offset + 0.5), self.cell_scale * (pos_y - offset + 0.5)))
 
     def _get_torus_positions(self, x, y, observation_range):
         """
@@ -133,10 +127,7 @@ class PyGameRenderer:
     def _draw_instances(self, instances, color):
         for instance in instances:
             x, y = instance.position
-            center = (
-                int(self.cell_scale * x + self.cell_scale / 2),
-                int(self.cell_scale * y + self.cell_scale / 2)
-            )
+            center = (int(self.cell_scale * x + self.cell_scale / 2), int(self.cell_scale * y + self.cell_scale / 2))
             pygame.draw.circle(self.screen, color, center, int(self.cell_scale / 2.3))
 
     def _draw_energy_title(self, x_pos, y_pos):
@@ -162,13 +153,15 @@ class PyGameRenderer:
             )
             pygame.display.set_caption("PredPreyGrass - create agents")
         else:
-            self.screen = pygame.Surface(
-                (self.cell_scale * self.env.x_grid_size, self.cell_scale * self.env.y_grid_size)
-            )
+            self.screen = pygame.Surface((self.cell_scale * self.env.x_grid_size, self.cell_scale * self.env.y_grid_size))
 
     def _draw_agent_ids(self):
         font = pygame.font.SysFont("Comic Sans MS", self.cell_scale * 2 // 3)
-        for agent_list in [self.env.active_agent_instance_list_type[self.env.predator_type_nr], self.env.active_agent_instance_list_type[self.env.prey_type_nr], self.env.active_agent_instance_list_type[self.env.grass_type_nr]]:
+        for agent_list in [
+            self.env.active_agent_instance_list_type[self.env.predator_type_nr],
+            self.env.active_agent_instance_list_type[self.env.prey_type_nr],
+            self.env.active_agent_instance_list_type[self.env.grass_type_nr],
+        ]:
             for instance in agent_list:
                 x, y = instance.position
                 pos_x, pos_y = self.cell_scale * x + self.cell_scale // 6, self.cell_scale * y + self.cell_scale // 1.2
@@ -179,11 +172,7 @@ class PyGameRenderer:
         x_pos, y_pos = self.cell_scale * self.env.x_grid_size + offset_x, 0
         pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
         self._draw_energy_title(x_pos + 750, 20)
-        self._draw_energy_bars_predators(
-            x_pos + 100, 
-            50, 
-            self.width_energy_chart - 100, 
-            400)
+        self._draw_energy_bars_predators(x_pos + 100, 50, self.width_energy_chart - 100, 400)
         self._draw_energy_label_predator(x_pos + 100, 585)
 
     def _draw_energy_chart_prey(self, offset_x):
@@ -191,12 +180,9 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, (255, 255, 255), pygame.Rect(x_pos, y_pos, self.width_energy_chart, self.height_energy_chart))
         self._draw_energy_title(x_pos + 750, 20)
         self._draw_energy_bars_prey(
-            x_pos + 100, 
-            100+self.y_position_prey_chart, 
-            self.width_energy_chart - 100, 
-            self.y_position_prey_chart
-            )
-        self._draw_energy_label_prey(x_pos + 100, self.y_position_prey_chart+550)
+            x_pos + 100, 100 + self.y_position_prey_chart, self.width_energy_chart - 100, self.y_position_prey_chart
+        )
+        self._draw_energy_label_prey(x_pos + 100, self.y_position_prey_chart + 550)
 
     def _draw_energy_title(self, x_pos, y_pos):
         title_font = pygame.font.Font(None, 40)
@@ -205,8 +191,8 @@ class PyGameRenderer:
 
     def _draw_energy_bars_predators(self, x_pos, y_pos, width, height):
         bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
+        y_axis_x = x_pos - 20
+        x_axis_y = y_pos + height
 
         # Draw Axes
         pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos, 5, height))
@@ -232,12 +218,12 @@ class PyGameRenderer:
 
     def _draw_energy_bars_prey(self, x_pos, y_pos, width, height):
         bar_width, offset, max_energy, red, blue = 10, 14, 50, (255, 0, 0), (0, 0, 255)
-        y_axis_x = x_pos -20
-        x_axis_y = y_pos + height 
+        y_axis_x = x_pos - 20
+        x_axis_y = y_pos + height
 
         # Draw Axes
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos+0, 5, height))
-        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y+0, width - 0, 5))
+        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, y_pos + 0, 5, height))
+        pygame.draw.rect(self.screen, (0, 0, 0), (y_axis_x, x_axis_y + 0, width - 0, 5))
 
         # Draw Bars and Labels for Prey
         for i, name in enumerate(self.env.possible_agent_name_list_type[self.env.prey_type_nr]):
@@ -272,6 +258,7 @@ class MatPlotLibRenderer:
     """
     A class for visualizing a grid-based environment using Matplotlib. Is used in the RLLib framework.
     """
+
     def __init__(self, grid_size, agents, trace_length=5, show_gridlines=True, scale=1.0, destination_path=None):
         """
         Initialize the visualizer.
@@ -287,7 +274,7 @@ class MatPlotLibRenderer:
         self.trace_length = trace_length
         self.agent_traces = {agent: [] for agent in agents}
         self.show_gridlines = show_gridlines
-        self.scale = scale 
+        self.scale = scale
         self.destination_path = destination_path
 
         # Set up the plot
@@ -340,10 +327,7 @@ class MatPlotLibRenderer:
             for x in range(self.grid_size[0]):
                 for y in range(self.grid_size[1]):
                     if grid_world_state[4, x, y] > 0:
-                        patch = plt.Rectangle(
-                            (y - 0.5, x - 0.5), 1, 1,
-                            color="#cceeff", zorder=0
-                        )
+                        patch = plt.Rectangle((y - 0.5, x - 0.5), 1, 1, color="#cceeff", zorder=0)
                         self.ax.add_patch(patch)
                         self.river_patches.append(patch)
 
@@ -368,18 +352,14 @@ class MatPlotLibRenderer:
         for agent, position in agent_positions.items():
             if "grass" in agent:
                 # Use the same font scaling for grass
-                cell_size = min(self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
-                                self.fig.get_figheight() * self.fig.dpi / self.grid_size[0])
+                cell_size = min(
+                    self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
+                    self.fig.get_figheight() * self.fig.dpi / self.grid_size[0],
+                )
                 font_size = cell_size * 0.6
 
                 self.agent_texts[agent] = self.ax.text(
-                    position[1],
-                    position[0],
-                    self.grass_marker,
-                    color="green",
-                    fontsize=font_size,
-                    ha="center",
-                    va="center"
+                    position[1], position[0], self.grass_marker, color="green", fontsize=font_size, ha="center", va="center"
                 )
                 continue
 
@@ -418,13 +398,13 @@ class MatPlotLibRenderer:
                 color = "black"  # unknown agent type fallback
 
             # Scale font to cell size
-            cell_size = min(self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
-                            self.fig.get_figheight() * self.fig.dpi / self.grid_size[0])
+            cell_size = min(
+                self.fig.get_figwidth() * self.fig.dpi / self.grid_size[1],
+                self.fig.get_figheight() * self.fig.dpi / self.grid_size[0],
+            )
             font_size = cell_size * 0.6  # 60% of the cell size for padding
 
-            self.agent_texts[agent] = self.ax.text(
-                y, x, marker, color=color, fontsize=font_size, ha="center", va="center"
-            )
+            self.agent_texts[agent] = self.ax.text(y, x, marker, color=color, fontsize=font_size, ha="center", va="center")
 
         plt.draw()
         plt.pause(0.01)
@@ -460,10 +440,10 @@ class MatPlotLibRenderer:
 class EvolutionVisualizer:
     def __init__(self):
         self.speed_counts_dict = {
-            'speed_1_predator': [],
-            'speed_2_predator': [],
-            'speed_1_prey': [],
-            'speed_2_prey': [],
+            "speed_1_predator": [],
+            "speed_2_predator": [],
+            "speed_1_prey": [],
+            "speed_2_prey": [],
         }
 
     def record_counts(self, active_agent_names):
@@ -472,10 +452,10 @@ class EvolutionVisualizer:
         s1_prey = sum(1 for name in active_agent_names if "speed_1_prey" in name)
         s2_prey = sum(1 for name in active_agent_names if "speed_2_prey" in name)
 
-        self.speed_counts_dict['speed_1_predator'].append(s1_pred)
-        self.speed_counts_dict['speed_2_predator'].append(s2_pred)
-        self.speed_counts_dict['speed_1_prey'].append(s1_prey)
-        self.speed_counts_dict['speed_2_prey'].append(s2_prey)
+        self.speed_counts_dict["speed_1_predator"].append(s1_pred)
+        self.speed_counts_dict["speed_2_predator"].append(s2_pred)
+        self.speed_counts_dict["speed_1_prey"].append(s1_prey)
+        self.speed_counts_dict["speed_2_prey"].append(s2_prey)
 
     def plot(self):
         speed_counts_dict = self.speed_counts_dict
@@ -501,8 +481,8 @@ class EvolutionVisualizer:
             total_pred = sum(speed_counts_dict[k][step] for k in speed_counts_dict if "predator" in k)
             total_prey = sum(speed_counts_dict[k][step] for k in speed_counts_dict if "prey" in k)
 
-            s2_pred = speed_counts_dict.get("speed_2_predator", [0]*total_steps)[step]
-            s2_prey = speed_counts_dict.get("speed_2_prey", [0]*total_steps)[step]
+            s2_pred = speed_counts_dict.get("speed_2_predator", [0] * total_steps)[step]
+            s2_prey = speed_counts_dict.get("speed_2_prey", [0] * total_steps)[step]
 
             speed_2_predator_props.append(s2_pred / total_pred if total_pred > 0 else 0)
             speed_2_prey_props.append(s2_prey / total_prey if total_prey > 0 else 0)
@@ -585,11 +565,11 @@ class PopulationChart:
 
     def plot(self):
         plt.figure(figsize=(10, 5))
-        plt.plot(self.time_steps, self.predator_counts, label='Predators', color='red')
-        plt.plot(self.time_steps, self.prey_counts, label='Prey', color='blue')
-        plt.xlabel('Time Step')
-        plt.ylabel('Number of Agents')
-        plt.title('Agent Population Over Time')
+        plt.plot(self.time_steps, self.predator_counts, label="Predators", color="red")
+        plt.plot(self.time_steps, self.prey_counts, label="Prey", color="blue")
+        plt.xlabel("Time Step")
+        plt.ylabel("Number of Agents")
+        plt.title("Agent Population Over Time")
         plt.legend()
         plt.grid(True)
         plt.tight_layout()
@@ -615,20 +595,10 @@ class CombinedEvolutionVisualizer:
         self.prey_counts = []
 
         # Speed-based counts
-        self.speed_counts_dict = {
-            "speed_1_predator": [],
-            "speed_2_predator": [],
-            "speed_1_prey": [],
-            "speed_2_prey": []
-        }
+        self.speed_counts_dict = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
 
         # Age tracking
-        self.average_ages = {
-            "speed_1_predator": [],
-            "speed_2_predator": [],
-            "speed_1_prey": [],
-            "speed_2_prey": []
-        }
+        self.average_ages = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
 
     def record(self, agent_ids, internal_ids, agent_ages):
         step = len(self.time_steps)
@@ -661,12 +631,7 @@ class CombinedEvolutionVisualizer:
     def plot(self):
         steps = self.time_steps
         plt.figure(figsize=(24, 6))
-        color_map = {
-            'speed_1_predator': "#ff9999",
-            'speed_2_predator': "red",
-            'speed_1_prey': "#9999ff",
-            'speed_2_prey': "blue"
-        }
+        color_map = {"speed_1_predator": "#ff9999", "speed_2_predator": "red", "speed_1_prey": "#9999ff", "speed_2_prey": "blue"}
 
         # 1. Total predator and prey count
         plt.subplot(1, 4, 1)
@@ -724,7 +689,7 @@ class CombinedEvolutionVisualizer:
 
         if self.destination_path:
             os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_"+str(self.timestamp)+".png")
+            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.timestamp) + ".png")
             plt.savefig(path)
             plt.show()
         else:
@@ -751,17 +716,17 @@ class PreyDeathCauseVisualizer:
     def plot(self):
         plt.figure(figsize=(8, 5))
         plt.plot(self.time_steps, [s * 100 for s in self.starved_ratio], label="Starved Prey %", color="blue", linewidth=2)
-        #plt.plot(self.time_steps, [e * 100 for e in self.eaten_ratio], label="Eaten Prey %", color="black", linestyle="--", linewidth=2)
+        # plt.plot(self.time_steps, [e * 100 for e in self.eaten_ratio], label="Eaten Prey %", color="black", linestyle="--", linewidth=2)
         plt.title("Prey Death Cause Starvation Relative")
         plt.xlabel("Step")
         plt.ylabel("Percentage (%)")
-        #plt.ylim(0, 100)
+        # plt.ylim(0, 100)
         plt.legend()
         plt.grid(True)
 
         if self.destination_path:
             os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "prey_death_cause_plot_"+str(self.timestamp)+".png")
+            path = os.path.join(self.destination_path, "summary_plots", "prey_death_cause_plot_" + str(self.timestamp) + ".png")
             plt.savefig(path)
             plt.show()
         else:

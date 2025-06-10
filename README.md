@@ -9,8 +9,8 @@
 We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. Therefore,this environment doesn't just support pre-programmed behavior—it also gives rise to **emergent population dynamics** through learning, mutation, inheritance, and selection.
 
 <p align="center">
-    <b>Dual policy PPO trained Predator and Prey</b></p>
-<p align="center">     
+    <b>Dual policy PPO trained Predator and Prey Gridworld</b></p>
+<p align="center">
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="500" height="400" />
 </p>
 
@@ -67,7 +67,7 @@ The described environment and training concept is implemented with seperated (de
 
 <p align="center">
     <b>Populations adapting to a changing environment by selection and learning</b></p>
-<p align="center">     
+<p align="center">
     <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
 </p>
 
@@ -75,12 +75,12 @@ The described environment and training concept is implemented with seperated (de
 ### Configuration of centralized training
 The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
 
-## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack 
+## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
 
 
 
 ### Configuration of decentralized training
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py). 
+Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py).
 
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
@@ -88,7 +88,7 @@ Training is applied in accordance with the RLlib new API stack protocol. The tra
     <img src="./assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
-A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.  
+A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.
 
 
 ## Introducing mutation with reproducing agents
@@ -118,10 +118,10 @@ Moreoever, this hypothesis is supported further when evaluating the trained poli
 </p>
 
 
-This is a clear example of **natural selection** within an artificial system:  
-- **Variation**: Introduced by random mutation of inherited traits (speed class).  
-- **Inheritance**: Agents retain behavior linked to their speed class via pre-trained policies.  
-- **Differential Fitness**: Faster agents outperform slower ones under the same environmental constraints.  
+This is a clear example of **natural selection** within an artificial system:
+- **Variation**: Introduced by random mutation of inherited traits (speed class).
+- **Inheritance**: Agents retain behavior linked to their speed class via pre-trained policies.
+- **Differential Fitness**: Faster agents outperform slower ones under the same environmental constraints.
 - **Selection**: Traits that increase survival and reproduction become dominant.
 
 ### Co-Evolution and the Red Queen Effect
@@ -136,14 +136,14 @@ Notably, agents in this system lack direct access to each other’s heritable tr
 
 **Editor used:** Visual Studio Code 1.100.3 on Linux Mint 22.0 Cinnamon
 
-1. Clone the repository: 
+1. Clone the repository:
    ```bash
    git clone https://github.com/doesburg11/PredPreyGrass.git
    ```
 2. Open Visual Studio Code and execute:
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
-   - Choose environment: Conda 
+   - Choose environment: Conda
    - Choose interpreter: Python 3.11.11 or higher
    - Open a new terminal
    - ```bash
@@ -152,14 +152,13 @@ Notably, agents in this system lack direct access to each other’s heritable tr
 3. Install the additional system dependency:
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
-        ```    
+        ```
 ## Running examples
 - [PettingZoo in combination with SB3](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#getting-started-with-the-pettingzoosb3-framework)
 
 
 ## References
 
-- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/)    
+- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/)
 - [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
 - [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
-

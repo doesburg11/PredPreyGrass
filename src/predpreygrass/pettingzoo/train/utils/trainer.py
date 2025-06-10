@@ -8,6 +8,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy
 from pettingzoo.utils.conversions import aec_to_parallel
 
+
 class Trainer:
     def __init__(
         self,
@@ -17,7 +18,7 @@ class Trainer:
         steps: int = 10_000,
         seed: int = 0,
         hyperparameters: dict = None,
-        **env_kwargs
+        **env_kwargs,
     ):
         self.env_fn = env_fn
         self.output_directory = output_directory
@@ -35,7 +36,6 @@ class Trainer:
         }
         if hyperparameters:
             self.hyperparameters.update(hyperparameters)
-
 
     def _prepare_environment(self, is_wrapped: bool, num_cores: int):
         # Choose environment type
@@ -99,7 +99,7 @@ class Trainer:
             self.hyperparameters["batch_size"] = 32_768
         elif num_cores == 2:  # Google Colab
             total_timesteps = 4_096_000
-            self.hyperparameters["n_steps"] = 2_048   
+            self.hyperparameters["n_steps"] = 2_048
             self.hyperparameters["batch_size"] = 8_192
         else:  # Default
             total_timesteps = self.steps

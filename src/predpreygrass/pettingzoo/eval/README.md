@@ -13,13 +13,11 @@ To evaluate a ppo trained and saved model:
 instructions set in config_file ```predpreygrass/pettingzoo/config/config_predpreygrass.py```
 - Navigate with linux mint file-explorer to your ```local_output_root``` defined in config_file
 - go to its subdirectory with the appropriate time stamp of training.
-- note that the entire file/directory structure of the project is copied into ```local_output_root/[time_stamp]/``` for reuse and 
+- note that the entire file/directory structure of the project is copied into ```local_output_root/[time_stamp]/``` for reuse and
   analysis and go down the directory tree:
   ```local_output_root/[time_stamp]/eval/evaluate_ppo_from_file_aec_env.py```
 - right mouseclick evaluate_ppo_rom_file.py and:
 - select "Open with"
-- select "Visual Studio Code" 
+- select "Visual Studio Code"
 - select "Run without debugging"
 - results are saved in: ```local_output_root/[time_stamp]/output/```
-
-

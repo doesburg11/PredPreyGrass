@@ -23,6 +23,7 @@ from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPP
 from ray.tune.registry import register_env
 import os
 
+
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
         super().__init__()
@@ -65,8 +66,10 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
+
 def env_creator(config):
     return PredPreyGrass(config or config_env)
+
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
     # Expected format: "speed_1_predator_0", "speed_2_prey_5"
@@ -82,22 +85,23 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     # "speed_2_prey_5" → "speed_2_prey"
     return f"speed_{speed}_{role}"
 
+
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-                module_class=DefaultPPOTorchRLModule,
-                observation_space=obs_space,
-                action_space=act_space,
-                inference_only=False,
-                model_config={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                    "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
-                catalog_class=None,
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space,
+        action_space=act_space,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
+        catalog_class=None,
     )
 
 
@@ -110,15 +114,14 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
     # Set your actual checkpoint path if you want to restore training
     checkpoint_dir = f"file://{os.path.abspath('./predpreygrass/rllib/v3_age/trained_models/config_2')}"
-    #checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
+    # checkpoint_dir = "/checkpoint_dir"  # Placeholder for the checkpoint directory
     sample_env = env_creator({})  # Create a single instance
     sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
     module_specs = {}
     for sample_agent in sample_agents:
         policy = policy_mapping_fn(sample_agent)
         module_specs[policy] = build_module_spec(
-            sample_env.observation_spaces[sample_agent],
-            sample_env.action_spaces[sample_agent]
+            sample_env.observation_spaces[sample_agent], sample_env.action_spaces[sample_agent]
         )
 
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
@@ -136,7 +139,7 @@ if __name__ == "__main__":
         results = restored_tuner.fit()
 
     except:
-        print(f"Starting new training experiment.")
+        print("Starting new training experiment.")
         # Create a fresh PPO configuration if no checkpoint is found
         ppo = (
             PPOConfig()
@@ -144,27 +147,25 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+                policies={
+                    pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs
+                },
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=1024, 
+                train_batch_size=1024,
                 gamma=0.99,
-                lr=0.0003,            
+                lr=0.0003,
             )
-            .rl_module(
-                rl_module_spec=multi_module_spec
-            )
+            .rl_module(rl_module_spec=multi_module_spec)
             .env_runners(
                 num_env_runners=4,  # MOO: adjusted from 4 to 2
-                num_envs_per_env_runner=4,  
+                num_envs_per_env_runner=4,
                 rollout_fragment_length="auto",
-                sample_timeout_s=600,  
-                num_cpus_per_env_runner=1  
+                sample_timeout_s=600,
+                num_cpus_per_env_runner=1,
             )
-            .resources(
-                num_cpus_for_main_process=2 
-            )       
+            .resources(num_cpus_for_main_process=2)
             .callbacks(EpisodeReturn)
         )
 
@@ -183,5 +184,5 @@ if __name__ == "__main__":
         )
         # Run the Tuner and capture the results.
         results = tuner.fit()
-    #print(f"Training results: {results}")
+    # print(f"Training results: {results}")
     ray.shutdown()

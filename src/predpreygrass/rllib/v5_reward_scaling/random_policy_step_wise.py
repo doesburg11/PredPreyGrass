@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     for step in range(env.max_steps):
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
-        #print(f"Positions agents step {step}:")
-        #print(env.agent_positions)
+        # print(f"Positions agents step {step}:")
+        # print(env.agent_positions)
         observations, rewards, terminations, truncations, info = env.step(action_dict)
 
         rounded_observations = {k: np.round(obs, 2).tolist() for k, obs in observations.items()}
@@ -49,10 +49,10 @@ if __name__ == "__main__":
         if verbose_grid_state:
             print(f"Step {step}:")
             print("-----------------------------------------")
-            #print("Actions :",list(action_dict.keys()))
-            #print('Agents  :',env.agents)
-            #print("Obs     :", list(observations.keys()))
-            #print("Reward  :", rewards)
+            # print("Actions :",list(action_dict.keys()))
+            # print('Agents  :',env.agents)
+            # print("Obs     :", list(observations.keys()))
+            # print("Reward  :", rewards)
             print("Energy:", env.agent_energies)
             print("Energy:")
             for agent, energy in env.agent_energies.items():

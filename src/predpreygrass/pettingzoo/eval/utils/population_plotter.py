@@ -49,7 +49,5 @@ class PopulationPlotter:
 
         population_dir = os.path.join(self.output_directory, "population_charts")
         os.makedirs(population_dir, exist_ok=True)
-        model_file_name = os.path.join(
-            population_dir, f"PredPreyPopulation_episode_{episode_number}.pdf"
-        )
+        model_file_name = os.path.join(population_dir, f"PredPreyPopulation_episode_{episode_number}.pdf")
         plt.savefig(model_file_name)

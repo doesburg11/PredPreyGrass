@@ -1,12 +1,12 @@
 """DEPRECATED"""
 """
-To log both the previous model's training and the continued training in TensorBoard, 
-you can use the same log directory for both training sessions. 
-Stable Baselines3's `learn` method will automatically continue logging to the same directory 
+To log both the previous model's training and the continued training in TensorBoard,
+you can use the same log directory for both training sessions.
+Stable Baselines3's `learn` method will automatically continue logging to the same directory
 without overwriting previous logs.
 
-The `tb_log_name` parameter is used to specify the name of the run for TensorBoard logging. 
-The `reset_num_timesteps` parameter is set to `False` to ensure that the timestep count 
+The `tb_log_name` parameter is used to specify the name of the run for TensorBoard logging.
+The `reset_num_timesteps` parameter is set to `False` to ensure that the timestep count
 continues from where it left off, rather than resetting to zero.
 
 After/during training, you can review the logs in TensorBoard
@@ -48,9 +48,7 @@ raw_parallel_env.reset()
 print(f"Continue training on {str(raw_parallel_env.metadata['name'])}.")
 
 raw_parallel_env = ss.pettingzoo_env_to_vec_env_v1(raw_parallel_env)
-raw_parallel_env = ss.concat_vec_envs_v1(
-    raw_parallel_env, 8, num_cpus=8, base_class="stable_baselines3"
-)
+raw_parallel_env = ss.concat_vec_envs_v1(raw_parallel_env, 8, num_cpus=8, base_class="stable_baselines3")
 
 
 # Set the environment

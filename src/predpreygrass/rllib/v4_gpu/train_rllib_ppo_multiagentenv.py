@@ -3,15 +3,15 @@ This script trains a multi-agent environment with PPO using Ray RLlib new API st
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
-Improvements versus v3_age: 
+Improvements versus v3_age:
 - Abiltity to utilize GPU and afjust learner in PPO configurtation
 - Hardware detecting and selecting the appropriate PPO config
 - Expanded callback to log the total average training time per iteration during run
-- Saving Evaluation timestamped results and chart and ppo an env config 
+- Saving Evaluation timestamped results and chart and ppo an env config
 
 This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
 """
-from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass 
+from predpreygrass.rllib.v4_gpu.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v4_gpu.config_env import config_env
 
 #  external libraries
@@ -27,8 +27,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-import os
 import time
+
 
 def get_config_ppo():
     """
@@ -111,7 +111,7 @@ class EpisodeReturn(RLlibCallback):
         self.last_iteration_time = now
 
         # Log to TensorBoard
-        result["timing/iter_minutes"] = iter_time / 60.0 
+        result["timing/iter_minutes"] = iter_time / 60.0
         result["timing/avg_minutes_per_iter"] = avg_time_per_iter / 60.0
         result["timing/total_minutes_elapsed"] = total_elapsed / 60.0
 
@@ -119,36 +119,38 @@ class EpisodeReturn(RLlibCallback):
 def env_creator(config):
     return PredPreyGrass(config or config_env)
 
+
 def policy_mapping_fn(agent_id, *args, **kwargs):  # Expected format: "speed_1_predator_0", "speed_2_prey_5"
     parts = agent_id.split("_")
     speed = parts[1]
     role = parts[2]
     return f"speed_{speed}_{role}"
 
+
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-                module_class=DefaultPPOTorchRLModule,
-                observation_space=obs_space,
-                action_space=act_space,
-                inference_only=False,
-                model_config={
-                    "conv_filters": [
-                        [16, [3, 3], 1],
-                        [32, [3, 3], 1],
-                        [64, [3, 3], 1],
-                    ],
-                    "fcnet_hiddens": [256, 256],
-                    "fcnet_activation": "relu",
-                },
+        module_class=DefaultPPOTorchRLModule,
+        observation_space=obs_space,
+        action_space=act_space,
+        inference_only=False,
+        model_config={
+            "conv_filters": [
+                [16, [3, 3], 1],
+                [32, [3, 3], 1],
+                [64, [3, 3], 1],
+            ],
+            "fcnet_hiddens": [256, 256],
+            "fcnet_activation": "relu",
+        },
     )
 
 
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(
-            log_to_driver=True,
-            ignore_reinit_error=True,
-        )
+        log_to_driver=True,
+        ignore_reinit_error=True,
+    )
     register_env("PredPreyGrass", env_creator)
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/4_gpu/pred_obs_range/grass_50"
     ray_results_path = Path(ray_results_dir).expanduser()
@@ -174,12 +176,11 @@ if __name__ == "__main__":
         for sample_agent in sample_agents:
             policy = policy_mapping_fn(sample_agent)
             module_specs[policy] = build_module_spec(
-                sample_env.observation_spaces[sample_agent],
-                sample_env.action_spaces[sample_agent]
+                sample_env.observation_spaces[sample_agent], sample_env.action_spaces[sample_agent]
             )
         multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
         # Prepare and save config metadata before training
-        config_ppo = get_config_ppo() # ppo config depending on system
+        config_ppo = get_config_ppo()  # ppo config depending on system
         config_metadata = {
             "config_env": config_env,
             "config_ppo": config_ppo,
@@ -194,35 +195,34 @@ if __name__ == "__main__":
             .framework("torch")
             .multi_agent(
                 # This ensures that each policy is trained on the right observation/action space.
-                policies = {pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+                policies={
+                    pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs
+                },
                 policy_mapping_fn=policy_mapping_fn,
             )
             .training(
-                train_batch_size=config_ppo["train_batch_size"], 
+                train_batch_size=config_ppo["train_batch_size"],
                 gamma=config_ppo["gamma"],
-                lr=config_ppo["lr"],            
+                lr=config_ppo["lr"],
             )
-            .rl_module(
-                rl_module_spec=multi_module_spec
-            )
+            .rl_module(rl_module_spec=multi_module_spec)
             .learners(
                 num_gpus_per_learner=config_ppo["num_gpus_per_learner"],
                 num_learners=config_ppo["num_learners"],
             )
             .env_runners(
-                num_env_runners=config_ppo["num_env_runners"],  
-                num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],  
+                num_env_runners=config_ppo["num_env_runners"],
+                num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],
                 rollout_fragment_length=config_ppo["rollout_fragment_length"],
-                sample_timeout_s=config_ppo["sample_timeout_s"],  
-                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"] 
+                sample_timeout_s=config_ppo["sample_timeout_s"],
+                num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
             )
             .resources(
                 num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
-            )       
+            )
             .callbacks(EpisodeReturn)
         )
 
- 
         # Start a new experiment if no checkpoint is found
         tuner = tune.Tuner(
             ppo.algo_class,

@@ -1,6 +1,8 @@
 import pygame
 from predpreygrass.utils.renderer import MatPlotLibRenderer
-from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import PredPreyGrass  # Import your custom environment
+from predpreygrass.rllib.v8_water.predpreygrass_rllib_env_with_river_and_grass import (
+    PredPreyGrass,
+)  # Import your custom environment
 from predpreygrass.rllib.v8_water.config.config_env_step_wise import config_env
 import numpy as np
 

@@ -31,11 +31,7 @@ if __name__ == "__main__":
     for step in range(env.max_steps):
         action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
-        combined_evolution_visualizer.record(
-            agent_ids=env.agents,
-            internal_ids=env.agent_internal_ids,
-            agent_ages=env.agent_ages
-        )
+        combined_evolution_visualizer.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
 
         if verbose_observation:
             for agent in env.agents:

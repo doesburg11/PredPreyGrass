@@ -83,10 +83,7 @@ if __name__ == "__main__":
             control.step_backward = False
         # Normal step forward
         if loop_helper.should_step(control):
-            action_dict = {
-                agent_id: random_policy_pi(agent_id, env)
-                for agent_id in env.agents
-            }
+            action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
 
             # Run one env step
             observations, rewards, terminations, truncations, info = env.step(action_dict)

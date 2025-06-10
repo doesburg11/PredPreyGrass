@@ -1,4 +1,4 @@
-# discretionary libraries   
+# discretionary libraries
 from .predpreygrass_base import PredPreyGrassAECEnv as predpreygrass
 
 # external libraries
@@ -15,6 +15,7 @@ def env(**kwargs):
     env = wrappers.OrderEnforcingWrapper(env)
     return env
 
+
 parallel_env = parallel_wrapper_fn(env)
 
 
@@ -27,12 +28,11 @@ class raw_env(AECEnv):
     }
 
     def __init__(self, *args, **kwargs):
-
         self.render_mode = kwargs.get("render_mode")
         pygame.init()
         self.closed = False
 
-        self.predpreygrass = predpreygrass(*args, **kwargs)  
+        self.predpreygrass = predpreygrass(*args, **kwargs)
         self.agents = self.predpreygrass.possible_learning_agent_name_list
         self.possible_agents = self.agents[:]
         self.action_spaces = {agent: space for agent, space in zip(self.agents, self.predpreygrass.action_space)}
@@ -54,16 +54,13 @@ class raw_env(AECEnv):
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.terminations = {agent: False for agent in self.agents}
         self.truncations = {agent: False for agent in self.agents}
-        self.infos = {agent: {} for agent in self.agents}        
+        self.infos = {agent: {} for agent in self.agents}
         self._agent_selector.reinit(self.agents)
         self.agent_selection = self._agent_selector.next()
         self.predpreygrass.reset()
 
     def step(self, action):
-        if (
-            self.terminations[self.agent_selection]
-            or self.truncations[self.agent_selection]
-        ):
+        if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
             self._was_dead_step(action)
             return
         agent = self.agent_selection
@@ -75,13 +72,11 @@ class raw_env(AECEnv):
             if self.predpreygrass.n_cycles >= self.predpreygrass.max_cycles:
                 self.truncations[k] = True
             else:
-                self.terminations[k] = (
-                    self.predpreygrass.is_no_prey or self.predpreygrass.is_no_predator
-                )
+                self.terminations[k] = self.predpreygrass.is_no_prey or self.predpreygrass.is_no_predator
         self.rewards = {agent_name: self.predpreygrass.rewards[agent_name] for agent_name in self.agents}
         self._cumulative_rewards = {agent: 0 for agent in self.agents}
         self.agent_selection = self._agent_selector.next()
-        self._accumulate_rewards() 
+        self._accumulate_rewards()
         if self.render_mode == "human" and agent_instance.is_active:
             self.render()
 
@@ -108,4 +103,3 @@ class raw_env(AECEnv):
     def render(self):
         if not self.closed:
             return self.predpreygrass.render()
-

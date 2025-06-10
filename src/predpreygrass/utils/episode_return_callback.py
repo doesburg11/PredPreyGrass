@@ -47,7 +47,9 @@ class EpisodeReturn(RLlibCallback):
                     break
 
         # Episode summary log
-        print(f"Episode {self.num_episodes}: Length: {episode_length} | R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
+        print(
+            f"Episode {self.num_episodes}: Length: {episode_length} | R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}"
+        )
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 
@@ -57,7 +59,6 @@ class EpisodeReturn(RLlibCallback):
         # Log episode length using MetricsLogger, https://docs.ray.io/en/latest/rllib/metrics-logger.html
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
 
-      
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
         now = time.time()

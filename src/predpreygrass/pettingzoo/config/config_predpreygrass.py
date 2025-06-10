@@ -1,19 +1,18 @@
 from predpreygrass.global_config import RESULTS_DIR
-import numpy as np
 
 local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
-training_steps_string= "1_638_400"
-#training_steps_string="2_293_760"
-#training_steps_string="4_587_520"
-#training_steps_string="6_881_280"
-#training_steps_string="9_175_040"
-#training_steps_string="11_468_800"
-#training_steps_string="13_762_560"
-#training_steps_string="16_056_320"
-#training_steps_string="18_350_080"
-#training_steps_string="20_643_840"
+training_steps_string = "1_638_400"
+# training_steps_string="2_293_760"
+# training_steps_string="4_587_520"
+# training_steps_string="6_881_280"
+# training_steps_string="9_175_040"
+# training_steps_string="11_468_800"
+# training_steps_string="13_762_560"
+# training_steps_string="16_056_320"
+# training_steps_string="18_350_080"
+# training_steps_string="20_643_840"
 
 
 env_kwargs = dict(
@@ -28,8 +27,8 @@ env_kwargs = dict(
     reproduction_reward_prey=10.0,
     reproduction_reward_predator=10.0,
     # agent parameters
-    n_possible_predator=40, #60,  # maximum number of predators during runtime
-    n_possible_prey=60, # #80,
+    n_possible_predator=40,  # 60,  # maximum number of predators during runtime
+    n_possible_prey=60,  # #80,
     n_possible_grass=25,
     n_initial_active_predator=6,
     n_initial_active_prey=8,
@@ -39,21 +38,21 @@ env_kwargs = dict(
     obs_range_prey=9,
     # action parameters
     is_von_neumann_neighborhood=False,
-    action_range = 5, # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3 
+    action_range=5,  # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3
     # energy parameters
-    energy_gain_per_step_predator= -0.19, #-0.15,  # -0.15 # default
-    energy_gain_per_step_prey= -0.03, #-0.05,  # -0.05 # default
+    energy_gain_per_step_predator=-0.19,  # -0.15,  # -0.15 # default
+    energy_gain_per_step_prey=-0.03,  # -0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    motion_energy_per_distance_unit = -0.01, # -0.01
+    motion_energy_per_distance_unit=-0.01,  # -0.01
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
     # visualization parameters
-    cell_scale=40, # 40
+    cell_scale=40,  # 40
     x_pygame_window=0,
     y_pygame_window=0,
     has_energy_chart=True,

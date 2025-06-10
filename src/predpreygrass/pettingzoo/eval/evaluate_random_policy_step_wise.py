@@ -9,7 +9,7 @@ pygame.display.set_caption("Press SPACE or Click to Continue")
 
 env = env(render_mode="human", **env_kwargs)
 env.reset(seed=42)
-          
+
 env.render()
 print("Press SPACE or Click to Continue")
 # Pause and wait for user input
