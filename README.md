@@ -42,15 +42,15 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 * Grass agents regenerate at the same spot after being eaten by Prey.
 
-### Code base:
-* Environment
+### [Code base](src/predpreygrass/rllib/v1_0)
 
-* Configuration
+* [Environment](src/predpreygrass/rllib/v1_0/predpreygrass_rllib_env.py)
 
-* Training
+* [Configuration](src/predpreygrass/rllib/v1_0/config_env.py)
 
-* Evaluation
+* [Training](src/predpreygrass/rllib/v1_0/train_rllib_ppo_multiagent_env.py)
 
+* [Evaluation](src/predpreygrass/rllib/v1_0/evaluate_ppo_from_checkpoint.py)
 
 
 ## Installation of the repository
@@ -74,9 +74,6 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
         ```
-## Running examples
-- [PettingZoo in combination with SB3](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#getting-started-with-the-pettingzoosb3-framework)
-
 
 ## References
 
