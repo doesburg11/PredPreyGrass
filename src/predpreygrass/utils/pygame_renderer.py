@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class GuiStyle:
     margin_left: int = 10
     margin_top: int = 10
-    margin_right: int = 280
+    margin_right: int = 320
     margin_bottom: int = 10
     legend_spacing: int = 30
     legend_font_size: int = 28
@@ -65,7 +65,7 @@ class PyGameRenderer:
         self._draw_grass(grass_positions, grass_energies)
         self._draw_agents(agent_positions, agent_energies, agents_just_ate)
         self._draw_tooltip(agent_positions, grass_positions, agent_energies, grass_energies)
-        self._draw_legend()
+        self._draw_legend(step)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
@@ -171,7 +171,7 @@ class PyGameRenderer:
             self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
             self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
 
-    def _draw_legend(self):
+    def _draw_legend(self, step):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
         y = self.gui_style.margin_top + 10
         spacing = self.gui_style.legend_spacing
@@ -179,8 +179,24 @@ class PyGameRenderer:
         s = self.gui_style.legend_square_size
         font = self.tooltip_font
 
-        # Draw legend title
-        title_surface = font.render("Agent size energy related", True, (0, 0, 0))
+        font = pygame.font.SysFont(None, 24)  # normal legend font
+        font_large = pygame.font.SysFont(None, 28)  # larger font for step
+
+        # Render "Step:" in BLACK
+        step_label_surface = font_large.render("Step:", True, (0, 0, 0))
+        self.screen.blit(step_label_surface, (x, y))
+
+        # Compute width of "Step:" text so number appears right after it
+        label_width = step_label_surface.get_width()
+
+        # Render the number in RED
+        step_number_surface = font_large.render(f"{step}", True, (255, 0, 0))
+        self.screen.blit(step_number_surface, (x + label_width + 5, y))  # +5 pixels spacing
+
+        y += spacing
+
+        # Draw legend title in BLACK
+        title_surface = font_large.render("Agent size depends on energy", True, (0, 0, 0))
         self.screen.blit(title_surface, (x, y))
 
         y += spacing  # Move down after title
@@ -193,7 +209,7 @@ class PyGameRenderer:
 
         y += spacing
         pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
-        self.screen.blit(font.render("Grass", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Grass regrowth", True, (0, 0, 0)), (x + 30, y))
 
         y += spacing
         pygame.draw.circle(

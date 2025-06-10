@@ -13,7 +13,7 @@ import pygame
 import cv2
 import numpy as np
 
-SAVE_MOVIE = True  # Set to False if you do not want to save movie
+SAVE_MOVIE = False  # Set to False if you do not want to save movie
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
@@ -54,9 +54,9 @@ def policy_pi(observation, policy_module, deterministic=True):
         raise KeyError("policy_pi: action_dist_inputs not found in action_output.")
 
     if deterministic:
-        action = torch.argmax(logits, dim=-1).item()
+        action = torch.argmax(logits, dim=-1).item()  # greedy action selection
     else:
-        dist = torch.distributions.Categorical(logits=logits)
+        dist = torch.distributions.Categorical(logits=logits)  # sample from the categorical distribution
         action = dist.sample().item()
 
     return action
