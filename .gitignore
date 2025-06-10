@@ -159,54 +159,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
-prometheus-3.2.1.linux-amd64*
-# Simulation exports
-exported_grid_states/
-
-# Add this to your .gitignore (or replace existing)
-unity_viewer/[Ll]ibrary/
-unity_viewer/[Tt]emp/
-unity_viewer/[Oo]bj/
-unity_viewer/[Bb]uild/
-unity_viewer/[Ll]ogs/
-unity_viewer/[Uu]ser[Ss]ettings/
-unity_viewer/.vs/
-unity_viewer/*.csproj
-unity_viewer/*.sln
-unity_viewer/*.user
-unity_viewer/Library/
-
-
-unity_viewer/Temp/
-src/unity_viewer/Temp/
-
-# Prevent future Unity cache bloat
-src/unity_viewer/Library/
-*.dll
-*.dylib
-*.so
-# === Unity auto-generated folders ===
-src/unity_viewer/Library/
-src/unity_viewer/Temp/
-src/unity_viewer/Obj/
-src/unity_viewer/Build/
-src/unity_viewer/Logs/
-src/unity_viewer/UserSettings/
-src/unity_viewer/.vs/
-
-# === Unity build and IDE files ===
-*.csproj
-*.sln
-*.user
-*.pidb
-*.booproj
-
 # === Binary files that should NEVER be in Git ===
 *.dll
 *.dylib
