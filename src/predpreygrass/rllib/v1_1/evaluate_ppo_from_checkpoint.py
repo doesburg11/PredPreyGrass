@@ -13,7 +13,7 @@ import pygame
 import cv2
 import numpy as np
 
-SAVE_MOVIE = False  # Set to False if you do not want to save movie
+SAVE_MOVIE = True  # Set to False if you do not want to save movie
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
