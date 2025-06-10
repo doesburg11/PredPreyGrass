@@ -119,6 +119,7 @@ if __name__ == "__main__":
     snapshots.append(env.get_state_snapshot())
 
     # Run one evaluation episode
+    # Avanced loop control added for step-wise back-and-forward evaluation debugging
     while not loop_helper.simulation_terminated:
         control.handle_events()
         # Backward step handling
