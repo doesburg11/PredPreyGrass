@@ -31,16 +31,18 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 * **Predator survival conditions**:
 
   * Preventing starvation (when energy runs out).
-* **Prey death conditions**:
 
-  * SPreventing sarvation.
+* **Prey survival conditions**:
+
+  * Preventing starvation.
   * Preventing being eaten by a Predator.
-* **Reproduction**:
+
+* **Reproduction conditions**:
 
   * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
   * New agents are spawned close to their parent.
 
-* Grass agents regenerate at the same spot after being eaten by Prey.
+* Grass agents gradually regenerate at the same spot after being eaten by Prey.
 
 ## Environments:
 
