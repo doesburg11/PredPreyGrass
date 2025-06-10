@@ -3,10 +3,8 @@ This script trains a multi-agent environment with PPO using Ray RLlib new API st
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
-The environment is implemented in the file predpreygrass/rllib/predpreygrass_rllib_env_moore_speed.py.
-The environment configuration is in the file predpreygrass/rllib/config_env.py.
-
-This implements MultiRLModuleSpec explicitly to define the policies for predators and prey.
+This implements MultiRLModuleSpec explicitly to define the policies for predators
+and prey separately.
 """
 from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v1_0.config_env import config_env
