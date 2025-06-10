@@ -43,7 +43,8 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 Environment [here].
 Configuration [here].
-
+Training [here]
+Evaluation [here]
 
 
 ## Key Features:
