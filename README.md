@@ -3,9 +3,9 @@
 
 
 # Predator-Prey-Grass
-### Evolution in a multi-agent reinforcement learning gridworld
+## Evolution in a multi-agent reinforcement learning gridworld
 
-We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). This repo explores emergent behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). This repo explores emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
     <b>The Predator-Prey-Grass base-environment</b></p>
@@ -13,7 +13,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
-### Features
+## Features
 
 * At startup Predator, Prey and Grass are randomly positioned.
 
@@ -28,13 +28,13 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
   * **Prey** eat **Grass** (green).
   * **Predators** eat **Prey** by moving onto the same grid cell.
 
-* **Predator death conditions**:
+* **Predator survival conditions**:
 
-  * Starvation (when energy runs out).
+  * Preventing starvation (when energy runs out).
 * **Prey death conditions**:
 
-  * Starvation.
-  * Being eaten by a Predator.
+  * SPreventing sarvation.
+  * Preventing being eaten by a Predator.
 * **Reproduction**:
 
   * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
@@ -42,17 +42,13 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 * Grass agents regenerate at the same spot after being eaten by Prey.
 
-### Environments:
+## Environments:
 
 * [Base environnment](src/predpreygrass/rllib/v1_0)
 
 * [Mutating agents](src/predpreygrass/rllib/v2_0)
 
 * [Changing river]()
-
-
-### Environment:
-* Base environment
 
 
 ## Installation of the repository
