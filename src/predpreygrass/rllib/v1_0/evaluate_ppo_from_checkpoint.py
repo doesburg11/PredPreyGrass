@@ -1,3 +1,11 @@
+"""
+This script loads a trained PPO policy from a checkpoint and runs it in the PredPreyGrass environment
+to visualize the agent behavior and collect statistics.
+The environment is rendered using PyGame, and the simulation can be recorded as a video.
+The graphical interface allows for real-time interaction with the simulation,
+including pausing [BACKSPACE], stepping forward [->], and stepping backward [<-] through the simulation steps.
+During pause, tooltips are available to inspect agent IDs, positions, energies.
+"""
 # discretionary libraries
 from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.utils.pygame_renderer import PyGameRenderer, ViewerControlHelper, LoopControlHelper
