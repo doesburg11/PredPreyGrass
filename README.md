@@ -11,7 +11,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 <p align="center">
     <b>Dual policy PPO trained Predator and Prey Gridworld</b></p>
 <p align="center">
-    <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="500" height="400" />
+    <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
 
