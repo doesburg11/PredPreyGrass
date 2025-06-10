@@ -1,7 +1,7 @@
 # Auxiliary folder
 output/
 # Rllib archive files
-predpreygrass/rllib/archive/
+src/predpreygrass/rllib/archive/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -172,6 +172,7 @@ __pycache__/
 
 # === Simulation exports ===
 exported_grid_states/
+archive/
 bfg.jar
 blobs.txt
 .bfg-report/

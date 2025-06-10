@@ -15,6 +15,14 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 </p>
 
 
+<table>
+<tr>
+<td><iimg align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500"/></td>
+<td>Your text goes here.<br/>You can have <b>HTML</b> or Markdown text here.</td>
+</tr>
+</table>
+
+
 ## Key Features:
 
 - **Modeling Nature vs. Nurture**: Agents inherit speed-based traits genetically, but refine behavior through learned policy optimization.
