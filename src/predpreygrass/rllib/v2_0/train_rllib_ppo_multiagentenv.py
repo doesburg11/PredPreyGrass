@@ -9,8 +9,8 @@ Improvements versus v6_logging:
 """
 
 
-from predpreygrass.rllib.v7_modular.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v7_modular.config.config_env_train import config_env
+from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_0.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 #  external libraries
