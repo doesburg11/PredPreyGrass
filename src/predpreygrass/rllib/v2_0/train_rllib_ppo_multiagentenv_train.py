@@ -25,6 +25,18 @@ import json
 # --- Helper functions ---
 
 
+# Custom logger_creator to redirect RLlib logs to our experiment_path
+def custom_logger_creator(config):
+    def logger_creator_func(config_):
+        from ray.tune.logger import UnifiedLogger
+
+        logdir = str(experiment_path)
+        print(f"Redirecting RLlib logging to {logdir}")
+        return UnifiedLogger(config_, logdir, loggers=None)
+
+    return logger_creator_func
+
+
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
@@ -134,12 +146,12 @@ if __name__ == "__main__":
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
         .callbacks(EpisodeReturn)
-        .build()
+        .build(logger_creator=custom_logger_creator({}))
     )
 
     # Manual training loop
     max_iters = 1000
-    checkpoint_every = 2
+    checkpoint_every = 10
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
