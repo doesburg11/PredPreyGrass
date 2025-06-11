@@ -28,11 +28,11 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v7_modular.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v2_0.config.config_ppo_gpu import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v7_modular.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v2_0.config.config_ppo_cpu import config_ppo
     elif num_cpus == 2:
-        from predpreygrass.rllib.v7_modular.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v2_0.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results_manual/"
+    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     experiment_name = f"PPO_{timestamp}"
@@ -139,24 +139,29 @@ if __name__ == "__main__":
 
     # Manual training loop
     max_iters = 1000
-    checkpoint_every = 10
+    checkpoint_every = 2
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
         result = ppo_algo.train()
 
+        mean_return = result.get("custom_metrics", {}).get("episode_return_mean", float("nan"))
+        mean_length = result.get("custom_metrics", {}).get("episode_len_mean", float("nan"))
+
         print(
             f"Iteration {iter + 1}: "
             f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, "
-            f"Mean episode return={result['env_runners/episode_return_mean']:.2f}, "
-            f"Mean episode length={result['env_runners/episode_len_mean']:.2f}"
+            f"Mean episode return={mean_return:.2f}, "
+            f"Mean episode length={mean_length:.2f}"
         )
 
         # Save checkpoint manually every N iterations
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
             checkpoint_path.mkdir(parents=True, exist_ok=True)
-            ppo_algo.save_to_path(str(checkpoint_path), map_location="cpu")
+            # ppo_algo.save_to_path(str(checkpoint_path), map_location="cpu")  # For HBP computer
+            ppo_algo.save_to_path(checkpoint_path)
+
             print(f"Saved checkpoint to {checkpoint_path}")
 
     ray.shutdown()
