@@ -1,9 +1,8 @@
 """
-Manual PPO training loop version of train_rllib_ppo_multiagentenv.py
-
-- No Tune used → full control of training loop
-- Safe checkpointing via map_location="cpu"
-- Compatible with future curriculum learning / open-ended learning
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_0.config.config_env_train import config_env
@@ -146,7 +145,7 @@ if __name__ == "__main__":
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
         .callbacks(EpisodeReturn)
-        .build(logger_creator=custom_logger_creator({}))
+        .build_algo(logger_creator=custom_logger_creator({}))
     )
 
     # Manual training loop
