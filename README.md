@@ -70,7 +70,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
    - ```bash
      pip install -e .
      ```
-3. Install the additional system dependency:
+3. Install the additional system dependency for Pygame visualization:
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
         ```
