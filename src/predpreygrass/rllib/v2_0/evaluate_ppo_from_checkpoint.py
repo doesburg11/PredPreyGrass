@@ -41,13 +41,16 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = "/PPO_2025-06-12_22-28-02/"
-checkpoint_dir = "checkpoint_iter_70"
+checkpoint_root = "/PPO_2025-06-12_23-54-40/"
+checkpoint_dir = "checkpoint_iter_10"
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
+print(f"Checkpoint path: {checkpoint_path}")
 # === Get training directory and prepare eval output dir ===
-training_dir = os.path.dirname(os.path.dirname(checkpoint_path))
+training_dir = os.path.dirname(checkpoint_path)
+print(f"Training directory: {training_dir}")
 now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
+print(f"Evaluation output directory: {eval_output_dir}")
 os.makedirs(eval_output_dir, exist_ok=True)
 
 # === Save config_env.json ===
