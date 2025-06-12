@@ -1,12 +1,5 @@
 """
 Evaluation code for evaluating a trained PPO agent from a checkpoint
-Improvement over the previous version:
-- Added a function to save the environment configuration to a JSON file.
-- Added a function to save the reward summary to a text file.
-- Added a function to save the prey death cause summary to a text file.
-- Added a function to plot the combined evolution of agents.
-- Added a function to plot the prey death cause
-
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v2_0.config.config_env_eval import config_env
@@ -38,24 +31,18 @@ register_env("PredPreyGrass", lambda config: env_creator(config))
 
 # Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    if "speed_1_predator" in agent_id:
-        return "speed_1_predator"
-    elif "speed_2_predator" in agent_id:
-        return "speed_2_predator"
-    elif "speed_1_prey" in agent_id:
-        return "speed_1_prey"
-    elif "speed_2_prey" in agent_id:
-        return "speed_2_prey"
-    else:
-        return None
+    parts = agent_id.split("_")
+    speed = parts[1]
+    role = parts[2]
+    return f"speed_{speed}_{role}"
 
 
 # === Set checkpoint paths ===
 ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-checkpoint_root = "/PPO_2025-05-04_22-52-53/PPO_PredPreyGrass_bf9c4_00000_0_2025-05-04_22-52-53/"
-checkpoint_dir = "checkpoint_000034"
+checkpoint_root = "/PPO_2025-06-11_21-28-42/"
+checkpoint_dir = "checkpoint_iter_500"
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 # === Get training directory and prepare eval output dir ===
 training_dir = os.path.dirname(os.path.dirname(checkpoint_path))

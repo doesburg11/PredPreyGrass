@@ -3,6 +3,9 @@ This script trains a multi-agent environment with PPO using Ray RLlib new API st
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
+Predators and prey both either posses speed_1 or speed_2.
+speed 1: action_space(9); Moore neighborhood movement (including "stay")
+speed_2: action_space(25); Extended Moore neighborhood movement (including "stay")
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_0.config.config_env_train import config_env
@@ -21,9 +24,6 @@ from pathlib import Path
 import json
 
 
-# --- Helper functions ---
-
-
 # Custom logger_creator to redirect RLlib logs to our experiment_path
 def custom_logger_creator(config):
     def logger_creator_func(config_):
@@ -37,11 +37,22 @@ def custom_logger_creator(config):
 
 
 def get_config_ppo():
+    """
+    Personalize to your system(s).
+    Dynamically select the appropriate PPO config based on system resources.
+    Returns:
+        config_ppo (dict): The selected PPO config module.
+    Raises:
+        RuntimeError if no suitable config is matched.
+    """
     num_cpus = os.cpu_count()
+    # GPU configuration
     if num_cpus == 32:
         from predpreygrass.rllib.v2_0.config.config_ppo_gpu import config_ppo
+    # CPU configuration
     elif num_cpus == 8:
         from predpreygrass.rllib.v2_0.config.config_ppo_cpu import config_ppo
+    # Colab configuration
     elif num_cpus == 2:
         from predpreygrass.rllib.v2_0.config.config_ppo_colab import config_ppo
     else:
@@ -54,6 +65,15 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    """
+    Maps agent IDs to policies based on their speed and role.
+    This function is used to determine which policy to apply for each agent.
+    Args:
+        agent_id (str): The ID of the agent, expected to be in the format "speed_X_role_Y".
+    Returns:
+        str: The policy name for the agent, formatted as "speed_X_role_Y".
+    """
+    # Expected format: "speed_1_predator_0", "speed_2_prey_5"
     parts = agent_id.split("_")
     speed = parts[1]
     role = parts[2]
@@ -85,7 +105,7 @@ if __name__ == "__main__":
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
     register_env("PredPreyGrass", env_creator)
-
+    # adjust the path to your personal results directory
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -156,23 +176,22 @@ if __name__ == "__main__":
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
         result = ppo_algo.train()
 
-        mean_return = result.get("custom_metrics", {}).get("episode_return_mean", float("nan"))
-        mean_length = result.get("custom_metrics", {}).get("episode_len_mean", float("nan"))
+        mean_return = result.get("env_runners/episode_return_mean", float("nan"))
+        mean_len = result.get("env_runners/episode_len_mean", float("nan"))
 
         print(
             f"Iteration {iter + 1}: "
             f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, "
             f"Mean episode return={mean_return:.2f}, "
-            f"Mean episode length={mean_length:.2f}"
+            f"Mean episode length={mean_len:.2f}"
         )
-
         # Save checkpoint manually every N iterations
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
             checkpoint_path.mkdir(parents=True, exist_ok=True)
-            # ppo_algo.save_to_path(str(checkpoint_path), map_location="cpu")  # For HBP computer
-            ppo_algo.save_to_path(checkpoint_path)
 
-            print(f"Saved checkpoint to {checkpoint_path}")
+            # Save Algorithm checkpoint
+            ppo_algo.save_to_path(str(checkpoint_path))
+            print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
     ray.shutdown()
