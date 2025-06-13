@@ -22,6 +22,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
+import time
 
 
 # Custom logger_creator to redirect RLlib logs to our experiment_path
@@ -194,4 +195,6 @@ if __name__ == "__main__":
             ppo_algo.save_to_path(str(checkpoint_path))
             print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
+    # Delay shutdown to give Ray time to clean up, to avoid crashing
+    time.sleep(2)
     ray.shutdown()
