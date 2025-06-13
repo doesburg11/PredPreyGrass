@@ -126,6 +126,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Define observation space per agent
         predator_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64)
         prey_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64)
+        self.agents_just_ate = set()  # agent_id → shows green ring this step
 
         def _generate_action_map(range_size: int) -> dict[int, tuple[int, int]]:
             """
@@ -279,9 +280,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Assign positions
         predator_positions = all_positions[: len([a for a in self.agents if "predator" in a])]
         prey_positions = all_positions[
-            len(predator_positions) : len(predator_positions) + len([a for a in self.agents if "prey" in a])
+            len(predator_positions): len(predator_positions) + len([a for a in self.agents if "prey" in a])
         ]
-        grass_positions = all_positions[len(predator_positions) + len(prey_positions) :]
+        grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
 
         # Assign predator positions and energy
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
@@ -322,6 +323,9 @@ class PredPreyGrass(MultiAgentEnv):
         truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
         if truncation_result is not None:
             return truncation_result
+
+        # For stepwise display eating in grid
+        self.agents_just_ate.clear()
 
         # Step 1: If not truncated; process energy depletion due to time steps and update age
         self._apply_energy_decay_per_step(action_dict)
@@ -827,6 +831,7 @@ class PredPreyGrass(MultiAgentEnv):
             self._log(
                 self.verbose_engagement, f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}", "white"
             )
+            self.agents_just_ate.add(agent)  # Show green ring for next 1 step
 
             rewards[agent] = self.reward_predator_catch_prey
             self.cumulative_rewards.setdefault(agent, 0)
@@ -870,6 +875,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         if caught_grass:
             self._log(self.verbose_engagement, f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}", "white")
+            self.agents_just_ate.add(agent)  # Show green ring for next 1 step
+            # Reward prey for eating grass
             rewards[agent] = self.reward_prey_eat_grass
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
@@ -1012,3 +1019,35 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
                 "green",
             )
+
+    def get_state_snapshot(self):
+        return {
+            "current_step": self.current_step,
+            "agent_positions": self.agent_positions.copy(),
+            "agent_energies": self.agent_energies.copy(),
+            "predator_positions": self.predator_positions.copy(),
+            "prey_positions": self.prey_positions.copy(),
+            "grass_positions": self.grass_positions.copy(),
+            "grass_energies": self.grass_energies.copy(),
+            "grid_world_state": self.grid_world_state.copy(),
+            "agents": self.agents.copy(),
+            "cumulative_rewards": self.cumulative_rewards.copy(),
+            "active_num_predators": self.active_num_predators,
+            "active_num_prey": self.active_num_prey,
+            "agents_just_ate": self.agents_just_ate.copy(),
+        }
+
+    def restore_state_snapshot(self, snapshot):
+        self.current_step = snapshot["current_step"]
+        self.agent_positions = snapshot["agent_positions"].copy()
+        self.agent_energies = snapshot["agent_energies"].copy()
+        self.predator_positions = snapshot["predator_positions"].copy()
+        self.prey_positions = snapshot["prey_positions"].copy()
+        self.grass_positions = snapshot["grass_positions"].copy()
+        self.grass_energies = snapshot["grass_energies"].copy()
+        self.grid_world_state = snapshot["grid_world_state"].copy()
+        self.agents = snapshot["agents"].copy()
+        self.cumulative_rewards = snapshot["cumulative_rewards"].copy()
+        self.current_num_predators = snapshot["current_num_predators"]
+        self.current_num_prey = snapshot["current_num_prey"]
+        self.agents_just_ate = snapshot["agents_just_ate"].copy()
