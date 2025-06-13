@@ -280,9 +280,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Assign positions
         predator_positions = all_positions[: len([a for a in self.agents if "predator" in a])]
         prey_positions = all_positions[
-            len(predator_positions): len(predator_positions) + len([a for a in self.agents if "prey" in a])
+            len(predator_positions) : len(predator_positions) + len([a for a in self.agents if "prey" in a])
         ]
-        grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
+        grass_positions = all_positions[len(predator_positions) + len(prey_positions) :]
 
         # Assign predator positions and energy
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
@@ -1048,6 +1048,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.grid_world_state = snapshot["grid_world_state"].copy()
         self.agents = snapshot["agents"].copy()
         self.cumulative_rewards = snapshot["cumulative_rewards"].copy()
-        self.current_num_predators = snapshot["current_num_predators"]
-        self.current_num_prey = snapshot["current_num_prey"]
+        self.active_num_predators = snapshot["active_num_predators"]
+        self.active_num_prey = snapshot["active_num_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()

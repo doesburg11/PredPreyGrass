@@ -182,6 +182,8 @@ if __name__ == "__main__":
                     agents_just_ate=env.agents_just_ate,
                     step=env.current_step,
                 )
+                control.fps_slider_rect = visualizer.slider_rect
+
                 pygame.time.wait(100)
             control.step_backward = False
         # Normal step forward
@@ -216,6 +218,8 @@ if __name__ == "__main__":
                 agents_just_ate=env.agents_just_ate,
                 step=env.current_step,
             )
+            control.fps_slider_rect = visualizer.slider_rect
+
             if SAVE_MOVIE:
                 frame = pygame.surfarray.array3d(visualizer.screen)
                 frame = np.transpose(frame, (1, 0, 2))  # Convert (width, height, channels) → (height, width, channels)
@@ -342,6 +346,9 @@ if __name__ == "__main__":
 
     combined_evolution_visualizer.plot()
     prey_death_cause_visualizer.plot()
+
+    pygame.event.pump()  # Flush event queue
+    pygame.quit()  # Ensure Pygame releases mouse cleanly
 
     # Shutdown Ray after evaluation
     ray.shutdown()
