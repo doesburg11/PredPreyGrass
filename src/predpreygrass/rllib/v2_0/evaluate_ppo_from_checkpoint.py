@@ -166,6 +166,10 @@ if __name__ == "__main__":
                     time_steps.pop()
                     predator_counts.pop()
                     prey_counts.pop()
+                combined_evolution_visualizer.record(
+                    agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages
+                )
+                prey_death_cause_visualizer.record(env.death_cause_prey)
 
                 visualizer.update(
                     agent_positions=env.agent_positions,
@@ -195,6 +199,10 @@ if __name__ == "__main__":
             snapshots.append(env.get_state_snapshot())
             if len(snapshots) > max_snapshots:
                 snapshots.pop(0)
+            combined_evolution_visualizer.record(
+                agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages
+            )
+            prey_death_cause_visualizer.record(env.death_cause_prey)
 
             # Update viewer
             visualizer.update(

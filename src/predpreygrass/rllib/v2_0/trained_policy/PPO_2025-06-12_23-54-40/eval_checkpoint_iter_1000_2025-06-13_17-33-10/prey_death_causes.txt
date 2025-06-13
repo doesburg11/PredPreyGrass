@@ -1,0 +1,30 @@
+--- Prey Death Causes ---
+Prey internal_id   38: eaten
+Prey internal_id   32: eaten
+Prey internal_id   29: eaten
+Prey internal_id   39: eaten
+Prey internal_id   24: eaten
+Prey internal_id   40: eaten
+Prey internal_id   21: eaten
+Prey internal_id   20: eaten
+Prey internal_id   41: eaten
+Prey internal_id   33: eaten
+Prey internal_id   34: eaten
+Prey internal_id   22: eaten
+Prey internal_id   48: eaten
+Prey internal_id   47: eaten
+Prey internal_id   44: eaten
+Prey internal_id   46: eaten
+Prey internal_id   50: eaten
+Prey internal_id   27: eaten
+Prey internal_id   37: eaten
+Prey internal_id   36: starved
+Prey internal_id   31: eaten
+Prey internal_id   60: eaten
+Prey internal_id   35: eaten
+Prey internal_id   45: starved
+Prey internal_id   65: eaten
+
+--- Summary ---
+Total prey eaten   : 23
+Total prey starved : 2
