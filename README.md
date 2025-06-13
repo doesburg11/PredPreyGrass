@@ -9,7 +9,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 
 <div align="center">
-  <video src="https://github.com/doesburg11/PredPreyGrass/issues/10#issue-3144686858" autoplay loop muted playsinline style="max-width: 100%; height: auto;">
+  <video src="https://github.com/doesburg11/PredPreyGrass/issues/11#issue-3144737806" autoplay loop muted playsinline style="max-width: 100%; height: auto;">
   </video>
 </div>
 
