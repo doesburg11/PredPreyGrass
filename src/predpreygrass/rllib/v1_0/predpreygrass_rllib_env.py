@@ -171,8 +171,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Assign positions
         predator_positions = all_positions[: self.n_initial_active_predator]
-        prey_positions = all_positions[self.n_initial_active_predator : self.n_initial_active_predator + self.n_initial_active_prey]
-        grass_positions = all_positions[self.n_initial_active_predator + self.n_initial_active_prey :]
+        prey_positions = all_positions[self.n_initial_active_predator: self.n_initial_active_predator + self.n_initial_active_prey]
+        grass_positions = all_positions[self.n_initial_active_predator + self.n_initial_active_prey:]
 
         # Store agent positions and initialize energy
         for i, agent in enumerate(self.agents):
