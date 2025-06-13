@@ -24,7 +24,7 @@ MOVIE_FPS = 10
 
 verbose_grid = False
 verbose_actions = False
-seed = None  # 42 # Optional: set to integer for reproducibility
+seed = 42  # 42 # Optional: set to integer for reproducibility
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
     # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
     checkpoint_root = "/PPO_2025-06-12_23-54-40/"
-    checkpoint_dir = "checkpoint_iter_500"
+    checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
     print(f"Checkpoint path: {checkpoint_path}")
     # === Get training directory and prepare eval output dir ===
@@ -282,7 +282,7 @@ if __name__ == "__main__":
         f.write(f"Total prey starved : {death_stats['starved']}\n")
 
     print(f"Prey death summary written to: {death_log_path}")
-    """
+
     # --- REWARD SUMMARY ---
     reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
     with open(reward_log_path, "w") as f:
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_reward
 
         f.write("\n--- Aggregated Rewards ---\n")
-        f.write(f"Total number of steps            : {step-1}\n")
+        f.write(f"Total number of steps            : {env.current_step-1}\n")
         f.write(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}\n")
         f.write(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}\n")
         f.write(f"Total Low-Speed Agent Reward     : {total_speed_1_predator_reward + total_speed_1_prey_reward:.2f}\n")
@@ -320,14 +320,13 @@ if __name__ == "__main__":
         f.write(f"Total High-Speed Agent Reward    : {total_speed_2_predator_reward + total_speed_2_prey_reward:.2f}\n")
 
         print("\n--- Aggregated Rewards ---")
-        print(f"Total number of steps            : {step-1}")
+        print(f"Total number of steps            : {env.current_step-1}")
         print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
         print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
         print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
         print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
         print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
         print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
-    """
 
     combined_evolution_visualizer.plot()
     prey_death_cause_visualizer.plot()
