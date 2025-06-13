@@ -24,7 +24,7 @@ MOVIE_FPS = 10
 
 verbose_grid = False
 verbose_actions = False
-seed = 42  # 42 # Optional: set to integer for reproducibility
+seed = 1  # 42 # Optional: set to integer for reproducibility
 
 # Initialize Ray
 ray.init(ignore_reinit_error=True)

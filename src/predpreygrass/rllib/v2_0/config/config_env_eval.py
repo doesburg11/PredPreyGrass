@@ -1,5 +1,5 @@
 config_env = {
-    "max_steps": 100,
+    "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
