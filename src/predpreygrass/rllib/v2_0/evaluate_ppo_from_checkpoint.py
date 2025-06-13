@@ -38,11 +38,11 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # === Set checkpoint paths ===
-ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
+ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policy"
 # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
 checkpoint_root = "/PPO_2025-06-12_23-54-40/"
-checkpoint_dir = "checkpoint_iter_10"
+checkpoint_dir = "checkpoint_iter_500"
 checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 print(f"Checkpoint path: {checkpoint_path}")
 # === Get training directory and prepare eval output dir ===
