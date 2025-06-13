@@ -56,9 +56,6 @@ class PyGameRenderer:
         self.population_history_prey = []
         self.population_history_max_length = 1000
 
-        self.target_fps = 10  # Default FPS
-        self.slider_rect = None  # Will be defined in _draw_legend()
-
     def update(self, agent_positions, grass_positions, agent_energies=None, grass_energies=None, step=0, agents_just_ate=None):
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -66,16 +63,6 @@ class PyGameRenderer:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.close()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    if self.slider_rect and self.slider_rect.collidepoint(event.pos):
-                        slider_x = event.pos[0]
-                        slider_start_x = self.slider_rect.left
-                        slider_width = self.slider_rect.width
-                        ratio = (slider_x - slider_start_x) / slider_width
-                        ratio = min(max(ratio, 0.0), 1.0)
-                        self.target_fps = int(1 + ratio * (60 - 1))
-                        print(f"[ViewerControl] Target FPS set to {self.target_fps}")
 
         self.screen.fill(self.gui_style.background_color)
 
@@ -260,32 +247,6 @@ class PyGameRenderer:
         )
         self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
 
-        # --- FPS Speed Slider ---
-        y += spacing
-        slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
-        self.screen.blit(slider_label_surface, (x, y))
-
-        y += spacing
-
-        slider_x = x
-        slider_y = y
-        slider_width = 200
-        slider_height = 10
-
-        pygame.draw.rect(self.screen, (180, 180, 180), pygame.Rect(slider_x, slider_y, slider_width, slider_height))
-        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(slider_x, slider_y, slider_width, slider_height), 1)
-
-        ratio = (self.target_fps - 1) / (60 - 1)
-        handle_x = slider_x + int(ratio * slider_width)
-        handle_y = slider_y + slider_height // 2
-
-        pygame.draw.circle(self.screen, (50, 50, 250), (handle_x, handle_y), 8)
-
-        fps_surface = font.render(f"{self.target_fps} FPS", True, (0, 0, 0))
-        self.screen.blit(fps_surface, (slider_x + slider_width + 15, slider_y - 8))
-
-        self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
-
         if not self.show_population_chart:
             return  # Skip drawing chart
 
@@ -378,8 +339,6 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
-        self.fps_slider_rect = None
-        self.fps_slider_update_fn = None
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -407,17 +366,6 @@ class ViewerControlHelper:
                     self.paused = True
                     self.step_backward = True
                     print("[ViewerControl] Step Backward")
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if self.fps_slider_rect and self.fps_slider_rect.collidepoint(event.pos):
-                        slider_x = event.pos[0]
-                        slider_start_x = self.fps_slider_rect.left
-                        slider_width = self.fps_slider_rect.width
-                        ratio = (slider_x - slider_start_x) / slider_width
-                        ratio = min(max(ratio, 0.0), 1.0)
-                        if self.fps_slider_update_fn:
-                            new_fps = int(1 + ratio * (60 - 1))
-                            self.fps_slider_update_fn(new_fps)
 
 
 class LoopControlHelper:

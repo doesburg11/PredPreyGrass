@@ -130,6 +130,9 @@ if __name__ == "__main__":
     # Initialize viewer control + loop helper
     control = ViewerControlHelper()
     loop_helper = LoopControlHelper()
+    # Add slider
+    control.fps_slider_rect = visualizer.slider_rect
+    control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
 
     # Optional: frame rate control
     clock = pygame.time.Clock()
@@ -226,7 +229,8 @@ if __name__ == "__main__":
             control.step_once = False
 
             # Frame rate control
-            clock.tick(target_fps)
+            # clock.tick(target_fps)
+            clock.tick(visualizer.target_fps)
 
             # Track stats
             num_predators = sum(1 for agent in env.agents if "predator" in agent)
