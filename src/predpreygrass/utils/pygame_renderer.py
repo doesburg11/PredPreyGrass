@@ -32,7 +32,6 @@ class PyGameRenderer:
         self.cell_size = cell_size
         self.gui_style = GuiStyle()
 
-        self.show_population_chart = True  # Set to False to disable population chart
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
         window_height = self.gui_style.margin_top + grid_size[1] * cell_size + self.gui_style.margin_bottom
         pygame.init()
@@ -230,66 +229,8 @@ class PyGameRenderer:
         # --- FPS Speed Slider ---
         y += spacing
         y = self._draw_speed_slider(x, y)
-        if not self.show_population_chart:
-            return  # Skip drawing chart
-
-        # Live population chart
-        chart_width = 260
-        chart_height = 100
-        chart_x = x + 20
-        chart_y = y + spacing + 40
-
-        # Draw chart title
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False, italic=False)
-        title_surface = font_small.render("Agent population over time", True, (0, 0, 0))
-        title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
-        title_y = chart_y - spacing // 2 - 10  # place a bit above chart box
-        self.screen.blit(title_surface, (title_x, title_y))
-
-        # Draw chart background
-        pygame.draw.rect(self.screen, (230, 230, 230), pygame.Rect(chart_x, chart_y, chart_width, chart_height))
-        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(chart_x, chart_y, chart_width, chart_height), 1)
-
-        # Draw Y axis labels (outside chart, right aligned)
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.7), bold=False)
-        num_ticks = 5
-        max_agents = max(max(self.population_history_predators), max(self.population_history_prey), 1)
-
-        label_x = chart_x - 5  # Put labels outside chart box
-
-        for i in range(num_ticks + 1):
-            value = int(i / num_ticks * max_agents)
-            y_pos = chart_y + chart_height - int(i / num_ticks * chart_height)
-            label_surface = font_small.render(f"{value}", True, (0, 0, 0))
-            label_width = label_surface.get_width()
-
-            # Right align label so it ends at label_x
-            self.screen.blit(label_surface, (label_x - label_width, y_pos - label_surface.get_height() // 2))
-
-        # Fixed window
-        # Draw fixed X axis labels (200, 400, 600, 800, 1000)
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.7), bold=False, italic=False)
-        x_tick_labels = [0, 200, 400, 600, 800, 1000]
-        num_xticks = len(x_tick_labels)
-        for i, label_value in enumerate(x_tick_labels):
-            x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
-            y_pos = chart_y + chart_height + 5  # a bit below chart box
-
-            label_surface = font_small.render(f"{label_value}", True, (0, 0, 0))
-            label_width = label_surface.get_width()
-            self.screen.blit(label_surface, (x_pos - label_width // 2, y_pos))
-
-        if self.population_history_steps:
-            max_agents = max(max(self.population_history_predators), max(self.population_history_prey), 1)
-            for i in range(1, len(self.population_history_steps)):
-                x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
-                x2 = chart_x + int(i / self.population_history_max_length * chart_width)
-                y1p = chart_y + chart_height - int(self.population_history_predators[i - 1] / max_agents * chart_height)
-                y2p = chart_y + chart_height - int(self.population_history_predators[i] / max_agents * chart_height)
-                pygame.draw.line(self.screen, (255, 0, 0), (x1, y1p), (x2, y2p), 2)
-                y1pr = chart_y + chart_height - int(self.population_history_prey[i - 1] / max_agents * chart_height)
-                y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
-                pygame.draw.line(self.screen, (0, 0, 255), (x1, y1pr), (x2, y2pr), 2)
+        # --- Population Chart ---
+        y = self._draw_population_chart(x, y)
 
     def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -355,6 +296,61 @@ class PyGameRenderer:
         self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
 
         return y + spacing  # Return new Y position for chart continuation
+
+    def _draw_population_chart(self, x, y):
+        chart_width = 260
+        chart_height = 100
+        chart_x = x + 20
+        chart_y = y + 40
+        spacing = self.gui_style.legend_spacing
+
+        # Chart title
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        title_surface = font_small.render("Agent population over time", True, (0, 0, 0))
+        title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
+        title_y = chart_y - spacing // 2 - 10
+        self.screen.blit(title_surface, (title_x, title_y))
+
+        # Chart box
+        pygame.draw.rect(self.screen, (230, 230, 230), pygame.Rect(chart_x, chart_y, chart_width, chart_height))
+        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(chart_x, chart_y, chart_width, chart_height), 1)
+
+        # Y axis
+        max_agents = max(max(self.population_history_predators, default=1), max(self.population_history_prey, default=1), 1)
+        num_ticks = 5
+        label_x = chart_x - 5
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.7), bold=False)
+
+        for i in range(num_ticks + 1):
+            value = int(i / num_ticks * max_agents)
+            y_pos = chart_y + chart_height - int(i / num_ticks * chart_height)
+            label_surface = font_small.render(f"{value}", True, (0, 0, 0))
+            label_width = label_surface.get_width()
+            self.screen.blit(label_surface, (label_x - label_width, y_pos - label_surface.get_height() // 2))
+
+        # X ticks
+        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        num_xticks = len(x_tick_labels)
+        for i, label_value in enumerate(x_tick_labels):
+            x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
+            y_pos = chart_y + chart_height + 5
+            label_surface = font_small.render(f"{label_value}", True, (0, 0, 0))
+            label_width = label_surface.get_width()
+            self.screen.blit(label_surface, (x_pos - label_width // 2, y_pos))
+
+        # Draw line chart
+        if self.population_history_steps:
+            for i in range(1, len(self.population_history_steps)):
+                x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
+                x2 = chart_x + int(i / self.population_history_max_length * chart_width)
+                y1p = chart_y + chart_height - int(self.population_history_predators[i - 1] / max_agents * chart_height)
+                y2p = chart_y + chart_height - int(self.population_history_predators[i] / max_agents * chart_height)
+                pygame.draw.line(self.screen, (255, 0, 0), (x1, y1p), (x2, y2p), 2)
+                y1pr = chart_y + chart_height - int(self.population_history_prey[i - 1] / max_agents * chart_height)
+                y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
+                pygame.draw.line(self.screen, (0, 0, 255), (x1, y1pr), (x2, y2pr), 2)
+
+        return chart_y + chart_height + self.gui_style.legend_spacing
 
     def close(self):
         pygame.quit()
