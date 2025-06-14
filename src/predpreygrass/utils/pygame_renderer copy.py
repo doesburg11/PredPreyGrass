@@ -56,6 +56,10 @@ class PyGameRenderer:
         self.population_history_prey = []
         self.population_history_max_length = 1000
 
+        self.target_fps = 10  # Default FPS
+        self.slider_rect = None  # Will be defined in _draw_legend()
+        self.max_fps = 100
+
     def update(self, agent_positions, grass_positions, agent_energies=None, grass_energies=None, step=0, agents_just_ate=None):
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -63,6 +67,16 @@ class PyGameRenderer:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.close()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button
+                    if self.slider_rect and self.slider_rect.collidepoint(event.pos):
+                        slider_x = event.pos[0]
+                        slider_start_x = self.slider_rect.left
+                        slider_width = self.slider_rect.width
+                        ratio = (slider_x - slider_start_x) / slider_width
+                        ratio = min(max(ratio, 0.0), 1.0)
+                        self.target_fps = int(1 + ratio * (60 - 1))
+                        print(f"[ViewerControl] Target FPS set to {self.target_fps}")
 
         self.screen.fill(self.gui_style.background_color)
 
@@ -157,40 +171,6 @@ class PyGameRenderer:
                     width=self.gui_style.halo_reproduction_thickness,
                 )
 
-    def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
-        mouse_x, mouse_y = pygame.mouse.get_pos()
-        grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
-        grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
-        hovered_entity = None
-        hovered_energy = 0.0
-
-        for agent_id, pos in agent_positions.items():
-            if pos == (grid_x, grid_y):
-                hovered_entity = agent_id
-                hovered_energy = agent_energies.get(agent_id, 0) if agent_energies else 0
-                break
-
-        if not hovered_entity:
-            for grass_id, pos in grass_positions.items():
-                if pos == (grid_x, grid_y):
-                    hovered_entity = grass_id
-                    hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
-                    break
-
-        if hovered_entity:
-            tooltip_line1 = self.tooltip_font.render(f"{hovered_entity}", True, (0, 0, 0))
-            tooltip_line2 = self.tooltip_font.render(f"E: {hovered_energy:.2f}", True, (0, 0, 0))
-            padding = self.gui_style.tooltip_padding
-            width = max(tooltip_line1.get_width(), tooltip_line2.get_width())
-            height = tooltip_line1.get_height() + tooltip_line2.get_height()
-            tooltip_x = mouse_x + 10
-            tooltip_y = mouse_y + 10
-            bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
-            pygame.draw.rect(self.screen, (255, 255, 200), bg_rect)
-            pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
-            self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
-            self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
-
     def _draw_legend(self, step):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
         y = self.gui_style.margin_top + 10
@@ -246,6 +226,34 @@ class PyGameRenderer:
             self.screen, self.gui_style.halo_eating_color, (x + r, y + r), r + 2, width=self.gui_style.halo_eating_thickness
         )
         self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
+
+        # --- FPS Speed Slider ---
+        y += spacing
+        slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
+        self.screen.blit(slider_label_surface, (x, y))
+
+        y += spacing
+
+        slider_x = x
+        slider_y = y
+        slider_width = 200
+        slider_height = 20
+
+        pygame.draw.rect(self.screen, (180, 180, 180), pygame.Rect(slider_x, slider_y, slider_width, slider_height))
+        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(slider_x, slider_y, slider_width, slider_height), 1)
+
+        max_fps = self.max_fps
+        ratio = (self.target_fps - 1) / (max_fps - 1)
+
+        handle_x = slider_x + int(ratio * slider_width)
+        handle_y = slider_y + slider_height // 2
+
+        pygame.draw.circle(self.screen, (50, 50, 250), (handle_x, handle_y), 16)
+
+        fps_surface = font.render(f"{self.target_fps} FPS", True, (0, 0, 0))
+        self.screen.blit(fps_surface, (slider_x + slider_width + 15, slider_y - 8))
+
+        self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
 
         if not self.show_population_chart:
             return  # Skip drawing chart
@@ -308,6 +316,40 @@ class PyGameRenderer:
                 y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
                 pygame.draw.line(self.screen, (0, 0, 255), (x1, y1pr), (x2, y2pr), 2)
 
+    def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
+        grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
+        hovered_entity = None
+        hovered_energy = 0.0
+
+        for agent_id, pos in agent_positions.items():
+            if pos == (grid_x, grid_y):
+                hovered_entity = agent_id
+                hovered_energy = agent_energies.get(agent_id, 0) if agent_energies else 0
+                break
+
+        if not hovered_entity:
+            for grass_id, pos in grass_positions.items():
+                if pos == (grid_x, grid_y):
+                    hovered_entity = grass_id
+                    hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
+                    break
+
+        if hovered_entity:
+            tooltip_line1 = self.tooltip_font.render(f"{hovered_entity}", True, (0, 0, 0))
+            tooltip_line2 = self.tooltip_font.render(f"E: {hovered_energy:.2f}", True, (0, 0, 0))
+            padding = self.gui_style.tooltip_padding
+            width = max(tooltip_line1.get_width(), tooltip_line2.get_width())
+            height = tooltip_line1.get_height() + tooltip_line2.get_height()
+            tooltip_x = mouse_x + 10
+            tooltip_y = mouse_y + 10
+            bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
+            pygame.draw.rect(self.screen, (255, 255, 200), bg_rect)
+            pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
+            self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
+            self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
+
     def close(self):
         pygame.quit()
 
@@ -339,6 +381,10 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
+        self.fps_slider_rect = None
+        self.fps_slider_update_fn = None
+        self.is_dragging_slider = False
+        self.fps_slider_max_fps = 100
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -366,6 +412,29 @@ class ViewerControlHelper:
                     self.paused = True
                     self.step_backward = True
                     print("[ViewerControl] Step Backward")
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    if self.fps_slider_rect and self.fps_slider_rect.collidepoint(event.pos):
+                        self.is_dragging_slider = True
+                        self._update_fps_slider(event.pos[0])
+
+            elif event.type == pygame.MOUSEMOTION:
+                if self.is_dragging_slider:
+                    self._update_fps_slider(event.pos[0])
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1 and self.is_dragging_slider:
+                    self.is_dragging_slider = False
+
+    def _update_fps_slider(self, slider_x):
+        max_fps = self.fps_slider_max_fps
+        slider_start_x = self.fps_slider_rect.left
+        slider_width = self.fps_slider_rect.width
+        ratio = (slider_x - slider_start_x) / slider_width
+        ratio = min(max(ratio, 0.0), 1.0)
+        new_fps = int(1 + ratio * (max_fps - 1))
+        self.fps_slider_update_fn(new_fps)
+        print(f"[ViewerControl] Target FPS set to {new_fps}")
 
 
 class LoopControlHelper:
