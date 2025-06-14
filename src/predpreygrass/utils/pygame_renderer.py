@@ -229,32 +229,7 @@ class PyGameRenderer:
 
         # --- FPS Speed Slider ---
         y += spacing
-        slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
-        self.screen.blit(slider_label_surface, (x, y))
-
-        y += spacing
-
-        slider_x = x
-        slider_y = y
-        slider_width = 200
-        slider_height = 20
-
-        pygame.draw.rect(self.screen, (180, 180, 180), pygame.Rect(slider_x, slider_y, slider_width, slider_height))
-        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(slider_x, slider_y, slider_width, slider_height), 1)
-
-        max_fps = self.max_fps
-        ratio = (self.target_fps - 1) / (max_fps - 1)
-
-        handle_x = slider_x + int(ratio * slider_width)
-        handle_y = slider_y + slider_height // 2
-
-        pygame.draw.circle(self.screen, (50, 50, 250), (handle_x, handle_y), 16)
-
-        fps_surface = font.render(f"{self.target_fps} FPS", True, (0, 0, 0))
-        self.screen.blit(fps_surface, (slider_x + slider_width + 15, slider_y - 8))
-
-        self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
-
+        y = self._draw_speed_slider(x, y)
         if not self.show_population_chart:
             return  # Skip drawing chart
 
@@ -349,6 +324,37 @@ class PyGameRenderer:
             pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
             self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
             self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
+
+    def _draw_speed_slider(self, x, y):
+        spacing = self.gui_style.legend_spacing
+        font = pygame.font.SysFont(None, 24)
+
+        slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
+        self.screen.blit(slider_label_surface, (x, y))
+
+        y += spacing
+
+        slider_x = x
+        slider_y = y
+        slider_width = 200
+        slider_height = 20
+
+        pygame.draw.rect(self.screen, (180, 180, 180), pygame.Rect(slider_x, slider_y, slider_width, slider_height))
+        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(slider_x, slider_y, slider_width, slider_height), 1)
+
+        max_fps = self.max_fps
+        ratio = (self.target_fps - 1) / (max_fps - 1)
+        handle_x = slider_x + int(ratio * slider_width)
+        handle_y = slider_y + slider_height // 2
+
+        pygame.draw.circle(self.screen, (50, 50, 250), (handle_x, handle_y), 16)
+
+        fps_surface = font.render(f"{self.target_fps} FPS", True, (0, 0, 0))
+        self.screen.blit(fps_surface, (slider_x + slider_width + 15, slider_y - 8))
+
+        self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
+
+        return y + spacing  # Return new Y position for chart continuation
 
     def close(self):
         pygame.quit()
