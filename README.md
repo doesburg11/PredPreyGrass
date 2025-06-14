@@ -15,7 +15,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 ## Features
 
-* At startup Predator, Prey and Grass are randomly positioned.
+* At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
 * Predators and Prey are independantly (decentralized) trained via their own RLlib policy module.:
 
@@ -40,7 +40,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 * **Reproduction conditions**:
 
   * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-  * New agents are spawned close to their parent.
+  * New agents are spawned near their parent.
 
 * Grass agents gradually regenerate at the same spot after being eaten by Prey.
 
