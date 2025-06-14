@@ -17,7 +17,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 * At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
-* Predators and Prey are independantly (decentralized) trained via their own RLlib policy module.:
+* Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
   * **Predators** (red)
   * **Prey** (blue)
