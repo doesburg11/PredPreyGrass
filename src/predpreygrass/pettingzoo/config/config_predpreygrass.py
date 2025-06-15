@@ -28,17 +28,17 @@ env_kwargs = dict(
     obs_range_predator=7,
     obs_range_prey=9,
     # action parameters
-    is_von_neumann_neighborhood=False,
-    action_range=5,  # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3
+    is_von_neumann_neighborhood=True,
+    action_range=3,  # obsolete when is_von_neumann_neighborhood is True: action_range automatically set to 3
     # energy parameters
-    energy_gain_per_step_predator=-0.19,  # -0.15,  # -0.15 # default
-    energy_gain_per_step_prey=-0.03,  # -0.05,  # -0.05 # default
+    energy_gain_per_step_predator=-0.15,  # -0.15,  # -0.15 # default
+    energy_gain_per_step_prey=-0.05,  # -0.05,  # -0.05 # default
     energy_gain_per_step_grass=0.2,
     initial_energy_predator=5.0,
     initial_energy_prey=5.0,
     initial_energy_grass=3.0,
     max_energy_level_grass=4.0,
-    motion_energy_per_distance_unit=-0.01,  # -0.01
+    motion_energy_per_distance_unit=-0.00,  # -0.01
     # create agents parameters
     prey_creation_energy_threshold=8,
     predator_creation_energy_threshold=12,
