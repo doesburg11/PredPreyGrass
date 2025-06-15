@@ -219,6 +219,7 @@ if __name__ == "__main__":
     # Add slider
     control.fps_slider_rect = visualizer.slider_rect
     control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
+    control.visualizer = visualizer
 
     # Optional: frame rate control
     clock = pygame.time.Clock()
