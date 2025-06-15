@@ -26,12 +26,10 @@ MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
 
-# Define environment registration
 def env_creator(config):
     return PredPreyGrass(config)
 
 
-# Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
     if "predator" in agent_id:
         return "predator_policy"
