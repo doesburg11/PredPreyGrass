@@ -57,34 +57,3 @@ The mutual shift of both **prey and predator populations toward high-speed varia
 This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is key.
 
 Notably, agents in this system lack direct access to each other’s heritable traits such as speed class. Observations are limited to localized energy maps for predators, prey, and grass, with no explicit encoding of whether an observed agent is fast or slow. Despite this, we observe a clear evolutionary shift toward higher-speed phenotypes in both predator and prey populations. This shift occurs even when high-speed variants are initially absent and must arise through rare mutations, suggesting that selection is driven not by trait recognition but by differential survival and reproductive success. Faster agents outperform their slower counterparts in the competitive landscape created by evolving opponents, leading to a mutual escalation in speed. This dynamic constitutes an implicit form of co-evolution consistent with the Red Queen hypothesis: species must continuously adapt, not to gain an absolute advantage, but merely to maintain relative fitness in a co-adaptive system.
-
-## Installation of the repository
-
-**Editor used:** Visual Studio Code 1.100.3 on Linux Mint 22.0 Cinnamon
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/doesburg11/PredPreyGrass.git
-   ```
-2. Open Visual Studio Code and execute:
-   - Press `ctrl+shift+p`
-   - Type and choose: "Python: Create Environment..."
-   - Choose environment: Conda
-   - Choose interpreter: Python 3.11.11 or higher
-   - Open a new terminal
-   - ```bash
-     pip install -e .
-     ```
-3. Install the additional system dependency:
-    -   ```bash
-        conda install -y -c conda-forge gcc=14.2.0
-        ```
-## Running examples
-- [PettingZoo in combination with SB3](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#getting-started-with-the-pettingzoosb3-framework)
-
-
-## References
-
-- [Terry, J and Black, Benjamin and Grammel, Nathaniel and Jayakumar, Mario and Hari, Ananth and Sullivan, Ryan and Santos, Luis S and Dieffendahl, Clemens and Horsch, Caroline and Perez-Vicente, Rodrigo and others. Pettingzoo: Gym for multi-agent reinforcement learning. 2021-2024](https://pettingzoo.farama.org/)
-- [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
-- [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
