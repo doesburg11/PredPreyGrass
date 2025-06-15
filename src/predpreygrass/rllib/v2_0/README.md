@@ -8,7 +8,7 @@
 <p align="center">
     <b>The Predator-Prey-Grass base-environment</b></p>
 <p align="center">
-    <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
+    <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000_two_speed.gif" width="600" height="500" />
 </p>
 
 ### Features

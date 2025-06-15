@@ -6,7 +6,7 @@ from dataclasses import dataclass
 class GuiStyle:
     margin_left: int = 10
     margin_top: int = 10
-    margin_right: int = 320
+    margin_right: int = 340
     margin_bottom: int = 10
     legend_spacing: int = 30
     legend_font_size: int = 28
@@ -61,6 +61,8 @@ class PyGameRenderer:
         self.population_history_predators = []
         self.population_history_prey = []
         self.population_history_max_length = 1000
+        self.population_pct_speed2_predators = []
+        self.population_pct_speed2_prey = []
 
         self.target_fps = 10  # Default FPS
         self.slider_rect = None  # Will be defined in _draw_legend()
@@ -79,8 +81,21 @@ class PyGameRenderer:
         # Count predator and prey population
         num_predators = sum(1 for agent_id in agent_positions if "predator" in agent_id)
         num_prey = sum(1 for agent_id in agent_positions if "prey" in agent_id)
+        num_speed2_predators = sum(1 for aid in agent_positions if "predator" in aid and "speed_2" in aid)
+        num_speed2_prey = sum(1 for aid in agent_positions if "prey" in aid and "speed_2" in aid)
+
+        pct_predators_speed2 = (num_speed2_predators / num_predators) if num_predators > 0 else 0
+        pct_prey_speed2 = (num_speed2_prey / num_prey) if num_prey > 0 else 0
 
         # Update population history
+        self.population_pct_speed2_predators.append(pct_predators_speed2)
+        self.population_pct_speed2_prey.append(pct_prey_speed2)
+
+        # Keep history bounded
+        if len(self.population_pct_speed2_predators) > self.population_history_max_length:
+            self.population_pct_speed2_predators.pop(0)
+            self.population_pct_speed2_prey.pop(0)
+
         self.population_history_steps.append(step)
         self.population_history_predators.append(num_predators)
         self.population_history_prey.append(num_prey)
@@ -189,6 +204,8 @@ class PyGameRenderer:
             y = self._draw_legend_speed_slider(x, y)
 
         y = self._draw_legend_population_chart(x, y)
+
+        y = self._draw_legend_speed2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
         spacing = self.gui_style.legend_spacing
@@ -313,13 +330,13 @@ class PyGameRenderer:
     def _draw_legend_population_chart(self, x, y):
         chart_width = 260
         chart_height = 100
-        chart_x = x + 20
+        chart_x = x + 30
         chart_y = y + 40
         spacing = self.gui_style.legend_spacing
 
         # Chart title
         font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
-        title_surface = font_small.render("Agent population over time", True, (0, 0, 0))
+        title_surface = font_small.render("Total predator and prey population", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
         title_y = chart_y - spacing // 2 - 10
         self.screen.blit(title_surface, (title_x, title_y))
@@ -332,7 +349,7 @@ class PyGameRenderer:
         max_agents = max(max(self.population_history_predators, default=1), max(self.population_history_prey, default=1), 1)
         num_ticks = 5
         label_x = chart_x - 5
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.7), bold=False)
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
 
         for i in range(num_ticks + 1):
             value = int(i / num_ticks * max_agents)
@@ -358,12 +375,60 @@ class PyGameRenderer:
                 x2 = chart_x + int(i / self.population_history_max_length * chart_width)
                 y1p = chart_y + chart_height - int(self.population_history_predators[i - 1] / max_agents * chart_height)
                 y2p = chart_y + chart_height - int(self.population_history_predators[i] / max_agents * chart_height)
-                pygame.draw.line(self.screen, (255, 0, 0), (x1, y1p), (x2, y2p), 2)
+                pygame.draw.line(self.screen, self.gui_style.predator_speed_1_color, (x1, y1p), (x2, y2p), 2)
                 y1pr = chart_y + chart_height - int(self.population_history_prey[i - 1] / max_agents * chart_height)
                 y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
-                pygame.draw.line(self.screen, (0, 0, 255), (x1, y1pr), (x2, y2pr), 2)
+                pygame.draw.line(self.screen, self.gui_style.prey_speed_1_color, (x1, y1pr), (x2, y2pr), 2)
 
         return chart_y + chart_height + self.gui_style.legend_spacing
+
+    def _draw_legend_speed2_percent_chart(self, x, y):
+        chart_width = 260
+        chart_height = 100
+        chart_x = x + 30
+        chart_y = y + 40
+        spacing = self.gui_style.legend_spacing
+
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        title_surface = font_small.render("Speed 2 predator and prey population (%)", True, (0, 0, 0))
+        title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
+        title_y = chart_y - spacing // 2 - 10
+        self.screen.blit(title_surface, (title_x, title_y))
+
+        pygame.draw.rect(self.screen, (230, 230, 230), pygame.Rect(chart_x, chart_y, chart_width, chart_height))
+        pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(chart_x, chart_y, chart_width, chart_height), 1)
+
+        # Y ticks (0% to 100%)
+        for i in range(0, 6):
+            pct = i * 0.2
+            y_pos = chart_y + chart_height - int(pct * chart_height)
+            label_surface = font_small.render(f"{int(pct * 100)}%", True, (0, 0, 0))
+            label_x = chart_x - 6 - label_surface.get_width()  # right-align
+            self.screen.blit(label_surface, (label_x, y_pos - 6))
+
+        # X ticks
+        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        num_xticks = len(x_tick_labels)
+        for i, label_value in enumerate(x_tick_labels):
+            x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
+            y_pos = chart_y + chart_height + 5
+            label_surface = font_small.render(f"{label_value}", True, (0, 0, 0))
+            self.screen.blit(label_surface, (x_pos - label_surface.get_width() // 2, y_pos))
+
+        # Draw lines
+        for i in range(1, len(self.population_pct_speed2_predators)):
+            x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
+            x2 = chart_x + int(i / self.population_history_max_length * chart_width)
+
+            y1_pred = chart_y + chart_height - int(self.population_pct_speed2_predators[i - 1] * chart_height)
+            y2_pred = chart_y + chart_height - int(self.population_pct_speed2_predators[i] * chart_height)
+            pygame.draw.line(self.screen, self.gui_style.predator_speed_2_color, (x1, y1_pred), (x2, y2_pred), 2)
+
+            y1_prey = chart_y + chart_height - int(self.population_pct_speed2_prey[i - 1] * chart_height)
+            y2_prey = chart_y + chart_height - int(self.population_pct_speed2_prey[i] * chart_height)
+            pygame.draw.line(self.screen, self.gui_style.prey_speed_2_color, (x1, y1_prey), (x2, y2_prey), 2)
+
+        return chart_y + chart_height + spacing
 
     def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
