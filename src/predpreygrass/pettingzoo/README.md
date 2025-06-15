@@ -10,12 +10,12 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
 </p>
 
 
-
 <p align="center">
-    <img src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
+    <b>Random policy Predator-Prey-Grass PettingZoo environment</b></p>
+    <img align="center" src="../../../assets/images/gifs/predpreygrass_random.gif" width="1000" height="200"/>
 </p>
 
-#### Visualization of a random policy with the PettingZoo framework
+#### Random policy with the PettingZoo framework
 - [`src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/eval/evaluate_random_policy.py)
 
 #### Training model using PPO from stable baselines3
@@ -57,6 +57,7 @@ The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/Pred
 ### Centralized training and decentralized evaluation
 
 <p align="center">
+    <b>Predator-Prey-Grass PettingZoo environment centralized trained using SB3's PPO</b></p>
     <img src="../../../assets/images/gifs/predpreygrass.gif" width="1000" height="200"/>
 </p>
 
