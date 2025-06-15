@@ -64,7 +64,7 @@ class PyGameRenderer:
 
         self.target_fps = 10  # Default FPS
         self.slider_rect = None  # Will be defined in _draw_legend()
-        self.max_fps = 100
+        self.slider_max_fps = 60
 
     def _using_speed_prefix(self, agent_positions):
         """Return True if any agent_id contains speed info."""
@@ -73,20 +73,6 @@ class PyGameRenderer:
     def update(self, agent_positions, grass_positions, agent_energies=None, grass_energies=None, step=0, agents_just_ate=None):
         if agents_just_ate is None:
             agents_just_ate = set()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.close()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Left mouse button
-                    if self.slider_rect and self.slider_rect.collidepoint(event.pos):
-                        slider_x = event.pos[0]
-                        slider_start_x = self.slider_rect.left
-                        slider_width = self.slider_rect.width
-                        ratio = (slider_x - slider_start_x) / slider_width
-                        ratio = min(max(ratio, 0.0), 1.0)
-                        self.target_fps = int(1 + ratio * (60 - 1))
-                        print(f"[ViewerControl] Target FPS set to {self.target_fps}")
 
         self.screen.fill(self.gui_style.background_color)
 
@@ -310,8 +296,8 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, (180, 180, 180), pygame.Rect(slider_x, slider_y, slider_width, slider_height))
         pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(slider_x, slider_y, slider_width, slider_height), 1)
 
-        max_fps = self.max_fps
-        ratio = (self.target_fps - 1) / (max_fps - 1)
+        slider_max_fps = self.slider_max_fps
+        ratio = (self.target_fps - 1) / (slider_max_fps - 1)
         handle_x = slider_x + int(ratio * slider_width)
         handle_y = slider_y + slider_height // 2
 
@@ -447,7 +433,6 @@ class ViewerControlHelper:
         self.fps_slider_rect = None
         self.fps_slider_update_fn = None
         self.is_dragging_slider = False
-        self.fps_slider_max_fps = 100
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -490,12 +475,12 @@ class ViewerControlHelper:
                     self.is_dragging_slider = False
 
     def _update_fps_slider(self, slider_x):
-        max_fps = self.fps_slider_max_fps
+        slider_max_fps = self.visualizer.slider_max_fps
         slider_start_x = self.fps_slider_rect.left
         slider_width = self.fps_slider_rect.width
         ratio = (slider_x - slider_start_x) / slider_width
         ratio = min(max(ratio, 0.0), 1.0)
-        new_fps = int(1 + ratio * (max_fps - 1))
+        new_fps = int(1 + ratio * (slider_max_fps - 1))
         self.fps_slider_update_fn(new_fps)
         print(f"[ViewerControl] Target FPS set to {new_fps}")
 
