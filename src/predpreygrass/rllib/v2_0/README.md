@@ -30,7 +30,7 @@
 The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">
-    <img src="../../../../assets/images/readme/training_low_v_high_speed.png" width="800" height="160"/>
+    <img src="../../../../assets/images/readme/training_low_v_high_speed.png" width="880" height="180"/>
     <p align="center"><b>Training results of low-speed and high-speed agents</b></p>
 </p>
 
