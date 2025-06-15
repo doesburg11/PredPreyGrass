@@ -4,16 +4,7 @@ local_output_root = RESULTS_DIR
 
 x_grid_size, y_grid_size = 25, 25
 training_steps_string = "1_638_400"
-# training_steps_string="2_293_760"
-# training_steps_string="4_587_520"
-# training_steps_string="6_881_280"
-# training_steps_string="9_175_040"
 # training_steps_string="11_468_800"
-# training_steps_string="13_762_560"
-# training_steps_string="16_056_320"
-# training_steps_string="18_350_080"
-# training_steps_string="20_643_840"
-
 
 env_kwargs = dict(
     # reward parameters
