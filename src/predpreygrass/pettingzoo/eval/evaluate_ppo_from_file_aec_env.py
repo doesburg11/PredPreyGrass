@@ -19,12 +19,12 @@ import os
 import sys
 from os.path import dirname as up
 
-# Add the parent directory to sys.path
-sys.path.append(up(up(__file__)))
-
 from predpreygrass.pettingzoo.envs import predpreygrass_aec_v0
 from predpreygrass.pettingzoo.config.config_predpreygrass import env_kwargs, training_steps_string
 from predpreygrass.pettingzoo.eval.utils.evaluator import Evaluator
+
+# Add the parent directory to sys.path
+sys.path.append(up(up(__file__)))
 
 
 if __name__ == "__main__":
