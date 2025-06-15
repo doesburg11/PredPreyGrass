@@ -2,109 +2,35 @@
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
-# Predator-Prey-Grass
+# Predator-Prey-Grass two-speed mutation environment
 
 
 <p align="center">
-    <b>The Predator-Prey-Grass base-environment</b></p>
+    <b>Evolution towards faster populations</b></p>
 <p align="center">
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000_two_speed.gif" width="600" height="500" />
 </p>
 
-### Features
+## Additional features with respect to the base-environment
 
-* At startup Predator, Prey and Grass are randomly positioned.
+* Initally, the Predator and Prey populations only consists of "slow" agents.
+  * "Slow" agents (Speed 1): can move in a (9-position) [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood) range.
 
-* Predators and Prey are independantly (decentralized) trained via their own RLlib policy module.:
+* At reproduction, the offspring of both "slow" Predators and Prey, can mutate with a probability of 5% towards "fast" agents (and vice versa).
+  * "Fast" agents (Speed 2): can move in a (25-position) extended Moore neigborhood range. Consequently, the high-speed agent can move faster across the gridworld per simulation step.
 
-  * **Predators** (red)
-  * **Prey** (blue)
-
-* Predator and Prey **learn movement strategies** based on their **partial observations**.
-* Both expend **energy** as they move around the grid and **replenish energy by eating**:
-
-  * **Prey** eat **Grass** (green).
-  * **Predators** eat **Prey** by moving onto the same grid cell.
-
-* **Predator death conditions**:
-
-  * Starvation (when energy runs out).
-* **Prey death conditions**:
-
-  * Starvation.
-  * Being eaten by a Predator.
-* **Reproduction**:
-
-  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-  * New agents are spawned close to their parent.
-
-* Grass agents regenerate at the same spot after being eaten by Prey.
-
-
-
-
-## Key Features:
-
-- **Sparse rewards**: agents only receive a reward when reproducing.
-- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
-- **Multi-Policy Training**:
-- **Gridworld Ecology**: Agents observe their local neighborhood with species-specific observation ranges; prey seek grass, predators hunt prey.
-- **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
-- **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
-
-
-
-## Overview
-This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
-
-
-
-
-
-
-## Centralized versus decentralized training
-The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework.
 
 <p align="center">
-    <b>Populations adapting to a changing environment by selection and learning</b></p>
-<p align="center">
-    <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
+    <img align="center" src="../../../../assets/images/readme/high-low-speed-agent.png" width="300" height="135"/>
+    <p align="center"><b>Action spaces of low-speed (Speed 1) and high-speed (Speed 2) agents</b></p>
 </p>
 
 
-### Configuration of centralized training
-The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
-
-## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
-
-
-
-### Configuration of decentralized training
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py).
-
-Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
+## Training and evaluation results
+The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">
-    <img src="./assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
-</p>
-
-A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.
-
-
-## Introducing mutation with reproducing agents
-
-The environment described above, wether centralized or decentralized trained, esentially optimizes policies for a fixed policy task for both predator an prey agent groups throughout the entire episode of the environment. To introduce variability in an agent policy (and therefore some element of open-endedness) we introduce for both predator and prey a low-speed and high-speed agent variant. A low-speed agent can move within its [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood), but a high-speed agent can move further within its *extended* Moore neighborhood with range *r*=2. Consequently, the high-speed agent can move faster across the gridworld, as depicted below.
-
-<p align="center">
-    <img src="./assets/images/readme/high-low-speed-agent.png" width="300" height="135"/>
-    <p align="center"><b>Action spaces of low-speed and high-speed agents</b></p>
-</p>
-
-
-The environment setup is changed to enable mutations with the reproduction of a agents. When reproduction occurs, there is a small change (5%) of mutating from a low-speed agent to a high-speed agent (or vice versa). When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
-
-<p align="center">
-    <img src="./assets/images/readme/training_low_v_high_speed.png" width="800" height="160"/>
+    <img src="../../../../assets/images/readme/training_low_v_high_speed.png" width="800" height="160"/>
     <p align="center"><b>Training results of low-speed and high-speed agents</b></p>
 </p>
 
@@ -113,12 +39,12 @@ The training results suggests that the population of the low-speed agents dimini
 Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey as displayed below. Note that after this shift the low-speed agents are not fully eradicated, but temporarily pop up due to back mutation.
 
 <p align="center">
-    <img src="./assets/images/readme/high_speed_agent_population_share.png" width="450" height="270"/>
+    <img src="../../../../assets/images/readme/high_speed_agent_population_share.png" width="450" height="270"/>
     <p align="center"><b>Low-speed agents replaced by high-Speed agents trough selection</b></p>
 </p>
 
 
-This is a clear example of **natural selection** within an artificial system:
+This is an example of **"natural" selection** within an artificial system:
 - **Variation**: Introduced by random mutation of inherited traits (speed class).
 - **Inheritance**: Agents retain behavior linked to their speed class via pre-trained policies.
 - **Differential Fitness**: Faster agents outperform slower ones under the same environmental constraints.
