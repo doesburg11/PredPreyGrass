@@ -1,6 +1,6 @@
 # discretionary libraries
 from predpreygrass.pettingzoo.agents.discrete_agent import DiscreteAgent
-from predpreygrass.utils.renderer import PyGameRenderer
+from predpreygrass.utils.pygame_renderer_pettingzoo import PyGameRenderer
 
 # external libraries
 from gymnasium import spaces
