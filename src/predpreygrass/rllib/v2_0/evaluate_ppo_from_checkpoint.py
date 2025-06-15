@@ -1,5 +1,7 @@
 """
-Evaluation code for evaluating a trained PPO agent from a checkpoint
+Evaluation code for evaluating a trained PPO agent from a checkpoint.
+This scripts ha an advanced viewer control system that allows stepping
+back-and-forward through the simulation.
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v2_0.config.config_env_eval import config_env
@@ -69,6 +71,148 @@ def policy_pi(observation, policy_module, deterministic=True):
         action = dist.sample().item()
 
     return action
+
+
+def setup_environment_and_visualizer(now):
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policy"
+    checkpoint_root = "/PPO_2025-06-12_23-54-40/"
+    checkpoint_dir = "checkpoint_iter_1000"
+    checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
+
+    training_dir = os.path.dirname(checkpoint_path)
+    eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
+
+    module_paths = {
+        pid: os.path.join(checkpoint_path, "learner_group", "learner", "rl_module", pid)
+        for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]
+    }
+    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
+
+    env = env_creator(config=config_env)
+    grid_size = (env.grid_size, env.grid_size)
+    visualizer = PyGameRenderer(grid_size)
+
+    if SAVE_EVAL_PLOTS:
+        os.makedirs(eval_output_dir, exist_ok=True)
+        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+            json.dump(config_env, f, indent=4)
+        ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
+        pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
+    else:
+        ceviz = CombinedEvolutionVisualizer(destination_path=None, timestamp=now)
+        pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
+
+    return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
+
+
+def step_backwards_if_requested(control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz):
+    if control.step_backward:
+        if len(snapshots) > 1:
+            snapshots.pop()
+            env.restore_state_snapshot(snapshots[-1])
+            print(f"[ViewerControl] Step Backward → Step {env.current_step}")
+
+            # REGENERATE observations
+            observations = {agent: env._get_observation(agent) for agent in env.agents}
+
+            # Rewind tracking
+            if time_steps:
+                time_steps.pop()
+                predator_counts.pop()
+                prey_counts.pop()
+
+            ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
+            pdviz.record(env.death_cause_prey)
+
+            visualizer.update(
+                agent_positions=env.agent_positions,
+                grass_positions=env.grass_positions,
+                agent_energies=env.agent_energies,
+                grass_energies=env.grass_energies,
+                agents_just_ate=env.agents_just_ate,
+                step=env.current_step,
+            )
+            control.fps_slider_rect = visualizer.slider_rect
+            pygame.time.wait(100)
+
+            control.step_backward = False
+            return observations  # ✅ return updated obs
+
+        control.step_backward = False
+    return None
+
+
+def step_forward(
+    env,
+    observations,
+    rl_modules,
+    control,
+    visualizer,
+    ceviz,
+    pdviz,
+    snapshots,
+    predator_counts,
+    prey_counts,
+    time_steps,
+    total_reward,
+    clock,
+    SAVE_MOVIE,
+    video_writer,
+):
+    action_dict = {
+        agent_id: policy_pi(
+            observations[agent_id],
+            rl_modules[policy_mapping_fn(agent_id)],
+            deterministic=True,
+        )
+        for agent_id in env.agents
+    }
+
+    observations, rewards, terminations, truncations, _ = env.step(action_dict)
+
+    snapshots.append(env.get_state_snapshot())
+    if len(snapshots) > 100:
+        snapshots.pop(0)
+
+    ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
+    pdviz.record(env.death_cause_prey)
+
+    visualizer.update(
+        agent_positions=env.agent_positions,
+        grass_positions=env.grass_positions,
+        agent_energies=env.agent_energies,
+        grass_energies=env.grass_energies,
+        agents_just_ate=env.agents_just_ate,
+        step=env.current_step,
+    )
+    control.fps_slider_rect = visualizer.slider_rect
+
+    if SAVE_MOVIE:
+        frame = pygame.surfarray.array3d(visualizer.screen)
+        frame = np.transpose(frame, (1, 0, 2))
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        video_writer.write(frame)
+
+    control.step_once = False
+    clock.tick(visualizer.target_fps)
+
+    predator_counts.append(sum(1 for a in env.agents if "predator" in a))
+    prey_counts.append(sum(1 for a in env.agents if "prey" in a))
+    time_steps.append(env.current_step)
+    total_reward += sum(rewards.values())
+
+    return observations, total_reward, terminations, truncations
+
+
+def render_static_if_paused(env, visualizer):
+    visualizer.update(
+        agent_positions=env.agent_positions,
+        grass_positions=env.grass_positions,
+        agent_energies=env.agent_energies,
+        grass_energies=env.grass_energies,
+        agents_just_ate=env.agents_just_ate,
+        step=env.current_step,
+    )
 
 
 def print_reward_summary(env, total_reward):
@@ -153,199 +297,64 @@ def run_post_evaluation_plots(combined_evolution_visualizer, prey_death_cause_vi
 
 
 if __name__ == "__main__":
-    # === Set checkpoint paths ===
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policy"
-    register_env("PredPreyGrass", lambda config: env_creator(config))
-    checkpoint_root = "/PPO_2025-06-12_23-54-40/"
-    checkpoint_dir = "checkpoint_iter_1000"
-    checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
-    print(f"Checkpoint path: {checkpoint_path}")
-    # === Get training directory and prepare eval output dir ===
-    training_dir = os.path.dirname(checkpoint_path)
-    print(f"Training directory: {training_dir}")
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
-    print(f"Evaluation output directory: {eval_output_dir}")
+    register_env("PredPreyGrass", lambda config: env_creator(config))
 
-    # Load RLModules directly from subfolders
-    module_paths = {
-        pid: os.path.join(checkpoint_path, "learner_group", "learner", "rl_module", pid)
-        for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]
-    }
-    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
-
-    # Initialize the environment
-    env = env_creator(config=config_env)  # PredPreyGrass()
-
-    # Reset environment and get initial observations
+    env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir = setup_environment_and_visualizer(now)
     observations, _ = env.reset(seed=seed)
 
-    # intitialize matplot lib renderer
-    grid_size = (env.grid_size, env.grid_size)
-    all_agents = env.possible_agents + env.grass_agents
-    visualizer = PyGameRenderer(grid_size)
-    if SAVE_EVAL_PLOTS:
-        os.makedirs(eval_output_dir, exist_ok=True)
-        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
-        combined_evolution_visualizer = CombinedEvolutionVisualizer(
-            destination_path=eval_output_dir,
-            timestamp=now,
-        )
-        prey_death_cause_visualizer = PreyDeathCauseVisualizer(
-            destination_path=eval_output_dir,
-            timestamp=now,
-        )
-    else:
-        combined_evolution_visualizer = CombinedEvolutionVisualizer(
-            destination_path=None,  # No file output
-            timestamp=now,
-        )
-        prey_death_cause_visualizer = PreyDeathCauseVisualizer(
-            destination_path=None,  # No file output
-            timestamp=now,
-        )
-
-    # Create movie
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
+    else:
+        video_writer = None
 
-    # Initialize viewer control + loop helper
     control = ViewerControlHelper()
     loop_helper = LoopControlHelper()
-    # Add slider
     control.fps_slider_rect = visualizer.slider_rect
     control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
     control.visualizer = visualizer
 
-    # Optional: frame rate control
     clock = pygame.time.Clock()
-    target_fps = 10  # Adjust as desired
-
     total_reward = 0
-    predator_counts = []
-    prey_counts = []
-    time_steps = []
+    predator_counts, prey_counts, time_steps = [], [], []
+    snapshots = [env.get_state_snapshot()]
 
-    # --- Setup snapshots for stepping backwards ---
-    snapshots = []
-    max_snapshots = 100  # Keep last 100 steps
-    # Save initial snapshot
-    snapshots.append(env.get_state_snapshot())
-
-    # Run one evaluation episode
-    # Avanced loop control added for step-wise back-and-forward evaluation debugging
     while not loop_helper.simulation_terminated:
         control.handle_events()
-        # Backward step handling
-        if control.step_backward:
-            if len(snapshots) > 1:
-                snapshots.pop()  # Discard current step
-                env.restore_state_snapshot(snapshots[-1])
-                print(f"[ViewerControl] Step Backward → Step {env.current_step}")
 
-                # --- REGENERATE observations to match restored state ---
-                observations = {agent: env._get_observation(agent) for agent in env.agents}
+        new_obs = step_backwards_if_requested(
+            control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz
+        )
+        if new_obs is not None:
+            observations = new_obs
+            continue
 
-                # --- Also rewind history lists ---
-                if len(time_steps) > 0:
-                    time_steps.pop()
-                    predator_counts.pop()
-                    prey_counts.pop()
-                combined_evolution_visualizer.record(
-                    agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages
-                )
-                prey_death_cause_visualizer.record(env.death_cause_prey)
-
-                visualizer.update(
-                    agent_positions=env.agent_positions,
-                    grass_positions=env.grass_positions,
-                    agent_energies=env.agent_energies,
-                    grass_energies=env.grass_energies,
-                    agents_just_ate=env.agents_just_ate,
-                    step=env.current_step,
-                )
-                control.fps_slider_rect = visualizer.slider_rect
-
-                pygame.time.wait(100)
-            control.step_backward = False
-        # Normal step forward
         if loop_helper.should_step(control):
-            # Build action dict from PPO policy
-            action_dict = {
-                agent_id: policy_pi(
-                    observations[agent_id],
-                    rl_modules[policy_mapping_fn(agent_id)],
-                    deterministic=True,  # or False if you want stochastic behavior
-                )
-                for agent_id in env.agents
-            }
-            # Step env
-            observations, rewards, terminations, truncations, _ = env.step(action_dict)
-
-            # Save snapshot AFTER step
-            snapshots.append(env.get_state_snapshot())
-            if len(snapshots) > max_snapshots:
-                snapshots.pop(0)
-            combined_evolution_visualizer.record(
-                agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages
+            observations, total_reward, terminations, truncations = step_forward(
+                env,
+                observations,
+                rl_modules,
+                control,
+                visualizer,
+                ceviz,
+                pdviz,
+                snapshots,
+                predator_counts,
+                prey_counts,
+                time_steps,
+                total_reward,
+                clock,
+                SAVE_MOVIE,
+                video_writer,
             )
-            prey_death_cause_visualizer.record(env.death_cause_prey)
-
-            # Update viewer
-            visualizer.update(
-                agent_positions=env.agent_positions,
-                grass_positions=env.grass_positions,
-                agent_energies=env.agent_energies,
-                grass_energies=env.grass_energies,
-                agents_just_ate=env.agents_just_ate,
-                step=env.current_step,
-            )
-            control.fps_slider_rect = visualizer.slider_rect
-
-            if SAVE_MOVIE:
-                frame = pygame.surfarray.array3d(visualizer.screen)
-                frame = np.transpose(frame, (1, 0, 2))  # Convert (width, height, channels) → (height, width, channels)
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Pygame uses RGB, OpenCV uses BGR
-                video_writer.write(frame)
-
-            # Update loop control termination flag
             loop_helper.update_simulation_terminated(terminations, truncations)
-
-            # Reset step_once
-            control.step_once = False
-
-            # Frame rate control
-            # clock.tick(target_fps)
-            clock.tick(visualizer.target_fps)
-
-            # Track stats
-            num_predators = sum(1 for agent in env.agents if "predator" in agent)
-            num_prey = sum(1 for agent in env.agents if "prey" in agent)
-
-            time_steps.append(env.current_step)
-            predator_counts.append(num_predators)
-            prey_counts.append(num_prey)
-            total_reward += sum(rewards.values())
         else:
-            # If paused → update viewer so tooltips work
-            visualizer.update(
-                agent_positions=env.agent_positions,
-                grass_positions=env.grass_positions,
-                agent_energies=env.agent_energies,
-                grass_energies=env.grass_energies,
-                agents_just_ate=env.agents_just_ate,
-                step=env.current_step,
-            )
-            # Small sleep to avoid CPU busy loop
+            render_static_if_paused(env, visualizer)
             pygame.time.wait(50)
 
-    # --- End of main loop ---
-
-    # --- Output handling ---
     print_reward_summary(env, total_reward)
     print_prey_death_summary(env)
 
@@ -353,7 +362,7 @@ if __name__ == "__main__":
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         save_prey_death_summary_to_file(env, eval_output_dir)
 
-    run_post_evaluation_plots(combined_evolution_visualizer, prey_death_cause_visualizer)
+    run_post_evaluation_plots(ceviz, pdviz)
 
     pygame.event.pump()
     pygame.quit()
