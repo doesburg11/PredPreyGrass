@@ -19,11 +19,10 @@ import cv2
 import numpy as np
 
 SAVE_MOVIE = False
+SAVE_EVAL_PLOTS = False  # Save plots of evolution and prey death causes
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
-verbose_grid = False
-verbose_actions = False
 seed = 1  # 42 # Optional: set to integer for reproducibility
 
 # Initialize Ray
@@ -72,12 +71,91 @@ def policy_pi(observation, policy_module, deterministic=True):
     return action
 
 
+def print_reward_summary(env, total_reward):
+    print(f"\nEvaluation complete! Total Reward: {total_reward}")
+
+    predator_rewards = []
+    prey_rewards = []
+
+    print("\n--- Reward Breakdown per Agent ---")
+    for agent_id, reward in env.cumulative_rewards.items():
+        print(f"{agent_id:15}: {reward:.2f}")
+        if "predator" in agent_id:
+            predator_rewards.append(reward)
+        elif "prey" in agent_id:
+            prey_rewards.append(reward)
+
+    total_predator_reward = sum(predator_rewards)
+    total_prey_reward = sum(prey_rewards)
+    total_reward_all = total_predator_reward + total_prey_reward
+
+    print("\n--- Aggregated Rewards ---")
+    print(f"Total number of steps: {env.current_step-1}")
+    print(f"Total Predator Reward: {total_predator_reward:.2f}")
+    print(f"Total Prey Reward:     {total_prey_reward:.2f}")
+    print(f"Total All-Agent Reward:{total_reward_all:.2f}")
+
+
+def print_prey_death_summary(env):
+    print("\n--- Prey Death Causes ---")
+    death_stats = {"eaten": 0, "starved": 0}
+
+    for internal_id, cause in env.death_cause_prey.items():
+        print(f"Prey internal_id {internal_id:4d}: {cause}")
+        if cause in death_stats:
+            death_stats[cause] += 1
+
+    print("\n--- Summary ---")
+    print(f"Total prey eaten   : {death_stats['eaten']}")
+    print(f"Total prey starved : {death_stats['starved']}")
+
+
+def save_reward_summary_to_file(env, total_reward, eval_output_dir):
+    reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
+    with open(reward_log_path, "w") as f:
+        f.write(f"Total Reward: {total_reward}\n")
+        f.write("\n--- Reward Breakdown per Agent ---\n")
+        for agent_id, reward in env.cumulative_rewards.items():
+            f.write(f"{agent_id:15}: {reward:.2f}\n")
+
+        # Group rewards by type
+        grouped_rewards = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
+        for agent_id, reward in env.cumulative_rewards.items():
+            for group in grouped_rewards:
+                if group in agent_id:
+                    grouped_rewards[group].append(reward)
+
+        f.write("\n--- Aggregated Rewards ---\n")
+        f.write(f"Total number of steps            : {env.current_step-1}\n")
+        for group, rewards in grouped_rewards.items():
+            total_group_reward = sum(rewards)
+            f.write(f"Total {group.replace('_', ' ').title()} Reward: {total_group_reward:.2f}\n")
+
+
+def save_prey_death_summary_to_file(env, eval_output_dir):
+    death_log_path = os.path.join(eval_output_dir, "prey_death_causes.txt")
+    death_stats = {"eaten": 0, "starved": 0}
+
+    with open(death_log_path, "w") as f:
+        f.write("--- Prey Death Causes ---\n")
+        for internal_id, cause in env.death_cause_prey.items():
+            f.write(f"Prey internal_id {internal_id:4d}: {cause}\n")
+            if cause in death_stats:
+                death_stats[cause] += 1
+        f.write("\n--- Summary ---\n")
+        f.write(f"Total prey eaten   : {death_stats['eaten']}\n")
+        f.write(f"Total prey starved : {death_stats['starved']}\n")
+
+
+def run_post_evaluation_plots(combined_evolution_visualizer, prey_death_cause_visualizer):
+    combined_evolution_visualizer.plot()
+    prey_death_cause_visualizer.plot()
+
+
 if __name__ == "__main__":
     # === Set checkpoint paths ===
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policy"
     register_env("PredPreyGrass", lambda config: env_creator(config))
-    # checkpoint_root = '/v5_move_energy/pred_obs_range/Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
-    # checkpoint_root = '/v5_move_energy/reward_1.0/obs_range_Pred_11_Prey_9/PPO_PredPreyGrass_109fe_00000_0_2025-04-19_10-41-19/'
     checkpoint_root = "/PPO_2025-06-12_23-54-40/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
@@ -88,11 +166,6 @@ if __name__ == "__main__":
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
     print(f"Evaluation output directory: {eval_output_dir}")
-    os.makedirs(eval_output_dir, exist_ok=True)
-
-    # === Save config_env.json ===
-    with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-        json.dump(config_env, f, indent=4)
 
     # Load RLModules directly from subfolders
     module_paths = {
@@ -111,14 +184,27 @@ if __name__ == "__main__":
     grid_size = (env.grid_size, env.grid_size)
     all_agents = env.possible_agents + env.grass_agents
     visualizer = PyGameRenderer(grid_size)
-    combined_evolution_visualizer = CombinedEvolutionVisualizer(
-        destination_path=eval_output_dir,
-        timestamp=now,
-    )
-    prey_death_cause_visualizer = PreyDeathCauseVisualizer(
-        destination_path=eval_output_dir,
-        timestamp=now,
-    )
+    if SAVE_EVAL_PLOTS:
+        os.makedirs(eval_output_dir, exist_ok=True)
+        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+            json.dump(config_env, f, indent=4)
+        combined_evolution_visualizer = CombinedEvolutionVisualizer(
+            destination_path=eval_output_dir,
+            timestamp=now,
+        )
+        prey_death_cause_visualizer = PreyDeathCauseVisualizer(
+            destination_path=eval_output_dir,
+            timestamp=now,
+        )
+    else:
+        combined_evolution_visualizer = CombinedEvolutionVisualizer(
+            destination_path=None,  # No file output
+            timestamp=now,
+        )
+        prey_death_cause_visualizer = PreyDeathCauseVisualizer(
+            destination_path=None,  # No file output
+            timestamp=now,
+        )
 
     # Create movie
     if SAVE_MOVIE:
@@ -258,96 +344,16 @@ if __name__ == "__main__":
 
     # --- End of main loop ---
 
-    print(f"Evaluation complete! Total Reward: {total_reward}")
+    # --- Output handling ---
+    print_reward_summary(env, total_reward)
+    print_prey_death_summary(env)
 
-    # --- REWARD SUMMARY ---
-    predator_rewards = []
-    prey_rewards = []
+    if SAVE_EVAL_PLOTS:
+        save_reward_summary_to_file(env, total_reward, eval_output_dir)
+        save_prey_death_summary_to_file(env, eval_output_dir)
 
-    print("\n--- Reward Breakdown per Agent ---")
-    for agent_id, reward in env.cumulative_rewards.items():
-        print(f"{agent_id:15}: {reward:.2f}")
-        if "predator" in agent_id:
-            predator_rewards.append(reward)
-        elif "prey" in agent_id:
-            prey_rewards.append(reward)
+    run_post_evaluation_plots(combined_evolution_visualizer, prey_death_cause_visualizer)
 
-    total_predator_reward = sum(predator_rewards)
-    total_prey_reward = sum(prey_rewards)
-    total_reward_all = total_predator_reward + total_prey_reward
-
-    print("\n--- Aggregated Rewards ---")
-    print(f"Total number of steps: {env.current_step-1}")
-    print(f"Total Predator Reward: {total_predator_reward:.2f}")
-    print(f"Total Prey Reward:     {total_prey_reward:.2f}")
-    print(f"Total All-Agent Reward:{total_reward_all:.2f}")
-
-    # --- PREY DEATH CAUSE SUMMARY ---
-    death_log_path = os.path.join(eval_output_dir, "prey_death_causes.txt")
-    death_stats = {"eaten": 0, "starved": 0}
-
-    with open(death_log_path, "w") as f:
-        f.write("--- Prey Death Causes ---\n")
-        for internal_id, cause in env.death_cause_prey.items():
-            f.write(f"Prey internal_id {internal_id:4d}: {cause}\n")
-            if cause in death_stats:
-                death_stats[cause] += 1
-        f.write("\n--- Summary ---\n")
-        f.write(f"Total prey eaten   : {death_stats['eaten']}\n")
-        f.write(f"Total prey starved : {death_stats['starved']}\n")
-
-    print(f"Prey death summary written to: {death_log_path}")
-
-    # --- REWARD SUMMARY ---
-    reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
-    with open(reward_log_path, "w") as f:
-        f.write(f"Total Reward: {total_reward}\n")
-        f.write("\n--- Reward Breakdown per Agent ---\n")
-        speed_1_predator_rewards = []
-        speed_2_predator_rewards = []
-        speed_1_prey_rewards = []
-        speed_2_prey_rewards = []
-        for agent_id, reward in env.cumulative_rewards.items():
-            f.write(f"{agent_id:15}: {reward:.2f}\n")
-            if "speed_1_predator" in agent_id:
-                speed_1_predator_rewards.append(reward)
-            elif "speed_2_predator" in agent_id:
-                speed_2_predator_rewards.append(reward)
-            elif "speed_1_prey" in agent_id:
-                speed_1_prey_rewards.append(reward)
-            elif "speed_2_prey" in agent_id:
-                speed_2_prey_rewards.append(reward)
-
-        total_speed_1_predator_reward = sum(speed_1_predator_rewards)
-        total_speed_1_prey_reward = sum(speed_1_prey_rewards)
-        total_reward_all_speed_1 = total_speed_1_predator_reward + total_speed_1_prey_reward
-        total_speed_2_predator_reward = sum(speed_2_predator_rewards)
-        total_speed_2_prey_reward = sum(speed_2_prey_rewards)
-        total_reward_all_speed_2 = total_speed_2_predator_reward + total_speed_2_prey_reward
-
-        f.write("\n--- Aggregated Rewards ---\n")
-        f.write(f"Total number of steps            : {env.current_step-1}\n")
-        f.write(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}\n")
-        f.write(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}\n")
-        f.write(f"Total Low-Speed Agent Reward     : {total_speed_1_predator_reward + total_speed_1_prey_reward:.2f}\n")
-        f.write(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}\n")
-        f.write(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}\n")
-        f.write(f"Total High-Speed Agent Reward    : {total_speed_2_predator_reward + total_speed_2_prey_reward:.2f}\n")
-
-        print("\n--- Aggregated Rewards ---")
-        print(f"Total number of steps            : {env.current_step-1}")
-        print(f"Total Low-Speed Predator Reward  : {total_speed_1_predator_reward:.2f}")
-        print(f"Total Low-Speed Prey Reward      : {total_speed_1_prey_reward:.2f}")
-        print(f"Total Low-Speed Agent Reward     : {total_reward_all_speed_1:.2f}")
-        print(f"Total High-Speed Predator Reward : {total_speed_2_predator_reward:.2f}")
-        print(f"Total High-Speed Prey Reward     : {total_speed_2_prey_reward:.2f}")
-        print(f"Total High-Speed Agent Reward    : {total_reward_all_speed_2:.2f}")
-
-    combined_evolution_visualizer.plot()
-    prey_death_cause_visualizer.plot()
-
-    pygame.event.pump()  # Flush event queue
-    pygame.quit()  # Ensure Pygame releases mouse cleanly
-
-    # Shutdown Ray after evaluation
+    pygame.event.pump()
+    pygame.quit()
     ray.shutdown()

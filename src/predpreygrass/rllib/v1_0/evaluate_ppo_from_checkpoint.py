@@ -90,7 +90,7 @@ if __name__ == "__main__":
 
     # Initialize PyGameRenderer
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size)
+    visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
 
     # Create movie
     if SAVE_MOVIE:

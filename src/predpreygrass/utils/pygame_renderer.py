@@ -31,9 +31,10 @@ class GuiStyle:
 
 
 class PyGameRenderer:
-    def __init__(self, grid_size, cell_size=32):
+    def __init__(self, grid_size, cell_size=32, ennable_speed_slider=True):
         self.grid_size = grid_size
         self.cell_size = cell_size
+        self.enable_speed_slider = ennable_speed_slider
         self.gui_style = GuiStyle()
 
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
@@ -198,9 +199,9 @@ class PyGameRenderer:
 
         y = self._draw_legend_environment_elements(x, y)
 
-        # --- FPS Speed Slider ---
-        y = self._draw_legend_speed_slider(x, y)
-        # --- Population Chart ---
+        if self.enable_speed_slider:
+            y = self._draw_legend_speed_slider(x, y)
+
         y = self._draw_legend_population_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
@@ -265,14 +266,14 @@ class PyGameRenderer:
             r + 2,
             width=self.gui_style.halo_reproduction_thickness,
         )
-        self.screen.blit(font.render("Close to reproduction", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Close to reproduction halo", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         # Eating halo
         pygame.draw.circle(
             self.screen, self.gui_style.halo_eating_color, (x + r, y + r), r + 2, width=self.gui_style.halo_eating_thickness
         )
-        self.screen.blit(font.render("Eating", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         return y
