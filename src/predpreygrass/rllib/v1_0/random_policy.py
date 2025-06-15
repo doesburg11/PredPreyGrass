@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
     # initialize the grid_visualizer
     grid_size = (env.grid_size, env.grid_size)
-    visualizar = PyGameRenderer(grid_size)
+    visualizar = PyGameRenderer(grid_size, ennable_speed_slider=False)
     # Initialize viewer control + loop helper
     control = ViewerControlHelper()
     loop_helper = LoopControlHelper()
