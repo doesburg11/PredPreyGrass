@@ -2,18 +2,18 @@
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
-# Predator-Prey-Grass two-speed mutation environment
+# Predator-Prey-Grass mutating agents environment
 
 
 <p align="center">
-    <b>Evolution towards faster populations</b></p>
+    <b>Evaluation of trained nutating agents envrionment</b></p>
 <p align="center">
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000_two_speed.gif" width="600" height="500" />
 </p>
 
 ## Additional features with respect to the [base-environment](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/v1_0)
 
-* Initally, the Predator and Prey populations only consists of "slow" agents.
+* At the start of the evaluation, the Predator and Prey populations only consists of "slow" agents.
   * "Slow" agents (Speed 1): can move in a (9-position) [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood) range.
 
 * At reproduction, the offspring of both "slow" Predators and Prey, can mutate with a probability of 5% towards "fast" agents (and vice versa).
@@ -27,6 +27,11 @@
 
 
 ## Training and evaluation results
+
+**Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
+
+
+
 The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">

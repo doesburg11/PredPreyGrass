@@ -5,7 +5,7 @@
 # Predator-Prey-Grass
 ## Evolution in a multi-agent reinforcement learning gridworld
 
-We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms). This repo explores emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+This repo explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via MARL algorithms) in ecological systems. We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
     <b>The Predator-Prey-Grass base-environment</b></p>
@@ -13,7 +13,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
-## Features
+## Features [base enviortonment](/src/predpreygrass/rllib/v1_0/)
 
 * At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
@@ -22,27 +22,26 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
   * **Predators** (red)
   * **Prey** (blue)
 
-* Predator and Prey **learn movement strategies** based on their **partial observations**.
-* Both expend **energy** as they move around the grid and **replenish energy by eating**:
+* **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act balance survival, reproduction, and exploration.
 
-  * **Prey** eat **Grass** (green).
-  * **Predators** eat **Prey** by moving onto the same grid cell.
+  * Predator and Prey **learn movement strategies** based on their **partial observations**.
+  * Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
-* **Predator survival conditions**:
+    * **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
+    * **Predators** eat **Prey** by moving onto the same grid cell.
 
-  * Preventing starvation (when energy runs out).
+  * **Survival conditions**:
 
-* **Prey survival conditions**:
+    * Both Predator and Prey must act to prevent starvation (when energy runs out).
+    * Prey must act to prevent being eaten by a Predator
 
-  * Preventing starvation.
-  * Preventing being eaten by a Predator.
+  * **Reproduction conditions**:
 
-* **Reproduction conditions**:
+      * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
+      * New agents are spawned near their parent.
+- **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](src/predpreygrass/rllib/v1_0/config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalstic optimized incentive for both Predators and Prey.
 
-  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-  * New agents are spawned near their parent.
-
-* Grass agents gradually regenerate at the same spot after being eaten by Prey.
+* Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
 ## Environments:
 
@@ -50,7 +49,7 @@ We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dyn
 
 * [Mutating agents](src/predpreygrass/rllib/v2_0)
 
-* [Changing river]()
+* Changing river (adding water resource;under development)
 
 
 ## Installation of the repository

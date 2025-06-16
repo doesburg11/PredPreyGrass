@@ -23,20 +23,9 @@
 
 
 
-## Key Features:
-
-- **Sparse rewards**: agents only receive a reward when reproducing.
-- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
-- **Multi-Policy Training**:
-- **Gridworld Ecology**: Agents observe their local neighborhood with species-specific observation ranges; prey seek grass, predators hunt prey.
-- **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
-- **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
-
 
 
 ## Overview
-This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
-
 
 
 

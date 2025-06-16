@@ -2,11 +2,11 @@
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
-# Predator-Prey-Grass
+# Predator-Prey-Grass base environment
 
 
 <p align="center">
-    <b>The Predator-Prey-Grass base-environment</b></p>
+    <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
@@ -39,7 +39,6 @@
   * New agents are spawned close to their parent.
 
 * Grass agents regenerate at the same spot after being eaten by Prey.
-
 
 
 
