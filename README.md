@@ -13,7 +13,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     <img align="center" src="./assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
-## Features [base enviortonment](/src/predpreygrass/rllib/v1_0/)
+## Features [base enviornment](/src/predpreygrass/rllib/v1_0/)
 
 * At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 

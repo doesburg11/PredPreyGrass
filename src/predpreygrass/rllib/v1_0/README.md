@@ -11,75 +11,50 @@
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
-### Features
+### Features base environment
 
-* At startup Predator, Prey and Grass are randomly positioned.
+* At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
-* Predators and Prey are independantly (decentralized) trained via their own RLlib policy module.:
+* Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
   * **Predators** (red)
   * **Prey** (blue)
 
-* Predator and Prey **learn movement strategies** based on their **partial observations**.
-* Both expend **energy** as they move around the grid and **replenish energy by eating**:
+* **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
-  * **Prey** eat **Grass** (green).
-  * **Predators** eat **Prey** by moving onto the same grid cell.
+  * Predator and Prey **learn movement strategies** based on their **partial observations**.
+  * Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
-* **Predator death conditions**:
+    * **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
+    * **Predators** eat **Prey** by moving onto the same grid cell.
 
-  * Starvation (when energy runs out).
-* **Prey death conditions**:
+  * **Survival conditions**:
 
-  * Starvation.
-  * Being eaten by a Predator.
-* **Reproduction**:
+    * Both Predator and Prey must act to prevent starvation (when energy runs out).
+    * Prey must act to prevent being eaten by a Predator
 
-  * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-  * New agents are spawned close to their parent.
+  * **Reproduction conditions**:
 
-* Grass agents regenerate at the same spot after being eaten by Prey.
+      * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
+      * New agents are spawned near their parent.
+- **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](./../v1_0/config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalstic optimized incentive for both Predators and Prey.
 
-
-
-## Key Features:
-
-- **Sparse rewards**: agents only receive a reward when reproducing.
-- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must balance survival, reproduction, and exploration.
-- **Multi-Policy Training**:
-- **Gridworld Ecology**: Agents observe their local neighborhood with species-specific observation ranges; prey seek grass, predators hunt prey.
-- **Procedural Regeneration**: Grass regrows over time; life and death shape a shifting ecological landscape.
-- **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
+* Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
 
-
-## Overview
-This repo explores emergent and open ended behaviors in a multi-agent dynamic ecosystem of predators, prey, and regenerating grass. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
-
-
-
+## Training and evaluation results
 
 
 
 ## Centralized versus decentralized training
-The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework.
+The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the (legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3).
 
-<p align="center">
-    <b>Populations adapting to a changing environment by selection and learning</b></p>
-<p align="center">
-    <img align="center" src="./assets/images/gifs/predpreygrass_river.gif" width="400" height="400" />
-</p>
-
-
-### Configuration of centralized training
+### (Legacy) Configuration of centralized training
 The MARL environment [`predpregrass_base.py`](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
 
-## Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
+### Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
 
-
-
-### Configuration of decentralized training
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of experimentation with compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment configuration file (config_env.py).
+Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the [RLlib environments](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/) are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of attempting to optimize compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment [configuration file](./../v1_0/config_env.py)
 
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
