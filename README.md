@@ -22,7 +22,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
   * **Predators** (red)
   * **Prey** (blue)
 
-* **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act balance survival, reproduction, and exploration.
+* **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
   * Predator and Prey **learn movement strategies** based on their **partial observations**.
   * Both expend **energy** as they move around the grid and **replenish energy by eating**:
@@ -54,7 +54,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Installation of the repository
 
-**Editor used:** Visual Studio Code 1.100.3 on Linux Mint 22.0 Cinnamon
+**Editor used:** Visual Studio Code 1.101.0 on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository:
    ```bash
