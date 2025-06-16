@@ -13,33 +13,33 @@
 
 ### Features base environment
 
-* At startup Predator, Prey and Grass are randomly positioned on the gridworld.
+- At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
-* Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
+- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
-  * **Predators** (red)
-  * **Prey** (blue)
+  - **Predators** (red)
+  - **Prey** (blue)
 
-* **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
+- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
-  * Predator and Prey **learn movement strategies** based on their **partial observations**.
-  * Both expend **energy** as they move around the grid and **replenish energy by eating**:
+  - Predator and Prey **learn movement strategies** based on their **partial observations**.
+  - Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
-    * **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
-    * **Predators** eat **Prey** by moving onto the same grid cell.
+    - **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
+    - **Predators** eat **Prey** by moving onto the same grid cell.
 
-  * **Survival conditions**:
+  - **Survival conditions**:
 
-    * Both Predator and Prey must act to prevent starvation (when energy runs out).
-    * Prey must act to prevent being eaten by a Predator
+    - Both Predator and Prey must act to prevent starvation (when energy runs out).
+    - Prey must act to prevent being eaten by a Predator
 
-  * **Reproduction conditions**:
+  - **Reproduction conditions**:
 
-      * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-      * New agents are spawned near their parent.
+      - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
+      - New agents are spawned near their parent.
 - **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](./../v1_0/config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalstic optimized incentive for both Predators and Prey.
 
-* Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
+- Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
 
 ## Training and evaluation results
@@ -54,9 +54,9 @@
 
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
 
-* The trained policies make the ecosystem perpetuate much longer than a random policy.
+- The trained policies make the ecosystem perpetuate much longer than a random policy.
 
-* The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
+- The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
 
 <p align="center">
     <img src="../../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
