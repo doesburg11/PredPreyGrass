@@ -2,7 +2,7 @@
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
-# Predator-Prey-Grass mutating agents environment
+# [v2_0]: Predator-Prey-Grass mutating agents environment
 
 
 <p align="center">

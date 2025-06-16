@@ -2,7 +2,7 @@
 [![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
-# Predator-Prey-Grass base environment
+# [v1_0]: Predator-Prey-Grass base environment
 
 
 <p align="center">
