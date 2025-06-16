@@ -44,13 +44,13 @@
 
 ## Training and evaluation results
 
-[Training](./train_rllib_ppo_multiagent_env.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. as pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as:
+[Training](./train_rllib_ppo_multiagent_env.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. as pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
 - Predators hunting Prey
-- Multiple Predators colaborating/competing hunting Prey; increasing teh
+- Multiple Predators colaborating/competing hunting Prey; increasing the probability of Prey being caught
 - Prey finding and eating grass
 - Predators hovering around grass to ambush Prey
 - Prey trying to escape Predators
--
+
 
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
 
