@@ -44,10 +44,27 @@
 
 ## Training and evaluation results
 
+[Training](./train_rllib_ppo_multiagent_env.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. as pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging behaviors such as:
+- Predators hunting Prey
+- Multiple Predators colaborating/competing hunting Prey; increasing teh
+- Prey finding and eating grass
+- Predators hovering around grass to ambush Prey
+- Prey trying to escape Predators
+-
+
+Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
+
+* The trained policies make the ecosystem perpetuate much longer than a random policy.
+
+* The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
+
+<p align="center">
+    <img src="../../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+</p>
 
 
 ## Centralized versus decentralized training
-The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the (legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3).
+The described environment and training concept is implemented with seperated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](./../../../../src/predpreygrass/pettingzoo).
 
 ### (Legacy) Configuration of centralized training
 The MARL environment [`predpregrass_base.py`](./../../../../src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](./../../../../src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](./../../../../src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
