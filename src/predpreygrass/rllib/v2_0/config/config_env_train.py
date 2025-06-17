@@ -17,25 +17,25 @@ config_env = {
     "reproduction_reward_predator": 10.0,
     "reproduction_reward_prey": 10.0,
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,  # experimental with respect to energy_move_cost # 0.15
+    "energy_loss_per_step_predator": 0.15,  # 0.15
     "energy_loss_per_step_prey": 0.05,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy
     # Learning agents
-    "n_possible_speed_1_predators": 30,  # 30
-    "n_possible_speed_2_predators": 30,  # 30
+    "n_possible_speed_1_predators": 40,  # 30
+    "n_possible_speed_2_predators": 0,  # 30
     "n_possible_speed_1_prey": 40,  # 40
-    "n_possible_speed_2_prey": 40,  # 40
+    "n_possible_speed_2_prey": 0,  # 40
     "n_initial_active_speed_1_predator": 20,  # 5
-    "n_initial_active_speed_1_prey": 10,  # 7
+    "n_initial_active_speed_1_prey": 20,  # 7
     "n_initial_active_speed_2_predator": 0,  # 5
-    "n_initial_active_speed_2_prey": 10,  # 7
+    "n_initial_active_speed_2_prey": 0,  # 7
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # mutation settings
     "mutation_rate_predator": 0.0,  # mutation probability from speed_1 to speed_2
-    "mutation_rate_prey": 0.05,  # and vice versa
+    "mutation_rate_prey": 0.0,  # and vice versa
     # Grass settings
     "initial_num_grass": 50,  # 100
     "initial_energy_grass": 2.0,
