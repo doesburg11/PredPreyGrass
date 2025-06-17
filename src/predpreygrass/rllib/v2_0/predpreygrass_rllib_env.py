@@ -1,14 +1,5 @@
 """
-Predator-Prey Grass RLlib Environment
-experimental_6 - process movements externalization
-more or less succeeded in (_4). It seems that memory problems
-negatively affect training. Those menory problems likely due to
-other use of the (laptop) computer. This is very sensitive: any
-additional use of computer (Chrome, etc.) seems to cause problems.
-Restart computer seems necessary to get rid of the problems.
-Experimental_6:
--Externalize Spawning of new agents
-
+Predator-Prey-Grass RLlib Environment
 """
 
 # external libraries
@@ -280,9 +271,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Assign positions
         predator_positions = all_positions[: len([a for a in self.agents if "predator" in a])]
         prey_positions = all_positions[
-            len(predator_positions) : len(predator_positions) + len([a for a in self.agents if "prey" in a])
+            len(predator_positions): len(predator_positions) + len([a for a in self.agents if "prey" in a])
         ]
-        grass_positions = all_positions[len(predator_positions) + len(prey_positions) :]
+        grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
 
         # Assign predator positions and energy
         for i, agent in enumerate([a for a in self.agents if "predator" in a]):
