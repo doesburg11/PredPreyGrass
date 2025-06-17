@@ -21,7 +21,7 @@ import cv2
 import numpy as np
 
 SAVE_MOVIE = False
-SAVE_EVAL_PLOTS = False  # Save plots of evolution and prey death causes
+SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
@@ -92,7 +92,7 @@ def setup_environment_and_visualizer(now):
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(grid_size)
 
-    if SAVE_EVAL_PLOTS:
+    if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
         with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
             json.dump(config_env, f, indent=4)
@@ -358,7 +358,7 @@ if __name__ == "__main__":
     print_reward_summary(env, total_reward)
     print_prey_death_summary(env)
 
-    if SAVE_EVAL_PLOTS:
+    if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         save_prey_death_summary_to_file(env, eval_output_dir)
 
