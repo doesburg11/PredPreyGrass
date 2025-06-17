@@ -205,7 +205,8 @@ class PyGameRenderer:
 
         y = self._draw_legend_population_chart(x, y)
 
-        y = self._draw_legend_speed2_percent_chart(x, y)
+        if self._using_speed_prefix(agent_positions):
+            y = self._draw_legend_speed2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
         spacing = self.gui_style.legend_spacing
