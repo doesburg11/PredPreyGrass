@@ -17,7 +17,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * At startup Predator, Prey and Grass are randomly positioned on the gridworld.
 
-* Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
+* Predators and Prey are independently (decentralized) trained via their respective [RLlib policy module](https://docs.ray.io/en/master/rllib/rl-modules.html).:
 
   * **Predators** (red)
   * **Prey** (blue)
