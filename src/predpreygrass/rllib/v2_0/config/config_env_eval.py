@@ -34,8 +34,8 @@ config_env = {
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # mutation settings
-    "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
-    "mutation_rate_prey": 0.05,  # and vice versa
+    "mutation_rate_predator": 0.05,  # 0.05 # mutation probability from speed_1 to speed_2
+    "mutation_rate_prey": 0.05,  # 0.05 and vice versa
     # Grass settings
     "initial_num_grass": 50,  # 100
     "initial_energy_grass": 2.0,
