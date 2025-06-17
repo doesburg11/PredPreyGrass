@@ -27,14 +27,14 @@ config_env = {
     "n_possible_speed_2_predators": 30,  # 30
     "n_possible_speed_1_prey": 40,  # 40
     "n_possible_speed_2_prey": 40,  # 40
-    "n_initial_active_speed_1_predator": 10,  # 5
+    "n_initial_active_speed_1_predator": 20,  # 5
     "n_initial_active_speed_1_prey": 10,  # 7
-    "n_initial_active_speed_2_predator": 10,  # 5
+    "n_initial_active_speed_2_predator": 0,  # 5
     "n_initial_active_speed_2_prey": 10,  # 7
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # mutation settings
-    "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
+    "mutation_rate_predator": 0.0,  # mutation probability from speed_1 to speed_2
     "mutation_rate_prey": 0.05,  # and vice versa
     # Grass settings
     "initial_num_grass": 50,  # 100
