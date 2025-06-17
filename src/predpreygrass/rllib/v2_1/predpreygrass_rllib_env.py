@@ -26,172 +26,146 @@ class PredPreyGrass(MultiAgentEnv):
         if config is None:
             raise ValueError("Environment config must be provided explicitly.")
         self.config = config
+        self._initialize_from_config()
 
-        self.debug_mode = config.get("debug_mode", False)
-        # Set specific verbose flags based on debug mode
-        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
-        self.verbose_decay = config.get("verbose_decay", self.debug_mode)
-        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
-        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+    def _initialize_from_config(self):
+        cfg = self.config
+        self.debug_mode = cfg.get("debug_mode", False)
+        self.verbose_movement = cfg.get("verbose_movement", self.debug_mode)
+        self.verbose_decay = cfg.get("verbose_decay", self.debug_mode)
+        self.verbose_reproduction = cfg.get("verbose_reproduction", self.debug_mode)
+        self.verbose_engagement = cfg.get("verbose_engagement", self.debug_mode)
 
-        self.max_steps = config.get("max_steps", 10000)
-        self.rng = np.random.default_rng(config.get("seed", 42))
+        self.max_steps = cfg.get("max_steps", 10000)
+        self.rng = np.random.default_rng(cfg.get("seed", 42))
 
         # Rewards
-        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
-        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
-        self.reward_predator_step = config.get("reward_predator_step", 0.0)
-        self.reward_prey_step = config.get("reward_prey_step", 0.0)
-        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
-        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
-        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
+        self.reward_predator_catch_prey = cfg.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = cfg.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = cfg.get("reward_predator_step", 0.0)
+        self.reward_prey_step = cfg.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = cfg.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = cfg.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = cfg.get("reproduction_reward_prey", 10.0)
 
         # Energy settings
-        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
-        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
-        self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
-        self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
+        self.energy_loss_per_step_predator = cfg.get("energy_loss_per_step_predator", 0.15)
+        self.energy_loss_per_step_prey = cfg.get("energy_loss_per_step_prey", 0.05)
+        self.predator_creation_energy_threshold = cfg.get("predator_creation_energy_threshold", 12.0)
+        self.prey_creation_energy_threshold = cfg.get("prey_creation_energy_threshold", 8.0)
 
         # Learning agents
-        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
-        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
-        self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
-        self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
+        self.n_possible_speed_1_predators = cfg.get("n_possible_speed_1_predators", 25)
+        self.n_possible_speed_2_predators = cfg.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_prey = cfg.get("n_possible_speed_1_prey", 25)
+        self.n_possible_speed_2_prey = cfg.get("n_possible_speed_2_prey", 25)
 
-        self.n_initial_active_speed_1_predator = config.get("n_initial_active_speed_1_predator", 6)
-        self.n_initial_active_speed_2_predator = config.get("n_initial_active_speed_2_predator", 0)
-        self.n_initial_active_speed_1_prey = config.get("n_initial_active_speed_1_prey", 8)
-        self.n_initial_active_speed_2_prey = config.get("n_initial_active_speed_2_prey", 0)
+        self.n_initial_active_speed_1_predator = cfg.get("n_initial_active_speed_1_predator", 6)
+        self.n_initial_active_speed_2_predator = cfg.get("n_initial_active_speed_2_predator", 0)
+        self.n_initial_active_speed_1_prey = cfg.get("n_initial_active_speed_1_prey", 8)
+        self.n_initial_active_speed_2_prey = cfg.get("n_initial_active_speed_2_prey", 0)
 
-        self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
-        self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
+        self.initial_energy_predator = cfg.get("initial_energy_predator", 5.0)
+        self.initial_energy_prey = cfg.get("initial_energy_prey", 3.0)
 
         # Grid and Observation Settings
-        self.grid_size = config.get("grid_size", 10)
-        self.num_obs_channels = config.get("num_obs_channels", 4)
-        self.predator_obs_range = config.get("predator_obs_range", 7)
-        self.prey_obs_range = config.get("prey_obs_range", 5)
+        self.grid_size = cfg.get("grid_size", 10)
+        self.num_obs_channels = cfg.get("num_obs_channels", 4)
+        self.predator_obs_range = cfg.get("predator_obs_range", 7)
+        self.prey_obs_range = cfg.get("prey_obs_range", 5)
 
         # Grass settings
-        self.initial_num_grass = config.get("initial_num_grass", 25)
-        self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
-        self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
+        self.initial_num_grass = cfg.get("initial_num_grass", 25)
+        self.initial_energy_grass = cfg.get("initial_energy_grass", 2.0)
+        self.energy_gain_per_step_grass = cfg.get("energy_gain_per_step_grass", 0.2)
 
-        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
-        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
+        # Mutation
+        self.mutation_rate_predator = cfg.get("mutation_rate_predator", 0.1)
+        self.mutation_rate_prey = cfg.get("mutation_rate_prey", 0.1)
 
-        self.cumulative_rewards = {}  # Track total rewards per agent
+        # Agent tracking
+        self.agent_instance_counter = 0
+        self.agent_internal_ids = {}
+        self.agent_ages = {}
+        self.cumulative_rewards = {}
+        self.death_cause_prey = {}
         self.predator_speeds = [1, 2]
         self.prey_speeds = [1, 2]
+        self.agents_just_ate = set()
 
-        # Age tracking dictionary
-        self.agent_instance_counter: int = 0
-        self.agent_internal_ids: Dict[AgentID, int] = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
-        self.agent_ages: Dict[AgentID, int] = {}
-        # Tracking causes of death prey
-        self.death_cause_prey: Dict[int, str] = {}  # key = internal ID, value = "eaten" or "starved"
+        # Build agent lists
+        self.possible_agents = [
+            f"speed_1_predator_{i}" for i in range(self.n_possible_speed_1_predators)
+        ] + [
+            f"speed_2_predator_{i}" for i in range(self.n_possible_speed_2_predators)
+        ] + [
+            f"speed_1_prey_{i}" for i in range(self.n_possible_speed_1_prey)
+        ] + [
+            f"speed_2_prey_{i}" for i in range(self.n_possible_speed_2_prey)
+        ]
 
-        # POSSIBLE agents (all agents that *could* exist)
-        self.possible_agents = []
+        self.agents = [
+            f"speed_1_predator_{i}" for i in range(self.n_initial_active_speed_1_predator)
+        ] + [
+            f"speed_2_predator_{i}" for i in range(self.n_initial_active_speed_2_predator)
+        ] + [
+            f"speed_1_prey_{i}" for i in range(self.n_initial_active_speed_1_prey)
+        ] + [
+            f"speed_2_prey_{i}" for i in range(self.n_initial_active_speed_2_prey)
+        ]
 
-        for i in range(self.n_possible_speed_1_predators):
-            self.possible_agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_possible_speed_2_predators):
-            self.possible_agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_possible_speed_1_prey):
-            self.possible_agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_possible_speed_2_prey):
-            self.possible_agents.append(f"speed_2_prey_{j}")
+        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
-        # INITIALLY ACTIVE agents (subset of possible_agents)
-        self.agents = []
+        # Action range and movement mapping
+        self.speed_1_act_range = cfg.get("speed_1_action_range", 3)
+        self.speed_2_act_range = cfg.get("speed_2_action_range", 5)
 
-        for i in range(self.n_initial_active_speed_1_predator):
-            self.agents.append(f"speed_1_predator_{i}")
-        for i in range(self.n_initial_active_speed_2_predator):
-            self.agents.append(f"speed_2_predator_{i}")
-        for j in range(self.n_initial_active_speed_1_prey):
-            self.agents.append(f"speed_1_prey_{j}")
-        for j in range(self.n_initial_active_speed_2_prey):
-            self.agents.append(f"speed_2_prey_{j}")
-
-        # Non-learning agents (grass); not included in 'possible_agents' or 'agents'
-        self.grass_agents: List[AgentID] = [f"grass_{k}" for k in range(self.initial_num_grass)]
-
-        # Spaces
-        # Compute observation shapes
-        predator_obs_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
-        prey_obs_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
-
-        # Define observation space per agent
-        predator_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64)
-        prey_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=prey_obs_shape, dtype=np.float64)
-        self.agents_just_ate = set()  # agent_id → shows green ring this step
-
-        def _generate_action_map(range_size: int) -> dict[int, tuple[int, int]]:
-            """
-            Generate a mapping of action indices to movement vectors.
-            The movement vectors are defined as (dx, dy) pairs, where dx and dy
-            are the changes in x and y coordinates, respectively.
-
-            Args:
-                range_size (int): The size of the action range.
-            Returns:
-                dict[int, tuple[int, int]]: A dictionary mapping action indices to movement vectors.
-            """
+        def _generate_action_map(range_size: int):
             delta = (range_size - 1) // 2
             return {
                 i: (dx, dy)
-                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
+                for i, (dx, dy) in enumerate(
+                    (dx, dy)
+                    for dx in range(-delta, delta + 1)
+                    for dy in range(-delta, delta + 1)
+                )
             }
 
-        # Generate action maps for both speed levels
-        speed_1_act_range = self.config.get("speed_1_action_range", 3)
-        speed_2_act_range = self.config.get("speed_2_action_range", 5)
+        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
+        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
 
-        n_speed_1_actions = speed_1_act_range**2
-        n_speed_2_actions = speed_2_act_range**2
-
-        # Save both dictionaries for later lookup
-        self.action_to_move_tuple_speed_1_agents = _generate_action_map(speed_1_act_range)
-        self.action_to_move_tuple_speed_2_agents = _generate_action_map(speed_2_act_range)
-
-        # Create action space objects
-        speed_1_action_space = gymnasium.spaces.Discrete(n_speed_1_actions)
-        speed_2_action_space = gymnasium.spaces.Discrete(n_speed_2_actions)
-
-        # Assign spaces per agent ID
+        # Action/Observation spaces
         self.observation_spaces = {}
         self.action_spaces = {}
 
+        pred_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+        prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
+
+        pred_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=pred_shape, dtype=np.float64)
+        prey_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float64)
+
         for agent in self.possible_agents:
             if "predator" in agent:
-                self.observation_spaces[agent] = predator_obs_space
+                self.observation_spaces[agent] = pred_obs_space
             elif "prey" in agent:
                 self.observation_spaces[agent] = prey_obs_space
 
-            # Set action space depending on speed string in agent ID
             if "speed_1" in agent:
-                self.action_spaces[agent] = speed_1_action_space
+                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_1_act_range**2)
             elif "speed_2" in agent:
-                self.action_spaces[agent] = speed_2_action_space
+                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_2_act_range**2)
 
-        # Initialize grid_world_state and agent positions
-        self.agent_positions: Dict[AgentID, Tuple[int, int]] = {}
-        self.predator_positions: Dict[AgentID, Tuple[int, int]] = {}
-        self.prey_positions: Dict[AgentID, Tuple[int, int]] = {}
-        self.grass_positions: Dict[AgentID, Tuple[int, int]] = {}
+        # Grid and state memory
+        self.agent_positions = {}
+        self.predator_positions = {}
+        self.prey_positions = {}
+        self.grass_positions = {}
+        self.agent_energies = {}
+        self.grass_energies = {}
 
-        self.agent_energies: Dict[AgentID, float] = {}
-        self.grass_energies: Dict[AgentID, float] = {}
-        self.grid_world_state_shape: Tuple[int, int, int] = (
-            self.num_obs_channels,
-            self.grid_size,
-            self.grid_size,
-        )
-        self.initial_grid_world_state: NDArray[np.float64] = np.zeros(self.grid_world_state_shape, dtype=np.float64)
-        self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
-        # Mapping actions to movements
+        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
+        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
+        self.grid_world_state = self.initial_grid_world_state.copy()
 
     def reset(self, *, seed=None, options=None):
         """
