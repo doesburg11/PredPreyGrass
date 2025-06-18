@@ -17,278 +17,59 @@ class PredPreyGrass(MultiAgentEnv):
         self.config = config
         self._initialize_from_config()
 
-    def _initialize_from_config(self):
-        cfg = self.config
-        self.debug_mode = cfg.get("debug_mode", False)
-        self.verbose_movement = cfg.get("verbose_movement", self.debug_mode)
-        self.verbose_decay = cfg.get("verbose_decay", self.debug_mode)
-        self.verbose_reproduction = cfg.get("verbose_reproduction", self.debug_mode)
-        self.verbose_engagement = cfg.get("verbose_engagement", self.debug_mode)
-
-        self.max_steps = cfg.get("max_steps", 10000)
-        self.rng = np.random.default_rng(cfg.get("seed", 42))
-
-        # Rewards
-        self.reward_predator_catch_prey = cfg.get("reward_predator_catch_prey", 0.0)
-        self.reward_prey_eat_grass = cfg.get("reward_prey_eat_grass", 0.0)
-        self.reward_predator_step = cfg.get("reward_predator_step", 0.0)
-        self.reward_prey_step = cfg.get("reward_prey_step", 0.0)
-        self.penalty_prey_caught = cfg.get("penalty_prey_caught", 0.0)
-        self.reproduction_reward_predator = cfg.get("reproduction_reward_predator", 10.0)
-        self.reproduction_reward_prey = cfg.get("reproduction_reward_prey", 10.0)
-
-        # Energy settings
-        self.energy_loss_per_step_predator = cfg.get("energy_loss_per_step_predator", 0.15)
-        self.energy_loss_per_step_prey = cfg.get("energy_loss_per_step_prey", 0.05)
-        self.predator_creation_energy_threshold = cfg.get("predator_creation_energy_threshold", 12.0)
-        self.prey_creation_energy_threshold = cfg.get("prey_creation_energy_threshold", 8.0)
-
-        # Learning agents
-        self.n_possible_speed_1_predators = cfg.get("n_possible_speed_1_predators", 25)
-        self.n_possible_speed_2_predators = cfg.get("n_possible_speed_2_predators", 25)
-        self.n_possible_speed_1_prey = cfg.get("n_possible_speed_1_prey", 25)
-        self.n_possible_speed_2_prey = cfg.get("n_possible_speed_2_prey", 25)
-
-        self.n_initial_active_speed_1_predator = cfg.get("n_initial_active_speed_1_predator", 6)
-        self.n_initial_active_speed_2_predator = cfg.get("n_initial_active_speed_2_predator", 0)
-        self.n_initial_active_speed_1_prey = cfg.get("n_initial_active_speed_1_prey", 8)
-        self.n_initial_active_speed_2_prey = cfg.get("n_initial_active_speed_2_prey", 0)
-
-        self.initial_energy_predator = cfg.get("initial_energy_predator", 5.0)
-        self.initial_energy_prey = cfg.get("initial_energy_prey", 3.0)
-
-        # Grid and Observation Settings
-        self.grid_size = cfg.get("grid_size", 10)
-        self.num_obs_channels = cfg.get("num_obs_channels", 4)
-        self.predator_obs_range = cfg.get("predator_obs_range", 7)
-        self.prey_obs_range = cfg.get("prey_obs_range", 5)
-
-        # Grass settings
-        self.initial_num_grass = cfg.get("initial_num_grass", 25)
-        self.initial_energy_grass = cfg.get("initial_energy_grass", 2.0)
-        self.energy_gain_per_step_grass = cfg.get("energy_gain_per_step_grass", 0.2)
-
-        # Mutation
-        self.mutation_rate_predator = cfg.get("mutation_rate_predator", 0.1)
-        self.mutation_rate_prey = cfg.get("mutation_rate_prey", 0.1)
-
-        # Agent tracking
-        self.agent_instance_counter = 0
-        self.agent_internal_ids = {}
-        self.agent_ages = {}
-        self.cumulative_rewards = {}
-        self.death_cause_prey = {}
-        self.predator_speeds = [1, 2]
-        self.prey_speeds = [1, 2]
-        self.agents_just_ate = set()
-
-        # Build agent lists
-        self.possible_agents = [
-            f"speed_1_predator_{i}" for i in range(self.n_possible_speed_1_predators)
-        ] + [
-            f"speed_2_predator_{i}" for i in range(self.n_possible_speed_2_predators)
-        ] + [
-            f"speed_1_prey_{i}" for i in range(self.n_possible_speed_1_prey)
-        ] + [
-            f"speed_2_prey_{i}" for i in range(self.n_possible_speed_2_prey)
-        ]
-
-        self.agents = [
-            f"speed_1_predator_{i}" for i in range(self.n_initial_active_speed_1_predator)
-        ] + [
-            f"speed_2_predator_{i}" for i in range(self.n_initial_active_speed_2_predator)
-        ] + [
-            f"speed_1_prey_{i}" for i in range(self.n_initial_active_speed_1_prey)
-        ] + [
-            f"speed_2_prey_{i}" for i in range(self.n_initial_active_speed_2_prey)
-        ]
-
-        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
-
-        # Action range and movement mapping
-        self.speed_1_act_range = cfg.get("speed_1_action_range", 3)
-        self.speed_2_act_range = cfg.get("speed_2_action_range", 5)
-
-        def _generate_action_map(range_size: int):
-            delta = (range_size - 1) // 2
-            return {
-                i: (dx, dy)
-                for i, (dx, dy) in enumerate(
-                    (dx, dy)
-                    for dx in range(-delta, delta + 1)
-                    for dy in range(-delta, delta + 1)
-                )
-            }
-
-        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
-        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
-
-        # Action/Observation spaces
-        self.observation_spaces = {}
-        self.action_spaces = {}
-
-        pred_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
-        prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
-
-        pred_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=pred_shape, dtype=np.float64)
-        prey_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float64)
-
-        for agent in self.possible_agents:
-            if "predator" in agent:
-                self.observation_spaces[agent] = pred_obs_space
-            elif "prey" in agent:
-                self.observation_spaces[agent] = prey_obs_space
-
-            if "speed_1" in agent:
-                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_1_act_range**2)
-            elif "speed_2" in agent:
-                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_2_act_range**2)
-
-        # Grid and state memory
-        self.agent_positions = {}
-        self.predator_positions = {}
-        self.prey_positions = {}
-        self.grass_positions = {}
-        self.agent_energies = {}
-        self.grass_energies = {}
-
-        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
-        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
-        self.grid_world_state = self.initial_grid_world_state.copy()
-
     def reset(self, *, seed=None, options=None):
         """
         Reset the environment to its initial state.
         """
         super().reset(seed=seed)
-        self.current_step = 0
-        self.rng = np.random.default_rng(seed)
+        self._init_reset_variables(seed)
 
-        # Initialize grid_world_state
-        self.grid_world_state = self.initial_grid_world_state.copy()
-
-        # reset entities (agents+grass) positions and energies
-        self.agent_positions = {}
-        self.predator_positions = {}
-        self.prey_positions = {}
-        self.grass_positions = {}
-
-        self.agent_energies = {}
-        self.grass_energies = {}
-        self.cumulative_rewards = {agent: 0 for agent in self.agents}
-
-        # reset age tracking logic
-        self.agent_instance_counter = 0
-        self.agent_ages = {}  # Maps internal ID -> age
-        self.agent_internal_ids = {}  # Maps agent_id (e.g., 'speed_1_prey_0') -> internal ID
-
-        self.death_cause_prey = {}  # key = internal ID, value = "eaten" or "starved"
-
-        # construct agent lists based on speed-aware config ---
-        self.agents = []
-        self.possible_agents = []
-
-        # Add all possible speed-1 and speed-2 predator agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
-                self.possible_agents.append(f"speed_{speed}_predator_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
-                agent_id = f"speed_{speed}_predator_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-        # Add all possible speed-1 and speed-2 prey agents
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
-                self.possible_agents.append(f"speed_{speed}_prey_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
-                agent_id = f"speed_{speed}_prey_{i}"
-                self.agents.append(agent_id)
-                self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-        # Grass agent IDs (unchanged)
-        self.grass_agents = [f"grass_{k}" for k in range(self.initial_num_grass)]
-
-        def generate_random_positions(grid_size: int, num_positions: int):
-            """
-            Generate unique random positions on a grid.
-
-            Args:
-                grid_size (int): The size of the grid (assumes square grid).
-                num_positions (int): The number of unique positions to generate.
-
-            Returns:
-                List[Tuple[int, int]]: A list of unique (x, y) position tuples.
-            """
-            if num_positions > grid_size * grid_size:
-                raise ValueError("Cannot place more unique positions than grid cells.")
-
-            rng = np.random.default_rng(seed)
-            positions = set()
-
-            while len(positions) < num_positions:
-                pos = tuple(rng.integers(0, grid_size, size=2))
-                positions.add(pos)  # Ensures uniqueness because positions is a set
-
-            return list(positions)
-
-        # Place agents and grass
         total_entities = len(self.agents) + len(self.grass_agents)
-        all_positions = generate_random_positions(self.grid_size, total_entities)
+        all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
 
-        # Assign positions
-        predator_positions = all_positions[: len([a for a in self.agents if "predator" in a])]
-        prey_positions = all_positions[
-            len(predator_positions): len(predator_positions) + len([a for a in self.agents if "prey" in a])
-        ]
-        grass_positions = all_positions[len(predator_positions) + len(prey_positions):]
+        predator_list = [a for a in self.agents if "predator" in a]
+        prey_list = [a for a in self.agents if "prey" in a]
 
-        # Assign predator positions and energy
-        for i, agent in enumerate([a for a in self.agents if "predator" in a]):
+        predator_positions = all_positions[:len(predator_list)]
+        prey_positions = all_positions[len(predator_list):len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+
+        for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
-            self.agent_positions[agent] = pos
-            self.predator_positions[agent] = pos
+            self.agent_positions[agent] = self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
             self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.cumulative_rewards[agent] = 0
 
-        # Assign prey positions and energy
-        for i, agent in enumerate([a for a in self.agents if "prey" in a]):
+        for i, agent in enumerate(prey_list):
             pos = prey_positions[i]
-            self.agent_positions[agent] = pos
-            self.prey_positions[agent] = pos
+            self.agent_positions[agent] = self.prey_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
+            self.cumulative_rewards[agent] = 0
 
-        # Assign grass positions and energy
         for i, grass in enumerate(self.grass_agents):
             pos = grass_positions[i]
             self.grass_positions[grass] = pos
             self.grass_energies[grass] = self.initial_energy_grass
             self.grid_world_state[3, *pos] = self.initial_energy_grass
 
-        # Track counts
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
         self.current_num_grass = len(self.grass_positions)
 
-        # Generate observations
         observations = {agent: self._get_observation(agent) for agent in self.agents}
-
         return observations, {}
 
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+        # For stepwise display eating in grid
+        self.agents_just_ate.clear()
+
         # step 0: check for truncation
         truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
         if truncation_result is not None:
             return truncation_result
-
-        # For stepwise display eating in grid
-        self.agents_just_ate.clear()
 
         # Step 1: If not truncated; process energy depletion due to time steps and update age
         self._apply_energy_decay_per_step(action_dict)
@@ -1014,3 +795,210 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = snapshot["active_num_predators"]
         self.active_num_prey = snapshot["active_num_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()
+
+    def _initialize_from_config(self):
+        cfg = self.config
+        self.debug_mode = cfg.get("debug_mode", False)
+        self.verbose_movement = cfg.get("verbose_movement", self.debug_mode)
+        self.verbose_decay = cfg.get("verbose_decay", self.debug_mode)
+        self.verbose_reproduction = cfg.get("verbose_reproduction", self.debug_mode)
+        self.verbose_engagement = cfg.get("verbose_engagement", self.debug_mode)
+
+        self.max_steps = cfg.get("max_steps", 10000)
+        self.rng = np.random.default_rng(cfg.get("seed", 42))
+
+        # Rewards
+        self.reward_predator_catch_prey = cfg.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = cfg.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = cfg.get("reward_predator_step", 0.0)
+        self.reward_prey_step = cfg.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = cfg.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = cfg.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = cfg.get("reproduction_reward_prey", 10.0)
+
+        # Energy settings
+        self.energy_loss_per_step_predator = cfg.get("energy_loss_per_step_predator", 0.15)
+        self.energy_loss_per_step_prey = cfg.get("energy_loss_per_step_prey", 0.05)
+        self.predator_creation_energy_threshold = cfg.get("predator_creation_energy_threshold", 12.0)
+        self.prey_creation_energy_threshold = cfg.get("prey_creation_energy_threshold", 8.0)
+
+        # Learning agents
+        self.n_possible_speed_1_predators = cfg.get("n_possible_speed_1_predators", 25)
+        self.n_possible_speed_2_predators = cfg.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_prey = cfg.get("n_possible_speed_1_prey", 25)
+        self.n_possible_speed_2_prey = cfg.get("n_possible_speed_2_prey", 25)
+
+        self.n_initial_active_speed_1_predator = cfg.get("n_initial_active_speed_1_predator", 6)
+        self.n_initial_active_speed_2_predator = cfg.get("n_initial_active_speed_2_predator", 0)
+        self.n_initial_active_speed_1_prey = cfg.get("n_initial_active_speed_1_prey", 8)
+        self.n_initial_active_speed_2_prey = cfg.get("n_initial_active_speed_2_prey", 0)
+
+        self.initial_energy_predator = cfg.get("initial_energy_predator", 5.0)
+        self.initial_energy_prey = cfg.get("initial_energy_prey", 3.0)
+
+        # Grid and Observation Settings
+        self.grid_size = cfg.get("grid_size", 10)
+        self.num_obs_channels = cfg.get("num_obs_channels", 4)
+        self.predator_obs_range = cfg.get("predator_obs_range", 7)
+        self.prey_obs_range = cfg.get("prey_obs_range", 5)
+
+        # Grass settings
+        self.initial_num_grass = cfg.get("initial_num_grass", 25)
+        self.initial_energy_grass = cfg.get("initial_energy_grass", 2.0)
+        self.energy_gain_per_step_grass = cfg.get("energy_gain_per_step_grass", 0.2)
+
+        # Mutation
+        self.mutation_rate_predator = cfg.get("mutation_rate_predator", 0.1)
+        self.mutation_rate_prey = cfg.get("mutation_rate_prey", 0.1)
+
+        # Agent tracking
+        self.agent_instance_counter = 0
+        self.agent_internal_ids = {}
+        self.agent_ages = {}
+        self.cumulative_rewards = {}
+        self.death_cause_prey = {}
+        self.predator_speeds = [1, 2]
+        self.prey_speeds = [1, 2]
+        self.agents_just_ate = set()
+
+        # Build agent lists
+        self.possible_agents = [
+            f"speed_1_predator_{i}" for i in range(self.n_possible_speed_1_predators)
+        ] + [
+            f"speed_2_predator_{i}" for i in range(self.n_possible_speed_2_predators)
+        ] + [
+            f"speed_1_prey_{i}" for i in range(self.n_possible_speed_1_prey)
+        ] + [
+            f"speed_2_prey_{i}" for i in range(self.n_possible_speed_2_prey)
+        ]
+
+        self.agents = [
+            f"speed_1_predator_{i}" for i in range(self.n_initial_active_speed_1_predator)
+        ] + [
+            f"speed_2_predator_{i}" for i in range(self.n_initial_active_speed_2_predator)
+        ] + [
+            f"speed_1_prey_{i}" for i in range(self.n_initial_active_speed_1_prey)
+        ] + [
+            f"speed_2_prey_{i}" for i in range(self.n_initial_active_speed_2_prey)
+        ]
+
+        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
+
+        # Action range and movement mapping
+        self.speed_1_act_range = cfg.get("speed_1_action_range", 3)
+        self.speed_2_act_range = cfg.get("speed_2_action_range", 5)
+
+        def _generate_action_map(range_size: int):
+            delta = (range_size - 1) // 2
+            return {
+                i: (dx, dy)
+                for i, (dx, dy) in enumerate(
+                    (dx, dy)
+                    for dx in range(-delta, delta + 1)
+                    for dy in range(-delta, delta + 1)
+                )
+            }
+
+        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
+        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
+
+        # Action/Observation spaces
+        self.observation_spaces = {}
+        self.action_spaces = {}
+
+        pred_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+        prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
+
+        pred_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=pred_shape, dtype=np.float64)
+        prey_obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float64)
+
+        for agent in self.possible_agents:
+            if "predator" in agent:
+                self.observation_spaces[agent] = pred_obs_space
+            elif "prey" in agent:
+                self.observation_spaces[agent] = prey_obs_space
+
+            if "speed_1" in agent:
+                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_1_act_range**2)
+            elif "speed_2" in agent:
+                self.action_spaces[agent] = gymnasium.spaces.Discrete(self.speed_2_act_range**2)
+
+        # Grid and state memory
+        self.agent_positions = {}
+        self.predator_positions = {}
+        self.prey_positions = {}
+        self.grass_positions = {}
+        self.agent_energies = {}
+        self.grass_energies = {}
+
+        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
+        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
+        self.grid_world_state = self.initial_grid_world_state.copy()
+
+    def _init_reset_variables(self, seed):
+        self.current_step = 0
+        self.rng = np.random.default_rng(seed)
+
+        self.grid_world_state = self.initial_grid_world_state.copy()
+        self.agent_positions = {}
+        self.predator_positions = {}
+        self.prey_positions = {}
+        self.grass_positions = {}
+        self.agent_energies = {}
+        self.grass_energies = {}
+
+        self.agent_instance_counter = 0
+        self.agent_internal_ids = {}
+        self.agent_ages = {}
+        self.death_cause_prey = {}
+        self.agents_just_ate = set()
+        self.cumulative_rewards = {}
+
+        self.agents = []
+        self.possible_agents = []
+
+        for speed in [1, 2]:
+            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
+                self.possible_agents.append(f"speed_{speed}_predator_{i}")
+            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
+                aid = f"speed_{speed}_predator_{i}"
+                self.agents.append(aid)
+                self.agent_internal_ids[aid] = self.agent_instance_counter
+                self.agent_ages[self.agent_instance_counter] = 0
+                self.agent_instance_counter += 1
+
+            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
+                self.possible_agents.append(f"speed_{speed}_prey_{i}")
+            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
+                aid = f"speed_{speed}_prey_{i}"
+                self.agents.append(aid)
+                self.agent_internal_ids[aid] = self.agent_instance_counter
+                self.agent_ages[self.agent_instance_counter] = 0
+                self.agent_instance_counter += 1
+
+        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
+
+    def _generate_random_positions(self, grid_size: int, num_positions: int, seed=None):
+        """
+        Generate unique random positions on a grid using a local RNG seeded per reset,
+        to ensure consistent and reproducible placement across runs.
+
+        Args:
+            grid_size (int): Size of the square grid.
+            num_positions (int): Number of unique positions to generate.
+            seed (int or None): Seed for local RNG (passed from reset()).
+
+        Returns:
+            List[Tuple[int, int]]: Unique (x, y) positions.
+        """
+        if num_positions > grid_size * grid_size:
+            raise ValueError("Cannot place more unique positions than grid cells.")
+
+        rng = np.random.default_rng(seed)
+        positions = set()
+
+        while len(positions) < num_positions:
+            pos = tuple(rng.integers(0, grid_size, size=2))
+            positions.add(pos)
+
+        return list(positions)
