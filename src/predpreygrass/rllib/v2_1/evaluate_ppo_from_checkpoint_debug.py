@@ -74,8 +74,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policy"
-    checkpoint_root = "/PPO_2025-06-12_23-54-40/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_1/trained_policies"
+    checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
@@ -84,7 +84,7 @@ def setup_environment_and_visualizer(now):
 
     module_paths = {
         pid: os.path.join(checkpoint_path, "learner_group", "learner", "rl_module", pid)
-        for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]
+        for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]  # remove any untrained agents if needed
     }
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
