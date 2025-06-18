@@ -1,22 +1,11 @@
 """
 Predator-Prey Grass RLlib Environment
-experimental_6 - process movements externalization
-more or less succeeded in (_4). It seems that memory problems
-negatively affect training. Those menory problems likely due to
-other use of the (laptop) computer. This is very sensitive: any
-additional use of computer (Chrome, etc.) seems to cause problems.
-Restart computer seems necessary to get rid of the problems.
-Experimental_6:
--Externalize Spawning of new agents
-
 """
-
 # external libraries
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
+from ray.rllib.utils.typing import AgentID, Tuple
 import numpy as np
-from numpy.typing import NDArray
 import math
 
 
