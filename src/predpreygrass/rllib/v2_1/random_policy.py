@@ -1,70 +1,55 @@
-from predpreygrass.utils.renderer_with_river import MatPlotLibRenderer, CombinedEvolutionVisualizer
+"""
+Random policy for the PredPreyGrass environment.
+No backward stepping is implemented in this version,
+because that is pointless for debugging and testing
+with a random policy.
+"""
 from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_1.config.config_env_random import config_env
+from predpreygrass.utils.pygame_renderer import PyGameRenderer
+import pygame
 
-# from time import sleep
 
-verbose_grid_state = False
-verbose_observation = False
+def env_creator(config):
+    return PredPreyGrass(config)
 
-seed_value = config_env.get("seed", 42)
+
+def random_policy_pi(agent_id, env):
+    return env.action_spaces[agent_id].sample()
+
 
 if __name__ == "__main__":
-    env = PredPreyGrass(config=config_env)
-
-    for agent in env.agents:
-        env.action_spaces[agent].seed(seed_value)
-
-    observations, _ = env.reset(seed=seed_value)
-
-    if verbose_grid_state:
-        print("\nRESET:")
-        env._print_grid_from_positions()
-        env._print_grid_from_state()
+    env = env_creator(config_env)
+    observations, _ = env.reset(seed=config_env.get("seed", 42))
 
     grid_size = (env.grid_size, env.grid_size)
-    all_agents = env.possible_agents + env.grass_agents
+    visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
+    clock = pygame.time.Clock()
 
-    grid_visualizer = MatPlotLibRenderer(grid_size, all_agents, trace_length=5, show_gridlines=False, scale=2)
-    combined_evolution_visualizer = CombinedEvolutionVisualizer()
+    # Run loop until termination
+    terminated = False
+    truncated = False
 
-    for step in range(env.max_steps):
-        action_dict = {agent: env.action_spaces[agent].sample() for agent in env.agents}
-        observations, rewards, terminations, truncations, info = env.step(action_dict)
-        combined_evolution_visualizer.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
+    while not terminated and not truncated:
+        # --- Step forward using random actions ---
+        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
+        observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
-        if verbose_observation:
-            for agent in env.agents:
-                print(f"\nAgent: {agent} position: {env.agent_positions[agent]}")
-                print("Walls")
-                print(observations[agent][0])
-                print("Predators")
-                print(observations[agent][1])
-                print("Prey")
-                print(observations[agent][2])
-                print("Grass")
-                print(observations[agent][3])
-                print()
+        # --- Update visualizer ---
+        visualizer.update(
+            agent_positions=env.agent_positions,
+            grass_positions=env.grass_positions,
+            agent_energies=env.agent_energies,
+            grass_energies=env.grass_energies,
+            agents_just_ate=env.agents_just_ate,
+            step=env.current_step,
+        )
 
-        if verbose_grid_state:
-            print(f"Step {step}:")
-            print("-----------------------------------------")
-            print("Actions : ", action_dict)
-            env._print_grid_from_positions()
-            env._print_grid_from_state()
-            print("-----------------------------------------")
+        terminated = any(terminations.values())
+        truncated = any(truncations.values())
 
-        merged_positions = {**env.agent_positions, **env.grass_positions}
-        grid_visualizer.update(merged_positions, step, grid_world_state=env.grid_world_state)
+        # Frame rate control
+        clock.tick(visualizer.target_fps)
 
-        if terminations["__all__"]:
-            print("Environment terminated by termination.")
-            break
-        if truncations["__all__"]:
-            print("Environment terminated by truncation.")
-            break
-
-        # sleep(0.1)
-
-    combined_evolution_visualizer.plot()
-    grid_visualizer.close()
+    visualizer.close()
+    env.close()
