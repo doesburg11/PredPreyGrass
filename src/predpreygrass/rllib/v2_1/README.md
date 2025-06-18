@@ -34,7 +34,7 @@ The base-environment setup is changed to enable mutations with the reproduction 
 
 <p align="center">
     <img src="../../../../assets/images/readme/tensorboard_incl_and_excl_speed_2.png" width="880" height="180"/>
-    <p align="center"><b>Tensorboard training results of low-speed and high-speed agents</b></p>
+    <p align="center"><b>Training results of low- & high-speed agents combined and low-speed agents only</b></p>
 </p>
 
 The training results suggests that the population of the low-speed agents diminishes relative to the population of high-speed agents, since (average) rewards are directly and solely linked to reproduction success for all agent groups. This crowding out of low-speed agents occurs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—apparently are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
