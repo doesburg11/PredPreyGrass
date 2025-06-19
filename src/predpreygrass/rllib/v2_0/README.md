@@ -1,7 +1,3 @@
-[![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
-[![RLlib](https://img.shields.io/badge/RLlib-v2.46.0-blue)](https://docs.ray.io/en/latest/rllib/)
-
-
 # [v2_0]: Predator-Prey-Grass mutating agents environment
 
 
@@ -33,7 +29,7 @@
 The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">
-    <img src="../../../../assets/images/readme/tensorboard_incl_and_excl_speed_2.png" width="880" height="180"/>
+    <img src="../../../../assets/images/readme/tensorboard_incl_and_excl_speed_2.png" width="880" height="480"/>
     <p align="center"><b>Training results of low- & high-speed agents combined and low-speed agents only</b></p>
 </p>
 
