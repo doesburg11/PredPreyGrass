@@ -30,9 +30,9 @@ class PredPreyGrass(MultiAgentEnv):
         predator_list = [a for a in self.agents if "predator" in a]
         prey_list = [a for a in self.agents if "prey" in a]
 
-        predator_positions = all_positions[:len(predator_list)]
-        prey_positions = all_positions[len(predator_list):len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+        predator_positions = all_positions[: len(predator_list)]
+        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
@@ -862,25 +862,19 @@ class PredPreyGrass(MultiAgentEnv):
         self.agents_just_ate = set()
 
         # Build agent lists
-        self.possible_agents = [
-            f"speed_1_predator_{i}" for i in range(self.n_possible_speed_1_predators)
-        ] + [
-            f"speed_2_predator_{i}" for i in range(self.n_possible_speed_2_predators)
-        ] + [
-            f"speed_1_prey_{i}" for i in range(self.n_possible_speed_1_prey)
-        ] + [
-            f"speed_2_prey_{i}" for i in range(self.n_possible_speed_2_prey)
-        ]
+        self.possible_agents = (
+            [f"speed_1_predator_{i}" for i in range(self.n_possible_speed_1_predators)]
+            + [f"speed_2_predator_{i}" for i in range(self.n_possible_speed_2_predators)]
+            + [f"speed_1_prey_{i}" for i in range(self.n_possible_speed_1_prey)]
+            + [f"speed_2_prey_{i}" for i in range(self.n_possible_speed_2_prey)]
+        )
 
-        self.agents = [
-            f"speed_1_predator_{i}" for i in range(self.n_initial_active_speed_1_predator)
-        ] + [
-            f"speed_2_predator_{i}" for i in range(self.n_initial_active_speed_2_predator)
-        ] + [
-            f"speed_1_prey_{i}" for i in range(self.n_initial_active_speed_1_prey)
-        ] + [
-            f"speed_2_prey_{i}" for i in range(self.n_initial_active_speed_2_prey)
-        ]
+        self.agents = (
+            [f"speed_1_predator_{i}" for i in range(self.n_initial_active_speed_1_predator)]
+            + [f"speed_2_predator_{i}" for i in range(self.n_initial_active_speed_2_predator)]
+            + [f"speed_1_prey_{i}" for i in range(self.n_initial_active_speed_1_prey)]
+            + [f"speed_2_prey_{i}" for i in range(self.n_initial_active_speed_2_prey)]
+        )
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
@@ -892,11 +886,7 @@ class PredPreyGrass(MultiAgentEnv):
             delta = (range_size - 1) // 2
             return {
                 i: (dx, dy)
-                for i, (dx, dy) in enumerate(
-                    (dx, dy)
-                    for dx in range(-delta, delta + 1)
-                    for dy in range(-delta, delta + 1)
-                )
+                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
             }
 
         self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)

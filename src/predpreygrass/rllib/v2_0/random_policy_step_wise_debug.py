@@ -1,7 +1,7 @@
 import pygame
 from predpreygrass.utils.renderer import MatPlotLibRenderer
-from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass  
-from predpreygrass.rllib.v2_1.config.config_env_step_wise import config_env
+from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_0.config.config_env_step_wise import config_env
 import numpy as np
 
 # Ensure all elements are displayed
