@@ -2,7 +2,7 @@
 output/
 # Rllib archive files
 src/predpreygrass/rllib/archive/
-src/predpreygrass/rllib/v2_0/trained_policy/
+# src/predpreygrass/rllib/v2_0/trained_policy/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
