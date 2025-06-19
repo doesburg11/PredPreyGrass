@@ -20,8 +20,8 @@ import pygame
 import cv2
 import numpy as np
 
-SAVE_MOVIE = False
 SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
+SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
