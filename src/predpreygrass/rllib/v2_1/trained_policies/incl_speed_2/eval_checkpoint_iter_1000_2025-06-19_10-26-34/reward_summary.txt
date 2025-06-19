@@ -99,9 +99,7 @@ speed_2_predator_23: 10.00
 
 --- Aggregated Rewards ---
 Total number of steps            : 999
-Total Low-Speed Predator Reward  : 210.00
-Total Low-Speed Prey Reward      : 150.00
-Total Low-Speed Agent Reward     : 360.00
-Total High-Speed Predator Reward : 360.00
-Total High-Speed Prey Reward     : 210.00
-Total High-Speed Agent Reward    : 570.00
+Total Speed 1 Predator Reward: 210.00
+Total Speed 2 Predator Reward: 360.00
+Total Speed 1 Prey Reward: 150.00
+Total Speed 2 Prey Reward: 210.00
