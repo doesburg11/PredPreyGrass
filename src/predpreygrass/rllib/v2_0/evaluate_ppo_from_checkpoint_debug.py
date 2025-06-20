@@ -74,7 +74,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_1/trained_policies"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies"
     checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
@@ -159,14 +159,12 @@ def step_forward(
     SAVE_MOVIE,
     video_writer,
 ):
-    action_dict = {
-        agent_id: policy_pi(
-            observations[agent_id],
-            rl_modules[policy_mapping_fn(agent_id)],
-            deterministic=True,
-        )
-        for agent_id in env.agents
-    }
+    action_dict = {}
+    for agent_id in env.agents:
+        group = policy_mapping_fn(agent_id)
+        if group not in rl_modules:
+            continue  # Skip untrained / excluded agent groups
+        action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
