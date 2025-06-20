@@ -3,8 +3,8 @@ Evaluation code for evaluating a trained PPO agent from a checkpoint.
 This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation.
 """
-from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v2_0.config.config_env_eval import config_env
+from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v2_1.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.utils.pygame_renderer import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -20,7 +20,7 @@ import pygame
 import cv2
 import numpy as np
 
-SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
+SAVE_EVAL_RESULTS = True  # Save plots of evolution and prey death causes
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
@@ -53,8 +53,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies"
-    checkpoint_root = "/excl_speed_2/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_1/trained_policies"
+    checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
@@ -311,6 +311,9 @@ if __name__ == "__main__":
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         save_prey_death_summary_to_file(env, eval_output_dir)
 
-    run_post_evaluation_plots(ceviz, pdviz)
+    # Always show plots on screen
+    ceviz.plot()
+    pdviz.plot()
+
     pygame.quit()
     ray.shutdown()
