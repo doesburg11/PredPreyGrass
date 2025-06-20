@@ -54,7 +54,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies"
-    checkpoint_root = "/excl_speed_2/"
+    checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
@@ -311,6 +311,9 @@ if __name__ == "__main__":
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         save_prey_death_summary_to_file(env, eval_output_dir)
 
-    run_post_evaluation_plots(ceviz, pdviz)
+    # Always show plots on screen
+    ceviz.plot()
+    pdviz.plot()
+
     pygame.quit()
     ray.shutdown()
