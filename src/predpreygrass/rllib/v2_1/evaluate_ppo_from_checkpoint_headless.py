@@ -14,11 +14,13 @@ SAVE_EVAL_RESULTS = True
 MAX_STEPS = 1000
 SEED = 1
 
+
 def policy_mapping_fn(agent_id):
     parts = agent_id.split("_")
     if len(parts) >= 3:
         return "_".join(parts[:3])
     raise ValueError(f"Invalid agent_id format: {agent_id}")
+
 
 def policy_pi(observation, policy_module, deterministic=True):
     obs_tensor = torch.tensor(observation).float().unsqueeze(0)
@@ -28,6 +30,7 @@ def policy_pi(observation, policy_module, deterministic=True):
     if logits is None:
         raise KeyError("Missing 'action_dist_inputs' in output.")
     return torch.argmax(logits, dim=-1).item() if deterministic else torch.distributions.Categorical(logits=logits).sample().item()
+
 
 def setup_environment_and_modules():
     checkpoint_root = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies/excl_speed_2/checkpoint_iter_1000"
@@ -40,6 +43,7 @@ def setup_environment_and_modules():
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
     env = PredPreyGrass(config=config_env)
     return env, rl_modules, checkpoint_root
+
 
 if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
