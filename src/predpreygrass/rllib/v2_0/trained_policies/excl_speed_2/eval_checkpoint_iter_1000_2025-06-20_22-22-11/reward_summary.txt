@@ -56,8 +56,6 @@ speed_1_prey_24: 0.00
 speed_1_prey_25: 10.00
 
 --- Aggregated Rewards ---
-Total number of steps            : 999
+Total number of steps: 999
 Total Speed 1 Predator Reward: 270.00
-Total Speed 2 Predator Reward: 0.00
 Total Speed 1 Prey Reward: 260.00
-Total Speed 2 Prey Reward: 0.00
