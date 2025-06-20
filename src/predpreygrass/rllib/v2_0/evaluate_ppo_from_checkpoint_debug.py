@@ -1,6 +1,6 @@
 """
 Evaluation code for evaluating a trained PPO agent from a checkpoint.
-This scripts ha an advanced viewer control system that allows stepping
+This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation.
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
@@ -25,67 +25,55 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
-seed = 1  # 42 # Optional: set to integer for reproducibility
-
-# Initialize Ray
-ray.init(ignore_reinit_error=True)
-
 
 def env_creator(config):
     return PredPreyGrass(config)
 
 
-# Policy mapping function
 def policy_mapping_fn(agent_id, *args, **kwargs):
     parts = agent_id.split("_")
-    speed = parts[1]
-    role = parts[2]
-    return f"speed_{speed}_{role}"
+    if len(parts) >= 3:
+        return "_".join(parts[:3])
+    else:
+        raise ValueError(f"Unrecognized agent_id format: {agent_id}")
 
 
 def policy_pi(observation, policy_module, deterministic=True):
-    """
-    Compute the action for a single observation using the given policy module.
-
-    Args:
-        observation (np.array or torch.Tensor): The observation of the agent.
-        policy_module: RLlib policy module (DefaultPPOTorchRLModule or similar).
-        deterministic (bool): If True, take argmax (greedy). If False, sample from distribution.
-
-    Returns:
-        int: The selected action (Discrete).
-    """
     obs_tensor = torch.tensor(observation).float().unsqueeze(0)
-
     with torch.no_grad():
         action_output = policy_module._forward_inference({"obs": obs_tensor})
-
     logits = action_output.get("action_dist_inputs")
     if logits is None:
         raise KeyError("policy_pi: action_dist_inputs not found in action_output.")
-
     if deterministic:
-        action = torch.argmax(logits, dim=-1).item()  # greedy action selection
+        return torch.argmax(logits, dim=-1).item()
     else:
-        dist = torch.distributions.Categorical(logits=logits)  # sample from the categorical distribution
-        action = dist.sample().item()
-
-    return action
+        dist = torch.distributions.Categorical(logits=logits)
+        return dist.sample().item()
 
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies"
-    checkpoint_root = "/incl_speed_2/"
+    checkpoint_root = "/excl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
 
-    module_paths = {
-        pid: os.path.join(checkpoint_path, "learner_group", "learner", "rl_module", pid)
-        for pid in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]  # remove any untrained agents if needed
-    }
+    rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
+    module_paths = {}
+
+    if os.path.isdir(rl_module_dir):
+        for pid in os.listdir(rl_module_dir):
+            path = os.path.join(rl_module_dir, pid)
+            if os.path.isdir(path):
+                module_paths[pid] = path
+            else:
+                print(f"[INFO] Skipping non-directory in rl_module: {pid}")
+    else:
+        raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
+
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
     env = env_creator(config=config_env)
@@ -111,19 +99,13 @@ def step_backwards_if_requested(control, env, snapshots, time_steps, predator_co
             snapshots.pop()
             env.restore_state_snapshot(snapshots[-1])
             print(f"[ViewerControl] Step Backward → Step {env.current_step}")
-
-            # REGENERATE observations
             observations = {agent: env._get_observation(agent) for agent in env.agents}
-
-            # Rewind tracking
             if time_steps:
                 time_steps.pop()
                 predator_counts.pop()
                 prey_counts.pop()
-
             ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
             pdviz.record(env.death_cause_prey)
-
             visualizer.update(
                 agent_positions=env.agent_positions,
                 grass_positions=env.grass_positions,
@@ -134,40 +116,20 @@ def step_backwards_if_requested(control, env, snapshots, time_steps, predator_co
             )
             control.fps_slider_rect = visualizer.slider_rect
             pygame.time.wait(100)
-
             control.step_backward = False
-            return observations  # ✅ return updated obs
-
+            return observations
         control.step_backward = False
     return None
 
 
-def step_forward(
-    env,
-    observations,
-    rl_modules,
-    control,
-    visualizer,
-    ceviz,
-    pdviz,
-    snapshots,
-    predator_counts,
-    prey_counts,
-    time_steps,
-    total_reward,
-    clock,
-    SAVE_MOVIE,
-    video_writer,
-):
+def step_forward(env, observations, rl_modules, control, visualizer, ceviz, pdviz, snapshots, predator_counts, prey_counts, time_steps, total_reward, clock, SAVE_MOVIE, video_writer):
     action_dict = {}
     for agent_id in env.agents:
         group = policy_mapping_fn(agent_id)
-        if group not in rl_modules:
-            continue  # Skip untrained / excluded agent groups
-        action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
+        if group in rl_modules:
+            action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
-
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
         snapshots.pop(0)
@@ -214,70 +176,56 @@ def render_static_if_paused(env, visualizer):
 
 
 def print_reward_summary(env, total_reward):
+    # Print final reward summary after evaluation
     print(f"\nEvaluation complete! Total Reward: {total_reward}")
-
-    predator_rewards = []
-    prey_rewards = []
-
     print("\n--- Reward Breakdown per Agent ---")
+    predator_rewards, prey_rewards = [], []
     for agent_id, reward in env.cumulative_rewards.items():
         print(f"{agent_id:15}: {reward:.2f}")
         if "predator" in agent_id:
             predator_rewards.append(reward)
         elif "prey" in agent_id:
             prey_rewards.append(reward)
-
-    total_predator_reward = sum(predator_rewards)
-    total_prey_reward = sum(prey_rewards)
-    total_reward_all = total_predator_reward + total_prey_reward
-
     print("\n--- Aggregated Rewards ---")
     print(f"Total number of steps: {env.current_step-1}")
-    print(f"Total Predator Reward: {total_predator_reward:.2f}")
-    print(f"Total Prey Reward:     {total_prey_reward:.2f}")
-    print(f"Total All-Agent Reward:{total_reward_all:.2f}")
+    print(f"Total Predator Reward: {sum(predator_rewards):.2f}")
+    print(f"Total Prey Reward:     {sum(prey_rewards):.2f}")
+    print(f"Total All-Agent Reward:{total_reward:.2f}")
 
 
 def print_prey_death_summary(env):
+    # Print causes of prey death
     print("\n--- Prey Death Causes ---")
-    death_stats = {"eaten": 0, "starved": 0}
-
+    stats = {"eaten": 0, "starved": 0}
     for internal_id, cause in env.death_cause_prey.items():
         print(f"Prey internal_id {internal_id:4d}: {cause}")
-        if cause in death_stats:
-            death_stats[cause] += 1
-
+        if cause in stats:
+            stats[cause] += 1
     print("\n--- Summary ---")
-    print(f"Total prey eaten   : {death_stats['eaten']}")
-    print(f"Total prey starved : {death_stats['starved']}")
+    print(f"Total prey eaten   : {stats['eaten']}")
+    print(f"Total prey starved : {stats['starved']}")
 
 
-def save_reward_summary_to_file(env, total_reward, eval_output_dir):
-    reward_log_path = os.path.join(eval_output_dir, "reward_summary.txt")
+def save_reward_summary_to_file(env, total_reward, output_dir):
+    reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     with open(reward_log_path, "w") as f:
-        f.write(f"Total Reward: {total_reward}\n")
-        f.write("\n--- Reward Breakdown per Agent ---\n")
+        f.write(f"Total Reward: {total_reward}\n\n")
+        f.write("--- Reward Breakdown per Agent ---\n")
         for agent_id, reward in env.cumulative_rewards.items():
             f.write(f"{agent_id:15}: {reward:.2f}\n")
-
-        # Group rewards by type
-        grouped_rewards = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
-        for agent_id, reward in env.cumulative_rewards.items():
-            for group in grouped_rewards:
-                if group in agent_id:
-                    grouped_rewards[group].append(reward)
-
         f.write("\n--- Aggregated Rewards ---\n")
-        f.write(f"Total number of steps            : {env.current_step-1}\n")
+        f.write(f"Total number of steps: {env.current_step-1}\n")
+        grouped_rewards = {}
+        for agent_id, reward in env.cumulative_rewards.items():
+            group = policy_mapping_fn(agent_id)
+            grouped_rewards.setdefault(group, []).append(reward)
         for group, rewards in grouped_rewards.items():
-            total_group_reward = sum(rewards)
-            f.write(f"Total {group.replace('_', ' ').title()} Reward: {total_group_reward:.2f}\n")
+            f.write(f"Total {group.replace('_', ' ').title()} Reward: {sum(rewards):.2f}\n")
 
 
-def save_prey_death_summary_to_file(env, eval_output_dir):
-    death_log_path = os.path.join(eval_output_dir, "prey_death_causes.txt")
+def save_prey_death_summary_to_file(env, output_dir):
+    death_log_path = os.path.join(output_dir, "prey_death_causes.txt")
     death_stats = {"eaten": 0, "starved": 0}
-
     with open(death_log_path, "w") as f:
         f.write("--- Prey Death Causes ---\n")
         for internal_id, cause in env.death_cause_prey.items():
@@ -289,12 +237,15 @@ def save_prey_death_summary_to_file(env, eval_output_dir):
         f.write(f"Total prey starved : {death_stats['starved']}\n")
 
 
-def run_post_evaluation_plots(combined_evolution_visualizer, prey_death_cause_visualizer):
-    combined_evolution_visualizer.plot()
-    prey_death_cause_visualizer.plot()
+def run_post_evaluation_plots(ceviz, pdviz):
+    if SAVE_EVAL_RESULTS:
+        ceviz.plot()
+        pdviz.plot()
 
 
 if __name__ == "__main__":
+    seed = 1
+    ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
@@ -361,7 +312,5 @@ if __name__ == "__main__":
         save_prey_death_summary_to_file(env, eval_output_dir)
 
     run_post_evaluation_plots(ceviz, pdviz)
-
-    pygame.event.pump()
     pygame.quit()
     ray.shutdown()
