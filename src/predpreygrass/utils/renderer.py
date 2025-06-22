@@ -428,7 +428,7 @@ class CombinedEvolutionVisualizer:
             os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
             path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.run_nr) + ".png")
             plt.savefig(path)
-            plt.show()
+            # plt.show()
         else:
             plt.show()
 
