@@ -9,9 +9,11 @@ from ray.tune.registry import register_env
 
 from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_1.config.config_env_eval import config_env
+from predpreygrass.utils.renderer import CombinedEvolutionVisualizer
+
 
 SAVE_EVAL_RESULTS = True
-MAX_STEPS = 1000
+N_RUNS = 5  # Number of evaluation runs
 SEED = 1
 
 
@@ -32,8 +34,11 @@ def policy_pi(observation, policy_module, deterministic=True):
     return torch.argmax(logits, dim=-1).item() if deterministic else torch.distributions.Categorical(logits=logits).sample().item()
 
 
-def setup_environment_and_modules():
-    checkpoint_root = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_0/trained_policies/excl_speed_2/checkpoint_iter_1000"
+def setup_modules():
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_1/trained_policies"
+    checkpoint_path = "/incl_speed_2/"
+    checkpoint_dir = "checkpoint_iter_1000"
+    checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
     module_paths = {
         pid: os.path.join(rl_module_dir, pid)
@@ -41,53 +46,72 @@ def setup_environment_and_modules():
         if os.path.isdir(os.path.join(rl_module_dir, pid))
     }
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
-    env = PredPreyGrass(config=config_env)
-    return env, rl_modules, checkpoint_root
+    return rl_modules, checkpoint_root
 
 
 if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: PredPreyGrass(config))
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
-    env, rl_modules, checkpoint_root = setup_environment_and_modules()
-    eval_output_dir = os.path.join(os.path.dirname(checkpoint_root), f"eval_checkpoint_iter_1000_{now}")
-    os.makedirs(eval_output_dir, exist_ok=True)
+    for run in range(N_RUNS):
+        print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
+        rl_modules, checkpoint_root = setup_modules()
+        print(f"Using checkpoint root: {checkpoint_root}")
+        env = PredPreyGrass(config=config_env)
+        observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
+        if SAVE_EVAL_RESULTS:
+            eval_output_dir = os.path.join(
+                checkpoint_root, f"eval_runs_{now}"
+            )
+            os.makedirs(eval_output_dir, exist_ok=True)
+            visualizer = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now, run_nr=run + 1)
+        else:
+            visualizer = None
 
-    observations, _ = env.reset(seed=SEED)
-    total_reward = 0
+        total_reward = 0
+        terminated = False
+        truncated = False
 
-    for _ in range(MAX_STEPS):
-        action_dict = {
-            aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)])
-            for aid in env.agents
-            if policy_mapping_fn(aid) in rl_modules
-        }
-        observations, rewards, terminations, truncations, _ = env.step(action_dict)
-        total_reward += sum(rewards.values())
+        while not terminated and not truncated:
+            action_dict = {
+                aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)])
+                for aid in env.agents
+            }
+            observations, rewards, terminations, truncations, _ = env.step(action_dict)
+            if visualizer:
+                visualizer.record(
+                    agent_ids=env.agents,
+                    internal_ids=env.agent_internal_ids,
+                    agent_ages=env.agent_ages,
+                )
 
-        if all(terminations.values()) or all(truncations.values()):
-            break
+            total_reward += sum(rewards.values())
+            # print(f"Step {i} Total Reward so far: {total_reward:.2f}")
+            terminated = any(terminations.values())
+            truncated = any(truncations.values())
 
-    print(f"\nEvaluation complete! Total Reward: {total_reward:.2f}")
-    for aid, r in env.cumulative_rewards.items():
-        print(f"{aid:20}: {r:.2f}")
+        print(f"Evaluation complete! Total Reward: {total_reward:.2f}")
+        print(f"Total Steps: {env.current_step}")
+        # for aid, r in env.cumulative_rewards.items():
+        #    print(f"{aid:20}: {r:.2f}")
 
-    death_stats = {"eaten": 0, "starved": 0}
-    for cause in env.death_cause_prey.values():
-        if cause in death_stats:
-            death_stats[cause] += 1
-    print(f"\nPrey Deaths: Eaten={death_stats['eaten']} Starved={death_stats['starved']}")
+        death_stats = {"eaten": 0, "starved": 0}
+        for cause in env.death_cause_prey.values():
+            if cause in death_stats:
+                death_stats[cause] += 1
+        print(f"Prey Deaths: Eaten={death_stats['eaten']} Starved={death_stats['starved']}")
 
-    if SAVE_EVAL_RESULTS:
-        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
-        with open(os.path.join(eval_output_dir, "reward_summary.txt"), "w") as f:
-            f.write(f"Total Reward: {total_reward:.2f}\n")
-            for aid, r in env.cumulative_rewards.items():
-                f.write(f"{aid:20}: {r:.2f}\n")
-        with open(os.path.join(eval_output_dir, "prey_death_causes.txt"), "w") as f:
-            for iid, cause in env.death_cause_prey.items():
-                f.write(f"Prey internal_id {iid:4d}: {cause}\n")
+        if SAVE_EVAL_RESULTS:
+            visualizer.plot()
+            with open(os.path.join(eval_output_dir, "config_env_"+str(run+1)+".json"), "w") as f:
+                json.dump(config_env, f, indent=4)
+            with open(os.path.join(eval_output_dir, "reward_summaryv_"+str(run+1)+".txt"), "w") as f:
+                f.write(f"Total Reward: {total_reward:.2f}\n")
+                for aid, r in env.cumulative_rewards.items():
+                    f.write(f"{aid:20}: {r:.2f}\n")
+            with open(os.path.join(eval_output_dir, "prey_death_causesv_"+str(run+1)+".txt"), "w") as f:
+                for iid, cause in env.death_cause_prey.items():
+                    f.write(f"Prey internal_id {iid:4d}: {cause}\n")
 
     ray.shutdown()
