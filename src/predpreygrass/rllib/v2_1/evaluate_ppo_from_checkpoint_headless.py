@@ -57,7 +57,6 @@ if __name__ == "__main__":
     for run in range(N_RUNS):
         print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
         rl_modules, checkpoint_root = setup_modules()
-        print(f"Using checkpoint root: {checkpoint_root}")
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         if SAVE_EVAL_RESULTS:
@@ -104,13 +103,17 @@ if __name__ == "__main__":
 
         if SAVE_EVAL_RESULTS:
             visualizer.plot()
-            with open(os.path.join(eval_output_dir, "config_env_"+str(run+1)+".json"), "w") as f:
+            config_env_dir = os.path.join(eval_output_dir, "config_env")
+            os.makedirs(config_env_dir, exist_ok=True)
+            summary_data_dir = os.path.join(eval_output_dir, "summary_data")
+            os.makedirs(summary_data_dir, exist_ok=True)
+            with open(os.path.join(config_env_dir, "config_env_"+str(run+1)+".json"), "w") as f:
                 json.dump(config_env, f, indent=4)
-            with open(os.path.join(eval_output_dir, "reward_summaryv_"+str(run+1)+".txt"), "w") as f:
+            with open(os.path.join(summary_data_dir, "reward_summary_"+str(run+1)+".txt"), "w") as f:
                 f.write(f"Total Reward: {total_reward:.2f}\n")
                 for aid, r in env.cumulative_rewards.items():
                     f.write(f"{aid:20}: {r:.2f}\n")
-            with open(os.path.join(eval_output_dir, "prey_death_causesv_"+str(run+1)+".txt"), "w") as f:
+            with open(os.path.join(summary_data_dir, "prey_death_causes_"+str(run+1)+".txt"), "w") as f:
                 for iid, cause in env.death_cause_prey.items():
                     f.write(f"Prey internal_id {iid:4d}: {cause}\n")
 
