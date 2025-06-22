@@ -321,10 +321,11 @@ class PopulationChart:
 
 
 class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None, timestamp=None):
+    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots", run_nr=None):
         self.destination_path = destination_path
+        self.destination_filename = destination_filename
         self.timestamp = timestamp
-
+        self.run_nr = run_nr
         # Population counts
         self.time_steps = []
         self.predator_counts = []
@@ -425,7 +426,7 @@ class CombinedEvolutionVisualizer:
 
         if self.destination_path:
             os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.timestamp) + ".png")
+            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.run_nr) + ".png")
             plt.savefig(path)
             plt.show()
         else:
@@ -461,8 +462,8 @@ class PreyDeathCauseVisualizer:
         plt.grid(True)
 
         if self.destination_path:
-            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "prey_death_cause_plot_" + str(self.timestamp) + ".png")
+            os.makedirs(os.path.join(self.destination_path, self.destination_filename), exist_ok=True)
+            path = os.path.join(self.destination_path, self.destination_filename, "prey_death_cause_plot_" + str(self.timestamp) + ".png")
             plt.savefig(path)
             plt.show()
         else:
