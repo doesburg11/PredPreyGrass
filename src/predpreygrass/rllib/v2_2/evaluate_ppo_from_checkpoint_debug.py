@@ -53,13 +53,13 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_1/trained_policies"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_2/trained_policies"
     checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
-    training_dir = os.path.dirname(checkpoint_path)
-    eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
+    # training_dir = os.path.dirname(checkpoint_path)
+    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
 
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {}
