@@ -434,9 +434,15 @@ class CombinedEvolutionVisualizer:
 
 
 class PreyDeathCauseVisualizer:
-    def __init__(self, destination_path=None, timestamp=None):
+    def __init__(
+            self,
+            destination_path=None,
+            timestamp=None,
+            destination_filename="summary_plots"
+    ):
         self.timestamp = timestamp
         self.destination_path = destination_path
+        self.destination_filename = destination_filename
         self.time_steps = []
         self.starved_ratio = []
         self.eaten_ratio = []
