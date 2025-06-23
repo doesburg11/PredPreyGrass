@@ -18,7 +18,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._initialize_from_config()  # import config variables
 
         # Build possible agent lists
-        self.possible_agents = self._build_possible_agents_ids()
+        self.possible_agents = self._build_possible_agent_ids()
 
         # Spaces (must be ready before reset())
         self.observation_spaces = {
@@ -54,7 +54,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] = self.initial_energy_predator
             self.grid_world_state[1, *pos] = self.initial_energy_predator
             self.cumulative_rewards[agent] = 0
-            self._assign_unique_id(agent)
 
         for i, agent in enumerate(prey_list):
             pos = prey_positions[i]
@@ -62,7 +61,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] = self.initial_energy_prey
             self.grid_world_state[2, *pos] = self.initial_energy_prey
             self.cumulative_rewards[agent] = 0
-            self._assign_unique_id(agent)
 
         for i, grass in enumerate(self.grass_agents):
             pos = grass_positions[i]
@@ -115,9 +113,6 @@ class PredPreyGrass(MultiAgentEnv):
             if terminations[agent]:
                 self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
-                # Age is already up-to-date
-                # Could log here if needed or cleanup
-                del self.unique_ids[agent]
 
         # Step 7: Spawning of new agents
         for agent in self.agents[:]:
@@ -169,7 +164,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Get the new position of the agent based on the action and its speed.
         """
-        current_position = self.agent_positions[agent]
+        action = int(action)
 
         # Choose the appropriate movement dictionary based on agent speed
         if "speed_1" in agent:
@@ -179,6 +174,7 @@ class PredPreyGrass(MultiAgentEnv):
         else:
             raise ValueError(f"Unknown speed for agent: {agent}")
 
+        current_position = self.agent_positions[agent]
         new_position = (
             current_position[0] + move_vector[0],
             current_position[1] + move_vector[1],
@@ -687,7 +683,6 @@ class PredPreyGrass(MultiAgentEnv):
                 # if potential_new_ids still available
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
-            self._assign_unique_id(new_agent, parent_unique_id=self.unique_ids[agent])
 
             self.agent_internal_ids[new_agent] = self.agent_instance_counter
             self.agent_ages[self.agent_instance_counter] = 0
@@ -750,7 +745,6 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
-            self._assign_unique_id(new_agent, parent_unique_id=self.unique_ids[agent])
 
             self.agent_internal_ids[new_agent] = self.agent_instance_counter
             self.agent_ages[self.agent_instance_counter] = 0
@@ -852,7 +846,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step = 0
         self.rng = np.random.default_rng(seed)
 
-        self.grid_world_state = self.initial_grid_world_state.copy()
         self.agent_positions = {}
         self.predator_positions = {}
         self.prey_positions = {}
@@ -866,10 +859,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = {}
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
-
-        self.unique_counter = {}  # e.g., {"speed_1_predator_0": 3}
-        self.unique_id = {}       # maps live agent_id → shadow_id
-        self.unique_agent_stats = {}  # shadow_id → {"age": x, "offspring": y, "parent": z}
 
         self.agents = []
         self.possible_agents = []
@@ -966,29 +955,21 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_prey = snapshot["active_num_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()
 
-    def _assign_unique_id(self, agent_id, parent_unique_id=None):
-        count = self.unique_counter.get(agent_id, 0)
-        unique_id = f"{agent_id}_{count}"
-        self.unique_counter[agent_id] = count + 1
-        self.unique_id[agent_id] = unique_id
-
-        self.unique_agent_stats[unique_id] = {
-            "age": 0,
-            "offspring": 0,
-            "parent": parent_unique_id
-        }
-
-    def _build_possible_agents_ids(self):
+    def _build_possible_agent_ids(self):
         """
         Build the list of possible agents based on the configuration.
         This is called during reset to ensure the agent list is up-to-date.
         """
-        self.possible_agents = []
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
-                self.possible_agents.append(f"speed_{speed}_predator_{i}")
-            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
-                self.possible_agents.append(f"speed_{speed}_prey_{i}")
+        agent_ids = []
+        for i in range(self.n_possible_speed_1_predators):
+            agent_ids.append(f"speed_1_predator_{i}")
+        for i in range(self.n_possible_speed_2_predators):
+            agent_ids.append(f"speed_2_predator_{i}")
+        for i in range(self.n_possible_speed_1_prey):
+            agent_ids.append(f"speed_1_prey_{i}")
+        for i in range(self.n_possible_speed_2_prey):
+            agent_ids.append(f"speed_2_prey_{i}")
+        return agent_ids  # ✅ ← this was missing
 
     def _build_observation_space(self, agent_id):
         """
@@ -1011,9 +992,9 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the action space for a specific agent.
         """
-        if "predator" in agent_id:
+        if "speed_1" in agent_id:
             action_space = gymnasium.spaces.Discrete(self.speed_1_act_range**2)
-        elif "prey" in agent_id:
+        elif "speed_2" in agent_id:
             action_space = gymnasium.spaces.Discrete(self.speed_2_act_range**2)
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
