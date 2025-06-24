@@ -1,5 +1,7 @@
 """
 Predator-Prey Grass RLlib Environment
+- Minimize __init___ self.possible_agents, self.observation_sapces and self.action_spaces
+- Simlpify reset
 """
 # external libraries
 import gymnasium
@@ -17,10 +19,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.config = config
         self._initialize_from_config()  # import config variables
 
-        # Build possible agent lists
         self.possible_agents = self._build_possible_agent_ids()
 
-        # Spaces (must be ready before reset())
         self.observation_spaces = {
             agent_id: self._build_observation_space(agent_id)
             for agent_id in self.possible_agents
@@ -30,6 +30,113 @@ class PredPreyGrass(MultiAgentEnv):
             agent_id: self._build_action_space(agent_id)
             for agent_id in self.possible_agents
         }
+
+    def _initialize_from_config(self):
+        config = self.config
+        self.debug_mode = config.get("debug_mode", False)
+        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
+        self.verbose_decay = config.get("verbose_decay", self.debug_mode)
+        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
+        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+
+        self.max_steps = config.get("max_steps", 10000)
+        self.rng = np.random.default_rng(config.get("seed", 42))
+
+        # Rewards
+        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = config.get("reward_predator_step", 0.0)
+        self.reward_prey_step = config.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
+
+        # Energy settings
+        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
+        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
+        self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
+        self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
+
+        # Learning agents
+        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
+        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
+        self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
+
+        self.n_initial_active_speed_1_predator = config.get("n_initial_active_speed_1_predator", 6)
+        self.n_initial_active_speed_2_predator = config.get("n_initial_active_speed_2_predator", 0)
+        self.n_initial_active_speed_1_prey = config.get("n_initial_active_speed_1_prey", 8)
+        self.n_initial_active_speed_2_prey = config.get("n_initial_active_speed_2_prey", 0)
+
+        self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
+        self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
+
+        # Grid and Observation Settings
+        self.grid_size = config.get("grid_size", 10)
+        self.num_obs_channels = config.get("num_obs_channels", 4)
+        self.predator_obs_range = config.get("predator_obs_range", 7)
+        self.prey_obs_range = config.get("prey_obs_range", 5)
+
+        # Grass settings
+        self.initial_num_grass = config.get("initial_num_grass", 25)
+        self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
+        self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
+
+        # Mutation
+        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
+        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
+
+        # Action range and movement mapping
+        self.speed_1_act_range = config.get("speed_1_action_range", 3)
+        self.speed_2_act_range = config.get("speed_2_action_range", 5)
+
+    def _init_reset_variables(self, seed):
+        # Agent tracking
+        self.current_step = 0
+        self.rng = np.random.default_rng(seed)
+
+        self.agent_positions = {}
+        self.predator_positions = {}
+        self.prey_positions = {}
+        self.grass_positions = {}
+        self.agent_energies = {}
+        self.grass_energies = {}
+
+        self.agent_instance_counter = 0
+        self.agent_internal_ids = {}
+        self.agent_ages = {}
+        self.death_cause_prey = {}
+        self.agents_just_ate = set()
+        self.cumulative_rewards = {}
+
+        self.agents = []
+
+        for agent_type in ["predator", "prey"]:
+            for speed in [1, 2]:
+                key = f"n_initial_active_speed_{speed}_{agent_type}"
+                count = self.config.get(key, 0)
+                for i in range(count):
+                    aid = f"speed_{speed}_{agent_type}_{i}"
+                    self.agents.append(aid)
+                    self.agent_internal_ids[aid] = self.agent_instance_counter
+                    self.agent_ages[self.agent_instance_counter] = 0
+                    self.agent_instance_counter += 1
+
+        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
+
+        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
+        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
+        self.grid_world_state = self.initial_grid_world_state.copy()
+
+        def _generate_action_map(range_size: int):
+            delta = (range_size - 1) // 2
+            return {
+                i: (dx, dy)
+                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
+            }
+
+        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
+        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
 
     def reset(self, *, seed=None, options=None):
         """
@@ -778,125 +885,6 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
                 "green",
             )
-
-    def _initialize_from_config(self):
-        config = self.config
-        self.debug_mode = config.get("debug_mode", False)
-        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
-        self.verbose_decay = config.get("verbose_decay", self.debug_mode)
-        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
-        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
-
-        self.max_steps = config.get("max_steps", 10000)
-        self.rng = np.random.default_rng(config.get("seed", 42))
-
-        # Rewards
-        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
-        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
-        self.reward_predator_step = config.get("reward_predator_step", 0.0)
-        self.reward_prey_step = config.get("reward_prey_step", 0.0)
-        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
-        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
-        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
-
-        # Energy settings
-        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
-        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
-        self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
-        self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
-
-        # Learning agents
-        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
-        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
-        self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
-        self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
-
-        self.n_initial_active_speed_1_predator = config.get("n_initial_active_speed_1_predator", 6)
-        self.n_initial_active_speed_2_predator = config.get("n_initial_active_speed_2_predator", 0)
-        self.n_initial_active_speed_1_prey = config.get("n_initial_active_speed_1_prey", 8)
-        self.n_initial_active_speed_2_prey = config.get("n_initial_active_speed_2_prey", 0)
-
-        self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
-        self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
-
-        # Grid and Observation Settings
-        self.grid_size = config.get("grid_size", 10)
-        self.num_obs_channels = config.get("num_obs_channels", 4)
-        self.predator_obs_range = config.get("predator_obs_range", 7)
-        self.prey_obs_range = config.get("prey_obs_range", 5)
-
-        # Grass settings
-        self.initial_num_grass = config.get("initial_num_grass", 25)
-        self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
-        self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
-
-        # Mutation
-        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
-        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
-
-        # Action range and movement mapping
-        self.speed_1_act_range = config.get("speed_1_action_range", 3)
-        self.speed_2_act_range = config.get("speed_2_action_range", 5)
-
-    def _init_reset_variables(self, seed):
-        # Agent tracking
-        self.predator_speeds = [1, 2]
-        self.prey_speeds = [1, 2]
-
-        self.current_step = 0
-        self.rng = np.random.default_rng(seed)
-
-        self.agent_positions = {}
-        self.predator_positions = {}
-        self.prey_positions = {}
-        self.grass_positions = {}
-        self.agent_energies = {}
-        self.grass_energies = {}
-
-        self.agent_instance_counter = 0
-        self.agent_internal_ids = {}
-        self.agent_ages = {}
-        self.death_cause_prey = {}
-        self.agents_just_ate = set()
-        self.cumulative_rewards = {}
-
-        self.agents = []
-        self.possible_agents = []
-
-        for speed in [1, 2]:
-            for i in range(self.config.get(f"n_possible_speed_{speed}_predators", 0)):
-                self.possible_agents.append(f"speed_{speed}_predator_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_predator", 0)):
-                aid = f"speed_{speed}_predator_{i}"
-                self.agents.append(aid)
-                self.agent_internal_ids[aid] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-            for i in range(self.config.get(f"n_possible_speed_{speed}_prey", 0)):
-                self.possible_agents.append(f"speed_{speed}_prey_{i}")
-            for i in range(self.config.get(f"n_initial_active_speed_{speed}_prey", 0)):
-                aid = f"speed_{speed}_prey_{i}"
-                self.agents.append(aid)
-                self.agent_internal_ids[aid] = self.agent_instance_counter
-                self.agent_ages[self.agent_instance_counter] = 0
-                self.agent_instance_counter += 1
-
-        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
-
-        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
-        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
-        self.grid_world_state = self.initial_grid_world_state.copy()
-
-        def _generate_action_map(range_size: int):
-            delta = (range_size - 1) // 2
-            return {
-                i: (dx, dy)
-                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
-            }
-
-        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
-        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
 
     def _generate_random_positions(self, grid_size: int, num_positions: int, seed=None):
         """
