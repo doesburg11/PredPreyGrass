@@ -130,7 +130,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.n_initial_active_speed_1_prey +
             self.n_initial_active_speed_2_prey
         )
-        n_initial_active_objects = self.initial_num_grass
+        n_initial_active_objects = (
+            self.initial_num_grass
+        )
         total_entities = n_initial_active_agents + n_initial_active_objects
 
         # Generation of random positions for all entities
@@ -152,10 +154,12 @@ class PredPreyGrass(MultiAgentEnv):
                         "role": "predator",
                         "speed": speed,
                         "parent_unique_id": None,
+                        "offspring_unique_id": [],
                         "position": all_positions[active_agent_counter],
                         "energy": self.initial_energy_predator,
                         "age": 0,
                     }
+                    self.agent_activation_counts[aid] += 1
                     active_agent_counter += 1
                     unique_id_counter += 1
 
