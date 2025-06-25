@@ -109,25 +109,114 @@ class PredPreyGrass(MultiAgentEnv):
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
 
-        self.agents = []
-
-        # Initialize active learning agents based on the configuration: self.agents
-        for agent_type in ["predator", "prey"]:
-            for speed in [1, 2]:
-                key = f"n_initial_active_speed_{speed}_{agent_type}"
-                count = self.config.get(key, 0)
-                for i in range(count):
-                    aid = f"speed_{speed}_{agent_type}_{i}"
-                    self.agents.append(aid)
-                    self.agent_internal_ids[aid] = self.agent_instance_counter
-                    self.agent_ages[self.agent_instance_counter] = 0
-                    self.agent_instance_counter += 1
-
-        self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
-
         self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
         self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
         self.grid_world_state = self.initial_grid_world_state.copy()
+
+    def reset(self, *, seed=None, options=None):
+        """
+        Reset the environment to its initial state.
+        """
+        super().reset(seed=seed)
+        self._init_reset_variables(seed)
+
+        self.agents = []  # rllib agents
+        self.active_agents = {}
+        self.active_objects = {}
+
+        n_initial_active_agents = (
+            self.n_initial_active_speed_1_predator +
+            self.n_initial_active_speed_2_predator +
+            self.n_initial_active_speed_1_prey +
+            self.n_initial_active_speed_2_prey
+        )
+        n_initial_active_objects = self.initial_num_grass
+        total_entities = n_initial_active_agents + n_initial_active_objects
+
+        # Generation of random positions for all entities
+        all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
+        active_agent_counter = 0
+        unique_id_counter = 0
+
+        # Initialize active learning agents 
+        for agent_role in ["predator", "prey"]:
+            for speed in [1, 2]:
+                key = f"n_initial_active_speed_{speed}_{agent_role}"
+                count = self.config.get(key, 0)0
+                for i in range(count):
+                    aid = f"speed_{speed}_{agent_role}_{i}"
+                    self.agents.append(aid)
+                    self.active_agents[aid] = {
+                        "agent_id": aid,
+                        "unique_id": aid + str(self.agent_activation_counts[aid]),  # Unique ID for the agent
+                        "role": "predator",
+                        "speed": speed,
+                        "parent_unique_id": None,
+                        "position": all_positions[active_agent_counter],
+                        "energy": self.initial_energy_predator,
+                        "age": 0,
+                    }
+                    active_agent_counter += 1
+                    unique_id_counter += 1
+
+
+
+        predator_list = [a for a in self.agents if "predator" in a]
+        prey_list = [a for a in self.agents if "prey" in a]
+        grass_list = [f"grass_{i}" for i in range(self.initial_num_grass)]
+
+        predator_positions = all_positions[: len(predator_list)]
+        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+
+        # NEW AGENT RECORD DICTIONARY AS REPLACEMENT FOR AGENT LISTS
+        # FOR UNIQUE ID GENERATION AND TRACKING REUSING AGENTS
+        self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
+        # Activation of possible agents
+        for i, agent_id in enumerate(predator_list):
+
+            pos = predator_positions[i]
+            self.agent_energies[agent_id] = self.initial_energy_predator
+            self.active_agents[agent_id] = {
+                "unique_id": agent_id + str(self.agent_activation_counts[agent_id]),  # Unique ID for the agent
+                "role": "predator",
+                "parent_unique_id": None,
+                "position": pos,
+                "energy": self.initial_energy_predator,
+            }
+            self.agent_activation_counts[agent_id] += 1
+            self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.cumulative_rewards[agent_id] = 0
+
+        for i, agent in enumerate(prey_list):
+            pos = prey_positions[i]
+            self.agent_energies[agent] = self.initial_energy_prey
+            self.active_agents[agent] = {
+                "unique_id": agent + str(self.agent_activation_counts[agent]),  # Unique ID, "0" is first time use of the agent
+                "role": "prey",
+                "parent_unique_id": None,
+                "position": pos,
+                "energy": self.initial_energy_prey,
+            }
+            self.agent_activation_counts[agent_id] += 1
+            self.grid_world_state[2, *pos] = self.initial_energy_prey
+            self.cumulative_rewards[agent_id] = 0
+
+        for i, grass in enumerate(grass_list):
+            pos = grass_positions[i]
+            self.grass_positions[grass] = pos
+            self.grass_energies[grass] = self.initial_energy_grass
+            self.active_objects[grass] = {
+                "position": pos,
+                "energy": self.initial_energy_grass,
+            }
+            self.grid_world_state[3, *pos] = self.initial_energy_grass
+
+        self.active_num_predators = len(predator_positions)
+        self.active_num_prey = len(prey_positions)
+        self.current_num_grass = len(grass_positions)
+
+        observations = {agent: self._get_observation(agent) for agent in self.agents}
 
         def _generate_action_map(range_size: int):
             delta = (range_size - 1) // 2
@@ -139,67 +228,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
         self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
 
-    def reset(self, *, seed=None, options=None):
-        """
-        Reset the environment to its initial state.
-        """
-        super().reset(seed=seed)
-        self._init_reset_variables(seed)
-
-        total_entities = len(self.agents) + len(self.grass_agents)
-        all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
-
-        predator_list = [a for a in self.agents if "predator" in a]
-        prey_list = [a for a in self.agents if "prey" in a]
-
-        predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
-
-        # NEW AGENT RECORD DICTIONARY AS REPLACEMENT FOR AGENT LISTS
-        self.active_agent_record_dict = {}
-        # FOR UNIQUE ID GENERATION AND TRACKING REUSING AGENTS
-        self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
-        # Activation of possible agents
-        for i, agent in enumerate(predator_list):
-            pos = predator_positions[i]
-            self.agent_positions[agent] = self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator
-            self.active_agent_record_dict[agent] = {
-                "position": pos,
-                "energy": self.initial_energy_predator,
-                "unique_id": agent + "_0",  # Unique ID for the agent
-            }
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-            self.cumulative_rewards[agent] = 0
-
-        for i, agent in enumerate(prey_list):
-            pos = prey_positions[i]
-            self.agent_positions[agent] = self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.active_agent_record_dict[agent] = {
-                "unique_id": agent + "_0",  # Unique ID, "0" is first time use of the agent
-                "position": pos,
-                "energy": self.initial_energy_prey,
-            }
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-            self.cumulative_rewards[agent] = 0
-
-        for i, grass in enumerate(self.grass_agents):
-            pos = grass_positions[i]
-            self.grass_positions[grass] = pos
-            self.grass_energies[grass] = self.initial_energy_grass
-            self.active_agent_record_dict[grass] = {
-                "position": pos,
-                "energy": self.initial_energy_grass,
-            }
-            self.grid_world_state[3, *pos] = self.initial_energy_grass
-
-        self.active_num_predators = len(self.predator_positions)
-        self.active_num_prey = len(self.prey_positions)
-        self.current_num_grass = len(self.grass_positions)
-
-        observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
     def step(self, action_dict):
@@ -614,42 +642,14 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _apply_energy_decay_per_step(self, action_dict):
         """
-        Apply fixed per-step energy decay to all agents based on type.
-        """
-        for agent in action_dict:
-            if agent not in self.agent_positions:
-                continue
-
-            old_energy = self.agent_energies[agent]
-
-            if "predator" in agent:
-                decay = self.energy_loss_per_step_predator
-                layer = 1
-            elif "prey" in agent:
-                decay = self.energy_loss_per_step_prey
-                layer = 2
-            else:
-                continue
-
-            self.agent_energies[agent] -= decay
-            self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
-
-            self._log(
-                self.verbose_decay,
-                f"[DECAY] {agent} energy: {round(old_energy, 2)} -> {round(self.agent_energies[agent], 2)}",
-                "red",
-            )
-
-    def __apply_energy_decay_per_step(self, action_dict):
-        """
         Apply fixed per-step energy decay to all agents based on type,
         using self.agent_data structure.
         """
         for agent_id in action_dict:
-            if agent_id not in self.agent_data:
+            if agent_id not in self.active_agents:
                 continue
 
-            data = self.active_agent_record_dict[agent_id]
+            data = self.active_agents[agent_id]
             old_energy = data["energy"]
 
             if "predator" in agent_id:
@@ -663,7 +663,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Apply decay
             new_energy = old_energy - decay
-            self.active_agent_record_dict[agent_id]["energy"] = new_energy
+            self.active_agents[agent_id]["energy"] = new_energy
 
             # Update grid state
             x, y = data["position"]
@@ -671,12 +671,12 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _apply_age_update(self, action_dict):
         """
-        Increment the age of each active agent by one step.
+        Increment the age of each active agent by one step,
+        using self.active_agents.
         """
-        for agent in action_dict:
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
+        for agent_id in action_dict:
+            if agent_id in self.active_agents:
+                self.active_agents[agent_id]["age"] += 1
 
     def _regenerate_grass_energy(self):
         """
