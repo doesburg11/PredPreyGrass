@@ -3,8 +3,8 @@ Evaluation code for evaluating a trained PPO agent from a checkpoint.
 This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation.
 """
-from predpreygrass.rllib.v2_2.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v2_2.config.config_env_eval import config_env
+from predpreygrass.rllib.v2_3.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v2_3.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.utils.pygame_renderer import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -53,7 +53,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_2/trained_policies"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_3/trained_policies"
     checkpoint_root = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
