@@ -123,6 +123,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agents = []  # rllib agents
         self.active_agents = {}
         self.active_objects = {}
+        self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
 
         n_initial_active_agents = (
             self.n_initial_active_speed_1_predator +
@@ -149,7 +150,6 @@ class PredPreyGrass(MultiAgentEnv):
                     aid = f"speed_{speed}_{agent_role}_{i}"
                     self.agents.append(aid)
                     self.active_agents[aid] = {
-                        "agent_id": aid,
                         "unique_id": aid + str(self.agent_activation_counts[aid]),  # Unique ID for the agent
                         "role": "predator",
                         "speed": speed,
