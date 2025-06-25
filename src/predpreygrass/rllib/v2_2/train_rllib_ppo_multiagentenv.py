@@ -49,13 +49,13 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_0.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v2_2.config.config_ppo_gpu import config_ppo
     # CPU configuration
     elif num_cpus == 8:
-        from predpreygrass.rllib.v2_0.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v2_2.config.config_ppo_cpu import config_ppo
     # Colab configuration
     elif num_cpus == 2:
-        from predpreygrass.rllib.v2_0.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v2_2.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
