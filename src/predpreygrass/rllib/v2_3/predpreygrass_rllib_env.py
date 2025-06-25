@@ -138,14 +138,15 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Generation of random positions for all entities
         all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
-        active_agent_counter = 0
+        active_agent_index = 0
+        active_object_index = 0
         unique_id_counter = 0
 
-        # Initialize active learning agents 
+        # Initialize active learning agents
         for agent_role in ["predator", "prey"]:
             for speed in [1, 2]:
                 key = f"n_initial_active_speed_{speed}_{agent_role}"
-                count = self.config.get(key, 0)0
+                count = self.config.get(key, 0)
                 for i in range(count):
                     aid = f"speed_{speed}_{agent_role}_{i}"
                     self.agents.append(aid)
@@ -155,72 +156,26 @@ class PredPreyGrass(MultiAgentEnv):
                         "speed": speed,
                         "parent_unique_id": None,
                         "offspring_unique_id": [],
-                        "position": all_positions[active_agent_counter],
+                        "position": all_positions[active_agent_index],
                         "energy": self.initial_energy_predator,
                         "age": 0,
                     }
                     self.agent_activation_counts[aid] += 1
-                    active_agent_counter += 1
+                    active_agent_index += 1
                     unique_id_counter += 1
+                    type = 1 if agent_role == "predator" else 2
+                    self.grid_world_state[type, *self.active_agents[aid]["position"]] = self.initial_energy_predator
+                    self.cumulative_rewards[aid] = 0
 
-
-
-        predator_list = [a for a in self.agents if "predator" in a]
-        prey_list = [a for a in self.agents if "prey" in a]
-        grass_list = [f"grass_{i}" for i in range(self.initial_num_grass)]
-
-        predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
-
-        # NEW AGENT RECORD DICTIONARY AS REPLACEMENT FOR AGENT LISTS
-        # FOR UNIQUE ID GENERATION AND TRACKING REUSING AGENTS
-        self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
-        # Activation of possible agents
-        for i, agent_id in enumerate(predator_list):
-
-            pos = predator_positions[i]
-            self.agent_energies[agent_id] = self.initial_energy_predator
-            self.active_agents[agent_id] = {
-                "unique_id": agent_id + str(self.agent_activation_counts[agent_id]),  # Unique ID for the agent
-                "role": "predator",
-                "parent_unique_id": None,
-                "position": pos,
-                "energy": self.initial_energy_predator,
-            }
-            self.agent_activation_counts[agent_id] += 1
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-            self.cumulative_rewards[agent_id] = 0
-
-        for i, agent in enumerate(prey_list):
-            pos = prey_positions[i]
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.active_agents[agent] = {
-                "unique_id": agent + str(self.agent_activation_counts[agent]),  # Unique ID, "0" is first time use of the agent
-                "role": "prey",
-                "parent_unique_id": None,
-                "position": pos,
-                "energy": self.initial_energy_prey,
-            }
-            self.agent_activation_counts[agent_id] += 1
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-            self.cumulative_rewards[agent_id] = 0
-
-        for i, grass in enumerate(grass_list):
-            pos = grass_positions[i]
-            self.grass_positions[grass] = pos
-            self.grass_energies[grass] = self.initial_energy_grass
-            self.active_objects[grass] = {
-                "position": pos,
+        active_object_index = active_agent_index
+        for g in range(self.initial_num_grass):
+            grass_id = f"grass_{g}"
+            self.active_objects[grass_id] = {
+                "position": all_positions[active_object_index],
                 "energy": self.initial_energy_grass,
             }
-            self.grid_world_state[3, *pos] = self.initial_energy_grass
-
-        self.active_num_predators = len(predator_positions)
-        self.active_num_prey = len(prey_positions)
-        self.current_num_grass = len(grass_positions)
-
-        observations = {agent: self._get_observation(agent) for agent in self.agents}
+            active_object_index += 1
+            self.grid_world_state[3, *self.active_objects[grass_id]["position"]] = self.initial_energy_grass
 
         def _generate_action_map(range_size: int):
             delta = (range_size - 1) // 2
@@ -231,6 +186,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
         self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
+        observations = {agent: self._get_observation(agent) for agent in self.agents}
 
         return observations, {}
 
