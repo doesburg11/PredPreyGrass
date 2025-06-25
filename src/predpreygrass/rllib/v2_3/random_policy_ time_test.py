@@ -1,5 +1,5 @@
-from predpreygrass.rllib.v2_2.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_2.config.config_env_random import config_env
+from predpreygrass.rllib.v2_3.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_3.config.config_env_random import config_env
 
 # external libraries
 import time
