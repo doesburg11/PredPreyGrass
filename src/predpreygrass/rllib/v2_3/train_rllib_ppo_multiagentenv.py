@@ -7,8 +7,8 @@ Predators and prey both either posses speed_1 or speed_2.
 speed 1: action_space(9); Moore neighborhood movement (including "stay")
 speed_2: action_space(25); Extended Moore neighborhood movement (including "stay")
 """
-from predpreygrass.rllib.v2_2.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_2.config.config_env_train import config_env
+from predpreygrass.rllib.v2_3.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_3.config.config_env_train import config_env
 from predpreygrass.utils.episode_return_callback import EpisodeReturn
 
 # External libraries
@@ -49,13 +49,13 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_0.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v2_3.config.config_ppo_gpu import config_ppo
     # CPU configuration
     elif num_cpus == 8:
-        from predpreygrass.rllib.v2_0.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v2_3.config.config_ppo_cpu import config_ppo
     # Colab configuration
     elif num_cpus == 2:
-        from predpreygrass.rllib.v2_0.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v2_3.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
