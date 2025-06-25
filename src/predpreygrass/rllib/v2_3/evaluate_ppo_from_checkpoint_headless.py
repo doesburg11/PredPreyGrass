@@ -1,5 +1,5 @@
-from predpreygrass.rllib.v2_2.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_2.config.config_env_eval import config_env
+from predpreygrass.rllib.v2_3.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_3.config.config_env_eval import config_env
 from predpreygrass.utils.renderer import CombinedEvolutionVisualizer
 
 # external libraries
@@ -35,7 +35,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_2/trained_policies"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_3/trained_policies"
     checkpoint_path = "/incl_speed_2/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
