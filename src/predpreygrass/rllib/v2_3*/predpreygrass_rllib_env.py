@@ -1,0 +1,833 @@
+"""
+Predator-Prey Grass RLlib Environment
+- Minimize __init___ self.possible_agents, self.observation_sapces and self.action_spaces
+- Simplify reset
+"""
+# external libraries
+import gymnasium
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
+from ray.rllib.utils.typing import AgentID, Tuple
+import numpy as np
+import math
+
+
+class PredPreyGrass(MultiAgentEnv):
+    def __init__(self, config=None):
+        super().__init__()
+        if config is None:
+            raise ValueError("Environment config must be provided explicitly.")
+        self.config = config
+        self._initialize_from_config()  # import config variables
+
+        self.possible_agents = self._build_possible_agent_ids()
+
+        self.observation_spaces = {
+            agent_id: self._build_observation_space(agent_id)
+            for agent_id in self.possible_agents
+        }
+
+        self.action_spaces = {
+            agent_id: self._build_action_space(agent_id)
+            for agent_id in self.possible_agents
+        }
+
+    def _initialize_from_config(self):
+        config = self.config
+        self.debug_mode = config.get("debug_mode", False)
+        self.verbose_movement = config.get("verbose_movement", self.debug_mode)
+        self.verbose_decay = config.get("verbose_decay", self.debug_mode)
+        self.verbose_reproduction = config.get("verbose_reproduction", self.debug_mode)
+        self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
+
+        self.max_steps = config.get("max_steps", 10000)
+        self.rng = np.random.default_rng(config.get("seed", 42))
+
+        # Rewards
+        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = config.get("reward_predator_step", 0.0)
+        self.reward_prey_step = config.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
+
+        # Energy settings
+        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
+        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.05)
+        self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
+        self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
+
+        # Learning agents
+        self.n_possible_speed_1_predators = config.get("n_possible_speed_1_predators", 25)
+        self.n_possible_speed_2_predators = config.get("n_possible_speed_2_predators", 25)
+        self.n_possible_speed_1_prey = config.get("n_possible_speed_1_prey", 25)
+        self.n_possible_speed_2_prey = config.get("n_possible_speed_2_prey", 25)
+
+        self.n_initial_active_speed_1_predator = config.get("n_initial_active_speed_1_predator", 6)
+        self.n_initial_active_speed_2_predator = config.get("n_initial_active_speed_2_predator", 0)
+        self.n_initial_active_speed_1_prey = config.get("n_initial_active_speed_1_prey", 8)
+        self.n_initial_active_speed_2_prey = config.get("n_initial_active_speed_2_prey", 0)
+
+        self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
+        self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
+
+        # Grid and Observation Settings
+        self.grid_size = config.get("grid_size", 10)
+        self.num_obs_channels = config.get("num_obs_channels", 4)
+        self.predator_obs_range = config.get("predator_obs_range", 7)
+        self.prey_obs_range = config.get("prey_obs_range", 5)
+
+        # Grass settings
+        self.initial_num_grass = config.get("initial_num_grass", 25)
+        self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
+        self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
+
+        # Mutation
+        self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
+        self.mutation_rate_prey = config.get("mutation_rate_prey", 0.1)
+
+        # Action range and movement mapping
+        self.speed_1_act_range = config.get("speed_1_action_range", 3)
+        self.speed_2_act_range = config.get("speed_2_action_range", 5)
+
+    def _init_reset_variables(self, seed):
+        # Agent tracking
+        self.current_step = 0
+        self.rng = np.random.default_rng(seed)
+
+        self.death_cause_prey = {}
+        self.agents_just_ate = set()
+        self.cumulative_rewards = {}
+
+        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
+        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
+        self.grid_world_state = self.initial_grid_world_state.copy()
+
+    def reset(self, *, seed=None, options=None):
+        """
+        Reset the environment to its initial state.
+        """
+        super().reset(seed=seed)
+        self._init_reset_variables(seed)
+
+        self.agents = []  # rllib agents
+        self.active_agents = {}
+        self.active_objects = {}
+        self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
+
+        n_initial_active_agents = (
+            self.n_initial_active_speed_1_predator +
+            self.n_initial_active_speed_2_predator +
+            self.n_initial_active_speed_1_prey +
+            self.n_initial_active_speed_2_prey
+        )
+        self.active_num_predators = (
+            self.n_initial_active_speed_1_predator +
+            self.n_initial_active_speed_2_predator
+        )
+        self.active_num_prey = (
+            self.n_initial_active_speed_1_prey +
+            self.n_initial_active_speed_2_prey
+        )
+        n_initial_active_objects = (
+            self.initial_num_grass
+        )
+        total_entities = n_initial_active_agents + n_initial_active_objects
+
+        # Generation of random positions for all entities
+        all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
+        active_object_index = 0
+        unique_id_counter = 0
+
+        # Initialize active learning agents
+        for agent_role in ["predator", "prey"]:
+            for speed in [1, 2]:
+                key = f"n_initial_active_speed_{speed}_{agent_role}"
+                count = self.config.get(key, 0)
+                for i in range(count):
+                    aid = f"speed_{speed}_{agent_role}_{i}"
+                    self.agents.append(aid)
+                    self.active_agents[aid] = {
+                        "unique_id": aid + str(self.agent_activation_counts[aid]),  # Unique ID for the agent
+                        "role": "predator",
+                        "speed": speed,
+                        "parent_unique_id": None,
+                        "offspring_unique_id": [],
+                        "position": all_positions[active_agent_index],
+                        "energy": self.initial_energy_predator,
+                        "age": 0,
+                    }
+                    self.agent_activation_counts[aid] += 1
+                    active_agent_index += 1
+                    unique_id_counter += 1
+                    type = 1 if agent_role == "predator" else 2
+                    self.grid_world_state[type, *self.active_agents[aid]["position"]] = self.initial_energy_predator
+                    self.cumulative_rewards[aid] = 0
+
+        self.grass_list = []
+        active_object_index = active_agent_index
+        for g in range(self.initial_num_grass):
+            grass_id = f"grass_{g}"
+            self.grass_list.append(grass_id)
+            self.active_objects[grass_id] = {
+                "position": all_positions[active_object_index],
+                "energy": self.initial_energy_grass,
+            }
+            active_object_index += 1
+            self.grid_world_state[3, *self.active_objects[grass_id]["position"]] = self.initial_energy_grass
+
+        def _generate_action_map(range_size: int):
+            delta = (range_size - 1) // 2
+            return {
+                i: (dx, dy)
+                for i, (dx, dy) in enumerate((dx, dy) for dx in range(-delta, delta + 1) for dy in range(-delta, delta + 1))
+            }
+
+        self.action_to_move_tuple_speed_1_agents = _generate_action_map(self.speed_1_act_range)
+        self.action_to_move_tuple_speed_2_agents = _generate_action_map(self.speed_2_act_range)
+
+        observations = {agent: self._get_observation(agent) for agent in self.agents}
+
+        return observations, {}
+
+    def step(self, action_dict):
+        observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+        # For stepwise debug display eating in grid
+        self.agents_just_ate.clear()
+
+        # step 0: check for truncation
+        truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
+        if truncation_result is not None:
+            return truncation_result
+
+        # Step 1: If not truncated; process energy depletion due to time steps and update age
+        self._apply_energy_decay_per_step(action_dict)
+
+        # Step 2: Update ages of all agents who act
+        self._apply_age_update(action_dict)
+
+        # Step 3: Regenerate grass energy
+        self._regenerate_grass_energy()
+
+        # Step 4: process agent movements
+        self._process_agent_movements(action_dict)
+
+        # Step 5: Handle agent engagements
+        for agent in self.agents:
+            if agent not in self.active_agents:
+                continue
+            if self.active_agents[agent]["energy"] <= 0:
+                self._handle_energy_depletion(agent, observations, rewards, terminations, truncations)
+            elif "predator" in agent:
+                self._handle_predator_engagement(agent, observations, rewards, terminations, truncations)
+            elif "prey" in agent:
+                self._handle_prey_engagement(agent, observations, rewards, terminations, truncations)
+
+        # Step 6: Handle agent removals
+        for agent in self.agents[:]:
+            if terminations[agent]:
+                self.agents.remove(agent)
+
+        # Step 7: Spawning of new agents
+        for agent in self.agents[:]:
+            if "predator" in agent:
+                self._handle_predator_reproduction(agent, rewards, observations, terminations, truncations)
+            elif "prey" in agent:
+                self._handle_prey_reproduction(agent, rewards, observations, terminations, truncations)
+
+        # Step 8: Generate observations for all agents AFTER all engagements in the step
+        for agent in self.agents:
+            if agent in self.active_agents:
+                observations[agent] = self._get_observation(agent)
+
+        # Global termination and truncation
+        terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
+
+        # output only observations, rewards for active agents
+        observations = {agent: observations[agent] for agent in self.agents if agent in observations}
+        rewards = {agent: rewards[agent] for agent in self.agents if agent in rewards}
+        terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
+        truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
+        truncations["__all__"] = False  # already handled at the beginning of the step
+
+        # Global termination and truncation
+        terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
+
+        self.agents.sort()  # Sort agents
+
+        # Increment step counter
+        self.current_step += 1
+
+        return observations, rewards, terminations, truncations, infos
+
+    def _get_movement_energy_cost(self, agent, current_position, new_position):
+        """
+        Calculate energy cost for movement based on distance and a configurable factor.
+        """
+        distance_factor = self.config.get("move_energy_cost_factor", 0.1)
+        # print(f"Distance factor: {distance_factor}")
+        current_energy = self.active_agents[agent]["energy"]
+        # print(f"Current energy: {current_energy}")
+        # distance gigh speed =[0.00,1.00, 1.41, 2.00, 2.24, 2.83]
+        distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
+        # print (f"Distance: {distance}")
+        energy_cost = distance * distance_factor * current_energy
+        return energy_cost
+
+    def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
+        """
+        Get the new position of the agent based on the action and its speed.
+        """
+        action = int(action)
+
+        # Choose the appropriate movement dictionary based on agent speed
+        if "speed_1" in agent:
+            move_vector = self.action_to_move_tuple_speed_1_agents[action]
+        elif "speed_2" in agent:
+            move_vector = self.action_to_move_tuple_speed_2_agents[action]
+        else:
+            raise ValueError(f"Unknown speed for agent: {agent}")
+
+        current_position = self.active_agents[agent]["position"]
+        new_position = (
+            current_position[0] + move_vector[0],
+            current_position[1] + move_vector[1],
+        )
+
+        # Clip new position to stay within grid bounds
+        new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
+
+        agent_type_nr = 1 if "predator" in agent else 2
+        if self.grid_world_state[agent_type_nr, *new_position] > 0:
+            # Collision with another same-type agent — stay in place
+            new_position = current_position
+
+        return new_position
+
+    def _get_observation(self, agent):
+        """
+        Generate an observation for the agent.
+        """
+        observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+        xp, yp = self.active_agents[agent]["position"]
+
+        xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
+        observation = np.zeros(
+            (self.num_obs_channels, observation_range, observation_range),
+            dtype=np.float64,
+        )
+        observation[0].fill(1)
+        observation[0, xolo:xohi, yolo:yohi] = 0
+        observation[1:, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+
+        return observation
+
+    def _obs_clip(self, x, y, observation_range):
+        """
+        Clip the observation window to the boundaries of the grid_world_state.
+        """
+        observation_offset = (observation_range - 1) // 2
+        xld, xhd = x - observation_offset, x + observation_offset
+        yld, yhd = y - observation_offset, y + observation_offset
+        xlo, xhi = np.clip(xld, 0, self.grid_size - 1), np.clip(xhd, 0, self.grid_size - 1)
+        ylo, yhi = np.clip(yld, 0, self.grid_size - 1), np.clip(yhd, 0, self.grid_size - 1)
+        xolo, yolo = abs(np.clip(xld, -observation_offset, 0)), abs(np.clip(yld, -observation_offset, 0))
+        xohi, yohi = xolo + (xhi - xlo), yolo + (yhi - ylo)
+        return xlo, xhi + 1, ylo, yhi + 1, xolo, xohi + 1, yolo, yohi + 1
+
+    def _find_available_spawn_position(self, reference_position, occupied_positions):
+        """
+        Finds an available position for spawning a new agent.
+        Tries to spawn near the parent agent first before selecting a random free position.
+        """
+
+        x, y = reference_position  # Parent agent's position
+        potential_positions = [
+            (x + dx, y + dy)
+            for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+            if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size  # Stay in bounds
+        ]
+
+        # Filter for unoccupied positions
+        valid_positions = [pos for pos in potential_positions if pos not in occupied_positions]
+
+        if valid_positions:
+            return valid_positions[0]  # Prefer adjacent position if available
+
+        # Fallback: Find any random unoccupied position
+        all_positions = {(i, j) for i in range(self.grid_size) for j in range(self.grid_size)}
+        free_positions = list(all_positions - occupied_positions)
+
+        if free_positions:
+            return free_positions[self.rng.integers(len(free_positions))]
+
+        return None  # No available position found
+
+    def _log(self, verbose: bool, message: str, color: str = None):
+        """
+        Log with sharp 90° box-drawing borders (Unicode), optional color.
+
+        Args:
+            verbose (bool): Whether to log this message (per category).
+            message (str): Message text (can be multi-line).
+            color (str, optional): One of red, green, yellow, blue, magenta, cyan.
+        """
+        if not getattr(self, "debug_mode", True):
+            return
+        if not verbose:
+            return
+
+        colors = {
+            "red": "\033[91m",
+            "green": "\033[92m",
+            "yellow": "\033[93m",
+            "blue": "\033[94m",
+            "magenta": "\033[95m",
+            "cyan": "\033[96m",
+            "reset": "\033[0m",
+        }
+
+        prefix = colors.get(color, "")
+        suffix = colors["reset"] if color else ""
+
+        lines = message.strip().split("\n")
+        max_width = max(len(line) for line in lines)
+        border = "─" * (max_width + 2)
+
+        print(f"┌{border}┐")
+        for line in lines:
+            print(f"│ {prefix}{line.ljust(max_width)}{suffix} │")
+        print(f"└{border}┘")
+
+    def _check_truncation_and_early_return(self, observations, rewards, terminations, truncations, infos):
+        """
+        If the max step limit is reached, populate outputs and return early.
+
+        Returns:
+            A 5-tuple (obs, rewards, terminations, truncations, infos) if truncated.
+            Otherwise, returns None.
+        """
+        if self.current_step >= self.max_steps:
+            for agent in self.possible_agents:
+                if agent in self.agents:  # Active agents get observation
+                    observations[agent] = self._get_observation(agent)
+                else:
+                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+                    observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float64)
+
+                rewards[agent] = 0.0
+                truncations[agent] = True
+                terminations[agent] = False
+
+            truncations["__all__"] = True
+            terminations["__all__"] = False
+            return observations, rewards, terminations, truncations, infos
+
+        return None
+
+    def _apply_energy_decay_per_step(self, action_dict):
+        """
+        Apply fixed per-step energy decay to all agents based on type,
+        using self.agent_data structure.
+        """
+        for agent_id in action_dict:
+            if agent_id not in self.active_agents:
+                continue
+
+            data = self.active_agents[agent_id]
+            old_energy = data["energy"]
+
+            if "predator" in agent_id:
+                decay = self.energy_loss_per_step_predator
+                layer = 1
+            elif "prey" in agent_id:
+                decay = self.energy_loss_per_step_prey
+                layer = 2
+            else:
+                continue
+
+            # Apply decay
+            new_energy = old_energy - decay
+            self.active_agents[agent_id]["energy"] = new_energy
+
+            # Update grid state
+            x, y = data["position"]
+            self.grid_world_state[layer, x, y] = new_energy
+
+    def _apply_age_update(self, action_dict):
+        """
+        Increment the age of each active agent by one step,
+        using self.active_agents.
+        """
+        for agent_id in action_dict:
+            if agent_id in self.active_agents:
+                self.active_agents[agent_id]["age"] += 1
+
+    def _regenerate_grass_energy(self):
+        """
+        Increase energy of all grass patches, capped at initial energy value.
+        """
+        for grass_id in self.grass_list:
+            new_energy = min(self.active_objects[grass_id]["energy"] + self.energy_gain_per_step_grass, self.initial_energy_grass)
+            self.active_objects[grass_id]["energy"] = new_energy
+            self.grid_world_state[3, *self.active_objects[grass_id]["position"]] = new_energy
+
+    def _process_agent_movements(self, action_dict):
+        """
+        Process movement, energy cost, and grid updates for all agents.
+        """
+        for agent_id, action in action_dict.items():
+            if agent_id in self.active_agents:
+                old_position = self.active_agents[agent_id]["position"]
+                new_position = self._get_move(agent_id, action)
+                self.active_agents[agent_id]["position"] = new_position
+                move_cost = self._get_movement_energy_cost(agent_id, old_position, new_position)
+                self.active_agents[agent_id]["energy"] -= move_cost
+                if "predator" in agent_id:
+                    self.grid_world_state[1, *old_position] = 0
+                    self.grid_world_state[1, *new_position] = self.active_agents[agent_id]["energy"]
+                elif "prey" in agent_id:
+                    self.grid_world_state[2, *old_position] = 0
+                    self.grid_world_state[2, *new_position] = self.active_agents[agent_id]["energy"]
+
+    def _handle_energy_depletion(self, agent, observations, rewards, terminations, truncations):
+        agent_data = self.active_agents[agent]
+        pos = agent_data["position"]
+
+        self._log(self.verbose_decay, f"[DECAY] {agent} at {pos} ran out of energy and is removed.", "red")
+
+        observations[agent] = self._get_observation(agent)
+        rewards[agent] = 0
+        terminations[agent] = True
+        truncations[agent] = False
+
+        layer = 1 if "predator" in agent else 2
+        self.grid_world_state[layer, *pos] = 0
+
+        if "predator" in agent:
+            self.active_num_predators -= 1
+        else:
+            self.active_num_prey -= 1
+            internal_id = self.agent_internal_ids[agent]
+            self.death_cause_prey[internal_id] = "starved"
+
+        del self.active_agents[agent]
+
+    def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
+        predator_position = self.active_agents[agent]["position"]
+
+        caught_prey = next(
+            (
+                prey for prey, data in self.active_agents.items()
+                if "prey" in prey and np.array_equal(predator_position, data["position"])
+            ),
+            None
+        )
+
+        if caught_prey:
+            self._log(
+                self.verbose_engagement,
+                f"[ENGAGE] {agent} caught {caught_prey} at {tuple(map(int, predator_position))}",
+                "white"
+            )
+
+            self.agents_just_ate.add(agent)  # Show green ring for next 1 step
+
+            rewards[agent] = self.reward_predator_catch_prey
+            self.cumulative_rewards.setdefault(agent, 0)
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            # Transfer prey's energy to predator
+            self.active_agents[agent]["energy"] += self.active_agents[caught_prey]["energy"]
+            self.grid_world_state[1, *predator_position] = self.active_agents[agent]["energy"]
+
+            # Prey outcomes
+            observations[caught_prey] = self._get_observation(caught_prey)
+            rewards[caught_prey] = self.penalty_prey_caught
+            self.cumulative_rewards.setdefault(caught_prey, 0.0)
+            self.cumulative_rewards[caught_prey] += rewards[caught_prey]
+
+            terminations[caught_prey] = True
+            truncations[caught_prey] = False
+            self.active_num_prey -= 1
+
+            self.grid_world_state[2, *self.active_agents[caught_prey]["position"]] = 0
+            del self.active_agents[caught_prey]
+        else:
+            rewards[agent] = self.reward_predator_step
+
+        # Finalize predator observation and reward
+        observations[agent] = self._get_observation(agent)
+        self.cumulative_rewards.setdefault(agent, 0)
+        self.cumulative_rewards[agent] += rewards[agent]
+        terminations[agent] = False
+        truncations[agent] = False
+
+    def _handle_prey_engagement(self, agent, observations, rewards, terminations, truncations):
+        if terminations.get(agent):
+            return
+
+        prey_position = self.active_agents[agent]["position"]
+
+        # Look for grass at the same position using self.active_agents
+        caught_grass = next(
+            (
+                g for g, data in self.active_agents.items()
+                if g.startswith("grass") and np.array_equal(prey_position, data["position"])
+            ),
+            None
+        )
+
+        if caught_grass:
+            self._log(self.verbose_engagement, f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}", "white")
+            self.agents_just_ate.add(agent)  # Show green ring for next 1 step
+
+            # Reward for eating grass
+            rewards[agent] = self.reward_prey_eat_grass
+            self.cumulative_rewards.setdefault(agent, 0)
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            # Energy transfer
+            self.active_agents[agent]["energy"] += self.active_agents[caught_grass]["energy"]
+            self.grid_world_state[2, *prey_position] = self.active_agents[agent]["energy"]
+
+            # Reset grass energy and update grass layer
+            self.grid_world_state[3, *prey_position] = 0
+            self.active_agents[caught_grass]["energy"] = 0
+        else:
+            rewards[agent] = self.reward_prey_step
+
+        observations[agent] = self._get_observation(agent)
+        self.cumulative_rewards.setdefault(agent, 0)
+        self.cumulative_rewards[agent] += rewards[agent]
+        terminations[agent] = False
+        truncations[agent] = False
+
+    def _handle_predator_reproduction(self, agent, rewards, observations, terminations, truncations):
+        if self.active_agents[agent]["energy"] >= self.predator_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # e.g. "speed_1_predator_3" → 1
+
+            # Mutation logic
+            if self.rng.random() < self.mutation_rate_predator:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
+
+            # Find available ID
+            potential_new_ids = [
+                f"speed_{new_speed}_predator_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_predators", 25))
+                if f"speed_{new_speed}_predator_{i}" not in self.active_agents
+            ]
+            if not potential_new_ids:
+                rewards[agent] = self.reproduction_reward_predator
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning",
+                    "red"
+                )
+                return
+
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
+
+            # Determine spawn position
+            occupied_positions = {data["position"] for data in self.active_agents.values()}
+            new_position = self._find_available_spawn_position(self.active_agents[agent]["position"], occupied_positions)
+
+            # Initialize new agent
+            self.active_agents[new_agent] = {
+                "position": new_position,
+                "energy": self.initial_energy_predator,
+                "age": 0,
+                "unique_id": f"{new_agent}_{self.agent_internal_ids[new_agent]}"
+            }
+
+            # Update parent's energy
+            self.active_agents[agent]["energy"] -= self.initial_energy_predator
+
+            # Update grid
+            self.grid_world_state[1, *new_position] = self.initial_energy_predator
+            self.grid_world_state[1, *self.active_agents[agent]["position"]] = self.active_agents[agent]["energy"]
+
+            self.active_num_predators += 1
+
+            # Rewards and bookkeeping
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_predator
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
+
+            self._log(
+                self.verbose_reproduction,
+                f"[REPRODUCTION] Predator {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
+
+    def _handle_prey_reproduction(self, agent, rewards, observations, terminations, truncations):
+        if self.active_agents[agent]["energy"] >= self.prey_creation_energy_threshold:
+            parent_speed = int(agent.split("_")[1])  # e.g. "speed_1_prey_6" → 1
+
+            # Mutation logic
+            if self.rng.random() < self.mutation_rate_prey:
+                new_speed = 2 if parent_speed == 1 else 1
+            else:
+                new_speed = parent_speed
+
+            # Find available ID
+            potential_new_ids = [
+                f"speed_{new_speed}_prey_{i}"
+                for i in range(self.config.get(f"n_possible_speed_{new_speed}_prey", 25))
+                if f"speed_{new_speed}_prey_{i}" not in self.active_agents
+            ]
+            if not potential_new_ids:
+                rewards[agent] = self.reproduction_reward_prey
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available prey slots at speed {new_speed} for spawning",
+                    "red"
+                )
+                return
+
+            new_agent = potential_new_ids[0]
+            self.agents.append(new_agent)
+
+            # Determine spawn position
+            occupied_positions = {data["position"] for data in self.active_agents.values()}
+            new_position = self._find_available_spawn_position(self.active_agents[agent]["position"], occupied_positions)
+
+            # Initialize new prey agent
+            self.active_agents[new_agent] = {
+                "position": new_position,
+                "energy": self.initial_energy_prey,
+                "age": 0,
+                "unique_id": f"{new_agent}_{self.agent_internal_ids[new_agent]}"
+            }
+
+            # Deduct energy from parent
+            self.active_agents[agent]["energy"] -= self.initial_energy_prey
+
+            # Update grid
+            self.grid_world_state[2, *new_position] = self.initial_energy_prey
+            self.grid_world_state[2, *self.active_agents[agent]["position"]] = self.active_agents[agent]["energy"]
+
+            self.active_num_prey += 1
+
+            # Rewards and bookkeeping
+            rewards[new_agent] = 0
+            rewards[agent] = self.reproduction_reward_prey
+            self.cumulative_rewards[new_agent] = 0
+            self.cumulative_rewards[agent] += rewards[agent]
+
+            observations[new_agent] = self._get_observation(new_agent)
+            terminations[new_agent] = False
+            truncations[new_agent] = False
+
+            self._log(
+                self.verbose_reproduction,
+                f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
+                "green"
+            )
+
+    def _generate_random_positions(self, grid_size: int, num_positions: int, seed=None):
+        """
+        Generate unique random positions on a grid using a local RNG seeded per reset,
+        to ensure consistent and reproducible placement across runs.
+
+        Args:
+            grid_size (int): Size of the square grid.
+            num_positions (int): Number of unique positions to generate.
+            seed (int or None): Seed for local RNG (passed from reset()).
+
+        Returns:
+            List[Tuple[int, int]]: Unique (x, y) positions.
+        """
+        if num_positions > grid_size * grid_size:
+            raise ValueError("Cannot place more unique positions than grid cells.")
+
+        rng = np.random.default_rng(seed)
+        positions = set()
+
+        while len(positions) < num_positions:
+            pos = tuple(rng.integers(0, grid_size, size=2))
+            positions.add(pos)
+
+        return list(positions)
+
+    def get_state_snapshot(self):
+        return {
+            "current_step": self.current_step,
+            "active_agents": {k: v.copy() for k, v in self.active_agents.items()},
+            "active_objects": {k: v.copy() for k, v in self.active_objects.items()},
+            "grid_world_state": self.grid_world_state.copy(),
+            "agents": self.agents.copy(),
+            "cumulative_rewards": self.cumulative_rewards.copy(),
+            "active_num_predators": self.active_num_predators,
+            "active_num_prey": self.active_num_prey,
+            "agents_just_ate": self.agents_just_ate.copy(),
+        }
+
+    def restore_state_snapshot(self, snapshot):
+        self.current_step = snapshot["current_step"]
+        self.active_agents = {k: v.copy() for k, v in snapshot["active_agents"].items()}
+        self.active_objects = {k: v.copy() for k, v in snapshot["active_objects"].items()}
+        self.grid_world_state = snapshot["grid_world_state"].copy()
+        self.agents = snapshot["agents"].copy()
+        self.cumulative_rewards = snapshot["cumulative_rewards"].copy()
+        self.active_num_predators = snapshot["active_num_predators"]
+        self.active_num_prey = snapshot["active_num_prey"]
+        self.agents_just_ate = snapshot["agents_just_ate"].copy()
+
+    def _build_possible_agent_ids(self):
+        """
+        Build the list of possible agents based on the configuration.
+        This is called during reset to ensure the agent list is up-to-date.
+        """
+        agent_ids = []
+        for i in range(self.n_possible_speed_1_predators):
+            agent_ids.append(f"speed_1_predator_{i}")
+        for i in range(self.n_possible_speed_2_predators):
+            agent_ids.append(f"speed_2_predator_{i}")
+        for i in range(self.n_possible_speed_1_prey):
+            agent_ids.append(f"speed_1_prey_{i}")
+        for i in range(self.n_possible_speed_2_prey):
+            agent_ids.append(f"speed_2_prey_{i}")
+        return agent_ids  # ✅ ← this was missing
+
+    def _build_observation_space(self, agent_id):
+        """
+        Build the observation space for a specific agent.
+        """
+        if "predator" in agent_id:
+            predator_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float64)
+
+        elif "prey" in agent_id:
+            prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
+            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float64)
+
+        else:
+            raise ValueError(f"Unknown agent type in ID: {agent_id}")
+
+        return obs_space
+
+    def _build_action_space(self, agent_id):
+        """
+        Build the action space for a specific agent.
+        """
+        if "speed_1" in agent_id:
+            action_space = gymnasium.spaces.Discrete(self.speed_1_act_range**2)
+        elif "speed_2" in agent_id:
+            action_space = gymnasium.spaces.Discrete(self.speed_2_act_range**2)
+        else:
+            raise ValueError(f"Unknown agent type in ID: {agent_id}")
+
+        return action_space
