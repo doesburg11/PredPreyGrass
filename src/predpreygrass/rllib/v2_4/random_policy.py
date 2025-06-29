@@ -39,10 +39,10 @@ if __name__ == "__main__":
 
         # --- Update visualizer ---
         visualizer.update(
-            agent_positions=env.agent_positions,
-            grass_positions=env.grass_positions,
-            agent_energies=env.agent_energies,
-            grass_energies=env.grass_energies,
+            agent_positions=env._get_agent_positions(),
+            grass_positions=env._get_grass_positions(),
+            agent_energies=env._get_agent_energies(),
+            grass_energies=env._get_grass_energies(),
             agents_just_ate=env.agents_just_ate,
             step=env.current_step,
         )

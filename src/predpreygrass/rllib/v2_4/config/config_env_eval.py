@@ -37,7 +37,7 @@ config_env = {
     "mutation_rate_predator": 0.05,  # 0.05 # mutation probability from speed_1 to speed_2
     "mutation_rate_prey": 0.05,  # 0.05 and vice versa
     # Grass settings
-    "initial_num_grass": 50,  # 100
+    "n_initial_active_grass": 50,  # 100
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.08,  # 0.04
     "verbose_engagement": False,
