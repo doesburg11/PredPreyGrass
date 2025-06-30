@@ -9,7 +9,7 @@ from ray.tune.registry import register_env
 
 from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_1.config.config_env_eval import config_env
-from predpreygrass.utils.renderer import CombinedEvolutionVisualizer
+from predpreygrass.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 
 SAVE_EVAL_RESULTS = True

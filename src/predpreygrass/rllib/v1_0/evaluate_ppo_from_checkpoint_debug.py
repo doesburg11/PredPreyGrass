@@ -8,7 +8,7 @@ available to inspect agent IDs, positions, energies.
 """
 # discretionary libraries
 from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.utils.pygame_renderer import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray

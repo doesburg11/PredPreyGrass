@@ -1,5 +1,5 @@
 from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.utils.pygame_renderer import PyGameRenderer
+from predpreygrass.utils.pygame_grid_renderer_rllib import PyGameRenderer
 import pygame
 
 

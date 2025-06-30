@@ -6,7 +6,7 @@ with a random policy.
 """
 from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_1.config.config_env_random import config_env
-from predpreygrass.utils.pygame_renderer import PyGameRenderer
+from predpreygrass.utils.pygame_grid_renderer_rllib import PyGameRenderer
 import pygame
 
 

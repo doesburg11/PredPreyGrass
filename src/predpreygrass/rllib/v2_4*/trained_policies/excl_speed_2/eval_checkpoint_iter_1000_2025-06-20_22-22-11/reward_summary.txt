@@ -1,0 +1,61 @@
+Total Reward: 6750.0
+
+--- Reward Breakdown per Agent ---
+speed_1_predator_0: 0.00
+speed_1_predator_1: 0.00
+speed_1_predator_2: 10.00
+speed_1_predator_3: 50.00
+speed_1_predator_4: 60.00
+speed_1_predator_5: 20.00
+speed_1_predator_6: 30.00
+speed_1_predator_7: 0.00
+speed_1_predator_8: 0.00
+speed_1_predator_9: 0.00
+speed_1_predator_10: 0.00
+speed_1_predator_11: 10.00
+speed_1_predator_12: 20.00
+speed_1_predator_13: 0.00
+speed_1_predator_14: 0.00
+speed_1_predator_15: 30.00
+speed_1_predator_16: 10.00
+speed_1_predator_17: 0.00
+speed_1_predator_18: 10.00
+speed_1_predator_19: 0.00
+speed_1_prey_0 : 0.00
+speed_1_prey_1 : 0.00
+speed_1_prey_2 : 10.00
+speed_1_prey_3 : 0.00
+speed_1_prey_4 : 0.00
+speed_1_prey_5 : 0.00
+speed_1_prey_6 : 10.00
+speed_1_prey_7 : 30.00
+speed_1_prey_8 : 0.00
+speed_1_prey_9 : 10.00
+speed_1_prey_10: 0.00
+speed_1_prey_11: 20.00
+speed_1_prey_12: 0.00
+speed_1_prey_13: 0.00
+speed_1_prey_14: 10.00
+speed_1_prey_15: 20.00
+speed_1_prey_16: 50.00
+speed_1_prey_17: 40.00
+speed_1_prey_18: 0.00
+speed_1_prey_19: 0.00
+speed_1_predator_20: 0.00
+speed_1_predator_21: 0.00
+speed_1_predator_22: 20.00
+speed_1_predator_23: 0.00
+speed_1_predator_24: 0.00
+speed_1_predator_25: 0.00
+speed_1_predator_26: 0.00
+speed_1_prey_20: 10.00
+speed_1_prey_21: 30.00
+speed_1_prey_22: 10.00
+speed_1_prey_23: 0.00
+speed_1_prey_24: 0.00
+speed_1_prey_25: 10.00
+
+--- Aggregated Rewards ---
+Total number of steps: 999
+Total Speed 1 Predator Reward: 270.00
+Total Speed 1 Prey Reward: 260.00
