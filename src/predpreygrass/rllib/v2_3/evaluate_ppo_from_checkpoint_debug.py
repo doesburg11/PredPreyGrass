@@ -305,6 +305,8 @@ if __name__ == "__main__":
     print_reward_summary(env, total_reward)
     print_prey_death_summary(env)
 
+    print("Death statistics:", env.death_agents_stats)
+
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         save_prey_death_summary_to_file(env, eval_output_dir)
