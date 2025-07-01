@@ -99,6 +99,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_positions = {}
         self.agent_energies = {}
         self.grass_energies = {}
+        self.agent_lifetimes = {}
 
         self.agent_instance_counter = 0
         self.agent_internal_ids = {}
@@ -108,7 +109,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.cumulative_rewards = {}
 
         self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
-        self.unique
+        self.unique_agents = {}  # list of unique agent IDs
+        self.death_agents_stats = {}
 
         self.agents = []
         # create active agents list based on config
@@ -117,15 +119,14 @@ class PredPreyGrass(MultiAgentEnv):
                 key = f"n_initial_active_speed_{speed}_{agent_type}"
                 count = self.config.get(key, 0)
                 for i in range(count):
-                    aid = f"speed_{speed}_{agent_type}_{i}"
-                    self.agents.append(aid)
-                    self.unique_agents.add(aid+"_"+str(self.agent_activation_counts[aid]))
-                    self.agent_activation_counts[aid] += 1
-                    self.agent_internal_ids[aid] = self.agent_instance_counter
+                    agent_id = f"speed_{speed}_{agent_type}_{i}"
+                    self.agents.append(agent_id)
+                    self.unique_agents[agent_id] = agent_id+"_"+str(self.agent_activation_counts[agent_id])
+                    self.agent_activation_counts[agent_id] += 1  # counts how many times this agent ID has been activated
+                    self.agent_internal_ids[agent_id] = self.agent_instance_counter
                     self.agent_ages[self.agent_instance_counter] = 0
+                    self.agent_lifetimes[agent_id] = 0
                     self.agent_instance_counter += 1
-        
-        print(f"Unique agents: {self.unique_agents}")
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
@@ -192,7 +193,7 @@ class PredPreyGrass(MultiAgentEnv):
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
 
-        # step 0: check for truncation
+        # step 0: Check for truncation
         truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
         if truncation_result is not None:
             return truncation_result
@@ -225,6 +226,8 @@ class PredPreyGrass(MultiAgentEnv):
             if terminations[agent]:
                 self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
+                self.death_agents_stats[self.unique_agents[agent]] = {"liftetime": self.agent_lifetimes[agent]}
+                del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
         for agent in self.agents[:]:
@@ -248,10 +251,11 @@ class PredPreyGrass(MultiAgentEnv):
         truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
         truncations["__all__"] = False  # already handled at the beginning of the step
 
-        # Global termination and truncation
+        # Global termination
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
 
-        self.agents.sort()  # Sort agents
+        # Sort agents for debugging
+        self.agents.sort()
 
         # Increment step counter
         self.current_step += 1
@@ -630,6 +634,7 @@ class PredPreyGrass(MultiAgentEnv):
         Increment the age of each active agent by one step.
         """
         for agent in action_dict:
+            self.agent_lifetimes[agent] += 1
             internal_id = self.agent_internal_ids.get(agent)
             if internal_id is not None:
                 self.agent_ages[internal_id] += 1
@@ -795,6 +800,9 @@ class PredPreyGrass(MultiAgentEnv):
                 # if potential_new_ids still available
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            self.agent_lifetimes[new_agent] = 0
+            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
+            self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
             self.agent_internal_ids[new_agent] = self.agent_instance_counter
             self.agent_ages[self.agent_instance_counter] = 0
@@ -857,6 +865,9 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            self.agent_lifetimes[new_agent] = 0
+            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
+            self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
             self.agent_internal_ids[new_agent] = self.agent_instance_counter
             self.agent_ages[self.agent_instance_counter] = 0
