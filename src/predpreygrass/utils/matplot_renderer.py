@@ -321,7 +321,13 @@ class PopulationChart:
 
 
 class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots", run_nr=None):
+    def __init__(
+            self,
+            destination_path=None,
+            timestamp=None,
+            destination_filename="summary_plots",
+            run_nr=None
+            ):
         self.destination_path = destination_path
         self.destination_filename = destination_filename
         self.timestamp = timestamp
@@ -337,7 +343,7 @@ class CombinedEvolutionVisualizer:
         # Age tracking
         self.average_ages = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
 
-    def record(self, agent_ids, internal_ids, agent_ages):
+    def record(self, agent_ids):
         step = len(self.time_steps)
         self.time_steps.append(step)
         self.predator_counts.append(sum(1 for a in agent_ids if "predator" in a))
@@ -351,7 +357,7 @@ class CombinedEvolutionVisualizer:
                     count_dict[group] += 1
         for k in self.speed_counts_dict:
             self.speed_counts_dict[k].append(count_dict[k])
-
+        """
         # Average ages
         age_sums = {k: 0 for k in self.average_ages}
         age_counts = {k: 0 for k in self.average_ages}
@@ -364,6 +370,7 @@ class CombinedEvolutionVisualizer:
         for group in self.average_ages:
             avg = age_sums[group] / age_counts[group] if age_counts[group] > 0 else 0
             self.average_ages[group].append(avg)
+        """
 
     def plot(self):
         steps = self.time_steps
@@ -371,7 +378,7 @@ class CombinedEvolutionVisualizer:
         color_map = {"speed_1_predator": "#ff9999", "speed_2_predator": "red", "speed_1_prey": "#9999ff", "speed_2_prey": "blue"}
 
         # 1. Total predator and prey count
-        plt.subplot(1, 4, 1)
+        plt.subplot(1, 3, 1)
         plt.plot(steps, self.predator_counts, label="Predators", color="red", linewidth=2)
         plt.plot(steps, self.prey_counts, label="Prey", color="blue", linewidth=2)
         plt.title("Agent Population by Type")
@@ -381,7 +388,7 @@ class CombinedEvolutionVisualizer:
         plt.grid(True)
 
         # 2. Speed-specific counts
-        plt.subplot(1, 4, 2)
+        plt.subplot(1, 3, 2)
         for group, counts in self.speed_counts_dict.items():
             label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
             plt.plot(steps, counts, label=label, color=color_map.get(group, "black"), linewidth=2)
@@ -392,7 +399,7 @@ class CombinedEvolutionVisualizer:
         plt.grid(True)
 
         # 3. High-speed proportions
-        plt.subplot(1, 4, 3)
+        plt.subplot(1, 3, 3)
         predator_props, prey_props = [], []
         for i in steps:
             pred1 = self.speed_counts_dict["speed_1_predator"][i]
@@ -410,7 +417,7 @@ class CombinedEvolutionVisualizer:
         plt.ylim(0, 100)
         plt.legend()
         plt.grid(True)
-
+        """"
         # 4. Average ages
         plt.subplot(1, 4, 4)
         for group, ages in self.average_ages.items():
@@ -421,6 +428,7 @@ class CombinedEvolutionVisualizer:
         plt.ylabel("Age")
         plt.legend()
         plt.grid(True)
+        """
 
         plt.tight_layout()
 
