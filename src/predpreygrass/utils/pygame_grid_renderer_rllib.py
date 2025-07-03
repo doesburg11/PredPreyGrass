@@ -453,7 +453,7 @@ class PyGameRenderer:
 
         if hovered_entity:
             tooltip_line1 = self.tooltip_font.render(f"{hovered_entity}", True, (0, 0, 0))
-            tooltip_line2 = self.tooltip_font.render(f"E: {hovered_energy:.2f}", True, (0, 0, 0))
+            tooltip_line2 = self.tooltip_font.render(f"Energy: {hovered_energy:.2f}", True, (0, 0, 0))
             padding = self.gui_style.tooltip_padding
             width = max(tooltip_line1.get_width(), tooltip_line2.get_width())
             height = tooltip_line1.get_height() + tooltip_line2.get_height()
