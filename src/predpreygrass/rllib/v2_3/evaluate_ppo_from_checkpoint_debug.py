@@ -102,7 +102,7 @@ def step_backwards_if_requested(control, env, snapshots, time_steps, predator_co
                 time_steps.pop()
                 predator_counts.pop()
                 prey_counts.pop()
-            ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
+            ceviz.record(agent_ids=env.agents)
             pdviz.record(env.death_cause_prey)
             visualizer.update(
                 agent_positions=env.agent_positions,
@@ -132,8 +132,7 @@ def step_forward(env, observations, rl_modules, control, visualizer, ceviz, pdvi
     if len(snapshots) > 100:
         snapshots.pop(0)
 
-    ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
-    pdviz.record(env.death_cause_prey)
+    ceviz.record(agent_ids=env.agents)
 
     visualizer.update(
         agent_positions=env.agent_positions,
@@ -191,19 +190,6 @@ def print_reward_summary(env, total_reward):
     print(f"Total All-Agent Reward:{total_reward:.2f}")
 
 
-def print_prey_death_summary(env):
-    # Print causes of prey death
-    print("\n--- Prey Death Causes ---")
-    stats = {"eaten": 0, "starved": 0}
-    for internal_id, cause in env.death_cause_prey.items():
-        print(f"Prey internal_id {internal_id:4d}: {cause}")
-        if cause in stats:
-            stats[cause] += 1
-    print("\n--- Summary ---")
-    print(f"Total prey eaten   : {stats['eaten']}")
-    print(f"Total prey starved : {stats['starved']}")
-
-
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     with open(reward_log_path, "w") as f:
@@ -219,20 +205,6 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             grouped_rewards.setdefault(group, []).append(reward)
         for group, rewards in grouped_rewards.items():
             f.write(f"Total {group.replace('_', ' ').title()} Reward: {sum(rewards):.2f}\n")
-
-
-def save_prey_death_summary_to_file(env, output_dir):
-    death_log_path = os.path.join(output_dir, "prey_death_causes.txt")
-    death_stats = {"eaten": 0, "starved": 0}
-    with open(death_log_path, "w") as f:
-        f.write("--- Prey Death Causes ---\n")
-        for internal_id, cause in env.death_cause_prey.items():
-            f.write(f"Prey internal_id {internal_id:4d}: {cause}\n")
-            if cause in death_stats:
-                death_stats[cause] += 1
-        f.write("\n--- Summary ---\n")
-        f.write(f"Total prey eaten   : {death_stats['eaten']}\n")
-        f.write(f"Total prey starved : {death_stats['starved']}\n")
 
 
 def run_post_evaluation_plots(ceviz, pdviz):
@@ -303,17 +275,14 @@ if __name__ == "__main__":
             pygame.time.wait(50)
 
     print_reward_summary(env, total_reward)
-    print_prey_death_summary(env)
 
     print("Death statistics:", env.death_agents_stats)
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
-        save_prey_death_summary_to_file(env, eval_output_dir)
 
     # Always show plots on screen
     ceviz.plot()
-    pdviz.plot()
 
     pygame.quit()
     ray.shutdown()
