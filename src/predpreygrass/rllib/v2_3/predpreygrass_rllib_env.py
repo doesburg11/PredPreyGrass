@@ -19,15 +19,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.possible_agents = self._build_possible_agent_ids()
 
-        self.observation_spaces = {
-            agent_id: self._build_observation_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
-        self.action_spaces = {
-            agent_id: self._build_action_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
     def _initialize_from_config(self):
         config = self.config
@@ -103,7 +97,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_parents = {}
         self.unique_agents = {}  # list of unique agent IDs
         self.unique_agent_stats = {}
-        
+
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
 
@@ -151,8 +145,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_list = [a for a in self.agents if "prey" in a]
 
         predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
@@ -219,8 +213,12 @@ class PredPreyGrass(MultiAgentEnv):
             if terminations[agent]:
                 self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
-                self.death_agents_stats[self.unique_agents[agent]] = {"lifetime": self.agent_ages[agent],
-                                                                      "parent": self.agent_parents[agent]}
+                uid = self.unique_agents[agent]
+                self.death_agents_stats[uid] = {
+                    **self.unique_agent_stats[uid],
+                    "lifetime": self.agent_ages[agent],
+                    "parent": self.agent_parents[agent],
+                }
                 del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
@@ -651,9 +649,7 @@ class PredPreyGrass(MultiAgentEnv):
                 move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
                 self.agent_energies[agent] -= move_cost
                 uid = self.unique_agents[agent]
-                self.unique_agent_stats[uid]["distance_traveled"] += (
-                    np.linalg.norm(np.array(new_position) - np.array(old_position))
-                )
+                self.unique_agent_stats[uid]["distance_traveled"] += np.linalg.norm(np.array(new_position) - np.array(old_position))
                 self.unique_agent_stats[uid]["energy_spent"] += move_cost
                 self.unique_agent_stats[uid]["avg_energy_sum"] += self.agent_energies[agent]
                 self.unique_agent_stats[uid]["avg_energy_steps"] += 1

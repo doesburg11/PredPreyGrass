@@ -60,9 +60,7 @@ if __name__ == "__main__":
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         if SAVE_EVAL_RESULTS:
-            eval_output_dir = os.path.join(
-                checkpoint_root, f"eval_runs_{now}"
-            )
+            eval_output_dir = os.path.join(checkpoint_root, f"eval_runs_{now}")
             os.makedirs(eval_output_dir, exist_ok=True)
             visualizer = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now, run_nr=run + 1)
         else:
@@ -73,16 +71,11 @@ if __name__ == "__main__":
         truncated = False
 
         while not terminated and not truncated:
-            action_dict = {
-                aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)])
-                for aid in env.agents
-            }
+            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
             if visualizer:
                 visualizer.record(
                     agent_ids=env.agents,
-                    internal_ids=env.agent_internal_ids,
-                    agent_ages=env.agent_ages,
                 )
 
             total_reward += sum(rewards.values())
@@ -95,26 +88,17 @@ if __name__ == "__main__":
         # for aid, r in env.cumulative_rewards.items():
         #    print(f"{aid:20}: {r:.2f}")
 
-        death_stats = {"eaten": 0, "starved": 0}
-        for cause in env.death_cause_prey.values():
-            if cause in death_stats:
-                death_stats[cause] += 1
-        print(f"Prey Deaths: Eaten={death_stats['eaten']} Starved={death_stats['starved']}")
-
         if SAVE_EVAL_RESULTS:
             visualizer.plot()
             config_env_dir = os.path.join(eval_output_dir, "config_env")
             os.makedirs(config_env_dir, exist_ok=True)
             summary_data_dir = os.path.join(eval_output_dir, "summary_data")
             os.makedirs(summary_data_dir, exist_ok=True)
-            with open(os.path.join(config_env_dir, "config_env_"+str(run+1)+".json"), "w") as f:
+            with open(os.path.join(config_env_dir, "config_env_" + str(run + 1) + ".json"), "w") as f:
                 json.dump(config_env, f, indent=4)
-            with open(os.path.join(summary_data_dir, "reward_summary_"+str(run+1)+".txt"), "w") as f:
+            with open(os.path.join(summary_data_dir, "reward_summary_" + str(run + 1) + ".txt"), "w") as f:
                 f.write(f"Total Reward: {total_reward:.2f}\n")
                 for aid, r in env.cumulative_rewards.items():
                     f.write(f"{aid:20}: {r:.2f}\n")
-            with open(os.path.join(summary_data_dir, "prey_death_causes_"+str(run+1)+".txt"), "w") as f:
-                for iid, cause in env.death_cause_prey.items():
-                    f.write(f"Prey internal_id {iid:4d}: {cause}\n")
 
     ray.shutdown()

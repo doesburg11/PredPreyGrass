@@ -181,12 +181,7 @@ if __name__ == "__main__":
         mean_return = result.get("env_runners/episode_return_mean", float("nan"))
         mean_len = result.get("env_runners/episode_len_mean", float("nan"))
 
-        print(
-            f"Iteration {iter + 1}: "
-            f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, "
-            f"Mean episode return={mean_return:.2f}, "
-            f"Mean episode length={mean_len:.2f}"
-        )
+        print(f"Iteration {iter + 1}: " f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, ")
         # Save checkpoint manually every N iterations
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
