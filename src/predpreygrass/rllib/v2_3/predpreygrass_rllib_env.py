@@ -99,17 +99,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_positions = {}
         self.agent_energies = {}
         self.grass_energies = {}
-        self.agent_lifetimes = {}
-
-        self.agent_instance_counter = 0
-        self.agent_internal_ids = {}
         self.agent_ages = {}
-        self.death_cause_prey = {}
+        self.agent_parents = {}
+        self.unique_agents = {}  # list of unique agent IDs
+        self.unique_agent_stats = {}
+        
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
 
         self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
-        self.unique_agents = {}  # list of unique agent IDs
         self.death_agents_stats = {}
 
         self.agents = []
@@ -121,12 +119,7 @@ class PredPreyGrass(MultiAgentEnv):
                 for i in range(count):
                     agent_id = f"speed_{speed}_{agent_type}_{i}"
                     self.agents.append(agent_id)
-                    self.unique_agents[agent_id] = agent_id+"_"+str(self.agent_activation_counts[agent_id])
-                    self.agent_activation_counts[agent_id] += 1  # counts how many times this agent ID has been activated
-                    self.agent_internal_ids[agent_id] = self.agent_instance_counter
-                    self.agent_ages[self.agent_instance_counter] = 0
-                    self.agent_lifetimes[agent_id] = 0
-                    self.agent_instance_counter += 1
+                    self._register_new_agent(agent_id)
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
@@ -226,7 +219,8 @@ class PredPreyGrass(MultiAgentEnv):
             if terminations[agent]:
                 self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
-                self.death_agents_stats[self.unique_agents[agent]] = {"liftetime": self.agent_lifetimes[agent]}
+                self.death_agents_stats[self.unique_agents[agent]] = {"lifetime": self.agent_ages[agent],
+                                                                      "parent": self.agent_parents[agent]}
                 del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
@@ -587,7 +581,7 @@ class PredPreyGrass(MultiAgentEnv):
             for agent in self.possible_agents:
                 if agent in self.agents:  # Active agents get observation
                     observations[agent] = self._get_observation(agent)
-                else:
+                else:  # Inactive agents get empty observation
                     obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
                     observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float64)
 
@@ -634,10 +628,7 @@ class PredPreyGrass(MultiAgentEnv):
         Increment the age of each active agent by one step.
         """
         for agent in action_dict:
-            self.agent_lifetimes[agent] += 1
-            internal_id = self.agent_internal_ids.get(agent)
-            if internal_id is not None:
-                self.agent_ages[internal_id] += 1
+            self.agent_ages[agent] += 1
 
     def _regenerate_grass_energy(self):
         """
@@ -659,6 +650,14 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agent_positions[agent] = new_position
                 move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
                 self.agent_energies[agent] -= move_cost
+                uid = self.unique_agents[agent]
+                self.unique_agent_stats[uid]["distance_traveled"] += (
+                    np.linalg.norm(np.array(new_position) - np.array(old_position))
+                )
+                self.unique_agent_stats[uid]["energy_spent"] += move_cost
+                self.unique_agent_stats[uid]["avg_energy_sum"] += self.agent_energies[agent]
+                self.unique_agent_stats[uid]["avg_energy_steps"] += 1
+
                 if "predator" in agent:
                     self.predator_positions[agent] = new_position
                     self.grid_world_state[1, *old_position] = 0
@@ -684,6 +683,16 @@ class PredPreyGrass(MultiAgentEnv):
 
         layer = 1 if "predator" in agent else 2
         self.grid_world_state[layer, *self.agent_positions[agent]] = 0
+        uid = self.unique_agents[agent]
+        stat = self.unique_agent_stats[uid]
+        stat["death_step"] = self.current_step
+        stat["death_cause"] = "starved"  # or "eaten"
+        stat["final_energy"] = self.agent_energies[agent]
+        steps = max(stat["avg_energy_steps"], 1)
+        stat["avg_energy"] = stat["avg_energy_sum"] / steps
+        stat["cumulative_reward"] = self.cumulative_rewards.get(agent, 0.0)
+
+        self.death_agents_stats[uid] = stat
 
         if "predator" in agent:
             self.active_num_predators -= 1
@@ -691,8 +700,6 @@ class PredPreyGrass(MultiAgentEnv):
         else:
             self.active_num_prey -= 1
             del self.prey_positions[agent]
-            internal_id = self.agent_internal_ids[agent]
-            self.death_cause_prey[internal_id] = "starved"
 
         del self.agent_positions[agent]
         del self.agent_energies[agent]
@@ -714,6 +721,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards[agent] += rewards[agent]
 
             self.agent_energies[agent] += self.agent_energies[caught_prey]
+            uid = self.unique_agents[agent]
+            self.unique_agent_stats[uid]["times_ate"] += 1
+            self.unique_agent_stats[uid]["energy_gained"] += self.agent_energies[caught_prey]
+            self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
+
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
             observations[caught_prey] = self._get_observation(caught_prey)
@@ -721,13 +733,21 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(caught_prey, 0.0)
             self.cumulative_rewards[caught_prey] += rewards[caught_prey]
 
-            internal_id = self.agent_internal_ids[caught_prey]
-            self.death_cause_prey[internal_id] = "eaten"
-
             terminations[caught_prey] = True
             truncations[caught_prey] = False
             self.active_num_prey -= 1
             self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
+            uid = self.unique_agents[agent]
+            stat = self.unique_agent_stats[uid]
+            stat["death_step"] = self.current_step
+            stat["death_cause"] = "eaten"
+            stat["final_energy"] = self.agent_energies[agent]
+            steps = max(stat["avg_energy_steps"], 1)
+            stat["avg_energy"] = stat["avg_energy_sum"] / steps
+            stat["cumulative_reward"] = self.cumulative_rewards.get(agent, 0.0)
+
+            self.death_agents_stats[uid] = stat
+
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
@@ -758,6 +778,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards[agent] += rewards[agent]
 
             self.agent_energies[agent] += self.grass_energies[caught_grass]
+            uid = self.unique_agents[agent]
+            self.unique_agent_stats[uid]["times_ate"] += 1
+            self.unique_agent_stats[uid]["energy_gained"] += self.grass_energies[caught_grass]
+            self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
+
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
 
             self.grid_world_state[3, *prey_position] = 0
@@ -776,7 +801,8 @@ class PredPreyGrass(MultiAgentEnv):
             parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
 
             # Mutation: chance (self.mutation_rate_predator) to switch speed
-            if self.rng.random() < self.mutation_rate_predator:
+            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            if mutated:
                 new_speed = 2 if parent_speed == 1 else 1
             else:
                 new_speed = parent_speed
@@ -796,17 +822,13 @@ class PredPreyGrass(MultiAgentEnv):
                     self.verbose_reproduction, f"[REPRODUCTION] No available predator slots at speed {new_speed} for spawning" "red"
                 )
                 return
-                # TODO continue is left out because it's it a lop anymmore, check outside of function
-                # if potential_new_ids still available
+
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
-            self.agent_lifetimes[new_agent] = 0
-            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
-            self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
-            self.agent_internal_ids[new_agent] = self.agent_instance_counter
-            self.agent_ages[self.agent_instance_counter] = 0
-            self.agent_instance_counter += 1
+            self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
+            self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
+            self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
             # Spawn position
             occupied_positions = set(self.agent_positions.values())
@@ -842,7 +864,8 @@ class PredPreyGrass(MultiAgentEnv):
             parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
             # Mutation: 10% chance to switch speed
-            if self.rng.random() < self.mutation_rate_prey:
+            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            if mutated:
                 new_speed = 2 if parent_speed == 1 else 1
             else:
                 new_speed = parent_speed
@@ -865,13 +888,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
-            self.agent_lifetimes[new_agent] = 0
-            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
-            self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
-            self.agent_internal_ids[new_agent] = self.agent_instance_counter
-            self.agent_ages[self.agent_instance_counter] = 0
-            self.agent_instance_counter += 1
+            self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
+            self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
+            self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
             # Spawn position
             occupied_positions = set(self.agent_positions.values())
@@ -942,6 +962,9 @@ class PredPreyGrass(MultiAgentEnv):
             "active_num_predators": self.active_num_predators,
             "active_num_prey": self.active_num_prey,
             "agents_just_ate": self.agents_just_ate.copy(),
+            "unique_agents": self.unique_agents.copy(),
+            "agent_activation_counts": self.agent_activation_counts.copy(),
+            "agent_ages": self.agent_ages.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -958,6 +981,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = snapshot["active_num_predators"]
         self.active_num_prey = snapshot["active_num_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()
+        self.unique_agents = snapshot["unique_agents"].copy()
+        self.agent_activation_counts = snapshot["agent_activation_counts"].copy()
+        self.agent_ages = snapshot["agent_ages"].copy()
 
     def _build_possible_agent_ids(self):
         """
@@ -1004,3 +1030,31 @@ class PredPreyGrass(MultiAgentEnv):
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
 
         return action_space
+
+    def _register_new_agent(self, agent_id: str, parent_unique_id: str = None):
+        reuse_index = self.agent_activation_counts[agent_id]
+        unique_id = f"{agent_id}_{reuse_index}"
+        self.unique_agents[agent_id] = unique_id
+        self.agent_activation_counts[agent_id] += 1
+
+        self.agent_ages[agent_id] = 0
+        self.agent_parents[agent_id] = parent_unique_id
+
+        self.unique_agent_stats[unique_id] = {
+            "birth_step": self.current_step,
+            "parent": parent_unique_id,
+            "offspring_count": 0,
+            "distance_traveled": 0.0,
+            "times_ate": 0,
+            "energy_gained": 0.0,
+            "energy_spent": 0.0,
+            "avg_energy_sum": 0.0,
+            "avg_energy_steps": 0,
+            "cumulative_reward": 0.0,
+            "policy_group": "_".join(agent_id.split("_")[:3]),
+            "mutated": False,
+            "death_step": None,
+            "death_cause": None,
+            "final_energy": None,
+            "avg_energy": None,
+        }
