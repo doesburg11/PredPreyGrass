@@ -19,15 +19,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.possible_agents = self._build_possible_agent_ids()
 
-        self.observation_spaces = {
-            agent_id: self._build_observation_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
-        self.action_spaces = {
-            agent_id: self._build_action_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
     def _initialize_from_config(self):
         config = self.config
@@ -120,7 +114,7 @@ class PredPreyGrass(MultiAgentEnv):
                     self.agents.append(agent_id)
                     self.agent_ages[agent_id] = 0
                     self.agent_parents[agent_id] = None  # No parent for initial agents
-                    self.unique_agents[agent_id] = agent_id+"_"+str(self.agent_activation_counts[agent_id])
+                    self.unique_agents[agent_id] = agent_id + "_" + str(self.agent_activation_counts[agent_id])
                     self.agent_activation_counts[agent_id] += 1  # counts how many times this agent ID has been activated
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
@@ -153,8 +147,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_list = [a for a in self.agents if "prey" in a]
 
         predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
@@ -221,8 +215,10 @@ class PredPreyGrass(MultiAgentEnv):
             if terminations[agent]:
                 self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
                 self.agents.remove(agent)
-                self.death_agents_stats[self.unique_agents[agent]] = {"lifetime": self.agent_ages[agent],
-                                                                      "parent": self.agent_parents[agent]}
+                self.death_agents_stats[self.unique_agents[agent]] = {
+                    "lifetime": self.agent_ages[agent],
+                    "parent": self.agent_parents[agent],
+                }
                 del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
@@ -246,7 +242,6 @@ class PredPreyGrass(MultiAgentEnv):
         terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
         truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
         truncations["__all__"] = False  # already handled at the beginning of the step
-
         # Global termination
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
 
@@ -789,7 +784,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents.append(new_agent)
             self.agent_ages[new_agent] = 0
             self.agent_parents[new_agent] = self.unique_agents[agent]
-            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
+            self.unique_agents[new_agent] = new_agent + "_" + str(self.agent_activation_counts[new_agent])
             self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
             # Spawn position
@@ -851,7 +846,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents.append(new_agent)
             self.agent_ages[new_agent] = 0
             self.agent_parents[new_agent] = self.unique_agents[agent]  # Track parent agent
-            self.unique_agents[new_agent] = new_agent+"_"+str(self.agent_activation_counts[new_agent])
+            self.unique_agents[new_agent] = new_agent + "_" + str(self.agent_activation_counts[new_agent])
             self.agent_activation_counts[new_agent] += 1  # counts how many times this agent ID has been activated
 
             # Spawn position

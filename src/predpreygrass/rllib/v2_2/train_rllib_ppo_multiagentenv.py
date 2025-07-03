@@ -126,8 +126,7 @@ if __name__ == "__main__":
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)
-    # sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
-    sample_agents = ["speed_1_predator_0", "speed_1_prey_0"]
+    sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
     module_specs = {}
     for sample_agent in sample_agents:
         policy = policy_mapping_fn(sample_agent)

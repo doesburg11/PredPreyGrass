@@ -233,17 +233,12 @@ class PredPreyGrass(MultiAgentEnv):
             if agent in self.agent_positions:
                 observations[agent] = self._get_observation(agent)
 
-        # Global termination and truncation
-        terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
-
         # output only observations, rewards for active agents
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
         rewards = {agent: rewards[agent] for agent in self.agents if agent in rewards}
         terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
         truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
-        truncations["__all__"] = False  # already handled at the beginning of the step
-
-        # Global termination
+        truncations["__all__"] = False  # already handled at the beginning of the step        # Global termination and truncation
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
 
         # Sort agents for debugging
