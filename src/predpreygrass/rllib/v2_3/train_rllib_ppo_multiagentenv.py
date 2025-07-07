@@ -192,4 +192,5 @@ if __name__ == "__main__":
 
     # Delay shutdown to give Ray time to clean up, to avoid crashing
     time.sleep(2)
+    del ppo_algo
     ray.shutdown()
