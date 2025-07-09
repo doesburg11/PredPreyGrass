@@ -1,7 +1,8 @@
 """
 Evaluation code for evaluating a trained PPO agent from a checkpoint.
 This script has an advanced viewer control system that allows stepping
-back-and-forward through the simulation.
+back-and-forward through the simulation. For a simplear evaluation script,
+see `evaluate_ppo_from_checkpoint_headless.py`.
 """
 from predpreygrass.rllib.v2_3.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v2_3.config.config_env_eval import config_env
