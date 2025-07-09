@@ -91,9 +91,7 @@ def setup_environment_and_visualizer(now):
     return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
 
 
-def step_backwards_if_requested(
-    control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
-):
+def step_backwards_if_requested(control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz):
     if control.step_backward:
         if len(snapshots) > 1:
             snapshots.pop()
@@ -104,8 +102,6 @@ def step_backwards_if_requested(
                 time_steps.pop()
                 predator_counts.pop()
                 prey_counts.pop()
-                energy_by_type_series.pop()
-
             ceviz.record(agent_ids=env.agents)
             pdviz.record(env.death_cause_prey)
             visualizer.update(
@@ -153,8 +149,6 @@ def step_forward(
         snapshots.pop(0)
 
     ceviz.record(agent_ids=env.agents)
-    if hasattr(ceviz, "record_energy"):
-        ceviz.record_energy(env.get_total_energy_by_type())
 
     visualizer.update(
         agent_positions=env.agent_positions,
@@ -178,7 +172,6 @@ def step_forward(
     predator_counts.append(sum(1 for a in env.agents if "predator" in a))
     prey_counts.append(sum(1 for a in env.agents if "prey" in a))
     time_steps.append(env.current_step)
-    energy_by_type_series.append(env.get_total_energy_by_type())
     total_reward += sum(rewards.values())
 
     return observations, total_reward, terminations, truncations
@@ -263,13 +256,12 @@ if __name__ == "__main__":
     total_reward = 0
     predator_counts, prey_counts, time_steps = [], [], []
     snapshots = [env.get_state_snapshot()]
-    energy_by_type_series = [env.get_total_energy_by_type()]
 
     while not loop_helper.simulation_terminated:
         control.handle_events()
 
         new_obs = step_backwards_if_requested(
-            control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
+            control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz
         )
         if new_obs is not None:
             observations = new_obs
@@ -304,9 +296,7 @@ if __name__ == "__main__":
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
-        energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
-        with open(energy_log_path, "w") as f:
-            json.dump(energy_by_type_series, f, indent=2)
+
     # Always show plots on screen
     ceviz.plot()
 

@@ -103,6 +103,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
         self.death_agents_stats = {}
+        self.death_cause_prey = {}
 
         # aggregates per step
         self.active_num_predators = 0
@@ -1660,6 +1661,7 @@ class PredPreyGrass(MultiAgentEnv):
             "unique_agents": self.unique_agents.copy(),
             "agent_activation_counts": self.agent_activation_counts.copy(),
             "agent_ages": self.agent_ages.copy(),
+            "death_cause_prey": self.death_cause_prey.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1679,6 +1681,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.unique_agents = snapshot["unique_agents"].copy()
         self.agent_activation_counts = snapshot["agent_activation_counts"].copy()
         self.agent_ages = snapshot["agent_ages"].copy()
+        self.death_cause_prey = snapshot["death_cause_prey"].copy()
 
     def _build_possible_agent_ids(self):
         """
@@ -1753,3 +1756,38 @@ class PredPreyGrass(MultiAgentEnv):
             "final_energy": None,
             "avg_energy": None,
         }
+
+    def get_total_energy_by_type(self):
+        """
+        Returns a dict with total energy by category:
+        - 'predator': total predator energy
+        - 'prey': total prey energy
+        - 'grass': total grass energy
+        - 'speed_1_predator', 'speed_2_predator'
+        - 'speed_1_prey', 'speed_2_prey'
+        """
+        energy_totals = {
+            "predator": 0.0,
+            "prey": 0.0,
+            "grass": sum(self.grass_energies.values()),
+            "speed_1_predator": 0.0,
+            "speed_2_predator": 0.0,
+            "speed_1_prey": 0.0,
+            "speed_2_prey": 0.0,
+        }
+
+        for agent_id, energy in self.agent_energies.items():
+            if "predator" in agent_id:
+                energy_totals["predator"] += energy
+                if "speed_1" in agent_id:
+                    energy_totals["speed_1_predator"] += energy
+                elif "speed_2" in agent_id:
+                    energy_totals["speed_2_predator"] += energy
+            elif "prey" in agent_id:
+                energy_totals["prey"] += energy
+                if "speed_1" in agent_id:
+                    energy_totals["speed_1_prey"] += energy
+                elif "speed_2" in agent_id:
+                    energy_totals["speed_2_prey"] += energy
+
+        return energy_totals
