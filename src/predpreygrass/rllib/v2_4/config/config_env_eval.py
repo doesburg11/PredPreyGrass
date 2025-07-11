@@ -55,4 +55,7 @@ config_env = {
     "reproduction_cooldown_steps": 10,
     "reproduction_chance_predator": 0.85,
     "reproduction_chance_prey": 0.9,
+    # Energy transfer and reproduction efficiency
+    "energy_transfer_efficiency": 0.85,  # e.g. 85% of energy is absorbed from food
+    "reproduction_energy_efficiency": 0.85,  # e.g. only 85% of energy investment goes to child
 }

@@ -720,8 +720,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
-            gain = min(self.agent_energies[caught_prey], self.config.get("max_energy_gain_per_prey", float("inf")))
+            raw_gain = min(self.agent_energies[caught_prey], self.config.get("max_energy_gain_per_prey", float("inf")))
+            efficiency = self.config.get("energy_transfer_efficiency", 1.0)
+            gain = raw_gain * efficiency
             self.agent_energies[agent] += gain
+
             # Cap the energy gain to max allowed for predator
             max_energy = self.config.get("max_energy_predator", float("inf"))
             self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
@@ -782,8 +785,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
-            gain = min(self.grass_energies[caught_grass], self.config.get("max_energy_gain_per_grass", float("inf")))
+            raw_gain = min(self.grass_energies[caught_grass], self.config.get("max_energy_gain_per_grass", float("inf")))
+            efficiency = self.config.get("energy_transfer_efficiency", 1.0)
+            gain = raw_gain * efficiency
             self.agent_energies[agent] += gain
+
             # Cap the energy gain to max allowed for prey
             max_energy = self.config.get("max_energy_prey", float("inf"))
             self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
@@ -856,7 +862,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
-            self.agent_energies[new_agent] = self.initial_energy_predator
+
+            repro_eff = self.config.get("reproduction_energy_efficiency", 1.0)
+            energy_given = self.initial_energy_predator * repro_eff
+            self.agent_energies[new_agent] = energy_given
             self.agent_energies[agent] -= self.initial_energy_predator
 
             self.grid_world_state[1, *new_position] = self.initial_energy_predator
@@ -929,7 +938,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
-            self.agent_energies[new_agent] = self.initial_energy_prey
+
+            repro_eff = self.config.get("reproduction_energy_efficiency", 1.0)
+            energy_given = self.initial_energy_prey * repro_eff
+            self.agent_energies[new_agent] = energy_given
             self.agent_energies[agent] -= self.initial_energy_prey
 
             self.grid_world_state[2, *new_position] = self.initial_energy_prey

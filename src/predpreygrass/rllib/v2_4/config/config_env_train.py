@@ -21,7 +21,7 @@ config_env = {
     "energy_loss_per_step_prey": 0.05,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "move_energy_cost_factor": 0.0,  # energy cost = distance * factor * current_energy
+    "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
     "n_possible_speed_2_predators": 30,  # 30
@@ -55,4 +55,7 @@ config_env = {
     "reproduction_cooldown_steps": 10,
     "reproduction_chance_predator": 0.85,
     "reproduction_chance_prey": 0.9,
+    # Energy transfer and reproduction efficiency
+    "energy_transfer_efficiency": 0.85,  # e.g. 85% of energy is absorbed from food
+    "reproduction_energy_efficiency": 0.85,  # e.g. only 85% of energy investment goes to child
 }
