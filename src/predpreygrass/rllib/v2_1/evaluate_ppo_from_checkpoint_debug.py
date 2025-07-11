@@ -5,8 +5,8 @@ back-and-forward through the simulation.
 """
 from predpreygrass.rllib.v2_1.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v2_1.config.config_env_eval import config_env
-from predpreygrass.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.v2_1.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.v2_1.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -122,7 +122,23 @@ def step_backwards_if_requested(control, env, snapshots, time_steps, predator_co
     return None
 
 
-def step_forward(env, observations, rl_modules, control, visualizer, ceviz, pdviz, snapshots, predator_counts, prey_counts, time_steps, total_reward, clock, SAVE_MOVIE, video_writer):
+def step_forward(
+    env,
+    observations,
+    rl_modules,
+    control,
+    visualizer,
+    ceviz,
+    pdviz,
+    snapshots,
+    predator_counts,
+    prey_counts,
+    time_steps,
+    total_reward,
+    clock,
+    SAVE_MOVIE,
+    video_writer,
+):
     action_dict = {}
     for agent_id in env.agents:
         group = policy_mapping_fn(agent_id)

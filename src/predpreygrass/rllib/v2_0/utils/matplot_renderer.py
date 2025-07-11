@@ -321,24 +321,22 @@ class PopulationChart:
 
 
 class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots", run_nr=None):
+    def __init__(self, destination_path=None, timestamp=None):
         self.destination_path = destination_path
-        self.destination_filename = destination_filename
         self.timestamp = timestamp
-        self.run_nr = run_nr
+
         # Population counts
         self.time_steps = []
         self.predator_counts = []
         self.prey_counts = []
+
         # Speed-based counts
         self.speed_counts_dict = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
-        # Energy by type series
-        self.energy_by_type_series = []  # e.g., [{"speed_1_prey": 120, "grass": 30, ...}, ...]
 
         # Age tracking
         self.average_ages = {"speed_1_predator": [], "speed_2_predator": [], "speed_1_prey": [], "speed_2_prey": []}
 
-    def record(self, agent_ids):
+    def record(self, agent_ids, internal_ids, agent_ages):
         step = len(self.time_steps)
         self.time_steps.append(step)
         self.predator_counts.append(sum(1 for a in agent_ids if "predator" in a))
@@ -353,20 +351,26 @@ class CombinedEvolutionVisualizer:
         for k in self.speed_counts_dict:
             self.speed_counts_dict[k].append(count_dict[k])
 
-    def record_energy(self, energy_dict):
-        """Stores a dict like {"speed_1_prey": total_energy, ..., "grass": total_energy} for each step."""
-        self.energy_by_type_series.append(energy_dict.copy())
+        # Average ages
+        age_sums = {k: 0 for k in self.average_ages}
+        age_counts = {k: 0 for k in self.average_ages}
+        for agent_id in agent_ids:
+            for group in self.average_ages:
+                if group in agent_id:
+                    internal_id = internal_ids[agent_id]
+                    age_sums[group] += agent_ages[internal_id]
+                    age_counts[group] += 1
+        for group in self.average_ages:
+            avg = age_sums[group] / age_counts[group] if age_counts[group] > 0 else 0
+            self.average_ages[group].append(avg)
 
     def plot(self):
         steps = self.time_steps
-        n_charts = 3
-        if self.energy_by_type_series:
-            n_charts += 1
         plt.figure(figsize=(24, 6))
         color_map = {"speed_1_predator": "#ff9999", "speed_2_predator": "red", "speed_1_prey": "#9999ff", "speed_2_prey": "blue"}
 
         # 1. Total predator and prey count
-        plt.subplot(1, n_charts, 1)
+        plt.subplot(1, 4, 1)
         plt.plot(steps, self.predator_counts, label="Predators", color="red", linewidth=2)
         plt.plot(steps, self.prey_counts, label="Prey", color="blue", linewidth=2)
         plt.title("Agent Population by Type")
@@ -376,7 +380,7 @@ class CombinedEvolutionVisualizer:
         plt.grid(True)
 
         # 2. Speed-specific counts
-        plt.subplot(1, n_charts, 2)
+        plt.subplot(1, 4, 2)
         for group, counts in self.speed_counts_dict.items():
             label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
             plt.plot(steps, counts, label=label, color=color_map.get(group, "black"), linewidth=2)
@@ -387,7 +391,7 @@ class CombinedEvolutionVisualizer:
         plt.grid(True)
 
         # 3. High-speed proportions
-        plt.subplot(1, n_charts, 3)
+        plt.subplot(1, 4, 3)
         predator_props, prey_props = [], []
         for i in steps:
             pred1 = self.speed_counts_dict["speed_1_predator"][i]
@@ -406,41 +410,32 @@ class CombinedEvolutionVisualizer:
         plt.legend()
         plt.grid(True)
 
-        # 4. Aggregate Energy by Type
-        if self.energy_by_type_series:
-            plt.subplot(1, n_charts, 4)
-            steps = list(range(len(self.energy_by_type_series)))
-            energy_keys = ["predator", "prey", "grass"]
-            color_map = {"predator": "red", "prey": "blue", "grass": "green", "total": "black"}
-            for k in energy_keys:
-                series = [entry[k] for entry in self.energy_by_type_series]
-                plt.plot(steps, series, label=k.capitalize(), linewidth=2, color=color_map[k])
-            # Add total energy line
-            total_series = [sum(entry[k] for k in energy_keys) for entry in self.energy_by_type_series]
-            plt.plot(steps, total_series, label="Total", linestyle="--", linewidth=2, color=color_map["total"])
-
-            plt.title("Total Energy per Agent Type")
-            plt.xlabel("Step")
-            plt.ylabel("Energy")
-            plt.legend()
-            plt.grid(True)
+        # 4. Average ages
+        plt.subplot(1, 4, 4)
+        for group, ages in self.average_ages.items():
+            label = group.replace("speed_1", "Low-Speed").replace("speed_2", "High-Speed").replace("_", " ").capitalize()
+            plt.plot(steps, ages, label=label, color=color_map.get(group, "black"), linewidth=2)
+        plt.title("Average Age per Agent Type")
+        plt.xlabel("Step")
+        plt.ylabel("Age")
+        plt.legend()
+        plt.grid(True)
 
         plt.tight_layout()
 
         if self.destination_path:
             os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.run_nr) + ".png")
+            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.timestamp) + ".png")
             plt.savefig(path)
-            # plt.show()
+            plt.show()
         else:
             plt.show()
 
 
 class PreyDeathCauseVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots"):
+    def __init__(self, destination_path=None, timestamp=None):
         self.timestamp = timestamp
         self.destination_path = destination_path
-        self.destination_filename = destination_filename
         self.time_steps = []
         self.starved_ratio = []
         self.eaten_ratio = []
@@ -466,10 +461,8 @@ class PreyDeathCauseVisualizer:
         plt.grid(True)
 
         if self.destination_path:
-            os.makedirs(os.path.join(self.destination_path, self.destination_filename), exist_ok=True)
-            path = os.path.join(
-                self.destination_path, self.destination_filename, "prey_death_cause_plot_" + str(self.timestamp) + ".png"
-            )
+            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
+            path = os.path.join(self.destination_path, "summary_plots", "prey_death_cause_plot_" + str(self.timestamp) + ".png")
             plt.savefig(path)
             plt.show()
         else:
