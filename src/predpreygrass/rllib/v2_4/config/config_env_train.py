@@ -45,4 +45,14 @@ config_env = {
     "verbose_decay": False,
     "verbose_reproduction": False,
     "debug_mode": False,
+    # Energy intake caps
+    "max_energy_gain_per_grass": 1.5,  # or any reasonable value < initial_energy_grass
+    "max_energy_gain_per_prey": 3.5,  # < average prey energy
+    # Absolute energy caps
+    "max_energy_predator": 20.0,
+    "max_energy_prey": 14.0,
+    # Reproduction control
+    "reproduction_cooldown_steps": 10,
+    "reproduction_chance_predator": 0.85,
+    "reproduction_chance_prey": 0.9,
 }

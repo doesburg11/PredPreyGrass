@@ -105,6 +105,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_agents_stats = {}
         self.death_cause_prey = {}
 
+        self.agent_last_reproduction = {}
+
         # aggregates per step
         self.active_num_predators = 0
         self.active_num_prey = 0
@@ -718,7 +720,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
-            self.agent_energies[agent] += self.agent_energies[caught_prey]
+            gain = min(self.agent_energies[caught_prey], self.config.get("max_energy_gain_per_prey", float("inf")))
+            self.agent_energies[agent] += gain
+            # Cap the energy gain to max allowed for predator
+            max_energy = self.config.get("max_energy_predator", float("inf"))
+            self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
+
             uid = self.unique_agents[agent]
             self.unique_agent_stats[uid]["times_ate"] += 1
             self.unique_agent_stats[uid]["energy_gained"] += self.agent_energies[caught_prey]
@@ -775,7 +782,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
-            self.agent_energies[agent] += self.grass_energies[caught_grass]
+            gain = min(self.grass_energies[caught_grass], self.config.get("max_energy_gain_per_grass", float("inf")))
+            self.agent_energies[agent] += gain
+            # Cap the energy gain to max allowed for prey
+            max_energy = self.config.get("max_energy_prey", float("inf"))
+            self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
+
             uid = self.unique_agents[agent]
             self.unique_agent_stats[uid]["times_ate"] += 1
             self.unique_agent_stats[uid]["energy_gained"] += self.grass_energies[caught_grass]
@@ -795,6 +807,14 @@ class PredPreyGrass(MultiAgentEnv):
         truncations[agent] = False
 
     def _handle_predator_reproduction(self, agent, rewards, observations, terminations, truncations):
+        cooldown = self.config.get("reproduction_cooldown_steps", 10)
+        if self.current_step - self.agent_last_reproduction.get(agent, -cooldown) < cooldown:
+            return
+
+        chance_key = "reproduction_chance_predator" if "predator" in agent else "reproduction_chance_prey"
+        if self.rng.random() > self.config.get(chance_key, 1.0):
+            return
+
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             parent_speed = int(agent.split("_")[1])  # from "speed_1_predator_3"
 
@@ -823,6 +843,8 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            # And after successful reproduction, store for cooldown
+            self.agent_last_reproduction[agent] = self.current_step
 
             self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
@@ -858,6 +880,14 @@ class PredPreyGrass(MultiAgentEnv):
             )
 
     def _handle_prey_reproduction(self, agent, rewards, observations, terminations, truncations):
+        cooldown = self.config.get("reproduction_cooldown_steps", 10)
+        if self.current_step - self.agent_last_reproduction.get(agent, -cooldown) < cooldown:
+            return
+
+        chance_key = "reproduction_chance_predator" if "predator" in agent else "reproduction_chance_prey"
+        if self.rng.random() > self.config.get(chance_key, 1.0):
+            return
+
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             parent_speed = int(agent.split("_")[1])  # from "speed_1_prey_6"
 
@@ -886,6 +916,8 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            # And after successful reproduction, store for cooldown
+            self.agent_last_reproduction[agent] = self.current_step
 
             self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
@@ -964,6 +996,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_activation_counts": self.agent_activation_counts.copy(),
             "agent_ages": self.agent_ages.copy(),
             "death_cause_prey": self.death_cause_prey.copy(),
+            "agent_last_reproduction": self.agent_last_reproduction.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -984,6 +1017,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_activation_counts = snapshot["agent_activation_counts"].copy()
         self.agent_ages = snapshot["agent_ages"].copy()
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
+        self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
 
     def _build_possible_agent_ids(self):
         """
@@ -1039,6 +1073,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_ages[agent_id] = 0
         self.agent_parents[agent_id] = parent_unique_id
+
+        self.agent_last_reproduction[agent_id] = -self.config.get("reproduction_cooldown_steps", 10)
 
         self.unique_agent_stats[unique_id] = {
             "birth_step": self.current_step,
