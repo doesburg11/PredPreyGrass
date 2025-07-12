@@ -17,11 +17,11 @@ config_env = {
     "reproduction_reward_predator": 10.0,
     "reproduction_reward_prey": 10.0,
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,  # 0.15
-    "energy_loss_per_step_prey": 0.05,  # 0.05
+    "energy_loss_per_step_predator": 0.08,  # 0.15
+    "energy_loss_per_step_prey": 0.02,  # 0.05
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "move_energy_cost_factor": 0.05,  # energy cost = distance * factor * current_energy
+    "move_energy_cost_factor": 0.01,  # 0.0  # energy cost = distance * factor * current_energy
     # Learning agents
     "n_possible_speed_1_predators": 30,  # 30
     "n_possible_speed_2_predators": 30,  # 30
@@ -37,9 +37,9 @@ config_env = {
     "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
     "mutation_rate_prey": 0.05,  # and vice versa
     # Grass settings
-    "initial_num_grass": 20,  # 100
+    "initial_num_grass": 100,  # 100
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.08,  # 0.04
+    "energy_gain_per_step_grass": 0.1,  # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,
@@ -52,10 +52,10 @@ config_env = {
     "max_energy_predator": 20.0,
     "max_energy_prey": 14.0,
     # Reproduction control
-    "reproduction_cooldown_steps": 10,
+    "reproduction_cooldown_steps": 5,
     "reproduction_chance_predator": 0.85,
-    "reproduction_chance_prey": 0.9,
+    "reproduction_chance_prey": 0.95,
     # Energy transfer and reproduction efficiency
-    "energy_transfer_efficiency": 0.85,  # e.g. 85% of energy is absorbed from food
-    "reproduction_energy_efficiency": 0.85,  # e.g. only 85% of energy investment goes to child
+    "energy_transfer_efficiency": 0.95,  # e.g. 85% of energy is absorbed from food
+    "reproduction_energy_efficiency": 0.95,  # e.g. only 85% of energy investment goes to child
 }
