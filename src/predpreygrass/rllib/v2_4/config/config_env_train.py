@@ -51,7 +51,7 @@ config_env = {
     # Absolute energy caps
     "max_energy_predator": 20.0,
     "max_energy_prey": 14.0,
-    "max_energy_grass": 2.0,  
+    "max_energy_grass": 2.0,
     # Reproduction control
     "reproduction_cooldown_steps": 5,
     "reproduction_chance_predator": 0.85,
