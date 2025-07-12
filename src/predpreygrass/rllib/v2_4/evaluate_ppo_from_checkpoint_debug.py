@@ -56,7 +56,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_4/trained_policies"
     checkpoint_root = "/incl_speed_2/"
-    checkpoint_dir = "checkpoint_iter_280"
+    checkpoint_dir = "checkpoint_iter_500"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -238,7 +238,7 @@ def run_post_evaluation_plots(ceviz, pdviz):
 
 
 if __name__ == "__main__":
-    seed = 1
+    seed = 7
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))

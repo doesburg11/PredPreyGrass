@@ -31,7 +31,7 @@ config_env = {
     "n_initial_active_speed_1_prey": 10,  # 7
     "n_initial_active_speed_2_predator": 10,  # 5
     "n_initial_active_speed_2_prey": 10,  # 7
-    "initial_energy_predator": 5.0,
+    "initial_energy_predator": 6.5,  # increased from 5.0 to allow for more steps 
     "initial_energy_prey": 3.0,
     # mutation settings
     "mutation_rate_predator": 0.05,  # mutation probability from speed_1 to speed_2
@@ -51,11 +51,12 @@ config_env = {
     # Absolute energy caps
     "max_energy_predator": 20.0,
     "max_energy_prey": 14.0,
+    # TODO "max_energy_grass": 2.0,  # not used in the current version
     # Reproduction control
     "reproduction_cooldown_steps": 5,
     "reproduction_chance_predator": 0.85,
     "reproduction_chance_prey": 0.95,
     # Energy transfer and reproduction efficiency
-    "energy_transfer_efficiency": 0.95,  # e.g. 85% of energy is absorbed from food
-    "reproduction_energy_efficiency": 0.95,  # e.g. only 85% of energy investment goes to child
+    "energy_transfer_efficiency": 0.9,  # e.g. 85% of energy is absorbed from food
+    "reproduction_energy_efficiency": 0.9,  # e.g. only 85% of energy investment goes to child
 }

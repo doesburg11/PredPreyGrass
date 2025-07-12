@@ -35,9 +35,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_3/trained_policies"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_4/trained_policies"
     checkpoint_path = "/incl_speed_2/"
-    checkpoint_dir = "checkpoint_iter_1000"
+    checkpoint_dir = "checkpoint_iter_500"
     checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
     module_paths = {
@@ -55,7 +55,9 @@ if __name__ == "__main__":
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
     for run in range(N_RUNS):
+        seed = SEED + run
         print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
+        print(f"Using seed: {seed}")
         rl_modules, checkpoint_root = setup_modules()
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
