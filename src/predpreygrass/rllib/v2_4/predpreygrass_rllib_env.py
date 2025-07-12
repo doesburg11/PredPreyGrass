@@ -463,8 +463,11 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Increase energy of all grass patches, capped at initial energy value.
         """
+
+        # Cap energy to maximum allowed for grass
+        max_energy_grass = self.config.get("max_energy_grass", float("inf"))
         for grass, pos in self.grass_positions.items():
-            new_energy = min(self.grass_energies[grass] + self.energy_gain_per_step_grass, self.initial_energy_grass)
+            new_energy = min(self.grass_energies[grass] + self.energy_gain_per_step_grass, max_energy_grass)
             self.grass_energies[grass] = new_energy
             self.grid_world_state[3, *pos] = new_energy
 
