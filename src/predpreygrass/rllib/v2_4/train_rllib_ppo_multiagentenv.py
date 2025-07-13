@@ -126,14 +126,16 @@ if __name__ == "__main__":
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)
-    sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
+    # Dynamically detect available sample agents
     module_specs = {}
-    for sample_agent in sample_agents:
-        policy = policy_mapping_fn(sample_agent)
-        module_specs[policy] = build_module_spec(
-            sample_env.observation_spaces[sample_agent],
-            sample_env.action_spaces[sample_agent],
-        )
+    for agent_id in sample_env.observation_spaces:
+        policy = policy_mapping_fn(agent_id)
+        if policy not in module_specs:
+            module_specs[policy] = build_module_spec(
+                sample_env.observation_spaces[agent_id],
+                sample_env.action_spaces[agent_id],
+            )
+
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
 
     # Build PPO algorithm
