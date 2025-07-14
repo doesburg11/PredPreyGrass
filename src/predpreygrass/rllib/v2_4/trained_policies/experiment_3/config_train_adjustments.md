@@ -7,6 +7,11 @@ experiment_2 - with adjustment in config_train.py because of low reproduction of
 experiment_3 - n_possible_speed_2_agents = 0, because experiment_2 led to extiction of speed_2_agents.
                Simplify environment to concentrate on implementing first and second law of thermodynamics.
 
+experiment_4 - raise n_possible_speed_1_predators from 30 to 50, raise n_possible_1_speed_1_prey from 40 to 60,
+               because the n_active_predators hits the upperbound quickly and stays there (s)ee eval in exp_3 at checkpoint 1000)
+               (n_initial_active_predators = 24)
+
+
 
 table_1: differences between experiment_1 and experiment_2
 --------------------------------------------------------------------------------------
