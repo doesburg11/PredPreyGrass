@@ -15,7 +15,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Features [base environment](/src/predpreygrass/rllib/v1_0/)
 
-* At startup Predator, Prey and Grass are randomly positioned on the gridworld.
+* At startup Predators, Prey and Grass are randomly positioned on the gridworld.
 
 * Predators and Prey are independently (decentralized) trained via their respective [RLlib policy module](https://docs.ray.io/en/master/rllib/rl-modules.html).:
 
@@ -24,7 +24,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
-  * Predator and Prey **learn movement strategies** based on their **partial observations**.
+  * Predators and Prey **learn movement strategies** based on their **partial observations**.
   * Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
     * **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
@@ -32,20 +32,20 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
   * **Survival conditions**:
 
-    * Both Predator and Prey must act to prevent starvation (when energy runs out).
+    * Both Predators and Prey must act to prevent starvation (when energy runs out).
     * Prey must act to prevent being eaten by a Predator
 
   * **Reproduction conditions**:
 
       * Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
       * New agents are spawned near their parent.
-- **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](src/predpreygrass/rllib/v1_0/config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalstic optimized incentive for both Predators and Prey.
+- **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](src/predpreygrass/rllib/v1_0/config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
 
 * Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
 ## Environments:
 
-* [Base environnment](src/predpreygrass/rllib/v1_0)
+* [Base enviornment](src/predpreygrass/rllib/v1_0)
 
 * [Mutating agents](src/predpreygrass/rllib/v2_0)
 
