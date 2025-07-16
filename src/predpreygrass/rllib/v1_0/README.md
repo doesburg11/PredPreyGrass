@@ -13,7 +13,7 @@
 
 ### Features base environment
 
-- At startup Predator, Prey and Grass are randomly positioned on the gridworld.
+- At startup Predators, Prey and Grass are randomly positioned on the gridworld.
 
 - Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
@@ -22,7 +22,7 @@
 
 - **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
-  - Predator and Prey **learn movement strategies** based on their **partial observations**.
+  - Predators and Prey **learn movement strategies** based on their **partial observations**.
   - Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
     - **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
@@ -30,7 +30,7 @@
 
   - **Survival conditions**:
 
-    - Both Predator and Prey must act to prevent starvation (when energy runs out).
+    - Both Predators and Prey must act to prevent starvation (when energy runs out).
     - Prey must act to prevent being eaten by a Predator
 
   - **Reproduction conditions**:
@@ -44,7 +44,7 @@
 
 ## Training and evaluation results
 
-[Training](./train_rllib_ppo_multiagent_env.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. as pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://human.behaviorpatterns.info/reward-scaling/index.html). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
+[Training](./train_rllib_ppo_multiagent_env.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://human.behaviorpatterns.info/reward-scaling/index.html). Despite this relativily sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
 - Predators hunting Prey
 - Multiple Predators colaborating/competing hunting Prey; increasing the probability of Prey being caught
 - Prey finding and eating grass
@@ -79,4 +79,4 @@ Training is applied in accordance with the RLlib new API stack protocol. The tra
     <img src="./../../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
-A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution. This is however a hypothesis and is subject to future investigation.
+A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.
