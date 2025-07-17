@@ -10,7 +10,7 @@ speed_2: action_space(25); Extended Moore neighborhood movement (including "stay
 from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v3_0.config.config_env_train import config_env
 from predpreygrass.rllib.v3_0.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.v3_0.utils.fitness_tracker import mutate_env_reward_config, get_offspring_totals
+from predpreygrass.rllib.v3_0.utils.fitness_tracker import mutate_reward_config_from_stats, get_offspring_totals
 
 # External libraries
 import ray
@@ -106,14 +106,19 @@ if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
-    register_env("PredPreyGrass", env_creator)
     # adjust the path to your personal results directory
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     experiment_name = f"PPO_{timestamp}"
+    trial_dir = ray_results_path / experiment_name / "PPO_PredPreyGrass_00000"
+    trial_dir.mkdir(parents=True, exist_ok=True)
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
+    # Inject into config_env dynamically
+    config_env["log_dir"] = str(trial_dir)  # <== ✅ FIXED: add log_dir to config_env
+    # Now register and launch the environment
+    register_env("PredPreyGrass", lambda config: PredPreyGrass(config))
 
     # Save config metadata
     config_ppo = get_config_ppo()
@@ -139,10 +144,13 @@ if __name__ == "__main__":
 
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
 
+    config_env["log_dir"] = str(experiment_path / "reward_evolution")
+    config_env["iteration"] = 0
+
     # Build PPO algorithm
-    ppo_algo = (
-        PPOConfig()
-        .environment(env="PredPreyGrass")
+    ppo_config = PPOConfig()
+    ppo_config = (
+        ppo_config.environment(env="PredPreyGrass", env_config=config_env)
         .framework("torch")
         .multi_agent(
             policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
@@ -169,47 +177,58 @@ if __name__ == "__main__":
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
         .callbacks(EpisodeReturn)
-        .build_algo(logger_creator=custom_logger_creator({}))
     )
+
+    ppo_algo = ppo_config.build_algo(logger_creator=custom_logger_creator({}))
 
     # Manual training loop
     max_iters = 1000
     checkpoint_every = 10
-    # Ensure a directory for storing reward evolution snapshots
-    log_dir = os.path.join(config_env.setdefault("log_dir", os.path.expanduser("~/ray_results")), "reward_evolution")
 
+    # Reward mutation output dir
+    log_dir = str(experiment_path / "reward_evolution")
     os.makedirs(log_dir, exist_ok=True)
+    current_reward_config = config_env["reward_config"].copy()
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
+        # Update the env_config dict with current iteration
+        ppo_algo.config["env_config"]["iteration"] = iter
+        ppo_algo.config["env_config"]["log_dir"] = log_dir
+        print(f"[DEBUG] Current iteration: {iter}, log_dir: {log_dir}")
         result = ppo_algo.train()
-        # Access environment
-        try:
-            rollout_worker = ppo_algo.workers._worker_set._index_to_worker[0]
-            vector_env = rollout_worker.env
-            if hasattr(vector_env, "get_sub_environments"):
-                local_env = vector_env.get_sub_environments()[0]
-            else:
-                print("[META-SELECTION] Could not extract actual environment.")
-                local_env = None
-        except Exception as e:
-            print(f"[META-SELECTION] Error accessing env: {e}")
-            local_env = None
 
-        if not local_env or not hasattr(local_env, "unique_agent_stats"):
-            print("[META-SELECTION] Skipped mutation: env not initialized or missing unique_agent_stats")
+        # Define where the mutated reward config will be stored
+        save_path = os.path.join(log_dir, f"mutated_reward_config_{iter}.json")
+
+        # Look for file saved by environment at reset
+        stats_path = os.path.join(log_dir, f"offspring_stats_iter_{iter}.json")
+        if not os.path.isfile(stats_path):
+            print(f"[META-SELECTION] Skipped mutation: stats file missing at {stats_path}")
             continue
 
-        # Save snapshot after mutation
-        save_path = os.path.join(log_dir, f"mutated_reward_config_{iter}.json")
-        mutate_env_reward_config(local_env, target_key="reward_prey_eat_grass", save_path=save_path)
+        with open(stats_path, "r") as f:
+            stats_data = json.load(f)
 
-        # Print reward summary for visual feedback
-        print("[ITERATION LOG] Completed iteration", iter)
-        print("[ITERATION LOG] Saved reward config to:", save_path)
+        offspring_totals = get_offspring_totals(stats_data)
 
-        offspring_totals = get_offspring_totals(local_env.unique_agent_stats)
-        sorted_types = sorted([(k, v) for k, v in offspring_totals.items() if "prey" in k], key=lambda x: x[1], reverse=True)
+        # Mutate and save new reward config based on offspring stats
+        mutate_reward_config_from_stats(
+            current_reward_config, offspring_totals, target_key="reward_prey_eat_grass", save_path=save_path
+        )
+
+        # Load and apply updated reward config to all workers
+        with open(save_path, "r") as f:
+            updated_reward_config = json.load(f)
+
+        ppo_algo.workers.foreach_worker(lambda w: w.env.set_reward_config(updated_reward_config))
+
+        sorted_types = sorted(
+            [(k, v) for k, v in offspring_totals.items() if "prey" in k],
+            key=lambda x: x[1],
+            reverse=True,
+        )
+
         if len(sorted_types) >= 2:
             winner, loser = sorted_types[0][0], sorted_types[1][0]
             print(
@@ -218,22 +237,18 @@ if __name__ == "__main__":
         else:
             print("[ITERATION LOG] Not enough prey types to determine winner.")
 
+        print("[ITERATION LOG] Completed iteration", iter)
+        print("[ITERATION LOG] Saved reward config to:", save_path)
         print("[ITERATION LOG] Current reward_prey_eat_grass values:")
-        for key in sorted(local_env.config["reward_config"].keys()):
+        for key in sorted(current_reward_config.keys()):
             if "prey" in key:
-                reward_val = local_env.config["reward_config"][key].get("reward_prey_eat_grass", 0)
+                reward_val = current_reward_config[key].get("reward_prey_eat_grass", 0)
                 print(f"    {key}: {reward_val:.3f}")
 
-            mean_return = result.get("env_runners/episode_return_mean", float("nan"))
-            mean_len = result.get("env_runners/episode_len_mean", float("nan"))
-
-            print(f"Iteration {iter + 1}: " f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, ")
-            # Save checkpoint manually every N iterations
-            if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
-                checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
-                checkpoint_path.mkdir(parents=True, exist_ok=True)
-
-            # Save Algorithm checkpoint
+        # Checkpoint
+        if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
+            checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
+            checkpoint_path.mkdir(parents=True, exist_ok=True)
             ppo_algo.save_to_path(str(checkpoint_path))
             print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
