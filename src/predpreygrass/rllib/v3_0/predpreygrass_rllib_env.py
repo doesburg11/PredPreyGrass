@@ -8,6 +8,8 @@ from ray.rllib.utils.typing import AgentID, Tuple
 import numpy as np
 import math
 import random
+import os
+import json
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -16,6 +18,7 @@ class PredPreyGrass(MultiAgentEnv):
         if config is None:
             raise ValueError("Environment config must be provided explicitly.")
         self.config = config
+
         self._initialize_from_config()  # import config variables
 
         self.possible_agents = self._build_possible_agent_ids()
@@ -181,6 +184,16 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_num_grass = len(self.grass_positions)
 
         self.current_grass_energy = sum(self.grass_energies.values())
+
+        # Inside def reset(self, *, seed=None, options=None):
+        iteration = self.config.get("iteration", 0)
+        log_dir = self.config["log_dir"]
+        stats_path = os.path.join(os.path.expanduser(log_dir), f"offspring_stats_iter_{iteration}.json")
+        os.makedirs(os.path.dirname(stats_path), exist_ok=True)
+        with open(stats_path, "w") as f:
+            json.dump(self.unique_agent_stats, f, indent=2)
+        print(f"[DEBUG] Saved stats to: {stats_path} | Exists after write: {os.path.exists(stats_path)}")
+        print(f"[DEBUG] Keys in stats: {list(self.unique_agent_stats.keys())}")
 
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
@@ -981,7 +994,7 @@ class PredPreyGrass(MultiAgentEnv):
         Returns:
             float: The reward value, or 0.0 if missing.
         """
-        policy_group = "_".join(agent.split("_")[:3])  # e.g. "speed_2_prey"
+        policy_group = "_".join(agent.split("_")[:3])
         return self.config.get("reward_config", {}).get(policy_group, {}).get(key, 0.0)
 
     def _mutate_reward_value_gaussian(base_value: float, std_dev: float = 0.5) -> float:
@@ -990,3 +1003,16 @@ class PredPreyGrass(MultiAgentEnv):
         Ensures mutated value remains >= 0.0.
         """
         return max(0.0, base_value + random.gauss(0, std_dev))
+
+    def save_unique_agent_stats(self, path: str):
+        import json
+
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump(self.unique_agent_stats, f, indent=2)
+
+    def set_reward_config(self, new_config):
+        self.config["reward_config"] = new_config
+
+    def set_iteration(self, iteration: int):
+        self.config["iteration"] = iteration
