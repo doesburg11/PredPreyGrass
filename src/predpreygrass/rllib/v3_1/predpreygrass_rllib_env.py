@@ -34,14 +34,16 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_steps = config.get("max_steps", 10000)
         self.rng = np.random.default_rng(config.get("seed", 42))
 
-        # Rewards
-        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
-        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
-        self.reward_predator_step = config.get("reward_predator_step", 0.0)
-        self.reward_prey_step = config.get("reward_prey_step", 0.0)
-        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
-        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
-        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
+        # Reward weights (centralized)
+        self.reward_weights = {
+            "catch_prey": config.get("reward_predator_catch_prey", 0.0),
+            "eat_grass": config.get("reward_prey_eat_grass", 0.0),
+            "predator_step": config.get("reward_predator_step", 0.0),
+            "prey_step": config.get("reward_prey_step", 0.0),
+            "penalty_prey_caught": config.get("penalty_prey_caught", 0.0),
+            "reproduce_predator": config.get("reproduction_reward_predator", 10.0),
+            "reproduce_prey": config.get("reproduction_reward_prey", 10.0),
+        }
 
         # Energy settings
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
@@ -546,7 +548,7 @@ class PredPreyGrass(MultiAgentEnv):
             )
             self.agents_just_ate.add(agent)  # Show green ring for next 1 step
 
-            rewards[agent] = self.reward_predator_catch_prey
+            rewards[agent] = self.reward_weights["catch_prey"]
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
@@ -567,7 +569,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
             observations[caught_prey] = self._get_observation(caught_prey)
-            rewards[caught_prey] = self.penalty_prey_caught
+            rewards[caught_prey] = self.reward_weights["penalty_prey_caught"]
             self.cumulative_rewards.setdefault(caught_prey, 0.0)
             self.cumulative_rewards[caught_prey] += rewards[caught_prey]
 
@@ -590,7 +592,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
         else:
-            rewards[agent] = self.reward_predator_step
+            rewards[agent] = self.reward_weights["predator_step"]
 
         observations[agent] = self._get_observation(agent)
         self.cumulative_rewards.setdefault(agent, 0)
@@ -611,7 +613,7 @@ class PredPreyGrass(MultiAgentEnv):
             self._log(self.verbose_engagement, f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}", "white")
             self.agents_just_ate.add(agent)  # Show green ring for next 1 step
             # Reward prey for eating grass
-            rewards[agent] = self.reward_prey_eat_grass
+            rewards[agent] = self.reward_weights["eat_grass"]
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
@@ -634,7 +636,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[3, *prey_position] = 0
             self.grass_energies[caught_grass] = 0
         else:
-            rewards[agent] = self.reward_prey_step
+            rewards[agent] = self.reward_weights["prey_step"]
 
         observations[agent] = self._get_observation(agent)
         self.cumulative_rewards.setdefault(agent, 0)
@@ -669,7 +671,7 @@ class PredPreyGrass(MultiAgentEnv):
             ]
             if not potential_new_ids:
                 # Always grant reproduction reward, even if no slot available
-                rewards[agent] = self.reproduction_reward_predator
+                rewards[agent] = self.reward_weights["reproduce_predator"]
                 self.cumulative_rewards.setdefault(agent, 0)
                 self.cumulative_rewards[agent] += rewards[agent]
                 self._log(
@@ -705,7 +707,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            rewards[agent] = self.reproduction_reward_predator
+            rewards[agent] = self.reward_weights["reproduce_predator"]
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
 
@@ -745,7 +747,7 @@ class PredPreyGrass(MultiAgentEnv):
             ]
             if not potential_new_ids:
                 # Always grant reproduction reward, even if no slot available
-                rewards[agent] = self.reproduction_reward_prey
+                rewards[agent] = self.reward_weights["reproduce_prey"]
                 self.cumulative_rewards.setdefault(agent, 0)
                 self.cumulative_rewards[agent] += rewards[agent]
                 self._log(
@@ -781,7 +783,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            rewards[agent] = self.reproduction_reward_prey
+            rewards[agent] = self.reward_weights["reproduce_prey"]
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
 
