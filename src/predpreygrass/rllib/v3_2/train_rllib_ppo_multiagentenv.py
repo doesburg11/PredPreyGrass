@@ -212,6 +212,9 @@ if __name__ == "__main__":
     # Update the environment config with new reward values
     resumed_algo.config["env_config"] = config_env
 
+    print(f"Resumed Algorithm from checkpoint: {checkpoint_str}")
+    print(f"Updated environment config: {resumed_algo.config['env_config']}")
+
     # Resume training for 1 iteration only
     print("🚀 Resuming training for 1 additional iteration with new config...")
     result = resumed_algo.train()
