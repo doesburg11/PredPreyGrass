@@ -171,6 +171,9 @@ if __name__ == "__main__":
         .build_algo(logger_creator=custom_logger_creator({}))
     )
 
+    EpisodeReturn.algo_ref = ppo_algo  # ✅ Inject algorithm
+    print("✅ Injected EpisodeReturn.algo_ref =", type(EpisodeReturn.algo_ref))
+
     # Manual training loop
     max_iters = 1000
     checkpoint_every = 10
