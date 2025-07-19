@@ -7,7 +7,7 @@ config_env = {
     "prey_obs_range": 9,  # 9
     # Action space settings
     "speed_1_action_range": 3,
-    "speed_2_action_range": 3,
+    "speed_2_action_range": 5,
     # Rewards
     "reward_predator_catch_prey": 0.0,
     "reward_prey_eat_grass": 0.0,

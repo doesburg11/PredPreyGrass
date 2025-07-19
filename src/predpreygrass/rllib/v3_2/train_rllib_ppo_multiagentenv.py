@@ -172,8 +172,8 @@ if __name__ == "__main__":
     )
 
     # Manual training loop
-    max_iters = 1000
-    checkpoint_every = 10
+    max_iters = 1
+    checkpoint_every = 1
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
@@ -195,4 +195,39 @@ if __name__ == "__main__":
     # Delay shutdown to give Ray time to clean up, to avoid crashing
     time.sleep(2)
     del ppo_algo
+
+    checkpoint_str = str(experiment_path / "checkpoint_iter_1")
+
+    # === STEP 2: Resume from checkpoint with modified grass-eating rewards ===
+
+    print("\n=== Step 2: Resuming from checkpoint with updated reward config ===")
+
+    # Modify reward for both prey types
+    config_env["reward_prey_eat_grass"] = 1.0
+
+    # Restore algorithm from checkpoint
+    from ray.rllib.algorithms.algorithm import Algorithm
+    resumed_algo = Algorithm.from_checkpoint(checkpoint_str)
+
+    # Update the environment config with new reward values
+    resumed_algo.config["env_config"] = config_env
+
+    # Resume training for 1 iteration only
+    print("🚀 Resuming training for 1 additional iteration with new config...")
+    result = resumed_algo.train()
+
+    # Save another checkpoint after resumed training
+    resumed_ckpt_path = experiment_path / f"checkpoint_iter_{2}"
+    resumed_ckpt_path.mkdir(parents=True, exist_ok=True)
+    resumed_algo.save_to_path(str(resumed_ckpt_path))
+    print(f"✅ Saved resumed checkpoint to: {resumed_ckpt_path}")
+
+    # Shutdown Ray
+    time.sleep(2)
+    del resumed_algo
     ray.shutdown()
+
+
+
+
+
