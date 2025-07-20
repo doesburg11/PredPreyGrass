@@ -9,7 +9,7 @@ config_env = {
     "speed_1_action_range": 3,
     "speed_2_action_range": 5,
     # Rewards
-    "reward_predator_catch_prey": 0.0,
+    "reward_predator_catch_prey": 3.0,
     "reward_prey_eat_grass": 0.0,
     "reward_predator_step": 0.0,
     "reward_prey_step": 0.0,
@@ -23,9 +23,9 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     "move_energy_cost_factor": 0.01,
     # Learning agents
-    "n_possible_speed_1_predators": 30,  # lowered from 50
+    "n_possible_speed_1_predators": 50,  # lowered from 50
     "n_possible_speed_2_predators": 0,
-    "n_possible_speed_1_prey": 40,  # lowerd from 60
+    "n_possible_speed_1_prey": 50,  # lowerd from 60
     "n_possible_speed_2_prey": 0,
     "n_initial_active_speed_1_predator": 24,  # 5
     "n_initial_active_speed_1_prey": 20,  # 7

@@ -7,9 +7,9 @@ Predators and prey both either posses speed_1 or speed_2.
 speed 1: action_space(9); Moore neighborhood movement (including "stay")
 speed_2: action_space(25); Extended Moore neighborhood movement (including "stay")
 """
-from predpreygrass.rllib.v2_4.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_4.config.config_env_train import config_env
-from predpreygrass.rllib.v2_4.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib.v2_5.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_5.config.config_env_train import config_env
+from predpreygrass.rllib.v2_5.utils.episode_return_callback import EpisodeReturn
 
 # External libraries
 import ray
