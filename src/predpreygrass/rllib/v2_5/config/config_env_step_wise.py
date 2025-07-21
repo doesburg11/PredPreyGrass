@@ -3,8 +3,8 @@ config_env = {
     # Grid and Observation Settings
     "grid_size": 10,
     "num_obs_channels": 4,  # Border, Predator, Prey, Grass
-    "predator_obs_range": 9,  # 7
-    "prey_obs_range": 9,  # 9
+    "predator_obs_range": 9,
+    "prey_obs_range": 9,
     # Action space settings
     "speed_1_action_range": 3,
     "speed_2_action_range": 5,
@@ -45,4 +45,18 @@ config_env = {
     "verbose_decay": False,
     "verbose_reproduction": False,
     "debug_mode": False,
+    # Energy intake caps
+    "max_energy_gain_per_grass": 1.5,
+    "max_energy_gain_per_prey": 5.0,
+    # Absolute energy caps
+    "max_energy_predator": 20.0,
+    "max_energy_prey": 14.0,
+    "max_energy_grass": 2.0,
+    # Reproduction control
+    "reproduction_cooldown_steps": 5,
+    "reproduction_chance_predator": 0.95,
+    "reproduction_chance_prey": 0.95,
+    # Energy transfer and reproduction efficiency
+    "energy_transfer_efficiency": 0.9,
+    "reproduction_energy_efficiency": 0.9,
 }

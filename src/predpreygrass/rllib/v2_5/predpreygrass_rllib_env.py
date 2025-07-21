@@ -971,3 +971,47 @@ class PredPreyGrass(MultiAgentEnv):
                     energy_totals["speed_2_prey"] += energy
 
         return energy_totals
+
+    def get_total_offspring_by_type(self):
+        """
+        Returns a dict of total offspring counts by agent type.
+        Example:
+        {
+            "speed_1_prey": 34,
+            "speed_2_prey": 12,
+            ...
+        }
+        """
+        counts = {
+            "speed_1_predator": 0,
+            "speed_2_predator": 0,
+            "speed_1_prey": 0,
+            "speed_2_prey": 0,
+        }
+        for stats in self.unique_agent_stats.values():
+            group = stats["policy_group"]
+            if group in counts:
+                counts[group] += stats.get("offspring_count", 0)
+        return counts
+
+    def get_total_energy_spent_by_type(self):
+        """
+        Returns a dict of total energy spent by agent type.
+        Example:
+        {
+            "speed_1_prey": 192.3,
+            "speed_2_prey": 83.1,
+            ...
+        }
+        """
+        energy_spent = {
+            "speed_1_predator": 0.0,
+            "speed_2_predator": 0.0,
+            "speed_1_prey": 0.0,
+            "speed_2_prey": 0.0,
+        }
+        for stats in self.unique_agent_stats.values():
+            group = stats["policy_group"]
+            if group in energy_spent:
+                energy_spent[group] += stats.get("energy_spent", 0.0)
+        return energy_spent

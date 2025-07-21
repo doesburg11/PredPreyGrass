@@ -1,10 +1,12 @@
 **To do**
 
-- Move experiments out of repo with exception of the first (v2_0 already done, go further with v2_1)
-
+-
 - can v2_5 be generalized to v1_0?
     - vx_x reduces to a config
     - experiment: vx_x + config_env
+
+
+- curriculum reward tuning
 
 - Fitness parameters:
     - offspring per agent

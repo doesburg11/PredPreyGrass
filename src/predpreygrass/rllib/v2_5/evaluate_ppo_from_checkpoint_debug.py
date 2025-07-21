@@ -4,10 +4,10 @@ This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation. For a simplear evaluation script,
 see `evaluate_ppo_from_checkpoint_headless.py`.
 """
-from predpreygrass.rllib.v2_4.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v2_4.config.config_env_eval import config_env
-from predpreygrass.rllib.v2_4.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.v2_4.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.v2_5.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v2_5.config.config_env_eval import config_env
+from predpreygrass.rllib.v2_5.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.v2_5.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -54,9 +54,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v2_4/trained_policies"
-    checkpoint_root = "/experiment_5/"
-    checkpoint_dir = "checkpoint_iter_380"
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/v2_4/trained_policies"
+    checkpoint_root = "/experiment_1/"
+    checkpoint_dir = "checkpoint_iter_710"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -298,6 +298,21 @@ if __name__ == "__main__":
         else:
             render_static_if_paused(env, visualizer)
             pygame.time.wait(50)
+
+    # === Print total offspring by type ===
+    offspring_counts = env.get_total_offspring_by_type()
+    print("\n--- Offspring Counts by Type ---")
+    for agent_type, count in offspring_counts.items():
+        print(f"{agent_type:20}: {count}")
+
+    # === Print reproductive efficiency (offspring / energy spent) ===
+    energy_spent = env.get_total_energy_spent_by_type()
+    print("\n--- Reproductive Efficiency (Offspring / Energy Spent) ---")
+    for agent_type in offspring_counts:
+        offspring = offspring_counts[agent_type]
+        energy = energy_spent.get(agent_type, 1e-6)  # Avoid division by zero
+        efficiency = offspring / energy
+        print(f"{agent_type:20}: {efficiency:.4f}")
 
     print_reward_summary(env, total_reward)
 
