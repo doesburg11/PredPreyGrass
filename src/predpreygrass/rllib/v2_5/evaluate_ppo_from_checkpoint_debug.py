@@ -54,9 +54,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/v2_4/trained_policies"
-    checkpoint_root = "/experiment_1/"
-    checkpoint_dir = "checkpoint_iter_710"
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
+    checkpoint_root = "/PPO_2025-07-21_23-11-44/"
+    checkpoint_dir = "checkpoint_iter_50"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -311,8 +311,9 @@ if __name__ == "__main__":
     for agent_type in offspring_counts:
         offspring = offspring_counts[agent_type]
         energy = energy_spent.get(agent_type, 1e-6)  # Avoid division by zero
-        efficiency = offspring / energy
-        print(f"{agent_type:20}: {efficiency:.4f}")
+        if energy > 0:
+            efficiency = offspring / energy
+            print(f"{agent_type:20}: {efficiency:.4f}")
 
     print_reward_summary(env, total_reward)
 
