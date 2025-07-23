@@ -20,6 +20,9 @@ import json
 import pygame
 import cv2
 import numpy as np
+import re
+from collections import defaultdict
+
 
 SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = False
@@ -54,9 +57,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
-    checkpoint_root = "/PPO_2025-07-21_23-11-44/"
-    checkpoint_dir = "checkpoint_iter_50"
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/v2_5_experiment_1"
+    checkpoint_root = "/PPO_2025-07-23_11-11-41/"
+    checkpoint_dir = "checkpoint_iter_340"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -196,22 +199,44 @@ def render_static_if_paused(env, visualizer):
     )
 
 
-def print_reward_summary(env, total_reward):
-    # Print final reward summary after evaluation
-    print(f"\nEvaluation complete! Total Reward: {total_reward}")
-    print("\n--- Reward Breakdown per Agent ---")
-    predator_rewards, prey_rewards = [], []
-    for agent_id, reward in env.cumulative_rewards.items():
-        print(f"{agent_id:15}: {reward:.2f}")
-        if "predator" in agent_id:
-            predator_rewards.append(reward)
-        elif "prey" in agent_id:
-            prey_rewards.append(reward)
-    print("\n--- Aggregated Rewards ---")
-    print(f"Total number of steps: {env.current_step-1}")
-    print(f"Total Predator Reward: {sum(predator_rewards):.2f}")
-    print(f"Total Prey Reward:     {sum(prey_rewards):.2f}")
-    print(f"Total All-Agent Reward:{total_reward:.2f}")
+def parse_uid(uid):
+    """
+    Parse UID like 'speed_1_predator_2_10' into sortable components:
+    → ('speed_1_predator', 2, 10)
+    """
+    match = re.match(r"(speed_\d+_(?:predator|prey))_(\d+)_(\d+)", uid)
+    if match:
+        group, idx, reuse = match.groups()
+        return group, int(idx), int(reuse)
+    else:
+        return uid, float("inf"), float("inf")  # fallback for malformed uids
+
+
+def print_ranked_reward_summary(env, total_reward):
+    group_rewards = defaultdict(list)
+
+    for uid, stats in env.unique_agent_stats.items():
+        reward = stats.get("cumulative_reward", 0.0)
+        group, index, reuse = parse_uid(uid)
+        group_rewards[group].append((uid, reward, index, reuse))
+
+    print(f"\nEvaluation complete! Total Reward: {total_reward:.2f}")
+    print("\n--- Ranked Reward Breakdown per Unique Agent ---")
+
+    for group in sorted(group_rewards.keys()):
+        print(f"\n## {group.replace('_', ' ').title()} ##")
+        sorted_group = sorted(
+            group_rewards[group], key=lambda x: (-x[1], x[2], x[3])  # sort by reward desc, then id asc, reuse asc
+        )
+        for uid, reward, _, _ in sorted_group:
+            print(f"{uid:25}: {reward:.2f}")
+
+    print("\n--- Aggregated Totals ---")
+    print(f"Total number of steps: {env.current_step - 1}")
+    for group in sorted(group_rewards.keys()):
+        total = sum(r for _, r, _, _ in group_rewards[group])
+        print(f"Total {group.replace('_', ' ').title():25}: {total:.2f}")
+    print(f"Total All-Agent Reward:           {total_reward:.2f}")
 
 
 def save_reward_summary_to_file(env, total_reward, output_dir):
@@ -305,17 +330,7 @@ if __name__ == "__main__":
     for agent_type, count in offspring_counts.items():
         print(f"{agent_type:20}: {count}")
 
-    # === Print reproductive efficiency (offspring / energy spent) ===
-    energy_spent = env.get_total_energy_spent_by_type()
-    print("\n--- Reproductive Efficiency (Offspring / Energy Spent) ---")
-    for agent_type in offspring_counts:
-        offspring = offspring_counts[agent_type]
-        energy = energy_spent.get(agent_type, 1e-6)  # Avoid division by zero
-        if energy > 0:
-            efficiency = offspring / energy
-            print(f"{agent_type:20}: {efficiency:.4f}")
-
-    print_reward_summary(env, total_reward)
+    # print_ranked_reward_summary(env, total_reward)
 
     # print("Death statistics:", env.death_agents_stats)
 
