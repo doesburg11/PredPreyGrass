@@ -2,6 +2,7 @@ from .config_env_base import config_env_base
 
 config_env = {
     **config_env_base,
+
     # Action space settings
     "type_1_action_range": 3,
     "type_2_action_range": 3,

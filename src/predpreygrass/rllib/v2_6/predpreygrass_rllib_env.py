@@ -155,8 +155,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_list = [a for a in self.agents if "prey" in a]
 
         predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
+        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list):]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
