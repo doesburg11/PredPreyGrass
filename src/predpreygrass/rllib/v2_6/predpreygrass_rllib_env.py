@@ -615,6 +615,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)  # Show green ring for next 1 step
             # Reward prey for eating grass
             rewards[agent] = self._get_type_specific("reward_prey_eat_grass", agent)
+            print(f"Rewards for {agent}: {rewards[agent]}")
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 
