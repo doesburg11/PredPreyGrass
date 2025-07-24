@@ -25,7 +25,7 @@ if __name__ == "__main__":
     observations, _ = env.reset(seed=config_env.get("seed", 42))
 
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
+    visualizer = PyGameRenderer(grid_size, enable_speed_slider=False)
     clock = pygame.time.Clock()
 
     # Run loop until termination
