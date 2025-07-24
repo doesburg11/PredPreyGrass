@@ -31,10 +31,10 @@ class GuiStyle:
 
 
 class PyGameRenderer:
-    def __init__(self, grid_size, cell_size=32, ennable_type_slider=True):
+    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True):
         self.grid_size = grid_size
         self.cell_size = cell_size
-        self.enable_type_slider = ennable_type_slider
+        self.enable_speed_slider = enable_speed_slider
         self.gui_style = GuiStyle()
 
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
@@ -200,7 +200,7 @@ class PyGameRenderer:
 
         y = self._draw_legend_environment_elements(x, y)
 
-        if self.enable_type_slider:
+        if self.enable_speed_slider:
             y = self._draw_legend_type_slider(x, y)
 
         y = self._draw_legend_population_chart(x, y)
