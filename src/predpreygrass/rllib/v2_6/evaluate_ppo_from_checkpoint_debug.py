@@ -263,7 +263,7 @@ def run_post_evaluation_plots(ceviz, pdviz):
 
 
 if __name__ == "__main__":
-    seed = 7
+    seed = 4
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
