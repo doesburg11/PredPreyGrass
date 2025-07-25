@@ -4,8 +4,6 @@ It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either posses type_1 or type_2.
-type 1: action_space(9); Moore neighborhood movement (including "stay")
-type_2: action_space(25); Extended Moore neighborhood movement (including "stay")
 """
 from predpreygrass.rllib.v2_6.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_6.config.config_env_train import config_env
