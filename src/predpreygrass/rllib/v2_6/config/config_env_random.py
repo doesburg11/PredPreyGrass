@@ -1,7 +1,6 @@
-from .config_env_train import config_env
+from .config_env_eval import config_env
 
 config_env = {
-    **config_env,
     **config_env,
     "type_1_action_range": 3,
     "type_2_action_range": 3,

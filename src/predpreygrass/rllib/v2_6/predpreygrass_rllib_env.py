@@ -155,8 +155,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_list = [a for a in self.agents if "prey" in a]
 
         predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
@@ -615,7 +615,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)  # Show green ring for next 1 step
             # Reward prey for eating grass
             rewards[agent] = self._get_type_specific("reward_prey_eat_grass", agent)
-            print(f"Rewards for {agent}: {rewards[agent]}")
+            # print(f"Rewards for {agent}: {rewards[agent]}")
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
 

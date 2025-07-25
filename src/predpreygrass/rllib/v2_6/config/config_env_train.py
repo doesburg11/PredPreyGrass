@@ -2,13 +2,12 @@ from .config_env_base import config_env_base
 
 config_env = {
     **config_env_base,
-
     # Action space settings
     "type_1_action_range": 3,
     "type_2_action_range": 3,
     "reward_prey_eat_grass": {
         "type_1_prey": 0.0,
-        "type_2_prey": 3.0,
+        "type_2_prey": 1.0,
     },
     "n_possible_type_1_predators": 50,  # Increased from 30
     "n_possible_type_2_predators": 0,
