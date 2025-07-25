@@ -80,7 +80,7 @@ def setup_environment_and_visualizer(now):
 
     env = env_creator(config=config_env)
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size)
+    visualizer = PyGameRenderer(grid_size, cell_size=16)
 
     if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
