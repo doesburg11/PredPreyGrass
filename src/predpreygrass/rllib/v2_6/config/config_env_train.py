@@ -1,3 +1,4 @@
+# v2_0 without mutation
 from .config_env_base import config_env_base
 
 config_env = {
@@ -13,6 +14,9 @@ config_env = {
     "n_possible_type_2_predators": 30,
     "n_initial_active_type_1_predator": 10,
     "n_initial_active_type_2_predator": 10,
+    # mutation settings
+    "mutation_rate_predator": 0.0,  # No mutations for this environment
+    "mutation_rate_prey": 0.0,  # No mutations for this environment
     # Grass settings
     "initial_num_grass": 50,
     "energy_gain_per_step_grass": 0.08,
