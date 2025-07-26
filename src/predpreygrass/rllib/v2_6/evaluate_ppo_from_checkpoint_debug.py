@@ -57,9 +57,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "/PPO_2025-07-24_23-21-49/"
-    checkpoint_dir = "checkpoint_iter_40"
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/tmp/"
+    checkpoint_root = "/no_mutation/"
+    checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
