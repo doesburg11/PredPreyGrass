@@ -68,21 +68,38 @@ class PyGameRenderer:
         self.slider_rect = None  # Will be defined in _draw_legend()
         self.slider_max_fps = 60
 
-    def _using_type_prefix(self, agent_positions):
-        """Return True if any agent_id contains type info."""
-        return any("type_1" in aid or "type_2" in aid for aid in agent_positions.keys())
+        self.grid_surface = pygame.Surface((window_width, window_height), pygame.SRCALPHA)
+        for x in range(self.grid_size[0]):
+            for y in range(self.grid_size[1]):
+                rect = pygame.Rect(
+                    self.gui_style.margin_left + x * self.cell_size,
+                    self.gui_style.margin_top + y * self.cell_size,
+                    self.cell_size,
+                    self.cell_size,
+                )
+                pygame.draw.rect(self.grid_surface, self.gui_style.grid_color, rect, 1)
 
-    def update(self, agent_positions, grass_positions, agent_energies=None, grass_energies=None, step=0, agents_just_ate=None):
+    def _using_type_prefix(self, step_data):
+        return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
+
+    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None):
+        step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
 
         self.screen.fill(self.gui_style.background_color)
 
-        # Count predator and prey population
-        num_predators = sum(1 for agent_id in agent_positions if "predator" in agent_id)
-        num_prey = sum(1 for agent_id in agent_positions if "prey" in agent_id)
-        num_type2_predators = sum(1 for aid in agent_positions if "predator" in aid and "type_2" in aid)
-        num_type2_prey = sum(1 for aid in agent_positions if "prey" in aid and "type_2" in aid)
+        # Count predator and prey population using step_data
+        num_predators = num_prey = num_type2_predators = num_type2_prey = 0
+        for agent_id in step_data:
+            if "predator" in agent_id:
+                num_predators += 1
+                if "type_2" in agent_id:
+                    num_type2_predators += 1
+            elif "prey" in agent_id:
+                num_prey += 1
+                if "type_2" in agent_id:
+                    num_type2_prey += 1
 
         pct_predators_type2 = (num_type2_predators / num_predators) if num_predators > 0 else 0
         pct_prey_type2 = (num_type2_prey / num_prey) if num_prey > 0 else 0
@@ -108,23 +125,15 @@ class PyGameRenderer:
 
         self._draw_grid()
         self._draw_grass(grass_positions, grass_energies)
-        self._draw_agents(agent_positions, agent_energies, agents_just_ate)
-        self._draw_tooltip(agent_positions, grass_positions, agent_energies, grass_energies)
-        self._draw_legend(step, agent_positions)
+        self._draw_agents(step_data, agents_just_ate)
+        self._draw_tooltip(step_data, grass_positions, grass_energies)
+        self._draw_legend(step, step_data)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
 
     def _draw_grid(self):
-        for x in range(self.grid_size[0]):
-            for y in range(self.grid_size[1]):
-                rect = pygame.Rect(
-                    self.gui_style.margin_left + x * self.cell_size,
-                    self.gui_style.margin_top + y * self.cell_size,
-                    self.cell_size,
-                    self.cell_size,
-                )
-                pygame.draw.rect(self.screen, self.gui_style.grid_color, rect, 1)
+        self.screen.blit(self.grid_surface, (0, 0))
 
     def _draw_grass(self, grass_positions, grass_energies):
         for grass_id, pos in grass_positions.items():
@@ -138,11 +147,14 @@ class PyGameRenderer:
             rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
             pygame.draw.rect(self.screen, color, rect)
 
-    def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
-        for agent_id, pos in agent_positions.items():
+    def _draw_agents(self, step_data, agents_just_ate):
+        for agent_id, agent in step_data.items():
+            pos = tuple(map(int, agent["position"]))
+            energy = agent["energy"]
+
+            # Convert grid position to pixel coordinates
             x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
             y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
-            energy = agent_energies.get(agent_id, 0) if agent_energies else 0
 
             # Determine type and type
             if "predator" in agent_id:
@@ -152,7 +164,6 @@ class PyGameRenderer:
                 elif "type_2" in agent_id:
                     color = self.gui_style.predator_type_2_color
                 reference_energy = self.reference_energy_predator
-                threshold = self.predator_creation_energy_threshold
 
             elif "prey" in agent_id:
                 color = self.gui_style.prey_color  # Default prey color
@@ -161,13 +172,11 @@ class PyGameRenderer:
                 elif "type_2" in agent_id:
                     color = self.gui_style.prey_type_2_color
                 reference_energy = self.reference_energy_prey
-                threshold = self.prey_creation_energy_threshold
 
             size_factor = min(energy / reference_energy, 1.0)
             base_radius = self.cell_size // 2 - 2
             radius = int(base_radius * size_factor)
 
-            # Draw main body
             pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
             # Eating halo (green ring)
@@ -181,7 +190,7 @@ class PyGameRenderer:
                 )
 
             # Reproduction halo (red ring)
-            if threshold and energy >= threshold * self.halo_trigger_fraction:
+            if "energy_reproduction" in agent and agent["energy_reproduction"] < 0:
                 pygame.draw.circle(
                     self.screen,
                     self.gui_style.halo_reproduction_color,
@@ -190,13 +199,13 @@ class PyGameRenderer:
                     width=self.gui_style.halo_reproduction_thickness,
                 )
 
-    def _draw_legend(self, step, agent_positions):
+    def _draw_legend(self, step, step_data):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
         y = self.gui_style.margin_top + 10
 
         y = self._draw_legend_step_counter(x, y, step)
 
-        y = self._draw_legend_agents(x, y, agent_positions)
+        y = self._draw_legend_agents(x, y, step_data)
 
         y = self._draw_legend_environment_elements(x, y)
 
@@ -205,7 +214,7 @@ class PyGameRenderer:
 
         y = self._draw_legend_population_chart(x, y)
 
-        if self._using_type_prefix(agent_positions):
+        if self._using_type_prefix(step_data):
             y = self._draw_legend_type2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
@@ -220,7 +229,7 @@ class PyGameRenderer:
 
         return y + spacing
 
-    def _draw_legend_agents(self, x, y, agent_positions):
+    def _draw_legend_agents(self, x, y, step_data):
         spacing = self.gui_style.legend_spacing
         r = self.gui_style.legend_circle_radius
         font = self.tooltip_font
@@ -231,7 +240,7 @@ class PyGameRenderer:
         self.screen.blit(title_surface, (x, y))
         y += spacing
 
-        is_type_based = self._using_type_prefix(agent_positions)
+        is_type_based = self._using_type_prefix(step_data)
 
         if is_type_based:
             # type-specific predator colors
@@ -270,7 +279,7 @@ class PyGameRenderer:
             r + 2,
             width=self.gui_style.halo_reproduction_thickness,
         )
-        self.screen.blit(font.render("Close to reproduction halo", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Reproduction halo", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         # Eating halo
@@ -431,19 +440,27 @@ class PyGameRenderer:
 
         return chart_y + chart_height + spacing
 
-    def _draw_tooltip(self, agent_positions, grass_positions, agent_energies, grass_energies):
+    def _draw_tooltip(self, step_data, grass_positions, grass_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
         grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
+
+        # Early exit if mouse is outside grid area
+        if not (0 <= grid_x < self.grid_size[0]) or not (0 <= grid_y < self.grid_size[1]):
+            return
+
         hovered_entity = None
         hovered_energy = 0.0
 
-        for agent_id, pos in agent_positions.items():
+        # Check for hovered agent
+        for agent_id, data in step_data.items():
+            pos = tuple(map(int, data["position"]))
             if pos == (grid_x, grid_y):
                 hovered_entity = agent_id
-                hovered_energy = agent_energies.get(agent_id, 0) if agent_energies else 0
+                hovered_energy = data["energy"]
                 break
 
+        # Check for hovered grass (only if no agent found)
         if not hovered_entity:
             for grass_id, pos in grass_positions.items():
                 if pos == (grid_x, grid_y):
@@ -452,18 +469,73 @@ class PyGameRenderer:
                     break
 
         if hovered_entity:
-            tooltip_line1 = self.tooltip_font.render(f"{hovered_entity}", True, (0, 0, 0))
-            tooltip_line2 = self.tooltip_font.render(f"Energy: {hovered_energy:.2f}", True, (0, 0, 0))
+            font = self.tooltip_font
+            lines = []
+
+            # First line: agent or grass ID
+            lines.append(("ID", hovered_entity))
+
+            if hovered_entity in step_data:
+                agent = step_data[hovered_entity]
+                lines.append(("Energy", f"{hovered_energy:+6.2f}"))
+
+                age = agent.get("age")
+                if age is not None:
+                    lines.append(("Age", f"{age:>6}"))
+
+                offspring = agent.get("offspring_count")
+                if offspring is not None:
+                    lines.append(("Offspring", f"{offspring:>6}"))
+
+                # Energy deltas
+                for key, label in [
+                    ("energy_decay", "-Decay"),
+                    ("energy_movement", "-Movement"),
+                    ("energy_eating", "-Eating"),
+                    ("energy_reproduction", "-Reproduction"),
+                ]:
+                    if key in agent:
+                        delta = agent[key]
+                        lines.append((label, f"{delta:+6.2f}"))
+
+                # Add implicit energy from previous step for debugging
+                if all(k in agent for k in ("energy_decay", "energy_movement", "energy_eating", "energy_reproduction")):
+                    decay = agent["energy_decay"]
+                    move = agent["energy_movement"]
+                    eat = agent["energy_eating"]
+                    repro = agent["energy_reproduction"]
+                    energy_prev = hovered_energy - decay - move - eat - repro
+                    lines.append(("Energy_prev", f"{energy_prev:6.2f}"))
+            else:
+                lines.append(("Energy", f"{hovered_energy:>6.2f}"))
+
+            # Measure width/height
+            label_width = max(font.size(label)[0] for label, _ in lines if label)
+            value_width = max(font.size(value)[0] for _, value in lines if value)
+            line_height = font.get_height()
             padding = self.gui_style.tooltip_padding
-            width = max(tooltip_line1.get_width(), tooltip_line2.get_width())
-            height = tooltip_line1.get_height() + tooltip_line2.get_height()
+            width = label_width + value_width + 12
+            height = len(lines) * line_height
+
             tooltip_x = mouse_x + 10
             tooltip_y = mouse_y + 10
+
             bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
             pygame.draw.rect(self.screen, (255, 255, 200), bg_rect)
             pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
-            self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
-            self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
+
+            # Render lines
+            y_offset = tooltip_y
+            for label, value in lines:
+                if value is None:
+                    text_surface = font.render(label, True, (0, 0, 0))
+                    self.screen.blit(text_surface, (tooltip_x, y_offset))
+                else:
+                    label_surface = font.render(f"{label}:", True, (0, 0, 0))
+                    value_surface = font.render(value, True, (0, 0, 0))
+                    self.screen.blit(label_surface, (tooltip_x, y_offset))
+                    self.screen.blit(value_surface, (tooltip_x + label_width + 12, y_offset))
+                y_offset += line_height
 
     def close(self):
         pygame.quit()
