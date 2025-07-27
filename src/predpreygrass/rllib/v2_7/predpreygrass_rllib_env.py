@@ -100,6 +100,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_parents = {}
         self.unique_agents = {}  # list of unique agent IDs
         self.unique_agent_stats = {}
+        self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
+        self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
@@ -214,7 +216,7 @@ class PredPreyGrass(MultiAgentEnv):
             if agent not in self.agent_positions:
                 continue
             if self.agent_energies[agent] <= 0:
-                self._handle_energy_depletion(agent, observations, rewards, terminations, truncations)
+                self._handle_energy_decay(agent, observations, rewards, terminations, truncations)
             elif "predator" in agent:
                 self._handle_predator_engagement(agent, observations, rewards, terminations, truncations)
             elif "prey" in agent:
@@ -256,6 +258,25 @@ class PredPreyGrass(MultiAgentEnv):
         # Sort agents for debugging
         self.agents.sort()
 
+        step_data = {}
+
+        for agent in self.agents:
+            pos = self.agent_positions[agent]
+            energy = self.agent_energies[agent]
+            deltas = self._per_agent_step_deltas[agent]
+
+            step_data[agent] = {
+                "position": pos,
+                "energy": energy,
+                "energy_decay": deltas["decay"],
+                "energy_movement": deltas["move"],
+                "energy_eating": deltas["eat"],
+                "energy_reproduction": deltas["repro"],
+            }
+
+        self.per_step_agent_data.append(step_data)
+        self._per_agent_step_deltas.clear()
+
         # Increment step counter
         self.current_step += 1
 
@@ -265,7 +286,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Calculate energy cost for movement based on distance and a configurable factor.
         """
-        distance_factor = self.config.get("move_energy_cost_factor", 0.1)
+        distance_factor = self.config.get("move_energy_cost_factor", 0.01)
         # print(f"Distance factor: {distance_factor}")
         current_energy = self.agent_energies[agent]
         # print(f"Current energy: {current_energy}")
@@ -447,6 +468,13 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
 
             self.agent_energies[agent] -= decay
+            self._per_agent_step_deltas[agent] = {
+                "decay": -decay,
+                "move": 0.0,
+                "eat": 0.0,
+                "repro": 0.0,
+            }
+
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self._log(
@@ -485,6 +513,8 @@ class PredPreyGrass(MultiAgentEnv):
                 self.agent_positions[agent] = new_position
                 move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
                 self.agent_energies[agent] -= move_cost
+                self._per_agent_step_deltas[agent]["move"] = -move_cost
+
                 uid = self.unique_agents[agent]
                 self.unique_agent_stats[uid]["distance_traveled"] += np.linalg.norm(np.array(new_position) - np.array(old_position))
                 self.unique_agent_stats[uid]["energy_spent"] += move_cost
@@ -507,7 +537,7 @@ class PredPreyGrass(MultiAgentEnv):
                     "blue",
                 )
 
-    def _handle_energy_depletion(self, agent, observations, rewards, terminations, truncations):
+    def _handle_energy_decay(self, agent, observations, rewards, terminations, truncations):
         self._log(self.verbose_decay, f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.", "red")
         observations[agent] = self._get_observation(agent)
         rewards[agent] = 0
@@ -557,6 +587,7 @@ class PredPreyGrass(MultiAgentEnv):
             efficiency = self.config.get("energy_transfer_efficiency", 1.0)
             gain = raw_gain * efficiency
             self.agent_energies[agent] += gain
+            self._per_agent_step_deltas[agent]["eat"] = gain
 
             # Cap the energy gain to max allowed for predator
             max_energy = self.config.get("max_energy_predator", float("inf"))
@@ -623,6 +654,7 @@ class PredPreyGrass(MultiAgentEnv):
             efficiency = self.config.get("energy_transfer_efficiency", 1.0)
             gain = raw_gain * efficiency
             self.agent_energies[agent] += gain
+            self._per_agent_step_deltas[agent]["eat"] = gain
 
             # Cap the energy gain to max allowed for prey
             max_energy = self.config.get("max_energy_prey", float("inf"))
@@ -685,6 +717,12 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            self._per_agent_step_deltas[new_agent] = {
+                "decay": 0.0,
+                "move": 0.0,
+                "eat": 0.0,
+                "repro": 0.0,
+            }
             # And after successful reproduction, store for cooldown
             self.agent_last_reproduction[agent] = self.current_step
 
@@ -703,6 +741,7 @@ class PredPreyGrass(MultiAgentEnv):
             energy_given = self.initial_energy_predator * repro_eff
             self.agent_energies[new_agent] = energy_given
             self.agent_energies[agent] -= self.initial_energy_predator
+            self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_predator
 
             self.grid_world_state[1, *new_position] = self.initial_energy_predator
             self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -761,6 +800,13 @@ class PredPreyGrass(MultiAgentEnv):
 
             new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
+            self._per_agent_step_deltas[new_agent] = {
+                "decay": 0.0,
+                "move": 0.0,
+                "eat": 0.0,
+                "repro": 0.0,
+            }
+
             # And after successful reproduction, store for cooldown
             self.agent_last_reproduction[agent] = self.current_step
 
@@ -779,6 +825,7 @@ class PredPreyGrass(MultiAgentEnv):
             energy_given = self.initial_energy_prey * repro_eff
             self.agent_energies[new_agent] = energy_given
             self.agent_energies[agent] -= self.initial_energy_prey
+            self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_prey
 
             self.grid_world_state[2, *new_position] = self.initial_energy_prey
             self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -847,6 +894,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_ages": self.agent_ages.copy(),
             "death_cause_prey": self.death_cause_prey.copy(),
             "agent_last_reproduction": self.agent_last_reproduction.copy(),
+            "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -868,6 +916,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_ages = snapshot["agent_ages"].copy()
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
+        self.per_step_agent_data = snapshot["per_step_agent_data"].copy()
 
     def _build_possible_agent_ids(self):
         """
