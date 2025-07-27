@@ -113,12 +113,11 @@ def step_backwards_if_requested(
             ceviz.record(agent_ids=env.agents)
             pdviz.record(env.death_cause_prey)
             visualizer.update(
-                agent_positions=env.agent_positions,
                 grass_positions=env.grass_positions,
-                agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies,
-                agents_just_ate=env.agents_just_ate,
                 step=env.current_step,
+                agents_just_ate=env.agents_just_ate,
+                per_step_agent_data=env.per_step_agent_data,
             )
             control.fps_slider_rect = visualizer.slider_rect
             pygame.time.wait(100)
@@ -161,12 +160,11 @@ def step_forward(
         ceviz.record_energy(env.get_total_energy_by_type())
 
     visualizer.update(
-        agent_positions=env.agent_positions,
         grass_positions=env.grass_positions,
-        agent_energies=env.agent_energies,
         grass_energies=env.grass_energies,
-        agents_just_ate=env.agents_just_ate,
         step=env.current_step,
+        agents_just_ate=env.agents_just_ate,
+        per_step_agent_data=env.per_step_agent_data,
     )
     control.fps_slider_rect = visualizer.slider_rect
 
@@ -190,12 +188,11 @@ def step_forward(
 
 def render_static_if_paused(env, visualizer):
     visualizer.update(
-        agent_positions=env.agent_positions,
         grass_positions=env.grass_positions,
-        agent_energies=env.agent_energies,
         grass_energies=env.grass_energies,
-        agents_just_ate=env.agents_just_ate,
         step=env.current_step,
+        agents_just_ate=env.agents_just_ate,
+        per_step_agent_data=env.per_step_agent_data,
     )
 
 
