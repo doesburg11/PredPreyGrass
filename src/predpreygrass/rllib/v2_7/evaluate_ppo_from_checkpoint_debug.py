@@ -59,7 +59,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     checkpoint_root = "/PPO_2025-07-27_23-54-21/"
-    checkpoint_dir = "checkpoint_iter_600"
+    checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -80,7 +80,7 @@ def setup_environment_and_visualizer(now):
 
     env = env_creator(config=config_env)
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size, cell_size=32)
+    visualizer = PyGameRenderer(grid_size, cell_size=32, max_steps=config_env.get("max_steps", 1000))
 
     if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
