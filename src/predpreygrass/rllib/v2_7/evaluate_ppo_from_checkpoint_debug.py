@@ -151,6 +151,10 @@ def step_forward(
             action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
+    # Inject unique ID per agent into step data
+    for agent_id, agent_data in env.per_step_agent_data[-1].items():
+        agent_data["unique_id"] = env.unique_agents[agent_id]
+
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
         snapshots.pop(0)
