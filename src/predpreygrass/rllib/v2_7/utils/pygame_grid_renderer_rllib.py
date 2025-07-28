@@ -24,7 +24,7 @@ class GuiStyle:
     prey_type_2_color: tuple = (100, 100, 255)
     grid_color: tuple = (200, 200, 200)
     background_color: tuple = (255, 255, 255)
-    halo_reproduction_color: tuple = (255, 0, 0)  # Gold
+    halo_reproduction_color: tuple = (255, 0, 0)
     halo_eating_color: tuple = (0, 128, 0)  # Bright green
     halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
@@ -482,6 +482,11 @@ class PyGameRenderer:
 
             if hovered_entity in step_data:
                 agent = step_data[hovered_entity]
+
+                # Second line: unique ID (only for agents, not grass)
+                uid = agent.get("unique_id")
+                if uid:
+                    lines.append(("UID", uid))
                 lines.append(("Energy", f"{hovered_energy:+6.2f}"))
 
                 age = agent.get("age")
