@@ -75,9 +75,15 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # Load trained model from checkpoint
-    root = "./src/predpreygrass/rllib/"
-    path = "v1_0/trained_policy/PPO_2025-06-06_21-34-53/PPO_PredPreyGrass_52139_00000_0_2025-06-06_21-34-53/checkpoint_000030"
-    checkpoint_path = f"file://{os.path.abspath(root+path)}"
+    script_dir = os.path.dirname(__file__)
+    checkpoint_path = os.path.join(
+        script_dir,
+        "trained_policy",
+        "PPO_2025-06-06_21-34-53",
+        "PPO_PredPreyGrass_52139_00000_0_2025-06-06_21-34-53",
+        "checkpoint_000030"
+    )
+
     trained_algo = Algorithm.from_checkpoint(checkpoint_path)
     print("Checkpoint loaded successfully!")
     # Access RLModules from learner_group

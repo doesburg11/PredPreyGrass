@@ -73,6 +73,15 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
         ```
+## Quick start
+Run te pretrained model in a Visual Studio Code terminal:
+
+```bash
+python ./src/predpreygrass/rllib/v1_0/evaluate_ppo_from_checkpoint_debug.py
+
+```
+
+
 
 ## References
 
