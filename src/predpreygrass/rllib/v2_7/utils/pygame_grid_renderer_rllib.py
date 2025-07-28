@@ -31,7 +31,7 @@ class GuiStyle:
 
 
 class PyGameRenderer:
-    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True):
+    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True, max_steps=None):
         self.grid_size = grid_size
         self.cell_size = cell_size
         self.enable_speed_slider = enable_speed_slider
@@ -67,6 +67,7 @@ class PyGameRenderer:
         self.target_fps = 10  # Default FPS
         self.slider_rect = None  # Will be defined in _draw_legend()
         self.slider_max_fps = 60
+        self.population_history_max_length = max_steps if max_steps else 1000
 
         self.grid_surface = pygame.Surface((window_width, window_height), pygame.SRCALPHA)
         for x in range(self.grid_size[0]):
@@ -369,7 +370,9 @@ class PyGameRenderer:
             self.screen.blit(label_surface, (label_x - label_width, y_pos - label_surface.get_height() // 2))
 
         # X ticks
-        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        max_len = self.population_history_max_length
+        step = max_len // 5
+        x_tick_labels = list(range(0, max_len + 1, step))
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
@@ -417,7 +420,9 @@ class PyGameRenderer:
             self.screen.blit(label_surface, (label_x, y_pos - 6))
 
         # X ticks
-        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        max_len = self.population_history_max_length
+        step = max_len // 5
+        x_tick_labels = list(range(0, max_len + 1, step))
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
