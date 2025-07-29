@@ -102,6 +102,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.unique_agent_stats = {}
         self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
         self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
+        self.agent_offspring_counts = {}
+        self.agent_live_offspring_ids = {}
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
@@ -272,6 +274,9 @@ class PredPreyGrass(MultiAgentEnv):
                 "energy_movement": deltas["move"],
                 "energy_eating": deltas["eat"],
                 "energy_reproduction": deltas["repro"],
+                "age": self.agent_ages[agent],
+                "offspring_count": self.agent_offspring_counts[agent],
+                "offspring_ids": self.agent_live_offspring_ids[agent],
             }
 
         self.per_step_agent_data.append(step_data)
@@ -727,6 +732,10 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_last_reproduction[agent] = self.current_step
 
             self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
+            child_uid = self.unique_agents[new_agent]
+            self.agent_live_offspring_ids[agent].append(child_uid)
+            self.agent_offspring_counts[agent] += 1
+
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
@@ -811,6 +820,10 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_last_reproduction[agent] = self.current_step
 
             self._register_new_agent(new_agent, parent_unique_id=self.unique_agents[agent])
+            child_uid = self.unique_agents[new_agent]
+            self.agent_live_offspring_ids[agent].append(child_uid)
+
+            self.agent_offspring_counts[agent] += 1
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
@@ -971,6 +984,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_activation_counts[agent_id] += 1
 
         self.agent_ages[agent_id] = 0
+        self.agent_offspring_counts[agent_id] = 0
+        self.agent_live_offspring_ids[agent_id] = []
+
         self.agent_parents[agent_id] = parent_unique_id
 
         self.agent_last_reproduction[agent_id] = -self.config.get("reproduction_cooldown_steps", 10)

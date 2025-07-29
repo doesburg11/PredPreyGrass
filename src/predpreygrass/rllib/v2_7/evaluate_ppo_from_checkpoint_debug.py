@@ -24,7 +24,7 @@ import re
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = False
+SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
@@ -58,7 +58,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "/PPO_2025-07-27_23-54-21/"
+    checkpoint_root = "PPO_2025-07-27_23-54-21/"
     checkpoint_dir = "checkpoint_iter_1000"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
@@ -263,6 +263,35 @@ def run_post_evaluation_plots(ceviz, pdviz):
         pdviz.plot()
 
 
+def print_ranked_fitness_summary(env):
+    print("\n--- Ranked Fitness Summary by Group ---")
+    group_stats = defaultdict(list)
+    for uid, stats in env.unique_agent_stats.items():
+        group, index, reuse = parse_uid(uid)
+        lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
+        group_stats[group].append(
+            {
+                "uid": uid,
+                "reward": stats.get("cumulative_reward", 0.0),
+                "lifetime": lifetime,
+                "offspring": stats.get("offspring_count", 0),
+                "efficiency": stats.get("offspring_count", 0) / max(stats.get("energy_spent", 1e-6), 1e-6),
+            }
+        )
+
+    for group in sorted(group_stats.keys()):
+        print(f"\n## {group.replace('_', ' ').title()} ##")
+        sorted_group = sorted(group_stats[group], key=lambda x: (-x["offspring"], -x["reward"], -x["lifetime"]))
+        for entry in sorted_group[:10]:  # top 10
+            print(
+                f"{entry['uid']:25} | "
+                f"R={entry['reward']:.2f} | "
+                f"Life={entry['lifetime']} | "
+                f"Off={entry['offspring']} | "
+                f"Eff={entry['efficiency']:.2f}"
+            )
+
+
 if __name__ == "__main__":
     seed = 4
     ray.init(ignore_reinit_error=True)
@@ -342,6 +371,13 @@ if __name__ == "__main__":
             json.dump(energy_by_type_series, f, indent=2)
     # Always show plots on screen
     ceviz.plot()
+    if SAVE_EVAL_RESULTS:
+        # Export all unique agent fitness stats
+        agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
+        with open(agent_fitness_path, "w") as f:
+            json.dump(env.unique_agent_stats, f, indent=2)
+
+    print_ranked_fitness_summary(env)
 
     pygame.quit()
     ray.shutdown()

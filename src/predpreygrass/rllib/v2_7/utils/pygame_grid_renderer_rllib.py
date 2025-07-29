@@ -127,8 +127,8 @@ class PyGameRenderer:
         self._draw_grid()
         self._draw_grass(grass_positions, grass_energies)
         self._draw_agents(step_data, agents_just_ate)
-        self._draw_tooltip(step_data, grass_positions, grass_energies)
         self._draw_legend(step, step_data)
+        self._draw_tooltip(step_data, grass_positions, grass_energies)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
@@ -487,15 +487,21 @@ class PyGameRenderer:
                 uid = agent.get("unique_id")
                 if uid:
                     lines.append(("UID", uid))
-                lines.append(("Energy", f"{hovered_energy:+6.2f}"))
 
                 age = agent.get("age")
                 if age is not None:
                     lines.append(("Age", f"{age:>6}"))
 
+                # Offspring count from the current live agent only
                 offspring = agent.get("offspring_count")
                 if offspring is not None:
                     lines.append(("Offspring", f"{offspring:>6}"))
+
+                if "offspring_ids" in agent and agent["offspring_ids"]:
+                    for i, uid in enumerate(agent["offspring_ids"]):
+                        lines.append((f"Child {i+1}", uid))
+
+                lines.append(("Energy", f"{hovered_energy:+6.2f}"))
 
                 # Energy deltas
                 for key, label in [
