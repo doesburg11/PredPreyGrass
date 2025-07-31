@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either posses type_1 or type_2.
 """
 from predpreygrass.rllib.v2_7.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_7.config.config_env_train import config_env
+from predpreygrass.rllib.v2_7.config.config_env_train_v1_0 import config_env
 from predpreygrass.rllib.v2_7.utils.episode_return_callback import EpisodeReturn
 
 # External libraries
