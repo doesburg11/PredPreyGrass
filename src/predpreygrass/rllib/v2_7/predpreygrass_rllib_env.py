@@ -554,6 +554,7 @@ class PredPreyGrass(MultiAgentEnv):
         uid = self.unique_agents[agent]
         stat = self.unique_agent_stats[uid]
         stat["death_step"] = self.current_step
+
         stat["death_cause"] = "starved"  # or "eaten"
         stat["final_energy"] = self.agent_energies[agent]
         steps = max(stat["avg_energy_steps"], 1)
