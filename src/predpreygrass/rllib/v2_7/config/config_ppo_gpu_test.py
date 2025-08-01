@@ -1,6 +1,6 @@
 config_ppo = {
     # Training
-    "train_batch_size": 16000,
+    "train_batch_size": 4096,
     "gamma": 0.99,
     "lr": 0.0003,
     # Learners
@@ -9,7 +9,7 @@ config_ppo = {
     # Env runners
     "num_env_runners": 4,
     "num_envs_per_env_runner": 8,
-    "rollout_fragment_length": 400,
+    "rollout_fragment_length": "auto",
     "sample_timeout_s": 600,
     "num_cpus_per_env_runner": 1,
     # Resources
