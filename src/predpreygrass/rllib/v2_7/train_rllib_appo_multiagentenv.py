@@ -147,9 +147,11 @@ if __name__ == "__main__":
             train_batch_size=config_ppo["train_batch_size"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
-            use_kl_loss=True,
-            kl_coeff=0.2,
-            clip_param=0.3,
+            kl_coeff=config_ppo["kl_coeff"],
+            kl_target=config_ppo["kl_target"],
+            clip_param=config_ppo["clip_param"],
+            use_kl_loss=config_ppo["use_kl_loss"],
+            entropy_coeff=config_ppo["entropy_coeff"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -176,20 +178,27 @@ if __name__ == "__main__":
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
-        result = appo_algo.train()
+
+        try:
+            result = appo_algo.train()
+        except ValueError as e:
+            if "doesn't have an env" in str(e):
+                print("⚠️ Environment runner crashed. Skipping this iteration and continuing...")
+                continue
+            else:
+                raise
 
         mean_return = result.get("env_runners/episode_return_mean", float("nan"))
         mean_len = result.get("env_runners/episode_len_mean", float("nan"))
 
         print(f"Iteration {iter + 1}: " f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, ")
         # Save checkpoint manually every N iterations
-        if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
+        if (iter + 1) % checkpoint_every == 0:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
             checkpoint_path.mkdir(parents=True, exist_ok=True)
 
-            # Save Algorithm checkpoint
-            appo_algo.save_to_path(str(checkpoint_path))
-            print(f"Saved Algorithm checkpoint to {checkpoint_path}")
+            appo_algo.save(str(checkpoint_path))
+            print(f"Saved policy checkpoint to {checkpoint_path}")
 
     # Delay shutdown to give Ray time to clean up, to avoid crashing
     time.sleep(2)
