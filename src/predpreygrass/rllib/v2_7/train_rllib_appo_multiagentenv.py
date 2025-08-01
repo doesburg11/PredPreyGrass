@@ -12,7 +12,8 @@ from predpreygrass.rllib.v2_7.utils.episode_return_callback import EpisodeReturn
 # External libraries
 import ray
 from ray.rllib.algorithms.appo import APPOConfig
-from ray.rllib.algorithms.appo.torch.appo_torch_rl_module import APPOTorchRLModule
+from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import DefaultAPPOTorchRLModule
+
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.tune.registry import register_env
@@ -47,7 +48,7 @@ def get_config_appo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_3.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_appo_gpu import config_ppo
     # CPU configuration
     elif num_cpus == 8:
         from predpreygrass.rllib.v2_3.config.config_ppo_cpu import config_ppo
@@ -81,7 +82,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 def build_module_spec(obs_space, act_space):
     return RLModuleSpec(
-        module_class=APPOTorchRLModule,
+        module_class=DefaultAPPOTorchRLModule,
         observation_space=obs_space,
         action_space=act_space,
         inference_only=False,
@@ -108,7 +109,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_{timestamp}"
+    experiment_name = f"APPO_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
@@ -149,7 +150,6 @@ if __name__ == "__main__":
             train_batch_size=config_ppo["train_batch_size"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
-            use_critic=True,
             use_kl_loss=True,
             kl_coeff=0.2,
             clip_param=0.3,
