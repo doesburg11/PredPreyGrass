@@ -51,10 +51,7 @@ def get_config_appo():
         from predpreygrass.rllib.v2_7.config.config_appo_gpu import config_ppo
     # CPU configuration
     elif num_cpus == 8:
-        from predpreygrass.rllib.v2_3.config.config_ppo_cpu import config_ppo
-    # Colab configuration
-    elif num_cpus == 2:
-        from predpreygrass.rllib.v2_3.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_appo_cpu import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
