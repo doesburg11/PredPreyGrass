@@ -47,7 +47,7 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_test import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_hybrid import config_ppo
     # CPU configuration
     elif num_cpus == 8:
         from predpreygrass.rllib.v2_7.config.config_ppo_cpu import config_ppo
@@ -143,9 +143,12 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         .training(
-            train_batch_size=config_ppo["train_batch_size"],
+            train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
+            minibatch_size=config_ppo["minibatch_size"],
+            num_epochs=config_ppo["num_epochs"],
+            entropy_coeff=config_ppo.get("entropy_coeff", 0.0),  # Optional, default to 0.0 if not set
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -167,23 +170,37 @@ if __name__ == "__main__":
     )
 
     # Manual training loop
-    max_iters = 1000
+    max_iters = config_ppo["max_iters"]
     checkpoint_every = 10
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
+        t0 = time.perf_counter()
         result = ppo_algo.train()
+        timers = result.get("timers", {})
+        learner_time = timers.get("learner_update_timer", float("nan"))
+        print(f"Learner time: {learner_time:.2f}s")
+
+        if "learner_info" in result:
+            print("Learner info keys:", list(result["learner_info"].keys()))
+
+        print(f"Steps: {result['num_env_steps_sampled_lifetime']}, Episodes: {result.get('env_runners/episodes_total', 'N/A')}")
+        print("Timings:", result.get("timers", {}))
+
+        t1 = time.perf_counter()
+
+        elapsed = t1 - t0
+        steps = result.get("num_env_steps_sampled_lifetime", 0)
 
         mean_return = result.get("env_runners/episode_return_mean", float("nan"))
         mean_len = result.get("env_runners/episode_len_mean", float("nan"))
 
-        print(f"Iteration {iter + 1}: " f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, ")
-        # Save checkpoint manually every N iterations
+        print(f"Iteration {iter + 1}: Time={elapsed:.2f}s, " f"Steps={steps}, Return={mean_return:.2f}, Length={mean_len:.2f}")
+
+        # Save checkpoint
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
             checkpoint_path.mkdir(parents=True, exist_ok=True)
-
-            # Save Algorithm checkpoint
             ppo_algo.save_to_path(str(checkpoint_path))
             print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
