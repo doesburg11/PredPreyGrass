@@ -5,6 +5,11 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either posses type_1 or type_2.
 """
+# surpress: " You are running PPO on the new API stack!..."
+import logging
+
+logging.getLogger("ray.rllib.algorithms.algorithm_config").setLevel(logging.ERROR)
+
 from predpreygrass.rllib.v2_7.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_7.config.config_env_train_v1_0 import config_env
 from predpreygrass.rllib.v2_7.utils.episode_return_callback import EpisodeReturn
@@ -29,7 +34,7 @@ def custom_logger_creator(config):
         from ray.tune.logger import UnifiedLogger
 
         logdir = str(experiment_path)
-        print(f"Redirecting RLlib logging to {logdir}")
+        # print(f"Redirecting RLlib logging to {logdir}")
         return UnifiedLogger(config_, logdir, loggers=None)
 
     return logger_creator_func
@@ -47,7 +52,7 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_hybrid import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_fast import config_ppo
     # CPU configuration
     elif num_cpus == 8:
         from predpreygrass.rllib.v2_7.config.config_ppo_cpu import config_ppo
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    print(f"Saved config to: {experiment_path/'run_config.json'}")
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)

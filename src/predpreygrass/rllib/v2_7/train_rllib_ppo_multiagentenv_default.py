@@ -117,7 +117,7 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    print(f"Saved config to: {experiment_path/'run_config.json'}")
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)

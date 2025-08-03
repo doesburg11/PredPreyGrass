@@ -21,15 +21,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.possible_agents = self._build_possible_agent_ids()
 
-        self.observation_spaces = {
-            agent_id: self._build_observation_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
-        self.action_spaces = {
-            agent_id: self._build_action_space(agent_id)
-            for agent_id in self.possible_agents
-        }
+        self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
     def _initialize_from_config(self):
         config = self.config
@@ -152,8 +146,8 @@ class PredPreyGrass(MultiAgentEnv):
         prey_list = [a for a in self.agents if "prey" in a]
 
         predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list): len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list):]
+        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]

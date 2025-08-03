@@ -34,3 +34,7 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+ignore = ["E402", "E203"]
+line-length = 132
