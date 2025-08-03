@@ -81,7 +81,7 @@ if __name__ == "__main__":
         "trained_policy",
         "PPO_2025-06-06_21-34-53",
         "PPO_PredPreyGrass_52139_00000_0_2025-06-06_21-34-53",
-        "checkpoint_000030"
+        "checkpoint_000030",
     )
 
     trained_algo = Algorithm.from_checkpoint(checkpoint_path)
