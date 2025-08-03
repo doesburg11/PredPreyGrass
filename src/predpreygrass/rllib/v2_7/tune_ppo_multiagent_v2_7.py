@@ -20,9 +20,11 @@ import json
 def custom_logger_creator(config):
     def logger_creator_func(config_):
         from ray.tune.logger import UnifiedLogger
+
         logdir = str(experiment_path)
         print(f"Redirecting RLlib logging to {logdir}")
         return UnifiedLogger(config_, logdir, loggers=None)
+
     return logger_creator_func
 
 
@@ -88,7 +90,7 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    print(f"Saved config to: {experiment_path/'run_config.json'}")
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
     module_specs = {}
@@ -134,16 +136,19 @@ if __name__ == "__main__":
         .callbacks(EpisodeReturn)
     )
 
+    max_iters = config_ppo["max_iters"]
+    checkpoint_every = 10
+
     tuner = Tuner(
         ppo_config.algo_class,
         param_space=ppo_config,
         run_config=train.RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
-            stop={"training_iteration": 1000},
+            stop={"training_iteration": max_iters},
             checkpoint_config=train.CheckpointConfig(
-                num_to_keep=5,
-                checkpoint_frequency=10,
+                num_to_keep=100,
+                checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
             ),
         ),

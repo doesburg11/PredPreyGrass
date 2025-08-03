@@ -1,10 +1,10 @@
 config_ppo = {
     # Training
-    "train_batch_size_per_learner": 512,
+    "train_batch_size_per_learner": 1024,
     "gamma": 0.99,
     "lr": 0.0003,
     # Learners
-    "num_gpus_per_learner": 0,
+    "num_gpus_per_learner": 1,
     "num_learners": 1,
     # Env runners
     "num_env_runners": 4,
