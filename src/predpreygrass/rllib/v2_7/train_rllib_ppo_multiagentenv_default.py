@@ -172,7 +172,7 @@ if __name__ == "__main__":
     ppo_algo = ppo_config.build_algo(logger_creator=custom_logger_creator({}))
 
     # Manual training loop
-    max_iters = 1000
+    max_iters = config_ppo["max_iters"]
     checkpoint_every = 10
 
     for iter in range(max_iters):
