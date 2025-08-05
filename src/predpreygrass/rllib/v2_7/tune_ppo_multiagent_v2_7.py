@@ -115,8 +115,16 @@ if __name__ == "__main__":
         )
         .training(
             train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
+            minibatch_size=config_ppo["minibatch_size"],
+            num_epochs=config_ppo["num_epochs"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
+            lambda_=config_ppo["lambda_"],
+            entropy_coeff=config_ppo["entropy_coeff"],
+            vf_loss_coeff=config_ppo["vf_loss_coeff"],
+            clip_param=config_ppo["clip_param"],
+            kl_coeff=config_ppo["kl_coeff"],
+            kl_target=config_ppo["kl_target"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(

@@ -4,8 +4,8 @@ config_ppo = {
     "train_batch_size_per_learner": 1024,
     "gamma": 0.99,
     "lr": 0.0003,
-    "minibatch_size": 128,
-    "num_epochs": 5,
+    "minibatch_size": 512,
+    "num_epochs": 2,
     # Learners
     "num_gpus_per_learner": 1,
     "num_learners": 1,

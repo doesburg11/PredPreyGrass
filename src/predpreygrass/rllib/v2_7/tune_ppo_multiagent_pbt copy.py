@@ -3,7 +3,19 @@ import os
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["TORCH_GLOBAL_FOREACH"] = "0"
 
-# ✅ patch must come before any torch/rllib usage
+# ✅ Global monkey-patch to enforce foreach=False in all Ray/PPO subprocesses
+import torch.optim
+
+_old_adam = torch.optim.Adam
+
+
+class PatchedAdam(_old_adam):
+    def __init__(self, *args, **kwargs):
+        kwargs["foreach"] = False
+        super().__init__(*args, **kwargs)
+
+
+torch.optim.Adam = PatchedAdam
 
 from predpreygrass.rllib.v2_7.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v2_7.config.config_env_train_v1_0 import config_env
@@ -17,12 +29,20 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
+from ray.rllib.core.models.catalog import Catalog
 from ray.tune.registry import register_env
 
 from datetime import datetime
 from pathlib import Path
 import json
 import pprint
+
+
+# ✅ Catalog wrapper to allow for future flexibility (optional)
+class SafeCatalog(Catalog):
+    def build_rl_module(self, *args, **kwargs):
+        kwargs["module_class"] = DefaultPPOTorchRLModule
+        return super().build_rl_module(*args, **kwargs)
 
 
 def custom_logger_creator(config):
@@ -82,24 +102,13 @@ if __name__ == "__main__":
     ray.shutdown()
     ray.init(
         log_to_driver=True,
+        _temp_dir="/tmp/ray",
         ignore_reinit_error=True,
         runtime_env={
-            "working_dir": ".",  # ✅ keep your code available to workers
             "env_vars": {
                 "TORCH_GLOBAL_FOREACH": "0",
                 "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
-            },
-            "excludes": [
-                # ❌ ignore large git artifacts
-                ".git",
-                ".git-lfs",
-                ".gitignore",
-                # ❌ ignore videos and gifs
-                "assets/images/video",
-                "assets/images/gifs",
-                # ❌ ignore tensorboard logs and old results
-                "src/predpreygrass/rllib/v1_0/trained_policy",
-            ],
+            }
         },
     )
 
@@ -200,14 +209,13 @@ if __name__ == "__main__":
                 checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
             ),
-            logger_creator=custom_logger_creator({}),
         ),
         tune_config=TuneConfig(
             scheduler=pbt,
             metric="env_runners/episode_return_mean",
             mode="max",
             num_samples=4,
-            reuse_actors=False,  # ✅ safer for now
+            reuse_actors=True,
         ),
     )
 

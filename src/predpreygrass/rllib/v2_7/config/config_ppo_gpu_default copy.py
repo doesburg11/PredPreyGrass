@@ -1,13 +1,11 @@
 config_ppo = {
     "max_iters": 1000,
     # Training
-    "train_batch_size_per_learner": 4096,
+    "train_batch_size_per_learner": 1024,
     "gamma": 0.99,
     "lr": 0.0003,
-    "minibatch_size": 256,
-    "num_epochs": 2,
     # Learners
-    "num_gpus_per_learner": 0.25,
+    "num_gpus_per_learner": 1,
     "num_learners": 1,
     # Env runners
     "num_env_runners": 8,
