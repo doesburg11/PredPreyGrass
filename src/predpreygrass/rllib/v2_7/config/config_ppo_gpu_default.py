@@ -6,7 +6,7 @@ config_ppo = {
     "lambda_": 1.0,
     "train_batch_size_per_learner": 1024,
     "minibatch_size": 128,
-    "num_epochs": 10,
+    "num_epochs": 5,
     "entropy_coeff": 0.0,
     "vf_loss_coeff": 1.0,
     "clip_param": 0.3,
