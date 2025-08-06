@@ -1,28 +1,27 @@
 import os
 
-os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
-os.environ["TORCH_GLOBAL_FOREACH"] = "0"
-
-# ✅ patch must come before any torch/rllib usage
-
-from predpreygrass.rllib.v2_7.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v2_7.config.config_env_train_v1_0 import config_env
-from predpreygrass.rllib.v2_7.utils.episode_return_callback import EpisodeReturn
-
-import random
+os.environ["TUNE_DISABLE_STRICT_METRIC_CHECKING"] = "1"
 import ray
-from ray.tune import Tuner, TuneConfig, RunConfig, CheckpointConfig
-from ray.tune.schedulers import PopulationBasedTraining
+
+
+import json
+import random
+from datetime import datetime
+from pathlib import Path
+
+from ray import tune
+from ray import train
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
+from ray.tune import Tuner
+from ray.tune.schedulers import PopulationBasedTraining
 
-from datetime import datetime
-from pathlib import Path
-import json
-import pprint
+from predpreygrass.rllib.v2_7.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v2_7.config.config_env_train_v1_0 import config_env
+from predpreygrass.rllib.v2_7.utils.episode_return_callback import EpisodeReturn
 
 
 def custom_logger_creator(config):
@@ -39,9 +38,9 @@ def custom_logger_creator(config):
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_pbt import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_default import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v2_7.config.config_ppo_cpu_pbt import config_ppo
+        from predpreygrass.rllib.v2_7.config.config_ppo_cpu import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
@@ -76,32 +75,9 @@ def build_module_spec(obs_space, act_space):
     )
 
 
-# --- Main training setup ---
-
 if __name__ == "__main__":
     ray.shutdown()
-    ray.init(
-        log_to_driver=True,
-        ignore_reinit_error=True,
-        runtime_env={
-            "working_dir": ".",  # ✅ keep your code available to workers
-            "env_vars": {
-                "TORCH_GLOBAL_FOREACH": "0",
-                "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
-            },
-            "excludes": [
-                # ❌ ignore large git artifacts
-                ".git",
-                ".git-lfs",
-                ".gitignore",
-                # ❌ ignore videos and gifs
-                "assets/images/video",
-                "assets/images/gifs",
-                # ❌ ignore tensorboard logs and old results
-                "src/predpreygrass/rllib/v1_0/trained_policy",
-            ],
-        },
-    )
+    ray.init(log_to_driver=True, ignore_reinit_error=True)
 
     register_env("PredPreyGrass", env_creator)
 
@@ -132,6 +108,29 @@ if __name__ == "__main__":
 
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
 
+    # --- Population-Based Training setup ---
+    def explore(cfg):
+        if cfg["train_batch_size_per_learner"] < cfg["minibatch_size"] * 2:
+            cfg["train_batch_size_per_learner"] = cfg["minibatch_size"] * 2
+        if cfg["num_epochs"] < 1:
+            cfg["num_epochs"] = 1
+        return cfg
+
+    pbt = PopulationBasedTraining(
+        time_attr="training_iteration",
+        perturbation_interval=20,
+        resample_probability=0.25,
+        hyperparam_mutations={
+            "lr": [1e-3, 5e-4, 1e-4, 5e-5],
+            "clip_param": lambda: random.uniform(0.1, 0.4),
+            "entropy_coeff": [0.0, 0.001, 0.005, 0.01],
+            "num_epochs": lambda: random.randint(1, 30),
+            "minibatch_size": lambda: random.choice([128, 256, 512]),
+            "train_batch_size_per_learner": lambda: random.choice([1024, 2048, 4096, 8192]),
+        },
+        custom_explore_fn=explore,
+    )
+
     ppo_config = (
         PPOConfig()
         .environment(env="PredPreyGrass")
@@ -142,10 +141,16 @@ if __name__ == "__main__":
         )
         .training(
             train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
-            gamma=config_ppo["gamma"],
-            lr=config_ppo["lr"],
             minibatch_size=config_ppo["minibatch_size"],
             num_epochs=config_ppo["num_epochs"],
+            gamma=config_ppo["gamma"],
+            lr=config_ppo["lr"],
+            lambda_=config_ppo["lambda_"],
+            entropy_coeff=config_ppo["entropy_coeff"],
+            vf_loss_coeff=config_ppo["vf_loss_coeff"],
+            clip_param=config_ppo["clip_param"],
+            kl_coeff=config_ppo["kl_coeff"],
+            kl_target=config_ppo["kl_target"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -159,72 +164,36 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
-        .resources(num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"])
+        .resources(
+            num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
+        )
         .callbacks(EpisodeReturn)
     )
 
     max_iters = config_ppo["max_iters"]
     checkpoint_every = 10
 
-    def explore(config):
-        if config["train_batch_size_per_learner"] < config["minibatch_size"] * 2:
-            config["train_batch_size_per_learner"] = config["minibatch_size"] * 2
-        if config.get("num_epochs", 1) < 1:
-            config["num_epochs"] = 1
-        return config
-
-    hyperparam_mutations = {
-        "lr": [1e-4, 5e-5, 1e-5],
-        "minibatch_size": lambda: random.randint(64, 512),
-        "train_batch_size_per_learner": lambda: random.randint(2048, 8192),
-        "num_epochs": lambda: random.randint(1, 4),
-    }
-
-    pbt = PopulationBasedTraining(
-        time_attr="time_total_s",
-        perturbation_interval=120,
-        resample_probability=0.25,
-        hyperparam_mutations=hyperparam_mutations,
-        custom_explore_fn=explore,
-    )
-
     tuner = Tuner(
-        trainable=ppo_config.algo_class,
+        ppo_config.algo_class,
         param_space=ppo_config,
-        run_config=RunConfig(
+        tune_config=tune.TuneConfig(
+            metric="time_total_s",
+            mode="max",
+            scheduler=pbt,
+            num_samples=2,
+            reuse_actors=True,
+        ),
+        run_config=train.RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
             stop={"training_iteration": max_iters},
-            checkpoint_config=CheckpointConfig(
+            checkpoint_config=train.CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
             ),
-            logger_creator=custom_logger_creator({}),
-        ),
-        tune_config=TuneConfig(
-            scheduler=pbt,
-            metric="env_runners/episode_return_mean",
-            mode="max",
-            num_samples=4,
-            reuse_actors=False,  # ✅ safer for now
         ),
     )
 
     result = tuner.fit()
-
-    best_result = result.get_best_result()
-
-    print("Best performing trial's final set of hyperparameters:\n")
-    pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
-
-    print("\nBest performing trial's final reported metrics:\n")
-    metrics_to_print = [
-        "episode_reward_mean",
-        "episode_reward_max",
-        "episode_reward_min",
-        "episode_len_mean",
-    ]
-    pprint.pprint({k: v for k, v in best_result.metrics.items() if k in metrics_to_print})
-
     ray.shutdown()
