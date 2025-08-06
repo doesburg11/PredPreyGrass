@@ -1,165 +1,95 @@
-import argparse
-import os
 import random
-from datetime import datetime
 
-import pandas as pd
-
-from ray.tune import run, sample_from
+from ray import tune
+from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 from ray.tune.schedulers import PopulationBasedTraining
-from ray.tune.schedulers.pb2 import PB2
-
-
-# Postprocess the perturbed config to ensure it's still valid used if PBT.
-def explore(config):
-    # Ensure we collect enough timesteps to do sgd.
-    if config["train_batch_size"] < config["sgd_minibatch_size"] * 2:
-        config["train_batch_size"] = config["sgd_minibatch_size"] * 2
-    # Ensure we run at least one sgd iter.
-    if config["lambda"] > 1:
-        config["lambda"] = 1
-    config["train_batch_size"] = int(config["train_batch_size"])
-    return config
-
+import pprint
 
 if __name__ == "__main__":
+    import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--max", type=int, default=1000000)
-    parser.add_argument("--algo", type=str, default="PPO")
-    parser.add_argument("--num_workers", type=int, default=4)
-    parser.add_argument("--num_samples", type=int, default=4)
-    parser.add_argument("--t_ready", type=int, default=50000)
-    parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument(
-        "--horizon", type=int, default=1600
-    )  # make this 1000 for other envs
-    parser.add_argument("--perturb", type=float, default=0.25)  # if using PBT
-    parser.add_argument("--env_name", type=str, default="BipedalWalker-v2")
-    parser.add_argument(
-        "--criteria", type=str, default="timesteps_total"
-    )  # "training_iteration", "time_total_s"
-    parser.add_argument(
-        "--net", type=str, default="32_32"
-    )  # May be important to use a larger network for bigger tasks.
-    parser.add_argument("--filename", type=str, default="")
-    parser.add_argument("--method", type=str, default="pb2")  # ['pbt', 'pb2']
-    parser.add_argument("--save_csv", type=bool, default=False)
+    parser.add_argument("--smoke-test", action="store_true", help="Finish quickly for testing")
+    args, _ = parser.parse_known_args()
 
-    args = parser.parse_args()
+    # Postprocess the perturbed config to ensure it's still valid
+    def explore(config):
+        # Ensure enough data to do at least 2 minibatches per epoch
+        if config.get("train_batch_size_per_learner", 0) < config.get("minibatch_size", 1) * 2:
+            config["train_batch_size_per_learner"] = config["minibatch_size"] * 2
 
-    # bipedalwalker needs 1600
-    if args.env_name in ["BipedalWalker-v2", "BipedalWalker-v3"]:
-        horizon = 1600
-    else:
-        horizon = 1000
+        # Ensure at least 1 epoch
+        if config.get("num_epochs", 0) < 1:
+            config["num_epochs"] = 1
+
+        return config
+
+    hyperparam_mutations = {
+        "clip_param": lambda: random.uniform(0.01, 0.5),
+        "lr": [1e-3, 5e-4, 1e-4, 5e-5, 1e-5],
+        "num_epochs": lambda: random.randint(1, 30),
+        "minibatch_size": lambda: random.randint(128, 16384),
+        "train_batch_size_per_learner": lambda: random.randint(2000, 160000),
+    }
 
     pbt = PopulationBasedTraining(
-        time_attr="env_runners/num_env_steps_sampled_lifetime",
-        metric="env_runners/episode_return_mean",
-        mode="max",
-        perturbation_interval=args.t_ready,
-        resample_probability=args.perturb,
-        quantile_fraction=args.perturb,  # copy bottom % with top %
-        # Specifies the search space for these hyperparams
-        hyperparam_mutations={
-            "lambda": lambda: random.uniform(0.9, 1.0),
-            "clip_param": lambda: random.uniform(0.1, 0.5),
-            "lr": lambda: random.uniform(1e-3, 1e-5),
-            "train_batch_size": lambda: random.randint(1000, 60000),
-        },
+        time_attr="time_total_s",
+        perturbation_interval=120,
+        resample_probability=0.25,
+        # Specifies the mutations of these hyperparams
+        hyperparam_mutations=hyperparam_mutations,
         custom_explore_fn=explore,
     )
 
-    pb2 = PB2(
-        time_attr="env_runners/num_env_steps_sampled_lifetime",  # ← Fix here
-        metric="env_runners/episode_return_mean",
-        mode="max",
-        perturbation_interval=args.t_ready,
-        quantile_fraction=args.perturb,  # copy bottom % with top %
-        # Specifies the hyperparam search space
-        hyperparam_bounds={
-            "lambda": [0.9, 1.0],
-            "clip_param": [0.1, 0.5],
-            "lr": [1e-5, 1e-3],
-            "train_batch_size": [1000, 60000],
-        },
-    )
+    # Stop when we've either reached 100 training iterations or reward=300
+    stopping_criteria = {"training_iteration": 3, "episode_reward_mean": 300}
 
-    methods = {"pbt": pbt, "pb2": pb2}
-
-    timelog = (
-        str(datetime.date(datetime.now())) + "_" + str(datetime.time(datetime.now()))
-    )
-
-    args.dir = "{}_{}_{}_Size{}_{}_{}".format(
-        args.algo,
-        args.filename,
-        args.method,
-        str(args.num_samples),
-        args.env_name,
-        args.criteria,
-    )
-
-    analysis = run(
-        args.algo,
-        name="{}_{}_{}_seed{}_{}".format(
-            timelog, args.method, args.env_name, str(args.seed), args.filename
-        ),
-        scheduler=methods[args.method],
-        verbose=1,
-        num_samples=args.num_samples,
-        reuse_actors=True,
-        stop={args.criteria: args.max},
-        config={
-            "env": args.env_name,
-            "log_level": "INFO",
-            "seed": args.seed,
-            "kl_coeff": 1.0,
-            "num_gpus": 0,
-            "horizon": horizon,
-            "observation_filter": "MeanStdFilter",
-            "model": {
-                "fcnet_hiddens": [
-                    int(args.net.split("_")[0]),
-                    int(args.net.split("_")[1]),
-                ],
-                "free_log_std": True,
-            },
-            "num_sgd_iter": 10,
-            "sgd_minibatch_size": 128,
-            "lambda": sample_from(lambda spec: random.uniform(0.9, 1.0)),
-            "clip_param": sample_from(lambda spec: random.uniform(0.1, 0.5)),
-            "lr": sample_from(lambda spec: random.uniform(1e-3, 1e-5)),
-            "train_batch_size": sample_from(lambda spec: random.randint(1000, 60000)),
-        },
-    )
-
-    all_dfs = list(analysis.trial_dataframes.values())
-
-    results = pd.DataFrame()
-    for i in range(args.num_samples):
-        df = analysis.trial_dataframes[analysis.get_best_trial(metric, mode=mode)].copy()
-        df = df[
-            [
-                "env_runners/num_env_steps_sampled_lifetime",
-                "env_runners/num_episodes_lifetime",
-                "env_runners/episode_return_mean",
-                "learners/default_policy/curr_kl_coeff",
-            ]
-        ].rename(
-            columns={
-                "env_runners/num_env_steps_sampled_lifetime": "timesteps_total",
-                "env_runners/num_episodes_lifetime": "episodes_total",
-                "env_runners/episode_return_mean": "episode_reward_mean",
-                "learners/default_policy/curr_kl_coeff": "info/learner/default_policy/cur_kl_coeff",
-            }
+    config = (
+        PPOConfig()
+        .environment("Humanoid-v5")
+        .env_runners(num_env_runners=4)
+        .training(
+            # These params are tuned from a fixed starting value.
+            kl_coeff=1.0,
+            lambda_=0.95,
+            clip_param=0.2,
+            lr=1e-4,
+            # These params start off randomly drawn from a set.
+            num_epochs=tune.choice([10, 20, 30]),
+            minibatch_size=tune.choice([128, 512, 2048]),
+            train_batch_size_per_learner=tune.choice([10000, 20000, 40000]),
         )
+        .rl_module(
+            model_config=DefaultModelConfig(free_log_std=True),
+        )
+    )
 
-        df["Agent"] = i
-        results = pd.concat([results, df]).reset_index(drop=True)
+    tuner = tune.Tuner(
+        "PPO",
+        tune_config=tune.TuneConfig(
+            metric="env_runners/episode_return_mean",
+            mode="max",
+            scheduler=pbt,
+            num_samples=1 if args.smoke_test else 2,
+        ),
+        param_space=config,
+        run_config=tune.RunConfig(stop=stopping_criteria),
+    )
+    results = tuner.fit()
 
-    if args.save_csv:
-        if not (os.path.exists("data/" + args.dir)):
-            os.makedirs("data/" + args.dir)
+    best_result = results.get_best_result()
 
-        results.to_csv("data/{}/seed{}.csv".format(args.dir, str(args.seed)))
+    print("Best performing trial's final set of hyperparameters:\n")
+    pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
+
+    env_metrics = best_result.metrics.get("env_runners", {})
+
+    metrics_to_print = {
+        "episode_return_mean": env_metrics.get("episode_return_mean"),
+        "episode_return_max": env_metrics.get("episode_return_max"),
+        "episode_return_min": env_metrics.get("episode_return_min"),
+        "episode_len_mean": env_metrics.get("episode_len_mean"),
+    }
+    print("\nBest performing trial's final reported metrics:\n")
+    pprint.pprint(metrics_to_print)
