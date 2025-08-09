@@ -132,7 +132,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
         self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
-        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float64)
+        self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float32)
         self.grid_world_state = self.initial_grid_world_state.copy()
 
         def _generate_action_map(range_size: int):
@@ -340,7 +340,7 @@ class PredPreyGrass(MultiAgentEnv):
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
         observation = np.zeros(
             (self.num_obs_channels, observation_range, observation_range),
-            dtype=np.float64,
+            dtype=np.float32,
         )
         observation[0].fill(1)
         observation[0, xolo:xohi, yolo:yohi] = 0
@@ -441,7 +441,7 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[agent] = self._get_observation(agent)
                 else:  # Inactive agents get empty observation
                     obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float64)
+                    observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float32)
 
                 rewards[agent] = 0.0
                 truncations[agent] = True
@@ -954,11 +954,11 @@ class PredPreyGrass(MultiAgentEnv):
         """
         if "predator" in agent_id:
             predator_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float64)
+            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
 
         elif "prey" in agent_id:
             prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float64)
+            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float32)
 
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
