@@ -190,8 +190,6 @@ if __name__ == "__main__":
     result = tuner.fit()
 
     best_result = result.get_best_result()
-    for result in best_result:
-        print(result.metrics.get("env_runners/episode_return_mean"))
 
     print("Best performing trial's final set of hyperparameters:\n")
     pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
