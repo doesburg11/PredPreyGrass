@@ -150,7 +150,7 @@ if __name__ == "__main__":
     }
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
-        perturbation_interval=20,
+        perturbation_interval=3,  # ← Cloning can occur after 5 iterations
         resample_probability=0.25,
         hyperparam_mutations=hyperparam_mutations,  # Specifies the mutations of hyperparams
         custom_explore_fn=explore,
@@ -168,7 +168,7 @@ if __name__ == "__main__":
             metric="time_total_s",
             mode="max",
             scheduler=pbt,
-            num_samples=2,
+            num_samples=4,
             reuse_actors=True,
         ),
         run_config=tune.RunConfig(
