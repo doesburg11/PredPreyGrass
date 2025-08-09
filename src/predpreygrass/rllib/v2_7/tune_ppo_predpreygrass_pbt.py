@@ -121,12 +121,12 @@ if __name__ == "__main__":
         perturbation_interval=20,
         resample_probability=0.25,
         hyperparam_mutations={
-            "lr": [1e-3, 5e-4, 1e-4, 5e-5],
+            "lr": [1e-3, 5e-4, 1e-4],
             "clip_param": lambda: random.uniform(0.1, 0.4),
-            "entropy_coeff": [0.0, 0.001, 0.005, 0.01],
+            "entropy_coeff": [0.0, 0.001, 0.005],
             "num_epochs": lambda: random.randint(1, 30),
             "minibatch_size": lambda: random.choice([128, 256, 512]),
-            "train_batch_size_per_learner": lambda: random.choice([1024, 2048, 4096, 8192]),
+            "train_batch_size_per_learner": lambda: random.choice([512, 1024, 2048]),
         },
         custom_explore_fn=explore,
     )
