@@ -27,8 +27,10 @@ from datetime import datetime
 from pathlib import Path
 import json
 
+
 def env_creator(config):
     return PredPreyGrass(config or config_env)
+
 
 def get_config_ppo():
     num_cpus = os.cpu_count()
@@ -192,4 +194,3 @@ if __name__ == "__main__":
     }
     print("\nBest performing trial's final reported metrics:\n")
     pprint.pprint(metrics_to_print)
-    
