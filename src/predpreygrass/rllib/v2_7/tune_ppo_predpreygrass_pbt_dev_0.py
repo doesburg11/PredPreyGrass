@@ -25,17 +25,19 @@ from pathlib import Path
 def env_creator(config):
     return PredPreyGrass(config or config_env)
 
+
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
         # Workaround to avoid PyTorch CUDA memory fragmentation
-        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512"
-        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_default import config_ppo
+        os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
+        from predpreygrass.rllib.v2_7.config.config_ppo_gpu_pbt import config_ppo
     elif num_cpus == 8:
         from predpreygrass.rllib.v2_7.config.config_ppo_cpu_pbt import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
+
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
     parts = agent_id.split("_")
@@ -61,6 +63,7 @@ def build_module_spec(obs_space, act_space):
         },
     )
 
+
 # Postprocess the perturbed PBT config to ensure it's still valid
 def explore(config):
     config["train_batch_size_per_learner"] = min(config["train_batch_size_per_learner"], 2048)
@@ -70,6 +73,7 @@ def explore(config):
     if config["num_epochs"] < 1:
         config["num_epochs"] = 1
     return config
+
 
 if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
@@ -102,7 +106,6 @@ if __name__ == "__main__":
                 sample_env.action_spaces[agent_id],
             )
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
-
 
     ppo_config = (
         PPOConfig()
@@ -140,7 +143,7 @@ if __name__ == "__main__":
     )
 
     # PBT setup
-    hyperparam_mutations={
+    hyperparam_mutations = {
         "lr": [1e-3, 5e-4, 1e-4],
         "clip_param": lambda: random.uniform(0.1, 0.3),
         "entropy_coeff": [0.0, 0.001, 0.005],
@@ -150,26 +153,27 @@ if __name__ == "__main__":
     }
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
-        perturbation_interval=3,  # ← Cloning can occur after 5 iterations
+        perturbation_interval=3,  # ← Cloning can occur after 3 iterations
         resample_probability=0.25,
         hyperparam_mutations=hyperparam_mutations,  # Specifies the mutations of hyperparams
         custom_explore_fn=explore,
+        log_config=True,
     )
 
     # Stopping criteria
-    stopping_criteria = {"training_iteration":  config_ppo["max_iters"], "episode_reward_mean": 300}
+    stopping_criteria = {"training_iteration": config_ppo["max_iters"]}
 
     checkpoint_every = 1
 
     tuner = Tuner(
-        ppo_config.algo_class,  # ?
-        param_space=ppo_config,  # ?
+        ppo_config.algo_class,
+        param_space=ppo_config,
         tune_config=tune.TuneConfig(
-            metric="time_total_s",
+            metric="env_runners/episode_return_mean",
             mode="max",
             scheduler=pbt,
-            num_samples=4,
-            reuse_actors=True,
+            num_samples=5,
+            reuse_actors=False,
         ),
         run_config=tune.RunConfig(
             name=experiment_name,
@@ -186,6 +190,8 @@ if __name__ == "__main__":
     result = tuner.fit()
 
     best_result = result.get_best_result()
+    for result in best_result:
+        print(result.metrics.get("env_runners/episode_return_mean"))
 
     print("Best performing trial's final set of hyperparameters:\n")
     pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
