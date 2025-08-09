@@ -175,7 +175,10 @@ if __name__ == "__main__":
             num_samples=2,
         ),
         param_space=config,
-        run_config=tune.RunConfig(name=experiment_name, storage_path=str(ray_results_path), stop=stopping_criteria),
+        run_config=tune.RunConfig(
+            name=experiment_name, 
+            storage_path=str(ray_results_path), 
+            stop=stopping_criteria),
     )
     results = tuner.fit()
 
