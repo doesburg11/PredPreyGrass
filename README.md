@@ -43,13 +43,13 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
-## Environments:
+## Experiments:
 
-* [Base enviornment](src/predpreygrass/rllib/v1_0)
+* [Training and evaluating base enviornment](src/predpreygrass/rllib/v1_0)
 
-* [Mutating agents](src/predpreygrass/rllib/v2_0)
+* [Training and evaluating mutating agents environment](src/predpreygrass/rllib/v2_0)
 
-* Changing river (adding water resource;under development)
+* [Hyperparameter tuning base environment - Population Based Training] 
 
 
 ## Installation of the repository
