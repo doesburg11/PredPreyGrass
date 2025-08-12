@@ -16,9 +16,9 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Experiments:
 
-* [Training and evaluating base enviornment](src/predpreygrass/rllib/v1_0)
+* [Training and evaluating base environment](src/predpreygrass/rllib/v1_0)
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of Predatoes and Prey
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of Predators and Prey
   * [Implementation](src/predpreygrass/rllib/v2_7/evaluate_red_queen_freeze_type_1_only.py)
   * [Results](https://doesburg11.github.io/pred-prey-grass/red-queen/)
 
