@@ -1,10 +1,18 @@
 """
-THIS IS A TEST SCRIPT FOR CHANGING REWARDS DURING TRAINING
-It runs 1 iteration, saves checkpoints, then runs another iteration with modified rewards.
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+Predators and prey both either posses type_1 or type_2.
 """
-from predpreygrass.rllib.v3_0_test.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_0_test.config.config_env_train import config_env
-from predpreygrass.rllib.v3_0_test.utils.episode_return_callback import EpisodeReturn
+# surpress: " You are running PPO on the new API stack!..."
+import logging
+
+logging.getLogger("ray.rllib.algorithms.algorithm_config").setLevel(logging.ERROR)
+
+from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
+from predpreygrass.rllib.v3_0.utils.episode_return_callback import EpisodeReturn
 
 # External libraries
 import ray
@@ -26,7 +34,7 @@ def custom_logger_creator(config):
         from ray.tune.logger import UnifiedLogger
 
         logdir = str(experiment_path)
-        print(f"Redirecting RLlib logging to {logdir}")
+        # print(f"Redirecting RLlib logging to {logdir}")
         return UnifiedLogger(config_, logdir, loggers=None)
 
     return logger_creator_func
@@ -44,13 +52,10 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib.v2_3.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib.v3_0.config.config_ppo_gpu_fast import config_ppo
     # CPU configuration
     elif num_cpus == 8:
-        from predpreygrass.rllib.v2_3.config.config_ppo_cpu import config_ppo
-    # Colab configuration
-    elif num_cpus == 2:
-        from predpreygrass.rllib.v2_3.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib.v3_0.config.config_ppo_cpu import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
@@ -62,18 +67,18 @@ def env_creator(config):
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
     """
-    Maps agent IDs to policies based on their speed and role.
+    Maps agent IDs to policies based on their type and role.
     This function is used to determine which policy to apply for each agent.
     Args:
-        agent_id (str): The ID of the agent, expected to be in the format "speed_X_role_Y".
+        agent_id (str): The ID of the agent, expected to be in the format "type_X_role_Y".
     Returns:
-        str: The policy name for the agent, formatted as "speed_X_role_Y".
+        str: The policy name for the agent, formatted as "type_X_role_Y".
     """
-    # Expected format: "speed_1_predator_0", "speed_2_prey_5"
+    # Expected format: "type_1_predator_0", "type_2_prey_5"
     parts = agent_id.split("_")
-    speed = parts[1]
+    type = parts[1]
     role = parts[2]
-    return f"speed_{speed}_{role}"
+    return f"type_{type}_{role}"
 
 
 def build_module_spec(obs_space, act_space):
@@ -117,7 +122,7 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    print(f"Saved config to: {experiment_path/'run_config.json'}")
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)
@@ -143,9 +148,12 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         .training(
-            train_batch_size=config_ppo["train_batch_size"],
+            train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
+            minibatch_size=config_ppo["minibatch_size"],
+            num_epochs=config_ppo["num_epochs"],
+            entropy_coeff=config_ppo.get("entropy_coeff", 0.0),  # Optional, default to 0.0 if not set
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -167,61 +175,41 @@ if __name__ == "__main__":
     )
 
     # Manual training loop
-    max_iters = 1
-    checkpoint_every = 1
+    max_iters = config_ppo["max_iters"]
+    checkpoint_every = 10
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
+        t0 = time.perf_counter()
         result = ppo_algo.train()
+        timers = result.get("timers", {})
+        learner_time = timers.get("learner_update_timer", float("nan"))
+        print(f"Learner time: {learner_time:.2f}s")
+
+        if "learner_info" in result:
+            print("Learner info keys:", list(result["learner_info"].keys()))
+
+        print(f"Steps: {result['num_env_steps_sampled_lifetime']}, Episodes: {result.get('env_runners/episodes_total', 'N/A')}")
+        print("Timings:", result.get("timers", {}))
+
+        t1 = time.perf_counter()
+
+        elapsed = t1 - t0
+        steps = result.get("num_env_steps_sampled_lifetime", 0)
 
         mean_return = result.get("env_runners/episode_return_mean", float("nan"))
         mean_len = result.get("env_runners/episode_len_mean", float("nan"))
 
-        print(f"Iteration {iter + 1}: " f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, ")
-        # Save checkpoint manually every N iterations
+        print(f"Iteration {iter + 1}: Time={elapsed:.2f}s, " f"Steps={steps}, Return={mean_return:.2f}, Length={mean_len:.2f}")
+
+        # Save checkpoint
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
             checkpoint_path = experiment_path / f"checkpoint_iter_{iter + 1}"
             checkpoint_path.mkdir(parents=True, exist_ok=True)
-
-            # Save Algorithm checkpoint
             ppo_algo.save_to_path(str(checkpoint_path))
             print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
     # Delay shutdown to give Ray time to clean up, to avoid crashing
     time.sleep(2)
     del ppo_algo
-
-    checkpoint_str = str(experiment_path / "checkpoint_iter_1")
-
-    # === STEP 2: Resume from checkpoint with modified grass-eating rewards ===
-
-    print("\n=== Step 2: Resuming from checkpoint with updated reward config ===")
-
-    # Modify reward for both prey types
-    config_env["reward_prey_eat_grass"] = 1.0
-
-    # Restore algorithm from checkpoint
-    from ray.rllib.algorithms.algorithm import Algorithm
-
-    resumed_algo = Algorithm.from_checkpoint(checkpoint_str)
-
-    # Update the environment config with new reward values
-    resumed_algo.config["env_config"] = config_env
-
-    print(f"Resumed Algorithm from checkpoint: {checkpoint_str}")
-    print(f"Updated environment config: {resumed_algo.config['env_config']}")
-
-    # Resume training for 1 iteration only
-    print("🚀 Resuming training for 1 additional iteration with new config...")
-    result = resumed_algo.train()
-
-    # Save another checkpoint after resumed training
-    resumed_ckpt_path = experiment_path / f"checkpoint_iter_{2}"
-    resumed_ckpt_path.mkdir(parents=True, exist_ok=True)
-    resumed_algo.save_to_path(str(resumed_ckpt_path))
-    print(f"✅ Saved resumed checkpoint to: {resumed_ckpt_path}")
-
-    # Shutdown Ray
-    time.sleep(2)
-    del resumed_algo
     ray.shutdown()

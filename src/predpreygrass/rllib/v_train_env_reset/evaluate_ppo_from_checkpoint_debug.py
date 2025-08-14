@@ -4,10 +4,10 @@ This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation. For a simplear evaluation script,
 see `evaluate_ppo_from_checkpoint_headless.py`.
 """
-from predpreygrass.rllib.v3_0_test.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v3_0_test.config.config_env_eval import config_env
-from predpreygrass.rllib.v3_0_test.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.v3_0_test.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.v_train_env_reset.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.v_train_env_reset.config.config_env_eval import config_env
+from predpreygrass.rllib.v_train_env_reset.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.v_train_env_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
