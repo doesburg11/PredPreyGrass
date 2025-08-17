@@ -4,7 +4,6 @@
 
 import os
 
-from torch import mode
 os.environ["PYTHONWARNINGS"]="ignore::DeprecationWarning"
 os.environ["TUNE_DISABLE_STRICT_METRIC_CHECKING"] = "1"
 
