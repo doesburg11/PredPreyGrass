@@ -1,21 +1,7 @@
 # changes compared to dev_1_works.py
 # reuse_actors=True
 # Trial configuration table only with relevant hyperparameters
-"""
-Trial RLLibPPOTrainable_e3bf6_00001 started with configuration:
-╭─────────────────────────────────────────────────────────────────────╮
-│ Trial RLLibPPOTrainable_e3bf6_00001 config                          │
-├─────────────────────────────────────────────────────────────────────┤
-│ algo_config                                    ...t 0x7f8fe6f6b210> │
-│ clip_param                                                  0.21097 │
-│ entropy_coeff                                                 0.001 │
-│ logger_creator                                 ...t 0x7f8fe66f7ba0> │
-│ lr                                                            0.001 │
-│ minibatch_size                                                  128 │
-│ num_epochs                                                       10 │
-│ train_batch_size_per_learner                                   2048 │
-╰─────────────────────────────────────────────────────────────────────╯
-"""
+
 
 from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
