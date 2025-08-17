@@ -159,8 +159,7 @@ if __name__ == "__main__":
         custom_explore_fn=explore,
         log_config=True,
         metric="env_runners/episode_return_mean",  # ← moved here
-        mode="max",                                 # ← moved here
-
+        mode="max",  # ← moved here
     )
 
     # Stopping criteria
@@ -187,7 +186,7 @@ if __name__ == "__main__":
                 checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
             ),
-      ),
+        ),
     )
 
     result = tuner.fit()
@@ -196,8 +195,6 @@ if __name__ == "__main__":
         metric="env_runners/episode_return_mean",
         mode="max",
     )
-    for result in best_result:
-        print(result.metrics.get("env_runners/episode_return_mean"))
 
     print("Best performing trial's final set of hyperparameters:\n")
     pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
