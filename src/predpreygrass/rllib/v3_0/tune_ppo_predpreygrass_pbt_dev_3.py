@@ -304,10 +304,9 @@ if __name__ == "__main__":
         hyperparam_mutations=hyperparam_mutations,  # Specifies the mutations of hyperparams
         custom_explore_fn=explore,
         log_config=False,
-        # metric="env_runners/episode_return_mean",  # ← moved here
         metric="pbt_metric",
-        mode="max",                                 # ← moved here
-        require_attrs=True,  # ← no need to require attrs for PBT
+        mode="max",
+        require_attrs=True,  
 
     )
     # Pack everything the Trainable needs into param_space
