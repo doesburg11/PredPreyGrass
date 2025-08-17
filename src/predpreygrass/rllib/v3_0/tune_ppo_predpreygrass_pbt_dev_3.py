@@ -2,12 +2,14 @@
 # reuse_actors=True
 # Trial configuration table only with relevant hyperparameters
 
-from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
-
 import os
 
+from torch import mode
+os.environ["PYTHONWARNINGS"]="ignore::DeprecationWarning"
 os.environ["TUNE_DISABLE_STRICT_METRIC_CHECKING"] = "1"
+
+from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
 
 from ray import tune
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -19,14 +21,12 @@ from ray.tune import Tuner
 from ray.tune import Trainable, RunConfig, CheckpointConfig
 from ray.tune.schedulers import PopulationBasedTraining
 from ray.tune import PlacementGroupFactory
-from ray.tune.logger import JsonLoggerCallback, CSVLoggerCallback, TBXLoggerCallback  # same TBXLoggerCallback as in ray.tune.logger.tensorboardx
 
 import pprint
 import json
 import random
 from datetime import datetime
 from pathlib import Path
-
 
 class RLLibPPOTrainable(Trainable):
     """
@@ -67,12 +67,33 @@ class RLLibPPOTrainable(Trainable):
 
         # Now build
         self.algo = base_conf.build_algo()
-
+    """
     def step(self):
         # One RLlib training iteration
         result = self.algo.train()
         # Tune likes flat dicts; RLlib already returns one
         return result
+    """
+
+    def step(self):
+        result = self.algo.train()
+
+        # Normalize RLlib’s moving target metric names into one stable key
+        metric_aliases = [
+            "episode_return_mean",                 # often present (newer stacks)
+            "env_runners/episode_return_mean",     # older/new-API internal
+            "evaluation/episode_return_mean",      # if you evaluate
+        ]
+        for k in metric_aliases:
+            if k in result:
+                result["pbt_metric"] = result[k]
+                break
+        else:
+            # Ensure the key exists so PBT(require_attrs=True) never crashes
+            result["pbt_metric"] = float("nan")
+
+        return result
+
 
     def save_checkpoint(self, checkpoint_dir):
         # RLlib will create a subdir; return the path for Tune
@@ -99,17 +120,39 @@ class RLLibPPOTrainable(Trainable):
                     ckpt = self._cfg.pop(k)
                     break
 
+            # IMPORTANT: stop the old algo before rebuilding
+            try:
+                if hasattr(self, "algo") and self.algo is not None:
+                    self.algo.stop()
+            except Exception:
+                pass
+
             # Rebuild with the *new* values now in self._cfg
             self._build_algo(self._cfg)
 
             # If exploitation asked us to load parent weights, restore now
             if ckpt:
                 self.algo.restore_from_path(ckpt)
+                print(f"[reset_config] restored from {ckpt}")
 
+            print(f"[reset_config] succeeded (actor reused). pid={os.getpid()}")
             return True
         except Exception as e:
             print(f"[reset_config] failed: {e}")
             return False
+    """
+    @classmethod
+    def default_resource_request(cls, config):
+        # mirror the bundles you compute in __main__
+        main_cpus = (
+            config["algo_config"]._resources.num_cpus_for_main_process  # or pass a plain number alongside
+        )
+        # if you don't want to pull from PPOConfig, pass numbers into config explicitly
+        bundles = [{"CPU": main_cpus}]
+        for _ in range(config["num_env_runners"]):  # add these simple ints into param_space
+            bundles.append({"CPU": config["num_cpus_per_env_runner"]})
+        return PlacementGroupFactory(bundles=bundles, strategy="PACK")
+    """
 
     def cleanup(self):
         try:
@@ -129,7 +172,7 @@ def get_config_ppo():
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
         from predpreygrass.rllib.v3_0.config.config_ppo_gpu_pbt import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v3_0.config.config_ppo_cpu_pbt import config_ppo
+        from predpreygrass.rllib.v3_0.config.config_ppo_cpu_pbt_smoke import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
@@ -223,9 +266,9 @@ if __name__ == "__main__":
             lr=config_ppo["lr"],
             entropy_coeff=config_ppo["entropy_coeff"],
             # set safe defaults; will be overridden per-trial
-            num_epochs=10,
-            minibatch_size=128,
-            train_batch_size_per_learner=1024,
+            num_epochs=config_ppo["num_epochs"],
+            minibatch_size=config_ppo["minibatch_size"],
+            train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -247,34 +290,37 @@ if __name__ == "__main__":
 
     # PBT setup
     hyperparam_mutations = {
-        "lr": [1e-3, 5e-4, 1e-4],
-        "clip_param": lambda: random.uniform(0.1, 0.3),
-        "entropy_coeff": [0.0, 0.001, 0.005],
-        "num_epochs": lambda: random.randint(10, 30),
-        "minibatch_size": lambda: random.choice([128, 256, 512]),
-        "train_batch_size_per_learner": lambda: random.choice([1024, 2048]),
+        "lr": config_ppo["pbt_lr_choices"],
+        "clip_param": lambda: random.uniform(*config_ppo["pbt_clip_range"]),
+        "entropy_coeff": config_ppo["pbt_entropy_choices"],
+        "num_epochs": lambda: random.randint(*config_ppo["pbt_num_epochs_range"]),
+        "minibatch_size": lambda: random.choice(config_ppo["pbt_minibatch_choices"]),
+        "train_batch_size_per_learner": lambda: random.choice(config_ppo["pbt_train_batch_size_choices"]),
     }
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
-        perturbation_interval=3,  # ← Cloning can occur after 3 iterations
-        resample_probability=0.25,
+        perturbation_interval=config_ppo["perturbation_interval"], 
+        resample_probability=config_ppo["resample_probability"],
+        quantile_fraction=config_ppo["quantile_fraction"],
         hyperparam_mutations=hyperparam_mutations,  # Specifies the mutations of hyperparams
         custom_explore_fn=explore,
         log_config=False,
-        metric="env_runners/episode_return_mean",  # ← moved here
+        # metric="env_runners/episode_return_mean",  # ← moved here
+        metric="pbt_metric",
         mode="max",                                 # ← moved here
+        require_attrs=True,  # ← no need to require attrs for PBT
 
     )
     # Pack everything the Trainable needs into param_space
     param_space = {
         "algo_config": ppo_config,                # base template
         # ← tunables live at top-level so Tune can sample them
-        "lr": tune.choice([1e-3, 5e-4, 1e-4]),
-        "clip_param": tune.uniform(0.1, 0.3),
-        "entropy_coeff": tune.choice([0.0, 0.001, 0.005]),
-        "num_epochs": tune.choice([10, 30]),
-        "minibatch_size": tune.choice([128, 256, 512]),
-        "train_batch_size_per_learner": tune.choice([1024, 2048]),
+        "lr": tune.choice(config_ppo["pbt_lr_choices"]),
+        "clip_param": tune.uniform(*config_ppo["pbt_clip_range"]),
+        "entropy_coeff": tune.choice(config_ppo["pbt_entropy_choices"]),
+        "num_epochs": tune.choice(config_ppo["pbt_num_epochs_range"]),
+        "minibatch_size": tune.choice(config_ppo["pbt_minibatch_choices"]),
+        "train_batch_size_per_learner": tune.choice(config_ppo["pbt_train_batch_size_choices"]),
     }
 
     # Stopping criteria
@@ -296,12 +342,6 @@ if __name__ == "__main__":
 
     pgf = PlacementGroupFactory(bundles=bundles, strategy="PACK")
 
-    callbacks = [
-        JsonLoggerCallback(),
-        CSVLoggerCallback(),
-        TBXLoggerCallback(),
-    ]
-
     tuner = Tuner(
         tune.with_resources(RLLibPPOTrainable, resources=pgf),  # ← two bundles
         param_space=param_space,
@@ -314,7 +354,7 @@ if __name__ == "__main__":
             name=experiment_name,
             storage_path=str(ray_results_path),
             stop=stopping_criteria,
-            callbacks=callbacks,
+            callbacks=None,
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=checkpoint_every,
