@@ -3,7 +3,6 @@
 # Trial configuration table only with relevant hyperparameters
 
 import os
-
 os.environ["PYTHONWARNINGS"]="ignore::DeprecationWarning"
 os.environ["TUNE_DISABLE_STRICT_METRIC_CHECKING"] = "1"
 

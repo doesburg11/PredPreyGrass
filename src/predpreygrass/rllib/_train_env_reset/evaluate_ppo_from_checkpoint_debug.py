@@ -1,12 +1,13 @@
 """
 Evaluation code for evaluating a trained PPO agent from a checkpoint.
 This script has an advanced viewer control system that allows stepping
-back-and-forward through the simulation.
+back-and-forward through the simulation. For a simplear evaluation script,
+see `evaluate_ppo_from_checkpoint_headless.py`.
 """
-from predpreygrass.rllib.v2_2.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v2_2.config.config_env_eval import config_env
-from predpreygrass.rllib.v2_2.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.v2_2.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib._train_env_reset.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib._train_env_reset.config.config_env_eval import config_env
+from predpreygrass.rllib._train_env_reset.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib._train_env_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -53,9 +54,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/v2_2/trained_policies"
-    checkpoint_root = "/incl_speed_2/"
-    checkpoint_dir = "checkpoint_iter_1000"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/v3_2/trained_policies"
+    checkpoint_root = "/experiment_5/"
+    checkpoint_dir = "checkpoint_iter_380"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -91,7 +92,9 @@ def setup_environment_and_visualizer(now):
     return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
 
 
-def step_backwards_if_requested(control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz):
+def step_backwards_if_requested(
+    control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
+):
     if control.step_backward:
         if len(snapshots) > 1:
             snapshots.pop()
@@ -102,7 +105,9 @@ def step_backwards_if_requested(control, env, snapshots, time_steps, predator_co
                 time_steps.pop()
                 predator_counts.pop()
                 prey_counts.pop()
-            ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
+                energy_by_type_series.pop()
+
+            ceviz.record(agent_ids=env.agents)
             pdviz.record(env.death_cause_prey)
             visualizer.update(
                 agent_positions=env.agent_positions,
@@ -148,8 +153,9 @@ def step_forward(
     if len(snapshots) > 100:
         snapshots.pop(0)
 
-    ceviz.record(agent_ids=env.agents, internal_ids=env.agent_internal_ids, agent_ages=env.agent_ages)
-    pdviz.record(env.death_cause_prey)
+    ceviz.record(agent_ids=env.agents)
+    if hasattr(ceviz, "record_energy"):
+        ceviz.record_energy(env.get_total_energy_by_type())
 
     visualizer.update(
         agent_positions=env.agent_positions,
@@ -173,6 +179,7 @@ def step_forward(
     predator_counts.append(sum(1 for a in env.agents if "predator" in a))
     prey_counts.append(sum(1 for a in env.agents if "prey" in a))
     time_steps.append(env.current_step)
+    energy_by_type_series.append(env.get_total_energy_by_type())
     total_reward += sum(rewards.values())
 
     return observations, total_reward, terminations, truncations
@@ -207,19 +214,6 @@ def print_reward_summary(env, total_reward):
     print(f"Total All-Agent Reward:{total_reward:.2f}")
 
 
-def print_prey_death_summary(env):
-    # Print causes of prey death
-    print("\n--- Prey Death Causes ---")
-    stats = {"eaten": 0, "starved": 0}
-    for internal_id, cause in env.death_cause_prey.items():
-        print(f"Prey internal_id {internal_id:4d}: {cause}")
-        if cause in stats:
-            stats[cause] += 1
-    print("\n--- Summary ---")
-    print(f"Total prey eaten   : {stats['eaten']}")
-    print(f"Total prey starved : {stats['starved']}")
-
-
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     with open(reward_log_path, "w") as f:
@@ -237,20 +231,6 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             f.write(f"Total {group.replace('_', ' ').title()} Reward: {sum(rewards):.2f}\n")
 
 
-def save_prey_death_summary_to_file(env, output_dir):
-    death_log_path = os.path.join(output_dir, "prey_death_causes.txt")
-    death_stats = {"eaten": 0, "starved": 0}
-    with open(death_log_path, "w") as f:
-        f.write("--- Prey Death Causes ---\n")
-        for internal_id, cause in env.death_cause_prey.items():
-            f.write(f"Prey internal_id {internal_id:4d}: {cause}\n")
-            if cause in death_stats:
-                death_stats[cause] += 1
-        f.write("\n--- Summary ---\n")
-        f.write(f"Total prey eaten   : {death_stats['eaten']}\n")
-        f.write(f"Total prey starved : {death_stats['starved']}\n")
-
-
 def run_post_evaluation_plots(ceviz, pdviz):
     if SAVE_EVAL_RESULTS:
         ceviz.plot()
@@ -258,7 +238,7 @@ def run_post_evaluation_plots(ceviz, pdviz):
 
 
 if __name__ == "__main__":
-    seed = 1
+    seed = 7
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
@@ -284,12 +264,13 @@ if __name__ == "__main__":
     total_reward = 0
     predator_counts, prey_counts, time_steps = [], [], []
     snapshots = [env.get_state_snapshot()]
+    energy_by_type_series = [env.get_total_energy_by_type()]
 
     while not loop_helper.simulation_terminated:
         control.handle_events()
 
         new_obs = step_backwards_if_requested(
-            control, env, snapshots, time_steps, predator_counts, prey_counts, visualizer, ceviz, pdviz
+            control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
         )
         if new_obs is not None:
             observations = new_obs
@@ -319,15 +300,16 @@ if __name__ == "__main__":
             pygame.time.wait(50)
 
     print_reward_summary(env, total_reward)
-    print_prey_death_summary(env)
+
+    # print("Death statistics:", env.death_agents_stats)
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
-        save_prey_death_summary_to_file(env, eval_output_dir)
-
+        energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
+        with open(energy_log_path, "w") as f:
+            json.dump(energy_by_type_series, f, indent=2)
     # Always show plots on screen
     ceviz.plot()
-    pdviz.plot()
 
     pygame.quit()
     ray.shutdown()
