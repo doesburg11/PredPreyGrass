@@ -18,6 +18,7 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.tune.registry import register_env
+from ray.tune import Tuner, RunConfig, CheckpointConfig
 import os
 
 
@@ -180,19 +181,18 @@ if __name__ == "__main__":
         )
 
         # Start a new experiment if no checkpoint is found
-        tuner = tune.Tuner(
+        tuner = Tuner(
             ppo.algo_class,
             param_space=ppo,
-            run_config=train.RunConfig(
+            run_config=RunConfig(
                 stop={"training_iteration": 1000},
-                checkpoint_config=train.CheckpointConfig(
-                    num_to_keep=100,  # Keep only the last 5 checkpoints to save disk space
-                    checkpoint_frequency=10,  # Save every 10 iterations
+                checkpoint_config=CheckpointConfig(
+                    num_to_keep=100,
+                    checkpoint_frequency=5,
                     checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
                 ),
             ),
         )
         # Run the Tuner and capture the results.
         results = tuner.fit()
-    # print(f"Training results: {results}")
     ray.shutdown()
