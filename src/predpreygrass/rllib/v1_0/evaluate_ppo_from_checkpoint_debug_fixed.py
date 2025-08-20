@@ -115,6 +115,7 @@ if __name__ == "__main__":
     # --- Create env ---
     seed = 42  # set seed for reproducibility (optional)
     env = env_creator({})
+    # Reset environment and get initial observations
     observations, _ = env.reset(seed=seed)
 
     # --- PyGame renderer ---
@@ -141,26 +142,27 @@ if __name__ == "__main__":
     prey_counts = []
     time_steps = []
 
-    # --- Snapshots for stepping backwards ---
+    # --- Setup snapshots for stepping backwards ---
     snapshots = []
     max_snapshots = 100  # Keep last 100 steps
-    snapshots.append(env.get_state_snapshot())  # initial snapshot
+    # Save initial snapshot
+    snapshots.append(env.get_state_snapshot())
 
     # --- Main eval loop ---
+    # Advanced loop control added for step-wise back-and-forward evaluation debugging
     while not loop_helper.simulation_terminated:
         control.handle_events()
-
         # Backward step
         if control.step_backward:
             if len(snapshots) > 1:
-                snapshots.pop()  # Discard current
+                snapshots.pop()  # Discard current step
                 env.restore_state_snapshot(snapshots[-1])
-                print(f"[ViewerControl] Step Backward \u2192 Step {env.current_step}")
+                print(f"[ViewerControl] Step Backward → Step {env.current_step}")
 
-                # regen observations after restore
+                # --- REGENERATE observations to match restored state ---
                 observations = {agent: env._get_observation(agent) for agent in env.agents}
 
-                # rewind chart lists
+                # --- Also rewind history lists ---
                 if len(time_steps) > 0:
                     time_steps.pop()
                     predator_counts.pop()
@@ -176,8 +178,7 @@ if __name__ == "__main__":
                 )
                 pygame.time.wait(100)
             control.step_backward = False
-
-        # Forward step
+        # Normal step forward
         if loop_helper.should_step(control):
             # Build actions from per-policy RLModules
             action_dict = {
@@ -188,7 +189,6 @@ if __name__ == "__main__":
                 )
                 for agent_id in env.agents
             }
-
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
             # Save snapshot AFTER step
@@ -196,7 +196,7 @@ if __name__ == "__main__":
             if len(snapshots) > max_snapshots:
                 snapshots.pop(0)
 
-            # Render
+            # Update viewer
             visualizer.update(
                 agent_positions=env.agent_positions,
                 grass_positions=env.grass_positions,
@@ -207,16 +207,18 @@ if __name__ == "__main__":
             )
             if SAVE_MOVIE:
                 frame = pygame.surfarray.array3d(visualizer.screen)
-                frame = np.transpose(frame, (1, 0, 2))
-                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                frame = np.transpose(frame, (1, 0, 2))  # Convert (width, height, channels) → (height, width, channels)
+                frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Pygame uses RGB, OpenCV uses BGR
                 video_writer.write(frame)
 
-            # Loop termination
+            # Update loop control termination flag
             loop_helper.update_simulation_terminated(terminations, truncations)
+            # Reset step_once
             control.step_once = False
+            # Frame rate control
             clock.tick(target_fps)
 
-            # Stats
+            # Track stats
             num_predators = sum(1 for agent in env.agents if "predator" in agent)
             num_prey = sum(1 for agent in env.agents if "prey" in agent)
             time_steps.append(env.current_step)
@@ -224,7 +226,7 @@ if __name__ == "__main__":
             prey_counts.append(num_prey)
             total_reward += sum(rewards.values())
         else:
-            # If paused → keep drawing so tooltips work
+            # If paused → update viewer so tooltips work
             visualizer.update(
                 agent_positions=env.agent_positions,
                 grass_positions=env.grass_positions,
@@ -233,26 +235,27 @@ if __name__ == "__main__":
                 agents_just_ate=env.agents_just_ate,
                 step=env.current_step,
             )
+            # Small sleep to avoid CPU busy loop
             pygame.time.wait(50)
 
-    # --- End of loop ---
+    # --- End of main loop ---
     print(f"Evaluation complete! Total Reward: {total_reward}")
 
     # --- Reward summary (per-agent + aggregated) ---
     predator_rewards, prey_rewards = [], []
-    print("\\n--- Reward Breakdown per Agent ---")
+    print("\n--- Reward Breakdown per Agent ---")
     for agent_id, reward in env.cumulative_rewards.items():
         print(f"{agent_id:15}: {reward:.2f}")
-        if 'predator' in agent_id:
+        if "predator" in agent_id:
             predator_rewards.append(reward)
-        elif 'prey' in agent_id:
+        elif "prey" in agent_id:
             prey_rewards.append(reward)
 
     total_predator_reward = sum(predator_rewards)
     total_prey_reward = sum(prey_rewards)
     total_reward_all = total_predator_reward + total_prey_reward
 
-    print("\\n--- Aggregated Rewards ---")
+    print("\n--- Aggregated Rewards ---")
     print(f"Total number of steps: {env.current_step-1}")
     print(f"Total Predator Reward: {total_predator_reward:.2f}")
     print(f"Total Prey Reward:     {total_prey_reward:.2f}")
@@ -260,8 +263,8 @@ if __name__ == "__main__":
 
     # --- Plot populations ---
     plt.figure(figsize=(10, 5))
-    plt.plot(time_steps, predator_counts, label="Predators")
-    plt.plot(time_steps, prey_counts, label="Prey")
+    plt.plot(time_steps, predator_counts, label="Predators", color="red")
+    plt.plot(time_steps, prey_counts, label="Prey", color="blue")
     plt.xlabel("Time Step")
     plt.ylabel("Number of Agents")
     plt.title("Agent Population Over Time")
