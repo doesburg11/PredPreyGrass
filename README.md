@@ -16,15 +16,20 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Experiments:
 
-* [Training and evaluating base environment](src/predpreygrass/rllib/v1_0)
+* Training and evaluating base environment
+    * [Implementation](src/predpreygrass/rllib/v1_0)
+    * [Results](https://doesburg11.github.io/pred-prey-grass/overview-ppg)
+
+* Training and evaluating mutating agents environment
+    * [Implementation](src/predpreygrass/rllib/v2_0)
+    * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/v2_0#v2_0-predator-prey-grass-mutating-agents-environment)
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of Predators and Prey
-  * [Implementation](src/predpreygrass/rllib/v2_7/evaluate_red_queen_freeze_type_1_only.py)
-  * [Results](https://doesburg11.github.io/pred-prey-grass/red-queen/)
+    * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
+    * [Results](https://doesburg11.github.io/pred-prey-grass/red-queen/)
 
-* [Training and evaluating mutating agents environment](src/predpreygrass/rllib/v2_0)
-
-* [Hyperparameter tuning base environment - Population Based Training](src/predpreygrass/rllib/v2_7/tune_ppo_predpreygrass_pbt_dev_0.py)
+* Hyperparameter tuning base environment - Population Based Training
+    * [Implementation](src/predpreygrass/rllib/v3_0/tune_ppo_predpreygrass_pbt_dev_3_works.py)
 
 
 ## Installation of the repository
