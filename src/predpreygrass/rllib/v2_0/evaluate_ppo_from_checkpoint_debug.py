@@ -1,7 +1,22 @@
 """
-Evaluation code for evaluating a trained PPO agent from a checkpoint.
-This script has an advanced viewer control system that allows stepping
-back-and-forward through the simulation.
+This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
+and runs them in the PredPreyGrass environment (v2_0) for interactive debugging.
+
+This version differs from v1_0 in that it includes two types of predators and two types of prey, 
+making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
+version of predator and prey are are faster and can cover more ground in one movement step.
+Both speed 1 and speed 2 predators and prey are mutually trained. Evaluation of only speed 1 
+predators and prey with only small change of mutation to speed 2 predators and prey generally 
+leads to dominance of speed 2 agents and extinction of speed 1 agents as the trained model shows 
+in the simulation.
+
+The simulation can be controlled in real-time using a graphical interface.
+- [Space] Pause/Unpause
+- [->] Step Forward
+- [<-] Step Backward
+- Tooltips are available to inspect agent IDs, positions, energies.
+
+The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.v2_0.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.v2_0.config.config_env_eval import config_env
@@ -52,10 +67,15 @@ def policy_pi(observation, policy_module, deterministic=True):
         return dist.sample().item()
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results_archive/v2_0/trained_policies/"
-    checkpoint_root = "/incl_speed_2/"
+    # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
+    script_dir = os.path.dirname(__file__)
     checkpoint_dir = "checkpoint_iter_1000"
-    checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
+    checkpoint_path = os.path.join(
+        script_dir,
+        "trained_policies",
+        "incl_speed_2",
+        checkpoint_dir,
+    )
 
     training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(training_dir, f"eval_{checkpoint_dir}_{now}")
@@ -68,8 +88,6 @@ def setup_environment_and_visualizer(now):
             path = os.path.join(rl_module_dir, pid)
             if os.path.isdir(path):
                 module_paths[pid] = path
-            else:
-                print(f"[INFO] Skipping non-directory in rl_module: {pid}")
     else:
         raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
 
