@@ -10,16 +10,19 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-# discretionary libraries
+
+# --- Project imports (v1_0 env + PyGame renderer) ---
 from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v1_0.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.v1_0.utils.pygame_grid_renderer_rllib import (
+    PyGameRenderer,
+    ViewerControlHelper,
+    LoopControlHelper,
+)
 
-# from predpreygrass.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
-
-# external libraries
+# --- External libs ---
 import ray
-from ray.rllib.algorithms.algorithm import Algorithm
 from ray.tune.registry import register_env
+from ray.rllib.algorithms.algorithm import Algorithm
 import torch
 import os
 import matplotlib.pyplot as plt
@@ -37,6 +40,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    # v1_0 naming: "predator_x" / "prey_y" → two policies
     if "predator" in agent_id:
         return "predator_policy"
     elif "prey" in agent_id:
@@ -93,29 +97,29 @@ if __name__ == "__main__":
     # Access RLModules from learner_group
     rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
 
-    seed = 42  # set seed for reproducibility
+    seed = 42  # set seed for reproducibility (optional)
     env = env_creator({})
     # Reset environment and get initial observations
     observations, _ = env.reset(seed=seed)
 
-    # Initialize PyGameRenderer
+    # --- PyGame renderer ---
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
 
-    # Create movie
+    # --- Optional movie writer ---
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
 
-    # Initialize viewer control + loop helper
+    # --- Viewer + loop helpers ---
     control = ViewerControlHelper()
     loop_helper = LoopControlHelper()
 
-    # Optional: frame rate control
+    # --- Frame rate ---
     clock = pygame.time.Clock()
-    target_fps = 10  # Adjust as desired
+    target_fps = 10
 
     total_reward = 0
     predator_counts = []
@@ -128,11 +132,11 @@ if __name__ == "__main__":
     # Save initial snapshot
     snapshots.append(env.get_state_snapshot())
 
-    # Run one evaluation episode
-    # Avanced loop control added for step-wise back-and-forward evaluation debugging
+    # --- Main eval loop ---
+    # Advanced loop control added for step-wise back-and-forward evaluation debugging
     while not loop_helper.simulation_terminated:
         control.handle_events()
-        # Backward step handling
+        # Backward step
         if control.step_backward:
             if len(snapshots) > 1:
                 snapshots.pop()  # Discard current step
@@ -165,11 +169,10 @@ if __name__ == "__main__":
                 agent_id: policy_pi(
                     observations[agent_id],
                     rl_modules[policy_mapping_fn(agent_id)],
-                    deterministic=True,  # or False if you want stochastic behavior
+                    deterministic=True,
                 )
                 for agent_id in env.agents
             }
-            # Step env
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
             # Save snapshot AFTER step
@@ -194,17 +197,14 @@ if __name__ == "__main__":
 
             # Update loop control termination flag
             loop_helper.update_simulation_terminated(terminations, truncations)
-
             # Reset step_once
             control.step_once = False
-
             # Frame rate control
             clock.tick(target_fps)
 
             # Track stats
             num_predators = sum(1 for agent in env.agents if "predator" in agent)
             num_prey = sum(1 for agent in env.agents if "prey" in agent)
-
             time_steps.append(env.current_step)
             predator_counts.append(num_predators)
             prey_counts.append(num_prey)
@@ -223,13 +223,10 @@ if __name__ == "__main__":
             pygame.time.wait(50)
 
     # --- End of main loop ---
-
     print(f"Evaluation complete! Total Reward: {total_reward}")
 
-    # --- REWARD SUMMARY ---
-    predator_rewards = []
-    prey_rewards = []
-
+    # --- Reward summary (per-agent + aggregated) ---
+    predator_rewards, prey_rewards = [], []
     print("\n--- Reward Breakdown per Agent ---")
     for agent_id, reward in env.cumulative_rewards.items():
         print(f"{agent_id:15}: {reward:.2f}")
@@ -248,7 +245,7 @@ if __name__ == "__main__":
     print(f"Total Prey Reward:     {total_prey_reward:.2f}")
     print(f"Total All-Agent Reward:{total_reward_all:.2f}")
 
-    # --- Plot ---
+    # --- Plot populations ---
     plt.figure(figsize=(10, 5))
     plt.plot(time_steps, predator_counts, label="Predators", color="red")
     plt.plot(time_steps, prey_counts, label="Prey", color="blue")
