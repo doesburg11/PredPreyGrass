@@ -22,7 +22,7 @@ from predpreygrass.rllib.v1_0.utils.pygame_grid_renderer_rllib import (
 # --- External libs ---
 import ray
 from ray.tune.registry import register_env
-from ray.rllib.algorithms.algorithm import Algorithm
+from ray.rllib.core.rl_module.rl_module import RLModule  # \u2190 load modules directly
 import torch
 import os
 import matplotlib.pyplot as plt
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
-    # Load trained model from checkpoint
+    # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
     script_dir = os.path.dirname(__file__)
     checkpoint_path = os.path.join(
         script_dir,
@@ -92,11 +92,27 @@ if __name__ == "__main__":
         "checkpoint_000030",
     )
 
-    trained_algo = Algorithm.from_checkpoint(checkpoint_path)
-    print("Checkpoint loaded successfully!")
-    # Access RLModules from learner_group
-    rl_modules = trained_algo.learner_group._learner.module  # Retrieves policy modules
+    # Minimal sanity checks
+    expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
+    predator_path = os.path.join(expected_rlmodule_root, "predator_policy")
+    prey_path = os.path.join(expected_rlmodule_root, "prey_policy")
+    if not (os.path.isdir(predator_path) and os.path.isdir(prey_path)):
+        raise FileNotFoundError(
+            "Could not find per-policy RLModule folders.\n"
+            f"Looked for:\n  {predator_path}\n  {prey_path}\n"
+            "Make sure 'checkpoint_XXXX/learner_group/learner/rl_module/<policy_id>' exists.\n"
+            "If your policy IDs differ, update policy_mapping_fn and the module_paths below."
+        )
 
+    # --- Load RLModules directly ---
+    module_paths = {
+        "predator_policy": predator_path,
+        "prey_policy": prey_path,
+    }
+    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
+    print("Loaded RLModules:", list(rl_modules.keys()))
+
+    # --- Create env ---
     seed = 42  # set seed for reproducibility (optional)
     env = env_creator({})
     # Reset environment and get initial observations
@@ -164,7 +180,7 @@ if __name__ == "__main__":
             control.step_backward = False
         # Normal step forward
         if loop_helper.should_step(control):
-            # Build action dict from PPO policy
+            # Build actions from per-policy RLModules
             action_dict = {
                 agent_id: policy_pi(
                     observations[agent_id],
