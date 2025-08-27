@@ -65,13 +65,6 @@ class RLLibPPOTrainable(Trainable):
 
         # Now build
         self.algo = base_conf.build_algo()
-    """
-    def step(self):
-        # One RLlib training iteration
-        result = self.algo.train()
-        # Tune likes flat dicts; RLlib already returns one
-        return result
-    """
 
     def step(self):
         result = self.algo.train()
@@ -138,19 +131,6 @@ class RLLibPPOTrainable(Trainable):
         except Exception as e:
             print(f"[reset_config] failed: {e}")
             return False
-    """
-    @classmethod
-    def default_resource_request(cls, config):
-        # mirror the bundles you compute in __main__
-        main_cpus = (
-            config["algo_config"]._resources.num_cpus_for_main_process  # or pass a plain number alongside
-        )
-        # if you don't want to pull from PPOConfig, pass numbers into config explicitly
-        bundles = [{"CPU": main_cpus}]
-        for _ in range(config["num_env_runners"]):  # add these simple ints into param_space
-            bundles.append({"CPU": config["num_cpus_per_env_runner"]})
-        return PlacementGroupFactory(bundles=bundles, strategy="PACK")
-    """
 
     def cleanup(self):
         try:
@@ -168,7 +148,7 @@ def get_config_ppo():
     if num_cpus == 32:
         # Workaround to avoid PyTorch CUDA memory fragmentation
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-        from predpreygrass.rllib.v3_0.config.config_ppo_gpu_pbt import config_ppo
+        from predpreygrass.rllib.v3_0.config.config_ppo_gpu_pbt_1 import config_ppo
     elif num_cpus == 8:
         from predpreygrass.rllib.v3_0.config.config_ppo_cpu_pbt_smoke import config_ppo
     else:
@@ -288,13 +268,14 @@ if __name__ == "__main__":
 
     # PBT setup
     hyperparam_mutations = {
-        "lr": config_ppo["pbt_lr_choices"],
+        "lr": lambda: random.choice(config_ppo["pbt_lr_choices"]),
         "clip_param": lambda: random.uniform(*config_ppo["pbt_clip_range"]),
-        "entropy_coeff": config_ppo["pbt_entropy_choices"],
+        "entropy_coeff": lambda: random.choice(config_ppo["pbt_entropy_choices"]),
         "num_epochs": lambda: random.randint(*config_ppo["pbt_num_epochs_range"]),
         "minibatch_size": lambda: random.choice(config_ppo["pbt_minibatch_choices"]),
         "train_batch_size_per_learner": lambda: random.choice(config_ppo["pbt_train_batch_size_choices"]),
     }
+
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
         perturbation_interval=config_ppo["perturbation_interval"], 
