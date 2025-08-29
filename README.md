@@ -24,11 +24,11 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     * [Implementation](src/predpreygrass/rllib/v2_0)
     * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/v2_0#v2_0-predator-prey-grass-mutating-agents-environment)
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of Predators and Prey
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey
     * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating agents
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey
     * [Implementation](src/predpreygrass/rllib/v2_0)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/v2_0/#co-evolution-and-the-red-queen-effect)
 
