@@ -18,7 +18,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * Training and evaluating base environment
     * [Implementation](src/predpreygrass/rllib/v1_0)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg)
+    * [Results](https://doesburg11.github.io/pred-prey-grass/overview-ppg)
 
 * Training and evaluating mutating agents environment
     * [Implementation](src/predpreygrass/rllib/v2_0)
@@ -26,11 +26,11 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of Predators and Prey
     * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
+    * [Results](https://doesburg11.github.io/pred-prey-grass/red-queen/)
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating agents
     * [Implementation](src/predpreygrass/rllib/v2_0)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
+    * [Results](https://doesburg11.github.io/pred-prey-grass/red-queen/)
 
 * Hyperparameter tuning base environment - Population Based Training
     * [Implementation](src/predpreygrass/rllib/v3_0/tune_ppo_predpreygrass_pbt_dev_3_works.py)
