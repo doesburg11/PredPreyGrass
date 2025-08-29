@@ -1,5 +1,5 @@
 config_ppo = {
-    "max_iters": 2,
+    "max_iters": 500,
     # Core learning
     "lr": 5e-5,
     "gamma": 0.99,
@@ -23,14 +23,14 @@ config_ppo = {
     "kl_coeff": 0.2,
     "kl_target": 0.01,
     # pbt parameters
-    "pbt_num_samples": 4,
-    "perturbation_interval": 3,
+    "pbt_num_samples": 6,
+    "perturbation_interval": 20,
     "resample_probability": 0.25,
-    "quantile_fraction": 0.25,
+    "quantile_fraction": 0.4,
     # PBT mutation ranges/choices
-    "pbt_lr_choices": [1e-3, 5e-4, 1e-4],
+    "pbt_lr_choices": [1e-2, 1e-3, 5e-4, 1e-4, 1e-5],
     "pbt_clip_range": [0.1, 0.3],              # min/max
-    "pbt_entropy_choices": [0.0, 1e-3, 5e-3],
+    "pbt_entropy_choices": [0.0, 1e-4, 1e-3, 5e-3],
     "pbt_num_epochs_range": [10, 30],          # min/max (ints)
     "pbt_minibatch_choices": [128, 256, 512],
     "pbt_train_batch_size_choices": [1024, 2048],
