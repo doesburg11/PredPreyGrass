@@ -6,8 +6,8 @@ import os
 os.environ["PYTHONWARNINGS"]="ignore::DeprecationWarning"
 os.environ["TUNE_DISABLE_STRICT_METRIC_CHECKING"] = "1"
 
-from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
+from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v3_1.config.config_env_train_v1_0 import config_env
 
 from ray import tune
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -148,9 +148,9 @@ def get_config_ppo():
     if num_cpus == 32:
         # Workaround to avoid PyTorch CUDA memory fragmentation
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-        from predpreygrass.rllib.v3_0.config.config_ppo_gpu_pbt_1 import config_ppo
+        from predpreygrass.rllib.v3_1.config.config_ppo_gpu_pbt_1 import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v3_0.config.config_ppo_cpu_pbt_smoke import config_ppo
+        from predpreygrass.rllib.v3_1.config.config_ppo_cpu_pbt_smoke import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
