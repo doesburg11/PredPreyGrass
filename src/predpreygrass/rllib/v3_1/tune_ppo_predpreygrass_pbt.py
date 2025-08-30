@@ -19,9 +19,9 @@ from ray.tune.registry import register_env
 from ray.tune import Tuner
 from ray.tune.schedulers import PopulationBasedTraining
 
-from predpreygrass.rllib.v3_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_0.config.config_env_train_v1_0 import config_env
-from predpreygrass.rllib.v3_0.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.v3_1.config.config_env_train_v1_0 import config_env
+from predpreygrass.rllib.v3_1.utils.episode_return_callback import EpisodeReturn
 
 
 def custom_logger_creator(config):
@@ -38,9 +38,9 @@ def custom_logger_creator(config):
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v3_0.config.config_ppo_gpu_default import config_ppo
+        from predpreygrass.rllib.v3_1.config.config_ppo_gpu_default import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.v3_0.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.v3_1.config.config_ppo_cpu import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
