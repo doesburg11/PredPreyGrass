@@ -1,10 +1,10 @@
 config_ppo = {
-    "max_iters": 3,
+    "max_iters": 100,
     # Core learning
     "lr": 5e-5,
     "gamma": 0.99,
     "lambda_": 0.95,
-    "train_batch_size_per_learner": 2048,
+    "train_batch_size_per_learner": 1024,
     "minibatch_size": 128,
     "num_epochs": 6,
     "entropy_coeff": 0.01,
@@ -12,8 +12,8 @@ config_ppo = {
     "clip_param": 0.3,
     # Resources
     "num_learners": 1,
-    "num_env_runners": 4,
-    "num_envs_per_env_runner": 2,
+    "num_env_runners": 6,
+    "num_envs_per_env_runner": 1,
     "num_gpus_per_learner": 0,
     "num_cpus_for_main_process": 1,
     "num_cpus_per_env_runner": 1,
