@@ -1,5 +1,6 @@
 
 from ray.rllib.core.rl_module import RLModuleSpec
+from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 
 
@@ -72,3 +73,43 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
             "fcnet_activation": "relu",
         },
     )
+
+def build_multi_module_spec(
+    obs_spaces_by_policy: dict,
+    act_spaces_by_policy: dict,
+) -> MultiRLModuleSpec:
+    """
+    Build a MultiRLModuleSpec for multiple policies.
+
+    Args:
+        obs_spaces_by_policy: dict mapping policy_id -> observation_space
+        act_spaces_by_policy: dict mapping policy_id -> action_space
+
+    Returns:
+        MultiRLModuleSpec containing an RLModuleSpec per policy, using
+        DefaultPPOTorchRLModule with conv/FC settings chosen by build_module_spec().
+
+    Notes:
+        - Keys of obs_spaces_by_policy and act_spaces_by_policy must match.
+        - This function prints one model summary line per policy (via build_module_spec).
+    """
+    # Ensure both dicts have the same policy IDs
+    obs_keys = set(obs_spaces_by_policy.keys())
+    act_keys = set(act_spaces_by_policy.keys())
+    if obs_keys != act_keys:
+        missing_in_act = sorted(obs_keys - act_keys)
+        missing_in_obs = sorted(act_keys - obs_keys)
+        raise ValueError(
+            f"Policy key mismatch. "
+            f"Missing in act: {missing_in_act}; Missing in obs: {missing_in_obs}"
+        )
+
+    rl_module_specs = {}
+    for policy_id in obs_keys:
+        rl_module_specs[policy_id] = build_module_spec(
+            obs_spaces_by_policy[policy_id],
+            act_spaces_by_policy[policy_id],
+            policy_name=policy_id,  # keeps your nice [MODEL] debug line
+        )
+
+    return MultiRLModuleSpec(rl_module_specs=rl_module_specs)
