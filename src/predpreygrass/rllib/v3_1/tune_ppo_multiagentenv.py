@@ -1,12 +1,11 @@
 from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.v3_1.config.config_env_train_v1_0 import config_env
 from predpreygrass.rllib.v3_1.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.v3_1.utils.networks import build_module_spec
+from predpreygrass.rllib.v3_1.utils.networks import build_multi_module_spec
 
 import ray
 from ray import train
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.tune.registry import register_env
 from ray.tune import Tuner
 
@@ -14,17 +13,6 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
-
-
-def custom_logger_creator(config):
-    def logger_creator_func(config_):
-        from ray.tune.logger import UnifiedLogger
-
-        logdir = str(experiment_path)
-        print(f"Redirecting RLlib logging to {logdir}")
-        return UnifiedLogger(config_, logdir, loggers=None)
-
-    return logger_creator_func
 
 
 def get_config_ppo():
@@ -74,16 +62,23 @@ if __name__ == "__main__":
     # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
-    module_specs = {}
-    for agent_id in sample_env.observation_spaces:
-        policy = policy_mapping_fn(agent_id)
-        if policy not in module_specs:
-            module_specs[policy] = build_module_spec(
-                sample_env.observation_spaces[agent_id],
-                sample_env.action_spaces[agent_id],
-            )
 
-    multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
+    # Group spaces per policy id (first agent of each policy defines the space)
+    obs_by_policy, act_by_policy = {}, {}
+    for agent_id, obs_space in sample_env.observation_spaces.items():
+        pid = policy_mapping_fn(agent_id)
+        if pid not in obs_by_policy:
+            obs_by_policy[pid] = obs_space
+            act_by_policy[pid] = sample_env.action_spaces[agent_id]
+
+    # Build one MultiRLModuleSpec in one go
+    multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
+
+    # Policies dict for RLlib
+    policies = {
+        pid: (None, obs_by_policy[pid], act_by_policy[pid], {})
+        for pid in obs_by_policy
+    }
 
     # Build config dictionary for Tune
     ppo_config = (
@@ -91,7 +86,7 @@ if __name__ == "__main__":
         .environment(env="PredPreyGrass", env_config=config_env)
         .framework("torch")
         .multi_agent(
-            policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+            policies=policies,
             policy_mapping_fn=policy_mapping_fn,
         )
         .training(
@@ -127,6 +122,7 @@ if __name__ == "__main__":
 
     max_iters = config_ppo["max_iters"]
     checkpoint_every = 10
+    del sample_env  # to avoid any stray references
 
     tuner = Tuner(
         ppo_config.algo_class,
