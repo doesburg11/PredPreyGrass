@@ -7,7 +7,7 @@ import ray
 from ray import train
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
-from ray.tune import Tuner
+from ray.tune import Tuner, RunConfig, CheckpointConfig
 
 import os
 from datetime import datetime
@@ -127,11 +127,11 @@ if __name__ == "__main__":
     tuner = Tuner(
         ppo_config.algo_class,
         param_space=ppo_config,
-        run_config=train.RunConfig(
+        run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
             stop={"training_iteration": max_iters},
-            checkpoint_config=train.CheckpointConfig(
+            checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
