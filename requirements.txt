@@ -1,0 +1,9 @@
+pettingzoo==1.24.3
+stable-baselines3[extra]==2.6.0
+SuperSuit==3.9.3
+
+ray[rllib]==2.49.0
+tensorboard==2.20.0
+
+GPUtil # library for querying available GPUs
+psutil # for checking RAM
