@@ -31,10 +31,11 @@ class GuiStyle:
 
 
 class PyGameRenderer:
-    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True, max_steps=None):
+    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True, enable_tooltips=True, max_steps=None):
         self.grid_size = grid_size
         self.cell_size = cell_size
         self.enable_speed_slider = enable_speed_slider
+        self.enable_tooltips = enable_tooltips
         self.gui_style = GuiStyle()
 
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
@@ -128,7 +129,8 @@ class PyGameRenderer:
         self._draw_grass(grass_positions, grass_energies)
         self._draw_agents(step_data, agents_just_ate)
         self._draw_legend(step, step_data)
-        self._draw_tooltip(step_data, grass_positions, grass_energies)
+        if self.enable_tooltips:
+            self._draw_tooltip(step_data, grass_positions, grass_energies)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
