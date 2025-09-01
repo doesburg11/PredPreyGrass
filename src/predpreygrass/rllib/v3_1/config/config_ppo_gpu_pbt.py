@@ -1,13 +1,13 @@
 config_ppo = {
     "max_iters": 500,
     # Core learning
-    "lr": 5e-5,
+    "lr": 0.0003,
     "gamma": 0.99,
-    "lambda_": 0.95,
-    "train_batch_size_per_learner": 2048,
+    "lambda_": 1.0,
+    "train_batch_size_per_learner": 1024,
     "minibatch_size": 128,
-    "num_epochs": 6,
-    "entropy_coeff": 0.01,
+    "num_epochs": 30,
+    "entropy_coeff": 0.0,
     "vf_loss_coeff": 1.0,
     "clip_param": 0.3,
     # Resources
@@ -24,15 +24,15 @@ config_ppo = {
     "kl_target": 0.01,
     # pbt parameters
     "pbt_num_samples": 6,
-    "perturbation_interval": 20,
+    "perturbation_interval": 3,
     "resample_probability": 0.25,
-    "quantile_fraction": 0.4,
+    "quantile_fraction": 0.25,
     # PBT mutation ranges/choices
-    "pbt_lr_choices": [1e-2, 1e-3, 5e-4, 1e-4, 1e-5],
-    "pbt_clip_range": [0.1, 0.3],              # min/max
-    "pbt_entropy_choices": [0.0, 1e-4, 1e-3, 5e-3],
-    "pbt_num_epochs_range": [10, 30],          # min/max (ints)
+    "pbt_lr_choices": [1e-4, 5e-4, 1e-3],
+    "pbt_clip_range": [0.2, 0.3],              
+    "pbt_entropy_choices": [0.0, 0.0001],
+    "pbt_num_epochs_range": [10, 35],          
     "pbt_minibatch_choices": [128, 256, 512],
-    "pbt_train_batch_size_choices": [1024, 2048],
+    "pbt_train_batch_size_choices": [1024, 2048, 4096],
 
 }
