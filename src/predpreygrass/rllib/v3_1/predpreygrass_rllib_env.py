@@ -615,7 +615,7 @@ class PredPreyGrass(MultiAgentEnv):
             truncations[caught_prey] = False
             self.active_num_prey -= 1
             self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-            uid = self.unique_agents[agent]
+            uid = self.unique_agents[caught_prey]
             stat = self.unique_agent_stats[uid]
             stat["death_step"] = self.current_step
             stat["death_cause"] = "eaten"
@@ -786,7 +786,7 @@ class PredPreyGrass(MultiAgentEnv):
             parent_type = int(agent.split("_")[1])  # from "type_1_prey_6"
 
             # Mutation: 10% chance to switch type
-            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            mutated = self.rng.random() < self.mutation_rate_prey
             if mutated:
                 new_type = 2 if parent_type == 1 else 1
             else:
