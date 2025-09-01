@@ -111,7 +111,7 @@ dependencies:
       - stable-baselines3==2.6.0
       - supersuit==3.9.3
       - sympy==1.13.3
-      - tensorboard==2.19.0
+      - tensorboard==2.20.0
       - tensorboard-data-server==0.7.2
       - tensorboardx==2.6.2.2
       - tinyscaler==1.2.8
