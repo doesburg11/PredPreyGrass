@@ -25,7 +25,7 @@ if __name__ == "__main__":
     observations, _ = env.reset(seed=config_env.get("seed", 42))
 
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size, enable_speed_slider=False)
+    visualizer = PyGameRenderer(grid_size, enable_speed_slider=False, enable_tooltips=False)
     clock = pygame.time.Clock()
 
     # Run loop until termination
@@ -39,12 +39,11 @@ if __name__ == "__main__":
 
         # --- Update visualizer ---
         visualizer.update(
-            #agent_positions=env.agent_positions,
             grass_positions=env.grass_positions,
-            #agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
-            agents_just_ate=env.agents_just_ate,
             step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
         )
 
         terminated = any(terminations.values())
