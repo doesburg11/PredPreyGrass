@@ -15,7 +15,7 @@ from predpreygrass.rllib.v3_1.utils.pygame_grid_renderer_rllib import PyGameRend
 
 # ==== CONFIG ====
 RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
-CHECKPOINT_PATH = "PPO_2025-07-25_22-58-56/checkpoint_iter_1000"
+CHECKPOINT_PATH = "v2_7_tune_default_benchmark/PPO_PredPreyGrass_86337_00000_0_2025-08-04_23-53-58/checkpoint_000099"
 SAVE_MOVIE = False
 MOVIE_FILENAME = "eval_video.mp4"
 MOVIE_FPS = 10
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     env = PredPreyGrass(config=config_env)
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size, cell_size=32, enable_speed_slider=False)
+    visualizer = PyGameRenderer(grid_size, cell_size=32, enable_speed_slider=False, enable_tooltips=False)
 
     observations, _ = env.reset(seed=SEED)
 
@@ -75,12 +75,11 @@ if __name__ == "__main__":
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
         visualizer.update(
-            agent_positions=env.agent_positions,
             grass_positions=env.grass_positions,
-            agent_energies=env.agent_energies,
             grass_energies=env.grass_energies,
             agents_just_ate=env.agents_just_ate,
             step=env.current_step,
+            per_step_agent_data=env.per_step_agent_data,
         )
 
         if SAVE_MOVIE:
