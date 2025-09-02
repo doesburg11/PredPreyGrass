@@ -4,7 +4,6 @@ from predpreygrass.rllib.v3_1.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.v3_1.utils.networks import build_multi_module_spec
 
 import ray
-from ray import train
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
