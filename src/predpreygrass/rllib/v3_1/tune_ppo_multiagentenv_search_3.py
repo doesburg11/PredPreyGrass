@@ -200,7 +200,12 @@ class FinalMetricsLogger(tune.Callback):
             f"reason={row['stop_reason']}"
         )
 
-    def on_trial_complete(self, iteration, trials, trial, result, **info):
+    def on_trial_complete(self, iteration, trials, trial, result=None, **info):
+        # Backwards/forwards compatibility: newer/older Ray may or may not pass
+        # 'result' as a separate argument. Fall back to info or trial.last_result.
+        if result is None:
+            result = info.get("result") or getattr(trial, "last_result", None) or {}
+
         # 1) Try our custom stopper wrapper first.
         reason = self._reasoned_stop.reason_for(trial.trial_id) or result.get("__stop_reason")
 
