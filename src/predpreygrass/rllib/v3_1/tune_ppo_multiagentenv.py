@@ -17,7 +17,7 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.v3_1.config.config_ppo_gpu_default import config_ppo
+        from predpreygrass.rllib.v3_1.config.config_ppo_hbp_best import config_ppo
     elif num_cpus == 8:
         from predpreygrass.rllib.v3_1.config.config_ppo_cpu import config_ppo
     else:
