@@ -5,5 +5,10 @@ SuperSuit==3.9.3
 ray[rllib]==2.49.0
 tensorboard==2.20.0
 
+numpy==1.26.4
+scipy==1.11.4
+Pillow>=10.0.0
+imageio>=2.34.0
+
 GPUtil # library for querying available GPUs
 psutil # for checking RAM
