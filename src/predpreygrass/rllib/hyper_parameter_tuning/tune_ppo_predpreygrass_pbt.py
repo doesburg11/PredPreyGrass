@@ -29,15 +29,24 @@ from pathlib import Path
 from ray.rllib.algorithms.callbacks import DefaultCallbacks
 
 def get_config_ppo():
+    # Optional smoke override for quick tests
+    smoke = os.getenv("PPG_SMOKE")
+    if smoke and str(smoke).lower() in ("1", "true", "yes", "y"):
+        from predpreygrass.rllib.hyper_parameter_tuning.config.config_ppo_cpu_pbt_smoke import config_ppo
+        return config_ppo
+
     num_cpus = os.cpu_count()
     if num_cpus == 32:
         # Workaround to avoid PyTorch CUDA memory fragmentation
         os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
         from predpreygrass.rllib.hyper_parameter_tuning.config.config_ppo_gpu_pbt import config_ppo
-    elif num_cpus == 8:
+        return config_ppo
+    if num_cpus == 8:
         from predpreygrass.rllib.hyper_parameter_tuning.config.config_ppo_cpu_pbt_smoke import config_ppo
-    else:
-        raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
+        return config_ppo
+
+    # Fallback to smoke config on unknown CPU counts to keep script runnable
+    from predpreygrass.rllib.hyper_parameter_tuning.config.config_ppo_cpu_pbt_smoke import config_ppo
     return config_ppo
 
 class ReproductionStatsCallback(DefaultCallbacks):
@@ -54,24 +63,72 @@ class ReproductionStatsCallback(DefaultCallbacks):
         self._reproduction_counts = []  # holds floats (per-episode reproduction counts)
 
     def on_episode_end(self, *, episode, **kwargs):  # RLlib callback API
-        # Depending on RLlib version, agent reward histories vary.
-        # We use episode.agent_rewards (dict with ((agent_id, policy_id), reward_sum)).
+        # Be robust across RLlib versions (EpisodeV2 vs legacy Episode)
         try:
-            total_reward = 0.0
-            found = False
-            for (aid, _pid), rew in episode.agent_rewards.items():
-                if aid == self.TARGET_AGENT:
-                    total_reward = rew
-                    found = True
-                    break
-            if not found:
+            target = self.TARGET_AGENT
+            total_reward = None
+
+            # Preferred (EpisodeV2): direct accessor
+            if hasattr(episode, "get_total_reward"):
+                try:
+                    total_reward = episode.get_total_reward(target)
+                except Exception:
+                    total_reward = None
+
+            # Try via agent list + accessor
+            if total_reward is None:
+                agent_ids = None
+                for name in ("get_agents", "get_agent_ids"):
+                    if hasattr(episode, name):
+                        try:
+                            ids = getattr(episode, name)()
+                            agent_ids = list(ids)
+                        except Exception:
+                            agent_ids = None
+                        break
+                if agent_ids and target in agent_ids and hasattr(episode, "get_total_reward"):
+                    try:
+                        total_reward = episode.get_total_reward(target)
+                    except Exception:
+                        pass
+
+            # Legacy fallback: episode.agent_rewards dict of ((agent_id, policy_id), reward_sum)
+            if total_reward is None and hasattr(episode, "agent_rewards"):
+                try:
+                    for (aid, _pid), rew in episode.agent_rewards.items():
+                        if aid == target:
+                            total_reward = rew
+                            break
+                except Exception:
+                    pass
+
+            if total_reward is None:
                 return
-            # Convert raw reward to reproduction count. Use env config reproduction reward.
-            reproduction_reward = config_env["reproduction_reward_predator"]["type_1_predator"]
-            if reproduction_reward:
-                reproduction_count = total_reward / reproduction_reward
-                # Store raw reproduction count; Trainable will aggregate.
-                self._reproduction_counts.append(reproduction_count)
+
+            # Convert raw reward to reproduction count using env config's reproduction reward value
+            reproduction_reward = None
+            try:
+                reproduction_reward = config_env["reproduction_reward_predator"].get("type_1_predator", None)
+            except Exception:
+                reproduction_reward = None
+            if not reproduction_reward:
+                reproduction_reward = 10.0  # safe default
+
+            reproduction_count = float(total_reward) / float(reproduction_reward)
+
+            # 1) Keep local list (useful if callback instance is accessible on driver)
+            self._reproduction_counts.append(reproduction_count)
+
+            # 2) Also write as a custom metric so RLlib will aggregate and report it in results
+            #    This ensures availability on the driver even when callbacks run remotely.
+            try:
+                # Both EpisodeV2 and legacy support custom_metrics dict on episode
+                if hasattr(episode, "custom_metrics") and isinstance(episode.custom_metrics, dict):
+                    episode.custom_metrics["target_agent_reproduction_count"] = reproduction_count
+                    # Lightweight diagnostic to verify the callback is firing and being aggregated
+                    episode.custom_metrics["target_agent_repro_cb_seen"] = 1.0
+            except Exception:
+                pass
         except Exception:
             pass  # fail-safe; do not break training
 
@@ -94,7 +151,7 @@ class RLLibPPOTrainable(Trainable):
         # Risk adjustment defaults
         self._risk_adjustment_enabled = True
         self._risk_adjustment_factor = 0.5
-        self._risk_switch_n = 30
+        self._risk_switch_n = 10
         # Fallback / diagnostics
         self._debug_repro_callback_hits = 0
         self._grace_iterations_before_fallback = 2
@@ -122,7 +179,7 @@ class RLLibPPOTrainable(Trainable):
         # Pull optional risk adjustment flags from config
         self._risk_adjustment_enabled = self._cfg.get("risk_adjustment_enabled", True)
         self._risk_adjustment_factor = self._cfg.get("risk_adjustment_factor", 0.5)
-        self._risk_switch_n = self._cfg.get("risk_adjustment_switch_n", 30)
+        self._risk_switch_n = self._cfg.get("risk_adjustment_switch_n", self._risk_switch_n)
         # Fallback/grace overrides
         self._grace_iterations_before_fallback = self._cfg.get("grace_iterations_before_fallback", self._grace_iterations_before_fallback)
         self._use_episode_return_fallback = self._cfg.get("use_episode_return_fallback", self._use_episode_return_fallback)
@@ -137,24 +194,14 @@ class RLLibPPOTrainable(Trainable):
 
     def _build_algo(self, cfg):
         base_conf: PPOConfig = cfg["algo_config"].copy(copy_frozen=False)  # ← unfrozen copy
-
         # Pull top-level sampled values from the Tune config and apply to the config copy
-        # (These keys exist because we put them into param_space.)
-        base_conf = (
-            base_conf
-            .training(
-                #lr=cfg["lr"],
-                # clip_param=cfg["clip_param"],
-                # entropy_coeff=cfg["entropy_coeff"],
-                num_epochs=cfg["num_epochs"],
-                minibatch_size=cfg["minibatch_size"],
-                train_batch_size_per_learner=cfg["train_batch_size_per_learner"],
-            )
+        base_conf = base_conf.training(
+            num_epochs=cfg["num_epochs"],
+            minibatch_size=cfg["minibatch_size"],
+            train_batch_size_per_learner=cfg["train_batch_size_per_learner"],
         )
-
-        # Now build
-        if getattr(base_conf, "callbacks_class", None) is None:
-            base_conf.callbacks(ReproductionStatsCallback)
+        # Ensure callback is always registered (new API stack safe)
+        base_conf.callbacks(ReproductionStatsCallback)
         self.algo = base_conf.build_algo()
 
     def step(self):
@@ -235,11 +282,37 @@ class RLLibPPOTrainable(Trainable):
         # --- Per-episode reproduction statistics (streaming) ---
         callback_obj = getattr(self.algo, "callbacks", None)
         new_counts = []
+        # Track where reproduction data came from this iteration
+        reproduction_source_label = "none"  # one of: callback, aggregated, derived, none
+        reproduction_source_code = -1        # 2=callback, 1=aggregated, 0=derived, -1=none
         if callback_obj and hasattr(callback_obj, "_reproduction_counts"):
             if callback_obj._reproduction_counts:
                 self._debug_repro_callback_hits += 1
+                reproduction_source_label = "callback"
+                reproduction_source_code = 2
             new_counts = callback_obj._reproduction_counts
             callback_obj._reproduction_counts = []
+        # If direct list is empty (common when callbacks run on workers), try RLlib aggregated custom metric
+        if not new_counts:
+            # RLlib aggregates episode-level custom metrics into result["custom_metrics"] as mean/max/min
+            # The key is typically "<name>_mean" for the mean across episodes in this iteration.
+            agg_key = "target_agent_reproduction_count_mean"
+            try:
+                cm_agg = result.get("custom_metrics", {})
+                if agg_key in cm_agg and cm_agg[agg_key] is not None:
+                    # Treat it as a single sample for this iteration's update
+                    new_counts = [float(cm_agg[agg_key])]
+                    # Diagnostics: count this as a callback hit via custom metric path
+                    self._debug_repro_callback_hits += 1
+                    reproduction_source_label = "aggregated"
+                    reproduction_source_code = 1
+                # Extra diagnostic: see if our callback fired at all this iter
+                cb_seen_key = "target_agent_repro_cb_seen_mean"
+                if cb_seen_key in cm_agg and cm_agg[cb_seen_key]:
+                    self._debug_repro_callback_hits += 1
+            except Exception:
+                pass
+
         for rc in new_counts:
             self._welford_update(rc)
 
@@ -296,6 +369,17 @@ class RLLibPPOTrainable(Trainable):
                 cm["target_agent_episode_reward_mean_raw"] = float(raw_agent_mean)
                 cm["target_agent_reward_normalized"] = float(normalized_agent_reward)
 
+        # 2b. If callback path failed to provide samples, derive a reproduction sample from normalized reward.
+        #     This lets the reproduction-first metric (with risk gating) activate early in the run.
+        if not new_counts and self._repr_n == 0 and normalized_agent_reward is not None:
+            try:
+                self._welford_update(float(normalized_agent_reward))
+                cm["target_agent_reproductions_derived_from_reward"] = float(normalized_agent_reward)
+                reproduction_source_label = "derived"
+                reproduction_source_code = 0
+            except Exception:
+                pass
+
         # 3. Episode return fallback already logged as fallback_episode_return_mean_raw
         episode_return_fallback = cm.get("fallback_episode_return_mean_raw")
 
@@ -330,6 +414,8 @@ class RLLibPPOTrainable(Trainable):
         # Diagnostics
         cm["reproduction_callback_hits"] = float(self._debug_repro_callback_hits)
         cm["reproduction_counts_observed"] = float(self._repr_n)
+        cm["reproduction_source_code"] = float(reproduction_source_code)
+        cm["reproduction_source"] = reproduction_source_label
 
         return result
 
@@ -499,7 +585,7 @@ if __name__ == "__main__":
     risk_meta = {
         "enabled": override_enabled if override_enabled is not None else ("TUNED" if cli_args.tune_risk_flags else True),
         "factor": override_factor if override_factor is not None else ("TUNED" if cli_args.tune_risk_flags else 0.5),
-        "switch_n": override_switch_n if override_switch_n is not None else ("TUNED" if cli_args.tune_risk_flags else 30),
+    "switch_n": override_switch_n if override_switch_n is not None else ("TUNED" if cli_args.tune_risk_flags else 10),
     }
 
     config_metadata = {
@@ -581,12 +667,16 @@ if __name__ == "__main__":
         "train_batch_size_per_learner": lambda: random.choice(config_ppo["pbt_train_batch_size_choices"]),
     }
     # Expose fallback related knobs to PBT only if user did NOT hard override them.
-    if override_grace_iters is None:
-        grace_choices = [0, 1, 2, 3, 5]
-        hyperparam_mutations["grace_iterations_before_fallback"] = lambda: random.choice(grace_choices)
-    if not disable_episode_return_fallback:
-        # allow toggling on/off; if user disabled explicitly we keep it off
-        hyperparam_mutations["use_episode_return_fallback"] = lambda: random.choice([True, False])
+    # NOTE: User requested to disable PBT perturbations for grace_iterations_before_fallback
+    # and use_episode_return_fallback. The mutation entries below are commented out so
+    # these values stay fixed after initial sampling (or override) and are not changed
+    # at perturbation intervals.
+    # if override_grace_iters is None:
+    #     grace_choices = [0, 1, 2, 3, 5]
+    #     hyperparam_mutations["grace_iterations_before_fallback"] = lambda: random.choice(grace_choices)
+    # if not disable_episode_return_fallback:
+    #     # allow toggling on/off; if user disabled explicitly we keep it off
+    #     hyperparam_mutations["use_episode_return_fallback"] = lambda: random.choice([True, False])
 
     pbt = PopulationBasedTraining(
         time_attr="training_iteration",
@@ -610,18 +700,16 @@ if __name__ == "__main__":
         "minibatch_size": tune.choice(config_ppo["pbt_minibatch_choices"]),
         "train_batch_size_per_learner": tune.choice(config_ppo["pbt_train_batch_size_choices"]),
     }
-
-    # Grace iterations before fallback: fixed if overridden else a tune.choice to enable trial diversity.
+    # REMOVE from tuning: User requested not to tune grace_iterations_before_fallback and
+    # use_episode_return_fallback. We only inject them if explicitly overridden so they remain fixed.
     if override_grace_iters is not None:
-        param_space["grace_iterations_before_fallback"] = override_grace_iters
-    else:
-        param_space["grace_iterations_before_fallback"] = tune.choice([0, 1, 2, 3, 5])
+        param_space["grace_iterations_before_fallback"] = override_grace_iters  # fixed override
+    # else: rely on Trainable's internal default (2) without adding to sampled space
 
-    # Episode return fallback toggle: respect explicit disable else allow tuning.
     if disable_episode_return_fallback:
+        # Explicitly force False if user disabled fallback
         param_space["use_episode_return_fallback"] = False
-    else:
-        param_space["use_episode_return_fallback"] = tune.choice([True, False])
+    # else: rely on Trainable default True without sampling/tuning
 
     # Risk parameter choices (used only if tuning and not overridden)
     RISK_ENABLED_CHOICES = [True, False]
@@ -650,7 +738,7 @@ if __name__ == "__main__":
     elif tune_risk:
         param_space["risk_adjustment_switch_n"] = tune.choice(RISK_SWITCH_CHOICES)
     else:
-        param_space["risk_adjustment_switch_n"] = 30
+        param_space["risk_adjustment_switch_n"] = 10
 
     # Stopping criteria
     stopping_criteria = {"training_iteration": config_ppo["max_iters"]}
@@ -695,10 +783,10 @@ if __name__ == "__main__":
     result = tuner.fit()
 
     best_result = result.get_best_result(
-        metric="env_runners/episode_return_mean",
+        metric="pbt_metric",
         mode="max",
     )
-    print(best_result.metrics.get("env_runners/episode_return_mean"))
+    print(best_result.metrics.get("pbt_metric"))
 
     print("Best performing trial's final set of hyperparameters:\n")
     pprint.pprint({k: v for k, v in best_result.config.items() if k in hyperparam_mutations})
@@ -725,6 +813,9 @@ if __name__ == "__main__":
         "pbt_metric_final": best_result.metrics.get("pbt_metric"),
         "pbt_metric_source_code": source_code,
         "pbt_metric_source_label": source_label,
+    # Reproduction source origin (callback, aggregated, derived)
+    "reproduction_source": custom.get("reproduction_source"),
+    "reproduction_source_code": custom.get("reproduction_source_code"),
         # Reproduction stats (if available)
         "reproductions_mean": custom.get("target_agent_reproductions_mean"),
         "reproductions_std": custom.get("target_agent_reproductions_std"),
