@@ -179,3 +179,9 @@ archive/
 bfg.jar
 blobs.txt
 .bfg-report/
+
+# Project logs (RLlib runs, checkpoints, temporary training outputs)
+logs/
+logs/**
+**/logs/
+**/logs/**
