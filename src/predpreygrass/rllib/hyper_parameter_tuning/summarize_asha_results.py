@@ -51,15 +51,23 @@ def parse_args():
     p.add_argument("--pattern", default="PPO_ASHA_*", help="Glob for experiment dirs under base")
     p.add_argument("--top", type=int, default=5, help="Show top-N trials by score_pred")
     p.add_argument("--csv-out", default=None, help="Optional path to write flattened per-trial CSV")
+    p.add_argument("--verbose", action="store_true", help="Print matched experiment dirs and missing CSVs")
     return p.parse_args()
 
 
-def load_trials(base: str, pattern: str) -> List[TrialRow]:
+def load_trials(base: str, pattern: str, verbose: bool = False) -> List[TrialRow]:
     base = os.path.expanduser(base)
     rows: List[TrialRow] = []
-    for exp_dir in sorted(glob.glob(os.path.join(base, pattern))):
+    matched = sorted(glob.glob(os.path.join(base, pattern)))
+    if verbose:
+        print(f"[verbose] Matched {len(matched)} experiment directories under {base} (pattern={pattern})")
+        for d in matched:
+            print(f"  - {os.path.basename(d)}")
+    for exp_dir in matched:
         final_path = os.path.join(exp_dir, "predator_final.csv")
         if not os.path.exists(final_path):
+            if verbose:
+                print(f"[verbose] Missing predator_final.csv in {exp_dir}")
             continue
         with open(final_path) as f:
             r = csv.DictReader(f)
@@ -97,12 +105,14 @@ def load_trials(base: str, pattern: str) -> List[TrialRow]:
     return rows
 
 
-def load_hits(base: str, pattern: str) -> set[str]:
+def load_hits(base: str, pattern: str, verbose: bool = False) -> set[str]:
     base = os.path.expanduser(base)
     hit_trials = set()
     for exp_dir in glob.glob(os.path.join(base, pattern)):
         hp = os.path.join(exp_dir, "predator_100_hits.csv")
         if not os.path.exists(hp):
+            if verbose:
+                print(f"[verbose] No predator_100_hits.csv in {exp_dir}")
             continue
         with open(hp) as f:
             r = csv.DictReader(f)
@@ -196,8 +206,8 @@ def maybe_write_csv(rows: List[TrialRow], path: str | None):
 
 def main():
     args = parse_args()
-    rows = load_trials(args.base, args.pattern)
-    hit_trials = load_hits(args.base, args.pattern)
+    rows = load_trials(args.base, args.pattern, verbose=args.verbose)
+    hit_trials = load_hits(args.base, args.pattern, verbose=args.verbose)
     summarize(rows, hit_trials, args.top)
     maybe_write_csv(rows, args.csv_out)
 
