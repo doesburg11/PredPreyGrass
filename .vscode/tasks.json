@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Train PPO (vector) in project env",
+			"type": "shell",
+			"command": "CONDA_PREFIX=/home/doesburg/Projects/PredPreyGrass/.conda; $CONDA_PREFIX/bin/python -m predpreygrass.rllib.continues_model.train_ppo_continuous --obs-mode vector --vision-radius 10 --n-predators 2 --n-prey 3 --n-grass 10 --num-workers 0 --rollout-fragment-length 40 --train-batch-size 80 --sgd-minibatch-size 32 --num-sgd-iter 1 --timesteps 200000 --framework torch --max-agents-per-type 256 --out /home/doesburg/Projects/PredPreyGrass/logs/tmp_cont_train_long",
+			"problemMatcher": [
+				"$tsc"
+			]
+		}
+	]
+}
