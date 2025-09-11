@@ -4,9 +4,9 @@ No backward stepping is implemented in this version,
 because that is pointless for debugging and testing
 with a random policy.
 """
-from predpreygrass.rllib.continues_model.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.continues_model.config.config_env_random import config_env
-from predpreygrass.rllib.continues_model.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib._on_hold_continues_model.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib._on_hold_continues_model.config.config_env_random import config_env
+from predpreygrass.rllib._on_hold_continues_model.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

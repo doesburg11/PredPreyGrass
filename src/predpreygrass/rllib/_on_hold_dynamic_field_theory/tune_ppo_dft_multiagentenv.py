@@ -1,7 +1,7 @@
-from predpreygrass.rllib.dynamic_field_theory.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.dynamic_field_theory.config.config_env_train_v1_0 import config_env
-from predpreygrass.rllib.dynamic_field_theory.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.dynamic_field_theory.utils.networks import (
+from predpreygrass.rllib._on_hold_dynamic_field_theory.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib._on_hold_dynamic_field_theory.config.config_env_train_v1_0 import config_env
+from predpreygrass.rllib._on_hold_dynamic_field_theory.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib._on_hold_dynamic_field_theory.utils.networks import (
     build_multi_module_spec,
     build_multi_module_spec_agent_dft,
 )
@@ -20,9 +20,9 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.dynamic_field_theory.config.config_ppo_hbp_best import config_ppo
+        from predpreygrass.rllib._on_hold_dynamic_field_theory.config.config_ppo_hbp_best import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.dynamic_field_theory.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib._on_hold_dynamic_field_theory.config.config_ppo_cpu import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_{timestamp}"
+    experiment_name = f"PPO_DFT_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 

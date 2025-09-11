@@ -156,14 +156,63 @@ class ReasonedStopper(Stopper):
 # Tune callback: when a trial completes/errors, write CSV row immediately
 # -----------------------------------------------------------------------------
 class FinalMetricsLogger(tune.Callback):
+    """Enhanced final metrics logger.
+
+    Writes <experiment_dir>/predator_final.csv when a trial finishes or errors,
+    adding richer ASHA context:
+      - progress_ratio   (iteration / max_iters)
+      - rung_index       (0-based index of last *completed* rung; -1 if before first)
+      - rung_pruned_at   (the rung boundary the trial failed to reach if pruned)
+      - asha_pruned      (1 if inferred ASHA prune, else 0)
+
+    Rung boundaries are reconstructed from grace_period & reduction_factor so we
+    don't rely on internal scheduler state.
     """
-    Writes <experiment_dir>/predator_final.csv as soon as a trial finishes,
-    including the stop reason. Also prints immediately.
-    """
-    def __init__(self, reasoned_stop, max_iters: int):
+    def __init__(self, reasoned_stop, max_iters: int, grace_period: int, reduction_factor: int):
         super().__init__()
         self._reasoned_stop = reasoned_stop
         self._max_iters = int(max_iters)
+        self._grace = int(grace_period)
+        self._rf = int(reduction_factor)
+        self._rungs = self._build_rungs()
+
+    def _build_rungs(self):
+        rungs = []
+        cur = self._grace
+        # Ensure strictly increasing rungs and stop before (not including) max_iters
+        while cur < self._max_iters and cur > 0:
+            rungs.append(cur)
+            cur = int(cur * self._rf)
+            # Safety: break if malformed parameters produce non-growth
+            if rungs and cur <= rungs[-1]:
+                break
+        return rungs
+
+    def _annotate_rung_info(self, final_iter: int, stop_reason: str):
+        """Return (rung_index, rung_pruned_at, asha_pruned_flag).
+
+        rung_index: index of last rung boundary attained (>= boundary). -1 if none.
+        rung_pruned_at: boundary at which trial failed (next rung) if ASHA pruned, else ''.
+        asha_pruned_flag: 1/0.
+        """
+        asha_pruned = int(stop_reason == "asha_early_stop")
+        rungs = self._rungs
+        if not rungs:
+            return (-1, "", asha_pruned)
+        idx = -1
+        for i, boundary in enumerate(rungs):
+            if final_iter >= boundary:
+                idx = i
+            else:
+                break
+        rung_pruned_at = ""
+        if asha_pruned:
+            # The first boundary strictly greater than final_iter
+            for boundary in rungs:
+                if final_iter < boundary:
+                    rung_pruned_at = str(boundary)
+                    break
+        return (idx, rung_pruned_at, asha_pruned)
 
     def _write_csv_row(self, trial, result, stop_reason):
         experiment_dir = os.path.dirname(trial.local_path)
@@ -174,30 +223,50 @@ class FinalMetricsLogger(tune.Callback):
         cfg = result.get("config", {}) or {}
         lr = float(cfg.get("lr", float("nan")))
         num_epochs = int(cfg.get("num_epochs", -1))
+        progress_ratio = (final_iter / self._max_iters) if self._max_iters > 0 and final_iter >= 0 else float("nan")
+
+        rung_index, rung_pruned_at, asha_pruned = self._annotate_rung_info(final_iter, stop_reason)
 
         row = {
             "trial_name": os.path.basename(trial.local_path),
             "iteration": final_iter,
+            "progress_ratio": f"{progress_ratio:.6f}" if progress_ratio == progress_ratio else "nan",
             "score_pred": score_pred,
             "lr": lr,
             "num_epochs": num_epochs,
             "stop_reason": stop_reason,
+            "rung_index": rung_index,
+            "rung_pruned_at": rung_pruned_at,
+            "asha_pruned": asha_pruned,
         }
 
+        field_order = [
+            "trial_name",
+            "iteration",
+            "progress_ratio",
+            "score_pred",
+            "lr",
+            "num_epochs",
+            "stop_reason",
+            "rung_index",
+            "rung_pruned_at",
+            "asha_pruned",
+        ]
+
         write_header = not os.path.exists(csv_path)
-        with open(csv_path, mode="a", newline="") as f:
-            writer = csv.DictWriter(
-                f,
-                fieldnames=["trial_name", "iteration", "score_pred", "lr", "num_epochs", "stop_reason"],
-            )
-            if write_header:
-                writer.writeheader()
-            writer.writerow(row)
+        try:
+            with open(csv_path, mode="a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=field_order)
+                if write_header:
+                    writer.writeheader()
+                writer.writerow(row)
+        except Exception as e:
+            print(f"[FinalMetricsLogger] Failed to append predator_final.csv: {e}")
 
         print(
-            f"[FinalMetricsLogger] Trial {row['trial_name']} stopped at iter={row['iteration']} "
-            f"score_pred={row['score_pred']:.3f}, lr={row['lr']}, epochs={row['num_epochs']} "
-            f"reason={row['stop_reason']}"
+            f"[FinalMetricsLogger] Trial {row['trial_name']} iter={row['iteration']} (progress={row['progress_ratio']}) "
+            f"score_pred={row['score_pred']:.3f} lr={row['lr']} epochs={row['num_epochs']} reason={row['stop_reason']} "
+            f"rung_index={row['rung_index']} asha_pruned={row['asha_pruned']}"
         )
 
     def on_trial_complete(self, iteration, trials, trial, result=None, **info):
@@ -266,7 +335,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_{timestamp}"
+    experiment_name = f"PPO_ASHA_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
@@ -364,11 +433,15 @@ if __name__ == "__main__":
 
     reasoned = ReasonedStopper(plateau, drop, cap)
 
+    # ASHA schedule parameters
+    grace_period = 40
+    reduction_factor = 3
+
     scheduler = ASHAScheduler(
         time_attr="training_iteration",
         max_t=max_iters,
-        grace_period=40,
-        reduction_factor=3,
+        grace_period=grace_period,
+        reduction_factor=reduction_factor,
     )
 
     searcher = OptunaSearch()
@@ -386,7 +459,7 @@ if __name__ == "__main__":
                 checkpoint_frequency=checkpoint_every,
                 checkpoint_at_end=True,
             ),
-            callbacks=[FinalMetricsLogger(reasoned, max_iters)],
+            callbacks=[FinalMetricsLogger(reasoned, max_iters, grace_period, reduction_factor)],
         ),
         tune_config=tune.TuneConfig(
             metric="score_pred",
