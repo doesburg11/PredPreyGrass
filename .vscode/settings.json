@@ -4,7 +4,7 @@
     // Ensure VS Code uses the project Conda env's interpreter
     "python.defaultInterpreterPath": "/home/doesburg/Projects/PredPreyGrass/.conda/bin/python",
     // Don't auto-activate (base) in new terminals; we will run with explicit interpreter paths
-    "python.terminal.activateEnvironment": false,
+    "python.terminal.activateEnvironment": true,
     // Make sure src/ is importable in the integrated terminal
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "/home/doesburg/Projects/PredPreyGrass/src:${env:PYTHONPATH}"
