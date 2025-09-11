@@ -6,7 +6,7 @@ Configure render_mode in env_config below. For an interactive window set to 'hum
 from __future__ import annotations
 import time
 import numpy as np
-from predpreygrass.rllib.continues_model.predpreygrass_continuous_env import PredPreyGrassContinuous
+from predpreygrass.rllib._on_hold_continues_model.predpreygrass_continuous_env import PredPreyGrassContinuous
 
 # Basic environment config (adjust as desired)
 env_config = dict(

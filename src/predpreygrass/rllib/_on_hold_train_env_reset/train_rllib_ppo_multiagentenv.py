@@ -2,9 +2,9 @@
 THIS IS A TEST SCRIPT FOR CHANGING REWARDS DURING TRAINING
 It runs 1 iteration, saves checkpoints, then runs another iteration with modified rewards.
 """
-from predpreygrass.rllib._train_env_reset.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib._train_env_reset.config.config_env_train import config_env
-from predpreygrass.rllib._train_env_reset.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib._on_hold_train_env_reset.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib._on_hold_train_env_reset.config.config_env_train import config_env
+from predpreygrass.rllib._on_hold_train_env_reset.utils.episode_return_callback import EpisodeReturn
 
 # External libraries
 import ray
@@ -44,13 +44,13 @@ def get_config_ppo():
     num_cpus = os.cpu_count()
     # GPU configuration
     if num_cpus == 32:
-        from predpreygrass.rllib._train_env_reset.config.config_ppo_gpu import config_ppo
+        from predpreygrass.rllib._on_hold_train_env_reset.config.config_ppo_gpu import config_ppo
     # CPU configuration
     elif num_cpus == 8:
-        from predpreygrass.rllib._train_env_reset.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib._on_hold_train_env_reset.config.config_ppo_cpu import config_ppo
     # Colab configuration
     elif num_cpus == 2:
-        from predpreygrass.rllib._train_env_reset.config.config_ppo_colab import config_ppo
+        from predpreygrass.rllib._on_hold_train_env_reset.config.config_ppo_colab import config_ppo
     else:
         raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
     return config_ppo

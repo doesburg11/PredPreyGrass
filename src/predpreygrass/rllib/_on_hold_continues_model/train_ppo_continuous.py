@@ -30,7 +30,7 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.policy.policy import PolicySpec
 import ray
 
-from predpreygrass.rllib.continues_model.predpreygrass_continuous_env import PredPreyGrassContinuous
+from predpreygrass.rllib._on_hold_continues_model.predpreygrass_continuous_env import PredPreyGrassContinuous
 
 
 def build_env_config(args: argparse.Namespace) -> Dict:

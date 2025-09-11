@@ -1,6 +1,6 @@
-from predpreygrass.rllib._train_env_reset.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib._train_env_reset.config.config_env_eval import config_env
-from predpreygrass.rllib._train_env_reset.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.rllib._on_hold_train_env_reset.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib._on_hold_train_env_reset.config.config_env_eval import config_env
+from predpreygrass.rllib._on_hold_train_env_reset.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os
