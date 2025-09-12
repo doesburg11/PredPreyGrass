@@ -1,6 +1,6 @@
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass environment (v1_0) for interactive debugging.
+and runs them in the PredPreyGrass environment (ppg_2_policies) for interactive debugging.
 
 The simulation can be controlled in real-time using a graphical interface.
 - [Space] Pause/Unpause
@@ -11,9 +11,9 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 
-# --- Project imports (v1_0 env + PyGame renderer) ---
-from predpreygrass.rllib.v1_0.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v1_0.utils.pygame_grid_renderer_rllib import (
+# --- Project imports (ppg_2_policies env + PyGame renderer) ---
+from predpreygrass.rllib.ppg_2_policies.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.ppg_2_policies.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
     ViewerControlHelper,
     LoopControlHelper,
@@ -40,7 +40,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    # v1_0 naming: "predator_x" / "prey_y" → two policies
+    # ppg_2_policies naming: "predator_x" / "prey_y" → two policies
     if "predator" in agent_id:
         return "predator_policy"
     elif "prey" in agent_id:
