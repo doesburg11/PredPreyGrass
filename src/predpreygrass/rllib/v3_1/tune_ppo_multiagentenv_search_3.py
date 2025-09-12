@@ -344,8 +344,8 @@ if __name__ == "__main__":
     # Search space: ONLY PPO hypers
     search_space = ppo_config.copy(copy_frozen=False)
     search_space.training(
-        num_epochs=tune.qrandint(22, 30, q=2),
-        lr=tune.loguniform(9e-5, 1.3e-4),  
+        num_epochs=tune.qrandint(20, 34, q=2),
+        lr=tune.loguniform(8e-5, 2e-4),  
     )
 
     # Stoppers with reason tracking
