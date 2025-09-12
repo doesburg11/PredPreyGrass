@@ -1,7 +1,5 @@
 """
 Predator-Prey Grass RLlib Environment
-v3_1:
-- make every agent type fully independently configurable so that competing (slightly) different prey can be compared
 """
 # external libraries
 import gymnasium
