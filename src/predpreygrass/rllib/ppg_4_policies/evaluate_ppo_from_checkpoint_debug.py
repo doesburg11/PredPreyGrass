@@ -4,10 +4,10 @@ This script has an advanced viewer control system that allows stepping
 back-and-forward through the simulation. For a simplear evaluation script,
 see `evaluate_ppo_from_checkpoint_headless.py`.
 """
-from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.v3_1.config.config_env_eval import config_env
-from predpreygrass.rllib.v3_1.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.v3_1.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.ppg_4_policies.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.ppg_4_policies.config.config_env_eval import config_env
+from predpreygrass.rllib.ppg_4_policies.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.ppg_4_policies.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -58,7 +58,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "v2_7_tune_default_benchmark/PPO_PredPreyGrass_86337_00000_0_2025-08-04_23-53-58/"
+    checkpoint_root = "PPO_4_POLICIES_2025-09-12_22-17-39/PPO_PredPreyGrass_87d7c_00000_0_2025-09-12_22-17-39/"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
 
