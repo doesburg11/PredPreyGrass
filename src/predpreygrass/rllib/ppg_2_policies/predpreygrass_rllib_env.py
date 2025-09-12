@@ -1,4 +1,4 @@
-from predpreygrass.rllib.v1_0.config_env import config_env
+from predpreygrass.rllib.ppg_2_policies.config_env import config_env
 
 # external libraries
 import numpy as np
