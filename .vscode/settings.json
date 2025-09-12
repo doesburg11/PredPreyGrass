@@ -3,10 +3,22 @@
     "python.linting.pylintArgs": ["--disable=line-too-long"],
     // Ensure VS Code uses the project Conda env's interpreter
     "python.defaultInterpreterPath": "/home/doesburg/Projects/PredPreyGrass/.conda/bin/python",
-    // Don't auto-activate (base) in new terminals; we will run with explicit interpreter paths
+    // Always activate this environment in new terminals
     "python.terminal.activateEnvironment": true,
-    // Make sure src/ is importable in the integrated terminal
+    // Inject env vars so we can self-heal if conda deactivates
     "terminal.integrated.env.linux": {
-        "PYTHONPATH": "/home/doesburg/Projects/PredPreyGrass/src:${env:PYTHONPATH}"
+        "PYTHONPATH": "/home/doesburg/Projects/PredPreyGrass/src:${env:PYTHONPATH}",
+        "PROJECT_CONDA_PREFIX": "/home/doesburg/Projects/PredPreyGrass/.conda"
+    },
+    // Run a tiny shell snippet on terminal creation to (re)activate env if not active
+    // This uses bash PROMPT_COMMAND so every prompt enforces the env.
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.defaultProfile.linux": "bash",
+    // Custom command to auto-source the correct conda env; requires conda init already executed.
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "/bin/bash",
+            "args": ["--rcfile", "/home/doesburg/Projects/PredPreyGrass/.vscode/auto_conda_rc"]
+        }
     }
 }
