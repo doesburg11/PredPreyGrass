@@ -20,5 +20,8 @@
             "path": "/bin/bash",
             "args": ["--rcfile", "/home/doesburg/Projects/PredPreyGrass/.vscode/auto_conda_rc"]
         }
-    }
+    },
+    "python.analysis.extraPaths": [
+        "./src"
+    ]
 }
