@@ -4,8 +4,8 @@ from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import ray
 import torch
-from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_1.config.config_env_eval import config_env
+from predpreygrass.rllib.ppg_4_policies.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.ppg_4_policies.config.config_env_eval import config_env
 
 
 def load_frozen_rl_modules(pred_ckpt_path, prey_ckpt_path):
