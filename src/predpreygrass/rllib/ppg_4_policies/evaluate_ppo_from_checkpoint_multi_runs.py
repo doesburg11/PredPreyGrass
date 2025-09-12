@@ -1,6 +1,6 @@
-from predpreygrass.rllib.v3_1.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.v3_1.config.config_env_eval import config_env
-from predpreygrass.rllib.v3_1.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.rllib.ppg_4_policies.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.ppg_4_policies.config.config_env_eval import config_env
+from predpreygrass.rllib.ppg_4_policies.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os
