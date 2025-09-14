@@ -38,7 +38,7 @@ import re
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
+SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
