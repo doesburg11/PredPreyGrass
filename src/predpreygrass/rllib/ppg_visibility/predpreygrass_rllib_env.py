@@ -1,10 +1,25 @@
 """
 Predator-Prey Grass RLlib Environment
+
+Additions:
+        - Static wall obstacles: `num_walls` random cells sampled at reset (default 20).
+            * Stored in `self.wall_positions` (set of (x,y)).
+            * Painted into observation channel 0 (binary 1=wall).
+            * Agents (predator, prey, grass placement) avoid wall cells at reset.
+            * Movement into a wall cell is disallowed (agent stays in place, still pays movement energy cost as computed for attempted move).
 """
-# external libraries
+# external libraries (Ray optional for lightweight diagnostics)
 import gymnasium
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from ray.rllib.utils.typing import AgentID, Tuple
+try:
+    from ray.rllib.env.multi_agent_env import MultiAgentEnv
+    from ray.rllib.utils.typing import AgentID, Tuple
+except Exception:  # pragma: no cover
+    from typing import Tuple as TypingTuple
+    class MultiAgentEnv:  # minimal stub for wall/placement local tests
+        def __init__(self):
+            pass
+    AgentID = str
+    Tuple = TypingTuple
 import numpy as np
 import math
 
@@ -69,11 +84,29 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_obs_channels = config.get("num_obs_channels", 4)
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 5)
+        # Optional extra observation channel (appended as last channel) showing
+        # line-of-sight visibility (1 = visible, 0 = occluded by at least one wall).
+        # When disabled, observation tensors retain their original channel count.
+        self.include_visibility_channel = config.get("include_visibility_channel", False)
+        # Movement restriction: if True, agents may only move to target cells with unobstructed LOS (no wall between current and target).
+        self.respect_los_for_movement = config.get("respect_los_for_movement", False)
+        # If True, dynamic observation channels (predators/prey/grass) are masked so that
+        # entities behind walls (no line-of-sight) appear as 0 even if within square range.
+        # Works independently of include_visibility_channel; if that is False we still mask
+        # but do not append the visibility channel itself.
+        self.mask_observation_with_visibility = config.get("mask_observation_with_visibility", False)
 
         # Grass settings
         self.initial_num_grass = config.get("initial_num_grass", 25)
         self.initial_energy_grass = config.get("initial_energy_grass", 2.0)
         self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
+        # Walls (static obstacles)
+        self.num_walls = config.get("num_walls", 20)
+        # New: wall placement mode: 'random' (default) or 'manual'.
+        # When 'manual', positions come from manual_wall_positions (list of (x,y)).
+        self.wall_placement_mode = config.get("wall_placement_mode", "random")
+        self.manual_wall_positions = config.get("manual_wall_positions", None)
+        self.wall_positions = set()
 
         # Mutation
         self.mutation_rate_predator = config.get("mutation_rate_predator", 0.1)
@@ -150,8 +183,54 @@ class PredPreyGrass(MultiAgentEnv):
         super().reset(seed=seed)
         self._init_reset_variables(seed)
 
+        # --- Place walls first ---
+        self.wall_positions = set()
+        max_cells = self.grid_size * self.grid_size
+        if self.wall_placement_mode not in ("random", "manual"):
+            raise ValueError("wall_placement_mode must be 'random' or 'manual'")
+
+        if self.wall_placement_mode == "manual":
+            # Manual mode: use provided coordinates; ignore duplicates/out-of-bounds
+            raw_positions = self.manual_wall_positions or []
+            added = 0
+            for pos in raw_positions:
+                try:
+                    x, y = map(int, pos)
+                except Exception:
+                    if self.debug_mode:
+                        print(f"[Walls] Skipping non-integer position {pos}")
+                    continue
+                if not (0 <= x < self.grid_size and 0 <= y < self.grid_size):
+                    if self.debug_mode:
+                        print(f"[Walls] Skipping out-of-bounds {(x,y)}")
+                    continue
+                if (x, y) in self.wall_positions:
+                    continue
+                self.wall_positions.add((x, y))
+                added += 1
+            # Optional: if manual list empty, fallback to random to avoid empty wall layer unless explicitly desired
+            if added == 0 and self.manual_wall_positions:
+                if self.debug_mode:
+                    print("[Walls] No valid manual wall positions provided; resulting set is empty.")
+            if added == 0 and not self.manual_wall_positions:
+                # Keep behaviour consistent: if user sets mode manual but no list, leave empty (explicit)
+                pass
+        else:  # random
+            if self.num_walls >= max_cells:
+                raise ValueError("num_walls must be less than total grid cells")
+            if self.num_walls > 0:
+                wall_indices = self.rng.choice(max_cells, size=self.num_walls, replace=False)
+                for idx in wall_indices:
+                    gx = idx // self.grid_size
+                    gy = idx % self.grid_size
+                    self.wall_positions.add((gx, gy))
+
         total_entities = len(self.agents) + len(self.grass_agents)
-        all_positions = self._generate_random_positions(self.grid_size, total_entities, seed)
+        if total_entities + self.num_walls > max_cells:
+            raise ValueError("Too many entities + walls for grid size")
+        free_indices = [i for i in range(max_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
+        chosen = self.rng.choice(free_indices, size=total_entities, replace=False)
+        all_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen]
 
         predator_list = [a for a in self.agents if "predator" in a]
         prey_list = [a for a in self.agents if "prey" in a]
@@ -159,6 +238,10 @@ class PredPreyGrass(MultiAgentEnv):
         predator_positions = all_positions[: len(predator_list)]
         prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
         grass_positions = all_positions[len(predator_list) + len(prey_list) :]
+
+        # Paint walls into channel 0
+        for (wx, wy) in self.wall_positions:
+            self.grid_world_state[0, wx, wy] = 1.0
 
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
@@ -299,7 +382,7 @@ class PredPreyGrass(MultiAgentEnv):
         energy_cost = distance * distance_factor * current_energy
         return energy_cost
 
-    def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
+    def _get_move(self, agent, action: int):
         """
         Get the new position of the agent based on the action and its type.
         """
@@ -323,11 +406,52 @@ class PredPreyGrass(MultiAgentEnv):
         new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
 
         agent_type_nr = 1 if "predator" in agent else 2
-        if self.grid_world_state[agent_type_nr, *new_position] > 0:
-            # Collision with another same-type agent — stay in place
+        # Block entry into wall cells
+        if new_position in self.wall_positions:
             new_position = current_position
+        elif self.grid_world_state[agent_type_nr, *new_position] > 0:
+            new_position = current_position
+        elif self.respect_los_for_movement and new_position != current_position:
+            # Perform LOS check; if blocked by any wall (excluding endpoints) cancel move.
+            if not self._line_of_sight_clear(current_position, new_position):
+                new_position = current_position
 
         return new_position
+
+    def _line_of_sight_clear(self, start, end):
+        """Return True if straight line between start and end (inclusive endpoints) has no wall strictly between.
+
+        Uses a simple integer Bresenham traversal. Walls at the destination do not count here
+        because destination walls are already handled earlier; we exclude start/end when checking.
+        """
+        (x0, y0), (x1, y1) = start, end
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        x, y = x0, y0
+        sx = 1 if x1 > x0 else -1
+        sy = 1 if y1 > y0 else -1
+        if dx >= dy:
+            err = dx / 2.0
+            while x != x1:
+                if (x, y) not in (start, end) and (x, y) in self.wall_positions:
+                    return False
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != y1:
+                if (x, y) not in (start, end) and (x, y) in self.wall_positions:
+                    return False
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+        # Check final cell (excluded by earlier condition); not necessary for movement blocking beyond destination.
+        return True
 
     def _get_observation(self, agent):
         """
@@ -336,13 +460,72 @@ class PredPreyGrass(MultiAgentEnv):
         observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
-        observation = np.zeros(
-            (self.num_obs_channels, observation_range, observation_range),
-            dtype=np.float32,
-        )
-        observation[0].fill(1)
-        observation[0, xolo:xohi, yolo:yohi] = 0
-        observation[1:, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+        observation = np.zeros((channels, observation_range, observation_range), dtype=np.float32)
+        # Channel 0: walls (binary). Already zero; stamp walls that fall inside window.
+        for (wx, wy) in self.wall_positions:
+            if xlo <= wx < xhi and ylo <= wy < yhi:
+                lx = wx - xlo + xolo
+                ly = wy - ylo + yolo
+                observation[0, lx, ly] = 1.0
+        # Copy dynamic channels (predators, prey, grass) into fixed locations 1..num_obs_channels-1 first
+        observation[1:self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+
+        need_visibility_mask = self.include_visibility_channel or self.mask_observation_with_visibility
+        visibility_mask = None
+        if need_visibility_mask:
+            visibility_mask = np.zeros((observation_range, observation_range), dtype=np.float32)
+
+            def bresenham(x0, y0, x1, y1):
+                dx = abs(x1 - x0)
+                dy = abs(y1 - y0)
+                x, y = x0, y0
+                sx = 1 if x1 > x0 else -1
+                sy = 1 if y1 > y0 else -1
+                if dx >= dy:
+                    err = dx / 2.0
+                    while x != x1:
+                        yield x, y
+                        err -= dy
+                        if err < 0:
+                            y += sy
+                            err += dx
+                        x += sx
+                    yield x1, y1
+                else:
+                    err = dy / 2.0
+                    while y != y1:
+                        yield x, y
+                        err -= dx
+                        if err < 0:
+                            x += sx
+                            err += dy
+                        y += sy
+                    yield x1, y1
+
+            for lx in range(observation_range):
+                for ly in range(observation_range):
+                    gx = xlo + (lx - xolo)
+                    gy = ylo + (ly - yolo)
+                    if not (0 <= gx < self.grid_size and 0 <= gy < self.grid_size):
+                        continue
+                    blocked = False
+                    for cx, cy in bresenham(xp, yp, gx, gy):
+                        if (cx, cy) == (xp, yp) or (cx, cy) == (gx, gy):
+                            continue
+                        if (cx, cy) in self.wall_positions:
+                            blocked = True
+                            break
+                    visibility_mask[lx, ly] = 0.0 if blocked else 1.0
+
+            if self.mask_observation_with_visibility:
+                # Multiply dynamic channels (exclude channel 0 walls, and exclude visibility channel if it'll be appended later)
+                for c in range(1, self.num_obs_channels):
+                    observation[c] *= visibility_mask
+
+            if self.include_visibility_channel:
+                vis_idx = channels - 1
+                observation[vis_idx] = visibility_mask
 
         return observation
 
@@ -439,7 +622,8 @@ class PredPreyGrass(MultiAgentEnv):
                     observations[agent] = self._get_observation(agent)
                 else:  # Inactive agents get empty observation
                     obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    observations[agent] = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float32)
+                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+                    observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
 
                 rewards[agent] = 0.0
                 truncations[agent] = True
@@ -950,12 +1134,13 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the observation space for a specific agent.
         """
+        extra = 1 if getattr(self, "include_visibility_channel", False) else 0
         if "predator" in agent_id:
-            predator_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+            predator_shape = (self.num_obs_channels + extra, self.predator_obs_range, self.predator_obs_range)
             obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
 
         elif "prey" in agent_id:
-            prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
+            prey_shape = (self.num_obs_channels + extra, self.prey_obs_range, self.prey_obs_range)
             obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float32)
 
         else:

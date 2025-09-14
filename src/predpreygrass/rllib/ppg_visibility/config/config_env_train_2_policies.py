@@ -1,5 +1,3 @@
-from math import inf
-
 config_env = {
     "max_steps": 1000,
     # Grid and Observation Settings
@@ -69,11 +67,11 @@ config_env = {
     "verbose_reproduction": False,
     "debug_mode": False,
     # Energy intake caps
-    "max_energy_gain_per_grass": inf,
-    "max_energy_gain_per_prey": inf,
+    "max_energy_gain_per_grass": float('inf'),
+    "max_energy_gain_per_prey": float('inf'),
     # Absolute energy caps
-    "max_energy_predator": inf,
-    "max_energy_prey": inf,
+    "max_energy_predator": float('inf'),
+    "max_energy_prey": float('inf'),
     "max_energy_grass": 2.0,
     "reproduction_cooldown_steps": 0,
     "reproduction_chance_predator": 1.0,
@@ -81,4 +79,19 @@ config_env = {
     # Energy transfer and reproduction efficiency
     "energy_transfer_efficiency": 1.0,
     "reproduction_energy_efficiency": 1.0,
+    # --- Wall placement ---
+    # Use manual wall layout: centered 12x12 square (side=12) with 2-cell opening on each side.
+    # Grid size is 25 -> start = (25-12)//2 = 6, square spans 6..17 inclusive.
+    # Openings located at the two middle coordinates of each side.
+    "wall_placement_mode": "manual",
+    "manual_wall_positions": [
+        # Top side y=6 (omit opening x=11,12)
+        (6,6),(7,6),(8,6),(9,6),(10,6),(13,6),(14,6),(15,6),(16,6),(17,6),
+        # Bottom side y=17 (omit opening x=11,12)
+        (6,17),(7,17),(8,17),(9,17),(10,17),(13,17),(14,17),(15,17),(16,17),(17,17),
+        # Left side x=6 (omit opening y=11,12; skip corners already listed)
+        (6,7),(6,8),(6,9),(6,10),(6,13),(6,14),(6,15),(6,16),
+        # Right side x=17 (omit opening y=11,12; skip corners already listed)
+        (17,7),(17,8),(17,9),(17,10),(17,13),(17,14),(17,15),(17,16),
+    ],
 }
