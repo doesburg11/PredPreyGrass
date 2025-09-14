@@ -21,13 +21,31 @@ from predpreygrass.rllib.ppg_2_policies.utils.pygame_grid_renderer_rllib import 
 # --- External libs ---
 import ray
 from ray.tune.registry import register_env
-from ray.rllib.core.rl_module.rl_module import RLModule  # \u2190 load modules directly
+from ray.rllib.core.rl_module.rl_module import RLModule  # ← load modules directly
 import torch
 import os
 import matplotlib.pyplot as plt
 import pygame
 import cv2
 import numpy as np
+
+# --- NumPy checkpoint compatibility shim ------------------------------------
+# Older checkpoints (created with certain NumPy builds) may pickle references
+# to the private path 'numpy._core.numeric'. In newer NumPy (>=1.26+), that
+# internal package path may not exist, causing ModuleNotFoundError on unpickle.
+# We pre-emptively alias it to the public 'numpy.core.numeric' if missing.
+import types, sys
+try:  # Only patch if attribute truly missing
+    import importlib
+    if 'numpy._core.numeric' not in sys.modules:
+        core_numeric = importlib.import_module('numpy.core.numeric')
+        shim_pkg = types.ModuleType('numpy._core')
+        # Register parent shim first if needed
+        if 'numpy._core' not in sys.modules:
+            sys.modules['numpy._core'] = shim_pkg
+        sys.modules['numpy._core.numeric'] = core_numeric
+except Exception as _shim_err:  # Fail silently; only affects legacy checkpoints
+    pass
 
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
