@@ -8,7 +8,7 @@ The core aim is to move beyond simple reward-driven dynamics by enforcing physic
 
 ### 🔧 Key Differences Compared to Earlier Version
 
-| Feature | Before (v1) | Now (v2.1, this version) | Why It Matters |
+| Feature | ppg-2-policies | ppg-4-policies | Why It Matters |
 |--------|--------------|---------------------------|----------------|
 | **Energy intake per event** | Unlimited (agents could gain all energy from a single prey or grass patch) | ✅ **Capped** per prey/grass interaction (configurable) | Models digestion limits and energy conversion inefficiency; encourages sharing and delayed consumption |
 | **Absolute energy level** | Unlimited (agents could theoretically accumulate extreme energy levels if not reproducing) | ✅ **Capped** at a species-specific max (configurable) | Reflects biological storage limits; prevents dominance by a few hoarders |

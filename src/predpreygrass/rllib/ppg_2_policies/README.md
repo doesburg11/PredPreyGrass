@@ -1,7 +1,3 @@
-[![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
-[![RLlib](https://img.shields.io/badge/RLlib-v2.48.0-blue)](https://docs.ray.io/en/latest/rllib/)
-
-
 # [ppg_2_policies]: Predator-Prey-Grass base environment
 
 
@@ -71,7 +67,7 @@ The MARL environment [`predpregrass_base.py`](./../../../../src/predpreygrass/pe
 
 ### Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
 
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the RLlib environments are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of attempting to optimize compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment [configuration file](./../v1_0/config_env.py)
+Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the RLlib environments are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a seperate agent class (largely a result of attempting to optimize compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a seperate environment [configuration file](./../ppg_2_policies/config_env.py)
 
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
