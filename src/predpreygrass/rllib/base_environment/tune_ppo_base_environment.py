@@ -11,7 +11,6 @@ from predpreygrass.rllib.base_environment.config_env import config_env
 
 #  external libraries
 import ray
-from ray import train, tune
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
