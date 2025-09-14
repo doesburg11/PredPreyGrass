@@ -17,7 +17,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 ## Experiments:
 
 * Training and evaluating base environment
-    * [Implementation](src/predpreygrass/rllib/v1_0)
+    * [Implementation](src/predpreygrass/rllib/ppg_2_policies)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg)
 
 * Training and evaluating mutating agents environment
@@ -61,7 +61,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 Run the pre trained model in a Visual Studio Code terminal:
 
 ```bash
-python ./src/predpreygrass/rllib/v1_0/evaluate_ppo_from_checkpoint_debug.py
+python ./src/predpreygrass/rllib/ppg_2_policies/evaluate_ppo_from_checkpoint_debug.py
 
 ```
 
