@@ -1,3 +1,7 @@
+"""
+The base environment for the PredPreyGrass simulation.
+Two types of agents: predators and prey. Independently learning policies for each type.
+"""
 from predpreygrass.rllib.base_environment.config_env import config_env
 
 # external libraries
