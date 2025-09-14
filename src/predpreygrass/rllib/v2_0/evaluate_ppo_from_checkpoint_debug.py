@@ -35,6 +35,19 @@ import pygame
 import cv2
 import numpy as np
 
+# --- NumPy checkpoint compatibility shim ------------------------------------
+# Some older checkpoints reference 'numpy._core.numeric' during pickle load.
+# Provide an alias to 'numpy.core.numeric' if missing to avoid ModuleNotFoundError.
+import sys, types, importlib
+try:
+    if 'numpy._core.numeric' not in sys.modules:
+        core_numeric = importlib.import_module('numpy.core.numeric')
+        if 'numpy._core' not in sys.modules:
+            sys.modules['numpy._core'] = types.ModuleType('numpy._core')
+        sys.modules['numpy._core.numeric'] = core_numeric
+except Exception:  # Silent; only affects legacy checkpoints
+    pass
+
 SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
@@ -91,7 +104,16 @@ def setup_environment_and_visualizer(now):
     else:
         raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
 
-    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
+    rl_modules = {}
+    for pid, path in module_paths.items():
+        try:
+            rl_modules[pid] = RLModule.from_checkpoint(path)
+        except ModuleNotFoundError as e:
+            raise RuntimeError(
+                f"Failed to load RLModule '{pid}' from {path}: {e}\n"
+                "Likely a dependency version mismatch (e.g., NumPy internal path). "
+                "Shim for numpy._core.numeric applied; if this persists, ensure training and eval environments align."
+            ) from e
 
     env = env_creator(config=config_env)
     grid_size = (env.grid_size, env.grid_size)
