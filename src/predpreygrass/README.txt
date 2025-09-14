@@ -1,122 +1,59 @@
-Structure of the respository
+Structure of the repository (updated)
 
-├── assets
-│   └── images
-├── CODE_OF_CONDUCT.md
-├── LICENSE
-├── PredPreyGrass.code-workspace
-├── predpreygrass.egg-info
-│   ├── dependency_links.txt
-│   ├── PKG-INFO
-│   ├── requires.txt
-│   ├── SOURCES.txt
-│   └── top_level.txt
-├── predpreygrass.ipynb
-├── pyproject.toml
-├── README.md
-├── requirements_lock.txt
-├── requirements.txt
-├── setup.py
-└── src
-    ├── predpreygrass
-    │   ├── global_config.py
-    │   ├── __init__.py
-    │   ├── pettingzoo
-    │   │   ├── agents
-    │   │   │   ├──
-    │   │   │   └── discrete_agent.py
-    │   │   ├── config
-    │   │   │   ├── config_predpreygrass.py
-    │   │   │   └── README.md
-    │   │   ├── envs
-    │   │   │   ├── __init__.py
-    │   │   │   ├── predpreygrass_aec.py
-    │   │   │   ├── predpreygrass_aec_v0.py
-    │   │   │   ├── predpreygrass_base.py
-    │   │   │   └── README.md
-    │   │   ├── eval
-    │   │   │   ├── evaluate_ppo_from_file_aec_env.py
-    │   │   │   ├── evaluate_random_policy.py
-    │   │   │   ├── evaluate_random_policy_step_wise.py
-    │   │   │   ├── evaluate_random_policy_to_file_aec_env.py
-    │   │   │   ├── parameter_variation_train_wrapped_to_parallel_and_evaluate_aec.py
-    │   │   │   ├── README.md
-    │   │   │   └── utils
-    │   │   │       ├── evaluator.py
-    │   │   │       └── population_plotter.py
-    │   │   ├── README.md
-    │   │   └── train
-    │   │       ├── README.md
-    │   │       ├── train_sb3_ppo_parallel_wrapped_aec_env.py
-    │   │       └── utils
-    │   │           ├── config_saver.py
-    │   │           ├── _continue_training_saved_model.py
-    │   │           ├── logger.py
-    │   │           └── trainer.py
-    │   ├── README.txt
-    │   ├── rllib
-    │   │   ├── readme.md
-    │   │   ├── utils
-    │   │   │   ├── create_video_from_checkpoint.py
-    │   │   │   └── create_video_from_checkpoint_speed.py
-    │   │   ├── v0_neumann
-    │   │   │   ├── config_env.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint.py
-    │   │   │   ├── __init__.py
-    │   │   │   ├── predpreygrass_rllib_env.py
-    │   │   │   ├── random_policy.py
-    │   │   │   ├── random_policy_step_wise.py
-    │   │   │   ├── random_policy_time_test.py
-    │   │   │   └── train_rllib_ppo_multiagent_env.py
-    │   │   ├── v1_moore
-    │   │   │   ├── config_env.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint.py
-    │   │   │   ├── predpreygrass_rllib_env.py
-    │   │   │   ├── random_policy.py
-    │   │   │   ├── random_policy_time_test.py
-    │   │   │   └── train_rllib_ppo_multiagent_env.py
-    │   │   ├── v2_speed
-    │   │   │   ├── config_env.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint.py
-    │   │   │   ├── __init__.py
-    │   │   │   ├── predpreygrass_rllib_env.py
-    │   │   │   ├── random_policy.py
-    │   │   │   ├── random_policy_time_test.py
-    │   │   │   └── train_rllib_ppo_multiagent_env.py
-    │   │   ├── v3_age
-    │   │   │   ├── config_env.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint_old.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint.py
-    │   │   │   ├── evaluate_random_policy.py
-    │   │   │   ├── __init__.py
-    │   │   │   ├── predpreygrass_rllib_env.py
-    │   │   │   ├── random_policy.py
-    │   │   │   ├── random_policy_ time_test.py
-    │   │   │   └── train_rllib_ppo_multiagentenv.py
-    │   │   ├── v4_select_coef
-    │   │   │   ├── config_env.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint copy.py
-    │   │   │   ├── evaluate_ppo_from_checkpoint.py
-    │   │   │   ├── evaluate_random_policy.py
-    │   │   │   ├── __init__.py
-    │   │   │   ├── predpreygrass_rllib_env.py
-    │   │   │   ├── random_policy.py
-    │   │   │   ├── random_policy_ time_test.py
-    │   │   │   └── train_rllib_ppo_multiagentenv.py
-    │   │   └── v4_select_coef_HBP
-    │   │       ├── config_env.py
-    │   │       ├── evaluate_ppo_from_checkpoint.py
-    │   │       ├── evaluate_random_policy.py
-    │   │       ├── __init__.py
-    │   │       ├── predpreygrass_rllib_env.py
-    │   │       ├── random_policy.py
-    │   │       ├── random_policy_ time_test.py
-    │   │       └── train_rllib_ppo_multiagentenv.py
-    │   └── utils
-    │       └── renderer.py
-    └── predpreygrass.egg-info
-        ├── dependency_links.txt
-        ├── PKG-INFO
-        ├── requires.txt
-        ├── SOURCES.txt
-        └── top_level.txt
+Top-level (selected):
+├── assets/                                 # Images, gifs, icons used in docs & visualizations
+├── predpreygrass_env.yml                   # Conda environment specification (pin core deps)
+├── pyproject.toml                          # Build + dependency metadata
+├── requirements.txt                        # Primary Python dependencies
+├── README.md                               # Project overview & usage
+├── clean_ray_gpu.sh                        # Helper script to clean Ray temp dirs (GPU runs)
+├── output/                                 # Generated experiment outputs (benchmarks, variations)
+└── src/
+    └── predpreygrass/
+        ├── README.txt                    # (This file) Detailed structure snapshot
+        ├── pettingzoo/                     # Legacy PettingZoo AEC environment + SB3 training
+        │   ├── envs/                       # AEC env variants (deprecated for current RLlib work)
+        │   ├── eval/                       # Legacy evaluation scripts (PettingZoo path)
+        │   └── train/                      # Legacy SB3 training utilities
+        ├── rllib/                          # Current RLlib multi-agent ecosystem (versioned)
+        │   ├── archive/                    # Older experimental or shelved scripts
+        │   ├── _on_hold_/                  # Temporarily parked ideas / WIP
+        │   ├── hyper_parameter_tuning/     # Shared tuning helpers
+        │   ├── ppg_2_policies/             # 2-policy (predators vs prey) baseline experiment variant
+        │   ├── ppg_4_policies/             # 4-policy mutating agents experiment variant
+        │   ├── ppg_visibility/             # Experiment variant exploring vision / visibility dynamics
+        │   └── readme.md                   # (If present) Legacy RLlib notes
+        └── utils/
+            └── renderer.py                 # Shared rendering logic (legacy path)
+
+Versioning Philosophy:
+Each environment change is captured in a new version directory (v1_0 → v3_1). Older versions are immutable for reproducibility and comparative experiments. New hypotheses = new folder; never retrofit older ones.
+
+Key Concepts (current v3_1 focus):
+* Multi-agent PPO (Ray RLlib) with separate predator/prey/grass roles via policy mapping.
+* Energy dynamics: capped storage, transfer & reproduction efficiencies.
+* Evolutionary loop: birth, aging, mutation (in mutating variants), death.
+* Performance layers: baseline dict implementation + optional array-core vectorized path (movement, decay, engagements).
+* Hyperparameter search: Optuna + ASHA + PBT scripts with custom metric (score_pred) and composite stoppers.
+
+Generated Artifacts (under user home results path, not all tracked here):
+* Ray Tune results: ~/Dropbox/02_marl_results/predpreygrass_results/ray_results/
+* CSV metrics: predator_100_hits.csv, predator_final.csv (auto-appended per trial)
+* Videos / gifs: created via renderer utilities (see assets/images/gifs/)
+
+Maintenance Notes:
+* When adding a new env parameter → update config_env_train.py & config_env_eval.py in the active version.
+* Add a new version folder instead of modifying previous ones.
+* Ensure new agent types appear in sample env used for module spec so their policy modules are registered.
+* Keep README tables (v3_1/README.md) aligned with any energy/reproduction parameter changes.
+* For large-scale runs, prefer specifying RAY_NUM_CPUS to control resource partitioning explicitly.
+
+Legacy vs Current:
+* PettingZoo + SB3 paths retained for historical comparison; current experiments center on RLlib (v3_* and ppg_* variants).
+* Older rllib versions (v1_0, v2_0, v3_0) remain as frozen baselines for evolutionary or performance regression analysis.
+
+Planned / In-Flight (as referenced during development):
+* Further array-core expansion (spawn/reproduction path & autogrow capacity management)
+* Enhanced benchmark script (dict vs array-core vs legacy) with standardized warm-ups
+* Additional Red Queen scenarios (mutating predator-prey arms races)
+
