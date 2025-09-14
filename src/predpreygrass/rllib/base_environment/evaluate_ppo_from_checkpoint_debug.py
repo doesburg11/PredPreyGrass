@@ -28,13 +28,17 @@ import matplotlib.pyplot as plt
 import pygame
 import cv2
 import numpy as np
+import types, sys
+
+SAVE_MOVIE = False
+MOVIE_FILENAME = "simulation.mp4"
+MOVIE_FPS = 10
 
 # --- NumPy checkpoint compatibility shim ------------------------------------
 # Older checkpoints (created with certain NumPy builds) may pickle references
 # to the private path 'numpy._core.numeric'. In newer NumPy (>=1.26+), that
 # internal package path may not exist, causing ModuleNotFoundError on unpickle.
 # We pre-emptively alias it to the public 'numpy.core.numeric' if missing.
-import types, sys
 try:  # Only patch if attribute truly missing
     import importlib
     if 'numpy._core.numeric' not in sys.modules:
@@ -46,11 +50,6 @@ try:  # Only patch if attribute truly missing
         sys.modules['numpy._core.numeric'] = core_numeric
 except Exception as _shim_err:  # Fail silently; only affects legacy checkpoints
     pass
-
-SAVE_MOVIE = False
-MOVIE_FILENAME = "simulation.mp4"
-MOVIE_FPS = 10
-
 
 def env_creator(config):
     return PredPreyGrass(config)
