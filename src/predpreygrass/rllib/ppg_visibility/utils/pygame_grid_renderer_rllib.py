@@ -28,15 +28,45 @@ class GuiStyle:
     halo_eating_color: tuple = (0, 128, 0)  # Bright green
     halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
+    wall_color: tuple = (80, 80, 80)  # Dark gray for walls
 
 
 class PyGameRenderer:
-    def __init__(self, grid_size, cell_size=32, enable_speed_slider=True, enable_tooltips=True, max_steps=None):
+    def __init__(
+        self,
+        grid_size,
+        cell_size=32,
+        enable_speed_slider=True,
+        enable_tooltips=True,
+        max_steps=None,
+        predator_obs_range=None,
+        prey_obs_range=None,
+        show_fov=True,
+        fov_alpha=70,
+        fov_agents=None,
+        fov_respect_walls=False,
+    ):
         self.grid_size = grid_size
         self.cell_size = cell_size
         self.enable_speed_slider = enable_speed_slider
         self.enable_tooltips = enable_tooltips
         self.gui_style = GuiStyle()
+
+        # Observation/FOV overlay configuration
+        self.predator_obs_range = predator_obs_range
+        self.prey_obs_range = prey_obs_range
+        self.show_fov = show_fov
+        self.fov_alpha = fov_alpha  # 0-255
+        # Optional: restrict FOV overlay to specific agent IDs (exact match). If None, draw for all.
+        self.fov_agents = set(fov_agents) if fov_agents is not None else None
+        # If True, clip FOV overlay by line-of-sight (walls block further cells)
+        self.fov_respect_walls = fov_respect_walls
+        # Per-species FOV colors (RGBA)
+        self.fov_color_predator = (255, 0, 0, self.fov_alpha)   # Red with alpha
+        self.fov_color_prey = (0, 0, 255, self.fov_alpha)       # Blue with alpha
+
+        # Cached walls (set of (x,y)) updated every frame in update(); used only when fov_respect_walls=True
+        self._walls_set = set()
 
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
         window_height = self.gui_style.margin_top + grid_size[1] * cell_size + self.gui_style.margin_bottom
@@ -84,10 +114,19 @@ class PyGameRenderer:
     def _using_type_prefix(self, step_data):
         return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
 
-    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None):
+    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
+
+        # Cache walls for FOV LOS clipping (if any)
+        if walls:
+            if isinstance(walls, dict):
+                self._walls_set = {tuple(map(int, w)) for w in walls.values()}
+            else:
+                self._walls_set = {tuple(map(int, w)) for w in walls}
+        else:
+            self._walls_set = set()
 
         self.screen.fill(self.gui_style.background_color)
 
@@ -126,6 +165,10 @@ class PyGameRenderer:
             self.population_history_prey.pop(0)
 
         self._draw_grid()
+        if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
+            self._draw_fov_overlays(step_data)
+        if walls:  # Draw beneath dynamic entities
+            self._draw_walls(walls)
         self._draw_grass(grass_positions, grass_energies)
         self._draw_agents(step_data, agents_just_ate)
         self._draw_legend(step, step_data)
@@ -149,6 +192,122 @@ class PyGameRenderer:
             rect_size = base_rect_size * size_factor
             rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
             pygame.draw.rect(self.screen, color, rect)
+
+    def _draw_walls(self, walls):
+        """Draw static wall cells.
+
+        Accepts set/list of (x,y) or mapping id->(x,y)."""
+        if isinstance(walls, dict):
+            positions = walls.values()
+        else:
+            positions = walls
+        ml = self.gui_style.margin_left
+        mt = self.gui_style.margin_top
+        cs = self.cell_size
+        for pos in positions:
+            x, y = map(int, pos)
+            rect = pygame.Rect(ml + x * cs + 1, mt + y * cs + 1, cs - 2, cs - 2)
+            pygame.draw.rect(self.screen, self.gui_style.wall_color, rect)
+
+    def _draw_fov_overlays(self, step_data):
+        """Draw transparent FOV overlays for each agent.
+
+        Modes:
+        - Default (fov_respect_walls=False): draw a solid square region (legacy behaviour).
+        - LOS-clipped (fov_respect_walls=True): per-cell line-of-sight test; walls block further cells.
+          A wall cell itself is rendered (you can see the wall) but cells behind it along the same line are skipped.
+        """
+        if self.fov_alpha <= 0:
+            return
+        # Create a small surface for blending
+        cs = self.cell_size
+        ml = self.gui_style.margin_left
+        mt = self.gui_style.margin_top
+
+        def _range_for_agent(aid):
+            if "predator" in aid:
+                return self.predator_obs_range
+            return self.prey_obs_range
+
+        los_clip = self.fov_respect_walls and bool(self._walls_set)
+
+        for agent_id, data in step_data.items():
+            if self.fov_agents is not None and agent_id not in self.fov_agents:
+                continue
+            obs_r = _range_for_agent(agent_id)
+            if not obs_r or obs_r <= 0:
+                continue
+            pos = tuple(map(int, data["position"]))
+            offset = (obs_r - 1) // 2
+            x0 = max(0, pos[0] - offset)
+            y0 = max(0, pos[1] - offset)
+            x1 = min(self.grid_size[0] - 1, pos[0] + offset)
+            y1 = min(self.grid_size[1] - 1, pos[1] + offset)
+
+            if "predator" in agent_id:
+                base_color = self.fov_color_predator
+            else:
+                base_color = self.fov_color_prey
+
+            if not los_clip:
+                # Fast path: old solid rectangle
+                px = ml + x0 * cs
+                py = mt + y0 * cs
+                w = (x1 - x0 + 1) * cs
+                h = (y1 - y0 + 1) * cs
+                surf = pygame.Surface((w, h), pygame.SRCALPHA)
+                surf.fill(base_color)
+                self.screen.blit(surf, (px, py))
+                continue
+
+            # LOS-clipped path: iterate cells
+            cell_surf = pygame.Surface((cs, cs), pygame.SRCALPHA)
+            cell_surf.fill(base_color)
+            ax, ay = pos
+
+            for cx in range(x0, x1 + 1):
+                for cy in range(y0, y1 + 1):
+                    if self._cell_visible_from(ax, ay, cx, cy):
+                        px = ml + cx * cs
+                        py = mt + cy * cs
+                        self.screen.blit(cell_surf, (px, py))
+
+    def _cell_visible_from(self, ax, ay, tx, ty):
+        """Return True if target cell (tx,ty) is visible from agent (ax,ay) with wall blocking.
+
+        A wall cell itself is visible; any wall encountered earlier in the ray blocks further cells.
+        Bresenham line algorithm adapted for grid; excluding the origin cell from blocking logic.
+        """
+        if (ax, ay) == (tx, ty):
+            return True
+
+        dx = abs(tx - ax)
+        dy = abs(ty - ay)
+        x, y = ax, ay
+        n = 1 + dx + dy
+        x_inc = 1 if tx > ax else -1
+        y_inc = 1 if ty > ay else -1
+        error = dx - dy
+        dx *= 2
+        dy *= 2
+
+        first = True
+        while n > 0:
+            if not first and (x, y) in self._walls_set:
+                # We hit a wall before reaching target -> target not visible
+                if (x, y) != (tx, ty):
+                    return False
+            if (x, y) == (tx, ty):
+                return True
+            if error > 0:
+                x += x_inc
+                error -= dy
+            else:
+                y += y_inc
+                error += dx
+            n -= 1
+            first = False
+        return True
 
     def _draw_agents(self, step_data, agents_just_ate):
         for agent_id, agent in step_data.items():
@@ -304,6 +463,29 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
         self.screen.blit(font.render("Grass", True, (0, 0, 0)), (x + 30, y))
         y += spacing
+
+        # Wall
+        pygame.draw.rect(self.screen, self.gui_style.wall_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
+        self.screen.blit(font.render("Wall", True, (0, 0, 0)), (x + 30, y))
+        y += spacing
+
+        if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
+            # Predator FOV legend
+            pygame.draw.rect(
+                self.screen,
+                (self.fov_color_predator[0], self.fov_color_predator[1], self.fov_color_predator[2]),
+                pygame.Rect(x + r - s // 2, y + r - s // 2, s, s),
+            )
+            self.screen.blit(font.render("Predator FOV", True, (0, 0, 0)), (x + 30, y))
+            y += spacing
+            # Prey FOV legend
+            pygame.draw.rect(
+                self.screen,
+                (self.fov_color_prey[0], self.fov_color_prey[1], self.fov_color_prey[2]),
+                pygame.Rect(x + r - s // 2, y + r - s // 2, s, s),
+            )
+            self.screen.blit(font.render("Prey FOV", True, (0, 0, 0)), (x + 30, y))
+            y += spacing
 
         return y
 
