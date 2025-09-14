@@ -147,20 +147,31 @@ if __name__ == "__main__":
             },
             policy_mapping_fn=policy_mapping_fn,
         )
+        .learners(
+            num_gpus_per_learner=1,
+            num_learners=1,
+        )
         .training(
-            train_batch_size=1024,
+            train_batch_size_per_learner=1024,
+            minibatch_size=128,
+            num_epochs=30,
             gamma=0.99,
             lr=0.0003,
+            entropy_coeff=0.0,
+            vf_loss_coeff=1.0,
+            clip_param=0.3,
+            kl_coeff=0.2,
+            kl_target=0.01,
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .env_runners(
-            num_env_runners=4,
-            num_envs_per_env_runner=4,
+            num_env_runners=8,
+            num_envs_per_env_runner=3,
+            num_cpus_per_env_runner=3,
             rollout_fragment_length="auto",
             sample_timeout_s=600,
-            num_cpus_per_env_runner=1,
         )
-        .resources(num_cpus_for_main_process=2)
+        .resources(num_cpus_for_main_process=4)
         .callbacks(EpisodeReturn)
     )
 
@@ -171,7 +182,7 @@ if __name__ == "__main__":
             stop={"training_iteration": 1000},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
-                checkpoint_frequency=5,
+                checkpoint_frequency=10,
                 checkpoint_at_end=True,  # Ensure a checkpoint is saved at the end
             ),
         ),
