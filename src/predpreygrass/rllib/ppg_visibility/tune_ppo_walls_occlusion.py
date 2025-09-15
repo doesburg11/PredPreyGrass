@@ -28,7 +28,8 @@ def get_config_ppo():
     elif num_cpus == 8:
         from predpreygrass.rllib.ppg_visibility.config.config_ppo_cpu import config_ppo
     else:
-        raise RuntimeError(f"Unsupported cpu_count={num_cpus}. Please add matching config_ppo.")
+        # Default to CPU config for other CPU counts to keep training usable across machines.
+        from predpreygrass.rllib.ppg_visibility.config.config_ppo_cpu import config_ppo
     return config_ppo
 
 
@@ -62,7 +63,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_4_POLICIES_{timestamp}"
+    experiment_name = f"PPO_LOS_REJECTED_MOVES_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
