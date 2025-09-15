@@ -6,7 +6,8 @@ Additions:
             * Stored in `self.wall_positions` (set of (x,y)).
             * Painted into observation channel 0 (binary 1=wall).
             * Agents (predator, prey, grass placement) avoid wall cells at reset.
-            * Movement into a wall cell is disallowed (agent stays in place, still pays movement energy cost as computed for attempted move).
+            * Movement into a wall cell is disallowed (agent stays in place, 
+              still pays movement energy cost as computed for attempted move).
 """
 # external libraries (Ray optional for lightweight diagnostics)
 import gymnasium
@@ -138,6 +139,13 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
+
+        # Per-step infos accumulator and last-move diagnostics
+        self._pending_infos = {}
+        self._last_move_block_reason = {}
+        # Global counters (optional diagnostics)
+        self.los_rejected_moves_total = 0
+        self.los_rejected_moves_by_type = {"predator": 0, "prey": 0}
 
         self.agent_activation_counts = {agent_id: 0 for agent_id in self.possible_agents}
         self.death_agents_stats = {}
@@ -276,6 +284,8 @@ class PredPreyGrass(MultiAgentEnv):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
+        # Reset per-step infos
+        self._pending_infos = {}
 
         # step 0: Check for truncation
         truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
@@ -337,6 +347,9 @@ class PredPreyGrass(MultiAgentEnv):
         truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
         truncations["__all__"] = False  # already handled at the beginning of the step        # Global termination and truncation
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
+
+        # Provide infos accumulated during the step
+        infos = {agent: self._pending_infos.get(agent, {}) for agent in self.agents}
 
         # Sort agents for debugging
         self.agents.sort()
@@ -406,15 +419,20 @@ class PredPreyGrass(MultiAgentEnv):
         new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
 
         agent_type_nr = 1 if "predator" in agent else 2
+        # Default: no block
+        self._last_move_block_reason[agent] = None
         # Block entry into wall cells
         if new_position in self.wall_positions:
             new_position = current_position
+            self._last_move_block_reason[agent] = "wall"
         elif self.grid_world_state[agent_type_nr, *new_position] > 0:
             new_position = current_position
+            self._last_move_block_reason[agent] = "occupied"
         elif self.respect_los_for_movement and new_position != current_position:
             # Perform LOS check; if blocked by any wall (excluding endpoints) cancel move.
             if not self._line_of_sight_clear(current_position, new_position):
                 new_position = current_position
+                self._last_move_block_reason[agent] = "los"
 
         return new_position
 
@@ -698,6 +716,19 @@ class PredPreyGrass(MultiAgentEnv):
                 old_position = self.agent_positions[agent]
                 new_position = self._get_move(agent, action)
                 self.agent_positions[agent] = new_position
+                # Populate per-step infos and counters for LOS rejections
+                reason = self._last_move_block_reason.get(agent)
+                agent_kind = "predator" if "predator" in agent else "prey"
+                if reason == "los":
+                    self.los_rejected_moves_total += 1
+                    self.los_rejected_moves_by_type[agent_kind] += 1
+                    self._pending_infos.setdefault(agent, {})["los_rejected"] = 1
+                    self._pending_infos[agent]["move_blocked_reason"] = reason
+                else:
+                    # Ensure key exists for easier aggregation
+                    self._pending_infos.setdefault(agent, {})["los_rejected"] = 0
+                    if reason:
+                        self._pending_infos[agent]["move_blocked_reason"] = reason
                 move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
                 self.agent_energies[agent] -= move_cost
                 self._per_agent_step_deltas[agent]["move"] = -move_cost

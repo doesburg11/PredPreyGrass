@@ -1,6 +1,6 @@
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass environment (ppg_4_policies) for interactive debugging.
+and runs them in the PredPreyGrass environment (ppg_visibility) for interactive debugging.
 
 This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
 making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.ppg_4_policies.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.ppg_4_policies.config.config_env_train_2_policies import config_env
-from predpreygrass.rllib.ppg_4_policies.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.ppg_4_policies.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.ppg_visibility.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.ppg_visibility.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.ppg_visibility.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.ppg_visibility.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -48,6 +48,56 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 
+def _load_training_env_config_from_run(checkpoint_path, base_cfg):
+    """
+    Try to locate a run_config.json near the checkpoint and merge its env settings
+    into the provided base_cfg. This aligns evaluation observations with the
+    shapes the policy network was trained on (avoids matmul shape errors).
+    """
+    candidates = [
+        os.path.join(os.path.dirname(checkpoint_path), "run_config.json"),
+        os.path.join(os.path.dirname(os.path.dirname(checkpoint_path)), "run_config.json"),
+    ]
+    training_env_cfg = None
+    for cand in candidates:
+        if os.path.isfile(cand):
+            try:
+                with open(cand, "r") as f:
+                    rc = json.load(f)
+                # Prefer explicit env_config if present; else, fall back to top-level keys
+                if isinstance(rc, dict):
+                    if isinstance(rc.get("env_config"), dict):
+                        training_env_cfg = rc["env_config"]
+                    else:
+                        # Heuristic: intersect with known keys in base_cfg
+                        training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
+                break
+            except Exception:
+                pass
+
+    if not isinstance(training_env_cfg, dict):
+        return base_cfg  # nothing to merge
+
+    # Only override observation-critical keys to avoid changing wall layout requests
+    obs_keys = {
+        "grid_size",
+        "num_obs_channels",
+        "predator_obs_range",
+        "prey_obs_range",
+        "include_visibility_channel",
+        "mask_observation_with_visibility",
+        "respect_los_for_movement",
+        # Action ranges can affect obs encoding in some setups; include for safety
+        "type_1_action_range",
+        "type_2_action_range",
+    }
+    merged = dict(base_cfg)
+    for k in obs_keys:
+        if k in training_env_cfg:
+            merged[k] = training_env_cfg[k]
+    return merged
+
+
 def policy_mapping_fn(agent_id, *args, **kwargs):
     parts = agent_id.split("_")
     if len(parts) >= 3:
@@ -71,10 +121,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/website_experiments/"
-    checkpoint_root = "PPO_4_POLICIES_2025-09-13_08-21-49/PPO_PredPreyGrass_eeb8d_00000_0_2025-09-13_08-21-49/"
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_dir)
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-15_13-57-36/PPO_PredPreyGrass_2bd25_00000_0_2025-09-15_13-57-36/"
+    checkpoint_dir = "checkpoint_000089"
+    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
@@ -92,15 +142,35 @@ def setup_environment_and_visualizer(now):
 
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
 
-    env = env_creator(config=config_env)
+    # Build config based on config_env and align observation-related keys with training run config
+    cfg = dict(config_env)
+    cfg = _load_training_env_config_from_run(checkpoint_path, cfg)
+
+    env = env_creator(config=cfg)
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(
-        grid_size, 
-        cell_size=32, 
-        enable_speed_slider=True, 
-        enable_tooltips=True,
-        max_steps=config_env.get("max_steps", 1000)
-    )
+    # Try to configure FOV overlay similar to random policy, but tolerate legacy renderer
+    try:
+        visualizer = PyGameRenderer(
+            grid_size,
+            cell_size=32,
+            enable_speed_slider=True,
+            enable_tooltips=True,
+            max_steps=cfg.get("max_steps", 1000),
+            predator_obs_range=cfg.get("predator_obs_range"),
+            prey_obs_range=cfg.get("prey_obs_range"),
+            show_fov=True,
+            fov_alpha=40,
+            fov_agents=["type_1_predator_0", "type_1_prey_0"],
+            fov_respect_walls=True,
+        )
+    except TypeError:
+        visualizer = PyGameRenderer(
+            grid_size,
+            cell_size=32,
+            enable_speed_slider=True,
+            enable_tooltips=True,
+            max_steps=cfg.get("max_steps", 1000),
+        )
 
     if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
@@ -132,13 +202,24 @@ def step_backwards_if_requested(
 
             ceviz.record(agent_ids=env.agents)
             pdviz.record(env.death_cause_prey)
-            visualizer.update(
-                grass_positions=env.grass_positions,
-                grass_energies=env.grass_energies,
-                step=env.current_step,
-                agents_just_ate=env.agents_just_ate,
-                per_step_agent_data=env.per_step_agent_data,
-            )
+            try:
+                visualizer.update(
+                    grass_positions=env.grass_positions,
+                    grass_energies=env.grass_energies,
+                    step=env.current_step,
+                    agents_just_ate=env.agents_just_ate,
+                    per_step_agent_data=env.per_step_agent_data,
+                    walls=getattr(env, "wall_positions", None),
+                )
+            except TypeError:
+                # Fallback for legacy renderer without `walls` kwarg
+                visualizer.update(
+                    grass_positions=env.grass_positions,
+                    grass_energies=env.grass_energies,
+                    step=env.current_step,
+                    agents_just_ate=env.agents_just_ate,
+                    per_step_agent_data=env.per_step_agent_data,
+                )
             control.fps_slider_rect = visualizer.slider_rect
             pygame.time.wait(100)
             control.step_backward = False
@@ -183,13 +264,23 @@ def step_forward(
     if hasattr(ceviz, "record_energy"):
         ceviz.record_energy(env.get_total_energy_by_type())
 
-    visualizer.update(
-        grass_positions=env.grass_positions,
-        grass_energies=env.grass_energies,
-        step=env.current_step,
-        agents_just_ate=env.agents_just_ate,
-        per_step_agent_data=env.per_step_agent_data,
-    )
+    try:
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+            walls=getattr(env, "wall_positions", None),
+        )
+    except TypeError:
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+        )
     control.fps_slider_rect = visualizer.slider_rect
 
     if SAVE_MOVIE:
@@ -211,13 +302,24 @@ def step_forward(
 
 
 def render_static_if_paused(env, visualizer):
-    visualizer.update(
-        grass_positions=env.grass_positions,
-        grass_energies=env.grass_energies,
-        step=env.current_step,
-        agents_just_ate=env.agents_just_ate,
-        per_step_agent_data=env.per_step_agent_data,
-    )
+    try:
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+            walls=getattr(env, "wall_positions", None),
+        )
+    except TypeError:
+        # Fallback for legacy renderer without `walls` kwarg
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+        )
 
 
 def parse_uid(uid):
@@ -313,7 +415,7 @@ def print_ranked_fitness_summary(env):
 
 
 if __name__ == "__main__":
-    seed = 4
+    seed = 5
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))

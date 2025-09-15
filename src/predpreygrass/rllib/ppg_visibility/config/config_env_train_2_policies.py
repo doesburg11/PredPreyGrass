@@ -66,6 +66,16 @@ config_env = {
     "verbose_decay": False,
     "verbose_reproduction": False,
     "debug_mode": False,
+    # Visibility & LOS behavior
+    # When True, dynamic observation channels (predators/prey/grass) are masked by
+    # a per-agent line-of-sight (LOS) mask so entities behind walls are hidden from the agent.
+    # This does NOT change the number of observation channels.
+    "mask_observation_with_visibility": True,
+    # Optionally append a visibility channel for debugging/learning signal purposes.
+    # Keep this False if your trained checkpoints assume a fixed num_obs_channels.
+    "include_visibility_channel": True,
+    # Optionally restrict movement so that agents cannot move to cells without clear LOS.
+    "respect_los_for_movement": True,
     # Energy intake caps
     "max_energy_gain_per_grass": float('inf'),
     "max_energy_gain_per_prey": float('inf'),
