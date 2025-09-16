@@ -1,24 +1,27 @@
-# [mutating_agents]: Predator-Prey-Grass mutating agents environment
+# Predator-Prey-Grass mutating agents environment
 
 
 <p align="center">
-    <b>Evaluation of trained nutating agents envrionment</b></p>
+    <b>Evaluation of trained mutating agents environment</b></p>
 <p align="center">
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000_two_speed.gif" width="600" height="500" />
 </p>
 
 ## Additional features with respect to the [base-environment](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/base_environment)
 
-* At the start of the evaluation, the Predator and Prey populations only consists of "slow" agents.
-  * "Slow" agents (Speed 1): can move in a (9-position) [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood) range.
+* At the start of *training*, the Predator and Prey populations both consists of "slow" agents as well as "fast" agents, in order to be trained alongside each other. Thus, in total four policies are trained together: 1) type_1_predator, 2) type_2_predator, 3) type_1_prey and 4) type_2_prey.
+    * "Slow" agents (type 1): can move in a (9-position) [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood) range.
+    * "Fast" agents (type 2): can move in a (25-position) extended Moore neighborhood range. Consequently, the high-speed agent can move faster than the low-speed agent across the gridworld per simulation step.
+
+* At the start of *evaluation*, the Predator and Prey populations, however, *only* consists of "slow" agents.
+  
 
 * At reproduction, the offspring of both "slow" Predators and Prey, can mutate with a probability of 5% towards "fast" agents (and vice versa).
-  * "Fast" agents (Speed 2): can move in a (25-position) extended Moore neigborhood range. Consequently, the high-speed agent can move faster across the gridworld per simulation step.
 
 
 <p align="center">
     <img align="center" src="../../../../assets/images/readme/high-low-speed-agent.png" width="300" height="135"/>
-    <p align="center"><b>Action spaces of low-speed (Speed 1) and high-speed (Speed 2) agents</b></p>
+    <p align="center"><b>Action spaces of low-speed (type 1) and high-speed (type 2) agents</b></p>
 </p>
 
 
@@ -26,7 +29,7 @@
 
 **Mutation and Selection**: When agents reproduce, they may randomly mutate (switching speed class). This introduces a natural (or more precise: *artificial*) selection pressure shaping the agent population over time.
 
-The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rappidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
+The base-environment setup is changed to enable mutations with the reproduction of a agents. When all 4 agents (low-speed-predator, high-speed-predator, low-speed-prey and high-speed-prey) are decentralized trained, it appears that average rewards of low-speed predator and prey agents **first increase rapidly** but **taper off after some time** as depicted below.The average rewards of the high-speed agents on the other hand still increase after this inflection point.
 
 <p align="center">
     <img src="../../../../assets/images/readme/tensorboard_incl_and_excl_speed_2.png" width="880" height="480"/>
@@ -35,7 +38,7 @@ The base-environment setup is changed to enable mutations with the reproduction 
 
 The training results suggests that the population of the low-speed agents diminishes relative to the population of high-speed agents, since (average) rewards are directly and solely linked to reproduction success for all agent groups. This crowding out of low-speed agents occurs **without any manual reward shaping** or explicit encouragement. High-speed agents—once introduced via mutation—apparently are more successful at acquiring energy and reproducing. As a result, they overtake the population at some point during the evaluation.
 
-Moreoever, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is utlimately replaced by high-speed agents for predators as well as prey as displayed below. Note that after this shift the low-speed agents are not fully eradicated, but temporarily pop up due to back mutation.
+Moreover, this hypothesis is supported further when evaluating the trained policies in a low-speed agent only environment at the start. It appears that when we initialize the evaluation with **only** low-speed predators and low-speed-prey, the population of low-speed agents is ultimately replaced by high-speed agents for predators as well as prey as displayed below. Note that after this shift the low-speed agents are not fully eradicated, but temporarily pop up due to back mutation.
 
 <p align="center">
     <img src="../../../../assets/images/readme/high_speed_agent_population_share.png" width="450" height="270"/>
@@ -51,7 +54,7 @@ This is an example of **"natural" selection** within an artificial system:
 
 ### Co-Evolution and the Red Queen Effect
 
-The mutual shift of both **prey and predator populations toward high-speed variants** reflects also a classic [**Red Queen dynamic**](https://en.wikipedia.org/wiki/Red_Queen_hypothesis): each species evolves not to get ahead absolutely, but also to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward. It is noteworthy that in this setup prey start to mutuate first.
+The mutual shift of both **prey and predator populations toward high-speed variants** reflects also a classic [**Red Queen dynamic**](https://en.wikipedia.org/wiki/Red_Queen_hypothesis): each species evolves not to get ahead absolutely, but also to keep up with the other. Faster prey escape better, which in turn favors faster predators. This escalating cycle is a hallmark of **co-evolutionary arms races**—where the relative advantage remains constant, but the baseline performance is continually ratcheted upward. It is noteworthy that in this setup prey start to mutate first.
 
 This ecosystem, therefore, is not only an instance of artificial selection—it’s also a model of **evolution in motion**, where fitness is relative, and adaptation is key.
 
