@@ -33,7 +33,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect)
 
 * Hyperparameter tuning base environment - Population Based Training
-    * [Implementation](src/predpreygrass/rllib/v3_0/tune_ppo_predpreygrass_pbt_dev_3_works.py)
+    * [Implementation](src/predpreygrass/rllib/hyper_paramter_tuning/tune_population_based_training.py)
 
 
 ## Installation of the repository
@@ -58,10 +58,15 @@ This repo explores the interplay between **nature** (inherited traits via reprod
         conda install -y -c conda-forge gcc=14.2.0
         ```
 ## Quick start
-Run the pre trained model in a Visual Studio Code terminal:
+Run the pre trained policy in a Visual Studio Code terminal:
 
 ```bash
 python ./src/predpreygrass/rllib/base_environment/evaluate_ppo_from_checkpoint_debug.py
+
+```
+Or a random policy:
+```bash
+python ./src/predpreygrass/rllib/base_environment/random_policy.py
 
 ```
 
