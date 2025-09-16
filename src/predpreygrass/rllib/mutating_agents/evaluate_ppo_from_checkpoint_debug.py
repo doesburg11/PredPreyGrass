@@ -35,6 +35,11 @@ import pygame
 import cv2
 import numpy as np
 
+SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
+SAVE_MOVIE = False
+MOVIE_FILENAME = "simulation.mp4"
+MOVIE_FPS = 10
+
 # --- NumPy checkpoint compatibility shim ------------------------------------
 # Some older checkpoints reference 'numpy._core.numeric' during pickle load.
 # Provide an alias to 'numpy.core.numeric' if missing to avoid ModuleNotFoundError.
@@ -47,15 +52,6 @@ try:
         sys.modules['numpy._core.numeric'] = core_numeric
 except Exception:  # Silent; only affects legacy checkpoints
     pass
-
-<<<<<<< HEAD:src/predpreygrass/rllib/ppg_4_policies/evaluate_ppo_from_checkpoint_debug.py
-SAVE_EVAL_RESULTS = False
-=======
-SAVE_EVAL_RESULTS = False  # Save plots of evolution and prey death causes
->>>>>>> 3479ee752033bdf227d074d6bd7c8d76fb5176b7:src/predpreygrass/rllib/mutating_agents/evaluate_ppo_from_checkpoint_debug.py
-SAVE_MOVIE = False
-MOVIE_FILENAME = "simulation.mp4"
-MOVIE_FPS = 10
 
 
 def env_creator(config):
