@@ -18,8 +18,8 @@ Top-level (selected):
         ├── rllib/                          # Current RLlib multi-agent ecosystem (versioned)
         │   ├── _on_hold_/                  # Temporarily parked ideas / WIP
         │   ├── hyper_parameter_tuning/     # Shared tuning helpers
-        │   ├── ppg_2_policies/             # 2-policy (predators vs prey) baseline experiment variant
-        │   ├── ppg_4_policies/             # 4-policy mutating agents experiment variant
+        │   ├── base_evironment/            # 2-policy (predators vs prey) baseline experiment variant
+        │   ├── mutating_agents/            # 4-policy mutating agents experiment variant
         │   ├── ppg_visibility/             # Experiment variant exploring vision / visibility dynamics
         │   └── readme.md                   # (If present) Legacy RLlib notes
         └── utils/
