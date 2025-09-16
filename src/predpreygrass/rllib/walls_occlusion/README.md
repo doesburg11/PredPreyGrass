@@ -1,56 +1,85 @@
-## 🔄 Environment Update: Energy and Reproduction Dynamics (v2.4)
+# Walls & Occlusion Experiments in PredPreyGrass
 
-This update introduces a set of critical changes to the predator–prey–grass environment to better reflect **thermodynamic constraints**, **biological realism**, and support for **emergent cooperative behavior**.
+This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
 
-The core aim is to move beyond simple reward-driven dynamics by enforcing physical and ecological limitations that shape agent strategy in a more naturalistic way.
+## Overview
 
----
+In the PPG environment, agents (predators and prey) interact on a gridworld with grass as a renewable resource. Walls can be placed to create obstacles, corridors, or complex mazes. When occlusion is enabled, walls block agents' line of sight, affecting both their observations and their ability to move. This setup allows for the study of:
+- How spatial structure and visibility constraints shape co-evolutionary dynamics
+- The emergence of new strategies in response to environmental complexity
+- The robustness of learned behaviors to changes in wall layout or occlusion rules
 
-### 🔧 Key Differences Compared to Earlier Version
+## Key Features
 
-| Feature | Before (v1) | Now (v2.1, this version) | Why It Matters |
-|--------|--------------|---------------------------|----------------|
-| **Energy intake per event** | Unlimited (agents could gain all energy from a single prey or grass patch) | ✅ **Capped** per prey/grass interaction (configurable) | Models digestion limits and energy conversion inefficiency; encourages sharing and delayed consumption |
-| **Absolute energy level** | Unlimited (agents could theoretically accumulate extreme energy levels if not reproducing) | ✅ **Capped** at a species-specific max (configurable) | Reflects biological storage limits; prevents dominance by a few hoarders |
-| **Reproduction trigger** | Automatic upon energy threshold | ✅ **Chance-based** (configurable probability) | Introduces variability and risk, encouraging strategic pacing |
-| **Reproduction frequency** | No restriction; agents could reproduce every step if above threshold | ✅ **Cooldown between reproductions** (in time steps) | Simulates gestation/recovery time; prevents rapid, unrealistic reproduction loops |
-| **Energy loss per step/move** | Configurable | ✅ Still supported | Maintains entropy-producing behavior and energy cost |
-| **Energy transfer efficiency (eating)** | 100% efficient (all energy from grass/prey is gained) | ✅ **Configurable η < 1.0** (e.g., 0.85) | Models digestive/metabolic loss; aligns with Second Law; encourages more frequent foraging |
-| **Reproduction energy efficiency** | 100% transfer (all parental energy passed to offspring) | ✅ **Configurable η < 1.0** (e.g., 0.85) | Models biological inefficiency in reproduction; reduces runaway population loops |
+- **Manual and Dynamic Wall Placement:**
+  - Walls can be placed manually (via config) or moved/reshuffled dynamically during training.
+  - Dynamic walls can change every N steps, forcing agents to adapt to a non-stationary environment.
+- **Occlusion (LOS Masking):**
+  - When enabled, agents' observations are masked by line-of-sight; they cannot see through walls.
+  - Movement can also be restricted to only those cells visible via LOS.
+- **Flexible Experimentation:**
+  - Easily switch between static/dynamic walls, with or without occlusion, by changing config flags.
+  - Supports a variety of wall layouts: mazes, chambers, forests, arenas, etc.
 
----
+## How It Works
 
-### 🔬 Why These Changes Matter
+- **Configuring Walls:**
+  - Set `wall_placement_mode` to `manual` and provide a list of `(x, y)` coordinates in `manual_wall_positions` for static layouts.
+  - For dynamic walls, set `dynamic_walls=True` and specify `dynamic_wall_update_freq` (steps between wall updates).
+- **Enabling Occlusion:**
+  - Set `mask_observation_with_visibility=True` to mask observations by LOS.
+  - Set `respect_los_for_movement=True` to restrict movement to LOS-visible cells.
+  - Optionally, set `include_visibility_channel=True` to add a visibility mask as an extra observation channel.
+- **Running Experiments:**
+  - Use the provided `tune_ppo_walls_occlusion.py` (or similar) script to launch training with your chosen wall/occlusion settings.
+  - Evaluation scripts (e.g., `evaluate_ppo_from_checkpoint_debug.py`) visualize agent behavior and wall/LOS overlays.
 
-- 🧪 **Thermodynamic Consistency**: Energy is no longer perfectly conserved during transfer — matching the 2nd Law. All biological processes now involve energy dissipation.
-- 🌱 **Ecological Realism**: Energy transfer caps and losses match real-world biology (digestion, storage limits, reproduction cost).
-- 🤝 **Supports Emergent Social Behavior**:
-  - Overfeeding is discouraged.
-  - Reproduction becomes a meaningful investment.
-  - Resource turnover dynamics allow sharing, patience, and differentiation.
-
----
-
-### 🛠️ New Config Parameters
-
-You can configure the updated energy and reproduction rules with the following fields in `config_env_train.py` and `config_env_eval.py`:
+## Example Config Snippet
 
 ```python
-# Energy intake caps
-"max_energy_gain_per_grass": 1.5,
-"max_energy_gain_per_prey": 3.5,
+config_env = {
+    # ... other env settings ...
+    "wall_placement_mode": "manual",
+    "manual_wall_positions": [(6,6), (7,6), ...],
+    "dynamic_walls": True,
+    "dynamic_wall_update_freq": 50,  # Move walls every 50 steps
+    "mask_observation_with_visibility": True,
+    "respect_los_for_movement": True,
+    "include_visibility_channel": True,
+}
+```
 
-# Absolute energy caps
-"max_energy_predator": 20.0,
-"max_energy_prey": 14.0,
+## Suggested Wall Layouts
+- **Central Maze:** Spiral or labyrinth in the center.
+- **Chambers:** Multiple rooms with narrow corridors.
+- **Forest:** Scattered single-tile obstacles.
+- **Arena:** Perimeter walls with a few gates.
+- **Dynamic:** Walls move or change during training.
 
-# Reproduction control
-"reproduction_cooldown_steps": 10,
-"reproduction_chance_predator": 0.85,
-"reproduction_chance_prey": 0.90,
+## Research Questions
+- How do static vs. dynamic walls affect predator/prey strategies?
+- Does occlusion promote more robust or generalizable behaviors?
+- Can agents adapt to non-stationary environments with moving obstacles?
 
-# Energy transfer efficiency (digestion loss)
-"energy_transfer_efficiency": 0.85,
+## Usage
+1. Edit the config file to set your desired wall and occlusion parameters.
+2. Run the training script:
+   ```bash
+   python -u src/predpreygrass/rllib/ppg_visibility/tune_ppo_walls_occlusion.py | tee logs/last_run_tune.log
+   ```
+3. Visualize and evaluate results using the provided evaluation scripts.
 
-# Reproduction efficiency (offspring receives η × parent energy investment)
-"reproduction_energy_efficiency": 0.85,
+## Files
+- `tune_ppo_walls_occlusion.py`: Main training script for wall/occlusion experiments.
+- `evaluate_ppo_from_checkpoint_debug.py`: Visual evaluation with wall and LOS overlays.
+- `config_env_train_2_policies.py`: Example config with manual/dynamic wall options.
+- `README.md`: This documentation.
+
+## Tips
+- For reproducibility, always snapshot your config and wall layout with each experiment.
+- Try both static and dynamic walls to see how agent strategies change.
+- Use the visibility channel for richer policy learning, or mask observations for harder partial observability.
+
+---
+
+For more details, see the main project README and the code comments in each script.
