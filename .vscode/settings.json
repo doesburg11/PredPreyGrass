@@ -25,6 +25,8 @@
         "./src"
     ],
     "cSpell.words": [
+        "matplot",
+        "predpreygrass",
         "pygame",
         "rllib"
     ]
