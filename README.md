@@ -17,20 +17,20 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 ## Experiments:
 
 * Training and evaluating base environment
-    * [Implementation](src/predpreygrass/rllib/ppg_2_policies)
+    * [Implementation](src/predpreygrass/rllib/base_environment)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg)
 
 * Training and evaluating mutating agents environment
-    * [Implementation](src/predpreygrass/rllib/ppg_4_policies)
-    * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/ppg_4_policies#ppg_4_policies-predator-prey-grass-mutating-agents-environment)
+    * [Implementation](src/predpreygrass/rllib/mutating_agents)
+    * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/mutating_agents#mutating_agents-predator-prey-grass-mutating-agents-environment)
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey
     * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey
-    * [Implementation](src/predpreygrass/rllib/ppg_4_policies)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/ppg_4_policies/#co-evolution-and-the-red-queen-effect)
+    * [Implementation](src/predpreygrass/rllib/mutating_agents)
+    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect)
 
 * Hyperparameter tuning base environment - Population Based Training
     * [Implementation](src/predpreygrass/rllib/v3_0/tune_ppo_predpreygrass_pbt_dev_3_works.py)
@@ -61,7 +61,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 Run the pre trained model in a Visual Studio Code terminal:
 
 ```bash
-python ./src/predpreygrass/rllib/ppg_2_policies/evaluate_ppo_from_checkpoint_debug.py
+python ./src/predpreygrass/rllib/base_environment/evaluate_ppo_from_checkpoint_debug.py
 
 ```
 
