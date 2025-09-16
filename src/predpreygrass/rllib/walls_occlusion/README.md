@@ -1,5 +1,11 @@
 # Walls & Occlusion Experiments in PredPreyGrass
 
+<p align="center">
+    <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
+<p align="center">
+    <img align="center" src="./assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
+</p>
+
 This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
 
 ## Overview
@@ -15,7 +21,7 @@ In the PPG environment, agents (predators and prey) interact on a gridworld with
   - Walls can be placed manually (via config) or moved/reshuffled dynamically during training.
   - Dynamic walls can change every N steps, forcing agents to adapt to a non-stationary environment.
 - **Occlusion (LOS Masking):**
-  - When enabled, agents' observations are masked by line-of-sight; they cannot see through walls.
+  - When enabled, agents' observations are masked by line-of-sight; they cannot see through walls. The Field Of Vision (FOV) in the gridworld is determined by the [*Bresenham's line algorithm*](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
   - Movement can also be restricted to only those cells visible via LOS.
 - **Flexible Experimentation:**
   - Easily switch between static/dynamic walls, with or without occlusion, by changing config flags.
