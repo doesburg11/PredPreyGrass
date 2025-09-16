@@ -1,6 +1,6 @@
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass environment (ppg_visibility) for interactive debugging.
+and runs them in the PredPreyGrass environment (walls_occlusion) for interactive debugging.
 
 This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
 making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.ppg_visibility.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.ppg_visibility.config.config_env_train_2_policies import config_env
-from predpreygrass.rllib.ppg_visibility.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.ppg_visibility.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -397,7 +397,7 @@ def print_ranked_fitness_summary(env):
                 "reward": stats.get("cumulative_reward", 0.0),
                 "lifetime": lifetime,
                 "offspring": stats.get("offspring_count", 0),
-                "efficiency": stats.get("offspring_count", 0) / max(stats.get("energy_spent", 1e-6), 1e-6),
+                "off_per_step": stats.get("offspring_count", 0) / lifetime if lifetime > 0 else 0.0,
             }
         )
 
@@ -410,8 +410,21 @@ def print_ranked_fitness_summary(env):
                 f"R={entry['reward']:.2f} | "
                 f"Life={entry['lifetime']} | "
                 f"Off={entry['offspring']} | "
-                f"Eff={entry['efficiency']:.2f}"
+                f"Off/100 Steps={100*entry['off_per_step']:.2f}"
             )
+
+        # Print averages for this group
+        n = len(group_stats[group])
+        if n > 0:
+            avg_reward = sum(e['reward'] for e in group_stats[group]) / n
+            avg_life = sum(e['lifetime'] for e in group_stats[group]) / n
+            avg_offspring = sum(e['offspring'] for e in group_stats[group]) / n
+            avg_off_per_step = sum(e['off_per_step'] for e in group_stats[group]) / n
+            print(f"{'(Averages)':25} | "
+                  f"R={avg_reward:.2f} | "
+                  f"Life={avg_life:.1f} | "
+                  f"Off={avg_offspring:.2f} | "
+                  f"Off/100 Steps={100*avg_off_per_step:.2f}")
 
 
 if __name__ == "__main__":
