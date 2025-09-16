@@ -7,7 +7,7 @@
     <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000_two_speed.gif" width="600" height="500" />
 </p>
 
-## Additional features with respect to the [base-environment](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/v1_0)
+## Additional features with respect to the [base-environment](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/base_environment)
 
 * At the start of the evaluation, the Predator and Prey populations only consists of "slow" agents.
   * "Slow" agents (Speed 1): can move in a (9-position) [Moore neighborhood](https://en.wikipedia.org/wiki/Moore_neighborhood) range.
