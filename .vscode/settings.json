@@ -23,5 +23,9 @@
     },
     "python.analysis.extraPaths": [
         "./src"
+    ],
+    "cSpell.words": [
+        "pygame",
+        "rllib"
     ]
 }
