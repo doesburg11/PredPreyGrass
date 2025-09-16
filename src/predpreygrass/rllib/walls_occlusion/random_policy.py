@@ -4,18 +4,18 @@ No backward stepping is implemented in this version,
 because that is pointless for debugging and testing
 with a random policy.
 """
-"""Random policy viewer with wall visualization (ppg_visibility variant).
+"""Random policy viewer with wall visualization (walls_occlusion variant).
 
-This script intentionally imports the local ppg_visibility environment & renderer
+This script intentionally imports the local walls_occlusion environment & renderer
 so that the `walls` parameter on `PyGameRenderer.update` is available. If you
-accidentally import the older ppg_visibility renderer, the call with `walls=`
+accidentally import the older walls_occlusion renderer, the call with `walls=`
 will raise a TypeError (unexpected keyword). Ensure the imports below stay
-pointing at `ppg_visibility` when using walls.
+pointing at `walls_occlusion` when using walls.
 """
 
-from predpreygrass.rllib.ppg_visibility.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.ppg_visibility.config.config_env_train_2_policies import config_env as base_config_env
-from predpreygrass.rllib.ppg_visibility.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame
