@@ -39,7 +39,7 @@ from collections import defaultdict
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = False
+SAVE_MOVIE = True
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
@@ -123,7 +123,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-15_13-57-36/PPO_PredPreyGrass_2bd25_00000_0_2025-09-15_13-57-36/"
-    checkpoint_dir = "checkpoint_000089"
+    checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
