@@ -3,7 +3,7 @@
 <p align="center">
     <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
 <p align="center">
-    <img align="center" src="./assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
+    <img align="center" src="../../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
 </p>
 
 This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
