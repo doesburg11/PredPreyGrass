@@ -772,6 +772,7 @@ class PredPreyGrass(MultiAgentEnv):
         stat["final_energy"] = self.agent_energies[agent]
         steps = max(stat["avg_energy_steps"], 1)
         stat["avg_energy"] = stat["avg_energy_sum"] / steps
+        # Fix: Always use the agent's own cumulative reward, not another agent's value
         stat["cumulative_reward"] = self.cumulative_rewards.get(agent, 0.0)
 
         self.death_agents_stats[uid] = stat
@@ -835,7 +836,7 @@ class PredPreyGrass(MultiAgentEnv):
             stat["final_energy"] = self.agent_energies[agent]
             steps = max(stat["avg_energy_steps"], 1)
             stat["avg_energy"] = stat["avg_energy_sum"] / steps
-            stat["cumulative_reward"] = self.cumulative_rewards.get(agent, 0.0)
+            stat["cumulative_reward"] = self.cumulative_rewards.get(caught_prey, 0.0)
 
             self.death_agents_stats[uid] = stat
 
@@ -974,8 +975,11 @@ class PredPreyGrass(MultiAgentEnv):
             # Rewards and tracking
             rewards[new_agent] = 0
             rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
+
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
+            uid = self.unique_agents[agent]
+            self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
 
             observations[new_agent] = self._get_observation(new_agent)
             terminations[new_agent] = False
