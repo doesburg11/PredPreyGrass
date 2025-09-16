@@ -40,7 +40,7 @@
 
 ## Training and evaluation results
 
-[Training](./tune_ppo_base_environment.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://doesburg11.github.io/pred-prey-grass/marl-ppg/rewards-ppg/scaling). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
+[Training](./tune_ppo_base_environment.py) the agents and [evaluating](./evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/challenges/rewards-ppg/scaling). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
 - Predators hunting Prey
 - Multiple Predators collaborating/competing hunting Prey; increasing the probability of Prey being caught
 - Prey finding and eating grass
