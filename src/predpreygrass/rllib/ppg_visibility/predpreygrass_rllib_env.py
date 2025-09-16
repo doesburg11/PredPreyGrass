@@ -221,7 +221,7 @@ class PredPreyGrass(MultiAgentEnv):
                 if self.debug_mode:
                     print("[Walls] No valid manual wall positions provided; resulting set is empty.")
             if added == 0 and not self.manual_wall_positions:
-                # Keep behaviour consistent: if user sets mode manual but no list, leave empty (explicit)
+                # Keep behavior consistent: if user sets mode manual but no list, leave empty (explicit)
                 pass
         else:  # random
             if self.num_walls >= max_cells:
