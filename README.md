@@ -24,6 +24,9 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     * [Implementation](src/predpreygrass/rllib/mutating_agents)
     * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/mutating_agents#mutating_agents-predator-prey-grass-mutating-agents-environment)
 
+* Training and evaluating walls occlusion
+    * [Implementation](src/predpreygrass/rllib/walls_occlusion)
+
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey
     * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
