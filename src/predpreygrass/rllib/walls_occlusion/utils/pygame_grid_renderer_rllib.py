@@ -494,7 +494,7 @@ class PyGameRenderer:
 
         y += spacing
 
-        slider_label_surface = font.render("type (steps/sec)", True, (0, 0, 0))
+        slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
         self.screen.blit(slider_label_surface, (x, y))
 
         y += spacing
