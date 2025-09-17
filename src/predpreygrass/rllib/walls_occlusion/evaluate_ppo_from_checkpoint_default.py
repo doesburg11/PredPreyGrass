@@ -9,13 +9,13 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.rllib.ppg_4_policies.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.ppg_4_policies.config.config_env_eval import config_env
-from predpreygrass.rllib.ppg_4_policies.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
-RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results"
-CHECKPOINT_PATH = "v2_7_tune_default_benchmark/PPO_PredPreyGrass_86337_00000_0_2025-08-04_23-53-58/checkpoint_000099"
+RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+CHECKPOINT_PATH = "PPO_LOS_REJECTED_MOVES_2025-09-15_13-57-36/PPO_PredPreyGrass_2bd25_00000_0_2025-09-15_13-57-36/checkpoint_000099"
 SAVE_MOVIE = False
 MOVIE_FILENAME = "eval_video.mp4"
 MOVIE_FPS = 10
@@ -55,9 +55,21 @@ if __name__ == "__main__":
 
     env = PredPreyGrass(config=config_env)
     grid_size = (env.grid_size, env.grid_size)
-    visualizer = PyGameRenderer(grid_size, cell_size=32, enable_speed_slider=False, enable_tooltips=False)
+    visualizer = PyGameRenderer(
+        grid_size,
+        cell_size=32,
+        enable_speed_slider=False,
+        enable_tooltips=False,
+        show_fov=True,
+        fov_alpha=40,
+        fov_agents=["type_1_predator_0", "type_1_prey_0"],
+        fov_respect_walls=True,
+        predator_obs_range=config_env.get("predator_obs_range", 7),
+        prey_obs_range=config_env.get("prey_obs_range", 9),
+    )
 
     observations, _ = env.reset(seed=SEED)
+    # FOV overlays will be shown for: type_1_predator_0 and type_1_prey_0
 
     if SAVE_MOVIE:
         screen_size = visualizer.screen.get_size()
@@ -80,6 +92,7 @@ if __name__ == "__main__":
             agents_just_ate=env.agents_just_ate,
             step=env.current_step,
             per_step_agent_data=env.per_step_agent_data,
+            walls=env.wall_positions,
         )
 
         if SAVE_MOVIE:
