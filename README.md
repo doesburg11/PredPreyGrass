@@ -36,7 +36,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect)
 
 * Hyperparameter tuning base environment - Population Based Training
-    * [Implementation](src/predpreygrass/rllib/hyper_paramter_tuning/tune_population_based_training.py)
+    * [Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py)
 
 
 ## Installation of the repository
