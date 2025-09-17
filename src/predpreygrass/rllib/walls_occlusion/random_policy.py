@@ -14,7 +14,7 @@ pointing at `walls_occlusion` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_zigzag_walls import config_env as base_config_env
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
@@ -33,18 +33,6 @@ if __name__ == "__main__":
     # Inject walls into config (if not already present)
     cfg = dict(base_config_env)
     cfg.setdefault("num_walls", 20)  # default number of walls for visualization
-    # To use manual wall placement instead of random, uncomment and edit below:
-    cfg["wall_placement_mode"] = "manual"
-    cfg["manual_wall_positions"] = [
-        # Top (y=4)
-        (4,4),(5,4),(6,4),(7,4),(10,4),(11,4),(12,4),(13,4),(14,4),(15,4),
-        # Bottom (y=15)
-        (4,15),(5,15),(6,15),(7,15),(10,15),(11,15),(12,15),(13,15),(14,15),(15,15),
-        # Left (x=4), excluding corners and opening at y=9,10
-        (4,5),(4,6),(4,7),(4,8),(4,11),(4,12),(4,13),(4,14),
-        # Right (x=15), excluding corners and opening at y=9,10
-        (15,5),(15,6),(15,7),(15,8),(15,11),(15,12),(15,13),(15,14),
-        ]  # list of (x,y) coordinates within grid bounds
     # Enable visibility (occlusion) channel so observations include LOS mask as final channel
     cfg.setdefault("include_visibility_channel", True)
     env = env_creator(cfg)

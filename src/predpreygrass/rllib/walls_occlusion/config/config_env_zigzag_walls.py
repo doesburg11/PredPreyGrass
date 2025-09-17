@@ -95,8 +95,7 @@ config_env = {
     # Openings located at the two middle coordinates of each side.
     "wall_placement_mode": "manual",
     "manual_wall_positions": (
-        [(x, y) for x in range(6, 12) for y in range(6, 12)] +
-        [(x, y) for x in range(13, 18) for y in range(6, 12)] +
-        [(x, y) for x in range(6, 12) for y in range(13, 18)] +
-        [(x, y) for x in range(13, 18) for y in range(13, 18)]
-    ),}
+        [(x, 6 + (x % 2)) for x in range(6, 18)] +
+        [(x, 17 - (x % 2)) for x in range(6, 18)]
+    ),
+}
