@@ -10,17 +10,18 @@ Top-level (selected):
 ├── output/                                 # Generated experiment outputs (benchmarks, variations)
 └── src/
     └── predpreygrass/
-        ├── README.txt                    # (This file) Detailed structure snapshot
+        ├── README.txt                      # (This file) Detailed structure snapshot
         ├── pettingzoo/                     # Legacy PettingZoo AEC environment + SB3 training
         │   ├── envs/                       # AEC env variants (deprecated for current RLlib work)
         │   ├── eval/                       # Legacy evaluation scripts (PettingZoo path)
         │   └── train/                      # Legacy SB3 training utilities
         ├── rllib/                          # Current RLlib multi-agent ecosystem (versioned)
         │   ├── _on_hold_/                  # Temporarily parked ideas / WIP
-        │   ├── hyper_parameter_tuning/     # Shared tuning helpers
         │   ├── base_evironment/            # 2-policy (predators vs prey) baseline experiment variant
-        │   ├── mutating_agents/            # 4-policy mutating agents experiment variant
-        │   ├── ppg_visibility/             # Experiment variant exploring vision / visibility dynamics
+        │   ├── mutating_agents/            # 4-policy mutating agents experiment variant [generalization base_evironment]
+        │   ├── walls_occlusion/            # added occluded vision by adding walls in the environment [generalization mutating_agents]
+        │   ├── red_queen/                  # exploring the red queen effect in 2-policy baseline experiment
+        │   ├── hyper_parameter_tuning/     # Shared tuning helpers
         │   └── readme.md                   # (If present) Legacy RLlib notes
         └── utils/
             └── renderer.py                 # Shared rendering logic (legacy path)
