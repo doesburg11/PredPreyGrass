@@ -234,11 +234,16 @@ class PredPreyGrass(MultiAgentEnv):
                     self.wall_positions.add((gx, gy))
 
         total_entities = len(self.agents) + len(self.grass_agents)
-        if total_entities + self.num_walls > max_cells:
-            raise ValueError("Too many entities + walls for grid size")
+        # PATCH: allow any config where number of free cells >= number of agents (even if zero grass)
+        free_cells = max_cells - self.num_walls
+        if total_entities > free_cells:
+            raise ValueError(f"Too many agents+grass ({total_entities}) for free cells ({free_cells}) given {self.num_walls} walls on {self.grid_size}x{self.grid_size} grid")
         free_indices = [i for i in range(max_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
-        chosen = self.rng.choice(free_indices, size=total_entities, replace=False)
-        all_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen]
+        if total_entities > 0:
+            chosen = self.rng.choice(free_indices, size=total_entities, replace=False)
+            all_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen]
+        else:
+            all_positions = []
 
         predator_list = [a for a in self.agents if "predator" in a]
         prey_list = [a for a in self.agents if "prey" in a]
@@ -429,8 +434,17 @@ class PredPreyGrass(MultiAgentEnv):
             new_position = current_position
             self._last_move_block_reason[agent] = "occupied"
         elif self.respect_los_for_movement and new_position != current_position:
+            # Block diagonal moves if either adjacent orthogonal cell is a wall (no corner cutting)
+            dx = new_position[0] - current_position[0]
+            dy = new_position[1] - current_position[1]
+            if abs(dx) == 1 and abs(dy) == 1:
+                ortho1 = (current_position[0] + dx, current_position[1])
+                ortho2 = (current_position[0], current_position[1] + dy)
+                if ortho1 in self.wall_positions or ortho2 in self.wall_positions:
+                    new_position = current_position
+                    self._last_move_block_reason[agent] = "corner_cut"
             # Perform LOS check; if blocked by any wall (excluding endpoints) cancel move.
-            if not self._line_of_sight_clear(current_position, new_position):
+            elif not self._line_of_sight_clear(current_position, new_position):
                 new_position = current_position
                 self._last_move_block_reason[agent] = "los"
 
