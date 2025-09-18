@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_zigzag_walls import config_env
 from predpreygrass.rllib.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -38,8 +38,8 @@ import re
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = True
+SAVE_EVAL_RESULTS = False
+SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
@@ -122,7 +122,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-15_13-57-36/PPO_PredPreyGrass_2bd25_00000_0_2025-09-15_13-57-36/"
+    checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-17_15-41-40/PPO_PredPreyGrass_0aa64_00000_0_2025-09-17_15-41-40"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
