@@ -90,9 +90,7 @@ config_env = {
     "energy_transfer_efficiency": 1.0,
     "reproduction_energy_efficiency": 1.0,
     # --- Wall placement ---
-    # Use manual wall layout: centered 12x12 square (side=12) with 2-cell opening on each side.
-    # Grid size is 25 -> start = (25-12)//2 = 6, square spans 6..17 inclusive.
-    # Openings located at the two middle coordinates of each side.
+    #  Zig-zag walls 
     "wall_placement_mode": "manual",
     "manual_wall_positions": (
         [(x, 6 + (x % 2)) for x in range(6, 18)] +
