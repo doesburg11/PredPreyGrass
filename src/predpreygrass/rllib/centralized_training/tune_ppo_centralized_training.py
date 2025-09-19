@@ -8,7 +8,6 @@ Predators and prey both either can be of type_1 or type_2.
 from predpreygrass.rllib.centralized_training.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.centralized_training.config.config_env_zigzag_walls import config_env
 from predpreygrass.rllib.centralized_training.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.centralized_training.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
