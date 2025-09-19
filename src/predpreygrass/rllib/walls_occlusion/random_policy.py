@@ -14,7 +14,7 @@ pointing at `walls_occlusion` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_zigzag_walls import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
