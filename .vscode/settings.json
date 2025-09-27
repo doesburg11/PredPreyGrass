@@ -14,13 +14,7 @@
     // This uses bash PROMPT_COMMAND so every prompt enforces the env.
     "terminal.integrated.shellIntegration.enabled": true,
     "terminal.integrated.defaultProfile.linux": "bash",
-    // Custom command to auto-source the correct conda env; requires conda init already executed.
-    "terminal.integrated.profiles.linux": {
-        "bash": {
-            "path": "/bin/bash",
-            "args": ["--rcfile", "/home/doesburg/Projects/PredPreyGrass/.vscode/auto_conda_rc"]
-        }
-    },
+    // Custom command removed: no auto_conda_rc sourcing
     "python.analysis.extraPaths": [
         "./src"
     ],
