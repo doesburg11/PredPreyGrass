@@ -16,6 +16,7 @@
     "terminal.integrated.defaultProfile.linux": "bash",
     // Custom command removed: no auto_conda_rc sourcing
     "python.analysis.extraPaths": [
+        "./src",
         "./src"
     ],
     "cSpell.words": [
