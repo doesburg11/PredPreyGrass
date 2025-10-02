@@ -18,6 +18,100 @@ class EpisodeReturn(RLlibCallback):
                     infos_map[agent_id] = {}
                 infos_map[agent_id]["windowed_lineage_reward"] = lineage_reward
         # ...existing code...
+        # --- Online cooperation metrics accumulation (lightweight proxies) ---
+        # We accumulate per-episode stats and emit them in on_episode_end to TensorBoard.
+        try:
+            env = getattr(episode, "env", None)
+            if env is None:
+                return
+            ep_id = getattr(episode, "id_", None)
+            if ep_id is None:
+                return
+            # Initialize per-episode accumulators if needed
+            acc = self._coop_accumulators.setdefault(ep_id, {"ai_sum_raw": 0.0, "ai_sum_los": 0.0, "ai_n": 0})
+            kpa = self._kpa_state.setdefault(ep_id, {
+                "prev_offspring": {},  # agent_id -> int
+                "prev_kin": {},        # agent_id -> bool
+                "with_trials": 0,
+                "with_events": 0,
+                "without_trials": 0,
+                "without_events": 0,
+            })
+
+            # Active learning agents this step
+            agents = [a for a in getattr(env, "agents", []) if a in env.agent_positions]
+            if not agents:
+                return
+
+            # Prepare lineage roots per agent and positions
+            R = int(getattr(env, "kin_density_radius", 2))
+            los_aware = bool(getattr(env, "kin_density_los_aware", False))
+            positions = {a: env.agent_positions[a] for a in agents}
+            roots = {}
+            for a in agents:
+                uid = env.unique_agents.get(a)
+                st = env.unique_agent_stats.get(uid, {}) if uid else {}
+                roots[a] = st.get("root_ancestor")
+
+            # Compute per-agent neighbor totals and same-root counts
+            def same_root_counts(use_los: bool):
+                same_total = []  # list of (same, total) per agent when total>0
+                kin_present = {}  # agent_id -> bool
+                for a in agents:
+                    ax, ay = positions[a]
+                    ra = roots.get(a)
+                    total = 0
+                    same = 0
+                    any_kin = False
+                    for b in agents:
+                        if b == a:
+                            continue
+                        bx, by = positions[b]
+                        if max(abs(bx - ax), abs(by - ay)) <= R:
+                            if (not use_los) or env._line_of_sight_clear((ax, ay), (bx, by)):
+                                total += 1
+                                if roots.get(b) is not None and roots.get(b) == ra:
+                                    same += 1
+                                    any_kin = True
+                    if total > 0:
+                        same_total.append((same, total))
+                    kin_present[a] = any_kin
+                return same_total, kin_present
+
+            same_total_raw, kin_present_raw = same_root_counts(use_los=False)
+            # Accumulate AI raw
+            for same, total in same_total_raw:
+                acc["ai_sum_raw"] += (same / total)
+                acc["ai_n"] += 1
+
+            # Optionally also accumulate LOS-aware AI (if enabled in env)
+            if los_aware:
+                same_total_los, _ = same_root_counts(use_los=True)
+                for same, total in same_total_los:
+                    acc["ai_sum_los"] += (same / total)
+
+            # KPA proxy: use last step's offspring counts and kin-present flag to see if reproduction happened
+            # Get current offspring counts from env.per_step_agent_data[-1]
+            if getattr(env, "per_step_agent_data", None):
+                cur = env.per_step_agent_data[-1]
+                for a in agents:
+                    off_now = int(cur.get(a, {}).get("offspring_count", 0))
+                    if a in kpa["prev_offspring"]:
+                        reproduced = off_now > kpa["prev_offspring"][a]
+                        if kpa["prev_kin"].get(a, False):
+                            kpa["with_trials"] += 1
+                            if reproduced:
+                                kpa["with_events"] += 1
+                        else:
+                            kpa["without_trials"] += 1
+                            if reproduced:
+                                kpa["without_events"] += 1
+                    # Update prev state for next step
+                    kpa["prev_offspring"][a] = off_now
+                    kpa["prev_kin"][a] = bool(kin_present_raw.get(a, False))
+        except Exception:
+            # Be robust to any env/callback API mismatches; skip metrics if unavailable
+            pass
     def __init__(self):
         super().__init__()
         self.overall_sum_of_rewards = 0.0
@@ -27,6 +121,9 @@ class EpisodeReturn(RLlibCallback):
         self.last_iteration_time = self.start_time
         self.episode_lengths = {}  # manual episode length tracking
         self._episode_los_rejected = {}
+        # Online cooperation metrics accumulators (per episode id)
+        self._coop_accumulators = {}
+        self._kpa_state = {}
 
     def _episode_agent_ids(self, episode) -> list:
         """
@@ -117,6 +214,31 @@ class EpisodeReturn(RLlibCallback):
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
         los_rejected = self._episode_los_rejected.pop(episode_id, 0)
         metrics_logger.log_value("los_rejected_moves", los_rejected, reduce="mean")
+
+        # --- Emit cooperation metrics to TensorBoard ---
+        acc = self._coop_accumulators.pop(episode_id, None)
+        if acc and acc.get("ai_n", 0) > 0:
+            ai_raw = acc["ai_sum_raw"] / max(1, acc["ai_n"])
+            metrics_logger.log_value("coop/ai_raw", ai_raw, reduce="mean")
+            # Only log LOS-aware AI if env had it enabled (we only accumulated then)
+            if acc.get("ai_sum_los", 0.0) > 0.0:
+                ai_los = acc["ai_sum_los"] / max(1, acc["ai_n"])
+                metrics_logger.log_value("coop/ai_los", ai_los, reduce="mean")
+
+        kpa = self._kpa_state.pop(episode_id, None)
+        if kpa:
+            with_trials = max(0, int(kpa.get("with_trials", 0)))
+            with_events = max(0, int(kpa.get("with_events", 0)))
+            without_trials = max(0, int(kpa.get("without_trials", 0)))
+            without_events = max(0, int(kpa.get("without_events", 0)))
+            p_with = (with_events / with_trials) if with_trials else 0.0
+            p_without = (without_events / without_trials) if without_trials else 0.0
+            metrics_logger.log_value("coop/kpa_with", p_with, reduce="mean")
+            metrics_logger.log_value("coop/kpa_without", p_without, reduce="mean")
+            metrics_logger.log_value("coop/kpa", p_with - p_without, reduce="mean")
+            # Useful counts for confidence in estimates
+            metrics_logger.log_value("coop/with_trials", with_trials, reduce="mean")
+            metrics_logger.log_value("coop/without_trials", without_trials, reduce="mean")
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
