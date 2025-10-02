@@ -1,13 +1,8 @@
 """
-Predator-Prey Grass RLlib Environment
-
-Additions:
-        - Static wall obstacles: `num_walls` random cells sampled at reset (default 20).
-            * Stored in `self.wall_positions` (set of (x,y)).
-            * Painted into observation channel 0 (binary 1=wall).
-            * Agents (predator, prey, grass placement) avoid wall cells at reset.
-            * Movement into a wall cell is disallowed (agent stays in place, 
-              still pays movement energy cost as computed for attempted move).
+Predator-Prey Grass RLlib Environment (selfish_gene variant)
+- Based on walls_occlusion environment
+- Adds Tier-1 Selfish Gene reward (windowed lineage reward on reproduction)
+- Adds optional visibility mask/channel and optional kin-density observation channel
 """
 # external libraries (Ray optional for lightweight diagnostics)
 import gymnasium
@@ -16,13 +11,15 @@ try:
     from ray.rllib.utils.typing import AgentID, Tuple
 except Exception:  # pragma: no cover
     from typing import Tuple as TypingTuple
-    class MultiAgentEnv:  # minimal stub for wall/placement local tests
+    class MultiAgentEnv:  # minimal stub for local tests
         def __init__(self):
             pass
     AgentID = str
     Tuple = TypingTuple
 import numpy as np
 import math
+import os
+import json
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -34,9 +31,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._initialize_from_config()  # import config variables
 
         self.possible_agents = self._build_possible_agent_ids()
-
         self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
-
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
     def _initialize_from_config(self):
@@ -53,7 +48,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Rewards dictionaries
         self.reward_predator_catch_prey_config = config.get("reward_predator_catch_prey", 0.0)
         self.reward_prey_eat_grass_config = config.get("reward_prey_eat_grass", 0.0)
-
         self.reward_predator_step_config = config.get("reward_predator_step", 0.0)
         self.reward_prey_step_config = config.get("reward_prey_step", 0.0)
         self.penalty_prey_caught_config = config.get("penalty_prey_caught", 0.0)
@@ -85,17 +79,28 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_obs_channels = config.get("num_obs_channels", 4)
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 5)
-        # Optional extra observation channel (appended as last channel) showing
-        # line-of-sight visibility (1 = visible, 0 = occluded by at least one wall).
-        # When disabled, observation tensors retain their original channel count.
+        # Optional extra observation channels
         self.include_visibility_channel = config.get("include_visibility_channel", False)
-        # Movement restriction: if True, agents may only move to target cells with unobstructed LOS (no wall between current and target).
+        self.include_kin_density_channel = config.get("include_kin_density_channel", False)
+        self.kin_density_radius = config.get("kin_density_radius", 2)
+        self.kin_density_norm_cap = config.get("kin_density_norm_cap", 8)
+        # When True, kin-density counts only kin that are visible via LOS (walls block)
+        self.kin_density_los_aware = config.get("kin_density_los_aware", False)
+        # Movement restriction and masking
         self.respect_los_for_movement = config.get("respect_los_for_movement", False)
-        # If True, dynamic observation channels (predators/prey/grass) are masked so that
-        # entities behind walls (no line-of-sight) appear as 0 even if within square range.
-        # Works independently of include_visibility_channel; if that is False we still mask
-        # but do not append the visibility channel itself.
         self.mask_observation_with_visibility = config.get("mask_observation_with_visibility", False)
+
+        # Optional cooperation logging controls
+        self.enable_coop_logging = config.get("enable_coop_logging", False)
+        self.coop_log_dir = config.get("coop_log_dir", "output/coop_logs")
+        # Internal episode index to name files uniquely
+        self._episode_index = 0
+
+        # Lineage reward window (Tier-1 Selfish Gene)
+        self.lineage_reward_window = config.get("lineage_reward_window", 50)
+        # Optional per-species lineage windows; default to global if not provided
+        self.lineage_reward_window_predator = config.get("lineage_reward_window_predator", self.lineage_reward_window)
+        self.lineage_reward_window_prey = config.get("lineage_reward_window_prey", self.lineage_reward_window)
 
         # Grass settings
         self.initial_num_grass = config.get("initial_num_grass", 25)
@@ -103,8 +108,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.energy_gain_per_step_grass = config.get("energy_gain_per_step_grass", 0.2)
         # Walls (static obstacles)
         self.num_walls = config.get("num_walls", 20)
-        # New: wall placement mode: 'random' (default) or 'manual'.
-        # When 'manual', positions come from manual_wall_positions (list of (x,y)).
         self.wall_placement_mode = config.get("wall_placement_mode", "random")
         self.manual_wall_positions = config.get("manual_wall_positions", None)
         self.wall_positions = set()
@@ -130,12 +133,29 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_energies = {}
         self.agent_ages = {}
         self.agent_parents = {}
-        self.unique_agents = {}  # list of unique agent IDs
+        self.unique_agents = {}
         self.unique_agent_stats = {}
-        self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
-        self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
+        self.per_step_agent_data = []
+        self._per_agent_step_deltas = {}
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
+
+        # Prepare episode logging buffer
+        if self.enable_coop_logging:
+            self._episode_log = {
+                "episode_index": int(getattr(self, "_episode_index", 0)),
+                "seed": int(self.config.get("seed", 42)),
+                "max_steps": int(self.max_steps),
+                "config": {
+                    # minimal subset relevant to analysis
+                    "grid_size": int(self.grid_size),
+                    "predator_obs_range": int(self.predator_obs_range),
+                    "prey_obs_range": int(self.prey_obs_range),
+                    "kin_density_radius": int(self.kin_density_radius),
+                    "kin_density_los_aware": bool(self.kin_density_los_aware),
+                },
+                "steps": [],
+            }
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
@@ -143,7 +163,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
         self._last_move_block_reason = {}
-        # Global counters (optional diagnostics)
         self.los_rejected_moves_total = 0
         self.los_rejected_moves_by_type = {"predator": 0, "prey": 0}
 
@@ -188,7 +207,19 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Reset the environment to its initial state.
         """
-        super().reset(seed=seed)
+        # Flush previous episode log if any
+        if getattr(self, "enable_coop_logging", False) and hasattr(self, "_episode_log") and self._episode_log.get("steps"):
+            try:
+                os.makedirs(self.coop_log_dir, exist_ok=True)
+                out_path = os.path.join(self.coop_log_dir, f"episode_{self._episode_index:05d}.json")
+                with open(out_path, "w") as f:
+                    json.dump(self._episode_log, f)
+            except Exception as e:
+                print(f"[COOP LOGGING] Failed to write episode log: {e}")
+        # Increment episode index for the next episode
+        if getattr(self, "enable_coop_logging", False):
+            self._episode_index = int(getattr(self, "_episode_index", 0)) + 1
+
         self._init_reset_variables(seed)
 
         # --- Place walls first ---
@@ -253,6 +284,13 @@ class PredPreyGrass(MultiAgentEnv):
         grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         # Paint walls into channel 0
+        if self.enable_coop_logging:
+            # Store static wall layout once per episode for analysis (LOS-aware metrics)
+            try:
+                self._episode_log["walls"] = [(int(x), int(y)) for (x, y) in sorted(self.wall_positions)]
+                self._episode_log["wall_placement_mode"] = self.wall_placement_mode
+            except Exception:
+                pass
         for (wx, wy) in self.wall_positions:
             self.grid_world_state[0, wx, wy] = 1.0
 
@@ -379,6 +417,25 @@ class PredPreyGrass(MultiAgentEnv):
             }
 
         self.per_step_agent_data.append(step_data)
+        # Also append minimal per-step log for coop analysis
+        if self.enable_coop_logging:
+            packed = {}
+            for aid, d in step_data.items():
+                uid = self.unique_agents.get(aid)
+                stats = self.unique_agent_stats.get(uid, {}) if uid else {}
+                packed[aid] = {
+                    "unique_id": uid,
+                    "policy_group": stats.get("policy_group"),
+                    "root_ancestor": stats.get("root_ancestor"),
+                    "position": tuple(map(int, d["position"])),
+                    "age": int(d["age"]),
+                    "energy": float(d["energy"]),
+                    "offspring_count": int(d["offspring_count"]),
+                }
+            self._episode_log["steps"].append({
+                "step": int(self.current_step),
+                "agents": packed,
+            })
         self._per_agent_step_deltas.clear()
 
         # Increment step counter
@@ -492,7 +549,7 @@ class PredPreyGrass(MultiAgentEnv):
         observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
-        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0) + (1 if self.include_kin_density_channel else 0)
         observation = np.zeros((channels, observation_range, observation_range), dtype=np.float32)
         # Channel 0: walls (binary). Already zero; stamp walls that fall inside window.
         for (wx, wy) in self.wall_positions:
@@ -503,7 +560,10 @@ class PredPreyGrass(MultiAgentEnv):
         # Copy dynamic channels (predators, prey, grass) into fixed locations 1..num_obs_channels-1 first
         observation[1:self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
 
-        need_visibility_mask = self.include_visibility_channel or self.mask_observation_with_visibility
+        # Also compute a visibility mask when LOS-aware kin density is requested
+        need_visibility_mask = (
+            self.include_visibility_channel or self.mask_observation_with_visibility or self.kin_density_los_aware
+        )
         visibility_mask = None
         if need_visibility_mask:
             visibility_mask = np.zeros((observation_range, observation_range), dtype=np.float32)
@@ -556,8 +616,39 @@ class PredPreyGrass(MultiAgentEnv):
                     observation[c] *= visibility_mask
 
             if self.include_visibility_channel:
-                vis_idx = channels - 1
+                # If kin-density channel is also enabled, place visibility before it
+                vis_idx = (channels - 2) if self.include_kin_density_channel else (channels - 1)
                 observation[vis_idx] = visibility_mask
+
+        # Append kin-density channel as final channel, if enabled
+        if self.include_kin_density_channel:
+            kin_idx = channels - 1
+            # Same-policy prefix, e.g., 'type_1_predator' or 'type_2_prey'
+            parts = agent.split("_")
+            same_policy_prefix = "_".join(parts[:3])
+            ax, ay = xp, yp
+            R = int(self.kin_density_radius)
+            count = 0
+            for other_id, (ox, oy) in self.agent_positions.items():
+                if other_id == agent:
+                    continue
+                if not other_id.startswith(same_policy_prefix):
+                    continue
+                if max(abs(ox - ax), abs(oy - ay)) <= R:
+                    if self.kin_density_los_aware:
+                        # Only count if within observation window AND LOS-visible
+                        if xlo <= ox < xhi and ylo <= oy < yhi:
+                            lx = ox - xlo + xolo
+                            ly = oy - ylo + yolo
+                            # visibility_mask may be None if not requested earlier; guard anyway
+                            if 'visibility_mask' in locals() and visibility_mask is not None:
+                                if visibility_mask[lx, ly] >= 0.5:
+                                    count += 1
+                        # Outside window -> treat as not visible
+                    else:
+                        count += 1
+            norm = min(count / max(self.kin_density_norm_cap, 1.0), 1.0)
+            observation[kin_idx, :, :] = norm
 
         return observation
 
@@ -649,12 +740,21 @@ class PredPreyGrass(MultiAgentEnv):
             Otherwise, returns None.
         """
         if self.current_step >= self.max_steps:
+            # Final flush on truncation
+            if getattr(self, "enable_coop_logging", False) and hasattr(self, "_episode_log") and self._episode_log.get("steps"):
+                try:
+                    os.makedirs(self.coop_log_dir, exist_ok=True)
+                    out_path = os.path.join(self.coop_log_dir, f"episode_{self._episode_index:05d}.json")
+                    with open(out_path, "w") as f:
+                        json.dump(self._episode_log, f)
+                except Exception as e:
+                    print(f"[COOP LOGGING] Failed to write episode log on truncation: {e}")
             for agent in self.possible_agents:
                 if agent in self.agents:  # Active agents get observation
                     observations[agent] = self._get_observation(agent)
                 else:  # Inactive agents get empty observation
                     obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0) + (1 if self.include_kin_density_channel else 0)
                     observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
 
                 rewards[agent] = 0.0
@@ -666,6 +766,17 @@ class PredPreyGrass(MultiAgentEnv):
             return observations, rewards, terminations, truncations, infos
 
         return None
+
+    def close(self):
+        # Ensure any buffered episode log is flushed on environment close
+        try:
+            if getattr(self, "enable_coop_logging", False) and hasattr(self, "_episode_log") and self._episode_log.get("steps"):
+                os.makedirs(self.coop_log_dir, exist_ok=True)
+                out_path = os.path.join(self.coop_log_dir, f"episode_{self._episode_index:05d}.json")
+                with open(out_path, "w") as f:
+                    json.dump(self._episode_log, f)
+        except Exception as e:
+            print(f"[COOP LOGGING] Failed to write episode log on close: {e}")
 
     def _apply_energy_decay_per_step(self, action_dict):
         """
@@ -984,8 +1095,8 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            # Replace reproduction reward with windowed lineage reward
-            lineage_reward = self._windowed_lineage_reward(agent, window=50)
+            # Replace reproduction reward with species-specific windowed lineage reward
+            lineage_reward = self._windowed_lineage_reward(agent, window=self.lineage_reward_window_predator)
             rewards[agent] = lineage_reward
 
             self.cumulative_rewards[new_agent] = 0
@@ -1005,7 +1116,7 @@ class PredPreyGrass(MultiAgentEnv):
                 child_stats = self.unique_agent_stats.get(child_uid, {})
                 birth_step = child_stats.get("birth_step", -1)
                 # Only count if within window and child is still alive (exists in agent_positions)
-                if self.current_step - birth_step <= 50 and child_uid in self.unique_agents.values():
+                if self.current_step - birth_step <= self.lineage_reward_window_predator and child_uid in self.unique_agents.values():
                     living_offspring_ids.append(child_uid)
             self._log(
                 self.verbose_reproduction,
@@ -1090,8 +1201,8 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            # Replace reproduction reward with windowed lineage reward
-            lineage_reward = self._windowed_lineage_reward(agent, window=50)
+            # Replace reproduction reward with species-specific windowed lineage reward
+            lineage_reward = self._windowed_lineage_reward(agent, window=self.lineage_reward_window_prey)
             rewards[agent] = lineage_reward
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
@@ -1110,7 +1221,7 @@ class PredPreyGrass(MultiAgentEnv):
                 child_stats = self.unique_agent_stats.get(child_uid, {})
                 birth_step = child_stats.get("birth_step", -1)
                 # Only count if within window and child is still alive (exists in unique_agents.values())
-                if self.current_step - birth_step <= 50 and child_uid in self.unique_agents.values():
+                if self.current_step - birth_step <= self.lineage_reward_window_prey and child_uid in self.unique_agents.values():
                     living_offspring_ids.append(child_uid)
             self._log(
                 self.verbose_reproduction,
@@ -1213,7 +1324,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the observation space for a specific agent.
         """
-        extra = 1 if getattr(self, "include_visibility_channel", False) else 0
+        extra = (1 if getattr(self, "include_visibility_channel", False) else 0) + (1 if getattr(self, "include_kin_density_channel", False) else 0)
         if "predator" in agent_id:
             predator_shape = (self.num_obs_channels + extra, self.predator_obs_range, self.predator_obs_range)
             obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
@@ -1256,10 +1367,18 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_last_reproduction[agent_id] = -self.config.get("reproduction_cooldown_steps", 10)
 
+        # Determine root ancestor for lineage analysis
+        if parent_unique_id is None:
+            root_ancestor = unique_id
+        else:
+            parent_stats = self.unique_agent_stats.get(parent_unique_id, {})
+            root_ancestor = parent_stats.get("root_ancestor", parent_unique_id)
+
         self.unique_agent_stats[unique_id] = {
             "lineage_tag": unique_id,
             "birth_step": self.current_step,
             "parent_id": parent_unique_id,
+            "root_ancestor": root_ancestor,
             "offspring_count": 0,
             "distance_traveled": 0.0,
             "times_ate": 0,
