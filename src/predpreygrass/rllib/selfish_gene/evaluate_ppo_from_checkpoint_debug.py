@@ -1,3 +1,4 @@
+
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
 and runs them in the PredPreyGrass environment (selfish_gene) for interactive debugging.
@@ -19,7 +20,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.selfish_gene.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.selfish_gene.config.config_env_zigzag_walls import config_env
+from predpreygrass.rllib.selfish_gene.config.config_env_selfish_gene import config_env
 from predpreygrass.rllib.selfish_gene.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.selfish_gene.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -36,6 +37,7 @@ import cv2
 import numpy as np
 import re
 from collections import defaultdict
+from sklearn.cluster import DBSCAN
 
 
 SAVE_EVAL_RESULTS = False
@@ -87,6 +89,11 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
         "include_visibility_channel",
         "mask_observation_with_visibility",
         "respect_los_for_movement",
+        # Kin-density observation-only feature
+        "include_kin_density_channel",
+        "kin_density_radius",
+        "kin_density_norm_cap",
+        "kin_density_los_aware",
         # Action ranges can affect obs encoding in some setups; include for safety
         "type_1_action_range",
         "type_2_action_range",
@@ -122,8 +129,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-17_15-41-40/PPO_PredPreyGrass_0aa64_00000_0_2025-09-17_15-41-40"
-    checkpoint_dir = "checkpoint_000099"
+    checkpoint_root = "PPO_SELFISH_GENE_2025-09-30_10-55-25/PPO_PredPreyGrass_34962_00000_0_2025-09-30_10-55-25/"
+    checkpoint_dir = "checkpoint_000028"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
@@ -427,6 +434,16 @@ def print_ranked_fitness_summary(env):
                   f"Off/100 Steps={100*avg_off_per_step:.2f}")
 
 
+def detect_clusters(agent_positions, eps=2, min_samples=2):
+    positions = np.array(list(agent_positions.values()))
+    if len(positions) == 0:
+        return 0, []
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(positions)
+    labels = clustering.labels_
+    num_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+    cluster_sizes = [np.sum(labels == k) for k in set(labels) if k != -1]
+    return num_clusters, cluster_sizes
+
 if __name__ == "__main__":
     seed = 5
     ray.init(ignore_reinit_error=True)
@@ -484,6 +501,9 @@ if __name__ == "__main__":
                 SAVE_MOVIE,
                 video_writer,
             )
+            # --- Clustering detection ---
+            num_clusters, cluster_sizes = detect_clusters(env.agent_positions)
+            print(f"Step {env.current_step}: {num_clusters} clusters detected. Sizes: {cluster_sizes}")
             loop_helper.update_simulation_terminated(terminations, truncations)
         else:
             render_static_if_paused(env, visualizer)
