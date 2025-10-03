@@ -16,27 +16,27 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ### Environments:
 
-* Base environment: The two-policy base environment. ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* **Base environment**: The two-policy base environment. ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* Mutating agents: A four-policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
+* **Mutating agents**: A four-policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* Centralized training: A single-policy variant of the base environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
+* **Centralized training**: A single-policy variant of the base environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
 
-* Walls occlusion: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
+* **Walls occlusion**: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
-* Selfish gene: An extension with lineage rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+* **Selfish gene**: An extension with lineage rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
 ### Experiments:
 
-* Testing the Red Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
-* Testing the Red Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
 
-* Testing cooperation by adding lineage rewards instead of direct reproduction rewards ([results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene#predpreygrass--selfish-gene-the-search-for-emergent-cooperation))
+* Testing **cooperation** by adding lineage rewards instead of direct reproduction rewards ([results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene#predpreygrass--selfish-gene-the-search-for-emergent-cooperation))
 
 ### Hyperparameter tuning
 
-* Hyperparameter tuning base environment - Population-Based Training ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
+* Hyperparameter tuning base environment - **Population-Based Training** ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
 
 
 ## Installation of the repository
