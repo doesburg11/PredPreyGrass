@@ -16,19 +16,23 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ### Environments:
 
-* Training and evaluating base environment ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* Base environment ([implementation](src/predpreygrass/rllib/base_environment): The two policy base environment. [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* Training and evaluating mutating agents environment ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
+* Mutating agents: A four policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* Training and evaluating walls occlusion environment ([implementation](src/predpreygrass/rllib/walls_occlusion))
+* Centralized training environment: A single policy variant of the base environment ([implmentation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
+
+* Walls occlusion: An extension of mutating agents: walls implementation and blocked vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
 * Training and evaluating selfish gene environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
 ### Experiments:
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([Implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
+
+* Testing cooperation by adding linneage rewards instead of direct reproduction rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
 ### Hyper parameter tuning
 
