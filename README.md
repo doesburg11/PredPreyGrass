@@ -16,7 +16,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ### Environments:
 
-* Base environment ([implementation](src/predpreygrass/rllib/base_environment)): The two-policy base environment. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* Base environment: The two-policy base environment. ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
 * Mutating agents: A four-policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
