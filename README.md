@@ -16,27 +16,27 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ### Environments:
 
-* Base environment ([implementation](src/predpreygrass/rllib/base_environment): The two policy base environment. [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* Base environment ([implementation](src/predpreygrass/rllib/base_environment)): The two-policy base environment. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* Mutating agents: A four policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
+* Mutating agents: A four-policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* Centralized training environment: A single policy variant of the base environment ([implmentation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
+* Centralized training: A single-policy variant of the base environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
 
-* Walls occlusion: An extension of mutating agents: walls implementation and blocked vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
+* Walls occlusion: An extension of mutating agents with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
-* Training and evaluating selfish gene environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+* Training and evaluating the selfish gene environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
 ### Experiments:
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
+* Testing the Red Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
+* Testing the Red Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
 
-* Testing cooperation by adding linneage rewards instead of direct reproduction rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+* Testing cooperation by adding lineage rewards instead of direct reproduction rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
-### Hyper parameter tuning
+### Hyperparameter tuning
 
-* Hyperparameter tuning base environment - Population Based Training ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
+* Hyperparameter tuning base environment - Population-Based Training ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
 
 
 ## Installation of the repository
@@ -61,7 +61,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
         conda install -y -c conda-forge gcc=14.2.0
         ```
 ## Quick start
-Run the pre trained policy in a Visual Studio Code terminal:
+Run the pre-trained policy in a Visual Studio Code terminal:
 
 ```bash
 python ./src/predpreygrass/rllib/base_environment/evaluate_ppo_from_checkpoint_debug.py
