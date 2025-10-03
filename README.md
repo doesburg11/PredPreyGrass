@@ -16,27 +16,17 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Experiments:
 
-* Training and evaluating base environment
-    * [Implementation](src/predpreygrass/rllib/base_environment)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg)
+* Training and evaluating base environment ([Implementation](src/predpreygrass/rllib/base_environment), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* Training and evaluating mutating agents environment
-    * [Implementation](src/predpreygrass/rllib/mutating_agents)
-    * [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/mutating_agents#mutating_agents-predator-prey-grass-mutating-agents-environment)
+* Training and evaluating mutating agents environment ([Implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/mutating_agents#mutating_agents-predator-prey-grass-mutating-agents-environment))
 
-* Training and evaluating walls occlusion
-    * [Implementation](src/predpreygrass/rllib/walls_occlusion)
+* Training and evaluating walls occlusion ([Implementation](src/predpreygrass/rllib/walls_occlusion))
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey
-    * [Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
-* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey
-    * [Implementation](src/predpreygrass/rllib/mutating_agents)
-    * [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect)
+* Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([Implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
 
-* Hyperparameter tuning base environment - Population Based Training
-    * [Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py)
+* Hyperparameter tuning base environment - Population Based Training ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
 
 
 ## Installation of the repository
