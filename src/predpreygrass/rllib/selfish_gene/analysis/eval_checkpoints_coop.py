@@ -96,7 +96,16 @@ def find_checkpoints(run_path: str):
     return cps
 
 
-def run_eval_for_checkpoint(checkpoint_dir: Path, episodes: int, max_steps: int | None, log_root: Path, seed: int):
+def run_eval_for_checkpoint(
+    checkpoint_dir: Path,
+    episodes: int,
+    max_steps: int | None,
+    log_root: Path,
+    seed: int,
+    progress_interval: int = 100,
+    n_bootstrap: int = 0,
+    deterministic_actions: bool = True,
+):
     # Load RLModules
     rl_module_dir = checkpoint_dir / "learner_group" / "learner" / "rl_module"
     if not rl_module_dir.is_dir():
@@ -119,8 +128,10 @@ def run_eval_for_checkpoint(checkpoint_dir: Path, episodes: int, max_steps: int 
 
     env = PredPreyGrass(cfg)
     for ep in range(episodes):
+        print(f"[EVAL] ▶ Start episode {ep+1}/{episodes} for {ckpt_id}", flush=True)
         obs, _ = env.reset(seed=int(seed + ep))
         done = False
+        steps = 0
         while not done:
             actions = {}
             for agent_id in env.agents:
@@ -130,19 +141,25 @@ def run_eval_for_checkpoint(checkpoint_dir: Path, episodes: int, max_steps: int 
                     # Default to no-op action 0 if module missing (shouldn't happen in multi-policy runs)
                     actions[agent_id] = 0
                 else:
-                    actions[agent_id] = policy_pi(obs[agent_id], module, deterministic=True)
+                    actions[agent_id] = policy_pi(obs[agent_id], module, deterministic=deterministic_actions)
             obs, rew, term, trunc, _ = env.step(actions)
+            steps += 1
+            if progress_interval and steps % progress_interval == 0:
+                ms = cfg.get("max_steps", max_steps) or "?"
+                print(f"[EVAL]   … {ckpt_id} ep {ep+1}/{episodes} step {steps}/{ms}", flush=True)
             done = term.get("__all__", False) or trunc.get("__all__", False)
+        print(f"[EVAL] ✓ Finished episode {ep+1}/{episodes} for {ckpt_id} in {steps} steps", flush=True)
     env.close()
 
     # Analyze
     episode_files = sorted(ckpt_log_dir.glob("episode_*.json"))
     episodes_data = [load_episode(fp) for fp in episode_files]
+    print(f"[EVAL] ⏳ Analyzing {ckpt_id} episodes (LOS-aware AI/KPA)…", flush=True)
     return {
-        "ai": compute_assortment_index(episodes_data, los_aware=True, n_bootstrap=0, seed=seed),
-        "kpa": compute_kin_proximity_advantage(episodes_data, los_aware=True, n_bootstrap=0, seed=seed),
-        "ai_by_policy": compute_assortment_index_by_policy(episodes_data, los_aware=True, n_bootstrap=0, seed=seed),
-        "kpa_by_policy": compute_kin_proximity_advantage_by_policy(episodes_data, los_aware=True, n_bootstrap=0, seed=seed),
+        "ai": compute_assortment_index(episodes_data, los_aware=True, n_bootstrap=n_bootstrap, seed=seed),
+        "kpa": compute_kin_proximity_advantage(episodes_data, los_aware=True, n_bootstrap=n_bootstrap, seed=seed),
+        "ai_by_policy": compute_assortment_index_by_policy(episodes_data, los_aware=True, n_bootstrap=n_bootstrap, seed=seed),
+        "kpa_by_policy": compute_kin_proximity_advantage_by_policy(episodes_data, los_aware=True, n_bootstrap=n_bootstrap, seed=seed),
     }
 
 
@@ -155,6 +172,9 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="Process only the last N checkpoints")
     parser.add_argument("--out", default="output/coop_eval_summary.csv", help="CSV path for summary output")
     parser.add_argument("--log-root", default="output/coop_eval_logs", help="Root directory for per-checkpoint episode logs")
+    parser.add_argument("--progress-interval", type=int, default=100, help="Print a heartbeat every N env steps (0 to disable)")
+    parser.add_argument("--bootstrap", type=int, default=0, help="Bootstrap iterations for CI computation (0 to disable)")
+    parser.add_argument("--stochastic", action="store_true", help="Sample actions stochastically during evaluation (default: deterministic argmax)")
 
     args = parser.parse_args()
     run_path = args.run
@@ -163,6 +183,7 @@ def main():
         raise FileNotFoundError(f"No checkpoints found under: {run_path}")
     if args.limit is not None and args.limit > 0:
         cps = cps[-args.limit:]
+    print(f"[EVAL] Found {len(cps)} checkpoint(s) under {run_path}", flush=True)
 
     out_csv = Path(args.out)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
@@ -170,20 +191,33 @@ def main():
     log_root.mkdir(parents=True, exist_ok=True)
 
     rows = []
-    for cp in cps:
+    for idx, cp in enumerate(cps, start=1):
         m = re.search(r"(\d+)$", cp.name)
         iteration = int(m.group(1)) if m else -1
-        print(f"[EVAL] Checkpoint {cp} (iter={iteration}) → generating {args.episodes} episodes")
-        metrics = run_eval_for_checkpoint(cp, episodes=args.episodes, max_steps=args.max_steps, log_root=log_root, seed=args.seed)
+        print(f"[EVAL] [{idx}/{len(cps)}] Checkpoint {cp} (iter={iteration}) → generating {args.episodes} episodes", flush=True)
+        metrics = run_eval_for_checkpoint(
+            cp,
+            episodes=args.episodes,
+            max_steps=args.max_steps,
+            log_root=log_root,
+            seed=args.seed,
+            progress_interval=args.progress_interval,
+            n_bootstrap=args.bootstrap,
+            deterministic_actions=not args.stochastic,
+        )
         # Flatten key metrics for CSV
         row = {
             "checkpoint": cp.name,
             "iteration": iteration,
             "ai": metrics["ai"].get("ai", 0.0),
             "ai_n": metrics["ai"].get("n", 0),
+            "ai_lo": (metrics["ai"].get("ci95")[0] if isinstance(metrics["ai"].get("ci95"), (list, tuple)) else ""),
+            "ai_hi": (metrics["ai"].get("ci95")[1] if isinstance(metrics["ai"].get("ci95"), (list, tuple)) else ""),
             "kpa": metrics["kpa"].get("kpa", 0.0),
             "kpa_n_with": metrics["kpa"].get("n_with", 0),
             "kpa_n_without": metrics["kpa"].get("n_without", 0),
+            "kpa_lo": (metrics["kpa"].get("ci95")[0] if isinstance(metrics["kpa"].get("ci95"), (list, tuple)) else ""),
+            "kpa_hi": (metrics["kpa"].get("ci95")[1] if isinstance(metrics["kpa"].get("ci95"), (list, tuple)) else ""),
         }
         rows.append(row)
 
@@ -191,16 +225,35 @@ def main():
         json_out = log_root / f"metrics_{cp.name}.json"
         with open(json_out, "w") as f:
             json.dump(metrics, f, indent=2)
+        ci_ai = f" [{row['ai_lo']:.4f},{row['ai_hi']:.4f}]" if row.get("ai_lo") != "" else ""
+        ci_kpa = f" [{row['kpa_lo']:.4f},{row['kpa_hi']:.4f}]" if row.get("kpa_lo") != "" else ""
+        print(
+            f"[EVAL] Saved metrics JSON → {json_out} | ai={row['ai']:.4f} (n={row['ai_n']}){ci_ai}  "
+            f"kpa={row['kpa']:.4f} (with={row['kpa_n_with']}, without={row['kpa_n_without']}){ci_kpa}",
+            flush=True,
+        )
 
     # Write summary CSV
-    fieldnames = ["checkpoint", "iteration", "ai", "ai_n", "kpa", "kpa_n_with", "kpa_n_without"]
+    fieldnames = [
+        "checkpoint",
+        "iteration",
+        "ai",
+        "ai_n",
+        "ai_lo",
+        "ai_hi",
+        "kpa",
+        "kpa_n_with",
+        "kpa_n_without",
+        "kpa_lo",
+        "kpa_hi",
+    ]
     with open(out_csv, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for r in rows:
             writer.writerow(r)
 
-    print(f"[DONE] Wrote summary to {out_csv} and per-checkpoint metrics JSON to {log_root}")
+    print(f"[DONE] Wrote summary to {out_csv} and per-checkpoint metrics JSON to {log_root}", flush=True)
 
 
 if __name__ == "__main__":
