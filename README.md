@@ -22,9 +22,9 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * Centralized training: A single-policy variant of the base environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
 
-* Walls occlusion: An extension of mutating agents with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
+* Walls occlusion: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
-* Training and evaluating the selfish gene environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+* Selfish gene: An extension with lineage rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
 
 ### Experiments:
 
@@ -32,7 +32,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * Testing the Red Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
 
-* Testing cooperation by adding lineage rewards instead of direct reproduction rewards ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+* Testing cooperation by adding lineage rewards instead of direct reproduction rewards ([results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene#predpreygrass--selfish-gene-the-search-for-emergent-cooperation))
 
 ### Hyperparameter tuning
 
