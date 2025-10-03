@@ -14,17 +14,23 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 </p>
 
 
-## Experiments:
+### Environments:
 
-* Training and evaluating base environment ([Implementation](src/predpreygrass/rllib/base_environment), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* Training and evaluating base environment ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* Training and evaluating mutating agents environment ([Implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/mutating_agents#mutating_agents-predator-prey-grass-mutating-agents-environment))
+* Training and evaluating mutating agents environment ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* Training and evaluating walls occlusion ([Implementation](src/predpreygrass/rllib/walls_occlusion))
+* Training and evaluating walls occlusion environment ([implementation](src/predpreygrass/rllib/walls_occlusion))
+
+* Training and evaluating selfish gene environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene))
+
+### Experiments:
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of (non-mutating) predators and prey ([Implementation](src/predpreygrass/rllib/v3_0/evaluate_red_queen_freeze_type_1_only.py), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
 * Testing the Req Queen Hypothesis in the co-evolutionary setting of mutating predators and prey ([Implementation](src/predpreygrass/rllib/mutating_agents), [Results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/configurations/mutating_agents/#co-evolution-and-the-red-queen-effect))
+
+### Hyper parameter tuning
 
 * Hyperparameter tuning base environment - Population Based Training ([Implementation](src/predpreygrass/rllib/hyper_parameter_tuning/tune_population_based_training.py))
 
