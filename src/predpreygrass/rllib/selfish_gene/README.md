@@ -119,7 +119,7 @@ Evaluating 5 checkpoints from `PPO_SELFISH_GENE_2025-10-02_21-31-07` produced:
 
 Embedded plot (from assets):
 
-![AI & KPA vs training iteration](assets/images/readme/PPO_SELFISH_GENE_2025-10-02_21-31-07.png)
+![AI & KPA vs training iteration](../../../../assets/images/readme/PPO_SELFISH_GENE_2025-10-02_21-31-07.png)
 
 Interpretation:
 - Under movement‑only actions and lineage reward, policies show meaningful assortment but learn to disperse over training.
