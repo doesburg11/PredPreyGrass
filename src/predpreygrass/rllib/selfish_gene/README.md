@@ -1,13 +1,4 @@
-# PredPreyGrass — Selfish Gene: Comprehensive Report on the Search for Emergent Cooperation
-
-This document consolidates and deduplicates the following materials from the selfish_gene effort:
-- README_SELFISH_GENE.md (overview and results)
-- METRICS_CLUSTERING.md (metrics rationale)
-- EXPERIMENT_PLAN.md (A/B plan around Tier‑1 lineage reward)
-- GOAL_SELFISH_GENE.md (design goal for Tier‑1 lineage reward)
-
-It provides a single, end‑to‑end narrative with rationale, environment and reward definitions, metrics, procedures, results, conclusions, and next steps. The underlying code lives under `src/predpreygrass/rllib/selfish_gene/` unless noted.
-
+# PredPreyGrass — Selfish Gene: The Search for Emergent Cooperation
 
 ## Table of Contents
 - [1) Motivation and Principles](#motivation-principles)
