@@ -1,91 +1,80 @@
-# Walls & Occlusion Experiments in PredPreyGrass
+# PredPreyGrass — Centralized Training (single shared policy)
 
-<p align="center">
-    <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
-<p align="center">
-    <img align="center" src="../../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
-</p>
+This folder contains a centralized training variant of PredPreyGrass using Ray RLlib’s new API stack and PPO. All agents (predators and prey) share a single policy (“shared_policy”), trained jointly on the same observations/action space.
 
-This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
+## What’s here
+- Environment: `predpreygrass_rllib_env.py` (gridworld with predators, prey, grass; walls/occlusion supported by configs)
+- Training script: `tune_ppo_centralized_training.py` (PPO + RLlib Tune; new RLModule API)
+- Evaluation helpers:
+  - `evaluate_ppo_from_checkpoint_debug.py`
+  - `evaluate_ppo_from_checkpoint_default.py`
+  - `evaluate_ppo_from_checkpoint_multi_runs.py`
+- Configs: `config/`
+  - Env presets (e.g., `config_env_zigzag_walls.py`, `config_env_train.py`, `config_env_eval.py`, …)
+  - PPO presets for CPU/GPU and PBT/search variants (e.g., `config_ppo_cpu.py`, `config_ppo_gpu_default.py`)
+- Utilities: `utils/` (env spec, networks, renderers, callback)
+- Tests: `test/` (sanity checks for walls/occlusion)
 
-## Overview
+## How it works (design sketch)
+- Centralized policy: `policy_mapping_fn` always returns `"shared_policy"` so every agent uses the same policy parameters.
+- Spaces: A sample env instance is created, and the first agent’s observation/action spaces are used to define the shared policy’s module spec.
+- Network: Uses `DefaultPPOTorchRLModule` with a simple Conv stack (filters: 16, 32, 64; 3×3; ReLU).
+- RLlib (new API):
+  - `PPOConfig().environment(...).framework('torch').multi_agent(...).training(...).rl_module(...).learners(...).env_runners(...).resources(...).callbacks(...)`
+  - Checkpoints produced every 10 iterations (keep up to 100).
+- Callback: `EpisodeReturn` emits episode returns (useful for quick sanity in TensorBoard).
 
-In the PPG environment, agents (predators and prey) interact on a gridworld with grass as a renewable resource. Walls can be placed to create obstacles, corridors, or complex mazes. When occlusion is enabled, walls block agents' line of sight, affecting both their observations and their ability to move. This setup allows for the study of:
-- How spatial structure and visibility constraints shape co-evolutionary dynamics
-- The emergence of new strategies in response to environmental complexity
-- The robustness of learned behaviors to changes in wall layout or occlusion rules
+## Running training
+By default, the script writes results under `~/Dropbox/02_marl_results/predpreygrass_results/ray_results/` with a timestamped experiment folder (`PPO_CENTRALIZED_TRAINING_<timestamp>`). It also saves a `run_config.json` snapshot (env + PPO).
 
-## Key Features
-
-- **Manual and Dynamic Wall Placement:**
-  - Walls can be placed manually (via config) or moved/reshuffled dynamically during training.
-  - Dynamic walls can change every N steps, forcing agents to adapt to a non-stationary environment.
-- **Occlusion (LOS Masking):**
-  - When enabled, agents' observations are masked by line-of-sight; they cannot see through walls. The Field Of Vision (FOV) in the gridworld is determined by the [*Bresenham's line algorithm*](https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm)
-  - Movement can also be restricted to only those cells visible via LOS.
-- **Flexible Experimentation:**
-  - Easily switch between static/dynamic walls, with or without occlusion, by changing config flags.
-  - Supports a variety of wall layouts: mazes, chambers, forests, arenas, etc.
-
-## How It Works
-
-- **Configuring Walls:**
-  - Set `wall_placement_mode` to `manual` and provide a list of `(x, y)` coordinates in `manual_wall_positions` for static layouts.
-  - For dynamic walls, set `dynamic_walls=True` and specify `dynamic_wall_update_freq` (steps between wall updates).
-- **Enabling Occlusion:**
-  - Set `mask_observation_with_visibility=True` to mask observations by LOS.
-  - Set `respect_los_for_movement=True` to restrict movement to LOS-visible cells.
-  - Optionally, set `include_visibility_channel=True` to add a visibility mask as an extra observation channel.
-- **Running Experiments:**
-  - Use the provided `tune_ppo_walls_occlusion.py` (or similar) script to launch training with your chosen wall/occlusion settings.
-  - Evaluation scripts (e.g., `evaluate_ppo_from_checkpoint_debug.py`) visualize agent behavior and wall/LOS overlays.
-
-## Example Config Snippet
-
-```python
-config_env = {
-    # ... other env settings ...
-    "wall_placement_mode": "manual",
-    "manual_wall_positions": [(6,6), (7,6), ...],
-    "dynamic_walls": True,
-    "dynamic_wall_update_freq": 50,  # Move walls every 50 steps
-    "mask_observation_with_visibility": True,
-    "respect_los_for_movement": True,
-    "include_visibility_channel": True,
-}
+Train with PPO (single shared policy):
+```bash
+python src/predpreygrass/rllib/centralized_training/tune_ppo_centralized_training.py
 ```
+Notes:
+- The environment preset imported by default is `config/config_env_zigzag_walls.py` (see the import at the top of the script). Switch to another env preset (e.g., `config_env_train.py`) by editing that import.
+- PPO preset selection is done in `get_config_ppo()` based on `os.cpu_count()`.
+  - If `os.cpu_count() == 32`: uses `config_ppo_gpu_default.py`
+  - If `os.cpu_count() == 8`: uses `config_ppo_cpu.py`
+  - Otherwise: falls back to `config_ppo_cpu.py`
+  If you want a specific preset, simply change the imports inside `get_config_ppo()`.
 
-## Suggested Wall Layouts
-- **Central Maze:** Spiral or labyrinth in the center.
-- **Chambers:** Multiple rooms with narrow corridors.
-- **Forest:** Scattered single-tile obstacles.
-- **Arena:** Perimeter walls with a few gates.
-- **Dynamic:** Walls move or change during training.
+## Evaluating checkpoints
+You can load a specific checkpoint and render/evaluate:
+```bash
+python src/predpreygrass/rllib/centralized_training/evaluate_ppo_from_checkpoint_debug.py
+```
+or the default variant:
+```bash
+python src/predpreygrass/rllib/centralized_training/evaluate_ppo_from_checkpoint_default.py
+```
+For sweeping multiple runs:
+```bash
+python src/predpreygrass/rllib/centralized_training/evaluate_ppo_from_checkpoint_multi_runs.py
+```
+Depending on the script, you may need to point it at the checkpoint folder under the experiment directory created by training.
 
-## Research Questions
-- How do static vs. dynamic walls affect predator/prey strategies?
-- Does occlusion promote more robust or generalizable behaviors?
-- Can agents adapt to non-stationary environments with moving obstacles?
+## Key configuration knobs
+- Env (see `config/`): grid size, walls/occlusion, vision radius, energy/reproduction knobs, episode length (`max_steps`).
+- PPO (see `config_ppo_*.py`):
+  - `train_batch_size_per_learner`, `minibatch_size`, `num_epochs`, `gamma`, `lr`, `lambda_`, `entropy_coeff`, `vf_loss_coeff`, `clip_param`, `kl_coeff`, `kl_target`.
+  - Runners/resources: `num_env_runners`, `num_envs_per_env_runner`, `rollout_fragment_length`, `num_cpus_per_env_runner`, `num_learners`, `num_gpus_per_learner`, `num_cpus_for_main_process`.
 
-## Usage
-1. Edit the config file to set your desired wall and occlusion parameters.
-2. Run the training script:
-   ```bash
-   python -u src/predpreygrass/rllib/ppg_visibility/tune_ppo_walls_occlusion.py | tee logs/last_run_tune.log
-   ```
-3. Visualize and evaluate results using the provided evaluation scripts.
+## Artifacts and logging
+- Ray/Tune results
+- Saved config snapshot
+- Checkpoints: Tune-managed; by default every 10 iterations and at the end.
+- Callback: episode returns are logged for visualization.
 
-## Files
-- `tune_ppo_walls_occlusion.py`: Main training script for wall/occlusion experiments.
-- `evaluate_ppo_from_checkpoint_debug.py`: Visual evaluation with wall and LOS overlays.
-- `config_env_train_2_policies.py`: Example config with manual/dynamic wall options.
-- `README.md`: This documentation.
+## Tips & troubleshooting
+- Observation shape mismatches when evaluating usually come from changed env presets. Ensure evaluation uses the same env settings as training.
+- On smaller machines, start with CPU presets and/or reduce `num_env_runners`, `num_envs_per_env_runner`, and batch sizes.
+- GPU usage is controlled by the selected PPO preset (`num_gpus_per_learner`). Ensure your CUDA environment is set up if you toggle this.
+- If you want role-specific policies (multi-policy training), switch from centralized mapping (`"shared_policy"`) to distinct policy IDs per role and update the `policies` dict and module spec accordingly.
 
-## Tips
-- For reproducibility, always snapshot your config and wall layout with each experiment.
-- Try both static and dynamic walls to see how agent strategies change.
-- Use the visibility channel for richer policy learning, or mask observations for harder partial observability.
-
----
-
-For more details, see the main project README and the code comments in each script.
+## Folder map (quick reference)
+- `tune_ppo_centralized_training.py` — main centralized PPO trainer
+- `predpreygrass_rllib_env.py` — environment implementation for this variant
+- `config/` — env and PPO presets (CPU/GPU/PBT)
+- `utils/` — helpers (networks, renderers, callback)
+- `evaluate_ppo_*.py` — checkpoint loaders and evaluators
