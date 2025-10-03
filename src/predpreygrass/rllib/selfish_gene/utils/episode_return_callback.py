@@ -5,8 +5,19 @@ from collections import defaultdict
 
 
 class EpisodeReturn(RLlibCallback):
+    def on_episode_start(self, *, episode, **kwargs):
+        # Initialize manual episode length tracking
+        try:
+            self.episode_lengths[episode.id_] = 0
+        except Exception:
+            pass
     def on_episode_step(self, *, episode, **kwargs):
         # ...existing code...
+        # Manual episode length++ so we can always emit episode_length at end
+        try:
+            self.episode_lengths[episode.id_] = self.episode_lengths.get(episode.id_, 0) + 1
+        except Exception:
+            pass
         # Windowed lineage reward hook (Tier-1 Selfish Gene)
         infos_map = self._episode_last_infos(episode)
         window = 50  # can be made configurable
@@ -89,6 +100,8 @@ class EpisodeReturn(RLlibCallback):
                 same_total_los, _ = same_root_counts(use_los=True)
                 for same, total in same_total_los:
                     acc["ai_sum_los"] += (same / total)
+                # Mark that LOS-aware accumulation was attempted this episode
+                acc["had_los"] = True
 
             # KPA proxy: use last step's offspring counts and kin-present flag to see if reproduction happened
             # Get current offspring counts from env.per_step_agent_data[-1]
@@ -124,6 +137,10 @@ class EpisodeReturn(RLlibCallback):
         # Online cooperation metrics accumulators (per episode id)
         self._coop_accumulators = {}
         self._kpa_state = {}
+        try:
+            print("[EpisodeReturn] Selfish Gene callback active: coop metrics will be logged.")
+        except Exception:
+            pass
 
     def _episode_agent_ids(self, episode) -> list:
         """
@@ -217,28 +234,36 @@ class EpisodeReturn(RLlibCallback):
 
         # --- Emit cooperation metrics to TensorBoard ---
         acc = self._coop_accumulators.pop(episode_id, None)
-        if acc and acc.get("ai_n", 0) > 0:
-            ai_raw = acc["ai_sum_raw"] / max(1, acc["ai_n"])
-            metrics_logger.log_value("coop/ai_raw", ai_raw, reduce="mean")
-            # Only log LOS-aware AI if env had it enabled (we only accumulated then)
-            if acc.get("ai_sum_los", 0.0) > 0.0:
-                ai_los = acc["ai_sum_los"] / max(1, acc["ai_n"])
-                metrics_logger.log_value("coop/ai_los", ai_los, reduce="mean")
+        # Always emit tags so they appear in TensorBoard, even if zero
+        ai_n = acc.get("ai_n", 0) if acc else 0
+        ai_raw = (acc.get("ai_sum_raw", 0.0) / max(1, ai_n)) if acc else 0.0
+        metrics_logger.log_value("coop/ai_raw", ai_raw, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/ai_raw", ai_raw, reduce="mean")
+        # Emit LOS-aware AI when LOS was enabled (or default to 0 if not accumulated but env is LOS-aware)
+        had_los = bool(acc.get("had_los", False)) if acc else False
+        if had_los:
+            ai_los = (acc.get("ai_sum_los", 0.0) / max(1, ai_n)) if acc else 0.0
+            metrics_logger.log_value("coop/ai_los", ai_los, reduce="mean")
+            metrics_logger.log_value("custom_metrics/coop/ai_los", ai_los, reduce="mean")
 
         kpa = self._kpa_state.pop(episode_id, None)
-        if kpa:
-            with_trials = max(0, int(kpa.get("with_trials", 0)))
-            with_events = max(0, int(kpa.get("with_events", 0)))
-            without_trials = max(0, int(kpa.get("without_trials", 0)))
-            without_events = max(0, int(kpa.get("without_events", 0)))
-            p_with = (with_events / with_trials) if with_trials else 0.0
-            p_without = (without_events / without_trials) if without_trials else 0.0
-            metrics_logger.log_value("coop/kpa_with", p_with, reduce="mean")
-            metrics_logger.log_value("coop/kpa_without", p_without, reduce="mean")
-            metrics_logger.log_value("coop/kpa", p_with - p_without, reduce="mean")
-            # Useful counts for confidence in estimates
-            metrics_logger.log_value("coop/with_trials", with_trials, reduce="mean")
-            metrics_logger.log_value("coop/without_trials", without_trials, reduce="mean")
+        with_trials = max(0, int(kpa.get("with_trials", 0))) if kpa else 0
+        with_events = max(0, int(kpa.get("with_events", 0))) if kpa else 0
+        without_trials = max(0, int(kpa.get("without_trials", 0))) if kpa else 0
+        without_events = max(0, int(kpa.get("without_events", 0))) if kpa else 0
+        p_with = (with_events / with_trials) if with_trials else 0.0
+        p_without = (without_events / without_trials) if without_trials else 0.0
+        metrics_logger.log_value("coop/kpa_with", p_with, reduce="mean")
+        metrics_logger.log_value("coop/kpa_without", p_without, reduce="mean")
+        metrics_logger.log_value("coop/kpa", p_with - p_without, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/kpa_with", p_with, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/kpa_without", p_without, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/kpa", p_with - p_without, reduce="mean")
+        # Useful counts for confidence in estimates
+        metrics_logger.log_value("coop/with_trials", with_trials, reduce="mean")
+        metrics_logger.log_value("coop/without_trials", without_trials, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/with_trials", with_trials, reduce="mean")
+        metrics_logger.log_value("custom_metrics/coop/without_trials", without_trials, reduce="mean")
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
