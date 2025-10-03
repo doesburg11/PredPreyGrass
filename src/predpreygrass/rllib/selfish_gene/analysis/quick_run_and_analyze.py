@@ -11,7 +11,7 @@ from predpreygrass.rllib.selfish_gene.analysis.coop_metrics import (
 )
 
 
-def run_episodes(n_episodes=10, max_steps=None, log_dir=None, seed=0, config_overrides=None):
+def run_episodes(n_episodes=10, max_steps=None, log_dir=None, seed=0, config_overrides=None, random_actions=False):
     cfg = dict(base_config)
     cfg["enable_coop_logging"] = True
     if max_steps is not None:
@@ -27,7 +27,12 @@ def run_episodes(n_episodes=10, max_steps=None, log_dir=None, seed=0, config_ove
         obs, _ = env.reset(seed=int(seed + ep))
         done = False
         while not done:
-            actions = {a: 0 for a in env.agents}
+            if random_actions:
+                # Sample a random action for each agent from its action space
+                actions = {a: env.action_spaces[a].sample() for a in env.agents}
+            else:
+                # Deterministic baseline action (often leads to little interaction)
+                actions = {a: 0 for a in env.agents}
             obs, rew, term, trunc, info = env.step(actions)
             done = term.get("__all__", False) or trunc.get("__all__", False)
     env.close()
@@ -60,6 +65,7 @@ def main():
     parser.add_argument("--bootstrap", type=int, default=0, help="Bootstrap iterations for CI")
     parser.add_argument("--by-policy", action="store_true", help="Include per-policy breakdowns")
     parser.add_argument("--config-override", action="append", default=[], help="Override env config as key=value (can be repeated)")
+    parser.add_argument("--random-actions", action="store_true", help="Use random actions to induce interactions in non-trained runs")
 
     args = parser.parse_args()
 
@@ -86,7 +92,14 @@ def main():
     log_dir = args.log_dir or base_config.get("coop_log_dir", "output/coop_logs")
 
     print(f"[RUN] episodes={args.episodes} max_steps={args.max_steps} log_dir={log_dir} overrides={overrides}")
-    run_episodes(n_episodes=args.episodes, max_steps=args.max_steps, log_dir=log_dir, seed=args.seed, config_overrides=overrides)
+    run_episodes(
+        n_episodes=args.episodes,
+        max_steps=args.max_steps,
+        log_dir=log_dir,
+        seed=args.seed,
+        config_overrides=overrides,
+        random_actions=args.random_actions,
+    )
 
     print("[ANALYZE] computing metrics...")
     out = analyze(log_dir=log_dir, los_aware=args.los_aware, bootstrap=args.bootstrap, seed=args.seed, by_policy=args.by_policy)
