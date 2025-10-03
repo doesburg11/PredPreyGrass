@@ -59,7 +59,7 @@ Compatibility
 
 ## 3) Tier‑1 Selfish Gene Reward (Design Goal)
 <a id="tier1-reward"></a>
-Principle (from GOAL_SELFISH_GENE.md): reward reflects lineage replication only.
+Principle: reward reflects lineage replication only.
 - Each agent carries lineage metadata: lineage_tag (root_ancestor), parent_id, birth_step.
 - Window W: per‑agent direct fitness = count of viable offspring within W (optionally weighted by offspring survival at window end).
 - Reward: Rᵢ(W) = α · direct_fitnessᵢ / mean_births_per_capita(W); trickled evenly across the last W steps to reduce variance.
@@ -82,7 +82,7 @@ Design guardrails:
 <a id="metrics"></a>
 We never hardcode helping; we detect lineage‑level outcomes and spatial signals.
 
-Primary metrics (from METRICS_CLUSTERING.md):
+Primary metrics:
 - Assortment Index (AI): baseline‑corrected same‑lineage neighbor fraction within radius R; LOS‑aware variant available. AI ≈ 0 implies random assortment; higher implies kin clustering.
 - Kin Proximity Advantage (KPA): difference in reproduction success when kin are present vs absent within R at the prior step; LOS‑aware variant available. Positive values mean kin proximity helps; negative values indicate a disadvantage (e.g., crowding/predation risk).
 
@@ -100,7 +100,6 @@ Implementation pointers:
 
 ## 6) Experiment plan (A/B comparison)
 <a id="experiment-plan"></a>
-From EXPERIMENT_PLAN.md:
 - Compare A (current rewards) vs B (adds Tier‑1 lineage reward).
 - Hold environment seeds/config equal; run n ≥ 5 eval seeds per condition.
 - Primary outcomes:
@@ -116,8 +115,6 @@ Evaluating 5 checkpoints from `PPO_SELFISH_GENE_2025-10-02_21-31-07` produced:
 - AI: clearly positive (≈ 0.24 → ≈ 0.20). There is non‑trivial kin clustering above random.
 - Trend: AI declines across checkpoints—clustering weakens with training.
 - KPA: slightly negative throughout (≈ −0.007 → ≈ −0.009) and trending more negative—kin proximity correlates with a small reproduction disadvantage, consistent with resource crowding and/or predator pressure on clusters.
-
-Embedded plot (from assets):
 
 ![AI & KPA vs training iteration](../../../../assets/images/readme/PPO_SELFISH_GENE_2025-10-02_21-31-07.png)
 
@@ -183,9 +180,9 @@ python src/predpreygrass/rllib/selfish_gene/analysis/coop_metrics.py \
 - With lineage reward and minimal observation extensions, we do not see increasing learned kin clustering. Cooperation via spatial assortment exists (positive AI), but policies trend toward dispersion, and kin proximity shows a small reproduction disadvantage.
 
 
-## 10) Next steps (incremental and testable)
+## 10) Next incremental steps
 <a id="next-steps"></a>
-1) Expand the action space (minimally):
+1) Expand the action space minimally:
 - Energy sharing or partial harvest (leave a fraction of grass/prey; or explicit small energy transfer to nearby kin). This introduces potential reciprocity/kin support without baking it into rewards.
 - Light signaling: a low‑cost “ping” that influences kin movement.
 
@@ -291,12 +288,3 @@ Notes
 - Unique lineage tracking maintains maps of `unique_agents` and per‑unique stats (birth/death steps, parent UID, offspring list/count, fitness aggregates) to support downstream analysis.
 - Kin‑density channel: groups by same‑policy prefix (e.g., `type_1_predator`) and uses Chebyshev radius. When `kin_density_los_aware=True`, kin counts are restricted to LOS‑visible neighbors by combining the kin mask with the visibility mask before counting; observation shape remains unchanged.
 - Callback metrics: training emits `coop/ai_raw`, `coop/ai_los`, `coop/kpa` and mirrors them under `custom_metrics/coop/*` for TensorBoard.
-
-
-## 16) Artifact paths
-<a id="artifact-paths"></a>
-- Ray results (training): `~/Dropbox/02_marl_results/predpreygrass_results/ray_results/` (one subfolder per run).
-- One‑shot event log: `reproduction_events.log` (step, parent UID, child UID, lineage reward, living‑offspring list).
-
----
-Questions, corrections, or requests for additional experiments (e.g., implementing partial harvest or energy sharing) are very welcome. We can stage them as a new `vX_Y` experiment directory to preserve lineage and comparability.
