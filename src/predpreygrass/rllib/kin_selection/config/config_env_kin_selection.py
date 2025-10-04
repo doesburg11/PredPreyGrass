@@ -1,4 +1,4 @@
-from .config_env_perimeter_four_gaps_walls import config_env as _base
+from .config_env_base import config_env_base as _base
 
 
 # Lineage-reward variant of the perimeter-four-gaps walls config.
