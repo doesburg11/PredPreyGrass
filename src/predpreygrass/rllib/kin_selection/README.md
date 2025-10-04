@@ -47,6 +47,18 @@ Compared to `rllib/walls_occlusion`:
 5. Safer callbacks
    - Handles list/dict shaped `infos` from env runners and guards sub-callbacks with try/except to avoid worker crashes.
 
+## Why two types (type_1 and type_2)?
+
+We include two heritable types to make kin selection testable and measurable during training:
+
+- Kin proxy that’s heritable: The type label is inherited (parent → offspring), so “same-type” approximates “kin.” This enables SHARE-with-kin rules and lets us ask if agents preferentially help kin vs non-kin.
+- Separate learning channels: Policies are split per species and type (e.g., `type_1_prey`, `type_2_prey`). Each lineage can learn distinct strategies, and TensorBoard will show per-policy stats, revealing divergence or kin bias.
+- Clean metrics and population signals: We can break out helping_rate/attempts and returns per type, and track the fraction of type_2 over time (invasion/fixation dynamics).
+- Controlled experiments: Keep types capability-matched to isolate pure kin effects, or deliberately vary a trait (e.g., action range) to study trade‑offs. Toggle depending on the hypothesis.
+- Lineage reward linkage: The type label pairs naturally with the lineage reward to see whether reproducing kin and helping kin co‑vary.
+
+Note: Policies are built only for types present in the sample env at startup. If `type_2` has zero initial actives, you won’t see `type_2_*` policies/metrics in TensorBoard. To enable them, set `n_initial_active_type_2_prey`/`n_initial_active_type_2_predator` > 0 (and ensure the corresponding `n_possible_type_2_*` > 0), then start a new experiment.
+
 ## Code map
 
 - `predpreygrass_rllib_env.py`
