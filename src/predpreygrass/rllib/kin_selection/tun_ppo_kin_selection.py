@@ -7,11 +7,7 @@ Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.kin_selection.predpreygrass_rllib_env import PredPreyGrass
 import os
-USE_LINEAGE = os.environ.get("PPG_USE_LINEAGE", "0").lower() in ("1", "true", "yes")
-if USE_LINEAGE:
-    from predpreygrass.rllib.kin_selection.config.config_env_kin_selection import config_env
-else:
-    from predpreygrass.rllib.kin_selection.config.config_env_perimeter_four_gaps_walls import config_env
+from predpreygrass.rllib.kin_selection.config.config_env_kin_selection import config_env
 from predpreygrass.rllib.kin_selection.utils.combined_callbacks import CombinedCallbacks
 from predpreygrass.rllib.kin_selection.utils.networks import build_multi_module_spec
 
@@ -67,7 +63,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_PERIMETER_FOUR_GAPS_{timestamp}"
+    experiment_name = f"PPO_KIN_SELECTION_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 

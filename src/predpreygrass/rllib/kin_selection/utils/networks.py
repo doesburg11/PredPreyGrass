@@ -10,11 +10,21 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
     so that the receptive field RF = 1 + 2L equals H.
     Also widens the first FC layer for large action spaces (>20 actions).
     """   
-    # obs_space is a Box with shape (C, H, W)
-    #   C = number of channels (layers of information: mask, predators, prey, grass → usually 4)
-    #   H = height of the square observation window (e.g. 7 for predators, 9 for prey)
-    #   W = width of the square observation window (equal to H here)
-    C, H, W = obs_space.shape
+    # obs_space may be a Box or a Dict({"obs": Box, "action_mask": Box})
+    #   C = number of channels
+    #   H = height of the square observation window
+    #   W = width of the square observation window
+    try:
+        from gymnasium.spaces import Dict as GymDict, Box as GymBox
+    except Exception:
+        GymDict = None
+        from gymnasium.spaces import Box as GymBox
+    if GymDict is not None and isinstance(obs_space, GymDict):
+        img_space = obs_space["obs"]
+    else:
+        img_space = obs_space
+    assert isinstance(img_space, GymBox), "Expected Box or Dict with Box under 'obs'"
+    C, H, W = img_space.shape
 
     # We assert the window is square and odd-sized.
     # Odd size is important because the agent is always centered in its window.
@@ -110,7 +120,7 @@ def build_multi_module_spec(
         rl_module_specs[policy_id] = build_module_spec(
             obs_spaces_by_policy[policy_id],
             act_spaces_by_policy[policy_id],
-            policy_name=policy_id,  
+            policy_name=policy_id,
         )
 
     return MultiRLModuleSpec(rl_module_specs=rl_module_specs)
