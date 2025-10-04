@@ -117,6 +117,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.type_1_act_range = config.get("type_1_action_range", 3)
         self.type_2_act_range = config.get("type_2_action_range", 5)
 
+        # Lineage reward toggle and parameters (optional Tier-1)
+        self.lineage_reward_enabled = config.get("lineage_reward_enabled", False)
+        self.lineage_reward_window_global = config.get("lineage_reward_window", 150)
+        self.lineage_reward_window_predator = config.get("lineage_reward_window_predator", None)
+        self.lineage_reward_window_prey = config.get("lineage_reward_window_prey", None)
+        # If False, direct reproduction rewards apply; if True and reproduction_reward_enabled is False,
+        # use lineage reward instead of direct reproduction reward.
+        self.reproduction_reward_enabled_flag = config.get("reproduction_reward_enabled", True)
+
     def _init_reset_variables(self, seed):
         # Agent tracking
         self.current_step = 0
@@ -152,6 +161,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = {}
 
         self.agent_last_reproduction = {}
+        # Optional SHARE action cooldown tracking per agent
+        self.agent_last_share = {}
 
         # aggregates per step
         self.active_num_predators = 0
@@ -188,7 +199,11 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Reset the environment to its initial state.
         """
-        super().reset(seed=seed)
+        # RLlib's MultiAgentEnv may not implement reset in some stubs; guard the call
+        try:
+            super().reset(seed=seed)
+        except Exception:
+            pass
         self._init_reset_variables(seed)
 
         # --- Place walls first ---
@@ -492,7 +507,12 @@ class PredPreyGrass(MultiAgentEnv):
         observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
-        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+        # Dynamic channel count: base + optional kin-energy + optional visibility
+        channels = self.num_obs_channels
+        if self.config.get("include_kin_energy_channel", False):
+            channels += 1
+        if self.include_visibility_channel:
+            channels += 1
         observation = np.zeros((channels, observation_range, observation_range), dtype=np.float32)
         # Channel 0: walls (binary). Already zero; stamp walls that fall inside window.
         for (wx, wy) in self.wall_positions:
@@ -559,7 +579,18 @@ class PredPreyGrass(MultiAgentEnv):
                 vis_idx = channels - 1
                 observation[vis_idx] = visibility_mask
 
-        return observation
+        # Optional kin-energy feature channel (uniform scalar across the window)
+        if self.config.get("include_kin_energy_channel", False):
+            kin_val = self._compute_kin_energy_feature(agent)
+            # Place this channel just before a visibility channel if present, otherwise at the end
+            kin_idx = channels - 1 if not self.include_visibility_channel else channels - 2
+            observation[kin_idx] = kin_val
+        # Optionally include action mask in observation as a dict
+        if self.config.get("action_mask_enabled", False):
+            mask = self._build_action_mask(agent)
+            return {"obs": observation, "action_mask": mask}
+        else:
+            return observation
 
     def _obs_clip(self, x, y, observation_range):
         """
@@ -727,6 +758,14 @@ class PredPreyGrass(MultiAgentEnv):
         """
         for agent, action in action_dict.items():
             if agent in self.agent_positions:
+                # Handle optional SHARE action: if enabled and action is the extra last index, attempt share instead of moving.
+                if self._share_allowed_for(agent):
+                    act_range = self.type_1_act_range if "type_1" in agent else self.type_2_act_range
+                    share_index = act_range**2  # last index when share is enabled
+                    if int(action) == share_index:
+                        self._attempt_share(agent)
+                        # No movement or movement cost applied when sharing; proceed to next agent
+                        continue
                 old_position = self.agent_positions[agent]
                 new_position = self._get_move(agent, action)
                 self.agent_positions[agent] = new_position
@@ -988,7 +1027,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
+            if self.lineage_reward_enabled and not self.reproduction_reward_enabled_flag:
+                rewards[agent] = self._compute_lineage_reward(agent, species="predator")
+            else:
+                rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
 
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
@@ -1079,7 +1121,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Rewards and tracking
             rewards[new_agent] = 0
-            rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
+            if self.lineage_reward_enabled and not self.reproduction_reward_enabled_flag:
+                rewards[agent] = self._compute_lineage_reward(agent, species="prey")
+            else:
+                rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
             self.cumulative_rewards[new_agent] = 0
             self.cumulative_rewards[agent] += rewards[agent]
             uid = self.unique_agents[agent]
@@ -1139,6 +1184,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_ages": self.agent_ages.copy(),
             "death_cause_prey": self.death_cause_prey.copy(),
             "agent_last_reproduction": self.agent_last_reproduction.copy(),
+            "agent_last_share": self.agent_last_share.copy(),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
         }
 
@@ -1161,6 +1207,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_ages = snapshot["agent_ages"].copy()
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
+        self.agent_last_share = snapshot.get("agent_last_share", {}).copy()
         self.per_step_agent_data = snapshot["per_step_agent_data"].copy()
 
     def _build_possible_agent_ids(self):
@@ -1183,28 +1230,43 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the observation space for a specific agent.
         """
-        extra = 1 if getattr(self, "include_visibility_channel", False) else 0
+        include_vis = getattr(self, "include_visibility_channel", False)
+        include_kin = bool(self.config.get("include_kin_energy_channel", False))
+        channels = self.num_obs_channels + (1 if include_kin else 0) + (1 if include_vis else 0)
         if "predator" in agent_id:
-            predator_shape = (self.num_obs_channels + extra, self.predator_obs_range, self.predator_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
-
+            shape = (channels, self.predator_obs_range, self.predator_obs_range)
         elif "prey" in agent_id:
-            prey_shape = (self.num_obs_channels + extra, self.prey_obs_range, self.prey_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float32)
-
+            shape = (channels, self.prey_obs_range, self.prey_obs_range)
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
 
-        return obs_space
+        box = gymnasium.spaces.Box(low=0, high=100.0, shape=shape, dtype=np.float32)
+
+        if self.config.get("action_mask_enabled", False):
+            # Determine number of actions for this agent for mask shape
+            role = "predator" if "predator" in agent_id else ("prey" if "prey" in agent_id else None)
+            share_extra = 1 if (self.config.get("share_enabled", False) and role in set(self.config.get("share_roles", ["prey"]))) else 0
+            base = self.type_1_act_range ** 2 if "type_1" in agent_id else self.type_2_act_range ** 2
+            n_actions = base + share_extra
+            mask_space = gymnasium.spaces.Box(low=0.0, high=1.0, shape=(n_actions,), dtype=np.float32)
+            return gymnasium.spaces.Dict({"obs": box, "action_mask": mask_space})
+        else:
+            return box
 
     def _build_action_space(self, agent_id):
         """
         Build the action space for a specific agent.
         """
+        # Optionally add a SHARE action (the extra last index) for eligible roles
+        share_extra = 0
+        role = "predator" if "predator" in agent_id else ("prey" if "prey" in agent_id else None)
+        if self.config.get("share_enabled", False) and role in set(self.config.get("share_roles", ["prey"])):
+            share_extra = 1
+
         if "type_1" in agent_id:
-            action_space = gymnasium.spaces.Discrete(self.type_1_act_range**2)
+            action_space = gymnasium.spaces.Discrete(self.type_1_act_range**2 + share_extra)
         elif "type_2" in agent_id:
-            action_space = gymnasium.spaces.Discrete(self.type_2_act_range**2)
+            action_space = gymnasium.spaces.Discrete(self.type_2_act_range**2 + share_extra)
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
 
@@ -1330,3 +1392,236 @@ class PredPreyGrass(MultiAgentEnv):
                     return raw_val[k]
             raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
         return raw_val
+
+    def _compute_lineage_reward(self, agent_id: str, species: str) -> float:
+        """Return the count of living offspring born within the last W steps.
+
+        Species-specific windows override the global window when provided.
+        We consider an offspring "living" if its unique stats record has no death_step yet.
+        """
+        if species == "predator":
+            w = self.lineage_reward_window_predator if self.lineage_reward_window_predator is not None else self.lineage_reward_window_global
+        else:
+            w = self.lineage_reward_window_prey if self.lineage_reward_window_prey is not None else self.lineage_reward_window_global
+
+        live_offspring_uids = self.agent_live_offspring_ids.get(agent_id, [])
+        if not live_offspring_uids:
+            return 0.0
+        lo = max(self.current_step - w, 0)
+        hi = self.current_step
+        count = 0
+        for uid in live_offspring_uids:
+            st = self.unique_agent_stats.get(uid)
+            if not st:
+                continue
+            b = st.get("birth_step")
+            d = st.get("death_step")
+            if b is None:
+                continue
+            if lo <= b <= hi and d is None:
+                count += 1
+        return float(count)
+
+    # -----------------------------
+    # SHARE mechanics (optional)
+    # -----------------------------
+    def _share_allowed_for(self, agent_id: str) -> bool:
+        if not self.config.get("share_enabled", False):
+            return False
+        role = "predator" if "predator" in agent_id else ("prey" if "prey" in agent_id else None)
+        if role is None:
+            return False
+        allowed_roles = set(self.config.get("share_roles", ["prey"]))
+        return role in allowed_roles
+
+    def _attempt_share(self, donor_id: str):
+        """
+        Donor attempts to share a fixed amount of energy with the lowest-energy eligible kin
+        within share_radius. Applies efficiency and cooldown. No-op if conditions fail.
+        """
+        # Cooldown
+        cooldown = int(self.config.get("share_cooldown", 0))
+        if cooldown > 0 and (self.current_step - self.agent_last_share.get(donor_id, -cooldown) < cooldown):
+            self._pending_infos.setdefault(donor_id, {})["shared"] = 0
+            self._pending_infos[donor_id]["share_reason"] = "cooldown"
+            return
+
+        donor_energy = self.agent_energies.get(donor_id, 0.0)
+        share_amount = float(self.config.get("share_amount", 0.0))
+        if share_amount <= 0.0:
+            self._pending_infos.setdefault(donor_id, {})["shared"] = 0
+            self._pending_infos[donor_id]["share_reason"] = "zero_amount"
+            return
+
+        donor_min = float(self.config.get("share_donor_min", 0.0))
+        donor_safe = float(self.config.get("share_donor_safe", 0.0))
+        if donor_energy < donor_min or (donor_energy - share_amount) < donor_safe:
+            self._pending_infos.setdefault(donor_id, {})["shared"] = 0
+            self._pending_infos[donor_id]["share_reason"] = "insufficient_energy"
+            return
+
+        # Find eligible recipients: same role and type within radius
+        role = "predator" if "predator" in donor_id else "prey"
+        donor_type = "type_1" if "type_1" in donor_id else ("type_2" if "type_2" in donor_id else None)
+        radius = float(self.config.get("share_radius", 1.0))
+        los_required = bool(self.config.get("share_respect_los", False))
+        donor_pos = self.agent_positions[donor_id]
+
+        def in_radius(pos_a, pos_b):
+            dx = pos_a[0] - pos_b[0]
+            dy = pos_a[1] - pos_b[1]
+            return math.sqrt(dx * dx + dy * dy) <= radius
+
+        # Collect candidates
+        candidates = []
+        for aid, pos in self.agent_positions.items():
+            if aid == donor_id:
+                continue
+            if role not in aid:
+                continue
+            if donor_type and donor_type not in aid and self.config.get("share_kin_only", True):
+                continue
+            if not in_radius(donor_pos, pos):
+                continue
+            if los_required and not self._line_of_sight_clear(donor_pos, pos):
+                continue
+            candidates.append(aid)
+
+        if not candidates:
+            self._pending_infos.setdefault(donor_id, {})["shared"] = 0
+            self._pending_infos[donor_id]["share_reason"] = "no_recipient"
+            return
+
+        # Pick lowest-energy candidate
+        recipient_id = min(candidates, key=lambda aid: self.agent_energies.get(aid, 0.0))
+        efficiency = float(self.config.get("share_efficiency", 1.0))
+        gain = share_amount * efficiency
+
+        # Apply transfer
+        self.agent_energies[donor_id] -= share_amount
+        self.agent_energies[recipient_id] = self.agent_energies.get(recipient_id, 0.0) + gain
+
+        # Cap energies by role
+        if role == "predator":
+            max_donor = float(self.config.get("max_energy_predator", float("inf")))
+            max_rec = max_donor
+            layer = 1
+        else:
+            max_donor = float(self.config.get("max_energy_prey", float("inf")))
+            max_rec = max_donor
+            layer = 2
+        self.agent_energies[donor_id] = min(self.agent_energies[donor_id], max_donor)
+        self.agent_energies[recipient_id] = min(self.agent_energies[recipient_id], max_rec)
+
+        # Update grid energy layers
+        self.grid_world_state[layer, *self.agent_positions[donor_id]] = self.agent_energies[donor_id]
+        self.grid_world_state[layer, *self.agent_positions[recipient_id]] = self.agent_energies[recipient_id]
+
+        # Cooldown mark and infos
+        self.agent_last_share[donor_id] = self.current_step
+        self._pending_infos.setdefault(donor_id, {})["shared"] = 1
+        self._pending_infos[donor_id]["shared_to"] = recipient_id
+        self._pending_infos[donor_id]["share_amount"] = share_amount
+        self._pending_infos[donor_id]["share_efficiency"] = efficiency
+        self._pending_infos.setdefault(recipient_id, {})["received_share"] = gain
+
+    def _build_action_mask(self, agent_id: str) -> np.ndarray:
+        """Return a 1/0 mask of length action_space.n. Masks only SHARE index based on eligibility.
+        Movement actions remain unmasked (1) by default.
+        """
+        # Determine number of actions for this agent
+        if "type_1" in agent_id:
+            base = self.type_1_act_range ** 2
+        else:
+            base = self.type_2_act_range ** 2
+        share_extra = 1 if self._share_allowed_for(agent_id) else 0
+        total = base + share_extra
+        mask = np.ones((total,), dtype=np.float32)
+        # If there is a share action, compute its eligibility and mask it accordingly
+        if share_extra:
+            share_idx = base
+            can_share, _ = self._can_share_now(agent_id)
+            if not can_share:
+                mask[share_idx] = 0.0
+        return mask
+
+    def _can_share_now(self, donor_id: str):
+        """Check if donor can share now based on cooldown, energy thresholds, and recipient availability."""
+        if not self._share_allowed_for(donor_id):
+            return False, "not_allowed"
+        cooldown = int(self.config.get("share_cooldown", 0))
+        if cooldown > 0 and (self.current_step - self.agent_last_share.get(donor_id, -cooldown) < cooldown):
+            return False, "cooldown"
+        share_amount = float(self.config.get("share_amount", 0.0))
+        if share_amount <= 0.0:
+            return False, "zero_amount"
+        donor_energy = self.agent_energies.get(donor_id, 0.0)
+        donor_min = float(self.config.get("share_donor_min", 0.0))
+        donor_safe = float(self.config.get("share_donor_safe", 0.0))
+        if donor_energy < donor_min or (donor_energy - share_amount) < donor_safe:
+            return False, "insufficient_energy"
+        if not self._has_share_recipient(donor_id):
+            return False, "no_recipient"
+        return True, None
+
+    def _has_share_recipient(self, donor_id: str) -> bool:
+        role = "predator" if "predator" in donor_id else "prey"
+        donor_type = "type_1" if "type_1" in donor_id else ("type_2" if "type_2" in donor_id else None)
+        radius = float(self.config.get("share_radius", 1.0))
+        los_required = bool(self.config.get("share_respect_los", False))
+        donor_pos = self.agent_positions.get(donor_id)
+        if donor_pos is None:
+            return False
+        def in_radius(pos_a, pos_b):
+            dx = pos_a[0] - pos_b[0]
+            dy = pos_a[1] - pos_b[1]
+            return math.sqrt(dx * dx + dy * dy) <= radius
+        for aid, pos in self.agent_positions.items():
+            if aid == donor_id:
+                continue
+            if role not in aid:
+                continue
+            if donor_type and donor_type not in aid and self.config.get("share_kin_only", True):
+                continue
+            if not in_radius(donor_pos, pos):
+                continue
+            if los_required and not self._line_of_sight_clear(donor_pos, pos):
+                continue
+            return True
+        return False
+
+    def _compute_kin_energy_feature(self, agent_id: str) -> float:
+        """Compute normalized mean kin energy within a radius (optionally LOS); returns a scalar to be broadcast as a channel."""
+        role = "predator" if "predator" in agent_id else "prey"
+        kin_only = self.config.get("share_kin_only", True)
+        radius = float(self.config.get("kin_energy_radius", self.config.get("share_radius", 1.0)))
+        los_required = bool(self.config.get("kin_energy_respect_los", False))
+        donor_type = "type_1" if "type_1" in agent_id else ("type_2" if "type_2" in agent_id else None)
+        center = self.agent_positions.get(agent_id)
+        if center is None:
+            return 0.0
+        def in_radius(a, b):
+            dx = a[0] - b[0]
+            dy = a[1] - b[1]
+            return math.sqrt(dx * dx + dy * dy) <= radius
+        energies = []
+        for aid, pos in self.agent_positions.items():
+            if aid == agent_id:
+                continue
+            if role not in aid:
+                continue
+            if kin_only and donor_type and donor_type not in aid:
+                continue
+            if not in_radius(center, pos):
+                continue
+            if los_required and not self._line_of_sight_clear(center, pos):
+                continue
+            energies.append(self.agent_energies.get(aid, 0.0))
+        if not energies:
+            mean_e = 0.0
+        else:
+            mean_e = float(np.mean(energies))
+        max_e = float(self.config.get("max_energy_predator", float("inf"))) if role == "predator" else float(self.config.get("max_energy_prey", float("inf")))
+        if np.isinf(max_e) or max_e <= 0:
+            return mean_e
+        return mean_e / max_e
