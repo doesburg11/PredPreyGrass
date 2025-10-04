@@ -1,4 +1,4 @@
-# Kin Selection – Type_1-only Experiment Results
+# Kin Selection – Type_1-only Experiment: learned cooperation
 
 Date: 2025-10-04
 
