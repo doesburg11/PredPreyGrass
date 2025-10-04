@@ -1,5 +1,5 @@
 from predpreygrass.rllib.kin_selection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.kin_selection.config.config_env_eval import config_env
+from predpreygrass.rllib.kin_selection.config.config_env_kin_selection import config_env
 from predpreygrass.rllib.kin_selection.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
