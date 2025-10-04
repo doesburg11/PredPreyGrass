@@ -30,8 +30,8 @@ config_env = {
     "share_cooldown": 2,
     "share_respect_los": True,
     "share_kin_only": True,
-    # Observation helpers
-    "action_mask_enabled": True,
+    # Observation helpers (disable action_mask to avoid Dict-obs encoder issues in RLlib new API)
+    "action_mask_enabled": False,
     "include_kin_energy_channel": True,
     "kin_energy_respect_los": True,
 }
