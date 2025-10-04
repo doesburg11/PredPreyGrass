@@ -14,7 +14,7 @@ pointing at `kin_selection` when using walls.
 """
 
 from predpreygrass.rllib.kin_selection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.kin_selection.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
+from predpreygrass.rllib.kin_selection.config.config_env_kin_selection import config_env as base_config_env
 from predpreygrass.rllib.kin_selection.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
