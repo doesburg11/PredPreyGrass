@@ -10,7 +10,7 @@ from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
 from predpreygrass.rllib.kin_selection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.kin_selection.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.kin_selection.config.config_env_kin_selection import config_env
 from predpreygrass.rllib.kin_selection.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
