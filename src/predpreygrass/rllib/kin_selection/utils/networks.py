@@ -75,7 +75,7 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
 
     return RLModuleSpec(
         module_class=DefaultPPOTorchRLModule,
-        observation_space=obs_space,
+        observation_space=img_space,
         action_space=act_space,
         inference_only=False,
         model_config={
