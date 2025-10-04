@@ -24,11 +24,11 @@ Helping metrics increased steadily during training, indicating learned use of SH
 
 Helping rate: `custom_metrics/helping_rate` (per-step donor-side successes)
 
-![Helping rate](../../../../assets/images/kin_selection/helping_rate_type1_only.png)
+![Helping rate](../../../../../assets/images/kin_selection/helping_rate_type1_only.png)
 
 Shares per episode: `custom_metrics/shares_per_episode`
 
-![Shares per episode](../../../../assets/images/kin_selection/shares_per_episode_type1_only.png)
+![Shares per episode](../../../../../assets/images/kin_selection/shares_per_episode_type1_only.png)
 
 ## Interpretation
 
