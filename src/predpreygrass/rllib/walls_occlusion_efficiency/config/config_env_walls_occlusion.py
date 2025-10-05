@@ -1,4 +1,5 @@
 config_env = {
+    "seed": 42,
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
@@ -7,7 +8,7 @@ config_env = {
     "prey_obs_range": 9,
     # Action space settings
     "type_1_action_range": 3,
-    "type_2_action_range": 3,
+    "type_2_action_range": 5,
     # Rewards
     "reward_predator_catch_prey": {
         "type_1_predator": 0.0,
@@ -94,6 +95,7 @@ config_env = {
     # Grid size is 25 -> start = (25-12)//2 = 6, square spans 6..17 inclusive.
     # Openings located at the two middle coordinates of each side.
     "wall_placement_mode": "manual",
+    "num_walls": 0,  # ignored when using manual placement
     "manual_wall_positions": (
         [(x, 6) for x in range(6, 18) if x not in (9, 14)] +
         [(x, 17) for x in range(6, 18) if x not in (11, 16)] +
