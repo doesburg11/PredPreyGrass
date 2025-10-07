@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion import config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.networks import build_multi_module_spec
 

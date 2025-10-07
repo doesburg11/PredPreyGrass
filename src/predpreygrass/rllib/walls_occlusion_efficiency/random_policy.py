@@ -14,7 +14,7 @@ pointing at `walls_occlusion_efficiency` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env as base_config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
