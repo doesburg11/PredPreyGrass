@@ -9,6 +9,7 @@ import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import numpy as np
 import math
+import time
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -276,6 +277,7 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
+        t0 = time.perf_counter()
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
@@ -283,32 +285,55 @@ class PredPreyGrass(MultiAgentEnv):
         self._pending_infos = {}
 
         # step 0: Check for truncation
+        t_trunc0 = time.perf_counter()
         truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
+        t_trunc1 = time.perf_counter()
+        trunc_check = t_trunc1 - t_trunc0
         if truncation_result is not None:
+            t_total = time.perf_counter() - t0
+            print(f"[PROFILE] step: trunc_check={trunc_check:.6f}s, decay=0.000000s, age=0.000000s, grass=0.000000s, move=0.000000s, engage=0.000000s, repro=0.000000s, obs=0.000000s, total={t_total:.6f}s")
             return truncation_result
 
         # Step 1: If not truncated; process energy depletion due to time steps and update age
+        t_decay0 = time.perf_counter()
         self._apply_energy_decay_per_step(action_dict)
+        t_decay1 = time.perf_counter()
+        decay = t_decay1 - t_decay0
 
         # Step 2: Update ages of all agents who act
+        t_age0 = time.perf_counter()
         self._apply_age_update(action_dict)
+        t_age1 = time.perf_counter()
+        age = t_age1 - t_age0
 
         # Step 3: Regenerate grass energy
+        t_grass0 = time.perf_counter()
         self._regenerate_grass_energy()
+        t_grass1 = time.perf_counter()
+        grass = t_grass1 - t_grass0
 
         # Step 4: process agent movements
+        t_move0 = time.perf_counter()
         self._process_agent_movements(action_dict)
+        t_move1 = time.perf_counter()
+        move = t_move1 - t_move0
 
-        # Step 5: Handle agent engagements
+        # Step 5: Handle agent engagements (optimized)
+        t_engage0 = time.perf_counter()
+        # Precompute position-to-agent mappings for prey and grass for O(1) lookup
+        prey_pos_map = {tuple(pos): prey for prey, pos in self.agent_positions.items() if "prey" in prey}
+        grass_pos_map = {tuple(pos): grass for grass, pos in self.grass_positions.items()}
         for agent in self.agents:
             if agent not in self.agent_positions:
                 continue
             if self.agent_energies[agent] <= 0:
                 self._handle_energy_decay(agent, observations, rewards, terminations, truncations)
             elif "predator" in agent:
-                self._handle_predator_engagement(agent, observations, rewards, terminations, truncations)
+                self._handle_predator_engagement(agent, observations, rewards, terminations, truncations, prey_pos_map=prey_pos_map)
             elif "prey" in agent:
-                self._handle_prey_engagement(agent, observations, rewards, terminations, truncations)
+                self._handle_prey_engagement(agent, observations, rewards, terminations, truncations, grass_pos_map=grass_pos_map)
+        t_engage1 = time.perf_counter()
+        engage = t_engage1 - t_engage0
 
         # Step 6: Handle agent removals
         for agent in self.agents[:]:
@@ -324,16 +349,22 @@ class PredPreyGrass(MultiAgentEnv):
                 del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
+        t_repro0 = time.perf_counter()
         for agent in self.agents[:]:
             if "predator" in agent:
                 self._handle_predator_reproduction(agent, rewards, observations, terminations, truncations)
             elif "prey" in agent:
                 self._handle_prey_reproduction(agent, rewards, observations, terminations, truncations)
+        t_repro1 = time.perf_counter()
+        repro = t_repro1 - t_repro0
 
         # Step 8: Generate observations for all agents AFTER all engagements in the step
+        t_obs0 = time.perf_counter()
         for agent in self.agents:
             if agent in self.agent_positions:
                 observations[agent] = self._get_observation(agent)
+        t_obs1 = time.perf_counter()
+        obs = t_obs1 - t_obs0
 
         # output only observations, rewards for active agents
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
@@ -374,6 +405,10 @@ class PredPreyGrass(MultiAgentEnv):
         # Increment step counter
         self.current_step += 1
 
+        # Profiling summary for this step
+        t1 = time.perf_counter()
+        t_total = t1 - t0
+        print(f"[PROFILE] step: trunc_check={trunc_check:.6f}s, decay={decay:.6f}s, age={age:.6f}s, grass={grass:.6f}s, move={move:.6f}s, engage={engage:.6f}s, repro={repro:.6f}s, obs={obs:.6f}s, total={t_total:.6f}s")
         return observations, rewards, terminations, truncations, infos
 
     def _get_movement_energy_cost(self, agent, current_position, new_position):
@@ -753,11 +788,18 @@ class PredPreyGrass(MultiAgentEnv):
         del self.agent_positions[agent]
         del self.agent_energies[agent]
 
-    def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations):
-        predator_position = self.agent_positions[agent]
-        caught_prey = next(
-            (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
-        )
+    def _handle_predator_engagement(self, agent, observations, rewards, terminations, truncations, prey_pos_map=None):
+        predator_position = tuple(self.agent_positions[agent])
+        if prey_pos_map is not None:
+            caught_prey = prey_pos_map.get(predator_position, None)
+            # Guard against stale map entries (prey already removed by another predator earlier this step)
+            if caught_prey is not None and caught_prey not in self.agent_positions:
+                caught_prey = None
+        else:
+            # fallback to old method if not provided
+            caught_prey = next(
+                (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
+            )
 
         if caught_prey:
             self._log(
@@ -806,6 +848,10 @@ class PredPreyGrass(MultiAgentEnv):
 
             self.death_agents_stats[uid] = stat
 
+            # Remove from cached pos-map to prevent another predator trying to eat same prey this step
+            if prey_pos_map is not None:
+                prey_pos_map.pop(predator_position, None)
+
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
@@ -820,14 +866,17 @@ class PredPreyGrass(MultiAgentEnv):
         terminations[agent] = False
         truncations[agent] = False
 
-    def _handle_prey_engagement(self, agent, observations, rewards, terminations, truncations):
+    def _handle_prey_engagement(self, agent, observations, rewards, terminations, truncations, grass_pos_map=None):
         if terminations.get(agent):
             return
 
-        prey_position = self.agent_positions[agent]
-        caught_grass = next(
-            (g for g, pos in self.grass_positions.items() if "grass" in g and np.array_equal(prey_position, pos)), None
-        )
+        prey_position = tuple(self.agent_positions[agent])
+        if grass_pos_map is not None:
+            caught_grass = grass_pos_map.get(prey_position, None)
+        else:
+            caught_grass = next(
+                (g for g, pos in self.grass_positions.items() if "grass" in g and np.array_equal(prey_position, pos)), None
+            )
 
         if caught_grass:
             self._log(self.verbose_engagement, f"[ENGAGE] {agent} caught grass at {tuple(map(int, prey_position))}", "white")
