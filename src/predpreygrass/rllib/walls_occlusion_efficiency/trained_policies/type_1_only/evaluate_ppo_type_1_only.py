@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion_efficiency.trained_policies.type_1_only import config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.trained_policies.type_1_only.config_env_walls_occlusion_efficiency_type_1_only import config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
