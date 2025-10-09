@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency_type_1_only import config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -122,7 +122,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_WALLS_OCCLUSION_EFFICIENCY_2025-10-07_20-10-56/PPO_PredPreyGrass_f81b8_00000_0_2025-10-07_20-10-56"
+    checkpoint_root = "PPO_WALLS_OCCLUSION_EFFICIENCY_TYPE_2_EATING_REWARDED_2025-10-08_09-51-32/PPO_PredPreyGrass_9b6a9_00000_0_2025-10-08_09-51-32"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
