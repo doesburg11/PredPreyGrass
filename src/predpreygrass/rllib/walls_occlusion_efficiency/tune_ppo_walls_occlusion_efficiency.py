@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency_type_2_eating_rewards import config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.networks import build_multi_module_spec
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_WALLS_OCCLUSION_EFFICIENCY_TYPE_2_EATING_REWARDED_{timestamp}"
+    experiment_name = f"PPO_WALLS_OCCLUSION_EFFICIENCY_TYPE_2_CATCH_PENALTY_PREY_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
