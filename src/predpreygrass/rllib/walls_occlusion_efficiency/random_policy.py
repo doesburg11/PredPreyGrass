@@ -14,7 +14,7 @@ pointing at `walls_occlusion_efficiency` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion_efficiency.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion_efficiency.config.config_env_walls_occlusion_efficiency import config_env
 from predpreygrass.rllib.walls_occlusion_efficiency.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
@@ -31,7 +31,7 @@ def random_policy_pi(agent_id, env):
 
 if __name__ == "__main__":
     # Inject walls into config (if not already present)
-    cfg = dict(base_config_env)
+    cfg = dict(config_env)
     cfg.setdefault("num_walls", 20)  # default number of walls for visualization
     # Enable visibility (occlusion) channel so observations include LOS mask as final channel
     cfg.setdefault("include_visibility_channel", True)
