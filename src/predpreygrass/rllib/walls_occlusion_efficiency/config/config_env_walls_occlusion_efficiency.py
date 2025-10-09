@@ -8,15 +8,15 @@ config_env = {
     "prey_obs_range": 9,
     # Action space settings
     "type_1_action_range": 3,
-    "type_2_action_range": 0,
+    "type_2_action_range": 3,
     # Rewards
     "reward_predator_catch_prey": {
         "type_1_predator": 0.0,
-        "type_2_predator": 0.0,
+        "type_2_predator": 1.0,
     },
     "reward_prey_eat_grass": {
         "type_1_prey": 0.0,
-        "type_2_prey": 0.0,
+        "type_2_prey": 1.0,
     },
     "reward_predator_step": {
         "type_1_predator": 0.0,
@@ -32,11 +32,11 @@ config_env = {
     },
     "reproduction_reward_predator": {
         "type_1_predator": 10.0,
-        "type_2_predator": 0.0,
+        "type_2_predator": 10.0,
     },
     "reproduction_reward_prey": {
         "type_1_prey": 10.0,
-        "type_2_prey": 0.0,
+        "type_2_prey": 10.0,
     },
     # Energy settings
     "energy_loss_per_step_predator": 0.15,
@@ -48,13 +48,13 @@ config_env = {
     "initial_energy_prey": 3.0,
     # Learning agents
     "n_possible_type_1_predators": 50,
-    "n_possible_type_2_predators": 0,
+    "n_possible_type_2_predators": 50,
     "n_possible_type_1_prey": 50,
-    "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 6,
-    "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 8,
-    "n_initial_active_type_2_prey": 0,
+    "n_possible_type_2_prey": 50,
+    "n_initial_active_type_1_predator": 10,
+    "n_initial_active_type_2_predator": 10,
+    "n_initial_active_type_1_prey": 10,
+    "n_initial_active_type_2_prey": 10,
     # mutation settings
     "mutation_rate_predator": 0.0,
     "mutation_rate_prey": 0.0,
