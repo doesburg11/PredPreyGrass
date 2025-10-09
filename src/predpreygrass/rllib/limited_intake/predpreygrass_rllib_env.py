@@ -58,6 +58,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_eating_predator = config.get("max_eating_predator", float("inf"))
         self.max_eating_prey = config.get("max_eating_prey", float("inf"))
 
+        # Initial energies
+        self.initial_energy_predator = config["initial_energy_predator"]
+        self.initial_energy_prey = config["initial_energy_prey"]
+
         # Learning agents
         self.n_possible_type_1_predators = config["n_possible_type_1_predators"]
         self.n_possible_type_2_predators = config["n_possible_type_2_predators"]
@@ -69,7 +73,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.n_initial_active_type_1_prey = config["n_initial_active_type_1_prey"]
         self.n_initial_active_type_2_prey = config["n_initial_active_type_2_prey"]
 
-        self.initial_energy_prey = config["initial_energy_prey"]
+        # Note: initial_energy_prey already set above; kept here for readability of the section structure.
 
         # Grid and Observation Settings
         self.grid_size = config["grid_size"]
