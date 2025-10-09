@@ -12,11 +12,11 @@ config_env = {
     # Rewards
     "reward_predator_catch_prey": {
         "type_1_predator": 0.0,
-        "type_2_predator": 1.0,
+        "type_2_predator": 0.0,
     },
     "reward_prey_eat_grass": {
         "type_1_prey": 0.0,
-        "type_2_prey": 1.0,
+        "type_2_prey": 0.0,
     },
     "reward_predator_step": {
         "type_1_predator": 0.0,
@@ -28,7 +28,7 @@ config_env = {
     },
     "penalty_prey_caught": {
         "type_1_prey": 0.0,
-        "type_2_prey": 0.0,
+        "type_2_prey": 1.0,
     },
     "reproduction_reward_predator": {
         "type_1_predator": 10.0,
