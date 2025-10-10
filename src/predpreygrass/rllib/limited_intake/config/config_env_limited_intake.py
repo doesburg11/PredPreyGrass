@@ -96,10 +96,10 @@ config_env = {
     # Openings located at the two middle coordinates of each side.
     "wall_placement_mode": "manual",
     "num_walls": 0,  # ignored when using manual placement
-    "manual_wall_positions": (
-        [(x, 6) for x in range(6, 18) if x not in (9, 14)] +
-        [(x, 17) for x in range(6, 18) if x not in (11, 16)] +
-        [(6, y) for y in range(7, 17) if y not in (10, 15)] +
-        [(17, y) for y in range(7, 17) if y not in (12, 16)]
-    ),
+    "manual_wall_positions": [
+        *( [(x, 6) for x in range(6, 18) if x not in (9, 14)] ),
+        *( [(x, 17) for x in range(6, 18) if x not in (11, 16)] ),
+        *( [(6, y) for y in range(7, 17) if y not in (10, 15)] ),
+        *( [(17, y) for y in range(7, 17) if y not in (12, 16)] ),
+    ],
 }
