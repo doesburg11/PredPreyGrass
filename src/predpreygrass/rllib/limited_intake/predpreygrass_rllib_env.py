@@ -58,6 +58,19 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_eating_predator = config.get("max_eating_predator", float("inf"))
         self.max_eating_prey = config.get("max_eating_prey", float("inf"))
 
+        # Carcass decay and lifetime (optional)
+        self.carcass_decay_per_step = float(config.get("carcass_decay_per_step", 0.0))
+        raw_life = config.get("carcass_max_lifetime", None)
+        if raw_life is None:
+            self.carcass_max_lifetime = None
+        else:
+            try:
+                raw_life_f = float(raw_life)
+                self.carcass_max_lifetime = int(raw_life_f) if raw_life_f > 0 else None
+            except Exception:
+                # Fallback: disable lifetime on invalid values
+                self.carcass_max_lifetime = None
+
         # Initial energies
         self.initial_energy_predator = config["initial_energy_predator"]
         self.initial_energy_prey = config["initial_energy_prey"]
@@ -136,6 +149,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
+        # Per-step energy deltas tracking
+        self._per_agent_step_deltas = {}
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
@@ -170,7 +185,19 @@ class PredPreyGrass(MultiAgentEnv):
         # Carcass tracking state
         self.carcass_positions = {}  # {carcass_id: (x, y)}
         self.carcass_energies = {}   # {carcass_id: energy}
+        self.carcass_ages = {}       # {carcass_id: age in steps}
         self.carcass_counter = 0
+
+        # Carcass metrics accumulators
+        self._carcass_metrics_step = {
+            "created_count": 0,
+            "created_energy": 0.0,
+            "consumed_energy": 0.0,
+            "decayed_energy": 0.0,
+            "expired_count": 0,
+            "removed_count": 0,
+        }
+        self._carcass_metrics_total = {k: (0 if isinstance(v, int) else 0.0) for k, v in self._carcass_metrics_step.items()}
 
         # Add carcass channel to grid state (one extra channel)
         self.grid_world_state_shape = (self.num_obs_channels + 1, self.grid_size, self.grid_size)
@@ -202,27 +229,27 @@ class PredPreyGrass(MultiAgentEnv):
 
         if self.wall_placement_mode == "manual":
             # Manual mode: use provided coordinates; ignore duplicates/out-of-bounds
+            print(f"[DEBUG] wall_placement_mode: {self.wall_placement_mode}")
+            print(f"[DEBUG] manual_wall_positions (first 10): {self.manual_wall_positions[:10]}{'...' if len(self.manual_wall_positions) > 10 else ''}")
             raw_positions = self.manual_wall_positions or []
             added = 0
             for pos in raw_positions:
                 try:
                     x, y = map(int, pos)
                 except Exception:
-                    if self.debug_mode:
-                        print(f"[Walls] Skipping non-integer position {pos}")
+                    print(f"[Walls] Skipping non-integer position {pos}")
                     continue
                 if not (0 <= x < self.grid_size and 0 <= y < self.grid_size):
-                    if self.debug_mode:
-                        print(f"[Walls] Skipping out-of-bounds {(x,y)}")
+                    print(f"[Walls] Skipping out-of-bounds {(x,y)}")
                     continue
                 if (x, y) in self.wall_positions:
                     continue
                 self.wall_positions.add((x, y))
                 added += 1
+            print(f"[DEBUG] wall_positions after placement (first 10): {list(self.wall_positions)[:10]}{'...' if len(self.wall_positions) > 10 else ''}")
             # Optional: if manual list empty, fallback to random to avoid empty wall layer unless explicitly desired
             if added == 0 and self.manual_wall_positions:
-                if self.debug_mode:
-                    print("[Walls] No valid manual wall positions provided; resulting set is empty.")
+                print("[Walls] No valid manual wall positions provided; resulting set is empty.")
             if added == 0 and not self.manual_wall_positions:
                 # Keep behavior consistent: if user sets mode manual but no list, leave empty (explicit)
                 pass
@@ -296,6 +323,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agents_just_ate.clear()
         # Reset per-step infos
         self._pending_infos = {}
+        # Reset per-step carcass metrics
+        for k in self._carcass_metrics_step:
+            self._carcass_metrics_step[k] = 0 if isinstance(self._carcass_metrics_step[k], int) else 0.0
 
         # step 0: Check for truncation
         t_trunc0 = time.perf_counter()
@@ -319,11 +349,14 @@ class PredPreyGrass(MultiAgentEnv):
         t_age1 = time.perf_counter()
         age = t_age1 - t_age0
 
-        # Step 3: Regenerate grass energy
+    # Step 3: Regenerate grass energy
         t_grass0 = time.perf_counter()
         self._regenerate_grass_energy()
         t_grass1 = time.perf_counter()
         grass = t_grass1 - t_grass0
+
+        # Step 3.5: Carcass decay and aging
+        self._apply_carcass_decay_and_aging()
 
         # Step 4: process agent movements
         t_move0 = time.perf_counter()
@@ -415,6 +448,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Provide infos accumulated during the step
         infos = {agent: self._pending_infos.get(agent, {}) for agent in self.agents}
+        # Attach carcass metrics snapshot for this step to all active agents' infos
+        for agent in infos:
+            infos[agent]["carcass_metrics"] = dict(self._carcass_metrics_step)
 
         # Sort agents for debugging
         self.agents.sort()
@@ -565,8 +601,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Channel 0: walls (binary). Slice from the pre-painted global walls channel for this window.
         observation[0, xolo:xohi, yolo:yohi] = self.grid_world_state[0, xlo:xhi, ylo:yhi]
         # Copy dynamic channels (predators, prey, grass, carcass) into fixed locations 1..base_channels-1
-        observation[1:base_channels, xolo:xohi, yolo:yhi] = self.grid_world_state[1:base_channels, xlo:xhi, ylo:yhi]
-
+        observation[1:base_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[1:base_channels, xlo:xhi, ylo:yhi]
         need_visibility_mask = self.include_visibility_channel or self.mask_observation_with_visibility
         visibility_mask = None
         if need_visibility_mask:
@@ -885,16 +920,25 @@ class PredPreyGrass(MultiAgentEnv):
                 if existing_carcass_id is not None and existing_carcass_id in self.carcass_energies:
                     self.carcass_energies[existing_carcass_id] += leftover_energy
                     self.grid_world_state[self.carcass_channel_idx, *predator_position] = self.carcass_energies[existing_carcass_id]
+                    # Metrics: energy added to carcasses
+                    self._carcass_metrics_step["created_energy"] += leftover_energy
+                    self._carcass_metrics_total["created_energy"] += leftover_energy
                 else:
                     carcass_id = f"carcass_{self.carcass_counter}"
                     self.carcass_counter += 1
                     self.carcass_positions[carcass_id] = predator_position
                     self.carcass_energies[carcass_id] = leftover_energy
+                    self.carcass_ages[carcass_id] = 0
                     # Write leftover to carcass channel in the grid
                     self.grid_world_state[self.carcass_channel_idx, *predator_position] = leftover_energy
                     # Update local map to reflect immediate availability for later agents in same step
                     if carcass_pos_map is not None:
                         carcass_pos_map[predator_position] = carcass_id
+                    # Metrics: new carcass created
+                    self._carcass_metrics_step["created_count"] += 1
+                    self._carcass_metrics_total["created_count"] += 1
+                    self._carcass_metrics_step["created_energy"] += leftover_energy
+                    self._carcass_metrics_total["created_energy"] += leftover_energy
             uid = self.unique_agents[agent]
             self.unique_agent_stats[uid]["times_ate"] += 1
             self.unique_agent_stats[uid]["energy_gained"] += gain
@@ -955,8 +999,11 @@ class PredPreyGrass(MultiAgentEnv):
                         # remove carcass
                         del self.carcass_energies[carcass_id]
                         del self.carcass_positions[carcass_id]
+                        self.carcass_ages.pop(carcass_id, None)
                         carcass_pos_map.pop(predator_position, None)
                         self.grid_world_state[self.carcass_channel_idx, *predator_position] = 0.0
+                        self._carcass_metrics_step["removed_count"] += 1
+                        self._carcass_metrics_total["removed_count"] += 1
                     else:
                         self.grid_world_state[self.carcass_channel_idx, *predator_position] = self.carcass_energies[carcass_id]
                     consumed = gain
@@ -966,6 +1013,9 @@ class PredPreyGrass(MultiAgentEnv):
                     uid = self.unique_agents[agent]
                     self.unique_agent_stats[uid]["times_ate"] += 1
                     self.unique_agent_stats[uid]["energy_gained"] += gain
+                    # Metrics: amount consumed (raw energy taken from carcass)
+                    self._carcass_metrics_step["consumed_energy"] += raw_gain
+                    self._carcass_metrics_total["consumed_energy"] += raw_gain
 
             # Even if nothing consumed, still apply step reward to predator
             rewards[agent] = self._get_type_specific("reward_predator_step", agent)
@@ -1429,3 +1479,50 @@ class PredPreyGrass(MultiAgentEnv):
                     return raw_val[k]
             raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
         return raw_val
+
+    # ---------------- Carcass Helpers & Metrics -----------------
+    def _apply_carcass_decay_and_aging(self):
+        """Apply per-step carcass decay and age; remove expired or depleted carcasses; update metrics and grid."""
+        if self.carcass_decay_per_step <= 0 and self.carcass_max_lifetime is None:
+            return
+        to_remove = []
+        for cid, energy in list(self.carcass_energies.items()):
+            # Age
+            self.carcass_ages[cid] = self.carcass_ages.get(cid, 0) + 1
+            # Decay
+            if self.carcass_decay_per_step > 0:
+                dec = min(self.carcass_decay_per_step, self.carcass_energies[cid])
+                if dec > 0:
+                    self.carcass_energies[cid] -= dec
+                    self._carcass_metrics_step["decayed_energy"] += dec
+                    self._carcass_metrics_total["decayed_energy"] += dec
+            # Lifetime check
+            expired = self.carcass_max_lifetime is not None and self.carcass_ages[cid] >= self.carcass_max_lifetime
+            depleted = self.carcass_energies[cid] <= 0
+            # Update grid value
+            pos = self.carcass_positions[cid]
+            if depleted or expired:
+                to_remove.append((cid, pos, expired))
+            else:
+                self.grid_world_state[self.carcass_channel_idx, *pos] = self.carcass_energies[cid]
+        # Remove after iteration
+        for cid, pos, expired in to_remove:
+            self.carcass_energies.pop(cid, None)
+            self.carcass_positions.pop(cid, None)
+            self.carcass_ages.pop(cid, None)
+            self.grid_world_state[self.carcass_channel_idx, *pos] = 0.0
+            if expired:
+                self._carcass_metrics_step["expired_count"] += 1
+                self._carcass_metrics_total["expired_count"] += 1
+            self._carcass_metrics_step["removed_count"] += 1
+            self._carcass_metrics_total["removed_count"] += 1
+
+    def get_carcass_metrics(self):
+        """Return carcass metrics snapshot (step and total) and current carcass state summary."""
+        total_energy = float(sum(self.carcass_energies.values())) if self.carcass_energies else 0.0
+        return {
+            "step": dict(self._carcass_metrics_step),
+            "total": dict(self._carcass_metrics_total),
+            "active_carcasses": len(self.carcass_positions),
+            "total_carcass_energy": total_energy,
+        }
