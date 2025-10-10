@@ -212,18 +212,17 @@ class PyGameRenderer:
             positions = list(walls.values())
         else:
             positions = list(walls)
-        print(f"[DEBUG] Drawing {len(positions)} wall positions: {positions[:10]}{'...' if len(positions) > 10 else ''}")
+    # (Debug print removed)
         ml = self.gui_style.margin_left
         mt = self.gui_style.margin_top
         cs = self.cell_size
         # Draw a large debug rectangle at (0,0) to confirm drawing works
-        debug_rect = pygame.Rect(ml + 0 * cs + 1, mt + 0 * cs + 1, cs * 2, cs * 2)
-        pygame.draw.rect(self.screen, (0, 255, 0), debug_rect)
+    # (Removed debug green rectangle in top left corner)
         for pos in positions:
             x, y = map(int, pos)
             rect = pygame.Rect(ml + x * cs + 1, mt + y * cs + 1, cs - 2, cs - 2)
-            # Draw in red for debug visibility
-            pygame.draw.rect(self.screen, (255, 0, 0), rect)
+            # Draw using the legend wall color (dark gray)
+            pygame.draw.rect(self.screen, self.gui_style.wall_color, rect)
 
     def _draw_carcasses(self, carcass_positions, carcass_energies):
         """Draw carcass energy as black squares, scaled by energy."""
@@ -661,10 +660,13 @@ class PyGameRenderer:
 
         return chart_y + chart_height + spacing
 
+
     def _draw_tooltip(self, step_data, grass_positions, grass_energies, carcass_positions=None, carcass_energies=None):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
         grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
+
+    # ...existing code...
 
         # Early exit if mouse is outside grid area
         if not (0 <= grid_x < self.grid_size[0]) or not (0 <= grid_y < self.grid_size[1]):
@@ -673,13 +675,16 @@ class PyGameRenderer:
         hovered_entity = None
         hovered_energy = 0.0
 
+
         # Check for hovered agent
         for agent_id, data in step_data.items():
             pos = tuple(map(int, data["position"]))
             if pos == (grid_x, grid_y):
                 hovered_entity = agent_id
                 hovered_energy = data["energy"]
+                # ...existing code...
                 break
+
 
         # Check for hovered grass (only if no agent found)
         if not hovered_entity:
@@ -687,7 +692,9 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = grass_id
                     hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
+                    # ...existing code...
                     break
+
 
         # Check for hovered carcass (only if no agent or grass found)
         if not hovered_entity and carcass_positions:
@@ -695,9 +702,11 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = cid
                     hovered_energy = carcass_energies.get(cid, 0) if carcass_energies else 0
+                    # ...existing code...
                     break
 
         if hovered_entity:
+            # ...existing code...
             font = self.tooltip_font
             lines = []
 
