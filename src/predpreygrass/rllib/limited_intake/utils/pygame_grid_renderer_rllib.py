@@ -29,6 +29,7 @@ class GuiStyle:
     halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
     wall_color: tuple = (80, 80, 80)  # Dark gray for walls
+    carcass_color: tuple = (0, 0, 0)  # Black for carcasses
 
 
 class PyGameRenderer:
@@ -114,7 +115,17 @@ class PyGameRenderer:
     def _using_type_prefix(self, step_data):
         return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
 
-    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None):
+    def update(
+        self,
+        grass_positions,
+        grass_energies=None,
+        step=0,
+        agents_just_ate=None,
+        per_step_agent_data=None,
+        walls=None,
+        carcass_positions=None,
+        carcass_energies=None,
+    ):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -170,10 +181,12 @@ class PyGameRenderer:
         if walls:  # Draw beneath dynamic entities
             self._draw_walls(walls)
         self._draw_grass(grass_positions, grass_energies)
+        if carcass_positions:
+            self._draw_carcasses(carcass_positions, carcass_energies or {})
         self._draw_agents(step_data, agents_just_ate)
         self._draw_legend(step, step_data)
         if self.enable_tooltips:
-            self._draw_tooltip(step_data, grass_positions, grass_energies)
+            self._draw_tooltip(step_data, grass_positions, grass_energies, carcass_positions, carcass_energies)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
@@ -194,20 +207,38 @@ class PyGameRenderer:
             pygame.draw.rect(self.screen, color, rect)
 
     def _draw_walls(self, walls):
-        """Draw static wall cells.
-
-        Accepts set/list of (x,y) or mapping id->(x,y)."""
+        """Draw static wall cells. Debug: print and highlight walls in red."""
         if isinstance(walls, dict):
-            positions = walls.values()
+            positions = list(walls.values())
         else:
-            positions = walls
+            positions = list(walls)
+        print(f"[DEBUG] Drawing {len(positions)} wall positions: {positions[:10]}{'...' if len(positions) > 10 else ''}")
         ml = self.gui_style.margin_left
         mt = self.gui_style.margin_top
         cs = self.cell_size
+        # Draw a large debug rectangle at (0,0) to confirm drawing works
+        debug_rect = pygame.Rect(ml + 0 * cs + 1, mt + 0 * cs + 1, cs * 2, cs * 2)
+        pygame.draw.rect(self.screen, (0, 255, 0), debug_rect)
         for pos in positions:
             x, y = map(int, pos)
             rect = pygame.Rect(ml + x * cs + 1, mt + y * cs + 1, cs - 2, cs - 2)
-            pygame.draw.rect(self.screen, self.gui_style.wall_color, rect)
+            # Draw in red for debug visibility
+            pygame.draw.rect(self.screen, (255, 0, 0), rect)
+
+    def _draw_carcasses(self, carcass_positions, carcass_energies):
+        """Draw carcass energy as black squares, scaled by energy."""
+        # Choose a reference for visual sizing
+        ref = max(self.reference_energy_prey, 1.0)
+        for carcass_id, pos in carcass_positions.items():
+            x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
+            y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
+            color = self.gui_style.carcass_color
+            energy = carcass_energies.get(carcass_id, 0) if carcass_energies else 0
+            size_factor = min(max(energy, 0) / ref, 1.0)
+            base_rect_size = self.cell_size * 0.7
+            rect_size = base_rect_size * (0.3 + 0.7 * size_factor)  # avoid disappearing when small
+            rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
+            pygame.draw.rect(self.screen, color, rect)
 
     def _draw_fov_overlays(self, step_data):
         """Draw transparent FOV overlays for each agent.
@@ -469,6 +500,11 @@ class PyGameRenderer:
         self.screen.blit(font.render("Wall", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
+        # Carcass (black)
+        pygame.draw.rect(self.screen, self.gui_style.carcass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
+        self.screen.blit(font.render("Carcass", True, (0, 0, 0)), (x + 30, y))
+        y += spacing
+
         if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
             # Predator FOV legend (with alpha blending)
             fov_pred_rect = pygame.Surface((s, s), pygame.SRCALPHA)
@@ -625,7 +661,7 @@ class PyGameRenderer:
 
         return chart_y + chart_height + spacing
 
-    def _draw_tooltip(self, step_data, grass_positions, grass_energies):
+    def _draw_tooltip(self, step_data, grass_positions, grass_energies, carcass_positions=None, carcass_energies=None):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
         grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
@@ -651,6 +687,14 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = grass_id
                     hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
+                    break
+
+        # Check for hovered carcass (only if no agent or grass found)
+        if not hovered_entity and carcass_positions:
+            for cid, pos in carcass_positions.items():
+                if pos == (grid_x, grid_y):
+                    hovered_entity = cid
+                    hovered_energy = carcass_energies.get(cid, 0) if carcass_energies else 0
                     break
 
         if hovered_entity:
