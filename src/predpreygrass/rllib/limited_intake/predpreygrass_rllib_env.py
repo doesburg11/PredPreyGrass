@@ -229,8 +229,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         if self.wall_placement_mode == "manual":
             # Manual mode: use provided coordinates; ignore duplicates/out-of-bounds
-            print(f"[DEBUG] wall_placement_mode: {self.wall_placement_mode}")
-            print(f"[DEBUG] manual_wall_positions (first 10): {self.manual_wall_positions[:10]}{'...' if len(self.manual_wall_positions) > 10 else ''}")
             raw_positions = self.manual_wall_positions or []
             added = 0
             for pos in raw_positions:
@@ -246,7 +244,6 @@ class PredPreyGrass(MultiAgentEnv):
                     continue
                 self.wall_positions.add((x, y))
                 added += 1
-            print(f"[DEBUG] wall_positions after placement (first 10): {list(self.wall_positions)[:10]}{'...' if len(self.wall_positions) > 10 else ''}")
             # Optional: if manual list empty, fallback to random to avoid empty wall layer unless explicitly desired
             if added == 0 and self.manual_wall_positions:
                 print("[Walls] No valid manual wall positions provided; resulting set is empty.")
