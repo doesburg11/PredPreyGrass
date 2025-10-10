@@ -37,4 +37,19 @@ If you want the old behavior (unlimited intake per event), set these to a very l
 - Predators can consume carcass energy in subsequent steps: they may take up to max_eating_predator raw energy per step from the carcass, multiplied by energy_transfer_efficiency. The carcass is removed when its energy reaches zero.
 - Carcass energy appears in observations subject to the same line-of-sight masking rules as other dynamic channels when mask_observation_with_visibility is enabled.
 
+### Carcass decay and lifetime (new)
+
+- Configurable keys:
+  - carcass_decay_per_step: float (default 0.0). Subtracted from each carcass's energy every step before engagements; clipped to available energy.
+  - carcass_max_lifetime: int or None (default None). Maximum age in steps; when reached, carcass is removed regardless of remaining energy.
+- Internally we track carcass_ages and remove carcasses upon depletion or expiration. Grid channel is updated accordingly.
+
+### Carcass metrics
+
+Per-step and cumulative counters are exposed via env.get_carcass_metrics() and are also attached to infos[agent]["carcass_metrics"] each step:
+- created_count, created_energy, consumed_energy, decayed_energy, expired_count, removed_count.
+- Also includes active_carcasses and total_carcass_energy snapshot.
+
+See evaluator script: src/predpreygrass/rllib/limited_intake/evaluate_carcass_activity.py to run a quick rollout and plot carcass activity over time.
+
 
