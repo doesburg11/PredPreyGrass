@@ -132,7 +132,7 @@ if __name__ == "__main__":
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
-        .callbacks(EpisodeReturn)
+    .callbacks(lambda: EpisodeReturn(log_trajectories=False))
     )
 
     max_iters = config_ppo["max_iters"]
