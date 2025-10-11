@@ -666,15 +666,13 @@ class PyGameRenderer:
         grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
         grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
 
-    # ...existing code...
-
         # Early exit if mouse is outside grid area
         if not (0 <= grid_x < self.grid_size[0]) or not (0 <= grid_y < self.grid_size[1]):
             return
 
         hovered_entity = None
         hovered_energy = 0.0
-
+        hovered_uid = None
 
         # Check for hovered agent
         for agent_id, data in step_data.items():
@@ -682,9 +680,11 @@ class PyGameRenderer:
             if pos == (grid_x, grid_y):
                 hovered_entity = agent_id
                 hovered_energy = data["energy"]
-                # ...existing code...
+                # Prefer the per-step unique_id field; fall back to env mapping
+                hovered_uid = data.get("unique_id")
+                if not hovered_uid and hasattr(self, "env") and hasattr(self.env, "unique_agents"):
+                    hovered_uid = self.env.unique_agents.get(agent_id)
                 break
-
 
         # Check for hovered grass (only if no agent found)
         if not hovered_entity:
@@ -692,9 +692,10 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = grass_id
                     hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
-                    # ...existing code...
+                    # Try to get unique id for grass if available
+                    if hasattr(self, "env") and hasattr(self.env, "unique_agents"):
+                        hovered_uid = self.env.unique_agents.get(grass_id)
                     break
-
 
         # Check for hovered carcass (only if no agent or grass found)
         if not hovered_entity and carcass_positions:
@@ -702,25 +703,28 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = cid
                     hovered_energy = carcass_energies.get(cid, 0) if carcass_energies else 0
-                    # ...existing code...
+                    # Try to get unique id for carcass if available
+                    if hasattr(self, "env") and hasattr(self.env, "unique_agents"):
+                        hovered_uid = self.env.unique_agents.get(cid)
                     break
 
         if hovered_entity:
-            # ...existing code...
             font = self.tooltip_font
             lines = []
 
-            # First line: agent or grass ID
-            lines.append(("ID", hovered_entity))
+
+            # Always show the unique id as the main ID (never optional)
+            # Always show the unique id (with suffix) as the first line for agents
+            if hovered_entity in step_data and step_data[hovered_entity].get("unique_id"):
+                lines.append(("ID", step_data[hovered_entity]["unique_id"]))
+            elif hasattr(self, "env") and hasattr(self.env, "unique_agents") and hovered_entity in self.env.unique_agents:
+                lines.append(("ID", self.env.unique_agents[hovered_entity]))
+            else:
+                # Fallback (e.g., grass/carcass not tracked with unique ids)
+                lines.append(("ID", hovered_entity))
 
             if hovered_entity in step_data:
                 agent = step_data[hovered_entity]
-
-                # Second line: unique ID (only for agents, not grass)
-                uid = agent.get("unique_id")
-                if uid:
-                    lines.append(("UID", uid))
-
                 age = agent.get("age")
                 if age is not None:
                     lines.append(("Age", f"{age:>6}"))
