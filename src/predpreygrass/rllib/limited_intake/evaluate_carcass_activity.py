@@ -44,8 +44,7 @@ def build_default_config(seed: int = 0):
         "max_energy_predator": 20.0,
         "max_energy_prey": 15.0,
         # multi-step eating caps
-        "max_eating_predator": 4.0,
-        "max_eating_prey": 2.0,
+    # Intake caps are set in config_env_limited_intake.py: max_eating_predator and max_eating_prey
         # carcass decay/lifetime
         "carcass_decay_per_step": 0.0,
         "carcass_max_lifetime": None,
