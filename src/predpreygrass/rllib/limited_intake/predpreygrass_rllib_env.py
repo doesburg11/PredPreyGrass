@@ -1468,6 +1468,20 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_parents[agent_id] = parent_unique_id
 
+        # Debug: log if parent's offspring list is being appended to during reset/registration
+        if parent_unique_id is not None:
+            parent_agent_id = None
+            # Find parent agent_id by unique_id
+            for aid, uid in self.unique_agents.items():
+                if uid == parent_unique_id:
+                    parent_agent_id = aid
+                    break
+            if parent_agent_id is not None:
+                print(f"[DEBUG-REGISTER] Registering {agent_id} with parent {parent_agent_id} (unique {parent_unique_id}) at step {self.current_step}")
+                print(f"[DEBUG-REGISTER] Parent's offspring list before: {self.agent_live_offspring_ids.get(parent_agent_id, [])}")
+            else:
+                print(f"[DEBUG-REGISTER] Registering {agent_id} with unknown parent unique_id {parent_unique_id} at step {self.current_step}")
+
         self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
 
         self.unique_agent_stats[unique_id] = {
