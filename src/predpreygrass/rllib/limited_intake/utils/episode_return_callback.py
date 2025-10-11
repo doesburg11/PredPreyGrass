@@ -9,6 +9,19 @@ import json
 
 
 class EpisodeReturn(RLlibCallback):
+    def __init__(self, log_trajectories=False):
+        super().__init__()
+        self.log_trajectories = log_trajectories
+        self.overall_sum_of_rewards = 0.0
+        self.num_episodes = 0
+        self._pending_episode_metrics = []
+        self.start_time = time.time()
+        self.last_iteration_time = self.start_time
+        self.episode_lengths = {}  # manual episode length tracking
+        self._episode_los_rejected = {}
+        # Sharing analytics: resource_consumers[resource_id] = {consumers: {agent: amount}, first: step, last: step}
+        self._episode_resource_consumers = {}
+
     def _append_agent_trajectories(self, episode):
         # Accumulate per-agent, per-step info for this episode
         infos_map = self._episode_last_infos(episode)
@@ -37,31 +50,15 @@ class EpisodeReturn(RLlibCallback):
                     if k in info:
                         traj[k] = info[k]
                 per_agent_trajectories.append(traj)
-        # Write to limited_intake/trajectories_output/agent_trajectories.json (append mode)
-        out_path = os.path.join(os.path.dirname(__file__), '../trajectories_output/agent_trajectories.json')
-        out_path = os.path.abspath(out_path)
+        # Write each episode's trajectories to a separate file to avoid concurrent write corruption
+        out_dir = os.path.join(os.path.dirname(__file__), '../trajectories_output')
+        os.makedirs(out_dir, exist_ok=True)
+        out_path = os.path.abspath(os.path.join(out_dir, f'agent_trajectories_{episode.id_}.json'))
         try:
-            if os.path.exists(out_path):
-                with open(out_path, 'r') as f:
-                    data = json.load(f)
-            else:
-                data = []
-            data.extend(per_agent_trajectories)
             with open(out_path, 'w') as f:
-                json.dump(data, f, indent=2)
+                json.dump(per_agent_trajectories, f, indent=2)
         except Exception as e:
-            print(f"[TrajectoryLogger] Failed to write trajectories: {e}")
-    def __init__(self):
-        super().__init__()
-        self.overall_sum_of_rewards = 0.0
-        self.num_episodes = 0
-        self._pending_episode_metrics = []
-        self.start_time = time.time()
-        self.last_iteration_time = self.start_time
-        self.episode_lengths = {}  # manual episode length tracking
-        self._episode_los_rejected = {}
-        # Sharing analytics: resource_consumers[resource_id] = {consumers: {agent: amount}, first: step, last: step}
-        self._episode_resource_consumers = {}
+            print(f"[TrajectoryLogger] Failed to write trajectories for episode {episode.id_}: {e}")
 
     def _episode_agent_ids(self, episode) -> list:
         """
@@ -136,7 +133,8 @@ class EpisodeReturn(RLlibCallback):
                     break
 
         # --- Trajectory logging ---
-        self._append_agent_trajectories(episode)
+        if self.log_trajectories:
+            self._append_agent_trajectories(episode)
 
         # Episode summary log
         print(
