@@ -13,6 +13,10 @@ import time
 
 
 class PredPreyGrass(MultiAgentEnv):
+    def _reset_step_consumed_resources(self):
+        self._step_consumed_resources = {agent: set() for agent in self.agents}
+    def _init_cumulative_consumed_resources(self):
+        self._cumulative_consumed_resources = {agent_id: [] for agent_id in self.possible_agents}
     # --- Sharing analytics ---
     def _init_sharing_analytics(self):
         from collections import defaultdict
@@ -172,13 +176,16 @@ class PredPreyGrass(MultiAgentEnv):
         self.type_2_act_range = config["type_2_action_range"]
 
     def _init_reset_variables(self, seed):
+        self._init_cumulative_consumed_resources()
         self._init_sharing_analytics()
         # Agent tracking
         self.current_step = 0
         # Seed RNG for this episode: prefer provided reset seed, else fallback to config seed, else default
         if seed is None:
             seed = self.config["seed"]
-        self.rng = np.random.default_rng(seed)
+        # Use legacy numpy RNG for reproducibility across process boundaries
+        np.random.seed(seed)
+        self.rng = np.random  # Use np.random for all random calls
 
         self.agent_positions = {}
         self.predator_positions = {}
@@ -193,6 +200,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
+        # Ensure all possible agents have an entry (prevents KeyError in step)
+        for agent_id in self.possible_agents:
+            self.agent_live_offspring_ids[agent_id] = []
+            self.agent_offspring_counts[agent_id] = 0
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
@@ -361,6 +372,9 @@ class PredPreyGrass(MultiAgentEnv):
         return observations, {}
 
     def step(self, action_dict):
+        # Track cumulative consumed resources for each agent
+        if not hasattr(self, '_cumulative_consumed_resources'):
+            self._init_cumulative_consumed_resources()
         t0 = time.perf_counter()
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # For stepwise display eating in grid
@@ -506,11 +520,65 @@ class PredPreyGrass(MultiAgentEnv):
 
 
         # --- Per-step agent data for env/renderer (keep 'position') ---
+        # Track which resources each agent has consumed this step to prevent double-counting
+        _step_consumed_resources = {agent: set() for agent in self.agents}
         step_data = {}
+        # Prepare cumulative consumed resources for this step
+        for agent in self.agents:
+            info = self._pending_infos.get(agent, {})
+            if "consumption_log" in info:
+                for entry in info["consumption_log"]:
+                    # entry: (resource_id, agent_unique_id, bite_size, step)
+                    resource_id, agent_uid, bite_size, step = entry
+                    # Only add if not already consumed by this agent in this step
+                    if resource_id not in _step_consumed_resources[agent]:
+                        # Default leftover_energy to None; will be set below if possible
+                        leftover_energy = None
+                        # Try to infer leftover_energy for grass and carcass
+                        if resource_id.startswith("grass_"):
+                            # For grass, get remaining energy if available
+                            leftover_energy = self.grass_energies.get(resource_id, 0.0)
+                        elif resource_id.endswith("_carcass") or resource_id.startswith("carcass_"):
+                            leftover_energy = self.carcass_energies.get(resource_id, 0.0)
+                        elif resource_id.startswith("type_1_prey_") or resource_id.startswith("type_2_prey_"):
+                            # For prey, leftover is the amount transferred to carcass (if any)
+                            # Try to find the corresponding carcass id
+                            carcass_id = f"{resource_id}_carcass"
+                            leftover_energy = self.carcass_energies.get(carcass_id, 0.0)
+                        self._cumulative_consumed_resources[agent].append({
+                            "consumer_id": self.unique_agents.get(agent, agent),
+                            "resource_id": resource_id,
+                            "bite_size": round(bite_size, 2),
+                            "time_step": step,
+                            "leftover_energy": round(leftover_energy, 2) if leftover_energy is not None else None,
+                        })
+                        _step_consumed_resources[agent].add(resource_id)
         for agent in self.agents:
             pos = self.agent_positions[agent]
-            energy = self.agent_energies[agent]
+            energy = round(self.agent_energies[agent], 2)
             deltas = self._per_agent_step_deltas.get(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
+            # Gather extra info fields for richer trajectory logging
+            info = self._pending_infos.get(agent, {})
+            # Reward: from info if present, else 0
+            reward = info.get("reward", 0)
+            # Parent id: from agent_parents, null if not present
+            parent_id = self.agent_parents.get(agent, None)
+            # Cause of death and age of death: from death_agents_stats if agent is dead, else null
+            cause_of_death = None
+            age_of_death = None
+            if self.unique_agents.get(agent, None) in self.death_agents_stats:
+                death_stats = self.death_agents_stats[self.unique_agents[agent]]
+                cause_of_death = death_stats.get("death_cause", None)
+                age_of_death = death_stats.get("lifetime", None)
+            # Consumed resource ids: cumulative up to this step
+            consumed_resources = list(self._cumulative_consumed_resources.get(agent, []))
+            # Add time_step to each offspring (when it was created)
+            # We need to track when each offspring was created; fallback to current_step if not tracked
+            offspring_ids = []
+            for child_uid in self.agent_live_offspring_ids[agent]:
+                # Try to get the step from unique_agent_stats if available
+                birth_step = self.unique_agent_stats.get(child_uid, {}).get("birth_step", self.current_step)
+                offspring_ids.append({"id": child_uid, "time_step": birth_step})
             step_data[agent] = {
                 "position": pos,
                 "unique_id": self.unique_agents.get(agent, agent),
@@ -520,8 +588,14 @@ class PredPreyGrass(MultiAgentEnv):
                 "energy_eating": deltas["eat"],
                 "energy_reproduction": deltas["repro"],
                 "age": self.agent_ages[agent],
-                "offspring_count": self.agent_offspring_counts[agent],
-                "offspring_ids": self.agent_live_offspring_ids[agent],
+                "offspring_count": int(self.agent_offspring_counts[agent]),
+                # Snapshot to avoid later mutations reflecting in earlier steps
+                "offspring_ids": offspring_ids,
+                "reward": reward,
+                "parent_id": parent_id,
+                "cause_of_death": cause_of_death,
+                "age_of_death": age_of_death,
+                "consumed_resources": consumed_resources,
                 # Event fields (to be filled in infos): movement, death, reproduction, reward, consumption_log, etc.
             }
         self.per_step_agent_data.append(step_data)
@@ -739,7 +813,7 @@ class PredPreyGrass(MultiAgentEnv):
         free_positions = list(all_positions - occupied_positions)
 
         if free_positions:
-            return free_positions[self.rng.integers(len(free_positions))]
+            return free_positions[np.random.randint(len(free_positions))]
 
         return None  # No available position found
 
@@ -953,19 +1027,17 @@ class PredPreyGrass(MultiAgentEnv):
             )
 
         if caught_prey:
+            # Only allow one consumption event per step: if prey is eaten, do not allow carcass consumption in this step
             prey_energy_full = self.agent_energies[caught_prey]
             raw_gain = min(prey_energy_full, self.max_eating_predator)
-            # Log kill (prey_caught::<uid>)
-            self._log_consumption(f"prey_caught::{caught_prey}", agent, raw_gain)
-            # Emit consumption event for callback aggregation
+            prey_uid = self.unique_agents.get(caught_prey, caught_prey)
+            self._log_consumption(prey_uid, agent, raw_gain)
             self._pending_infos.setdefault(agent, {}).setdefault("consumption_log", []).append(
-                (f"prey_caught::{caught_prey}", self.unique_agents.get(agent, agent), float(raw_gain), int(self.current_step))
+                (prey_uid, self.unique_agents.get(agent, agent), float(raw_gain), int(self.current_step))
             )
             t0 = time.perf_counter()
             uid = self.unique_agents[agent]
-            prey_uid = self.unique_agents.get(caught_prey, caught_prey)
             self._log(self.verbose_engagement, f"[ENGAGE] {uid} caught {prey_uid} at {tuple(map(int, predator_position))}", "white")
-            # Apply kill energy cost to predator
             kill_cost = self.config.get("kill_energy_cost", 0.0)
             self.agent_energies[agent] -= kill_cost
             t_log = time.perf_counter()
@@ -985,43 +1057,28 @@ class PredPreyGrass(MultiAgentEnv):
             max_energy = self.config["max_energy_predator"]
             self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
             t_cap = time.perf_counter()
-            # Leave a carcass if prey had more energy than predator can eat this step
             leftover_energy = max(prey_energy_full - self.max_eating_predator, 0.0)
             if leftover_energy > 0:
-                # Merge with existing carcass if present at the same cell
                 existing_carcass_id = carcass_pos_map.get(predator_position) if carcass_pos_map is not None else None
                 if existing_carcass_id is not None and existing_carcass_id in self.carcass_energies:
                     self.carcass_energies[existing_carcass_id] += leftover_energy
                     self.grid_world_state[self.carcass_channel_idx, *predator_position] = self.carcass_energies[existing_carcass_id]
-                    # Metrics: energy added to carcasses
                     self._carcass_metrics_step["created_energy"] += leftover_energy
                     self._carcass_metrics_total["created_energy"] += leftover_energy
-                    # Log carcass as resource for sharing and emit event
-                    self._log_consumption(existing_carcass_id, agent, leftover_energy)
-                    self._pending_infos.setdefault(agent, {}).setdefault("consumption_log", []).append(
-                        (existing_carcass_id, self.unique_agents.get(agent, agent), float(leftover_energy), int(self.current_step))
-                    )
                 else:
-                    carcass_id = f"carcass_{self.carcass_counter}"
-                    self.carcass_counter += 1
+                    # Use the unique id of the prey with '_carcass' suffix as the carcass id
+                    prey_uid = self.unique_agents.get(caught_prey, caught_prey)
+                    carcass_id = f"{prey_uid}_carcass"
                     self.carcass_positions[carcass_id] = predator_position
                     self.carcass_energies[carcass_id] = leftover_energy
                     self.carcass_ages[carcass_id] = 0
-                    # Write leftover to carcass channel in the grid
                     self.grid_world_state[self.carcass_channel_idx, *predator_position] = leftover_energy
-                    # Update local map to reflect immediate availability for later agents in same step
                     if carcass_pos_map is not None:
                         carcass_pos_map[predator_position] = carcass_id
-                    # Metrics: new carcass created
                     self._carcass_metrics_step["created_count"] += 1
                     self._carcass_metrics_total["created_count"] += 1
                     self._carcass_metrics_step["created_energy"] += leftover_energy
                     self._carcass_metrics_total["created_energy"] += leftover_energy
-                    # Log carcass as resource for sharing and emit event
-                    self._log_consumption(carcass_id, agent, leftover_energy)
-                    self._pending_infos.setdefault(agent, {}).setdefault("consumption_log", []).append(
-                        (carcass_id, self.unique_agents.get(agent, agent), float(leftover_energy), int(self.current_step))
-                    )
             uid = self.unique_agents[agent]
             self.unique_agent_stats[uid]["times_ate"] += 1
             self.unique_agent_stats[uid]["energy_gained"] += gain
@@ -1037,7 +1094,6 @@ class PredPreyGrass(MultiAgentEnv):
             terminations[caught_prey] = True
             truncations[caught_prey] = False
             self.active_num_prey -= 1
-            # Clear prey energy channel at this cell (predator_position)
             self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
             uid = self.unique_agents[caught_prey]
             stat = self.unique_agent_stats[uid]
@@ -1187,14 +1243,14 @@ class PredPreyGrass(MultiAgentEnv):
             return
 
         chance_key = "reproduction_chance_predator" if "predator" in agent else "reproduction_chance_prey"
-        if self.rng.random() > self.config[chance_key]:
+        if np.random.random() > self.config[chance_key]:
             return
 
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_predator_3"
 
             # Mutation: chance (self.mutation_rate_predator) to switch type
-            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            mutated = np.random.random() < self.mutation_rate_predator  # or _prey
             if mutated:
                 new_type = 2 if parent_type == 1 else 1
             else:
@@ -1280,14 +1336,14 @@ class PredPreyGrass(MultiAgentEnv):
             return
 
         chance_key = "reproduction_chance_predator" if "predator" in agent else "reproduction_chance_prey"
-        if self.rng.random() > self.config[chance_key]:
+        if np.random.random() > self.config[chance_key]:
             return
 
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_prey_6"
 
             # Mutation: 10% chance to switch type
-            mutated = self.rng.random() < self.mutation_rate_prey
+            mutated = np.random.random() < self.mutation_rate_prey
             if mutated:
                 new_type = 2 if parent_type == 1 else 1
             else:
@@ -1464,25 +1520,15 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_ages[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
-        self.agent_live_offspring_ids[agent_id] = []
+        # Do NOT initialize self.agent_live_offspring_ids here; only in _init_reset_variables
 
         self.agent_parents[agent_id] = parent_unique_id
 
         # Debug: log if parent's offspring list is being appended to during reset/registration
-        if parent_unique_id is not None:
-            parent_agent_id = None
-            # Find parent agent_id by unique_id
-            for aid, uid in self.unique_agents.items():
-                if uid == parent_unique_id:
-                    parent_agent_id = aid
-                    break
-            if parent_agent_id is not None:
-                print(f"[DEBUG-REGISTER] Registering {agent_id} with parent {parent_agent_id} (unique {parent_unique_id}) at step {self.current_step}")
-                print(f"[DEBUG-REGISTER] Parent's offspring list before: {self.agent_live_offspring_ids.get(parent_agent_id, [])}")
-            else:
-                print(f"[DEBUG-REGISTER] Registering {agent_id} with unknown parent unique_id {parent_unique_id} at step {self.current_step}")
+        # (debug print statements removed)
 
-        self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
+        # Prevent reproduction on the very first step after reset by setting last reproduction to now
+        self.agent_last_reproduction[agent_id] = self.current_step
 
         self.unique_agent_stats[unique_id] = {
             "birth_step": self.current_step,
