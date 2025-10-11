@@ -107,16 +107,10 @@ if __name__ == "__main__":
                 if k in info:
                     traj[k] = info[k]
             per_agent_trajectories.append(traj)
-    # Write or append to JSON
+    # Write JSON (overwrite, do not append)
     try:
-        if os.path.exists(out_path):
-            with open(out_path, 'r') as f:
-                data = json.load(f)
-        else:
-            data = []
-        data.extend(per_agent_trajectories)
         with open(out_path, 'w') as f:
-            json.dump(data, f, indent=2)
+            json.dump(per_agent_trajectories, f, indent=2)
         print(f"[random_policy] Trajectories written to {out_path}")
     except Exception as e:
         print(f"[random_policy] Failed to write trajectories: {e}")
