@@ -4,7 +4,8 @@ from predpreygrass.rllib.limited_intake.utils.pygame_grid_renderer_rllib import 
 import pygame
 import os
 import json
-
+import random
+import numpy as np
 
 def env_creator(config):
     return PredPreyGrass(config)
@@ -13,8 +14,13 @@ def random_policy_pi(agent_id, env):
     return env.action_spaces[agent_id].sample()
 
 if __name__ == "__main__":
+
     # Always inject wall config for visualization parity
     cfg = dict(config_env)
+    # Set seeds for reproducibility
+    SEED = cfg.get("seed", 42)
+    random.seed(SEED)
+    np.random.seed(SEED)
     # Force manual wall layout for this viewer
     cfg["wall_placement_mode"] = "manual"
     cfg["manual_wall_positions"] = config_env["manual_wall_positions"]
@@ -28,6 +34,12 @@ if __name__ == "__main__":
     cfg["carcass_max_lifetime"] = None
     env = env_creator(cfg)
     observations, _ = env.reset(seed=cfg.get("seed", 42))
+    # Seed action spaces for reproducible .sample()
+    for agent_id, space in env.action_spaces.items():
+        try:
+            space.seed(SEED)
+        except Exception:
+            pass
 
     # (Debug print removed)
 
@@ -82,6 +94,8 @@ if __name__ == "__main__":
                 agents_just_ate=env.agents_just_ate,
                 per_step_agent_data=env.per_step_agent_data,
             )
+        # --- Slow down simulation for visibility ---
+        clock.tick(20)  # steps per second
     # --- Trajectory logging at episode end ---
     # Save per-agent, per-step data to the same format as the callback (excluding 'position')
     out_path = os.path.join(os.path.dirname(__file__), 'trajectories_output/agent_trajectories.json')
@@ -91,7 +105,6 @@ if __name__ == "__main__":
         for agent_id, info in step_data.items():
             traj = {
                 'unique_id': info.get('unique_id', agent_id),
-                'agent_id': agent_id,
                 'step': step,
                 'energy': info.get('energy'),
                 'energy_decay': info.get('energy_decay'),
@@ -101,13 +114,18 @@ if __name__ == "__main__":
                 'age': info.get('age'),
                 'offspring_count': info.get('offspring_count'),
                 'offspring_ids': info.get('offspring_ids'),
+                'reward': info.get('reward'),
+                'parent_id': info.get('parent_id'),
+                'cause_of_death': info.get('cause_of_death'),
+                'age_of_death': info.get('age_of_death'),
+                'consumed_resources': info.get('consumed_resources'),
             }
             # Optionally add event fields if present
             for k in ["movement", "death", "reproduction", "reward", "consumption_log", "move_blocked_reason", "los_rejected"]:
                 if k in info:
                     traj[k] = info[k]
             per_agent_trajectories.append(traj)
-    # Write JSON (overwrite, do not append)
+    # Write to JSON (overwrite, do not append)
     try:
         with open(out_path, 'w') as f:
             json.dump(per_agent_trajectories, f, indent=2)
