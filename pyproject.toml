@@ -42,3 +42,4 @@ where = ["src"]
 [tool.ruff]
 ignore = ["E402", "E203"]
 line-length = 132
+target-version = "py311"
