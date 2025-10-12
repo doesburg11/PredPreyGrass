@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.limited_intake.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.limited_intake.config.config_env_limited_intake import config_env
+from predpreygrass.rllib.limited_intake.experiments.config_env_limited_intake import config_env
 from predpreygrass.rllib.limited_intake.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.limited_intake.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -123,8 +123,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_limited_intake_TYPE_2_EATING_REWARDED_2025-10-08_09-51-32/PPO_PredPreyGrass_9b6a9_00000_0_2025-10-08_09-51-32"
-    checkpoint_dir = "checkpoint_000099"
+    checkpoint_root = "PPO_LIMITED_INTAKE_2025-10-12_00-06-54/PPO_PredPreyGrass_9899f_00000_0_2025-10-12_00-06-54"
+    checkpoint_dir = "checkpoint_000089"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)
