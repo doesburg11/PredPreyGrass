@@ -3,15 +3,10 @@ from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
 
-import os
-import json
-
-
 
 class EpisodeReturn(RLlibCallback):
-    def __init__(self, log_trajectories=False):
+    def __init__(self):
         super().__init__()
-        self.log_trajectories = log_trajectories
         self.overall_sum_of_rewards = 0.0
         self.num_episodes = 0
         self._pending_episode_metrics = []
@@ -19,46 +14,6 @@ class EpisodeReturn(RLlibCallback):
         self.last_iteration_time = self.start_time
         self.episode_lengths = {}  # manual episode length tracking
         self._episode_los_rejected = {}
-        # Sharing analytics: resource_consumers[resource_id] = {consumers: {agent: amount}, first: step, last: step}
-        self._episode_resource_consumers = {}
-
-    def _append_agent_trajectories(self, episode):
-        # Accumulate per-agent, per-step info for this episode
-        infos_map = self._episode_last_infos(episode)
-        agent_ids = self._episode_agent_ids(episode)
-        episode_steps = episode.length if hasattr(episode, 'length') else self.episode_lengths.get(episode.id_, 0)
-        # Build: {unique_id, agent_id, episode_id, step, ...fields from infos...}
-        per_agent_trajectories = []
-        for step in range(episode_steps):
-            # RLlib does not expose all per-step infos, so we use only last info for each agent
-            for agent_id in agent_ids:
-                info = infos_map.get(agent_id, {})
-                if not info:
-                    continue
-                traj = {
-                    "unique_id": info.get("unique_id", agent_id),
-                    "agent_id": agent_id,
-                    "episode_id": episode.id_,
-                    "step": step,
-                }
-                # Always-logged fields
-                for k in ["energy", "energy_decay", "energy_movement", "energy_eating", "energy_reproduction", "age", "offspring_count", "offspring_ids"]:
-                    if k in info:
-                        traj[k] = info[k]
-                # Event fields (movement, death, reproduction, reward, consumption_log, etc.)
-                for k in ["movement", "death", "reproduction", "reward", "consumption_log", "move_blocked_reason", "los_rejected"]:
-                    if k in info:
-                        traj[k] = info[k]
-                per_agent_trajectories.append(traj)
-        # Write each episode's trajectories to a separate file to avoid concurrent write corruption
-        out_dir = os.path.join(os.path.dirname(__file__), '../trajectories_output')
-        os.makedirs(out_dir, exist_ok=True)
-        out_path = os.path.abspath(os.path.join(out_dir, f'agent_trajectories_{episode.id_}.json'))
-        try:
-            with open(out_path, 'w') as f:
-                json.dump(per_agent_trajectories, f, indent=2)
-        except Exception as e:
-            print(f"[TrajectoryLogger] Failed to write trajectories for episode {episode.id_}: {e}")
 
     def _episode_agent_ids(self, episode) -> list:
         """
@@ -91,17 +46,6 @@ class EpisodeReturn(RLlibCallback):
             for info in infos_map.values():
                 if info and isinstance(info, dict):
                     los_count += int(info.get("los_rejected", 0))
-                    # --- Sharing analytics: look for 'consumption_log' in info ---
-                    consumption_log = info.get("consumption_log")
-                    if consumption_log and isinstance(consumption_log, list):
-                        for event in consumption_log:
-                            # event: (resource_id, agent_id, bite_size, step)
-                            resource_id, agent_id, bite_size, step = event
-                            rec = self._episode_resource_consumers.setdefault(resource_id, {"consumers": {}, "first": None, "last": None})
-                            rec["consumers"][agent_id] = rec["consumers"].get(agent_id, 0.0) + bite_size
-                            if rec["first"] is None:
-                                rec["first"] = step
-                            rec["last"] = step
         self._episode_los_rejected[eid] = self._episode_los_rejected.get(eid, 0) + los_count
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
@@ -132,10 +76,6 @@ class EpisodeReturn(RLlibCallback):
                     group_rewards[group].append(total)
                     break
 
-        # --- Trajectory logging ---
-        if self.log_trajectories:
-            self._append_agent_trajectories(episode)
-
         # Episode summary log
         print(
             f"Episode {self.num_episodes}: Length: {episode_length} | R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}"
@@ -150,41 +90,6 @@ class EpisodeReturn(RLlibCallback):
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
         los_rejected = self._episode_los_rejected.pop(episode_id, 0)
         metrics_logger.log_value("los_rejected_moves", los_rejected, reduce="mean")
-
-        # --- Sharing analytics: compute and log sharing summary ---
-        consumers_per_resource = []
-        sharing_delays = []
-        gini_per_resource = []
-        n_shared = 0
-        for res_id, rec in self._episode_resource_consumers.items():
-            n_cons = len(rec["consumers"])
-            consumers_per_resource.append(n_cons)
-            if n_cons > 1:
-                n_shared += 1
-                sharing_delays.append(rec["last"] - rec["first"])
-            # Gini index for bite shares
-            bites = list(rec["consumers"].values())
-            if bites:
-                sorted_bites = sorted(bites)
-                n = len(bites)
-                s = sum(sorted_bites)
-                gini = (sum(abs(x - y) for x in sorted_bites for y in sorted_bites)) / (2 * n * s) if s > 0 else 0.0
-                gini_per_resource.append(gini)
-        total = len(self._episode_resource_consumers)
-        shared_fraction = n_shared / total if total > 0 else 0.0
-        avg_consumers = float(sum(consumers_per_resource) / len(consumers_per_resource)) if consumers_per_resource else 0.0
-        avg_sharing_delay = float(sum(sharing_delays) / len(sharing_delays)) if sharing_delays else 0.0
-        avg_gini = float(sum(gini_per_resource) / len(gini_per_resource)) if gini_per_resource else 0.0
-        metrics_logger.log_value("sharing/shared_fraction", shared_fraction, reduce="mean")
-        metrics_logger.log_value("sharing/avg_consumers_per_resource", avg_consumers, reduce="mean")
-        metrics_logger.log_value("sharing/avg_sharing_delay", avg_sharing_delay, reduce="mean")
-        metrics_logger.log_value("sharing/avg_share_gini", avg_gini, reduce="mean")
-        metrics_logger.log_value("sharing/n_resources", total, reduce="mean")
-        # Reset for next episode
-        self._episode_resource_consumers = {}
-
-        # Note: Sharing metrics are fully accumulated in this callback from infos['consumption_log'].
-        # No direct env access is needed (or used) in the new RLlib stack.
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics

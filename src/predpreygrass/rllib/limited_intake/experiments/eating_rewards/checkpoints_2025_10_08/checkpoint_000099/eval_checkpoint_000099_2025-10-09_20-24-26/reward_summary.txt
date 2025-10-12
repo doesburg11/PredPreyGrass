@@ -1,0 +1,105 @@
+Total Reward: 7159.0
+
+--- Reward Breakdown per Agent ---
+type_1_predator_0: 0.00
+type_1_predator_1: 0.00
+type_1_predator_2: 0.00
+type_1_predator_3: 10.00
+type_1_predator_4: 0.00
+type_1_predator_5: 0.00
+type_1_predator_6: 10.00
+type_1_predator_7: 0.00
+type_1_predator_8: 0.00
+type_1_predator_9: 0.00
+type_2_predator_0: 15.00
+type_2_predator_1: 32.00
+type_2_predator_2: 0.00
+type_2_predator_3: 13.00
+type_2_predator_4: 23.00
+type_2_predator_5: 0.00
+type_2_predator_6: 27.00
+type_2_predator_7: 0.00
+type_2_predator_8: 28.00
+type_2_predator_9: 13.00
+type_1_prey_0  : 10.00
+type_1_prey_1  : 0.00
+type_1_prey_2  : 0.00
+type_1_prey_3  : 0.00
+type_1_prey_4  : 0.00
+type_1_prey_5  : 0.00
+type_1_prey_6  : 0.00
+type_1_prey_7  : 10.00
+type_1_prey_8  : 10.00
+type_1_prey_9  : 0.00
+type_2_prey_0  : 5.00
+type_2_prey_1  : 0.00
+type_2_prey_2  : 2.00
+type_2_prey_3  : 0.00
+type_2_prey_4  : 2.00
+type_2_prey_5  : 1.00
+type_2_prey_6  : 0.00
+type_2_prey_7  : 0.00
+type_2_prey_8  : 3.00
+type_2_prey_9  : 18.00
+type_1_prey_10 : 10.00
+type_1_prey_11 : 0.00
+type_1_prey_12 : 20.00
+type_1_prey_13 : 0.00
+type_1_prey_14 : 20.00
+type_1_prey_15 : 0.00
+type_2_predator_10: 59.00
+type_1_predator_10: 0.00
+type_1_prey_16 : 50.00
+type_1_prey_17 : 0.00
+type_1_prey_18 : 20.00
+type_1_prey_19 : 0.00
+type_1_prey_20 : 0.00
+type_1_prey_21 : 0.00
+type_1_prey_22 : 0.00
+type_1_prey_23 : 10.00
+type_1_prey_24 : 0.00
+type_1_prey_25 : 10.00
+type_1_prey_26 : 10.00
+type_2_predator_11: 14.00
+type_2_predator_12: 4.00
+type_2_predator_13: 3.00
+type_1_prey_27 : 0.00
+type_1_prey_28 : 0.00
+type_1_prey_29 : 10.00
+type_2_predator_14: 2.00
+type_2_predator_15: 2.00
+type_2_predator_16: 2.00
+type_2_predator_17: 66.00
+type_2_predator_18: 0.00
+type_2_predator_19: 23.00
+type_2_predator_20: 29.00
+type_2_predator_21: 2.00
+type_2_predator_22: 0.00
+type_2_predator_23: 0.00
+type_2_predator_24: 0.00
+type_1_prey_30 : 0.00
+type_1_prey_31 : 0.00
+type_1_prey_32 : 0.00
+type_1_prey_33 : 0.00
+type_1_prey_34 : 10.00
+type_1_prey_35 : 0.00
+type_1_prey_36 : 10.00
+type_1_prey_37 : 0.00
+type_1_prey_38 : 30.00
+type_1_prey_39 : 0.00
+type_1_prey_40 : 0.00
+type_1_prey_41 : 20.00
+type_1_prey_42 : 10.00
+type_1_prey_43 : 0.00
+type_1_prey_44 : 0.00
+type_1_prey_45 : 0.00
+type_1_prey_46 : 0.00
+type_1_prey_47 : 30.00
+type_1_prey_48 : 0.00
+
+--- Aggregated Rewards ---
+Total number of steps: 999
+Total Type 1 Predator Reward: 20.00
+Total Type 2 Predator Reward: 357.00
+Total Type 1 Prey Reward: 300.00
+Total Type 2 Prey Reward: 31.00
