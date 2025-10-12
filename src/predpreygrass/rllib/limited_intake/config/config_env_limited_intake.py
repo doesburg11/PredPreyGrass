@@ -64,7 +64,7 @@ config_env = {
     "respect_los_for_movement": True,         # restrict movement by LOS
 
     # --- Intake caps (bite size per event) ---
-    "max_eating_predator": 2.0,  # max energy predator can eat per event (from prey or carcass)
+    "max_eating_predator": 3.0,  # max energy predator can eat per event (from prey or carcass)
     "max_eating_prey": 1.0,      # max energy prey can eat per event (from grass)
 
     # --- Absolute energy caps ---
