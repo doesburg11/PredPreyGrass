@@ -122,8 +122,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
 
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion_efficiency/"
-    checkpoint_root = "experiments/eating_rewards/checkpoints_2025_10_08/"
+    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    checkpoint_root = "PPO_LIMITED_INTAKE_2025-10-12_00-06-54/PPO_PredPreyGrass_9899f_00000_0_2025-10-12_00-06-54"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
