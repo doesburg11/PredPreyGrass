@@ -26,6 +26,19 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
+        # --- Carcass state tracking ---
+        # Carcass positions: {carcass_id: (x, y)}
+        self.carcass_positions = {}
+        # Carcass energies: {carcass_id: energy}
+        self.carcass_energies = {}
+        # Carcass ages: {carcass_id: age in steps}
+        self.carcass_ages = {}
+        # Carcass unique id counter
+        self.carcass_counter = 0
+
+        # Add carcass channel to grid state (one extra channel)
+        self.carcass_channel_idx = self.num_obs_channels
+
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config["debug_mode"]
@@ -104,6 +117,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.type_1_act_range = config["type_1_action_range"]
         self.type_2_act_range = config["type_2_action_range"]
 
+
     def _init_reset_variables(self, seed):
         # Agent tracking
         self.current_step = 0
@@ -160,7 +174,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
-        self.grid_world_state_shape = (self.num_obs_channels, self.grid_size, self.grid_size)
+        # Add an extra channel for carcasses
+        self.grid_world_state_shape = (self.num_obs_channels + 1, self.grid_size, self.grid_size)
         self.initial_grid_world_state = np.zeros(self.grid_world_state_shape, dtype=np.float32)
         self.grid_world_state = self.initial_grid_world_state.copy()
 
@@ -274,6 +289,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_num_grass = len(self.grass_positions)
 
         observations = {agent: self._get_observation(agent) for agent in self.agents}
+        # Print the shape of the first agent's observation and its expected space
+        if observations:
+            first_agent = next(iter(observations))
+            actual = observations[first_agent].shape
+            expected = self.observation_spaces[first_agent].shape if first_agent in self.observation_spaces else None
+            print(f"[RESET DEBUG] First agent {first_agent}: actual obs shape {actual}, expected {expected}")
         return observations, {}
 
     def step(self, action_dict):
@@ -537,12 +558,16 @@ class PredPreyGrass(MultiAgentEnv):
         observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
-        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+        # Number of channels in the grid (including carcass channel)
+        grid_channels = self.grid_world_state.shape[0]
+        channels = grid_channels + (1 if self.include_visibility_channel else 0)
         observation = np.zeros((channels, observation_range, observation_range), dtype=np.float32)
-        # Channel 0: walls (binary). Slice from the pre-painted global walls channel for this window.
-        observation[0, xolo:xohi, yolo:yohi] = self.grid_world_state[0, xlo:xhi, ylo:yhi]
-        # Copy dynamic channels (predators, prey, grass) into fixed locations 1..num_obs_channels-1 first
-        observation[1:self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+        # Channel 0: walls (binary)
+        dx = min(xhi - xlo, xohi - xolo)
+        dy = min(yhi - ylo, yohi - yolo)
+        observation[0, xolo:xolo+dx, yolo:yolo+dy] = self.grid_world_state[0, xlo:xlo+dx, ylo:ylo+dy]
+        # Copy all other channels (predators, prey, grass, carcass) into observation
+        observation[1:grid_channels, xolo:xolo+dx, yolo:yolo+dy] = self.grid_world_state[1:, xlo:xlo+dx, ylo:ylo+dy]
 
         need_visibility_mask = self.include_visibility_channel or self.mask_observation_with_visibility
         visibility_mask = None
@@ -581,6 +606,9 @@ class PredPreyGrass(MultiAgentEnv):
         obs_time = obs_t1 - obs_t0
         if obs_time > 0.002 and getattr(self, "debug_mode", False):  # Only log if >2ms
             print(f"[PROFILE-OBS-AGENT] agent={agent} obs_time={obs_time:.6f}s")
+        # Debug: compare actual observation shape to declared observation space
+        expected_shape = self.observation_spaces[agent].shape if hasattr(self, 'observation_spaces') and agent in self.observation_spaces else None
+        print(f"[OBS DEBUG] Agent {agent}: actual obs shape {observation.shape}, expected {expected_shape}")
         return observation
 
     def _obs_clip(self, x, y, observation_range):
@@ -844,7 +872,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
             t_reward = time.perf_counter()
-            raw_gain = min(self.agent_energies[caught_prey], self.config["max_energy_gain_per_prey"])
+            prey_energy = self.agent_energies[caught_prey]
+            max_intake = self.config["max_energy_gain_per_prey"]
+            raw_gain = min(prey_energy, max_intake)
             efficiency = self.config["energy_transfer_efficiency"]
             gain = raw_gain * efficiency
             self.agent_energies[agent] += gain
@@ -868,16 +898,31 @@ class PredPreyGrass(MultiAgentEnv):
             terminations[caught_prey] = True
             truncations[caught_prey] = False
             self.active_num_prey -= 1
-            self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-            uid = self.unique_agents[caught_prey]
-            stat = self.unique_agent_stats[uid]
+            prey_pos = self.agent_positions[caught_prey]
+            self.grid_world_state[2, *prey_pos] = 0
+            uid_prey = self.unique_agents[caught_prey]
+            stat = self.unique_agent_stats[uid_prey]
             stat["death_step"] = self.current_step
             stat["death_cause"] = "eaten"
             steps = max(stat["avg_energy_steps"], 1)
             stat["avg_energy"] = stat["avg_energy_sum"] / steps
             stat["cumulative_reward"] = self.cumulative_rewards.get(caught_prey, 0.0)
-            self.death_agents_stats[uid] = stat
+            self.death_agents_stats[uid_prey] = stat
             t_prey_stats = time.perf_counter()
+            # --- Carcass creation logic ---
+            leftover_energy = prey_energy - raw_gain
+            if leftover_energy > 0:
+                # Create a new carcass at the prey's position
+                carcass_id = f"carcass_{self.carcass_counter}"
+                self.carcass_counter += 1
+                self.carcass_positions[carcass_id] = prey_pos
+                self.carcass_energies[carcass_id] = leftover_energy
+                self.carcass_ages[carcass_id] = 0
+                # Paint carcass energy into the grid's carcass channel
+                self.grid_world_state[self.carcass_channel_idx, *prey_pos] = leftover_energy
+            else:
+                # Clear any carcass at this position (shouldn't be needed, but for safety)
+                self.grid_world_state[self.carcass_channel_idx, *prey_pos] = 0
             if prey_pos_map is not None:
                 prey_pos_map.pop(predator_position, None)
             del self.agent_positions[caught_prey]
@@ -892,14 +937,67 @@ class PredPreyGrass(MultiAgentEnv):
                 "prey_stats": t_prey_stats-t_prey_reward, "del": t_del-t_prey_stats, "total": t_del-t0
             }
         else:
-            t0 = time.perf_counter()
-            rewards[agent] = self._get_type_specific("reward_predator_step", agent)
-            uid = self.unique_agents[agent]
-            self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
-            t1 = time.perf_counter()
-            if getattr(self, "debug_mode", False):
-                print(f"[PROFILE-ENGAGE] pred: no-catch reward+stats={1e3*(t1-t0):.3f}ms")
-            return {"log": 0.0, "just_ate": 0.0, "reward": t1-t0, "gain": 0.0, "cap": 0.0, "stats": 0.0, "grid": 0.0, "prey_reward": 0.0, "prey_stats": 0.0, "del": 0.0, "total": t1-t0}
+            # Check for carcass at predator's position
+            predator_position = tuple(self.agent_positions[agent])
+            carcass_id = None
+            for cid, pos in self.carcass_positions.items():
+                if tuple(pos) == predator_position:
+                    carcass_id = cid
+                    break
+            if carcass_id is not None:
+                t0 = time.perf_counter()
+                self._log(self.verbose_engagement, f"[ENGAGE] {agent} consumes carcass {carcass_id} at {predator_position}", "magenta")
+                t_log = time.perf_counter()
+                self.agents_just_ate.add(agent)
+                t_just_ate = time.perf_counter()
+                rewards[agent] = self._get_type_specific("reward_predator_catch_prey", agent)  # Optionally use a separate reward for carcass
+                self.cumulative_rewards.setdefault(agent, 0)
+                self.cumulative_rewards[agent] += rewards[agent]
+                t_reward = time.perf_counter()
+                carcass_energy = self.carcass_energies[carcass_id]
+                max_intake = self.config["max_energy_gain_per_prey"]
+                raw_gain = min(carcass_energy, max_intake)
+                efficiency = self.config["energy_transfer_efficiency"]
+                gain = raw_gain * efficiency
+                self.agent_energies[agent] += gain
+                self._per_agent_step_deltas[agent]["eat"] = gain
+                t_gain = time.perf_counter()
+                max_energy = self.config["max_energy_predator"]
+                self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
+                t_cap = time.perf_counter()
+                uid = self.unique_agents[agent]
+                self.unique_agent_stats[uid]["times_ate"] += 1
+                self.unique_agent_stats[uid]["energy_gained"] += gain
+                self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
+                t_stats = time.perf_counter()
+                self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
+                # Subtract energy from carcass
+                leftover = carcass_energy - raw_gain
+                if leftover > 0:
+                    self.carcass_energies[carcass_id] = leftover
+                    self.grid_world_state[self.carcass_channel_idx, *predator_position] = leftover
+                else:
+                    # Remove carcass
+                    del self.carcass_positions[carcass_id]
+                    del self.carcass_energies[carcass_id]
+                    del self.carcass_ages[carcass_id]
+                    self.grid_world_state[self.carcass_channel_idx, *predator_position] = 0
+                t_carcass = time.perf_counter()
+                if getattr(self, "debug_mode", False):
+                    print(f"[PROFILE-ENGAGE] pred: carcass log={1e3*(t_log-t0):.3f}ms just_ate={1e3*(t_just_ate-t_log):.3f}ms reward={1e3*(t_reward-t_just_ate):.3f}ms gain={1e3*(t_gain-t_reward):.3f}ms cap={1e3*(t_cap-t_gain):.3f}ms stats={1e3*(t_stats-t_cap):.3f}ms carcass={1e3*(t_carcass-t_stats):.3f}ms total={1e3*(t_carcass-t0):.3f}ms")
+                return {
+                    "log": t_log-t0, "just_ate": t_just_ate-t_log, "reward": t_reward-t_just_ate, "gain": t_gain-t_reward,
+                    "cap": t_cap-t_gain, "stats": t_stats-t_cap, "carcass": t_carcass-t_stats, "total": t_carcass-t0
+                }
+            else:
+                t0 = time.perf_counter()
+                rewards[agent] = self._get_type_specific("reward_predator_step", agent)
+                uid = self.unique_agents[agent]
+                self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
+                t1 = time.perf_counter()
+                if getattr(self, "debug_mode", False):
+                    print(f"[PROFILE-ENGAGE] pred: no-catch reward+stats={1e3*(t1-t0):.3f}ms")
+                return {"log": 0.0, "just_ate": 0.0, "reward": t1-t0, "gain": 0.0, "cap": 0.0, "stats": 0.0, "grid": 0.0, "prey_reward": 0.0, "prey_stats": 0.0, "del": 0.0, "total": t1-t0}
 
     def _handle_prey_engagement(self, agent, observations, rewards, terminations, truncations, grass_pos_map=None):
         import time
