@@ -1029,34 +1029,27 @@ class PredPreyGrass(MultiAgentEnv):
         if caught_prey:
             # Only allow one consumption event per step: if prey is eaten, do not allow carcass consumption in this step
             prey_energy_full = self.agent_energies[caught_prey]
+            # energy "taken"
             raw_gain = min(prey_energy_full, self.max_eating_predator)
             prey_uid = self.unique_agents.get(caught_prey, caught_prey)
             self._log_consumption(prey_uid, agent, raw_gain)
             self._pending_infos.setdefault(agent, {}).setdefault("consumption_log", []).append(
                 (prey_uid, self.unique_agents.get(agent, agent), float(raw_gain), int(self.current_step))
             )
-            t0 = time.perf_counter()
             uid = self.unique_agents[agent]
             self._log(self.verbose_engagement, f"[ENGAGE] {uid} caught {prey_uid} at {tuple(map(int, predator_position))}", "white")
-            kill_cost = self.config.get("kill_energy_cost", 0.0)
+            kill_cost = self.config["kill_prey_energy_cost"]
             self.agent_energies[agent] -= kill_cost
-            t_log = time.perf_counter()
             self.agents_just_ate.add(agent)
-            t_just_ate = time.perf_counter()
             rewards[agent] = self._get_type_specific("reward_predator_catch_prey", agent)
             self.cumulative_rewards.setdefault(agent, 0)
             self.cumulative_rewards[agent] += rewards[agent]
-            t_reward = time.perf_counter()
-            prey_energy_full = self.agent_energies[caught_prey]
-            raw_gain = min(prey_energy_full, self.max_eating_predator)
             efficiency = self.config["energy_transfer_efficiency"]
-            gain = raw_gain * efficiency
-            self.agent_energies[agent] += gain
-            self._per_agent_step_deltas[agent]["eat"] = gain
-            t_gain = time.perf_counter()
+            net_gain = raw_gain * efficiency
+            self.agent_energies[agent] += net_gain
+            self._per_agent_step_deltas[agent]["eat"] = net_gain
             max_energy = self.config["max_energy_predator"]
             self.agent_energies[agent] = min(self.agent_energies[agent], max_energy)
-            t_cap = time.perf_counter()
             leftover_energy = max(prey_energy_full - self.max_eating_predator, 0.0)
             if leftover_energy > 0:
                 existing_carcass_id = carcass_pos_map.get(predator_position) if carcass_pos_map is not None else None
@@ -1081,16 +1074,13 @@ class PredPreyGrass(MultiAgentEnv):
                     self._carcass_metrics_total["created_energy"] += leftover_energy
             uid = self.unique_agents[agent]
             self.unique_agent_stats[uid]["times_ate"] += 1
-            self.unique_agent_stats[uid]["energy_gained"] += gain
+            self.unique_agent_stats[uid]["energy_gained"] += net_gain
             self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
-            t_stats = time.perf_counter()
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
-            t_grid = time.perf_counter()
             observations[caught_prey] = self._get_observation(caught_prey)
             rewards[caught_prey] = self._get_type_specific("penalty_prey_caught", caught_prey)
             self.cumulative_rewards.setdefault(caught_prey, 0.0)
             self.cumulative_rewards[caught_prey] += rewards[caught_prey]
-            t_prey_reward = time.perf_counter()
             terminations[caught_prey] = True
             truncations[caught_prey] = False
             self.active_num_prey -= 1
@@ -1103,20 +1093,11 @@ class PredPreyGrass(MultiAgentEnv):
             stat["avg_energy"] = stat["avg_energy_sum"] / steps
             stat["cumulative_reward"] = self.cumulative_rewards.get(caught_prey, 0.0)
             self.death_agents_stats[uid] = stat
-            t_prey_stats = time.perf_counter()
             if prey_pos_map is not None:
                 prey_pos_map.pop(predator_position, None)
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
-            t_del = time.perf_counter()
-            if getattr(self, "debug_mode", False):
-                print(f"[PROFILE-ENGAGE] pred: log={1e3*(t_log-t0):.3f}ms just_ate={1e3*(t_just_ate-t_log):.3f}ms reward={1e3*(t_reward-t_just_ate):.3f}ms gain={1e3*(t_gain-t_reward):.3f}ms cap={1e3*(t_cap-t_gain):.3f}ms stats={1e3*(t_stats-t_cap):.3f}ms grid={1e3*(t_grid-t_stats):.3f}ms prey_reward={1e3*(t_prey_reward-t_grid):.3f}ms prey_stats={1e3*(t_prey_stats-t_prey_reward):.3f}ms del={1e3*(t_del-t_prey_stats):.3f}ms total={1e3*(t_del-t0):.3f}ms")
-            return {
-                "log": t_log-t0, "just_ate": t_just_ate-t_log, "reward": t_reward-t_just_ate, "gain": t_gain-t_reward,
-                "cap": t_cap-t_gain, "stats": t_stats-t_cap, "grid": t_grid-t_stats, "prey_reward": t_prey_reward-t_grid,
-                "prey_stats": t_prey_stats-t_prey_reward, "del": t_del-t_prey_stats, "total": t_del-t0
-            }
         else:
             t0 = time.perf_counter()
             # If no live prey at cell, try to consume carcass energy if present
@@ -1233,6 +1214,7 @@ class PredPreyGrass(MultiAgentEnv):
                 "log": t_log-t0, "just_ate": t_just_ate-t_log, "reward": t_reward-t_just_ate, "gain": t_gain-t_reward,
                 "cap": t_cap-t_gain, "stats": t_stats-t_cap, "grid": t_grid-t_stats, "grass": t_grass-t_grid, "total": t_grass-t0
             }
+
     def get_sharing_summary(self):
         """Return sharing summary for the current episode (call at end or truncation)."""
         # else branch is correct as previously implemented
