@@ -31,6 +31,7 @@ config_env = {
     "kill_energy_cost": 0.0,  # Extra energy cost for killing prey (predator only)
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
+    "kill_prey_energy_cost": 0.0,  # Energy cost to predator for killing prey
 
     # --- Agent population ---
     "n_possible_type_1_predators": 50,
