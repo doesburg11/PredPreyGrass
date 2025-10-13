@@ -25,7 +25,7 @@ if __name__ == "__main__":
     # Always inject wall config for visualization parity
     cfg = dict(config_env)
     # Set seeds for reproducibility
-    SEED = cfg.get("seed", 42)
+    SEED = cfg["seed"]
     np.random.seed(SEED)  # For any legacy code, but not used for sampling actions
     rng = np.random.default_rng(SEED)
     # Force manual wall layout for this viewer
