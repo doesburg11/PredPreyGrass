@@ -116,6 +116,7 @@ if __name__ == "__main__":
             clip_param=config_ppo["clip_param"],
             kl_coeff=config_ppo["kl_coeff"],
             kl_target=config_ppo["kl_target"],
+            grad_clip=40.0,
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
