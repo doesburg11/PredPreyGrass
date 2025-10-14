@@ -68,6 +68,9 @@ config_env = {
     "max_eating_predator": 100.0,  # max energy predator can eat per event (from prey or carcass)
     "max_eating_prey": 100.0,      # max energy prey can eat per event (from grass)
 
+    # --- Debug/compatibility flags ---
+    "strict_no_carcass_channel": True,  # Set True for strict old-env observation compatibility
+
     # --- Absolute energy caps ---
     "max_energy_predator": float('inf'),
     "max_energy_prey": float('inf'),
