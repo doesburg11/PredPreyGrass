@@ -299,6 +299,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.agents_just_ate.clear()
         # Reset per-step infos
         self._pending_infos = {}
+        # Track positions of agents that terminate during this step (for evaluation/encounter logging)
+        self._terminated_positions_this_step = {}
 
         # step 0: Check for truncation
         t_trunc0 = time.perf_counter()
@@ -432,16 +434,19 @@ class PredPreyGrass(MultiAgentEnv):
         t_obs1 = time.perf_counter()
         obs = t_obs1 - t_obs0
 
-        # output only observations, rewards for active agents
+        # Assemble outputs
+        # - Observations only for active agents; terminated agents should not receive final observations
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
-        rewards = {agent: rewards[agent] for agent in self.agents if agent in rewards}
-        terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
-        truncations = {agent: truncations[agent] for agent in self.agents if agent in truncations}
+        # - Keep rewards/terminations/truncations for terminated agents too (don't filter by active agents)
+        rewards = dict(rewards)
+        terminations = dict(terminations)
+        truncations = dict(truncations)
         truncations["__all__"] = False  # already handled at the beginning of the step        # Global termination and truncation
         terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
 
-        # Provide infos accumulated during the step
-        infos = {agent: self._pending_infos.get(agent, {}) for agent in self.agents}
+        # Provide infos accumulated during the step for both active and just-terminated agents
+        final_info_agents = set(self.agents) | {aid for aid, done in terminations.items() if done}
+        infos = {agent: self._pending_infos.get(agent, {}) for agent in final_info_agents}
 
         # Sort agents for debugging
         self.agents.sort()
@@ -645,15 +650,19 @@ class PredPreyGrass(MultiAgentEnv):
             if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size  # Stay in bounds
         ]
 
-        # Filter for unoccupied positions
-        valid_positions = [pos for pos in potential_positions if pos not in occupied_positions]
+        # Filter for unoccupied positions and not a wall
+        valid_positions = [
+            pos
+            for pos in potential_positions
+            if (pos not in occupied_positions) and (pos not in self.wall_positions)
+        ]
 
         if valid_positions:
             return valid_positions[0]  # Prefer adjacent position if available
 
-        # Fallback: Find any random unoccupied position
+        # Fallback: Find any random unoccupied position that is not a wall
         all_positions = {(i, j) for i in range(self.grid_size) for j in range(self.grid_size)}
-        free_positions = list(all_positions - occupied_positions)
+        free_positions = list(all_positions - occupied_positions - set(self.wall_positions))
 
         if free_positions:
             return free_positions[self.rng.integers(len(free_positions))]
@@ -847,10 +856,22 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _handle_energy_decay(self, agent, observations, rewards, terminations, truncations):
         self._log(self.verbose_decay, f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.", "red")
-        observations[agent] = self._get_observation(agent)
+        # No final observation for terminated agents; only reward and flags
         rewards[agent] = 0
         terminations[agent] = True
         truncations[agent] = False
+        # Attach minimal final-step info
+        self._pending_infos[agent] = {
+            **self._pending_infos.get(agent, {}),
+            "terminated": True,
+            "death_cause": "starved",
+            "final_step": self.current_step,
+        }
+        # Remember where this agent terminated for encounter logging
+        try:
+            self._terminated_positions_this_step[agent] = tuple(self.agent_positions[agent])
+        except Exception:
+            pass
 
         layer = 1 if "predator" in agent else 2
         self.grid_world_state[layer, *self.agent_positions[agent]] = 0
@@ -916,13 +937,25 @@ class PredPreyGrass(MultiAgentEnv):
             t_stats = time.perf_counter()
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
             t_grid = time.perf_counter()
-            observations[caught_prey] = self._get_observation(caught_prey)
+            # No final observation for terminated prey in their last step
             rewards[caught_prey] = self._get_type_specific("penalty_prey_caught", caught_prey)
             self.cumulative_rewards.setdefault(caught_prey, 0.0)
             self.cumulative_rewards[caught_prey] += rewards[caught_prey]
             t_prey_reward = time.perf_counter()
             terminations[caught_prey] = True
             truncations[caught_prey] = False
+            # Attach minimal final-step info
+            self._pending_infos[caught_prey] = {
+                **self._pending_infos.get(caught_prey, {}),
+                "terminated": True,
+                "death_cause": "eaten",
+                "final_step": self.current_step,
+            }
+            # Remember prey death position for encounter logging
+            try:
+                self._terminated_positions_this_step[caught_prey] = tuple(self.agent_positions[caught_prey])
+            except Exception:
+                pass
             self.active_num_prey -= 1
             self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
             uid = self.unique_agents[caught_prey]
@@ -1071,9 +1104,17 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
+            # Spawn position (treat walls as occupied)
+            occupied_positions = set(self.agent_positions.values()) | set(self.wall_positions)
             new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            # Defensive guard
+            if (new_position is None) or (new_position in self.wall_positions):
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] Predator {agent} could not find a non-wall spawn position",
+                    "yellow",
+                )
+                return
 
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
@@ -1163,9 +1204,17 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
+            # Spawn position (treat walls as occupied)
+            occupied_positions = set(self.agent_positions.values()) | set(self.wall_positions)
             new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            # Defensive guard
+            if (new_position is None) or (new_position in self.wall_positions):
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] Prey {agent} could not find a non-wall spawn position",
+                    "yellow",
+                )
+                return
 
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
