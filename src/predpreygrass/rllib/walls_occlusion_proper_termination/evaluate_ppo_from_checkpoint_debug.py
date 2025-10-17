@@ -1,6 +1,6 @@
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass environment (walls_occlusion_correct_termination) for interactive debugging.
+and runs them in the PredPreyGrass environment (walls_occlusion_proper_termination) for interactive debugging.
 
 This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
 making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.walls_occlusion_correct_termination.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion_correct_termination.config.config_env_walls_occlusion_correct_termination import config_env
-from predpreygrass.rllib.walls_occlusion_correct_termination.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.walls_occlusion_correct_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.walls_occlusion_proper_termination.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.walls_occlusion_proper_termination.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_proper_termination.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.walls_occlusion_proper_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -123,8 +123,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_WALLS_OCCLUSION_EFFICIENCY_TYPE_2_EATING_REWARDED_2025-10-08_09-51-32/PPO_PredPreyGrass_9b6a9_00000_0_2025-10-08_09-51-32"
-    checkpoint_dir = "checkpoint_000099"
+    checkpoint_root = "PPO_WALLS_OCCLUSION_PROPER_TERMINATION_2025-10-16_23-33-32/PPO_PredPreyGrass_c3a90_00000_0_2025-10-16_23-33-32"
+    checkpoint_dir = "checkpoint_000009"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
     # training_dir = os.path.dirname(checkpoint_path)

@@ -8,6 +8,12 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Pytest (project env, no-activate)",
+			"type": "shell",
+			"command": "/home/doesburg/Projects/PredPreyGrass/.conda/bin/python -m pytest -q src/predpreygrass/rllib/walls_occlusion_correct_termination/test/test_termination_protocol.py",
+			"problemMatcher": []
 		}
 	]
 }
