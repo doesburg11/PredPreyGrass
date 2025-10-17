@@ -10,7 +10,7 @@ from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
 from predpreygrass.rllib.walls_occlusion_vectorization.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_vectorization.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_vectorization.config.config_env_walls_occlusion_vectorization import config_env
 from predpreygrass.rllib.walls_occlusion_vectorization.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====

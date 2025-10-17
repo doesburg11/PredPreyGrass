@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.walls_occlusion_vectorization.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion_vectorization.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_vectorization.config.config_env_walls_occlusion_vectorization import config_env
 from predpreygrass.rllib.walls_occlusion_vectorization.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion_vectorization.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -42,6 +42,128 @@ SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
+
+
+def detect_and_log_encounters(env, terminations, output_dir, save=True):
+    """
+    Inspect the current grid occupancy and record interesting encounter cases per cell:
+    - predators encounter multiple prey
+    - multiple predators encounter one prey
+    - multiple predators encounter multiple prey
+    - multiple prey encounter grass
+
+    Records what happened using the environment's own outcomes:
+    - which prey terminated in this step
+    - which predators/prey are marked as having eaten (agents_just_ate)
+    - current grass energy at that cell
+    """
+    # Build occupancy map: pos -> {predators: [...], prey: [...]} using current step data
+    occupancy = defaultdict(lambda: {"predators": [], "prey": []})
+    for agent_id, pos in env.agent_positions.items():
+        key = tuple(pos)
+        if "predator" in agent_id:
+            occupancy[key]["predators"].append(agent_id)
+        elif "prey" in agent_id:
+            occupancy[key]["prey"].append(agent_id)
+
+    # Also include prey that terminated this step at their final positions, so we can attribute prey deaths per cell
+    terminated_positions = getattr(env, "_terminated_positions_this_step", {}) or {}
+    for agent_id, pos in terminated_positions.items():
+        if "prey" in agent_id:
+            key = tuple(pos)
+            if agent_id not in occupancy[key]["prey"]:
+                occupancy[key]["prey"].append(agent_id)
+
+    # Build quick grass lookup by position (there should be at most one grass per cell)
+    grass_at = {}
+    for gid, gpos in env.grass_positions.items():
+        grass_at[tuple(gpos)] = gid
+
+    # Prepare output path
+    events_path = os.path.join(output_dir, "encounter_events.jsonl") if save else None
+
+    def _json_default(o):
+        try:
+            import numpy as _np
+        except Exception:
+            _np = None
+        if _np is not None:
+            if isinstance(o, (_np.integer,)):
+                return int(o)
+            if isinstance(o, (_np.floating,)):
+                return float(o)
+            if isinstance(o, (_np.ndarray,)):
+                return o.tolist()
+        if isinstance(o, set):
+            return list(o)
+        return str(o)
+
+    # Collect events
+    events = []
+    for pos, groups in occupancy.items():
+        preds = groups["predators"]
+        preys = groups["prey"]
+        has_grass = pos in grass_at
+        grass_id = grass_at.get(pos)
+        grass_energy = float(env.grass_energies.get(grass_id, 0.0)) if grass_id is not None else 0.0
+
+
+        # Determine event type(s), including pure/mixed multiple_prey_grass
+        event_types = []
+        if len(preds) == 1 and len(preys) > 1:
+            event_types.append("one_predator_multiple_prey")
+        if len(preds) > 1 and len(preys) == 1:
+            event_types.append("multiple_predators_one_prey")
+        if len(preds) > 1 and len(preys) > 1:
+            event_types.append("multiple_predators_multiple_prey")
+        # New: explicitly capture simple 1 vs 1 encounters
+        if len(preds) == 1 and len(preys) == 1:
+            event_types.append("one_predator_one_prey")
+        # Split multiple_prey_grass into pure vs mixed
+        if len(preys) > 1 and has_grass:
+            if len(preds) == 0:
+                event_types.append("multiple_prey_grass_pure")
+            else:
+                event_types.append("multiple_prey_grass_mixed")
+
+        if not event_types:
+            continue
+
+        # Outcomes from this step
+        prey_terminated = [a for a in preys if terminations.get(a, False)]
+        predators_ate = [a for a in preds if a in env.agents_just_ate]
+        prey_ate = [a for a in preys if a in env.agents_just_ate]
+
+        pos_int = (int(pos[0]), int(pos[1]))
+        ev = {
+            "step": int(env.current_step),
+            "position": pos_int,
+            "event_types": event_types,
+            "predators": preds,
+            "prey": preys,
+            "prey_terminated": prey_terminated,
+            "predators_ate": predators_ate,
+            "prey_ate": prey_ate,
+            "grass_id": grass_id,
+            "grass_energy": grass_energy,
+        }
+        events.append(ev)
+
+    # Persist and print summaries
+    if events:
+        if save and events_path:
+            os.makedirs(output_dir, exist_ok=True)
+            with open(events_path, "a") as f:
+                for ev in events:
+                    f.write(json.dumps(ev, default=_json_default) + "\n")
+        for ev in events:
+            types_str = ", ".join(ev["event_types"])
+            print(f"[ENCOUNTER] step={ev['step']} pos={ev['position']} types=[{types_str}] "
+                  f"pred={len(ev['predators'])} prey={len(ev['prey'])} "
+                  f"prey_term={ev['prey_terminated']} pred_ate={ev['predators_ate']} prey_ate={ev['prey_ate']} "
+                  f"grass={ev['grass_id']} energy={ev['grass_energy']:.1f}")
+
+    return events
 
 
 def env_creator(config):
@@ -257,6 +379,12 @@ def step_forward(
     for agent_id, agent_data in env.per_step_agent_data[-1].items():
         agent_data["unique_id"] = env.unique_agents[agent_id]
 
+    # Detect and log encounters for this step
+    try:
+        detect_and_log_encounters(env, terminations, output_dir=eval_output_dir, save=SAVE_EVAL_RESULTS)
+    except Exception as e:
+        print(f"[WARN] Encounter logging failed: {e}")
+
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
         snapshots.pop(0)
@@ -439,6 +567,146 @@ def run_post_evaluation_plots(ceviz, pdviz):
         pdviz.plot()
 
 
+def summarize_encounter_events(output_dir):
+    """
+    Read encounter_events.jsonl and aggregate counts by event_types.
+    Prints a compact table with per-type totals and simple outcome sums.
+    """
+    events_path = os.path.join(output_dir, "encounter_events.jsonl")
+    if not os.path.isfile(events_path):
+        print("[ENCOUNTER-SUMMARY] No encounter_events.jsonl found; skipping summary.")
+        return
+
+    from collections import defaultdict
+    type_counts = defaultdict(int)
+    type_cells = defaultdict(set)
+    type_prey_term = defaultdict(int)
+    type_pred_ate = defaultdict(int)
+    type_prey_ate = defaultdict(int)
+    type_pred_present = defaultdict(int)
+    type_prey_present = defaultdict(int)
+
+    total_lines = 0
+    # Dedup sets: unique counts across all event types
+    unique_prey_term_pairs = set()  # (step, prey_id)
+    unique_pred_ate_pairs = set()   # (step, predator_id)
+    unique_prey_ate_pairs = set()   # (step, prey_id) for prey that ate grass
+    with open(events_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                ev = json.loads(line)
+            except Exception:
+                continue
+            total_lines += 1
+            pos = tuple(ev.get("position", ()))
+            preds = ev.get("predators", []) or []
+            preys = ev.get("prey", []) or []
+            prey_term = ev.get("prey_terminated", []) or []
+            pred_ate = ev.get("predators_ate", []) or []
+            prey_ate = ev.get("prey_ate", []) or []
+            step = ev.get("step")
+            for et in ev.get("event_types", []) or []:
+                type_counts[et] += 1
+                if pos:
+                    type_cells[et].add(pos)
+                type_prey_term[et] += len(prey_term)
+                type_pred_ate[et] += len(pred_ate)
+                type_prey_ate[et] += len(prey_ate)
+                type_pred_present[et] += len(preds)
+                type_prey_present[et] += len(preys)
+            # Update unique, deduplicated sets by step+agent
+            if step is not None:
+                for a in prey_term:
+                    unique_prey_term_pairs.add((step, a))
+                for a in pred_ate:
+                    unique_pred_ate_pairs.add((step, a))
+                for a in prey_ate:
+                    unique_prey_ate_pairs.add((step, a))
+
+    if not type_counts:
+        print("[ENCOUNTER-SUMMARY] No events found in log.")
+        return
+
+    # Print table header
+    headers = [
+        ("Event Type", 32),
+        ("Events", 8),
+        ("UniqueCells", 12),
+        ("SumPreyTerm", 12),
+        ("SumPredAte", 11),
+        ("SumPreyAte", 11),
+    ]
+    title = "Encounter Summary (from encounter_events.jsonl)"
+    print("\n" + title)
+    print("-" * len(title))
+    head_line = " | ".join(h[0].ljust(h[1]) for h in headers)
+    print(head_line)
+    print("-" * len(head_line))
+
+    # Order by descending event count
+    for et, cnt in sorted(type_counts.items(), key=lambda kv: (-kv[1], kv[0])):
+        row = [
+            et.ljust(32),
+            str(cnt).rjust(8),
+            str(len(type_cells[et])).rjust(12),
+            str(type_prey_term[et]).rjust(12),
+            str(type_pred_ate[et]).rjust(11),
+            str(type_prey_ate[et]).rjust(11),
+        ]
+        print(" | ".join(row))
+
+    # Totals line
+    total_events = sum(type_counts.values())
+    total_cells = len({cell for s in type_cells.values() for cell in s})
+    total_prey_term = sum(type_prey_term.values())
+    total_pred_ate = sum(type_pred_ate.values())
+    total_prey_ate = sum(type_prey_ate.values())
+    print("-" * len(head_line))
+    print(
+        " | ".join(
+            [
+                "TOTAL".ljust(32),
+                str(total_events).rjust(8),
+                str(total_cells).rjust(12),
+                str(total_prey_term).rjust(12),
+                str(total_pred_ate).rjust(11),
+                str(total_prey_ate).rjust(11),
+            ]
+        )
+    )
+    # Print deduplicated totals (unique by step+agent id across all event types)
+    uniq_prey_term = len(unique_prey_term_pairs)
+    uniq_pred_ate = len(unique_pred_ate_pairs)
+    uniq_prey_ate = len(unique_prey_ate_pairs)
+    print(
+        " | ".join(
+            [
+                "UNIQUE_TOTALS".ljust(32),
+                "-".rjust(8),
+                "-".rjust(12),
+                str(uniq_prey_term).rjust(12),
+                str(uniq_pred_ate).rjust(11),
+                "-".rjust(11),
+            ]
+        )
+    )
+    print(
+        " | ".join(
+            [
+                "UNIQUE_TOTALS_PREY_ATE".ljust(32),
+                "-".rjust(8),
+                "-".rjust(12),
+                "-".rjust(12),
+                "-".rjust(11),
+                str(uniq_prey_ate).rjust(11),
+            ]
+        )
+    )
+
+
 def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
     group_stats = defaultdict(list)
@@ -558,6 +826,11 @@ if __name__ == "__main__":
         energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
         with open(energy_log_path, "w") as f:
             json.dump(energy_by_type_series, f, indent=2)
+        # Post-run encounter summary
+        try:
+            summarize_encounter_events(eval_output_dir)
+        except Exception as e:
+            print(f"[WARN] Encounter summary failed: {e}")
     # Always show plots on screen
     ceviz.plot()
     if SAVE_EVAL_RESULTS:
