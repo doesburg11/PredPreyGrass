@@ -1,5 +1,5 @@
 config_ppo = {
-    "max_iters": 100,
+    "max_iters": 250,
     # Core learning
     "lr": 5e-5,
     "gamma": 0.99,
