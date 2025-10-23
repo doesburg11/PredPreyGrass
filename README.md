@@ -51,7 +51,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
    - Press `ctrl+shift+p`
    - Type and choose: "Python: Create Environment..."
    - Choose environment: Conda
-   - Choose interpreter: Python 3.11.11 or higher
+   - Choose interpreter: Python 3.11.13 or higher
    - Open a new terminal
    - ```bash
      pip install -e .
