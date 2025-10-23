@@ -3,7 +3,7 @@ import numpy as np
 from predpreygrass.rllib.numpy_vectorization.np_vec_env import PredPreyGrassEnv
 
 if __name__ == "__main__":
-    num_steps = 10000
+    num_steps = 1000
     render_sleep = 0.05
     env = PredPreyGrassEnv()
     obs, infos = env.reset()
