@@ -1,5 +1,5 @@
-[![Python 3.11.11](https://img.shields.io/badge/python-3.11.11-blue.svg)](https://www.python.org/downloads/release/python-31111/)
-[![RLlib](https://img.shields.io/badge/RLlib-v2.49.0-blue)](https://docs.ray.io/en/latest/rllib/)
+[![Python 3.11.11](https://img.shields.io/badge/python-3.11.13-blue.svg)](https://www.python.org/downloads/release/python-31111/)
+[![RLlib](https://img.shields.io/badge/RLlib-v2.50.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
 # Predator-Prey-Grass
