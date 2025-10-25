@@ -151,7 +151,10 @@ class PredPreyGrassEnv(MultiAgentEnv):
         obs_high = np.full(obs_shape, np.finfo(np.float32).max, dtype=np.float32)
 
         obs_space = spaces.Box(low=obs_low, high=obs_high, dtype=np.float32)
-        act_space = spaces.Discrete(5)
+        # 9-action Moore neighborhood (including stay):
+        # 0: stay, 1: up, 2: up-right, 3: right, 4: down-right,
+        # 5: down, 6: down-left, 7: left, 8: up-left
+        act_space = spaces.Discrete(9)
 
         self.observation_space = obs_space
         self.action_space = act_space
@@ -273,7 +276,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
         """
         RLlib MultiAgentEnv step function with fully vectorized agent movement.
         Args:
-            action_dict: dict mapping agent_id to action (0: noop, 1: up, 2: right, 3: down, 4: left)
+            action_dict: dict mapping agent_id to action in Moore neighborhood (9 actions):
+                0: stay, 1: up, 2: up-right, 3: right, 4: down-right,
+                5: down, 6: down-left, 7: left, 8: up-left
         Returns:
             observations: dict of new observations
             rewards: dict of rewards
@@ -426,14 +431,20 @@ class PredPreyGrassEnv(MultiAgentEnv):
     def _apply_agent_movement(self, action_dict):
         """
         Vectorized agent movement step. Applies actions to all active agents.
+        9-action Moore neighborhood (including stay), with boundary clamping.
         """
-        # Movement deltas: 0=noop, 1=up, 2=right, 3=down, 4=left
+        # Movement deltas (row, col): 0=stay, 1=up, 2=up-right, 3=right, 4=down-right,
+        # 5=down, 6=down-left, 7=left, 8=up-left
         deltas = np.array([
-            [0, 0],    # noop
+            [0, 0],    # stay
             [-1, 0],   # up
+            [-1, 1],   # up-right
             [0, 1],    # right
+            [1, 1],    # down-right
             [1, 0],    # down
+            [1, -1],   # down-left
             [0, -1],   # left
+            [-1, -1],  # up-left
         ], dtype=np.int32)
 
         # --- Vectorized action gather (no Python loop) ---
