@@ -5,10 +5,10 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.rllib.limited_intake.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.limited_intake.config.config_env_limited_intake import config_env
-from predpreygrass.rllib.limited_intake.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.limited_intake.utils.networks import build_multi_module_spec
+from predpreygrass.rllib._limited_intake_old.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib._limited_intake_old.config.config_env_limited_intake import config_env
+from predpreygrass.rllib._limited_intake_old.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib._limited_intake_old.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -24,12 +24,12 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.limited_intake.config.config_ppo_gpu_limited_intake import config_ppo
+        from predpreygrass.rllib._limited_intake_old.config.config_ppo_gpu_walls_oclussion_efficiency import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.limited_intake.config.config_ppo_cpu_limited_intake import config_ppo
+        from predpreygrass.rllib._limited_intake_old.config.config_ppo_cpu_walls_oclussion_efficiency import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.limited_intake.config.config_ppo_cpu_limited_intake import config_ppo
+        from predpreygrass.rllib._limited_intake_old.config.config_ppo_cpu_walls_oclussion_efficiency import config_ppo
     return config_ppo
 
 
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_WALLS_OCCLUSION_EFFICIENCY_TYPE_2_CATCH_PENALTY_PREY_{timestamp}"
+    experiment_name = f"PPO_UNLIMITED_INTAKE_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
@@ -116,6 +116,7 @@ if __name__ == "__main__":
             clip_param=config_ppo["clip_param"],
             kl_coeff=config_ppo["kl_coeff"],
             kl_target=config_ppo["kl_target"],
+            grad_clip=40.0,
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -132,7 +133,7 @@ if __name__ == "__main__":
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
-        .callbacks(EpisodeReturn)
+    .callbacks(lambda: EpisodeReturn(log_trajectories=False))
     )
 
     max_iters = config_ppo["max_iters"]
