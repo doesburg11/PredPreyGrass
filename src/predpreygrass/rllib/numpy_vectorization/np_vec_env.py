@@ -4,7 +4,6 @@ from gymnasium import spaces
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from numba import njit
 import pygame
-import collections
 
 
 @njit(cache=True)
@@ -65,6 +64,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         max_grass_energy: float = 2.0,
         obs_range: int = 7,
         num_obs_channels: int = 4,
+        obs_build: str = "global_maps",
         max_episode_steps: int | None = None,
     ):
         self.grid_h, self.grid_w = int(grid_shape[0]), int(grid_shape[1])
@@ -143,6 +143,8 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # Default local window size (can be overridden in reset)
         self.obs_range = obs_range
         self.num_obs_channels = num_obs_channels
+        # Observation build strategy: 'global_maps' (fast) or 'per_agent' (fallback)
+        self.obs_build = str(obs_build)
         obs_shape = (self.num_obs_channels, self.obs_range, self.obs_range)
 
         obs_low  = np.zeros(obs_shape, dtype=np.float32)
@@ -252,10 +254,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
             gy = (grass_lin % self.grid_w).astype(np.int32)
             self.grass[gx, gy] = self.initial_energy_grass
             self._original_grass_mask[gx, gy] = True
-
-        # Build local grid observations for each agent
+        # Build observations for each agent (batch, possibly via global maps)
         agent_ids = self.agents
-        observations = {aid: self._get_local_observation(aid, self.obs_range) for aid in agent_ids}
+        observations = self._batch_observations(agent_ids, self.obs_range)
 
         idx = np.fromiter((self._id_to_ix[aid] for aid in agent_ids), dtype=np.int32, count=len(agent_ids))
         xs = self.pos[idx, 0].astype(int)
@@ -287,6 +288,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # After starvation, refresh agent cache and set terminations for starved agents
         terminations = self._refresh_and_set_terminations(agents_before_time_maintenance)
         # Step 1: Apply agent movements
+        acted_agents = list(action_dict.keys())
         self._apply_agent_movement(action_dict)
         agents_before_engagement = set(self.agents)  # Snapshot of agents before engagement removals
         # Step 2: Resolve engagements (predator-prey and prey-grass)
@@ -318,10 +320,12 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # Determine the complete set of agents we must report for this step:
         # - All currently alive agents
         # - Plus any agents that were truncated this step (must receive last obs for bootstrap)
+        # - Plus agents that acted this step (to guarantee last obs delivery even if they got truncated)
         truncated_agents = [aid for aid, flag in truncations.items() if flag]
-        report_agents = list(dict.fromkeys(alive_agents + truncated_agents))  # preserve order, dedup
+        base_list = alive_agents + truncated_agents + acted_agents
+        report_agents = list(dict.fromkeys(base_list))  # preserve order, dedup
 
-        observations = {aid: self._get_local_observation(aid, self.obs_range) for aid in report_agents}
+        observations = self._batch_observations(report_agents, self.obs_range)
         rewards = {aid: rewards.get(aid, 0.0) for aid in report_agents}
         terminations = {aid: terminations.get(aid, False) for aid in report_agents}
         truncations = {aid: truncations.get(aid, False) for aid in report_agents}
@@ -463,91 +467,120 @@ class PredPreyGrassEnv(MultiAgentEnv):
 
     def _resolve_prey_grass_engagement(self):
         """
-        Single-consumer grazing: In each cell with one or more active prey and grass > 0,
-        randomly select ONE prey to consume ALL grass in that cell. That prey gains the
-        grass energy; the cell's grass is set to 0. No agents are (de)activated here.
+        Vectorized grazing: For each cell containing one or more active prey and grass > 0,
+        select one prey uniformly at random to consume all grass at that cell.
         """
-        cell_prey = collections.defaultdict(list)
-        # Group active prey by their cell
-        for i, active in enumerate(self.active):
-            if not active or not self.is_prey[i]:
-                continue
-            x, y = int(self.pos[i, 0]), int(self.pos[i, 1])
-            cell_prey[(x, y)].append(i)
+        # Active prey indices
+        prey_mask = self.active & self.is_prey
+        if not np.any(prey_mask):
+            return
+        prey_ix = np.flatnonzero(prey_mask)
+        pos = self.pos[prey_ix]
+        x = pos[:, 0].astype(np.int64)
+        y = pos[:, 1].astype(np.int64)
+        lin = x * self.grid_w + y
 
-        if not cell_prey:
+        # Group prey by linearized cell index
+        order = np.argsort(lin)
+        lin_sorted = lin[order]
+        prey_ix_sorted = prey_ix[order]
+        unique_lin, starts, counts = np.unique(lin_sorted, return_index=True, return_counts=True)
+
+        # Grass energy at unique cells
+        ux = (unique_lin // self.grid_w).astype(np.int64)
+        uy = (unique_lin % self.grid_w).astype(np.int64)
+        gvals = self.grass[ux, uy]
+
+        eligible = gvals > 0.0
+        if not np.any(eligible):
             return
 
-        prey_indices = []
-        energy_gains = []
-        cells_x = []
-        cells_y = []
+        # Randomly select one prey per eligible cell group
+        sel_counts = counts[eligible]
+        sel_starts = starts[eligible]
+        rand_offsets = self.rng.integers(0, sel_counts, size=sel_counts.shape[0])
+        sel_sorted_idx = sel_starts + rand_offsets
+        chosen_prey_ix = prey_ix_sorted[sel_sorted_idx]
 
-        for (x, y), prey_list in cell_prey.items():
-            g = float(self.grass[x, y])
-            if g <= 0.0 or len(prey_list) == 0:
-                continue
-            # Choose one prey uniformly at random to consume all grass at this cell
-            chosen = prey_list[self.rng.integers(0, len(prey_list))]
-            # (debug print removed)
-            prey_indices.append(chosen)
-            energy_gains.append(g)
-            cells_x.append(x)
-            cells_y.append(y)
-
-        # Batch apply updates
-        if prey_indices:
-            prey_idx_arr = np.array(prey_indices, dtype=np.int32)
-            gain_arr = np.array(energy_gains, dtype=np.float32)
-            self.energy[prey_idx_arr] += gain_arr
-            self.grass[(np.array(cells_x, dtype=np.int32), np.array(cells_y, dtype=np.int32))] = 0.0
+        # Apply gains and zero the grass in those cells
+        gains = gvals[eligible].astype(np.float32)
+        self.energy[chosen_prey_ix] += gains
+        self.grass[ux[eligible], uy[eligible]] = 0.0
 
     def _resolve_predator_prey_engagement(self):
-        # Step 1: Build cell occupancy maps
-        cell_predators = collections.defaultdict(list)
-        cell_prey = collections.defaultdict(list)
-        for i, active in enumerate(self.active):
-            if not active:
-                continue
-            x, y = self.pos[i]
-            key = (int(x), int(y))
-            if self.is_pred[i]:
-                cell_predators[key].append(i)
-            else:
-                cell_prey[key].append(i)
+        """
+        Vectorized per-cell matching between predators and prey:
+        - For each cell, shuffle predators and prey independently and match up to k=min(n_pred,n_prey).
+        - Predators gain the prey's energy; prey are deactivated.
+        """
+        if not np.any(self.active):
+            return
 
-        # Step 2: Make 1-to-1 matches per cell (shuffle for fairness)
-        pred_ix_list = []
-        prey_ix_list = []
-        for cell, preds in cell_predators.items():
-            prey = cell_prey.get(cell, [])
-            if not prey:
-                continue
-            self.rng.shuffle(preds)
-            self.rng.shuffle(prey)
-            k = min(len(preds), len(prey))           # number of pairs
+        # Active indices by role
+        pred_mask = self.active & self.is_pred
+        prey_mask = self.active & self.is_prey
+        if not np.any(pred_mask) or not np.any(prey_mask):
+            return
+
+        pred_ix_all = np.flatnonzero(pred_mask)
+        prey_ix_all = np.flatnonzero(prey_mask)
+
+        # Linearized cell ids
+        ppos = self.pos[pred_ix_all]
+        plin = (ppos[:, 0].astype(np.int64) * self.grid_w + ppos[:, 1].astype(np.int64))
+        qpos = self.pos[prey_ix_all]
+        qlin = (qpos[:, 0].astype(np.int64) * self.grid_w + qpos[:, 1].astype(np.int64))
+
+        # Randomize order within each cell by sorting on (lin, random key)
+        prand = self.rng.random(size=pred_ix_all.shape[0])
+        qrand = self.rng.random(size=prey_ix_all.shape[0])
+        p_order = np.lexsort((prand, plin))
+        q_order = np.lexsort((qrand, qlin))
+
+        plin_sorted = plin[p_order]
+        qlin_sorted = qlin[q_order]
+        pred_ix_sorted = pred_ix_all[p_order]
+        prey_ix_sorted = prey_ix_all[q_order]
+
+        # Group boundaries per species
+        u_plin, p_starts, p_counts = np.unique(plin_sorted, return_index=True, return_counts=True)
+        u_qlin, q_starts, q_counts = np.unique(qlin_sorted, return_index=True, return_counts=True)
+
+        # Cells where both species occur
+        common_lin, idx_p_groups, idx_q_groups = np.intersect1d(u_plin, u_qlin, assume_unique=False, return_indices=True)
+        if common_lin.size == 0:
+            return
+
+        # For each common cell, pair first k elements from randomized order
+        pred_pairs = []
+        prey_pairs = []
+        for gi_p, gi_q in zip(idx_p_groups, idx_q_groups):
+            start_p = p_starts[gi_p]
+            cnt_p = p_counts[gi_p]
+            start_q = q_starts[gi_q]
+            cnt_q = q_counts[gi_q]
+            k = cnt_p if cnt_p < cnt_q else cnt_q
             if k <= 0:
                 continue
-            pred_ix_list.extend(preds[:k])
-            prey_ix_list.extend(prey[:k])
+            pred_pairs.append(pred_ix_sorted[start_p:start_p + k])
+            prey_pairs.append(prey_ix_sorted[start_q:start_q + k])
 
-        # Step 3: Batch energy transfer + deactivation of eaten prey
-        if pred_ix_list:
-            pred_ix = np.asarray(pred_ix_list, dtype=np.int32)
-            prey_ix = np.asarray(prey_ix_list, dtype=np.int32)
+        if not pred_pairs:
+            return
 
-            # predators gain exactly the prey's current energy
-            gains = self.energy[prey_ix].astype(np.float32)
-            self.energy[pred_ix] += gains
+        pred_ix = np.concatenate(pred_pairs).astype(np.int32, copy=False)
+        prey_ix = np.concatenate(prey_pairs).astype(np.int32, copy=False)
 
-            # (optional) cap predator energy if you define a max
-            if hasattr(self, "max_predator_energy") and self.max_predator_energy is not None:
-                np.minimum(self.energy[pred_ix], self.max_predator_energy, out=self.energy[pred_ix])
+        # Energy transfer and prey deactivation
+        gains = self.energy[prey_ix].astype(np.float32)
+        self.energy[pred_ix] += gains
 
-            # eaten prey: zero energy and deactivate
-            self.energy[prey_ix] = 0.0
-            self.active[prey_ix] = False
-            self._active_dirty = True   # membership changed
+        if hasattr(self, "max_predator_energy") and self.max_predator_energy is not None:
+            np.minimum(self.energy[pred_ix], self.max_predator_energy, out=self.energy[pred_ix])
+
+        self.energy[prey_ix] = 0.0
+        self.active[prey_ix] = False
+        self._active_dirty = True
 
     def _apply_reproduction(self, agents_before_engagement, terminations, rewards):
         """
@@ -633,6 +666,102 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self.grid_h,
             self.grid_w
         )
+
+    def _batch_observations(self, agent_ids: list[str], obs_range: int) -> dict[str, np.ndarray]:
+        """
+        Build observations for a list of agent_ids.
+        Uses a fast global-map slicing path when self.obs_build == 'global_maps';
+        otherwise falls back to per-agent numba kernel.
+        """
+        if not agent_ids:
+            return {}
+        if getattr(self, "obs_build", "global_maps") == "global_maps":
+            return self._batch_observations_global_maps(agent_ids, obs_range)
+        # Fallback: per-agent construction
+        return {aid: self._get_local_observation(aid, obs_range) for aid in agent_ids}
+
+    def _batch_observations_global_maps(self, agent_ids: list[str], obs_range: int) -> dict[str, np.ndarray]:
+        """
+        Fast observation builder using global energy maps for predators, prey, and grass,
+        then slicing a padded array around each agent.
+        Channels:
+          0: walls mask (1 outside grid, 0 inside)
+          1: predator energy
+          2: prey energy
+          3: grass energy
+        If num_obs_channels > 4, remaining channels are zero.
+        """
+        # Precompute energy maps
+        pred_map = np.zeros((self.grid_h, self.grid_w), dtype=np.float32)
+        prey_map = np.zeros((self.grid_h, self.grid_w), dtype=np.float32)
+
+        if np.any(self.active):
+            active_ix = np.flatnonzero(self.active)
+            if active_ix.size:
+                pred_ix = active_ix[self.is_pred[active_ix]]
+                prey_ix = active_ix[self.is_prey[active_ix]]
+                if pred_ix.size:
+                    px = self.pos[pred_ix, 0].astype(np.intp)
+                    py = self.pos[pred_ix, 1].astype(np.intp)
+                    np.add.at(pred_map, (px, py), self.energy[pred_ix].astype(np.float32))
+                if prey_ix.size:
+                    qx = self.pos[prey_ix, 0].astype(np.intp)
+                    qy = self.pos[prey_ix, 1].astype(np.intp)
+                    np.add.at(prey_map, (qx, qy), self.energy[prey_ix].astype(np.float32))
+
+        # Padded maps for easy slicing
+        half = obs_range // 2
+        pad = half
+        if pad > 0:
+            pred_pad = np.pad(pred_map, ((pad, pad), (pad, pad)), mode='constant', constant_values=0.0)
+            prey_pad = np.pad(prey_map, ((pad, pad), (pad, pad)), mode='constant', constant_values=0.0)
+            grass_pad = np.pad(self.grass, ((pad, pad), (pad, pad)), mode='constant', constant_values=0.0)
+        else:
+            pred_pad = pred_map
+            prey_pad = prey_map
+            grass_pad = self.grass
+
+        # Prepare outputs
+        out: dict[str, np.ndarray] = {}
+        ch = int(self.num_obs_channels)
+        for aid in agent_ids:
+            ix = self._id_to_ix[aid]
+            x = int(self.pos[ix, 0])
+            y = int(self.pos[ix, 1])
+
+            # Slices on padded maps
+            sx = x + pad - half
+            sy = y + pad - half
+            pred_patch = pred_pad[sx:sx+obs_range, sy:sy+obs_range]
+            prey_patch = prey_pad[sx:sx+obs_range, sy:sy+obs_range]
+            grass_patch = grass_pad[sx:sx+obs_range, sy:sy+obs_range]
+
+            # Walls channel: ones outside real grid, zeros inside
+            walls = np.ones((obs_range, obs_range), dtype=np.float32)
+            xlo = max(x - half, 0)
+            xhi = min(x + half + 1, self.grid_h)
+            ylo = max(y - half, 0)
+            yhi = min(y + half + 1, self.grid_w)
+            pxlo = half - (x - xlo)
+            pxhi = pxlo + (xhi - xlo)
+            pylo = half - (y - ylo)
+            pyhi = pylo + (yhi - ylo)
+            walls[pxlo:pxhi, pylo:pyhi] = 0.0
+
+            patch = np.zeros((ch, obs_range, obs_range), dtype=np.float32)
+            # Assign up to 4 base channels
+            if ch >= 1:
+                patch[0] = walls
+            if ch >= 2:
+                patch[1] = pred_patch
+            if ch >= 3:
+                patch[2] = prey_patch
+            if ch >= 4:
+                patch[3] = grass_patch
+
+            out[aid] = patch
+
+        return out
 
     # ---------- Override MultiAgentEnv methods ----------
     def get_observation_space(self, agent_id):
