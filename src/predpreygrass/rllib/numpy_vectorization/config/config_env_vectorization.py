@@ -1,0 +1,15 @@
+config_env = {
+    "grid_shape": (25, 25),
+    "num_possible_predators": 50,
+    "num_possible_prey": 50,
+    "initial_num_predators": 10,
+    "initial_num_prey": 10,
+    "initial_num_grass": 100,
+    "initial_energy_grass": 2.0,
+    "initial_energy_predator": 5.0,
+    "initial_energy_prey": 3.0,
+    "seed": 42,
+    "predator_creation_energy_threshold": 12.0,
+    "prey_creation_energy_threshold": 8.0,
+    "max_episode_steps": 1000,
+}
