@@ -8,10 +8,10 @@ import collections
 
 
 @njit(cache=True)
-def _get_local_observation_numba(ix, pos, active, is_pred, energy, grass, obs_range, grid_h, grid_w):
+def _get_local_observation_numba(ix, pos, active, is_pred, energy, grass, obs_range, num_obs_channels, grid_h, grid_w):
     half = obs_range // 2
     x, y = pos[ix]
-    patch = np.zeros((4, obs_range, obs_range), dtype=np.float32)
+    patch = np.zeros((num_obs_channels, obs_range, obs_range), dtype=np.float32)
     xlo = max(x - half, 0)
     xhi = min(x + half + 1, grid_h)
     ylo = max(y - half, 0)
@@ -59,6 +59,12 @@ class PredPreyGrassEnv(MultiAgentEnv):
         seed: int | None = None,
         predator_creation_energy_threshold: float = 10.0,
         prey_creation_energy_threshold: float = 6.0,
+        energy_loss_per_step_predator: float = 0.15,
+        energy_loss_per_step_prey: float = 0.05,
+        energy_gain_per_step_grass: float = 0.04,
+        max_grass_energy: float = 2.0,
+        obs_range: int = 7,
+        num_obs_channels: int = 4,
         max_episode_steps: int | None = None,
     ):
         self.grid_h, self.grid_w = int(grid_shape[0]), int(grid_shape[1])
@@ -82,12 +88,12 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.prey_creation_energy_threshold = float(prey_creation_energy_threshold)
 
         # Per-step maintenance costs (energy drain); adjust as needed
-        self.energy_loss_per_step_predator = 0.15
-        self.energy_loss_per_step_prey = 0.05
+        self.energy_loss_per_step_predator = energy_loss_per_step_predator
+        self.energy_loss_per_step_prey = energy_loss_per_step_prey
 
         # Grass regrowth parameters
-        self.energy_gain_per_step_grass = 0.04
-        self.max_grass_energy = 2.0
+        self.energy_gain_per_step_grass = energy_gain_per_step_grass
+        self.max_grass_energy = max_grass_energy
 
         # RNG
         self._seed = seed
@@ -119,6 +125,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.pos = np.full((self.num_possible_agents, 2), -1, dtype=np.int32)
         self.energy = np.zeros(self.num_possible_agents, dtype=np.float32)
         self.age = np.zeros(self.num_possible_agents, dtype=np.int32)
+        # Track whether an agent slot has been used at any point during the current episode.
+        # A slot that has been used once (active at reset or spawned later) cannot be reused until reset.
+        self._used_this_episode = np.zeros(self.num_possible_agents, dtype=bool)
 
         # Grass field (single-channel energy map)
         self.grass = np.zeros((self.grid_h, self.grid_w), dtype=np.float32)
@@ -132,8 +141,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
 
         # ---- Observation/action spaces ----
         # Default local window size (can be overridden in reset)
-        self.obs_range = 7
-        obs_shape = (4, self.obs_range, self.obs_range)
+        self.obs_range = obs_range
+        self.num_obs_channels = num_obs_channels
+        obs_shape = (self.num_obs_channels, self.obs_range, self.obs_range)
 
         obs_low  = np.zeros(obs_shape, dtype=np.float32)
         obs_high = np.full(obs_shape, np.finfo(np.float32).max, dtype=np.float32)
@@ -145,6 +155,9 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.action_space = act_space
         self.observation_spaces = {aid: obs_space for aid in self.possible_agents}
         self.action_spaces = {aid: act_space for aid in self.possible_agents}
+
+        self.reproduction_reward_predator = 10.0
+        self.reproduction_reward_prey = 10.0
 
     # ---------- Public API ----------
     def reset(self, *, seed: int | None = None, options: dict | None = None, obs_range: int | None = None):
@@ -166,7 +179,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         if obs_range is not None and int(obs_range) != self.obs_range:
             self.obs_range = int(obs_range)
             # Rebuild observation spaces to match the new shape
-            obs_shape = (4, self.obs_range, self.obs_range)
+            obs_shape = (self.num_obs_channels, self.obs_range, self.obs_range)
             obs_low  = np.zeros(obs_shape, dtype=np.float32)
             obs_high = np.full(obs_shape, np.finfo(np.float32).max, dtype=np.float32)
             obs_space = spaces.Box(low=obs_low, high=obs_high, dtype=np.float32)
@@ -184,6 +197,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         self.pos[:] = -1
         self.energy[:] = 0.0
         self.age[:] = 0
+        self._used_this_episode[:] = False
         self._episode_steps = 0
         self._active_dirty = True
 
@@ -193,6 +207,11 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # Prey: after all possible predators, activate only initial_num_prey
         prey_start = self.num_possible_predators
         self.active[prey_start:prey_start + self.initial_num_prey] = True
+        # Mark initially activated slots as used for this episode
+        if self.initial_num_predators > 0:
+            self._used_this_episode[:self.initial_num_predators] = True
+        if self.initial_num_prey > 0:
+            self._used_this_episode[prey_start:prey_start + self.initial_num_prey] = True
         self._refresh_agents_cache()  # Update the active agent list for RLlib
 
         # ---- Sample positions (vectorized) ----
@@ -261,15 +280,13 @@ class PredPreyGrassEnv(MultiAgentEnv):
             truncations: dict of truncation flags (per agent). When max_episode_steps is reached, all non-terminated agents are truncated and '__all__' is True.
             infos: dict of info dicts (per agent)
         """
-    # Step 0: Time maintenance - costs energy drain, (re)growing grass and aging
+        # Step 0: Time maintenance - costs energy drain, (re)growing grass and aging
         agents_before_time_maintenance = set(self.agents)  # Snapshot of agents before time maintenance
+        rewards = {aid: 0.0 for aid in agents_before_time_maintenance}  # intialize rewards at 0.0
         self._apply_basal_metabolism_and_aging()
         # After starvation, refresh agent cache and set terminations for starved agents
         terminations = self._refresh_and_set_terminations(agents_before_time_maintenance)
-        # Print agent deletions after starvation
-        # (debug print removed)
         # Step 1: Apply agent movements
-        # Only allow currently active agents to move and participate in engagement
         self._apply_agent_movement(action_dict)
         agents_before_engagement = set(self.agents)  # Snapshot of agents before engagement removals
         # Step 2: Resolve engagements (predator-prey and prey-grass)
@@ -279,30 +296,42 @@ class PredPreyGrassEnv(MultiAgentEnv):
         # After engagements, refresh agent cache and set terminations for eaten/removed agents
         terminations = self._refresh_and_set_terminations(agents_before_engagement)
         # Step 4: Apply reproduction logic
-        self._apply_reproduction(agents_before_engagement, terminations)
+        self._apply_reproduction(agents_before_engagement, terminations, rewards)
 
-        # Build agent-specific outputs for all agents present at start or terminated/spawned during this step
-        agent_keys = (agents_before_time_maintenance | set(terminations.keys()) | set(self.agents)) - {'__all__'}
-        observations = {aid: self._get_local_observation(aid, self.obs_range) for aid in self.agents}
-        rewards = {aid: 0.0 for aid in agent_keys}
-        truncations = {aid: False for aid in agent_keys}
+        # Build outputs ensuring that any truncated agents receive a final observation
+        # Preserve agent order to keep deterministic key ordering in outputs.
+        alive_agents = list(self.agents)
+
+        # Increment episode step counter BEFORE computing truncation status to ensure consistency
+        self._episode_steps += 1
+
+        # Start with default flags for alive agents
+        truncations = {aid: False for aid in alive_agents}
+        # Apply truncation for alive, non-terminated agents if we hit the episode step limit
+        did_truncate = False
+        if (self.max_episode_steps is not None) and (self._episode_steps >= self.max_episode_steps):
+            for aid in alive_agents:
+                if not terminations.get(aid, False):
+                    truncations[aid] = True
+            did_truncate = len(alive_agents) > 0
+
+        # Determine the complete set of agents we must report for this step:
+        # - All currently alive agents
+        # - Plus any agents that were truncated this step (must receive last obs for bootstrap)
+        truncated_agents = [aid for aid, flag in truncations.items() if flag]
+        report_agents = list(dict.fromkeys(alive_agents + truncated_agents))  # preserve order, dedup
+
+        observations = {aid: self._get_local_observation(aid, self.obs_range) for aid in report_agents}
+        rewards = {aid: rewards.get(aid, 0.0) for aid in report_agents}
+        terminations = {aid: terminations.get(aid, False) for aid in report_agents}
+        truncations = {aid: truncations.get(aid, False) for aid in report_agents}
         infos = {}
-        for aid in agent_keys:
+        for aid in report_agents:
             ix = self._id_to_ix[aid]
             x, y = int(self.pos[ix, 0]), int(self.pos[ix, 1])
             energy = float(self.energy[ix])
             age = int(self.age[ix])
             infos[aid] = {"x": x, "y": y, "energy": energy, "age": age, "step": self._episode_steps}
-        # Increment episode step counter and apply truncation if limit reached
-        self._episode_steps += 1
-        did_truncate = False
-        if (self.max_episode_steps is not None) and (self._episode_steps >= self.max_episode_steps):
-            # Mark truncation for all agents that are not already terminated in this step
-            for aid in agent_keys:
-                if not terminations.get(aid, False):
-                    truncations[aid] = True
-            # Only set global truncation if at least one agent remains active
-            did_truncate = any((aid in self.agents) for aid in agent_keys)
         # Custom termination: end if no predators or no prey remain
         n_pred = int(np.sum(self.active & self.is_pred))
         n_prey = int(np.sum(self.active & self.is_prey))
@@ -355,6 +384,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
         pygame.display.flip()
         self._pygame_clock.tick(30)
 
+    # ---------- Internal vectorized logic methods ----------
     def _apply_basal_metabolism_and_aging(self):
         """
         Vectorized per-step updates applied before movement:
@@ -519,9 +549,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self.active[prey_ix] = False
             self._active_dirty = True   # membership changed
 
-    def _apply_reproduction(self, agents_before_engagement, terminations):
-        # (debug print removed)
-
+    def _apply_reproduction(self, agents_before_engagement, terminations, rewards):
         """
         Vectorized reproduction logic for predators and prey.
         Spawns new agents if parents are above energy threshold and slots are available.
@@ -533,10 +561,11 @@ class PredPreyGrassEnv(MultiAgentEnv):
         active_ix = np.flatnonzero(self.active)
         pred_ix = active_ix[self.is_pred[active_ix] & (self.energy[active_ix] >= self.predator_creation_energy_threshold)]
         prey_ix = active_ix[self.is_prey[active_ix] & (self.energy[active_ix] >= self.prey_creation_energy_threshold)]
-        # Find available slots for new agents (not active, not just deactivated)
+        # No need to track parents; assign reward directly
+        # Find available slots for new agents (not active, not used previously in this episode)
         all_ix = np.arange(self.num_possible_agents)
-        available_ix = all_ix[~self.active]
-        # Exclude just deactivated
+        available_ix = all_ix[~self.active & ~self._used_this_episode]
+        # Exclude just deactivated (extra safety for within-step events)
         if just_deactivated:
             just_deactivated_ix = np.array([self._id_to_ix[aid] for aid in just_deactivated], dtype=np.int32)
             available_ix = np.setdiff1d(available_ix, just_deactivated_ix, assume_unique=True)
@@ -545,12 +574,21 @@ class PredPreyGrassEnv(MultiAgentEnv):
         if n_pred_spawn > 0:
             spawn_pred_ix = available_ix[self.is_pred[available_ix]][:n_pred_spawn]
             parent_pred_ix = pred_ix[:n_pred_spawn]
-            # (debug print removed)
             self.active[spawn_pred_ix] = True
             self.energy[spawn_pred_ix] = self.initial_energy_predator
             self.age[spawn_pred_ix] = 0
             self.pos[spawn_pred_ix] = self.pos[parent_pred_ix]  # spawn at parent location
             self.energy[parent_pred_ix] -= self.initial_energy_predator
+            # Mark spawned slots as used for this episode
+            self._used_this_episode[spawn_pred_ix] = True
+            # Ensure new agents have reward 0.0
+            for ix in spawn_pred_ix:
+                rewards[self._all_ids[ix]] = 0.0
+            # Assign reproduction reward directly
+            for ix in parent_pred_ix:
+                aid = self._all_ids[ix]
+                if aid in rewards:
+                    rewards[aid] += self.reproduction_reward_predator
         # Spawn new prey
         n_prey_spawn = min(len(prey_ix), np.sum(self.is_prey[available_ix]))
         if n_prey_spawn > 0:
@@ -561,6 +599,16 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self.age[spawn_prey_ix] = 0
             self.pos[spawn_prey_ix] = self.pos[parent_prey_ix]  # spawn at parent location
             self.energy[parent_prey_ix] -= self.initial_energy_prey
+            # Mark spawned slots as used for this episode
+            self._used_this_episode[spawn_prey_ix] = True
+            # Ensure new agents have reward 0.0
+            for ix in spawn_prey_ix:
+                rewards[self._all_ids[ix]] = 0.0
+            # Assign reproduction reward directly
+            for ix in parent_prey_ix:
+                aid = self._all_ids[ix]
+                if aid in rewards:
+                    rewards[aid] += self.reproduction_reward_prey
 
         # Refresh agent cache after possible spawns
         self._refresh_agents_cache()
@@ -581,6 +629,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self.energy,
             self.grass,
             obs_range,
+            self.num_obs_channels,
             self.grid_h,
             self.grid_w
         )
@@ -598,6 +647,7 @@ class PredPreyGrassEnv(MultiAgentEnv):
             self._refresh_agents_cache()
         return self._agents_cache
 
+    # ----- Helpers for managing active agents cache -----
     def _refresh_agents_cache(self):
         idx = np.flatnonzero(self.active)
         # Convert indices to strings once
