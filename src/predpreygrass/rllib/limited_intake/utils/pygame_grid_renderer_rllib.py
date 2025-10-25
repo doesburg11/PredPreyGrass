@@ -29,7 +29,6 @@ class GuiStyle:
     halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
     wall_color: tuple = (80, 80, 80)  # Dark gray for walls
-    carcass_color: tuple = (0, 0, 0)  # Black for carcasses
 
 
 class PyGameRenderer:
@@ -115,17 +114,7 @@ class PyGameRenderer:
     def _using_type_prefix(self, step_data):
         return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
 
-    def update(
-        self,
-        grass_positions,
-        grass_energies=None,
-        step=0,
-        agents_just_ate=None,
-        per_step_agent_data=None,
-        walls=None,
-        carcass_positions=None,
-        carcass_energies=None,
-    ):
+    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -181,12 +170,10 @@ class PyGameRenderer:
         if walls:  # Draw beneath dynamic entities
             self._draw_walls(walls)
         self._draw_grass(grass_positions, grass_energies)
-        if carcass_positions:
-            self._draw_carcasses(carcass_positions, carcass_energies or {})
         self._draw_agents(step_data, agents_just_ate)
         self._draw_legend(step, step_data)
         if self.enable_tooltips:
-            self._draw_tooltip(step_data, grass_positions, grass_energies, carcass_positions, carcass_energies)
+            self._draw_tooltip(step_data, grass_positions, grass_energies)
 
         pygame.display.set_caption(f"PredPreyGrass Live Viewer — Step {step}")
         pygame.display.flip()
@@ -207,37 +194,20 @@ class PyGameRenderer:
             pygame.draw.rect(self.screen, color, rect)
 
     def _draw_walls(self, walls):
-        """Draw static wall cells. Debug: print and highlight walls in red."""
+        """Draw static wall cells.
+
+        Accepts set/list of (x,y) or mapping id->(x,y)."""
         if isinstance(walls, dict):
-            positions = list(walls.values())
+            positions = walls.values()
         else:
-            positions = list(walls)
-    # (Debug print removed)
+            positions = walls
         ml = self.gui_style.margin_left
         mt = self.gui_style.margin_top
         cs = self.cell_size
-        # Draw a large debug rectangle at (0,0) to confirm drawing works
-    # (Removed debug green rectangle in top left corner)
         for pos in positions:
             x, y = map(int, pos)
             rect = pygame.Rect(ml + x * cs + 1, mt + y * cs + 1, cs - 2, cs - 2)
-            # Draw using the legend wall color (dark gray)
             pygame.draw.rect(self.screen, self.gui_style.wall_color, rect)
-
-    def _draw_carcasses(self, carcass_positions, carcass_energies):
-        """Draw carcass energy as black squares, scaled by energy."""
-        # Choose a reference for visual sizing
-        ref = max(self.reference_energy_prey, 1.0)
-        for carcass_id, pos in carcass_positions.items():
-            x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
-            y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
-            color = self.gui_style.carcass_color
-            energy = carcass_energies.get(carcass_id, 0) if carcass_energies else 0
-            size_factor = min(max(energy, 0) / ref, 1.0)
-            base_rect_size = self.cell_size * 0.7
-            rect_size = base_rect_size * (0.3 + 0.7 * size_factor)  # avoid disappearing when small
-            rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
-            pygame.draw.rect(self.screen, color, rect)
 
     def _draw_fov_overlays(self, step_data):
         """Draw transparent FOV overlays for each agent.
@@ -499,11 +469,6 @@ class PyGameRenderer:
         self.screen.blit(font.render("Wall", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
-        # Carcass (black)
-        pygame.draw.rect(self.screen, self.gui_style.carcass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
-        self.screen.blit(font.render("Carcass", True, (0, 0, 0)), (x + 30, y))
-        y += spacing
-
         if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
             # Predator FOV legend (with alpha blending)
             fov_pred_rect = pygame.Surface((s, s), pygame.SRCALPHA)
@@ -660,8 +625,7 @@ class PyGameRenderer:
 
         return chart_y + chart_height + spacing
 
-
-    def _draw_tooltip(self, step_data, grass_positions, grass_energies, carcass_positions=None, carcass_energies=None):
+    def _draw_tooltip(self, step_data, grass_positions, grass_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
         grid_x = (mouse_x - self.gui_style.margin_left) // self.cell_size
         grid_y = (mouse_y - self.gui_style.margin_top) // self.cell_size
@@ -672,7 +636,6 @@ class PyGameRenderer:
 
         hovered_entity = None
         hovered_energy = 0.0
-        hovered_uid = None
 
         # Check for hovered agent
         for agent_id, data in step_data.items():
@@ -680,10 +643,6 @@ class PyGameRenderer:
             if pos == (grid_x, grid_y):
                 hovered_entity = agent_id
                 hovered_energy = data["energy"]
-                # Prefer the per-step unique_id field; fall back to env mapping
-                hovered_uid = data.get("unique_id")
-                if not hovered_uid and hasattr(self, "env") and hasattr(self.env, "unique_agents"):
-                    hovered_uid = self.env.unique_agents.get(agent_id)
                 break
 
         # Check for hovered grass (only if no agent found)
@@ -692,39 +651,23 @@ class PyGameRenderer:
                 if pos == (grid_x, grid_y):
                     hovered_entity = grass_id
                     hovered_energy = grass_energies.get(grass_id, 0) if grass_energies else 0
-                    # Try to get unique id for grass if available
-                    if hasattr(self, "env") and hasattr(self.env, "unique_agents"):
-                        hovered_uid = self.env.unique_agents.get(grass_id)
-                    break
-
-        # Check for hovered carcass (only if no agent or grass found)
-        if not hovered_entity and carcass_positions:
-            for cid, pos in carcass_positions.items():
-                if pos == (grid_x, grid_y):
-                    hovered_entity = cid
-                    hovered_energy = carcass_energies.get(cid, 0) if carcass_energies else 0
-                    # Try to get unique id for carcass if available
-                    if hasattr(self, "env") and hasattr(self.env, "unique_agents"):
-                        hovered_uid = self.env.unique_agents.get(cid)
                     break
 
         if hovered_entity:
             font = self.tooltip_font
             lines = []
 
-
-            # Always show the unique id as the main ID (never optional)
-            # Always show the unique id (with suffix) as the first line for agents
-            if hovered_entity in step_data and step_data[hovered_entity].get("unique_id"):
-                lines.append(("ID", step_data[hovered_entity]["unique_id"]))
-            elif hasattr(self, "env") and hasattr(self.env, "unique_agents") and hovered_entity in self.env.unique_agents:
-                lines.append(("ID", self.env.unique_agents[hovered_entity]))
-            else:
-                # Fallback (e.g., grass/carcass not tracked with unique ids)
-                lines.append(("ID", hovered_entity))
+            # First line: agent or grass ID
+            lines.append(("ID", hovered_entity))
 
             if hovered_entity in step_data:
                 agent = step_data[hovered_entity]
+
+                # Second line: unique ID (only for agents, not grass)
+                uid = agent.get("unique_id")
+                if uid:
+                    lines.append(("UID", uid))
+
                 age = agent.get("age")
                 if age is not None:
                     lines.append(("Age", f"{age:>6}"))
@@ -763,8 +706,8 @@ class PyGameRenderer:
                 lines.append(("Energy", f"{hovered_energy:>6.2f}"))
 
             # Measure width/height
-            label_width = max(font.size(str(label))[0] for label, _ in lines if label)
-            value_width = max(font.size(str(value))[0] for _, value in lines if value)
+            label_width = max(font.size(label)[0] for label, _ in lines if label)
+            value_width = max(font.size(value)[0] for _, value in lines if value)
             line_height = font.get_height()
             padding = self.gui_style.tooltip_padding
             width = label_width + value_width + 12
@@ -781,11 +724,11 @@ class PyGameRenderer:
             y_offset = tooltip_y
             for label, value in lines:
                 if value is None:
-                    text_surface = font.render(str(label), True, (0, 0, 0))
+                    text_surface = font.render(label, True, (0, 0, 0))
                     self.screen.blit(text_surface, (tooltip_x, y_offset))
                 else:
                     label_surface = font.render(f"{label}:", True, (0, 0, 0))
-                    value_surface = font.render(str(value), True, (0, 0, 0))
+                    value_surface = font.render(value, True, (0, 0, 0))
                     self.screen.blit(label_surface, (tooltip_x, y_offset))
                     self.screen.blit(value_surface, (tooltip_x + label_width + 12, y_offset))
                 y_offset += line_height
