@@ -12,7 +12,7 @@ if __name__ == "__main__":
     step = 0
     while not done_all:
         # Take random actions for all active agents
-        action_dict = {aid: np.random.randint(0, 5) for aid in env.agents}
+        action_dict = {aid: np.random.randint(0, 9) for aid in env.agents}
         obs, rewards, terminations, truncations, infos = env.step(action_dict)
         env.render()
         time.sleep(render_sleep)
