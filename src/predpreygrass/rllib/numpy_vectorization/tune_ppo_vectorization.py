@@ -17,6 +17,7 @@ from ray.tune import Tuner, RunConfig, CheckpointConfig
 from datetime import datetime
 from pathlib import Path
 import json
+import os
 
 
 def get_config_ppo():
@@ -49,6 +50,25 @@ if __name__ == "__main__":
     experiment_path.mkdir(parents=True, exist_ok=True)
 
     config_ppo = get_config_ppo()
+    # Optional runtime overrides via environment variables for quick smoke tests
+    max_iters_override = os.environ.get("MAX_ITERS")
+    if max_iters_override is not None:
+        try:
+            config_ppo["max_iters"] = int(max_iters_override)
+        except ValueError:
+            pass
+    num_env_runners_override = os.environ.get("NUM_ENV_RUNNERS")
+    if num_env_runners_override is not None:
+        try:
+            config_ppo["num_env_runners"] = int(num_env_runners_override)
+        except ValueError:
+            pass
+    num_envs_per_runner_override = os.environ.get("NUM_ENVS_PER_ENV_RUNNER")
+    if num_envs_per_runner_override is not None:
+        try:
+            config_ppo["num_envs_per_env_runner"] = int(num_envs_per_runner_override)
+        except ValueError:
+            pass
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,
