@@ -1,28 +1,29 @@
-# Walls & Occlusion Efficiency in PredPreyGrass
+# Limited intak in PredPreyGrass
 
-## Goals:
+### Done
+- Refactoring reset function (placement and creation of wall, grass, prey and predators)
+- Combine all refactoring functions into: 
+
+
+### Goals:
+- Implement limited Intake
 - Make env more modular
+- Make trajectories end well with terminated
 - Remove redunant code
-- Make it "cooperation-search-ready"
+- Remove all non-reproduction rewards (to get copilot better understand) 
+- Tidy up?
+- delete all unnecesarry configs?
 
 
 ## Potential setup
 - Masking for stepping into self-species occupied cell?
-- Remove all non-reproduction rewards (to get copilot better understand the confif_env)?
-- Tidy up?
-  - delete all unnecesarry configs?
-
-## TODO
+### Done:
 - 
-
 
 ## Later on
 - Introduce **max_eating**. So a predator/prey cannot eat a prey/grass in one step => predator decides to eat more or leave for other in the next step? This could be an efficient way to increase the action_space over multiple steps. Predator "stays" to eat carcass further in next step or it "leaves" to "share" energy with other predators.=> is already implemented with "max_energy_gain_per_prey".
   ("raw_gain = min(self.agent_energies[caught_prey], self.config.get("max_energy_gain_per_prey", float("inf"))))
-
-
-
-- Adjustments: 
+- Adjustments? 
   - Killing prey at a higher energy cost than scavenging for predators?
   - Leave (prey) carcass on grid, as an unmovable energy source for predators.
   - Carcass depletes?
