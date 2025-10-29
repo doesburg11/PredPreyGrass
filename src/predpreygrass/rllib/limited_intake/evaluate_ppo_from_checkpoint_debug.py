@@ -252,6 +252,46 @@ def step_forward(
             action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
+    # --- Diagnostics: replicate random_policy viewer prints ---
+    print("-----------------------------")
+    print(f"step {env.current_step}")
+    print("-----------------------------")
+    print(f"counts predators={env.active_num_predators} prey={env.active_num_prey} agents={len(env.agents)}")
+    predators_list = sorted([aid for aid in env.agents if "predator" in aid])
+    prey_list = sorted([aid for aid in env.agents if "prey" in aid])
+    print(f"predators \n {predators_list}")
+    print(f"prey \n {prey_list}")
+    print(f"rewards \n {rewards}")
+    print(f"cumulative rewards \n {env.cumulative_rewards}")
+    print(f"terminations \n { {k: v for k, v in terminations.items() if k != '__all__'} }")
+
+    # Extra diagnostics: death causes for agents terminated this step
+    terminated_agents = [aid for aid, done in terminations.items() if aid != "__all__" and done]
+    death_causes = {}
+    for aid in terminated_agents:
+        try:
+            reuse_index = env.agent_activation_counts.get(aid, 0) - 1
+            if reuse_index >= 0:
+                uid = f"{aid}_{reuse_index}"
+                cause = env.death_agents_stats.get(uid, {}).get("death_cause", None)
+                step = env.death_agents_stats.get(uid, {}).get("death_step", None)
+                death_causes[aid] = {"cause": cause, "death_step": step}
+        except Exception:
+            # best-effort only
+            pass
+    if death_causes:
+        print(f"death causes \n {death_causes}")
+
+    # List predators that ate this step (energy_eating > 0)
+    if env.per_step_agent_data:
+        last_step = env.per_step_agent_data[-1]
+        ate_predators = sorted([
+            aid for aid, data in last_step.items()
+            if "predator" in aid and float(data.get("energy_eating", 0.0)) > 0.0
+        ])
+        if ate_predators:
+            print(f"predators ate this step \n {ate_predators}")
+    print("-----------------------------")
     # Inject unique ID per agent into step data
     for agent_id, agent_data in env.per_step_agent_data[-1].items():
         agent_data["unique_id"] = env.unique_agents[agent_id]
@@ -489,83 +529,98 @@ if __name__ == "__main__":
     env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir = setup_environment_and_visualizer(now)
     observations, _ = env.reset(seed=seed)
 
-    if SAVE_MOVIE:
-        screen_width = visualizer.screen.get_width()
-        screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
-    else:
-        video_writer = None
+    import sys
 
-    control = ViewerControlHelper()
-    loop_helper = LoopControlHelper()
-    control.fps_slider_rect = visualizer.slider_rect
-    control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
-    control.visualizer = visualizer
+    # Write evaluation_output.txt in the same directory as this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_file_path = os.path.join(script_dir, "evaluation_output.txt")
 
-    clock = pygame.time.Clock()
-    total_reward = 0
-    predator_counts, prey_counts, time_steps = [], [], []
-    snapshots = [env.get_state_snapshot()]
-    energy_by_type_series = [env.get_total_energy_by_type()]
+    # --- Main evaluation loop and summary prints redirected to file ---
+    with open(output_file_path, "w") as out_f:
+        old_stdout = sys.stdout
+        sys.stdout = out_f
+        try:
+            if SAVE_MOVIE:
+                screen_width = visualizer.screen.get_width()
+                screen_height = visualizer.screen.get_height()
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+                video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
+            else:
+                video_writer = None
 
-    while not loop_helper.simulation_terminated:
-        control.handle_events()
+            control = ViewerControlHelper()
+            loop_helper = LoopControlHelper()
+            control.fps_slider_rect = visualizer.slider_rect
+            control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
+            control.visualizer = visualizer
 
-        new_obs = step_backwards_if_requested(
-            control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
-        )
-        if new_obs is not None:
-            observations = new_obs
-            continue
+            clock = pygame.time.Clock()
+            total_reward = 0
+            predator_counts, prey_counts, time_steps = [], [], []
+            snapshots = [env.get_state_snapshot()]
+            energy_by_type_series = [env.get_total_energy_by_type()]
 
-        if loop_helper.should_step(control):
-            observations, total_reward, terminations, truncations = step_forward(
-                env,
-                observations,
-                rl_modules,
-                control,
-                visualizer,
-                ceviz,
-                pdviz,
-                snapshots,
-                predator_counts,
-                prey_counts,
-                time_steps,
-                total_reward,
-                clock,
-                SAVE_MOVIE,
-                video_writer,
-            )
-            loop_helper.update_simulation_terminated(terminations, truncations)
-        else:
-            render_static_if_paused(env, visualizer)
-            pygame.time.wait(50)
+            while not loop_helper.simulation_terminated:
+                control.handle_events()
 
-    # === Print total offspring by type ===
-    offspring_counts = env.get_total_offspring_by_type()
-    print("\n--- Offspring Counts by Type ---")
-    for agent_type, count in offspring_counts.items():
-        print(f"{agent_type:20}: {count}")
+                new_obs = step_backwards_if_requested(
+                    control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
+                )
+                if new_obs is not None:
+                    observations = new_obs
+                    continue
 
-    # print_ranked_reward_summary(env, total_reward)
+                if loop_helper.should_step(control):
+                    observations, total_reward, terminations, truncations = step_forward(
+                        env,
+                        observations,
+                        rl_modules,
+                        control,
+                        visualizer,
+                        ceviz,
+                        pdviz,
+                        snapshots,
+                        predator_counts,
+                        prey_counts,
+                        time_steps,
+                        total_reward,
+                        clock,
+                        SAVE_MOVIE,
+                        video_writer,
+                    )
+                    loop_helper.update_simulation_terminated(terminations, truncations)
+                else:
+                    render_static_if_paused(env, visualizer)
+                    pygame.time.wait(50)
 
-    # print("Death statistics:", env.death_agents_stats)
+            # === Print total offspring by type ===
+            offspring_counts = env.get_total_offspring_by_type()
+            print("\n--- Offspring Counts by Type ---")
+            for agent_type, count in offspring_counts.items():
+                print(f"{agent_type:20}: {count}")
 
-    if SAVE_EVAL_RESULTS:
-        save_reward_summary_to_file(env, total_reward, eval_output_dir)
-        energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
-        with open(energy_log_path, "w") as f:
-            json.dump(energy_by_type_series, f, indent=2)
-    # Always show plots on screen
-    ceviz.plot()
-    if SAVE_EVAL_RESULTS:
-        # Export all unique agent fitness stats
-        agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
-        with open(agent_fitness_path, "w") as f:
-            json.dump(env.unique_agent_stats, f, indent=2)
+            # print_ranked_reward_summary(env, total_reward)
 
-    print_ranked_fitness_summary(env)
+            # print("Death statistics:", env.death_agents_stats)
+
+            if SAVE_EVAL_RESULTS:
+                save_reward_summary_to_file(env, total_reward, eval_output_dir)
+                energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
+                with open(energy_log_path, "w") as f:
+                    json.dump(energy_by_type_series, f, indent=2)
+            # Always show plots on screen
+            ceviz.plot()
+            if SAVE_EVAL_RESULTS:
+                # Export all unique agent fitness stats
+                agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
+                with open(agent_fitness_path, "w") as f:
+                    json.dump(env.unique_agent_stats, f, indent=2)
+
+            print_ranked_fitness_summary(env)
+        finally:
+            sys.stdout = old_stdout
+
+    # --- End of redirected output ---
 
     pygame.quit()
     ray.shutdown()
