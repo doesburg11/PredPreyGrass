@@ -294,7 +294,7 @@ def step_forward(
     print("-----------------------------")
     # Inject unique ID per agent into step data
     for agent_id, agent_data in env.per_step_agent_data[-1].items():
-        agent_data["unique_id"] = env.unique_agents[agent_id]
+        agent_data["unique_id"] = agent_id
 
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
@@ -378,7 +378,7 @@ def parse_uid(uid):
 def print_ranked_reward_summary(env, total_reward):
     def _get_group_rewards(env):
         group_rewards = defaultdict(list)
-        for uid, stats in env.unique_agent_stats.items():
+        for uid, stats in env.agent_stats.items():
             reward = stats.get("cumulative_reward", 0.0)
             group, index, reuse = parse_uid(uid)
             group_rewards[group].append((uid, reward, index, reuse))
@@ -414,7 +414,7 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     def _get_group_stats(env):
         group_stats = defaultdict(list)
-        for uid, stats in env.unique_agent_stats.items():
+        for uid, stats in env.agent_stats.items():
             group, index, reuse = parse_uid(uid)
             reward = stats.get("cumulative_reward", 0.0)
             lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
@@ -481,7 +481,7 @@ def run_post_evaluation_plots(ceviz, pdviz):
 def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
     group_stats = defaultdict(list)
-    for uid, stats in env.unique_agent_stats.items():
+    for uid, stats in env.agent_stats.items():
         group, index, reuse = parse_uid(uid)
         lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
         group_stats[group].append(
@@ -614,7 +614,7 @@ if __name__ == "__main__":
                 # Export all unique agent fitness stats
                 agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
                 with open(agent_fitness_path, "w") as f:
-                    json.dump(env.unique_agent_stats, f, indent=2)
+                    json.dump(env.agent_stats, f, indent=2)
 
             print_ranked_fitness_summary(env)
         finally:
