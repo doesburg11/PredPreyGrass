@@ -26,6 +26,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
+        self.agent_id_counters = {"type_1_prey": 0, "type_2_predator": 0, "type_1_grass": 0, "type_2_grass": 0}
+
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config["debug_mode"]
@@ -89,10 +91,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_energy_grass = config["initial_energy_grass"]
         self.energy_gain_per_step_grass = config["energy_gain_per_step_grass"]
         # Walls (static obstacles)
-        self.num_walls = config["num_walls"]
-        # New: wall placement mode: 'random' (default) or 'manual'.
-        # When 'manual', positions come from manual_wall_positions (list of (x,y)).
-        self.wall_placement_mode = config["wall_placement_mode"]
         self.manual_wall_positions = config["manual_wall_positions"]
         self.wall_positions = set()
 
@@ -181,100 +179,116 @@ class PredPreyGrass(MultiAgentEnv):
         super().reset(seed=seed)
         self._init_reset_variables(seed)
 
-        # --- Place walls first ---
-        self.wall_positions = set()
-        max_cells = self.grid_size * self.grid_size
-        if self.wall_placement_mode not in ("random", "manual"):
-            raise ValueError("wall_placement_mode must be 'random' or 'manual'")
-
-        if self.wall_placement_mode == "manual":
-            # Manual mode: use provided coordinates; ignore duplicates/out-of-bounds
-            raw_positions = self.manual_wall_positions or []
-            added = 0
-            for pos in raw_positions:
-                try:
-                    x, y = map(int, pos)
-                except Exception:
-                    if self.debug_mode:
-                        print(f"[Walls] Skipping non-integer position {pos}")
-                    continue
-                if not (0 <= x < self.grid_size and 0 <= y < self.grid_size):
-                    if self.debug_mode:
-                        print(f"[Walls] Skipping out-of-bounds {(x,y)}")
-                    continue
-                if (x, y) in self.wall_positions:
-                    continue
-                self.wall_positions.add((x, y))
-                added += 1
-            # Optional: if manual list empty, fallback to random to avoid empty wall layer unless explicitly desired
-            if added == 0 and self.manual_wall_positions:
-                if self.debug_mode:
-                    print("[Walls] No valid manual wall positions provided; resulting set is empty.")
-            if added == 0 and not self.manual_wall_positions:
-                # Keep behavior consistent: if user sets mode manual but no list, leave empty (explicit)
-                pass
-        else:  # random
-            if self.num_walls >= max_cells:
-                raise ValueError("num_walls must be less than total grid cells")
-            if self.num_walls > 0:
-                wall_indices = self.rng.choice(max_cells, size=self.num_walls, replace=False)
-                for idx in wall_indices:
-                    gx = idx // self.grid_size
-                    gy = idx % self.grid_size
-                    self.wall_positions.add((gx, gy))
-
-        total_entities = len(self.agents) + len(self.grass_agents)
-        # PATCH: allow any config where number of free cells >= number of agents (even if zero grass).
-        # Use actual number of placed walls (manual or random) for free-cell check.
-        free_cells = max_cells - len(self.wall_positions)
-        if total_entities > free_cells:
-            raise ValueError(
-                f"Too many agents+grass ({total_entities}) for free cells ({free_cells}) given {len(self.wall_positions)} walls on {self.grid_size}x{self.grid_size} grid"
-            )
-        free_indices = [i for i in range(max_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
-        if total_entities > 0:
-            chosen = self.rng.choice(free_indices, size=total_entities, replace=False)
-            all_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen]
-        else:
-            all_positions = []
-
-        predator_list = [a for a in self.agents if "predator" in a]
-        prey_list = [a for a in self.agents if "prey" in a]
-
-        predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
-
-        # Paint walls into channel 0
-        for (wx, wy) in self.wall_positions:
-            self.grid_world_state[0, wx, wy] = 1.0
-
-        for i, agent in enumerate(predator_list):
-            pos = predator_positions[i]
-            self.agent_positions[agent] = self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-            self.cumulative_rewards[agent] = 0
-
-        for i, agent in enumerate(prey_list):
-            pos = prey_positions[i]
-            self.agent_positions[agent] = self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-            self.cumulative_rewards[agent] = 0
-
-        for i, grass in enumerate(self.grass_agents):
-            pos = grass_positions[i]
-            self.grass_positions[grass] = pos
-            self.grass_energies[grass] = self.initial_energy_grass
-            self.grid_world_state[3, *pos] = self.initial_energy_grass
+        self._create_and_place_grid_world_entities()
 
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
         self.current_num_grass = len(self.grass_positions)
 
+        self.current_step = 0
+
+        self.potential_new_ids = list(set(self.possible_agents) - set(self.agents))        
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
+
+    #-------- Reset placement methods grid world entities --------
+    def _create_and_place_grid_world_entities(self):
+        """
+        Place and create all entities (walls, predators, prey, grass) into the grid world state.
+        """
+        wall_positions = self._create_wall_positions()
+        predator_list, prey_list, predator_positions, prey_positions, grass_positions = self._sample_agent_and_grass_positions()
+        self._place_walls(wall_positions)
+        self._place_predators(predator_list, predator_positions)
+        self._place_prey(prey_list, prey_positions)
+        self._place_grass(grass_positions)
+  
+    # -------- Reset wall placement methods --------
+    def _create_wall_positions(self):
+        """
+        Compute wall positions in the environment according to the placement mode and return as a set.
+        """
+        wall_positions = set()
+        raw_positions = self.manual_wall_positions or []
+        added = 0
+        for pos in raw_positions:
+            x, y = pos
+            if 0 <= x < self.grid_size and 0 <= y < self.grid_size:
+                if (x, y) not in wall_positions:
+                    wall_positions.add((x, y))
+                    added += 1
+            else:
+                if self.debug_mode:
+                    print(f"[Walls] Skipping out-of-bounds {(x, y)}")
+        if added == 0 and self.manual_wall_positions:
+            if self.debug_mode:
+                print("[Walls] No valid manual wall positions provided; resulting set is empty.")
+        # If manual_wall_positions is empty, leave wall_positions empty (explicit)
+        return wall_positions
+
+    # -------- Reset other entity placement methods --------
+    def _sample_agent_and_grass_positions(self):
+        """
+        Sample free positions for all entities and return lists for placement.
+        Returns:
+            predator_list, prey_list, predator_positions, prey_positions, grass_positions
+        """
+        num_grid_cells = self.grid_size * self.grid_size
+        num_agents_and_grass = len(self.agents) + len(self.grass_agents)
+        free_non_wall_indices = [i for i in range(num_grid_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
+
+        chosen_grid_indices = self.rng.choice(free_non_wall_indices, size=num_agents_and_grass, replace=False)
+        chosen_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen_grid_indices]
+
+        predator_list = [a for a in self.agents if "predator" in a]
+        prey_list = [a for a in self.agents if "prey" in a]
+
+        predator_positions = chosen_positions[: len(predator_list)]
+        prey_positions = chosen_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = chosen_positions[len(predator_list) + len(prey_list) :]
+
+        return predator_list, prey_list, predator_positions, prey_positions, grass_positions
+
+    def _place_walls(self, wall_positions):
+        """
+        Place walls into the grid world state.
+        """
+        self.wall_positions = wall_positions
+        self.grid_world_state[0, :, :] = 0.0  # Clear wall channel
+        for (wx, wy) in wall_positions:
+            self.grid_world_state[0, wx, wy] = 1.0
+
+    #-------- Placement method for predators --------
+    def _place_predators(self, predator_list, predator_positions):
+        self.predator_positions = {}
+        for i, agent in enumerate(predator_list):
+            pos = predator_positions[i]
+            self.agent_positions[agent] = pos
+            self.predator_positions[agent] = pos
+            self.agent_energies[agent] = self.initial_energy_predator
+            self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.cumulative_rewards[agent] = 0.0
+
+    #-------- Placement method for prey --------
+    def _place_prey(self, prey_list, prey_positions):
+        self.prey_positions = {}
+        for i, agent in enumerate(prey_list):
+            pos = prey_positions[i]
+            self.agent_positions[agent] = pos
+            self.prey_positions[agent] = pos
+            self.agent_energies[agent] = self.initial_energy_prey
+            self.grid_world_state[2, *pos] = self.initial_energy_prey
+            self.cumulative_rewards[agent] = 0.0
+
+    #-------- Placement method for grass --------
+    def _place_grass(self, grass_positions):
+        self.grass_positions = {}
+        self.grass_energies = {}
+        for i, grass in enumerate(self.grass_agents):
+            pos = grass_positions[i]
+            self.grass_positions[grass] = pos
+            self.grass_energies[grass] = self.initial_energy_grass
+            self.grid_world_state[3, *pos] = self.initial_energy_grass
 
     def step(self, action_dict):
         t0 = time.perf_counter()
@@ -1235,10 +1249,8 @@ class PredPreyGrass(MultiAgentEnv):
         return action_space
 
     def _register_new_agent(self, agent_id: str, parent_unique_id: str = None):
-        reuse_index = self.agent_activation_counts[agent_id]
-        unique_id = f"{agent_id}_{reuse_index}"
-        self.unique_agents[agent_id] = unique_id
-        self.agent_activation_counts[agent_id] += 1
+        # agent_id is already unique and never reused
+        self.unique_agents[agent_id] = agent_id  # For compatibility; could remove unique_agents entirely
 
         self.agent_ages[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
@@ -1248,7 +1260,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
 
-        self.unique_agent_stats[unique_id] = {
+        self.unique_agent_stats[agent_id] = {
             "birth_step": self.current_step,
             "parent": parent_unique_id,
             "offspring_count": 0,
@@ -1263,7 +1275,6 @@ class PredPreyGrass(MultiAgentEnv):
             "mutated": False,
             "death_step": None,
             "death_cause": None,
-            # removed final_energy
             "avg_energy": None,
         }
 
