@@ -2,6 +2,7 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
+- applied cap check possible_agent at spawning and log message
 
 """
 # external libraries (Ray required)
@@ -989,6 +990,12 @@ class PredPreyGrass(MultiAgentEnv):
                 new_type = parent_type
 
             agent_type_str = f"type_{new_type}_predator"
+            max_agents = self.config.get(f"n_possible_{agent_type_str}s", None)
+            if max_agents is not None and self.agent_id_counters[agent_type_str] >= max_agents:
+                if getattr(self, "debug_mode", False):
+                    print(f"[WARN] Max {agent_type_str} agents reached; cannot spawn more.")
+                return  # Do not spawn more than allowed
+
             new_agent = f"{agent_type_str}_{self.agent_id_counters[agent_type_str]}"
             self.agent_id_counters[agent_type_str] += 1
             self.agents.append(new_agent)
@@ -1064,6 +1071,12 @@ class PredPreyGrass(MultiAgentEnv):
                 new_type = parent_type
 
             agent_type_str = f"type_{new_type}_prey"
+            max_agents = self.config.get(f"n_possible_{agent_type_str}s", None)
+            if max_agents is not None and self.agent_id_counters[agent_type_str] >= max_agents:
+                if getattr(self, "debug_mode", False):
+                    print(f"[WARN] Max {agent_type_str} agents reached; cannot spawn more.")
+                return  # Do not spawn more than allowed
+
             new_agent = f"{agent_type_str}_{self.agent_id_counters[agent_type_str]}"
             self.agent_id_counters[agent_type_str] += 1
             self.agents.append(new_agent)
