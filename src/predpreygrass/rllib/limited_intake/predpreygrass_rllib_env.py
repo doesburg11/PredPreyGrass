@@ -55,8 +55,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_creation_energy_threshold = config["prey_creation_energy_threshold"]
 
         # Learning agents
-        self.n_possible_type_1_predators = config["n_possible_type_1_predators"]
-        self.n_possible_type_2_predators = config["n_possible_type_2_predators"]
+        self.n_possible_type_1_predator = config["n_possible_type_1_predator"]
+        self.n_possible_type_2_predator = config["n_possible_type_2_predator"]
         self.n_possible_type_1_prey = config["n_possible_type_1_prey"]
         self.n_possible_type_2_prey = config["n_possible_type_2_prey"]
 
@@ -874,6 +874,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_stats[agent]["cumulative_reward"] += rewards[agent]
             t_stats = time.perf_counter()
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
+
+            # mark infos for analysis
+            self._pending_infos.setdefault(agent, {})["ate_prey"] = caught_prey
+            self._pending_infos.setdefault(caught_prey, {})["got_caught_by"] = agent
+
             t_grid = time.perf_counter()
             observations[caught_prey] = self._get_observation(caught_prey)
             rewards[caught_prey] = self._get_type_specific("penalty_prey_caught", caught_prey)
@@ -949,6 +954,10 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_stats[agent]["times_ate"] += 1
             self.agent_stats[agent]["energy_gained"] += gain
             self.agent_stats[agent]["cumulative_reward"] += rewards[agent]
+
+            # mark infos for analysis  # NEW
+            self._pending_infos.setdefault(agent, {})["ate_grass"] = caught_grass  # NEW
+
             t_stats = time.perf_counter()
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
             t_grid = time.perf_counter()
@@ -990,11 +999,18 @@ class PredPreyGrass(MultiAgentEnv):
                 new_type = parent_type
 
             agent_type_str = f"type_{new_type}_predator"
-            max_agents = self.config.get(f"n_possible_{agent_type_str}s", None)
+            # Accept both plural and singular config keys for robustness
+            max_agents = self.config.get(f"n_possible_{agent_type_str}", None)
+            if max_agents is None:
+                max_agents = self.config.get(f"n_possible_{agent_type_str}", None)
+            # Strictly enforce cap: never allow counter to reach or exceed max_agents
             if max_agents is not None and self.agent_id_counters[agent_type_str] >= max_agents:
+                print(f"[DEBUG] Cap reached: {agent_type_str} counter={self.agent_id_counters[agent_type_str]} max_agents={max_agents}")
                 if getattr(self, "debug_mode", False):
                     print(f"[WARN] Max {agent_type_str} agents reached; cannot spawn more.")
                 return  # Do not spawn more than allowed
+
+            print(f"[DEBUG] Spawning {agent_type_str}: counter before increment={self.agent_id_counters[agent_type_str]}, max_agents={max_agents}")
 
             new_agent = f"{agent_type_str}_{self.agent_id_counters[agent_type_str]}"
             self.agent_id_counters[agent_type_str] += 1
@@ -1050,6 +1066,10 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[REPRODUCTION] Predator {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
                 "green",
             )
+            # mark infos for analysis  # NEW
+            self._pending_infos.setdefault(agent, {})["spawned"] = new_agent  # NEW
+            self._pending_infos.setdefault(new_agent, {})["born_of"] = agent  # NEW
+
 
     def _handle_prey_reproduction(self, agent, rewards, observations, terminations, truncations):
         cooldown = self.config["reproduction_cooldown_steps"]
@@ -1071,11 +1091,18 @@ class PredPreyGrass(MultiAgentEnv):
                 new_type = parent_type
 
             agent_type_str = f"type_{new_type}_prey"
-            max_agents = self.config.get(f"n_possible_{agent_type_str}s", None)
+            # Accept both plural and singular config keys for robustness
+            max_agents = self.config.get(f"n_possible_{agent_type_str}", None)
+            if max_agents is None:
+                max_agents = self.config.get(f"n_possible_{agent_type_str}", None)
+            # Strictly enforce cap: never allow counter to reach or exceed max_agents
             if max_agents is not None and self.agent_id_counters[agent_type_str] >= max_agents:
+                print(f"[DEBUG] Cap reached: {agent_type_str} counter={self.agent_id_counters[agent_type_str]} max_agents={max_agents}")
                 if getattr(self, "debug_mode", False):
                     print(f"[WARN] Max {agent_type_str} agents reached; cannot spawn more.")
                 return  # Do not spawn more than allowed
+
+            print(f"[DEBUG] Spawning {agent_type_str}: counter before increment={self.agent_id_counters[agent_type_str]}, max_agents={max_agents}")
 
             new_agent = f"{agent_type_str}_{self.agent_id_counters[agent_type_str]}"
             self.agent_id_counters[agent_type_str] += 1
@@ -1131,6 +1158,9 @@ class PredPreyGrass(MultiAgentEnv):
                 f"[REPRODUCTION] Prey {agent} spawned {new_agent} at {tuple(map(int, new_position))}",
                 "green",
             )
+            # mark infos for analysis  # NEW
+            self._pending_infos.setdefault(agent, {})["spawned"] = new_agent  # NEW
+            self._pending_infos.setdefault(new_agent, {})["born_of"] = agent  # NEW
 
     def get_state_snapshot(self):
         return {
@@ -1180,9 +1210,9 @@ class PredPreyGrass(MultiAgentEnv):
         This is called during reset to ensure the agent list is up-to-date.
         """
         agent_ids = []
-        for i in range(self.n_possible_type_1_predators):
+        for i in range(self.n_possible_type_1_predator):
             agent_ids.append(f"type_1_predator_{i}")
-        for i in range(self.n_possible_type_2_predators):
+        for i in range(self.n_possible_type_2_predator):
             agent_ids.append(f"type_2_predator_{i}")
         for i in range(self.n_possible_type_1_prey):
             agent_ids.append(f"type_1_prey_{i}")
