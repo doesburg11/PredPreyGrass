@@ -7,7 +7,7 @@ Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.limited_intake.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.limited_intake.config.config_env_limited_intake import config_env
-from predpreygrass.rllib.limited_intake.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib.limited_intake.utils.episode_return_callback1 import EpisodeReturn
 from predpreygrass.rllib.limited_intake.utils.networks import build_multi_module_spec
 
 import ray
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
-            stop={"training_iteration": max_iters},
+            stop={"training_iteration": 1},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=checkpoint_every,
