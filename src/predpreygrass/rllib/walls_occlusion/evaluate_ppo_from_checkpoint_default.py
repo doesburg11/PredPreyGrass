@@ -10,12 +10,12 @@ from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_train_2_policies import config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
-RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-CHECKPOINT_PATH = "PPO_LOS_REJECTED_MOVES_2025-09-15_13-57-36/PPO_PredPreyGrass_2bd25_00000_0_2025-09-15_13-57-36/checkpoint_000099"
+RAY_RESULTS_DIR ="/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion/experiments/"
+CHECKPOINT_PATH = "type_1_only/checkpoints_2025_10_07/checkpoint_000099"
 SAVE_MOVIE = False
 MOVIE_FILENAME = "eval_video.mp4"
 MOVIE_FPS = 10
