@@ -1,6 +1,6 @@
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass environment (walls_occlusion) for interactive debugging.
+and runs them in the PredPreyGrass environment (walls_occlusion_efficiency) for interactive debugging.
 
 This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
 making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
@@ -19,7 +19,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion.config.config_env_zigzag_walls import config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
 from predpreygrass.rllib.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -38,7 +38,7 @@ import re
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = False
+SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
@@ -121,8 +121,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_LOS_REJECTED_MOVES_2025-09-17_15-41-40/PPO_PredPreyGrass_0aa64_00000_0_2025-09-17_15-41-40"
+
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion/experiments/"
+    checkpoint_root = "type_1_only/checkpoints_2025_10_07"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
 
@@ -336,47 +337,100 @@ def parse_uid(uid):
 
 
 def print_ranked_reward_summary(env, total_reward):
-    group_rewards = defaultdict(list)
+    def _get_group_rewards(env):
+        group_rewards = defaultdict(list)
+        for uid, stats in env.unique_agent_stats.items():
+            reward = stats.get("cumulative_reward", 0.0)
+            group, index, reuse = parse_uid(uid)
+            group_rewards[group].append((uid, reward, index, reuse))
+        return group_rewards
 
-    for uid, stats in env.unique_agent_stats.items():
-        reward = stats.get("cumulative_reward", 0.0)
-        group, index, reuse = parse_uid(uid)
-        group_rewards[group].append((uid, reward, index, reuse))
+    def _format_ranked_reward_summary(env, total_reward, group_rewards):
+        lines = []
+        lines.append(f"Total Reward: {total_reward:.2f}\n")
+        lines.append("--- Ranked Reward Breakdown per Unique Agent ---\n")
+        for group in sorted(group_rewards.keys()):
+            lines.append(f"\n## {group.replace('_', ' ').title()} ##\n")
+            sorted_group = sorted(
+                group_rewards[group], key=lambda x: (-x[1], x[2], x[3])
+            )
+            for uid, reward, _, _ in sorted_group:
+                lines.append(f"{uid:25}: {reward:.2f}\n")
+        lines.append("\n--- Aggregated Totals ---\n")
+        lines.append(f"Total number of steps: {env.current_step - 1}\n")
+        for group in sorted(group_rewards.keys()):
+            total = sum(r for _, r, _, _ in group_rewards[group])
+            lines.append(f"Total {group.replace('_', ' ').title():25}: {total:.2f}\n")
+        lines.append(f"Total All-Agent Reward:           {total_reward:.2f}\n")
+        return lines
 
-    print(f"\nEvaluation complete! Total Reward: {total_reward:.2f}")
-    print("\n--- Ranked Reward Breakdown per Unique Agent ---")
-
-    for group in sorted(group_rewards.keys()):
-        print(f"\n## {group.replace('_', ' ').title()} ##")
-        sorted_group = sorted(
-            group_rewards[group], key=lambda x: (-x[1], x[2], x[3])  # sort by reward desc, then id asc, reuse asc
-        )
-        for uid, reward, _, _ in sorted_group:
-            print(f"{uid:25}: {reward:.2f}")
-
-    print("\n--- Aggregated Totals ---")
-    print(f"Total number of steps: {env.current_step - 1}")
-    for group in sorted(group_rewards.keys()):
-        total = sum(r for _, r, _, _ in group_rewards[group])
-        print(f"Total {group.replace('_', ' ').title():25}: {total:.2f}")
-    print(f"Total All-Agent Reward:           {total_reward:.2f}")
+    group_rewards = _get_group_rewards(env)
+    lines = _format_ranked_reward_summary(env, total_reward, group_rewards)
+    print("\nEvaluation complete! Total Reward: {:.2f}".format(total_reward))
+    for line in lines[1:]:  # skip duplicate first line
+        print(line.rstrip())
 
 
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
+    def _get_group_stats(env):
+        group_stats = defaultdict(list)
+        for uid, stats in env.unique_agent_stats.items():
+            group, index, reuse = parse_uid(uid)
+            reward = stats.get("cumulative_reward", 0.0)
+            lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
+            offspring = stats.get("offspring_count", 0)
+            off_per_step = offspring / lifetime if lifetime > 0 else 0.0
+            group_stats[group].append({
+                "uid": uid,
+                "reward": reward,
+                "lifetime": lifetime,
+                "offspring": offspring,
+                "off_per_step": off_per_step,
+                "index": index,
+                "reuse": reuse,
+            })
+        return group_stats
+
+    def _format_ranked_fitness_summary(env, total_reward, group_stats):
+        lines = []
+        lines.append(f"Total Reward: {total_reward:.2f}\n")
+        lines.append("--- Ranked Reward Breakdown per Unique Agent ---\n")
+        for group in sorted(group_stats.keys()):
+            lines.append(f"\n## {group.replace('_', ' ').title()} ##\n")
+            sorted_group = sorted(
+                group_stats[group], key=lambda x: (-x["reward"], x["index"], x["reuse"])
+            )
+            lines.append(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13}\n")
+            for entry in sorted_group:
+                lines.append(
+                    f"{entry['uid']:25} | "
+                    f"{entry['reward']:8.2f} | "
+                    f"{entry['lifetime']:6} | "
+                    f"{entry['offspring']:4} | "
+                    f"{100*entry['off_per_step']:13.2f}\n"
+                )
+            # Print averages for this group
+            n = len(sorted_group)
+            if n > 0:
+                avg_reward = sum(e['reward'] for e in sorted_group) / n
+                avg_life = sum(e['lifetime'] for e in sorted_group) / n
+                avg_offspring = sum(e['offspring'] for e in sorted_group) / n
+                avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
+                lines.append(f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | {100*avg_off_per_step:13.2f}\n")
+        lines.append("\n--- Aggregated Totals ---\n")
+        lines.append(f"Total number of steps: {env.current_step - 1}\n")
+        for group in sorted(group_stats.keys()):
+            total = sum(e['reward'] for e in group_stats[group])
+            lines.append(f"Total {group.replace('_', ' ').title():25}: {total:.2f}\n")
+        lines.append(f"Total All-Agent Reward:           {total_reward:.2f}\n")
+        return lines
+
+    group_stats = _get_group_stats(env)
+    lines = _format_ranked_fitness_summary(env, total_reward, group_stats)
     with open(reward_log_path, "w") as f:
-        f.write(f"Total Reward: {total_reward}\n\n")
-        f.write("--- Reward Breakdown per Agent ---\n")
-        for agent_id, reward in env.cumulative_rewards.items():
-            f.write(f"{agent_id:15}: {reward:.2f}\n")
-        f.write("\n--- Aggregated Rewards ---\n")
-        f.write(f"Total number of steps: {env.current_step-1}\n")
-        grouped_rewards = {}
-        for agent_id, reward in env.cumulative_rewards.items():
-            group = policy_mapping_fn(agent_id)
-            grouped_rewards.setdefault(group, []).append(reward)
-        for group, rewards in grouped_rewards.items():
-            f.write(f"Total {group.replace('_', ' ').title()} Reward: {sum(rewards):.2f}\n")
+        for line in lines:
+            f.write(line)
 
 
 def run_post_evaluation_plots(ceviz, pdviz):

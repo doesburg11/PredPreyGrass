@@ -1,5 +1,5 @@
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_eval import config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
 from predpreygrass.rllib.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
@@ -35,10 +35,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_path = "v2_7_tune_default_benchmark/PPO_PredPreyGrass_86337_00000_0_2025-08-04_23-53-58/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion/experiments/"
+    checkpoint_root = "type_1_only/checkpoints_2025_10_07"
     checkpoint_dir = "checkpoint_000099"
-    checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
+    checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_root + "/" + checkpoint_dir)
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
     module_paths = {
         pid: os.path.join(rl_module_dir, pid)

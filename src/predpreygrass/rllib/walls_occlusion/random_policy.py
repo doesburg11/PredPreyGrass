@@ -4,17 +4,17 @@ No backward stepping is implemented in this version,
 because that is pointless for debugging and testing
 with a random policy.
 """
-"""Random policy viewer with wall visualization (walls_occlusion variant).
+"""Random policy viewer with wall visualization (walls_occlusion_efficiency variant).
 
-This script intentionally imports the local walls_occlusion environment & renderer
+This script intentionally imports the local walls_occlusion_efficiency environment & renderer
 so that the `walls` parameter on `PyGameRenderer.update` is available. If you
-accidentally import the older walls_occlusion renderer, the call with `walls=`
+accidentally import the older walls_occlusion_efficiency renderer, the call with `walls=`
 will raise a TypeError (unexpected keyword). Ensure the imports below stay
-pointing at `walls_occlusion` when using walls.
+pointing at `walls_occlusion_efficiency` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
+from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
 from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
@@ -31,7 +31,7 @@ def random_policy_pi(agent_id, env):
 
 if __name__ == "__main__":
     # Inject walls into config (if not already present)
-    cfg = dict(base_config_env)
+    cfg = dict(config_env)
     cfg.setdefault("num_walls", 20)  # default number of walls for visualization
     # Enable visibility (occlusion) channel so observations include LOS mask as final channel
     cfg.setdefault("include_visibility_channel", True)
