@@ -9,13 +9,14 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
-from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
-RAY_RESULTS_DIR ="/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion/experiments/"
-CHECKPOINT_PATH = "type_1_only/checkpoints_2025_10_07/checkpoint_000099"
+RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+CHECKPOINT_PATH = "PPO_PROPER_TERMINATION_REFACTORED_RESET_2025-11-01_12-48-51/PPO_PredPreyGrass_bc28d_00000_0_2025-11-01_12-48-51/checkpoint_000003"
+
 SAVE_MOVIE = False
 MOVIE_FILENAME = "eval_video.mp4"
 MOVIE_FPS = 10

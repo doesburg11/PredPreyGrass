@@ -4,18 +4,18 @@ No backward stepping is implemented in this version,
 because that is pointless for debugging and testing
 with a random policy.
 """
-"""Random policy viewer with wall visualization (walls_occlusion_efficiency variant).
+"""Random policy viewer with wall visualization (walls_occlusion_proper_termination variant).
 
-This script intentionally imports the local walls_occlusion_efficiency environment & renderer
+This script intentionally imports the local walls_occlusion_proper_termination environment & renderer
 so that the `walls` parameter on `PyGameRenderer.update` is available. If you
-accidentally import the older walls_occlusion_efficiency renderer, the call with `walls=`
+accidentally import the older walls_occlusion_proper_termination renderer, the call with `walls=`
 will raise a TypeError (unexpected keyword). Ensure the imports below stay
-pointing at `walls_occlusion_efficiency` when using walls.
+pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion.config.config_env_walls_occlusion import config_env
-from predpreygrass.rllib.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

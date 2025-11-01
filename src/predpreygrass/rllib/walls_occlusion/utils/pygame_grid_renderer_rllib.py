@@ -376,9 +376,8 @@ class PyGameRenderer:
 
         y = self._draw_legend_population_chart(x, y)
 
-        # type 2 not utilized in this experiment
-        # if self._using_type_prefix(step_data):
-        #    y = self._draw_legend_type2_percent_chart(x, y)
+        if self._using_type_prefix(step_data):
+            y = self._draw_legend_type2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
         spacing = self.gui_style.legend_spacing
@@ -403,9 +402,7 @@ class PyGameRenderer:
         self.screen.blit(title_surface, (x, y))
         y += spacing
 
-        # type 2 not utilized in this experiment
-        # is_type_based = self._using_type_prefix(step_data)
-        is_type_based = False
+        is_type_based = self._using_type_prefix(step_data)
 
         if is_type_based:
             # type-specific predator colors
@@ -477,13 +474,13 @@ class PyGameRenderer:
             fov_pred_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_pred_rect.fill(self.fov_color_predator)
             self.screen.blit(fov_pred_rect, (x + r - s // 2, y + r - s // 2))
-            self.screen.blit(font.render("Predator FOV", True, (0, 0, 0)), (x + 30, y))
+            self.screen.blit(font.render("Predator_0 Field Of Vision", True, (0, 0, 0)), (x + 30, y))
             y += spacing
             # Prey FOV legend (with alpha blending)
             fov_prey_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_prey_rect.fill(self.fov_color_prey)
             self.screen.blit(fov_prey_rect, (x + r - s // 2, y + r - s // 2))
-            self.screen.blit(font.render("Prey FOV", True, (0, 0, 0)), (x + 30, y))
+            self.screen.blit(font.render("Prey_0 Field Of Vision", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
         return y
