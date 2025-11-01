@@ -5,11 +5,6 @@ from collections import defaultdict
 import os
 
 class EpisodeReturn(RLlibCallback):
-    def on_episode_start(self, *, episode, **kwargs):
-        eid = episode.id_
-        if eid not in self.episode_id_to_number:
-            self.episode_counter += 1
-            self.episode_id_to_number[eid] = self.episode_counter
     def __init__(self, *, lookback_k: int = 5):
         super().__init__()
         self.overall_sum_of_rewards = 0.0
@@ -24,6 +19,12 @@ class EpisodeReturn(RLlibCallback):
         self.episode_counter = 0
         self.episode_id_to_number = {}
 
+    def on_episode_start(self, *, episode, **kwargs):
+        eid = episode.id_
+        if eid not in self.episode_id_to_number:
+            self.episode_counter += 1
+            self.episode_id_to_number[eid] = self.episode_counter
+
     # ---------- Helpers ----------
     def _episode_agent_ids(self, episode) -> list:
         """
@@ -34,72 +35,43 @@ class EpisodeReturn(RLlibCallback):
         for attr in ("agent_ids", "get_agent_ids", "get_agents"):
             if hasattr(episode, attr):
                 obj = getattr(episode, attr)
-                try:
-                    return list(obj() if callable(obj) else obj)
-                except Exception:
-                    pass
+                return list(obj() if callable(obj) else obj)
         if hasattr(episode, "last_info_for") and hasattr(episode, "_agent_to_last_info"):
-            try:
-                return list(getattr(episode, "_agent_to_last_info").keys())
-            except Exception:
-                pass
+            return list(getattr(episode, "_agent_to_last_info").keys())
         return []
 
     def _episode_last_infos(self, episode) -> dict:
         for name in ("get_last_infos", "get_infos"):
             if hasattr(episode, name):
-                try:
-                    infos = getattr(episode, name)()
-                    if isinstance(infos, dict):
-                        return infos
-                except Exception:
-                    pass
+                infos = getattr(episode, name)()
+                if isinstance(infos, dict):
+                    return infos
         for name in ("last_infos", "infos"):
             if hasattr(episode, name):
-                try:
-                    infos = getattr(episode, name)
-                    if isinstance(infos, dict):
-                        return infos
-                except Exception:
-                    pass
+                infos = getattr(episode, name)
+                if isinstance(infos, dict):
+                    return infos
         if hasattr(episode, "_agent_to_last_info"):
-            try:
-                mapping = getattr(episode, "_agent_to_last_info")
-                if isinstance(mapping, dict):
-                    return mapping
-            except Exception:
-                pass
+            mapping = getattr(episode, "_agent_to_last_info")
+            if isinstance(mapping, dict):
+                return mapping
         return {}
 
     def _env_len(self, episode) -> int:
         # Robust way to infer env length: take max of reward sequences
-        try:
-            rewards_map = episode.get_rewards()
-            return max((len(seq) for seq in rewards_map.values()), default=0)
-        except Exception:
-            return 0
+        rewards_map = episode.get_rewards()
+        return max((len(seq) for seq in rewards_map.values()), default=0)
 
     def _print_window_for_agents(self, *, episode, agents, title: str):
         # Debug: Print what agent IDs and data are actually present in the episode object
-        try:
-            all_rewards = episode.get_rewards()
-            print(f"[DEBUG] episode.get_rewards() keys: {list(all_rewards.keys())}")
-        except Exception as e:
-            print(f"[DEBUG] episode.get_rewards() error: {e}")
-
-        try:
-            all_actions = episode.get_actions() if hasattr(episode, 'get_actions') else None
-            if all_actions is not None:
-                print(f"[DEBUG] episode.get_actions() keys: {list(all_actions.keys())}")
-        except Exception as e:
-            print(f"[DEBUG] episode.get_actions() error: {e}")
-
-        try:
-            all_terms = episode.get_terminateds() if hasattr(episode, 'get_terminateds') else None
-            if all_terms is not None:
-                print(f"[DEBUG] episode.get_terminateds() keys: {list(all_terms.keys())}")
-        except Exception as e:
-            print(f"[DEBUG] episode.get_terminateds() error: {e}")
+        all_rewards = episode.get_rewards()
+        print(f"[DEBUG] episode.get_rewards() keys: {list(all_rewards.keys())}")
+        all_actions = episode.get_actions() if hasattr(episode, 'get_actions') else None
+        if all_actions is not None:
+            print(f"[DEBUG] episode.get_actions() keys: {list(all_actions.keys())}")
+        all_terms = episode.get_terminateds() if hasattr(episode, 'get_terminateds') else None
+        if all_terms is not None:
+            print(f"[DEBUG] episode.get_terminateds() keys: {list(all_terms.keys())}")
         env_len = self._env_len(episode)
         if env_len == 0:
             return
@@ -169,34 +141,23 @@ class EpisodeReturn(RLlibCallback):
             self.episode_id_to_number[eid] = self.episode_counter
         ep_num = self.episode_id_to_number[eid]
         # Write step number with a unique marker to a dedicated log file
-        try:
-            log_path = os.path.join(os.path.dirname(__file__), "../logs/step_numbers.log")
-            with open(log_path, "a") as f:
-                f.write(f"[RL_STEP_NUM] STEP {step_num} (Episode {ep_num})\n")
-        except Exception as e:
-            # Fallback to print if file write fails
-            print(f"[RL_STEP_NUM] STEP {step_num} (Episode {ep_num}) [file write error: {e}]", flush=True)
+        log_path = os.path.join(os.path.dirname(__file__), "../logs/step_numbers.log")
+        with open(log_path, "a") as f:
+            f.write(f"[RL_STEP_NUM] STEP {step_num} (Episode {ep_num})\n")
 
         # --- NEW: Log per-agent termination events ---
-        try:
-            # Try to get per-agent terminateds for this step
-            terminateds = None
-            if hasattr(episode, 'get_terminateds'):
-                terminateds = episode.get_terminateds()
-            elif hasattr(episode, '_agent_done'):
-                terminateds = getattr(episode, '_agent_done')
-            if terminateds and isinstance(terminateds, dict):
-                for agent_id, term_val in terminateds.items():
-                    # RLlib may use True/False or 1/0
-                    if term_val is True or term_val == 1:
-                        try:
-                            log_path = os.path.join(os.path.dirname(__file__), "../logs/agent_terminated_events.log")
-                            with open(log_path, "a") as tf:
-                                tf.write(f"[AGENT_TERMINATED] agent_id={agent_id} episode={ep_num} step={step_num}\n")
-                        except Exception as te:
-                            print(f"[AGENT_TERMINATED] agent_id={agent_id} episode={ep_num} step={step_num} [file write error: {te}]", flush=True)
-        except Exception as e:
-            print(f"[AGENT_TERMINATED] Error logging terminateds: {e}", flush=True)
+        terminateds = None
+        if hasattr(episode, 'get_terminateds'):
+            terminateds = episode.get_terminateds()
+        elif hasattr(episode, '_agent_done'):
+            terminateds = getattr(episode, '_agent_done')
+        if terminateds and isinstance(terminateds, dict):
+            for agent_id, term_val in terminateds.items():
+                # RLlib may use True/False or 1/0
+                if term_val is True or term_val == 1:
+                    log_path = os.path.join(os.path.dirname(__file__), "../logs/agent_terminated_events.log")
+                    with open(log_path, "a") as tf:
+                        tf.write(f"[AGENT_TERMINATED] agent_id={agent_id} episode={ep_num} step={step_num}\n")
         # Aggregate per-agent infos for LOS rejections into an episode counter
         los_count = 0
         infos_map = self._episode_last_infos(episode)
@@ -236,20 +197,17 @@ class EpisodeReturn(RLlibCallback):
             self._print_window_for_agents(episode=episode, agents=all_agents, title="all agents (every step)")
         
         # Print terminateds (done flags) for each agent if available
-        try:
-            # RLlib episode object may have _agent_done or _agent_to_last_done_step
-            if hasattr(episode, '_agent_to_last_done_step'):
-                print("[Callback] Terminateds (last done step per agent):")
-                for agent_id, done_step in episode._agent_to_last_done_step.items():
-                    print(f"  {agent_id}: last done at step {done_step}")
-            elif hasattr(episode, '_agent_done'):
-                print("[Callback] Terminateds (_agent_done):")
-                for agent_id, done in episode._agent_done.items():
-                    print(f"  {agent_id}: {done}")
-            else:
-                print("[Callback] No per-agent terminateds found in episode object.")
-        except Exception as e:
-            print(f"[Callback] Error printing terminateds: {e}")
+        # RLlib episode object may have _agent_done or _agent_to_last_done_step
+        if hasattr(episode, '_agent_to_last_done_step'):
+            print("[Callback] Terminateds (last done step per agent):")
+            for agent_id, done_step in episode._agent_to_last_done_step.items():
+                print(f"  {agent_id}: last done at step {done_step}")
+        elif hasattr(episode, '_agent_done'):
+            print("[Callback] Terminateds (_agent_done):")
+            for agent_id, done in episode._agent_done.items():
+                print(f"  {agent_id}: {done}")
+        else:
+            print("[Callback] No per-agent terminateds found in episode object.")
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
         # Assign a human-readable episode number if not already assigned

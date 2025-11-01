@@ -5,11 +5,10 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.rllib.limited_intake.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.limited_intake.config.config_env_limited_intake import config_env
-from predpreygrass.rllib.limited_intake.utils.per_agent_step_logger import PerAgentStepLogger
-# from predpreygrass.rllib.limited_intake.utils.episode_return_callback2 import EpisodeReturn
-from predpreygrass.rllib.limited_intake.utils.networks import build_multi_module_spec
+from predpreygrass.rllib.walls_occlusion_proper_termination.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion_proper_termination.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_proper_termination.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib.walls_occlusion_proper_termination.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -25,12 +24,12 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.limited_intake.config.config_ppo_gpu_limited_intake import config_ppo
+        from predpreygrass.rllib.walls_occlusion_proper_termination.config.config_ppo_gpu_walls_oclussion_proper_termination_factored_reset import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.limited_intake.config.config_ppo_cpu_limited_intake import config_ppo
+        from predpreygrass.rllib.walls_occlusion_proper_termination.config.config_ppo_cpu_walls_oclussion_proper_termination import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.limited_intake.config.config_ppo_cpu_limited_intake import config_ppo
+        from predpreygrass.rllib.walls_occlusion_proper_termination.config.config_ppo_cpu_walls_oclussion_proper_termination import config_ppo
     return config_ppo
 
 
@@ -64,7 +63,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_LIMITED_INTAKE_{timestamp}"
+    experiment_name = f"PPO_PROPER_TERMINATION_REFACTORED_RESET_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
@@ -133,11 +132,11 @@ if __name__ == "__main__":
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
-        .callbacks(PerAgentStepLogger)
+        .callbacks(EpisodeReturn)
     )
 
     max_iters = config_ppo["max_iters"]
-    checkpoint_every = 10
+    checkpoint_every = 100
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
@@ -146,7 +145,7 @@ if __name__ == "__main__":
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
-            stop={"training_iteration": 3},
+            stop={"training_iteration": max_iters},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=checkpoint_every,
