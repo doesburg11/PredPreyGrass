@@ -7,7 +7,7 @@ Predators try to catch prey, and prey try to eat grass.
 from predpreygrass.rllib.numpy_vectorization.np_vec_env import PredPreyGrassEnv as PredPreyGrass
 from predpreygrass.rllib.numpy_vectorization.utils.networks import build_multi_module_spec
 from predpreygrass.rllib.numpy_vectorization.config.config_env_vectorization import config_env
-from predpreygrass.rllib.numpy_vectorization.config.config_ppo_cpu_vectorization import config_ppo
+from predpreygrass.rllib.numpy_vectorization.config.config_ppo_gpu_vectorization import config_ppo
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
