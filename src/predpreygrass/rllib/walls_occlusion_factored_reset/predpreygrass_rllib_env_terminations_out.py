@@ -369,10 +369,6 @@ class PredPreyGrass(MultiAgentEnv):
         if engage_counts > 0 and getattr(self, "debug_mode", False):
             print('[PROFILE-ENGAGE-SUMMARY] ' + ' '.join(f'{k}={engage_totals[k]:.6f}' for k in engage_subsections))
 
-        # print(f"Terminations check 2: {self.terminations}")
-
-        # print(f"Terminations before handle removals: {self.terminations}")
-
         # Step 6: Handle agent removals
         for agent in self.agents[:]:
             if self.terminations.get(agent, False):
@@ -385,9 +381,6 @@ class PredPreyGrass(MultiAgentEnv):
                     "parent": self.agent_parents[agent],
                 }
                 del self.unique_agents[agent]
-
-        #print(f"Terminations check 1: {self.terminations}")
-
 
 
         # Step 7: Spawning of new agents (vectorized)
@@ -406,7 +399,6 @@ class PredPreyGrass(MultiAgentEnv):
             self._handle_predator_reproduction(agent, rewards, observations, truncations)
 
 
-        print(f"Terminations check 3: {self.terminations}")
 
 
         # Vectorized eligibility for prey
@@ -419,10 +411,13 @@ class PredPreyGrass(MultiAgentEnv):
         prey_energy_ready = prey_energies >= self.prey_creation_energy_threshold
         prey_chances = self.rng.random(len(prey_agents)) <= self.config["reproduction_chance_prey"]
         prey_eligible = prey_ready & prey_energy_ready & prey_chances
+
+        print(f"Terminations check 1: {self.terminations}")
+
         for agent in prey_agents[prey_eligible]:
             self._handle_prey_reproduction(agent, rewards, observations, truncations)
 
-        print(f"Terminations check 4: {self.terminations}")
+        print(f"Terminations check last: {self.terminations}")
 
 
         # Step 8: Generate observations for all agents AFTER all engagements in the step
@@ -430,9 +425,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Vectorized: batch call _get_observation for all agents
         obs_batch = [self._get_observation(agent) for agent in agent_ids]
         observations = dict(zip(agent_ids, obs_batch))
-
-        # print(f"Terminations check 5: {self.terminations}")
-
 
         # output only observations, rewards for active agents
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
@@ -1138,8 +1130,10 @@ class PredPreyGrass(MultiAgentEnv):
                     self.verbose_reproduction, f"[REPRODUCTION] No available prey slots at type {new_type} for spawning", "red"
                 )
                 return
+            print(f"Terminations check 2: {self.terminations}")
 
             new_agent = potential_new_ids[0]
+            print(f"Creating new prey agent: {new_agent}")
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -1187,7 +1181,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[uid]["cumulative_reward"] += rewards[agent]
 
             observations[new_agent] = self._get_observation(new_agent)
+            print(f"Terminations check 3: {self.terminations}")
+
             self.terminations[new_agent] = False
+            print(f"Terminations check 4: {self.terminations}")
+
             truncations[new_agent] = False
             self._log(
                 self.verbose_reproduction,
