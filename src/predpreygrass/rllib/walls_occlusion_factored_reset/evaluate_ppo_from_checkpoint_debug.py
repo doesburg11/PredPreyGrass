@@ -244,12 +244,12 @@ def step_forward(
             action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
-    print("----------------------------------------------")
-    print(f"Step {env.current_step}")
+    # print("----------------------------------------------")
+    # print(f"Step {env.current_step}")
     # print(f"Rewards: {rewards}")
     # print(f"Terminations: {terminations}")
-    print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
-    print("----------------------------------------------")
+    # print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
+    # print("----------------------------------------------")
 
     # Inject unique ID per agent into step data
     for agent_id, agent_data in env.per_step_agent_data[-1].items():
