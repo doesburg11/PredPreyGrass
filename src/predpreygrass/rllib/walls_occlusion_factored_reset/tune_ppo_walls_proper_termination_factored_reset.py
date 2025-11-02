@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_factored_reset import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_factored_reset import config_env
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.networks import build_multi_module_spec
 
@@ -24,12 +24,12 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_gpu_walls_oclussion_proper_termination_factored_reset import config_ppo
+        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_gpu_walls_oclussion_factored_reset import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_cpu_walls_oclussion_proper_termination import config_ppo
+        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_cpu_walls_oclussion_factored_reset import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_cpu_walls_oclussion_proper_termination import config_ppo
+        from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_ppo_cpu_walls_oclussion_factored_reset import config_ppo
     return config_ppo
 
 
