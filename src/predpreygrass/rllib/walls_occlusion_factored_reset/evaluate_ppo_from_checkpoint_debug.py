@@ -18,8 +18,8 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_factored_reset import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_terminations_out import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_factored_reset import config_env
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
@@ -245,9 +245,10 @@ def step_forward(
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
     print("----------------------------------------------")
-    #print(f"Step {env.current_step} taken with actions: {action_dict}")
-    #print(f"Rewards: {rewards}")
-    print(f"Terminations: {terminations}")
+    print(f"Step {env.current_step}")
+    # print(f"Rewards: {rewards}")
+    # print(f"Terminations: {terminations}")
+    print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
     print("----------------------------------------------")
 
     # Inject unique ID per agent into step data
