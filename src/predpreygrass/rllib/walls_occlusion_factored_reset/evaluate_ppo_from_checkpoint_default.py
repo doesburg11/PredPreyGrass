@@ -9,8 +9,8 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_factored_reset import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.predpreygrass_rllib_env_terminations_out import PredPreyGrass
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_factored_reset import config_env
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
@@ -103,8 +103,8 @@ if __name__ == "__main__":
             video_writer.write(frame)
 
         total_reward += sum(rewards.values())
-        terminated = any(terminations.values())
-        truncated = any(truncations.values())
+        terminated = all(terminations.values())
+        truncated = all(truncations.values())
         clock.tick(visualizer.target_fps)
 
     print(f"\n Evaluation complete! Total Reward: {total_reward:.2f}")

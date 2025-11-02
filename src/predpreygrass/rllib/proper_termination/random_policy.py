@@ -14,7 +14,7 @@ pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
 from predpreygrass.rllib.walls_occlusion_factored_reset._predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_factored_reset import config_env
 from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries

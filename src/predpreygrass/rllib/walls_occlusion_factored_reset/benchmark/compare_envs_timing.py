@@ -3,7 +3,7 @@ import numpy as np
 import importlib
 
 # Config import (assumes same config for both envs)
-from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_proper_termination import config_env
+from predpreygrass.rllib.walls_occlusion_factored_reset.config.config_env_walls_occlusion_factored_reset import config_env
 
 ENV_MODULES = [
     "predpreygrass.rllib.walls_occlusion_proper_termination.predpreygrass_rllib_env_old",
