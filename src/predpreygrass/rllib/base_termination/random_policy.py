@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.rllib.walls_occlusion_termination.predpreygrass_rllib_env_termination import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_termination.config.config_env_walls_occlusion_termination import config_env
-from predpreygrass.rllib.walls_occlusion_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.base_termination.predpreygrass_rllib_env_termination import PredPreyGrass
+from predpreygrass.rllib.base_termination.config.config_env_walls_occlusion_termination import config_env
+from predpreygrass.rllib.base_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame
@@ -46,13 +46,13 @@ if __name__ == "__main__":
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(
         grid_size,
-        enable_speed_slider=False,
+        enable_speed_slider=True,
         enable_tooltips=False,
         predator_obs_range=cfg.get("predator_obs_range"),
         prey_obs_range=cfg.get("prey_obs_range"),
         show_fov=True,
         fov_alpha=40,
-        fov_agents=["type_1_predator_0", "type_1_prey_0"],
+        fov_agents=["predator_0", "prey_0"],
         fov_respect_walls=True,
     )
     clock = pygame.time.Clock()
@@ -65,29 +65,25 @@ if __name__ == "__main__":
         # --- Step forward using random actions ---
         action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
+        print(f"[Main] Step {env.current_step}.")
+        #print(f"[Main] Rewards: {rewards}")
+        #print(f"[Main] Terminations: {terminations}")
+        print(f"[Env] Energies: { {k: round(v, 2) for k, v in env.agent_energies.items()} }")
+
 
         # --- Update visualizer ---
-        try:
-            visualizer.update(
-                grass_positions=env.grass_positions,
-                grass_energies=env.grass_energies,
-                step=env.current_step,
-                agents_just_ate=env.agents_just_ate,
-                per_step_agent_data=env.per_step_agent_data,
-                walls=getattr(env, "wall_positions", None),
-            )
-        except TypeError:
-            # Fallback for legacy renderer without `walls` kwarg
-            visualizer.update(
-                grass_positions=env.grass_positions,
-                grass_energies=env.grass_energies,
-                step=env.current_step,
-                agents_just_ate=env.agents_just_ate,
-                per_step_agent_data=env.per_step_agent_data,
-            )
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+            walls=getattr(env, "wall_positions", None),
+        )
 
-        terminated = all(terminations.values())
-        truncated = all(truncations.values())
+        # Prefer episode-level flags from the environment only (no extra fallbacks)
+        terminated = terminations.get("__all__", False)
+        truncated = truncations.get("__all__", False)
 
         # Frame rate control
         clock.tick(visualizer.target_fps)

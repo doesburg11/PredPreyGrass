@@ -1,6 +1,6 @@
-from predpreygrass.rllib.walls_occlusion_termination.predpreygrass_rllib_env_termination import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_termination.config.config_env_walls_occlusion_termination import config_env
-from predpreygrass.rllib.walls_occlusion_termination.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.rllib.base_termination.predpreygrass_rllib_env_termination import PredPreyGrass
+from predpreygrass.rllib.base_termination.config.config_env_walls_occlusion_termination import config_env
+from predpreygrass.rllib.base_termination.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os
