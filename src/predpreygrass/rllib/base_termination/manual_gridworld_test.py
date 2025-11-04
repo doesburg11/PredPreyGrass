@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from predpreygrass.rllib.walls_occlusion_termination.predpreygrass_rllib_env_termination import PredPreyGrass
+from predpreygrass.rllib.base_termination.predpreygrass_rllib_env_termination import PredPreyGrass
 
 # --- Manual test config ---
 manual_config = {
