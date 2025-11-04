@@ -9,9 +9,9 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.rllib.walls_occlusion_termination.predpreygrass_rllib_env_termination import PredPreyGrass
-from predpreygrass.rllib.walls_occlusion_termination.config.config_env_walls_occlusion_termination import config_env
-from predpreygrass.rllib.walls_occlusion_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.rllib.base_termination.predpreygrass_rllib_env_termination import PredPreyGrass
+from predpreygrass.rllib.base_termination.config.config_env_walls_occlusion_termination import config_env
+from predpreygrass.rllib.base_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
 RAY_RESULTS_DIR = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/walls_occlusion_termination/experiments/"
