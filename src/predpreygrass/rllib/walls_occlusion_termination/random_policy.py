@@ -86,8 +86,8 @@ if __name__ == "__main__":
                 per_step_agent_data=env.per_step_agent_data,
             )
 
-        terminated = any(terminations.values())
-        truncated = any(truncations.values())
+        terminated = all(terminations.values())
+        truncated = all(truncations.values())
 
         # Frame rate control
         clock.tick(visualizer.target_fps)
