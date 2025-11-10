@@ -28,7 +28,7 @@ config_env = {
     },
     "penalty_prey_caught": {
         "type_1_prey": 0.0,
-        "type_2_prey": 1.0,
+        "type_2_prey": 0.0,
     },
     "reproduction_reward_predator": {
         "type_1_predator": 10.0,
@@ -62,7 +62,7 @@ config_env = {
     "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.04,
-    "verbose_engagement": True,
+    "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,
     "verbose_reproduction": False,
@@ -88,8 +88,8 @@ config_env = {
     "reproduction_chance_predator": 1.0,
     "reproduction_chance_prey": 1.0,
     # Energy transfer and reproduction efficiency
-    "energy_transfer_efficiency": 1.0,
-    "reproduction_energy_efficiency": 1.0,
+    "energy_transfer_efficiency": 1.0,  # TODO: to be removed
+    "reproduction_energy_efficiency": 1.0,  # TODO: to be removed
     # --- Wall placement ---
     # Use manual wall layout: centered 12x12 square (side=12) with 2-cell opening on each side.
     # Grid size is 25 -> start = (25-12)//2 = 6, square spans 6..17 inclusive.
