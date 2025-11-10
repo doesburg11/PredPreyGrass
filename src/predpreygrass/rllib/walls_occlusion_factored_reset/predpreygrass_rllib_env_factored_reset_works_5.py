@@ -2,15 +2,13 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
-- Added refactored reset function
-- Fixed overlapping wall & grass placement
+- de-vectrorize regenerate grass energy
 
 """
 # external libraries (Ray required)
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import numpy as np
-import math
 import time
 
 
@@ -59,6 +57,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.energy_loss_per_step_prey = config["energy_loss_per_step_prey"]
         self.predator_creation_energy_threshold = config["predator_creation_energy_threshold"]
         self.prey_creation_energy_threshold = config["prey_creation_energy_threshold"]
+        self.max_energy_grass = self.config["max_energy_grass"]
+
 
         # Learning agents
         self.n_possible_type_1_predators = config["n_possible_type_1_predators"]
@@ -196,102 +196,6 @@ class PredPreyGrass(MultiAgentEnv):
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
-    def _create_and_place_grid_world_entities(self):
-        """
-        Place and create all entities (walls, predators, prey, grass) into the grid world state.
-        """
-        self.wall_positions = self._create_wall_positions()
-        predator_list, prey_list, predator_positions, prey_positions, grass_positions = self._sample_agent_and_grass_positions()
-        self._place_walls(self.wall_positions)
-        self._place_predators(predator_list, predator_positions)
-        self._place_prey(prey_list, prey_positions)
-        self._place_grass(grass_positions)
-  
-    def _create_wall_positions(self):
-        """
-        Compute wall positions in the environment according to the placement mode and return as a set.
-        """
-        wall_positions = set()
-        raw_positions = self.manual_wall_positions or []
-        added = 0
-        for pos in raw_positions:
-            x, y = pos
-            if 0 <= x < self.grid_size and 0 <= y < self.grid_size:
-                if (x, y) not in wall_positions:
-                    wall_positions.add((x, y))
-                    added += 1
-            else:
-                if self.debug_mode:
-                    print(f"[Walls] Skipping out-of-bounds {(x, y)}")
-        if added == 0 and self.manual_wall_positions:
-            if self.debug_mode:
-                print("[Walls] No valid manual wall positions provided; resulting set is empty.")
-        # If manual_wall_positions is empty, leave wall_positions empty (explicit)
-        return wall_positions
-
-    def _sample_agent_and_grass_positions(self):
-        """
-        Sample free positions for all entities and return lists for placement.
-        Returns:
-            predator_list, prey_list, predator_positions, prey_positions, grass_positions
-        """
-        num_grid_cells = self.grid_size * self.grid_size
-        num_agents_and_grass = len(self.agents) + len(self.grass_agents)
-        free_non_wall_indices = [i for i in range(num_grid_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
-
-        chosen_grid_indices = self.rng.choice(free_non_wall_indices, size=num_agents_and_grass, replace=False)
-        chosen_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen_grid_indices]
-
-        predator_list = [a for a in self.agents if "predator" in a]
-        prey_list = [a for a in self.agents if "prey" in a]
-
-        predator_positions = chosen_positions[: len(predator_list)]
-        prey_positions = chosen_positions[len(predator_list) : len(predator_list) + len(prey_list)]
-        grass_positions = chosen_positions[len(predator_list) + len(prey_list) :]
-
-        return predator_list, prey_list, predator_positions, prey_positions, grass_positions
-
-    def _place_walls(self, wall_positions):
-        """
-        Place walls into the grid world state.
-        """
-        self.wall_positions = wall_positions
-        self.grid_world_state[0, :, :] = 0.0  # Clear wall channel
-        for (wx, wy) in wall_positions:
-            self.grid_world_state[0, wx, wy] = 1.0
-
-    def _place_predators(self, predator_list, predator_positions):
-    #-------- Placement method for predators --------
-        self.predator_positions = {}
-        for i, agent in enumerate(predator_list):
-            pos = predator_positions[i]
-            self.agent_positions[agent] = pos
-            self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-            self.cumulative_rewards[agent] = 0.0
-
-    def _place_prey(self, prey_list, prey_positions):
-    #-------- Placement method for prey --------
-        self.prey_positions = {}
-        for i, agent in enumerate(prey_list):
-            pos = prey_positions[i]
-            self.agent_positions[agent] = pos
-            self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-            self.cumulative_rewards[agent] = 0.0
-
-    def _place_grass(self, grass_positions):
-    #-------- Placement method for grass --------
-        self.grass_positions = {}
-        self.grass_energies = {}
-        for i, grass in enumerate(self.grass_agents):
-            pos = grass_positions[i]
-            self.grass_positions[grass] = pos
-            self.grass_energies[grass] = self.initial_energy_grass
-            self.grid_world_state[3, *pos] = self.initial_energy_grass
-
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
         # For stepwise display eating in grid
@@ -299,24 +203,16 @@ class PredPreyGrass(MultiAgentEnv):
         # Reset per-step infos
         self._pending_infos = {}
 
-        # step 0: Check for truncation
-        truncation_result = self._check_truncation_and_early_return(observations, rewards, terminations, truncations, infos)
-        if truncation_result is not None:
-            return truncation_result
+        # Step 1: Process energy depletion due to time steps and update age 
+        self._apply_time_step_update()
 
-        # Step 1: If not truncated; process energy depletion due to time steps and update age
-        self._apply_energy_decay_per_step(action_dict)
-
-        # Step 2: Update ages of all agents who act
-        self._apply_age_update(action_dict)
-
-        # Step 3: Regenerate grass energy
+        # Step 2: Regenerate grass energy
         self._regenerate_grass_energy()
 
-        # Step 4: process agent movements
+        # Step 3: process agent movements
         self._process_agent_movements(action_dict)
 
-        # Step 5: Handle agent engagements (optimized)
+        # Step 4: Handle agent engagements (optimized)
         # Precompute position-to-agent mappings for prey and grass for O(1) lookup
         prey_pos_map = {tuple(pos): prey for prey, pos in self.agent_positions.items() if "prey" in prey}
         grass_pos_map = {tuple(pos): grass for grass, pos in self.grass_positions.items()}
@@ -355,6 +251,8 @@ class PredPreyGrass(MultiAgentEnv):
                         if k in timings:
                             engage_totals[k] += timings[k]
                     engage_counts += 1
+        if engage_counts > 0 and getattr(self, "debug_mode", False):
+            print('[PROFILE-ENGAGE-SUMMARY] ' + ' '.join(f'{k}={engage_totals[k]:.6f}' for k in engage_subsections))
 
         # Step 6: Handle agent removals
         for agent in self.agents[:]:
@@ -442,21 +340,24 @@ class PredPreyGrass(MultiAgentEnv):
         # Increment step counter
         self.current_step += 1
 
-        return observations, rewards, terminations, truncations, infos
+        if self.current_step >= self.max_steps:
+            for agent in self.possible_agents:
+                if agent in self.agents:  # Active agents get observation
+                    observations[agent] = self._get_observation(agent)
+                else:  # Inactive agents get empty observation
+                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+                    observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
 
-    def _get_movement_energy_cost(self, agent, current_position, new_position):
-        """
-        Calculate energy cost for movement based on distance and a configurable factor.
-        """
-        distance_factor = self.config["move_energy_cost_factor"]
-        # print(f"Distance factor: {distance_factor}")
-        current_energy = self.agent_energies[agent]
-        # print(f"Current energy: {current_energy}")
-        # distance gigh type =[0.00,1.00, 1.41, 2.00, 2.24, 2.83]
-        distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
-        # print (f"Distance: {distance}")
-        energy_cost = distance * distance_factor * current_energy
-        return energy_cost
+                rewards[agent] = 0.0
+                truncations[agent] = True
+                terminations[agent] = False
+
+            truncations["__all__"] = True
+            terminations["__all__"] = False
+            return observations, rewards, terminations, truncations, infos
+
+        return observations, rewards, terminations, truncations, infos
 
     def _get_move(self, agent, action: int):
         """
@@ -663,153 +564,59 @@ class PredPreyGrass(MultiAgentEnv):
             print(f"│ {prefix}{line.ljust(max_width)}{suffix} │")
         print(f"└{border}┘")
 
-    def _check_truncation_and_early_return(self, observations, rewards, terminations, truncations, infos):
+    def _apply_time_step_update(self):
         """
-        If the max step limit is reached, populate outputs and return early.
-
-        Returns:
-            A 5-tuple (obs, rewards, terminations, truncations, infos) if truncated.
-            Otherwise, returns None.
+        Apply all per-step updates (energy decay, age increment).
         """
-        if self.current_step >= self.max_steps:
-            for agent in self.possible_agents:
-                if agent in self.agents:  # Active agents get observation
-                    observations[agent] = self._get_observation(agent)
-                else:  # Inactive agents get empty observation
-                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-                    observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+        for agent in self.agents:
+            layer = 1 if "predator" in agent else 2
+            if layer == 1:
+                energy_decay = self.energy_loss_per_step_predator
+                self.agent_energies[agent] -= energy_decay
+                self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
+            elif layer == 2:
+                energy_decay = self.energy_loss_per_step_prey
+                self.agent_energies[agent] -= energy_decay
+                self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-                rewards[agent] = 0.0
-                truncations[agent] = True
-                terminations[agent] = False
-
-            truncations["__all__"] = True
-            terminations["__all__"] = False
-            return observations, rewards, terminations, truncations, infos
-
-        return None
-
-    def _apply_energy_decay_per_step(self, action_dict):
-        """
-        Apply fixed per-step energy decay to all active (alive) agents based on type.
-        """
-        # Vectorized energy decay for all agents
-        agent_ids = list(self.agent_positions.keys())
-        energies = np.array([self.agent_energies[agent] for agent in agent_ids])
-        is_predator = np.array(["predator" in agent for agent in agent_ids])
-        is_prey = np.array(["prey" in agent for agent in agent_ids])
-        decay_pred = self.energy_loss_per_step_predator
-        decay_prey = self.energy_loss_per_step_prey
-        decay = np.where(is_predator, decay_pred, np.where(is_prey, decay_prey, 0.0))
-        old_energies = energies.copy()
-        energies -= decay
-        # Update agent energies and per-step deltas
-        for i, agent in enumerate(agent_ids):
-            self.agent_energies[agent] = energies[i]
+            self.agent_ages[agent] += 1
             self._per_agent_step_deltas[agent] = {
-                "decay": -decay[i],
+                "decay": -energy_decay,
                 "move": 0.0,
                 "eat": 0.0,
                 "repro": 0.0,
             }
-            layer = 1 if is_predator[i] else 2 if is_prey[i] else None
-            if layer is not None:
-                self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
-            self._log(
-                self.verbose_decay,
-                f"[DECAY] {agent} energy: {round(old_energies[i], 2)} -> {round(self.agent_energies[agent], 2)}",
-                "red",
-            )
-
-    def _apply_age_update(self, action_dict):
-        """
-        Increment the age of each active (alive) agent by one step.
-        """
-        # Vectorized age update for all agents
-        agent_ids = list(self.agent_positions.keys())
-        ages = np.array([self.agent_ages[agent] for agent in agent_ids])
-        ages += 1
-        for i, agent in enumerate(agent_ids):
-            self.agent_ages[agent] = ages[i]
 
     def _regenerate_grass_energy(self):
         """
         Increase energy of all grass patches, capped at initial energy value.
         """
-        # Vectorized grass energy regeneration
-        max_energy_grass = self.config["max_energy_grass"]
-        grass_ids = list(self.grass_positions.keys())
-        if not grass_ids:
-            return
-        positions = np.array([self.grass_positions[g] for g in grass_ids])
-        energies = np.array([self.grass_energies[g] for g in grass_ids])
-        new_energies = np.minimum(energies + self.energy_gain_per_step_grass, max_energy_grass)
-        # Vectorized update for grass energies and grid
-        for i, grass in enumerate(grass_ids):
-            self.grass_energies[grass] = new_energies[i]
-        if len(positions) > 0:
-            self.grid_world_state[3, positions[:,0], positions[:,1]] = new_energies
+        for grass, pos in self.grass_positions.items():
+            old_energy = self.grass_energies[grass]
+            new_energy = min(old_energy + self.energy_gain_per_step_grass, self.max_energy_grass)
+            self.grass_energies[grass] = new_energy
+            self.grid_world_state[3, pos[0], pos[1]] = new_energy
 
     def _process_agent_movements(self, action_dict):
         """
-        Process movement, energy cost, and grid updates for all agents.
+        Process movement and grid updates for all agents (non-vectorized, simple loop).
         """
-        # Vectorized movement for all agents in action_dict
-        agent_ids = [agent for agent in action_dict if agent in self.agent_positions]
-        old_positions = np.array([self.agent_positions[agent] for agent in agent_ids])
-        actions = np.array([action_dict[agent] for agent in agent_ids])
-        new_positions = []
-        for i, agent in enumerate(agent_ids):
-            new_pos = self._get_move(agent, actions[i])
-            new_positions.append(new_pos)
-        new_positions = np.array(new_positions)
-
-        # Vectorized grid state update for all agents
-        move_costs = np.array([
-            self._get_movement_energy_cost(agent, tuple(old_positions[i]), tuple(new_positions[i]))
-            for i, agent in enumerate(agent_ids)
-        ])
-        for i, agent in enumerate(agent_ids):
-            self.agent_energies[agent] -= move_costs[i]
-            self._per_agent_step_deltas[agent]["move"] = -move_costs[i]
+        for agent in action_dict.keys():
+            old_position = self.agent_positions[agent]
+            action = action_dict[agent]
+            new_position = self._get_move(agent, action)
+            if "predator" in agent:
+                self.predator_positions[agent] = tuple(new_position)
+                self.grid_world_state[1, old_position[0], old_position[1]] = 0
+                self.grid_world_state[1, new_position[0], new_position[1]] = self.agent_energies[agent]
+            elif "prey" in agent:
+                self.prey_positions[agent] = tuple(new_position)
+                self.grid_world_state[2, old_position[0], old_position[1]] = 0
+                self.grid_world_state[2, new_position[0], new_position[1]] = self.agent_energies[agent]
             uid = self.unique_agents[agent]
-            self.unique_agent_stats[uid]["distance_traveled"] += np.linalg.norm(np.array(new_positions[i]) - np.array(old_positions[i]))
-            self.unique_agent_stats[uid]["energy_spent"] += move_costs[i]
             self.unique_agent_stats[uid]["avg_energy_sum"] += self.agent_energies[agent]
             self.unique_agent_stats[uid]["avg_energy_steps"] += 1
-            self.agent_positions[agent] = tuple(new_positions[i])
-        # Prepare masks for predators and prey
-        is_predator = np.array(["predator" in agent for agent in agent_ids])
-        is_prey = np.array(["prey" in agent for agent in agent_ids])
-        # Old and new positions for each type
-        old_pred = old_positions[is_predator]
-        new_pred = new_positions[is_predator]
-        pred_energies = np.array([self.agent_energies[agent_ids[i]] for i in range(len(agent_ids)) if is_predator[i]])
-        old_prey = old_positions[is_prey]
-        new_prey = new_positions[is_prey]
-        prey_energies = np.array([self.agent_energies[agent_ids[i]] for i in range(len(agent_ids)) if is_prey[i]])
-        # Zero out old positions
-        if len(old_pred) > 0:
-            self.grid_world_state[1, old_pred[:,0], old_pred[:,1]] = 0
-        if len(old_prey) > 0:
-            self.grid_world_state[2, old_prey[:,0], old_prey[:,1]] = 0
-        # Set new positions with updated energies
-        if len(new_pred) > 0:
-            self.grid_world_state[1, new_pred[:,0], new_pred[:,1]] = pred_energies
-        if len(new_prey) > 0:
-            self.grid_world_state[2, new_prey[:,0], new_prey[:,1]] = prey_energies
-        # Logging (optional, keep per-agent for now)
-        for i, agent in enumerate(agent_ids):
-            old_position = tuple(old_positions[i])
-            new_position = tuple(new_positions[i])
-            move_cost = move_costs[i]
-            self._log(
-                self.verbose_movement,
-                f"[MOVE] {agent} moved: {tuple(map(int, old_position))} -> {tuple(map(int, new_position))}. "
-                f"Move energy: {move_cost:.2f} Energy level: {self.agent_energies[agent]:.2f}\n",
-                "blue",
-            )
+            self.agent_positions[agent] = tuple(new_position)
 
     def _handle_energy_decay(self, agent, observations, rewards, terminations, truncations):
         self._log(self.verbose_decay, f"[DECAY] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.", "red")
@@ -825,7 +632,7 @@ class PredPreyGrass(MultiAgentEnv):
         stat["death_step"] = self.current_step
 
         stat["death_cause"] = "starved"  # or "eaten"
-    # removed final_energy: not used
+        # removed final_energy: not used
         steps = max(stat["avg_energy_steps"], 1)
         stat["avg_energy"] = stat["avg_energy_sum"] / steps
         # Fix: Always use the agent's own cumulative reward, not another agent's value
@@ -1289,27 +1096,6 @@ class PredPreyGrass(MultiAgentEnv):
             "avg_energy": None,
         }
 
-    def _get_type_specific(self, key: str, agent_id: str):
-        raw_val = getattr(self, f"{key}_config", 0.0)
-        if isinstance(raw_val, dict):
-            for k in raw_val:
-                if agent_id.startswith(k):
-                    return raw_val[k]
-            raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
-        return raw_val
-
-    def _precompute_los_mask(self, observation_range):
-        offset = (observation_range - 1) // 2
-        mask = np.zeros((observation_range, observation_range), dtype=np.float32)
-        center = (offset, offset)
-        for dx in range(-offset, offset + 1):
-            for dy in range(-offset, offset + 1):
-                tx, ty = center[0] + dx, center[1] + dy
-                # Convert window offset to global grid offset as needed
-                if self._line_of_sight_clear(center, (tx, ty)):
-                    mask[tx, ty] = 1.0
-        return mask
-
     def get_total_energy_by_type(self):
         """
         Returns a dict with total energy by category:
@@ -1388,3 +1174,125 @@ class PredPreyGrass(MultiAgentEnv):
             if group in energy_spent:
                 energy_spent[group] += stats.get("energy_spent", 0.0)
         return energy_spent
+
+    def _get_type_specific(self, key: str, agent_id: str):
+        raw_val = getattr(self, f"{key}_config", 0.0)
+        if isinstance(raw_val, dict):
+            for k in raw_val:
+                if agent_id.startswith(k):
+                    return raw_val[k]
+            raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
+        return raw_val
+
+    #-------- Reset placement methods grid world entities --------
+    def _create_and_place_grid_world_entities(self):
+        """
+        Place and create all entities (walls, predators, prey, grass) into the grid world state.
+        """
+        self.wall_positions = self._create_wall_positions()
+        predator_list, prey_list, predator_positions, prey_positions, grass_positions = self._sample_agent_and_grass_positions()
+        self._place_walls(self.wall_positions)
+        self._place_predators(predator_list, predator_positions)
+        self._place_prey(prey_list, prey_positions)
+        self._place_grass(grass_positions)
+  
+    # -------- Reset wall placement methods --------
+    def _create_wall_positions(self):
+        """
+        Compute wall positions in the environment according to the placement mode and return as a set.
+        """
+        wall_positions = set()
+        raw_positions = self.manual_wall_positions or []
+        added = 0
+        for pos in raw_positions:
+            x, y = pos
+            if 0 <= x < self.grid_size and 0 <= y < self.grid_size:
+                if (x, y) not in wall_positions:
+                    wall_positions.add((x, y))
+                    added += 1
+            else:
+                if self.debug_mode:
+                    print(f"[Walls] Skipping out-of-bounds {(x, y)}")
+        if added == 0 and self.manual_wall_positions:
+            if self.debug_mode:
+                print("[Walls] No valid manual wall positions provided; resulting set is empty.")
+        # If manual_wall_positions is empty, leave wall_positions empty (explicit)
+        return wall_positions
+
+    # -------- Reset other entity placement methods --------
+    def _sample_agent_and_grass_positions(self):
+        """
+        Sample free positions for all entities and return lists for placement.
+        Returns:
+            predator_list, prey_list, predator_positions, prey_positions, grass_positions
+        """
+        num_grid_cells = self.grid_size * self.grid_size
+        num_agents_and_grass = len(self.agents) + len(self.grass_agents)
+        free_non_wall_indices = [i for i in range(num_grid_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
+
+        chosen_grid_indices = self.rng.choice(free_non_wall_indices, size=num_agents_and_grass, replace=False)
+        chosen_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen_grid_indices]
+
+        predator_list = [a for a in self.agents if "predator" in a]
+        prey_list = [a for a in self.agents if "prey" in a]
+
+        predator_positions = chosen_positions[: len(predator_list)]
+        prey_positions = chosen_positions[len(predator_list) : len(predator_list) + len(prey_list)]
+        grass_positions = chosen_positions[len(predator_list) + len(prey_list) :]
+
+        return predator_list, prey_list, predator_positions, prey_positions, grass_positions
+
+    def _place_walls(self, wall_positions):
+        """
+        Place walls into the grid world state.
+        """
+        self.wall_positions = wall_positions
+        self.grid_world_state[0, :, :] = 0.0  # Clear wall channel
+        for (wx, wy) in wall_positions:
+            self.grid_world_state[0, wx, wy] = 1.0
+
+    #-------- Placement method for predators --------
+    def _place_predators(self, predator_list, predator_positions):
+        self.predator_positions = {}
+        for i, agent in enumerate(predator_list):
+            pos = predator_positions[i]
+            self.agent_positions[agent] = pos
+            self.predator_positions[agent] = pos
+            self.agent_energies[agent] = self.initial_energy_predator
+            self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.cumulative_rewards[agent] = 0.0
+
+    #-------- Placement method for prey --------
+    def _place_prey(self, prey_list, prey_positions):
+        self.prey_positions = {}
+        for i, agent in enumerate(prey_list):
+            pos = prey_positions[i]
+            self.agent_positions[agent] = pos
+            self.prey_positions[agent] = pos
+            self.agent_energies[agent] = self.initial_energy_prey
+            self.grid_world_state[2, *pos] = self.initial_energy_prey
+            self.cumulative_rewards[agent] = 0.0
+
+    #-------- Placement method for grass --------
+    def _place_grass(self, grass_positions):
+        self.grass_positions = {}
+        self.grass_energies = {}
+        for i, grass in enumerate(self.grass_agents):
+            pos = grass_positions[i]
+            self.grass_positions[grass] = pos
+            self.grass_energies[grass] = self.initial_energy_grass
+            self.grid_world_state[3, *pos] = self.initial_energy_grass
+
+
+    def _precompute_los_mask(self, observation_range):
+        offset = (observation_range - 1) // 2
+        mask = np.zeros((observation_range, observation_range), dtype=np.float32)
+        center = (offset, offset)
+        for dx in range(-offset, offset + 1):
+            for dy in range(-offset, offset + 1):
+                tx, ty = center[0] + dx, center[1] + dy
+                # Convert window offset to global grid offset as needed
+                if self._line_of_sight_clear(center, (tx, ty)):
+                    mask[tx, ty] = 1.0
+        return mask
+

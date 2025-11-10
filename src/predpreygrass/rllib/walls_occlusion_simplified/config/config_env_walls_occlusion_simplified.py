@@ -1,5 +1,5 @@
 config_env = {
-    "seed": 42,
+    "seed": 5,
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
@@ -52,9 +52,9 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 50,
     "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 10,
+    "n_initial_active_type_1_predator": 30,
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 10,
+    "n_initial_active_type_1_prey": 30,
     "n_initial_active_type_2_prey": 0,
     # mutation settings
     "mutation_rate_predator": 0.0,

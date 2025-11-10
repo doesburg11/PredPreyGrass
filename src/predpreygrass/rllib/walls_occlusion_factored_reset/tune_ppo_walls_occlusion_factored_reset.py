@@ -19,6 +19,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
+import shutil
 
 
 def get_config_ppo():
@@ -63,9 +64,16 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_REFACTORED_RESET_{timestamp}"
+    version = "works_11"
+    experiment_name = f"PPO_REFACTORED_RESET_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
+
     experiment_path.mkdir(parents=True, exist_ok=True)
+    # --- Save environment source file for provenance ---
+    source_dir = experiment_path / "SOURCE_CODE"
+    source_dir.mkdir(exist_ok=True)
+    env_file = Path(__file__).parent / "predpreygrass_rllib_env_factored_reset.py"
+    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_factored_reset_{version}.py")
 
     config_ppo = get_config_ppo()
     config_metadata = {
