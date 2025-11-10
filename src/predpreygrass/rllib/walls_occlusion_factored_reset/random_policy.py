@@ -19,6 +19,9 @@ from predpreygrass.rllib.walls_occlusion_factored_reset.utils.pygame_grid_render
 
 # external libraries
 import pygame
+import random
+import numpy as np
+
 
 
 def env_creator(config):
@@ -32,11 +35,16 @@ def random_policy_pi(agent_id, env):
 if __name__ == "__main__":
     # Inject walls into config (if not already present)
     cfg = dict(config_env)
-    cfg.setdefault("num_walls", 20)  # default number of walls for visualization
+    seed = cfg["seed"]
+    random.seed(seed)
+    np.random.seed(seed)
     # Enable visibility (occlusion) channel so observations include LOS mask as final channel
-    cfg.setdefault("include_visibility_channel", True)
     env = env_creator(cfg)
-    observations, _ = env.reset(seed=cfg.get("seed", 42))
+    observations, _ = env.reset(seed=seed)
+
+    # Seed all action spaces for reproducibility
+    for space in env.action_spaces.values():
+        space.seed(seed)
 
     # Debug: print one observation shape to confirm visibility channel present
     if observations:
@@ -67,24 +75,14 @@ if __name__ == "__main__":
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
 
         # --- Update visualizer ---
-        try:
-            visualizer.update(
-                grass_positions=env.grass_positions,
-                grass_energies=env.grass_energies,
-                step=env.current_step,
-                agents_just_ate=env.agents_just_ate,
-                per_step_agent_data=env.per_step_agent_data,
-                walls=getattr(env, "wall_positions", None),
-            )
-        except TypeError:
-            # Fallback for legacy renderer without `walls` kwarg
-            visualizer.update(
-                grass_positions=env.grass_positions,
-                grass_energies=env.grass_energies,
-                step=env.current_step,
-                agents_just_ate=env.agents_just_ate,
-                per_step_agent_data=env.per_step_agent_data,
-            )
+        visualizer.update(
+            grass_positions=env.grass_positions,
+            grass_energies=env.grass_energies,
+            step=env.current_step,
+            agents_just_ate=env.agents_just_ate,
+            per_step_agent_data=env.per_step_agent_data,
+            walls=getattr(env, "wall_positions", None),
+        )
 
         terminated = any(terminations.values())
         truncated = any(truncations.values())
@@ -92,5 +90,6 @@ if __name__ == "__main__":
         # Frame rate control
         clock.tick(visualizer.target_fps)
 
+    print(f"Episode ended at step: {env.current_step}")
     visualizer.close()
     env.close()
