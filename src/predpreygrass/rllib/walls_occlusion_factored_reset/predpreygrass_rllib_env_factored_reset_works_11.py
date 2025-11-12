@@ -2,13 +2,18 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
-
+- rename _handle_energy_decay into _handle_energy_starvation
+- remove arguments (obs, rew, term, trunc, inf) from _handlers
+- replace observations dict with self.observations attribute
+- replace rewards dict with self.rewards attribute
+- replace terminations dict with self.terminations attribute
+- replace truncations dict with self.truncations attribute
+- replace infos dict with self.infos attribute
 """
 # external libraries (Ray required)
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import numpy as np
-from collections import deque
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -128,14 +133,6 @@ class PredPreyGrass(MultiAgentEnv):
         self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
-        # Track all agent IDs that have ever been active in this episode to prevent reuse
-        self.used_agent_ids = set()
-        # Capacity block counters (episode-level)
-        self.reproduction_blocked_due_to_capacity_predator = 0
-        self.reproduction_blocked_due_to_capacity_prey = 0
-        # Episode-level spawn counters
-        self.spawned_predators = 0
-        self.spawned_prey = 0
 
         self.agents_just_ate = set()
         self.cumulative_rewards = {}
@@ -167,7 +164,6 @@ class PredPreyGrass(MultiAgentEnv):
                     agent_id = f"type_{type}_{agent_type}_{i}"
                     self.agents.append(agent_id)
                     self._register_new_agent(agent_id)
-                    # _register_new_agent already adds to used_agent_ids
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
 
@@ -184,60 +180,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_to_move_tuple_type_1_agents = _generate_action_map(self.type_1_act_range)
         self.action_to_move_tuple_type_2_agents = _generate_action_map(self.type_2_act_range)
-
-        # Initialize per-type available ID pools (never reuse within an episode)
-        self._init_available_id_pools()
-        # Print-once guard for termination debug logs (per episode)
-        self._printed_termination_ids = set()
-
-    def _init_available_id_pools(self):
-        """Build deques of never-used IDs per species/type for O(1) allocation.
-
-        Pools are initialized with all possible IDs from config, then filtered to exclude
-        any IDs that are already used in this episode (initial actives). IDs are never
-        returned to the pool until reset.
-        """
-        pools = {
-            "type_1_predator": deque(),
-            "type_2_predator": deque(),
-            "type_1_prey": deque(),
-            "type_2_prey": deque(),
-        }
-
-        # Populate in deterministic order
-        for i in range(self.n_possible_type_1_predators):
-            aid = f"type_1_predator_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_1_predator"].append(aid)
-        for i in range(self.n_possible_type_2_predators):
-            aid = f"type_2_predator_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_2_predator"].append(aid)
-        for i in range(self.n_possible_type_1_prey):
-            aid = f"type_1_prey_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_1_prey"].append(aid)
-        for i in range(self.n_possible_type_2_prey):
-            aid = f"type_2_prey_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_2_prey"].append(aid)
-
-        self._available_id_pools = pools
-
-    def _alloc_new_id(self, species: str, type_nr: int):
-        """Allocate a fresh agent ID from the per-type pool or return None if exhausted.
-
-        Ensures the returned ID has not been used earlier in this episode and is not currently active.
-        """
-        key = f"type_{type_nr}_{species}"
-        dq = self._available_id_pools.get(key)
-        if dq is None:
-            return None
-        while dq:
-            cand = dq.popleft()
-            if cand not in self.used_agent_ids and cand not in self.agents:
-                return cand
-        return None
 
     def reset(self, *, seed=None, options=None):
         """
@@ -329,8 +271,9 @@ class PredPreyGrass(MultiAgentEnv):
                 elif agent in prey_pos:
                     prey_pos.pop(agent, None)
                 # Keep agent_ages/parents for history unless explicitly pruned elsewhere
-                # Keep termination/truncation entries; they'll be returned once more this step.
-                # self.truncations.pop(agent, None)  # preserve for return protocol
+                # Optionally shrink step dicts
+                terminations.pop(agent, None)
+                self.truncations.pop(agent, None)
 
             # Rebuild active agent list without repeated O(n) list.remove calls
             self.agents = [a for a in self.agents if a not in to_remove_set]
@@ -351,34 +294,22 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
 
-        # Step 8: Assemble return dicts.
-        # Generate observations for all still-active agents AFTER engagements and reproduction.
+        # Step 8: Generate observations for all active agents AFTER all engagements in the step
         get_obs = self._get_observation
-        active_obs = {agent: get_obs(agent) for agent in self.agents}
-        self.observations.update(active_obs)  # Preserve any earlier terminal snapshots
+        positions = self.agent_positions
+        self.observations = {agent: get_obs(agent) for agent in self.agents}
 
-        # Union of all agent IDs referenced this step.
-        all_ids = set(self.observations) | set(self.terminations) | set(self.rewards) | set(self.truncations)
-
-        # Guarantee observation presence for terminated agents that didn't have a snapshot captured earlier.
-        for aid in all_ids:
-            if aid not in self.observations:
-                if "predator" in aid:
-                    obs_range = self.predator_obs_range
-                elif "prey" in aid:
-                    obs_range = self.prey_obs_range
-                else:
-                    continue  # Skip non-learning entities if any
-                channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-                self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
-
-        # Fill defaults for missing reward/termination/truncation keys (without erasing True terminations).
-        self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in all_ids}
-        self.terminations = {aid: self.terminations.get(aid, False) for aid in all_ids}
-        self.truncations = {aid: self.truncations.get(aid, False) for aid in all_ids}
+        # output only self.observations, self.rewards for active agents
+        self.observations = {agent: self.observations[agent] for agent in self.agents if agent in self.observations}
+        self.rewards = {agent: self.rewards[agent] for agent in self.agents if agent in self.rewards}
+        self.terminations = {agent: self.terminations[agent] for agent in self.agents if agent in self.terminations}
+        self.truncations = {agent: self.truncations[agent] for agent in self.agents if agent in self.truncations}
+        self.truncations["__all__"] = False  # already handled earlier in the step
         self.terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
-        self.truncations["__all__"] = False
-        self.infos = {aid: self._pending_infos.get(aid, {}) for aid in all_ids}
+
+        # Provide self.infos accumulated during the step
+        self.infos = {agent: self._pending_infos.get(agent, {}) for agent in self.agents}
+
         step_data = {}
         for agent in self.agents:
             pos = self.agent_positions[agent]
@@ -403,64 +334,19 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step += 1
 
         if self.current_step >= self.max_steps:
-            # Final time-limit step: include active agents as truncated=True, and
-            # any agents that terminated this step as termination=True with final obs.
-            obs, rews, terms, truncs, infos = {}, {}, {}, {}, {}
-
-            terminated_this_step = {aid for aid, t in self.terminations.items() if t}
-            active_now = set(self.agents)
-
-            # Active agents -> truncated=True, terminated=False
-            for agent in active_now:
-                obs[agent] = self._get_observation(agent)
-                rews[agent] = self.rewards.get(agent, 0.0)
-                truncs[agent] = True
-                terms[agent] = False
-                infos[agent] = self._pending_infos.get(agent, {})
-
-            # Agents that died this step -> termination=True, truncated=False
-            for agent in terminated_this_step:
-                # Preserve any earlier captured final obs; else generate a zero fallback
-                if agent in self.observations:
-                    obs[agent] = self.observations[agent]
-                else:
-                    if "predator" in agent:
-                        rng = self.predator_obs_range
-                    elif "prey" in agent:
-                        rng = self.prey_obs_range
-                    else:
-                        continue
+            for agent in self.possible_agents:
+                if agent in self.agents:  # Active agents get observation
+                    self.observations[agent] = self._get_observation(agent)
+                else:  # Inactive agents get empty observation
+                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
                     channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-                    obs[agent] = np.zeros((channels, rng, rng), dtype=np.float32)
-
-                rews[agent] = self.rewards.get(agent, 0.0)
-                terms[agent] = True
-                truncs[agent] = False
-                infos[agent] = self._pending_infos.get(agent, {})
-
-            truncs["__all__"] = True
-            terms["__all__"] = False
-
-            # Overwrite step-assembled dicts to only contain final-step relevant agents.
-            self.observations, self.rewards = obs, rews
-            self.terminations, self.truncations, self.infos = terms, truncs, infos
-            # Episode-end console summary (time limit)
-            print(
-                f"[EPISODE-SUMMARY] End by time at step {self.current_step}: "
-                f"blocked_pred={self.reproduction_blocked_due_to_capacity_predator}, "
-                f"blocked_prey={self.reproduction_blocked_due_to_capacity_prey}, "
-                f"spawned_pred={self.spawned_predators}, spawned_prey={self.spawned_prey}"
-            )
+                    self.observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+                self.rewards[agent] = 0.0
+                self.truncations[agent] = True
+                self.terminations[agent] = False
+            self.truncations["__all__"] = True
+            self.terminations["__all__"] = False
             return self.observations, self.rewards, self.terminations, self.truncations, self.infos
-
-        # If episode ended by termination condition this step, print summary
-        if self.terminations.get("__all__", False):
-            print(
-                f"[EPISODE-SUMMARY] End by termination at step {self.current_step}: "
-                f"blocked_pred={self.reproduction_blocked_due_to_capacity_predator}, "
-                f"blocked_prey={self.reproduction_blocked_due_to_capacity_prey}, "
-                f"spawned_pred={self.spawned_predators}, spawned_prey={self.spawned_prey}"
-            )
 
         return self.observations, self.rewards, self.terminations, self.truncations, self.infos
 
@@ -714,18 +600,10 @@ class PredPreyGrass(MultiAgentEnv):
             print(f"│ {prefix}{line.ljust(max_width)}{suffix} │")
         print(f"└{border}┘")
 
-    def _debug_print_termination_once(self, agent: str):
-        """Print termination debug message only once per agent per episode."""
-        if agent not in getattr(self, "_printed_termination_ids", set()):
-            print(f"[DEBUG] self.terminations[{agent}] = True")
-            self._printed_termination_ids.add(agent)
-
     def _handle_energy_starvation(self, agent):
         self.observations[agent] = self._get_observation(agent)
         self.rewards[agent] = 0
-
         self.terminations[agent] = True
-        self._debug_print_termination_once(agent)
         self.truncations[agent] = False
 
         layer = 1 if "predator" in agent else 2
@@ -767,11 +645,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[uid]["energy_gained"] += energy_gain
             self.unique_agent_stats[uid]["cumulative_reward"] += self.rewards[agent]
             # attribution prey
-            # Capture a final observation for the caught prey at the moment of termination
-            # so RLlib registers the terminal step properly.
-            self.observations[caught_prey] = self._get_observation(caught_prey)
             self.terminations[caught_prey] = True
-            self._debug_print_termination_once(caught_prey)
             self.rewards[caught_prey] = self._get_type_specific("penalty_prey_caught", caught_prey)
             self.cumulative_rewards.setdefault(caught_prey, 0.0)
             self.cumulative_rewards[caught_prey] += self.rewards[caught_prey]
@@ -834,28 +708,25 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 new_type = parent_type
 
-            # Find available new agent ID using pool allocator
-            new_agent = self._alloc_new_id("predator", new_type)
-            if not new_agent:
-                # Capacity exhausted: record metric + info flag and still award reproduction reward.
-                self.reproduction_blocked_due_to_capacity_predator += 1
+            # Find available new agent ID
+            potential_new_ids = [
+                f"type_{new_type}_predator_{i}"
+                for i in range(self.config[f"n_possible_type_{new_type}_predators"])
+                if f"type_{new_type}_predator_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
                 self.rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
                 self.cumulative_rewards.setdefault(agent, 0)
                 self.cumulative_rewards[agent] += self.rewards[agent]
-                self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
-                self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_predator"] = self.reproduction_blocked_due_to_capacity_predator
-                # Print immediately to console as requested (not gated by verbose flags)
-                print(
-                    f"[CAPACITY] Predator reproduction blocked at step {self.current_step}: "
-                    f"type={new_type}, agent={agent}, total_blocked={self.reproduction_blocked_due_to_capacity_predator}"
-                )
                 self._log(
                     self.verbose_reproduction,
-                    f"[REPRODUCTION] Predator capacity exhausted (type {new_type}); blocked count={self.reproduction_blocked_due_to_capacity_predator}",
+                    f"[REPRODUCTION] No available predator slots at type {new_type} for spawning",
                     "red",
                 )
                 return
 
+            new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -870,8 +741,6 @@ class PredPreyGrass(MultiAgentEnv):
             child_uid = self.unique_agents[new_agent]
             self.agent_live_offspring_ids[agent].append(child_uid)
             self.agent_offspring_counts[agent] += 1
-            # Count successful predator spawns
-            self.spawned_predators += 1
 
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
@@ -928,28 +797,23 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 new_type = parent_type
 
-            # Find available new agent ID using pool allocator
-            new_agent = self._alloc_new_id("prey", new_type)
-            if not new_agent:
-                # Capacity exhausted: record metric + info flag and still award reproduction reward.
-                self.reproduction_blocked_due_to_capacity_prey += 1
+            # Find available new agent ID
+            potential_new_ids = [
+                f"type_{new_type}_prey_{i}"
+                for i in range(self.config[f"n_possible_type_{new_type}_prey"])
+                if f"type_{new_type}_prey_{i}" not in self.agents
+            ]
+            if not potential_new_ids:
+                # Always grant reproduction reward, even if no slot available
                 self.rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
                 self.cumulative_rewards.setdefault(agent, 0)
                 self.cumulative_rewards[agent] += self.rewards[agent]
-                self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
-                self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_prey"] = self.reproduction_blocked_due_to_capacity_prey
-                # Print immediately to console as requested (not gated by verbose flags)
-                print(
-                    f"[CAPACITY] Prey reproduction blocked at step {self.current_step}: "
-                    f"type={new_type}, agent={agent}, total_blocked={self.reproduction_blocked_due_to_capacity_prey}"
-                )
                 self._log(
-                    self.verbose_reproduction,
-                    f"[REPRODUCTION] Prey capacity exhausted (type {new_type}); blocked count={self.reproduction_blocked_due_to_capacity_prey}",
-                    "red",
+                    self.verbose_reproduction, f"[REPRODUCTION] No available prey slots at type {new_type} for spawning", "red"
                 )
                 return
 
+            new_agent = potential_new_ids[0]
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -968,8 +832,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_offspring_counts[agent] += 1
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
-            # Count successful prey spawns
-            self.spawned_prey += 1
 
             # Spawn position
             occupied_positions = set(self.agent_positions.values())
@@ -1103,8 +965,6 @@ class PredPreyGrass(MultiAgentEnv):
         unique_id = f"{agent_id}_{reuse_index}"
         self.unique_agents[agent_id] = unique_id
         self.agent_activation_counts[agent_id] += 1
-        # Prevent reuse of agent IDs within the same episode
-        self.used_agent_ids.add(agent_id)
 
         self.agent_ages[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
