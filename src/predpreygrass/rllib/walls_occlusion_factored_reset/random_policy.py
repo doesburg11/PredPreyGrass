@@ -73,6 +73,8 @@ if __name__ == "__main__":
         # --- Step forward using random actions ---
         action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
+        print(f"Step {env.current_step}")
+        print(f"{terminations}")
 
         # --- Update visualizer ---
         visualizer.update(
@@ -84,8 +86,8 @@ if __name__ == "__main__":
             walls=getattr(env, "wall_positions", None),
         )
 
-        terminated = any(terminations.values())
-        truncated = any(truncations.values())
+        terminated =  env.terminations["__all__"]
+        truncated = env.truncations["__all__"]
 
         # Frame rate control
         clock.tick(visualizer.target_fps)
