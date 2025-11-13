@@ -1,0 +1,224 @@
+{
+    "seed": 42,
+    "max_steps": 1000,
+    "grid_size": 25,
+    "num_obs_channels": 4,
+    "predator_obs_range": 7,
+    "prey_obs_range": 9,
+    "type_1_action_range": 3,
+    "type_2_action_range": 0,
+    "reward_predator_catch_prey": {
+        "type_1_predator": 0.0,
+        "type_2_predator": 0.0
+    },
+    "reward_prey_eat_grass": {
+        "type_1_prey": 0.0,
+        "type_2_prey": 0.0
+    },
+    "reward_predator_step": {
+        "type_1_predator": 0.0,
+        "type_2_predator": 0.0
+    },
+    "reward_prey_step": {
+        "type_1_prey": 0.0,
+        "type_2_prey": 0.0
+    },
+    "penalty_prey_caught": {
+        "type_1_prey": 0.0,
+        "type_2_prey": 1.0
+    },
+    "reproduction_reward_predator": {
+        "type_1_predator": 10.0,
+        "type_2_predator": 0.0
+    },
+    "reproduction_reward_prey": {
+        "type_1_prey": 10.0,
+        "type_2_prey": 0.0
+    },
+    "energy_loss_per_step_predator": 0.15,
+    "energy_loss_per_step_prey": 0.05,
+    "predator_creation_energy_threshold": 12.0,
+    "prey_creation_energy_threshold": 8.0,
+    "move_energy_cost_factor": 0.0,
+    "initial_energy_predator": 5.0,
+    "initial_energy_prey": 3.0,
+    "n_possible_type_1_predators": 50,
+    "n_possible_type_2_predators": 0,
+    "n_possible_type_1_prey": 50,
+    "n_possible_type_2_prey": 0,
+    "n_initial_active_type_1_predator": 10,
+    "n_initial_active_type_2_predator": 0,
+    "n_initial_active_type_1_prey": 10,
+    "n_initial_active_type_2_prey": 0,
+    "mutation_rate_predator": 0.0,
+    "mutation_rate_prey": 0.0,
+    "initial_num_grass": 100,
+    "initial_energy_grass": 2.0,
+    "energy_gain_per_step_grass": 0.04,
+    "verbose_engagement": true,
+    "verbose_movement": false,
+    "verbose_decay": false,
+    "verbose_reproduction": false,
+    "debug_mode": false,
+    "mask_observation_with_visibility": true,
+    "include_visibility_channel": true,
+    "respect_los_for_movement": true,
+    "max_energy_gain_per_grass": Infinity,
+    "max_energy_gain_per_prey": Infinity,
+    "max_energy_predator": Infinity,
+    "max_energy_prey": Infinity,
+    "max_energy_grass": 2.0,
+    "reproduction_cooldown_steps": 0,
+    "reproduction_chance_predator": 1.0,
+    "reproduction_chance_prey": 1.0,
+    "energy_transfer_efficiency": 1.0,
+    "reproduction_energy_efficiency": 1.0,
+    "wall_placement_mode": "manual",
+    "num_walls": 0,
+    "manual_wall_positions": [
+        [
+            6,
+            6
+        ],
+        [
+            7,
+            6
+        ],
+        [
+            8,
+            6
+        ],
+        [
+            10,
+            6
+        ],
+        [
+            11,
+            6
+        ],
+        [
+            12,
+            6
+        ],
+        [
+            13,
+            6
+        ],
+        [
+            15,
+            6
+        ],
+        [
+            16,
+            6
+        ],
+        [
+            17,
+            6
+        ],
+        [
+            6,
+            17
+        ],
+        [
+            7,
+            17
+        ],
+        [
+            8,
+            17
+        ],
+        [
+            9,
+            17
+        ],
+        [
+            10,
+            17
+        ],
+        [
+            12,
+            17
+        ],
+        [
+            13,
+            17
+        ],
+        [
+            14,
+            17
+        ],
+        [
+            15,
+            17
+        ],
+        [
+            17,
+            17
+        ],
+        [
+            6,
+            7
+        ],
+        [
+            6,
+            8
+        ],
+        [
+            6,
+            9
+        ],
+        [
+            6,
+            11
+        ],
+        [
+            6,
+            12
+        ],
+        [
+            6,
+            13
+        ],
+        [
+            6,
+            14
+        ],
+        [
+            6,
+            16
+        ],
+        [
+            17,
+            7
+        ],
+        [
+            17,
+            8
+        ],
+        [
+            17,
+            9
+        ],
+        [
+            17,
+            10
+        ],
+        [
+            17,
+            11
+        ],
+        [
+            17,
+            13
+        ],
+        [
+            17,
+            14
+        ],
+        [
+            17,
+            15
+        ]
+    ]
+}
