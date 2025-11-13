@@ -717,7 +717,7 @@ class PredPreyGrass(MultiAgentEnv):
     def _debug_print_termination_once(self, agent: str):
         """Print termination debug message only once per agent per episode."""
         if agent not in getattr(self, "_printed_termination_ids", set()):
-            print(f"[DEBUG] self.terminations[{agent}] = True")
+            print(f"[DEBUG] self.terminations[{agent}] = {self.terminations[agent]}")
             self._printed_termination_ids.add(agent)
 
     def _handle_energy_starvation(self, agent):
