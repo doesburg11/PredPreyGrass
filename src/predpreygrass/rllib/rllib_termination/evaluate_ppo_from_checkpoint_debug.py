@@ -18,7 +18,7 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env_factored_reset import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
 from predpreygrass.rllib.rllib_termination.config.config_env_rllib_termination import config_env
 from predpreygrass.rllib.rllib_termination.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.rllib_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
@@ -251,10 +251,6 @@ def step_forward(
     # print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
     # print("----------------------------------------------")
 
-    # Inject unique ID per agent into step data
-    for agent_id, agent_data in env.per_step_agent_data[-1].items():
-        agent_data["unique_id"] = env.unique_agents[agent_id]
-
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
         snapshots.pop(0)
@@ -323,21 +319,21 @@ def render_static_if_paused(env, visualizer):
 
 def parse_uid(uid):
     """
-    Parse UID like 'type_1_predator_2_10' into sortable components:
-    → ('type_1_predator', 2, 10)
+    Parse agent id like 'type_1_predator_2#17' into sortable components:
+    → ('type_1_predator', 2, 17)
     """
-    match = re.match(r"(type_\d+_(?:predator|prey))_(\d+)_(\d+)", uid)
+    match = re.match(r"(type_\d+_(?:predator|prey))_(\d+)(?:#(\d+))?", uid)
     if match:
-        group, idx, reuse = match.groups()
-        return group, int(idx), int(reuse)
+        group, idx, lifetime = match.groups()
+        return group, int(idx), int(lifetime) if lifetime is not None else 0
     else:
-        return uid, float("inf"), float("inf")  # fallback for malformed uids
+        return uid, float("inf"), float("inf")  # fallback for malformed ids
 
 
 def print_ranked_reward_summary(env, total_reward):
     def _get_group_rewards(env):
         group_rewards = defaultdict(list)
-        for uid, stats in env.unique_agent_stats.items():
+        for uid, stats in env.get_all_agent_stats().items():
             reward = stats.get("cumulative_reward", 0.0)
             group, index, reuse = parse_uid(uid)
             group_rewards[group].append((uid, reward, index, reuse))
@@ -373,7 +369,7 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     def _get_group_stats(env):
         group_stats = defaultdict(list)
-        for uid, stats in env.unique_agent_stats.items():
+        for uid, stats in env.get_all_agent_stats().items():
             group, index, reuse = parse_uid(uid)
             reward = stats.get("cumulative_reward", 0.0)
             lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
@@ -440,7 +436,7 @@ def run_post_evaluation_plots(ceviz, pdviz):
 def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
     group_stats = defaultdict(list)
-    for uid, stats in env.unique_agent_stats.items():
+    for uid, stats in env.get_all_agent_stats().items():
         group, index, reuse = parse_uid(uid)
         lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
         group_stats[group].append(
@@ -562,7 +558,7 @@ if __name__ == "__main__":
         # Export all unique agent fitness stats
         agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
         with open(agent_fitness_path, "w") as f:
-            json.dump(env.unique_agent_stats, f, indent=2)
+            json.dump(env.get_all_agent_stats(), f, indent=2)
 
     print_ranked_fitness_summary(env)
 

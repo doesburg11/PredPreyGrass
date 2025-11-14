@@ -5,7 +5,7 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.rllib_termination.config.config_env_rllib_termination import config_env
 from predpreygrass.rllib.rllib_termination.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.rllib_termination.utils.networks import build_multi_module_spec
@@ -72,8 +72,8 @@ if __name__ == "__main__":
     # --- Save environment source file for provenance ---
     source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
-    env_file = Path(__file__).parent / "predpreygrass_rllib_env_factored_reset.py"
-    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_factored_reset_{version}.py")
+    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
+    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
     config_metadata = {
