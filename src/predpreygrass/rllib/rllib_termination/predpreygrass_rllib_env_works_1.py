@@ -78,16 +78,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_obs_channels = config["num_obs_channels"]
         self.predator_obs_range = config["predator_obs_range"]
         self.prey_obs_range = config["prey_obs_range"]
-        # Optional extra observation channel (appended as last channel) showing
-        # line-of-sight visibility (1 = visible, 0 = occluded by at least one wall).
-        # When disabled, observation tensors retain their original channel count.
         self.include_visibility_channel = config["include_visibility_channel"]
         # Movement restriction: if True, agents may only move to target cells with unobstructed LOS (no wall between current and target).
-        self.respect_los_for_movement = config["respect_los_for_movement"]
-        # If True, dynamic observation channels (predators/prey/grass) are masked so that
-        # entities behind walls (no line-of-sight) appear as 0 even if within square range.
-        # Works independently of include_visibility_channel; if that is False we still mask
-        # but do not append the visibility channel itself.
+        self.respect_los_for_movement = config["respect_los_for_movement"] # TODO is this even a problem in a Moore neighborhood?
         self.mask_observation_with_visibility = config["mask_observation_with_visibility"]
 
         # Grass settings
