@@ -13,7 +13,7 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.rllib_termination.config.config_env_rllib_termination import config_env
 from predpreygrass.rllib.rllib_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer
 

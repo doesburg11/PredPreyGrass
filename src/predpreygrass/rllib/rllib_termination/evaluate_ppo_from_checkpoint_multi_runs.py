@@ -1,4 +1,4 @@
-from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env_factored_reset import PredPreyGrass
+from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.rllib_termination.config.config_env_rllib_termination import config_env
 from predpreygrass.rllib.rllib_termination.utils.matplot_renderer import CombinedEvolutionVisualizer
 
