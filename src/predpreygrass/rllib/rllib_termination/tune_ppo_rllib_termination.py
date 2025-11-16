@@ -64,8 +64,8 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "clean_termination"
-    experiment_name = f"PPO_REFACTORED_RESET_{version}_{timestamp}"
+    version = "1_0"
+    experiment_name = f"PPO_KIN_REWARD_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
     experiment_path.mkdir(parents=True, exist_ok=True)
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     )
 
     max_iters = config_ppo["max_iters"]
-    checkpoint_every = 100
+    checkpoint_every = 10
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
