@@ -48,8 +48,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.penalty_prey_caught_config = config["penalty_prey_caught"]
         self.reproduction_reward_predator_config = config["reproduction_reward_predator"]
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
-        self.kin_kick_back_predator_config = config["kin_kick_back_predator"]
-        self.kin_kick_back_prey_config = config["kin_kick_back_prey"]
 
         # Energy settings
         self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
@@ -356,9 +354,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.truncations["__all__"] = False
         self.infos = {aid: self._pending_infos.get(aid, {}) for aid in all_ids}
         step_data = {}
-        kin_reward = 1.0
         alive_agents = set(self.agents)
         for agent in self.agents:
+            kin_reward = self._get_type_specific("kin_kick_back_predator", agent) \
+                if "predator" in agent else self._get_type_specific("kin_kick_back_prey", agent)
             pos = self.agent_positions[agent]
             energy = self.agent_energies[agent]
             deltas = self._per_agent_step_deltas.get(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
