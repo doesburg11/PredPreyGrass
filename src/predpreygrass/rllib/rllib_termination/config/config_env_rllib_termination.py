@@ -38,6 +38,14 @@ config_env = {
         "type_1_prey": 10.0,
         "type_2_prey": 0.0,
     },
+    "kin_kick_back_reward_predator": {
+        "type_1_predator": 0.0,
+        "type_2_predator": 0.0,
+    },
+    "kin_kick_back_reward_prey": {
+        "type_1_prey": 0.0,
+        "type_2_prey": 0.0,
+    },
     # Energy settings
     "energy_loss_per_step_predator": 0.15,
     "energy_loss_per_step_prey": 0.05,

@@ -123,10 +123,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/PPO_REFACTORED_RESET_clean_termination_2025-11-12_09-20-26/PPO_PredPreyGrass_7126e_00000_0_2025-11-12_09-20-26/"
+    checkpoint_root = "kin_kick_back=1.0/PPO_PredPreyGrass_e9a5c_00000_0_2025-11-16_16-07-05/"
     checkpoint_dir = "checkpoint_000001"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
-
     # training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
 
@@ -219,7 +218,6 @@ def step_backwards_if_requested(
         control.step_backward = False
     return None
 
-
 def step_forward(
     env,
     observations,
@@ -295,7 +293,6 @@ def step_forward(
 
     return observations, total_reward, terminations, truncations
 
-
 def render_static_if_paused(env, visualizer):
     try:
         visualizer.update(
@@ -316,7 +313,6 @@ def render_static_if_paused(env, visualizer):
             per_step_agent_data=env.per_step_agent_data,
         )
 
-
 def parse_uid(uid):
     """
     Parse agent id like 'type_1_predator_2#17' into sortable components:
@@ -328,7 +324,6 @@ def parse_uid(uid):
         return group, int(idx), int(lifetime) if lifetime is not None else 0
     else:
         return uid, float("inf"), float("inf")  # fallback for malformed ids
-
 
 def print_ranked_reward_summary(env, total_reward):
     def _get_group_rewards(env):
@@ -364,7 +359,6 @@ def print_ranked_reward_summary(env, total_reward):
     for line in lines[1:]:  # skip duplicate first line
         print(line.rstrip())
 
-
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     def _get_group_stats(env):
@@ -383,6 +377,7 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 "off_per_step": off_per_step,
                 "index": index,
                 "reuse": reuse,
+                "kin_kickbacks": stats.get("kin_kickbacks", 0),
             })
         return group_stats
 
@@ -395,14 +390,15 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             sorted_group = sorted(
                 group_stats[group], key=lambda x: (-x["reward"], x["index"], x["reuse"])
             )
-            lines.append(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13}\n")
+            lines.append(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13} | {'KinKick':>8}\n")
             for entry in sorted_group:
                 lines.append(
                     f"{entry['uid']:25} | "
                     f"{entry['reward']:8.2f} | "
                     f"{entry['lifetime']:6} | "
                     f"{entry['offspring']:4} | "
-                    f"{100*entry['off_per_step']:13.2f}\n"
+                    f"{100*entry['off_per_step']:13.2f} | "
+                    f"{entry['kin_kickbacks']:8}\n"
                 )
             # Print averages for this group
             n = len(sorted_group)
@@ -411,7 +407,8 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 avg_life = sum(e['lifetime'] for e in sorted_group) / n
                 avg_offspring = sum(e['offspring'] for e in sorted_group) / n
                 avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
-                lines.append(f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | {100*avg_off_per_step:13.2f}\n")
+                avg_kin_kickbacks = sum(e['kin_kickbacks'] for e in sorted_group) / n
+                lines.append(f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | {100*avg_off_per_step:13.2f} | {avg_kin_kickbacks:8.2f}\n")
         lines.append("\n--- Aggregated Totals ---\n")
         lines.append(f"Total number of steps: {env.current_step - 1}\n")
         for group in sorted(group_stats.keys()):
@@ -426,12 +423,10 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
         for line in lines:
             f.write(line)
 
-
 def run_post_evaluation_plots(ceviz, pdviz):
     if SAVE_EVAL_RESULTS:
         ceviz.plot()
         pdviz.plot()
-
 
 def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
@@ -446,34 +441,32 @@ def print_ranked_fitness_summary(env):
                 "lifetime": lifetime,
                 "offspring": stats.get("offspring_count", 0),
                 "off_per_step": stats.get("offspring_count", 0) / lifetime if lifetime > 0 else 0.0,
+                "kin_kickbacks": stats.get("kin_kickbacks", 0),
             }
         )
 
     for group in sorted(group_stats.keys()):
         print(f"\n## {group.replace('_', ' ').title()} ##")
         sorted_group = sorted(group_stats[group], key=lambda x: (-x["offspring"], -x["reward"], -x["lifetime"]))
+        print(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13} | {'KinKick':>8}")
         for entry in sorted_group[:10]:  # top 10
             print(
                 f"{entry['uid']:25} | "
                 f"R={entry['reward']:.2f} | "
                 f"Life={entry['lifetime']} | "
                 f"Off={entry['offspring']} | "
-                f"Off/100 Steps={100*entry['off_per_step']:.2f}"
+                f"Off/100 Steps={100*entry['off_per_step']:.2f} | "
+                f"{entry.get('kin_kickbacks', 0):8}"
             )
-
         # Print averages for this group
-        n = len(group_stats[group])
+        n = len(sorted_group)
         if n > 0:
-            avg_reward = sum(e['reward'] for e in group_stats[group]) / n
-            avg_life = sum(e['lifetime'] for e in group_stats[group]) / n
-            avg_offspring = sum(e['offspring'] for e in group_stats[group]) / n
-            avg_off_per_step = sum(e['off_per_step'] for e in group_stats[group]) / n
-            print(f"{'(Averages)':25} | "
-                  f"R={avg_reward:.2f} | "
-                  f"Life={avg_life:.1f} | "
-                  f"Off={avg_offspring:.2f} | "
-                  f"Off/100 Steps={100*avg_off_per_step:.2f}")
-
+            avg_reward = sum(e['reward'] for e in sorted_group) / n
+            avg_life = sum(e['lifetime'] for e in sorted_group) / n
+            avg_offspring = sum(e['offspring'] for e in sorted_group) / n
+            avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
+            avg_kin_kickbacks = sum(e.get('kin_kickbacks', 0) for e in sorted_group) / n
+            print(f"{'(Averages)':25} | R={avg_reward:.2f} | Life={avg_life:.1f} | Off={avg_offspring:.2f} | Off/100 Steps={100*avg_off_per_step:.2f} | {avg_kin_kickbacks:8.2f}")
 
 if __name__ == "__main__":
     seed = 5

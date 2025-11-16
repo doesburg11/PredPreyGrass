@@ -663,11 +663,6 @@ class PyGameRenderer:
             if hovered_entity in step_data:
                 agent = step_data[hovered_entity]
 
-                # Second line: unique ID (only for agents, not grass)
-                uid = agent.get("unique_id")
-                if uid:
-                    lines.append(("UID", uid))
-
                 age = agent.get("age")
                 if age is not None:
                     lines.append(("Age", f"{age:>6}"))
