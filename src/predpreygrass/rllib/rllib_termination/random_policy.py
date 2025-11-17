@@ -42,9 +42,10 @@ if __name__ == "__main__":
     env = env_creator(cfg)
     observations, _ = env.reset(seed=seed)
 
-    # Seed all action spaces for reproducibility
-    for space in env.action_spaces.values():
-        space.seed(seed)
+    # Seed each action space with a distinct but reproducible seed to avoid
+    # agents sampling identical action sequences in lockstep.
+    for i, (agent_id, space) in enumerate(env.action_spaces.items()):
+        space.seed(seed + i * 9973)
 
     # Debug: print one observation shape to confirm visibility channel present
     if observations:
@@ -73,8 +74,8 @@ if __name__ == "__main__":
         # --- Step forward using random actions ---
         action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
-        print(f"Step {env.current_step}")
-        print(f"{terminations}")
+        # print(f"Step {env.current_step}")
+        # print(f"{terminations}")
 
         # --- Update visualizer ---
         visualizer.update(
