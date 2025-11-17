@@ -48,8 +48,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.penalty_prey_caught_config = config["penalty_prey_caught"]
         self.reproduction_reward_predator_config = config["reproduction_reward_predator"]
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
-        self.kin_kick_back_predator_config = config["kin_kick_back_predator"]
-        self.kin_kick_back_prey_config = config["kin_kick_back_prey"]
+        self.kin_kick_back_predator_config = config["kin_kick_back_reward_predator"]
+        self.kin_kick_back_prey_config = config["kin_kick_back_reward_prey"]
 
         # Energy settings
         self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
@@ -356,9 +356,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.truncations["__all__"] = False
         self.infos = {aid: self._pending_infos.get(aid, {}) for aid in all_ids}
         step_data = {}
-        kin_reward = 1.0
         alive_agents = set(self.agents)
         for agent in self.agents:
+            kin_reward = self._get_type_specific("kin_kick_back_predator", agent) \
+                if "predator" in agent else self._get_type_specific("kin_kick_back_prey", agent)
             pos = self.agent_positions[agent]
             energy = self.agent_energies[agent]
             deltas = self._per_agent_step_deltas.get(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
@@ -581,8 +582,6 @@ class PredPreyGrass(MultiAgentEnv):
         return True
 
     def _get_observation(self, agent):
-        import time
-        t0 = time.perf_counter()
         # Generate an observation for the agent.
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
@@ -605,10 +604,6 @@ class PredPreyGrass(MultiAgentEnv):
                     obs[c] *= visibility_mask
             if self.include_visibility_channel:
                 obs[channels - 1] = visibility_mask
-
-        dt = time.perf_counter() - t0
-        if dt > 0.002 and getattr(self, "debug_mode", False):  # log only if >2ms
-            print(f"[PROFILE-OBS-AGENT] agent={agent} obs_time={dt:.6f}s")
         return obs
 
     def _obs_clip(self, x, y, observation_range):
@@ -770,11 +765,6 @@ class PredPreyGrass(MultiAgentEnv):
                 # cumulative_reward is tracked directly in agent_stats_live
                 self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
                 self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_predator"] = self.reproduction_blocked_due_to_capacity_predator
-                # Print immediately to console as requested (not gated by verbose flags)
-                print(
-                    f"[CAPACITY] Predator reproduction blocked at step {self.current_step}: "
-                    f"type={new_type}, agent={agent}, total_blocked={self.reproduction_blocked_due_to_capacity_predator}"
-                )
                 return
 
             self.agents.append(new_agent)
@@ -852,11 +842,6 @@ class PredPreyGrass(MultiAgentEnv):
                 # cumulative_reward is tracked directly in agent_stats_live
                 self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
                 self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_prey"] = self.reproduction_blocked_due_to_capacity_prey
-                # Print immediately to console as requested (not gated by verbose flags)
-                print(
-                    f"[CAPACITY] Prey reproduction blocked at step {self.current_step}: "
-                    f"type={new_type}, agent={agent}, total_blocked={self.reproduction_blocked_due_to_capacity_prey}"
-                )
                 return
 
             self.agents.append(new_agent)
@@ -877,9 +862,6 @@ class PredPreyGrass(MultiAgentEnv):
             parent_record = self.agent_stats_live.get(agent)
             if parent_record is not None:
                 parent_record["offspring_count"] += 1
-            # Debug: print cumulative_reward before reproduction reward
-            if parent_record is not None:
-                print(f"[DEBUG] Before reproduction: {agent} cumulative_reward={parent_record['cumulative_reward']}")
             # Count successful prey spawns
             self.spawned_prey += 1
 
@@ -908,7 +890,6 @@ class PredPreyGrass(MultiAgentEnv):
             # cumulative_reward is tracked directly in agent_stats_live
             if parent_record is not None:
                 parent_record["cumulative_reward"] += self.rewards[agent]
-                print(f"[DEBUG] After reproduction: {agent} cumulative_reward={parent_record['cumulative_reward']} (added {self.rewards[agent]})")
 
             self.observations[new_agent] = self._get_observation(new_agent)
             self.terminations[new_agent] = False
@@ -1070,10 +1051,6 @@ class PredPreyGrass(MultiAgentEnv):
         return copied
 
     def _finalize_agent_record(self, agent_id: str, cause: Optional[str] = None):
-        # Debug: print cumulative_reward and full record for prey with offspring > 0, before and after finalization
-        record = self.agent_stats_live.get(agent_id)
-        if record is not None and "prey" in agent_id and record.get("offspring_count", 0) > 0:
-            print(f"[DEBUG] (Before finalize) {agent_id} record: {record}")
         record = self.agent_stats_live.pop(agent_id, None)
         if record is None:
             return
@@ -1088,8 +1065,6 @@ class PredPreyGrass(MultiAgentEnv):
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
         steps = max(record.get("avg_energy_steps", 0), 1)
         record["avg_energy"] = record.get("avg_energy_sum", 0.0) / steps
-        if "prey" in agent_id and record.get("offspring_count", 0) > 0:
-            print(f"[DEBUG] (After finalize) {agent_id} record: {record}")
         # Copy kin_kickbacks to completed record
         record["kin_kickbacks"] = record.get("kin_kickbacks", 0)
         self.agent_stats_completed[agent_id] = record
