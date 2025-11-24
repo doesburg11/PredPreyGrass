@@ -145,6 +145,11 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_last_reproduction = {}
 
+        # Episode-level debug counters for predator rewards
+        self.debug_predator_total_reward = 0.0
+        self.debug_predator_repro_events = 0
+        self.debug_predator_kin_events = 0
+
         # aggregates per step
         self.active_num_predators = 0
         self.active_num_prey = 0
@@ -352,7 +357,14 @@ class PredPreyGrass(MultiAgentEnv):
         self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in all_ids}
         self.terminations = {aid: self.terminations.get(aid, False) for aid in all_ids}
         self.truncations = {aid: self.truncations.get(aid, False) for aid in all_ids}
-        self.terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
+        episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
+        if episode_done:
+            # Any still-alive agents should be marked truncated and provided with their final cumulative reward
+            for agent in self.agents:
+                if not self.terminations.get(agent, False):
+                    self.truncations[agent] = True
+            self._attach_final_cumulative_rewards_for_live_agents()
+        self.terminations["__all__"] = episode_done
         self.truncations["__all__"] = False
         self.infos = {aid: self._pending_infos.get(aid, {}) for aid in all_ids}
         step_data = {}
@@ -367,6 +379,10 @@ class PredPreyGrass(MultiAgentEnv):
             # Kin survival reward: if parent is alive, reward the parent
             if parent is not None and parent in alive_agents:
                 self.rewards[parent] = self.rewards.get(parent, 0.0) + kin_reward
+                # Debug: kin kickback reward
+                if "predator" in parent:
+                    self.debug_predator_total_reward += float(kin_reward)
+                    self.debug_predator_kin_events += 1
                 parent_record = self.agent_stats_live.get(parent)
                 if parent_record is not None:
                     parent_record["cumulative_reward"] += kin_reward
@@ -404,7 +420,12 @@ class PredPreyGrass(MultiAgentEnv):
                 rews[agent] = self.rewards.get(agent, 0.0)
                 truncs[agent] = True
                 terms[agent] = False
-                infos[agent] = self._pending_infos.get(agent, {})
+                # Start from any pending infos and attach final cumulative_reward
+                info = self._pending_infos.get(agent, {}).copy()
+                record = self.agent_stats_live.get(agent) or self.agent_stats_completed.get(agent)
+                if record is not None:
+                    info["final_cumulative_reward"] = record.get("cumulative_reward", 0.0)
+                infos[agent] = info
 
             # Agents that died this step -> termination=True, truncated=False
             for agent in terminated_this_step:
@@ -424,7 +445,12 @@ class PredPreyGrass(MultiAgentEnv):
                 rews[agent] = self.rewards.get(agent, 0.0)
                 terms[agent] = True
                 truncs[agent] = False
-                infos[agent] = self._pending_infos.get(agent, {})
+                # Start from any pending infos and attach final cumulative_reward
+                info = self._pending_infos.get(agent, {}).copy()
+                record = self.agent_stats_completed.get(agent) or self.agent_stats_live.get(agent)
+                if record is not None:
+                    info["final_cumulative_reward"] = record.get("cumulative_reward", 0.0)
+                infos[agent] = info
 
             truncs["__all__"] = True
             terms["__all__"] = False
@@ -432,6 +458,14 @@ class PredPreyGrass(MultiAgentEnv):
             # Overwrite step-assembled dicts to only contain final-step relevant agents.
             self.observations, self.rewards = obs, rews
             self.terminations, self.truncations, self.infos = terms, truncs, infos
+
+            # Debug: print predator reward invariants at episode end
+            print(
+                f"[ENV DEBUG] Episode end: "
+                f"debug_predator_total_reward={self.debug_predator_total_reward:.4f}, "
+                f"repro_events={self.debug_predator_repro_events}, "
+                f"kin_events={self.debug_predator_kin_events}"
+            )
 
             for agent_id in list(self.agent_stats_live.keys()):
                 self._finalize_agent_record(agent_id, cause="time_limit")
@@ -680,6 +714,8 @@ class PredPreyGrass(MultiAgentEnv):
             # attribution predator
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_type_specific("reward_predator_catch_prey", agent)
+            # Debug: track predator reward contributions
+            self.debug_predator_total_reward += float(self.rewards[agent])
             # cumulative_reward is tracked directly in agent_stats_live
             energy_gain = min(self.agent_energies[caught_prey], self.config["max_energy_gain_per_prey"])
             self.agent_energies[agent] +=  energy_gain
@@ -708,6 +744,8 @@ class PredPreyGrass(MultiAgentEnv):
             self._finalize_agent_record(caught_prey, cause="eaten")
         else:
             self.rewards[agent] = self._get_type_specific("reward_predator_step", agent)
+            # Debug: track predator step rewards
+            self.debug_predator_total_reward += float(self.rewards[agent])
             predator_record = self.agent_stats_live.get(agent)
             if predator_record is not None:
                 predator_record["cumulative_reward"] += self.rewards[agent]
@@ -762,6 +800,9 @@ class PredPreyGrass(MultiAgentEnv):
                 # Capacity exhausted: record metric + info flag and still award reproduction reward.
                 self.reproduction_blocked_due_to_capacity_predator += 1
                 self.rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
+                # Debug: reproduction reward even if capacity blocked
+                self.debug_predator_total_reward += float(self.rewards[agent])
+                self.debug_predator_repro_events += 1
                 # cumulative_reward is tracked directly in agent_stats_live
                 self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
                 self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_predator"] = self.reproduction_blocked_due_to_capacity_predator
@@ -809,6 +850,9 @@ class PredPreyGrass(MultiAgentEnv):
             # self.rewards and tracking
             self.rewards[new_agent] = 0
             self.rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
+            # Debug: successful reproduction reward
+            self.debug_predator_total_reward += float(self.rewards[agent])
+            self.debug_predator_repro_events += 1
 
             # cumulative_reward is tracked directly in agent_stats_live
             if parent_record is not None:
@@ -1067,8 +1111,19 @@ class PredPreyGrass(MultiAgentEnv):
         record["avg_energy"] = record.get("avg_energy_sum", 0.0) / steps
         # Copy kin_kickbacks to completed record
         record["kin_kickbacks"] = record.get("kin_kickbacks", 0)
+        final_total = record.get("cumulative_reward", 0.0)
+        # Ensure callbacks can access the exact per-agent totals via infos regardless of termination path.
+        info = self._pending_infos.setdefault(agent_id, {})
+        # Avoid overwriting if a branch (e.g., time-limit) already attached the same value.
+        info.setdefault("final_cumulative_reward", final_total)
         self.agent_stats_completed[agent_id] = record
         self.agent_live_offspring_ids.pop(agent_id, None)
+
+    def _attach_final_cumulative_rewards_for_live_agents(self):
+        """Ensure all agents that remain alive at episode end expose their cumulative rewards via infos."""
+        for agent_id, record in self.agent_stats_live.items():
+            info = self._pending_infos.setdefault(agent_id, {})
+            info.setdefault("final_cumulative_reward", record.get("cumulative_reward", 0.0))
 
     def _iter_all_agent_records(self):
         for agent_id, record in self.agent_stats_live.items():
