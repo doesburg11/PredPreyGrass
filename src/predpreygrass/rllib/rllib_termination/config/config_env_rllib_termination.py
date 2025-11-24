@@ -39,11 +39,11 @@ config_env = {
         "type_2_prey": 0.0,
     },
     "kin_kick_back_reward_predator": {
-        "type_1_predator": 0.1,
+        "type_1_predator": 0.2,
         "type_2_predator": 0.0,
     },
     "kin_kick_back_reward_prey": {
-        "type_1_prey": 0.1,
+        "type_1_prey": 0.2,
         "type_2_prey": 0.0,
     },
     # Energy settings
