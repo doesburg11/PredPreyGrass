@@ -2,6 +2,7 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
+import numpy as np
 
 
 class EpisodeReturn(RLlibCallback):
@@ -12,41 +13,7 @@ class EpisodeReturn(RLlibCallback):
         self._pending_episode_metrics = []
         self.start_time = time.time()
         self.last_iteration_time = self.start_time
-        self.episode_lengths = {}  # manual episode length tracking
-        self._episode_los_rejected = {}
-
-    def _episode_agent_ids(self, episode) -> list:
-        """
-        Return a list of agent IDs for the current episode in a way that's
-        compatible with RLlib's evolving Episode APIs.
-        """
-        # Try common stable attributes/methods first
-        for attr in ("agent_ids", "get_agent_ids", "get_agents"):
-            if hasattr(episode, attr):
-                obj = getattr(episode, attr)
-                try:
-                    return list(obj() if callable(obj) else obj)
-                except Exception:
-                    pass
-        # Last resort: peek into known internal mapping used by last_info_for
-        if hasattr(episode, "last_info_for") and hasattr(episode, "_agent_to_last_info"):
-            try:
-                return list(getattr(episode, "_agent_to_last_info").keys())
-            except Exception:
-                pass
-        return []
-
-    def on_episode_step(self, *, episode, **kwargs):
-        eid = episode.id_
-        self.episode_lengths[eid] = self.episode_lengths.get(eid, 0) + 1
-        # Aggregate per-agent infos for LOS rejections into an episode counter
-        los_count = 0
-        infos_map = self._episode_last_infos(episode)
-        if isinstance(infos_map, dict):
-            for info in infos_map.values():
-                if info and isinstance(info, dict):
-                    los_count += int(info.get("los_rejected", 0))
-        self._episode_los_rejected[eid] = self._episode_los_rejected.get(eid, 0) + los_count
+        # rely on built-in RLlib episode length metrics instead of manual counting
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
         """
@@ -55,20 +22,23 @@ class EpisodeReturn(RLlibCallback):
         """
         self.num_episodes += 1
         episode_return = episode.get_return()
-        episode_id = episode.id_
-        episode_length = self.episode_lengths.pop(episode_id, 0)
+        episode_length = getattr(episode, "length", 0)
         self.overall_sum_of_rewards += episode_return
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
         predator_total = prey_total = 0.0
+        predator_totals = []
+        prey_totals = []
 
         for agent_id, rewards in episode.get_rewards().items():
             total = sum(rewards)
             if "predator" in agent_id:
                 predator_total += total
+                predator_totals.append(total)
             elif "prey" in agent_id:
                 prey_total += total
+                prey_totals.append(total)
 
             # Match subgroup
             for group in ["type_1_predator", "type_2_predator", "type_1_prey", "type_2_prey"]:
@@ -86,10 +56,20 @@ class EpisodeReturn(RLlibCallback):
         for group, totals in group_rewards.items():
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
-        # Log episode length and LOS-rejected count using MetricsLogger
-        metrics_logger.log_value("episode_length", episode_length, reduce="mean")
-        los_rejected = self._episode_los_rejected.pop(episode_id, 0)
-        metrics_logger.log_value("los_rejected_moves", los_rejected, reduce="mean")
+        # Percentile scalars for TensorBoard (appears under Scalars tab)
+        if predator_totals:
+            p25, p50, p75 = np.percentile(predator_totals, [25, 50, 75])
+            metrics_logger.log_value("predator_episode_return_p25", float(p25))
+            metrics_logger.log_value("predator_episode_return_p50", float(p50))
+            metrics_logger.log_value("predator_episode_return_p75", float(p75))
+
+        if prey_totals:
+            p25, p50, p75 = np.percentile(prey_totals, [25, 50, 75])
+            metrics_logger.log_value("prey_episode_return_p25", float(p25))
+            metrics_logger.log_value("prey_episode_return_p50", float(p50))
+            metrics_logger.log_value("prey_episode_return_p75", float(p75))
+
+        # RLlib already emits episode_len_* metrics for TensorBoard; no extra episode-length metrics_logger entry needed here
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
@@ -105,36 +85,3 @@ class EpisodeReturn(RLlibCallback):
         # Optional: surface custom metric if available in learner results aggregation
         # (Ray will automatically aggregate logged metrics like los_rejected_moves across episodes)
 
-    # ---- Compatibility helpers ----
-    def _episode_last_infos(self, episode) -> dict:
-        """
-        Return a mapping of agent_id -> last info dict for this episode, with
-        compatibility across RLlib API changes.
-        """
-        # Preferred: public getters
-        for name in ("get_last_infos", "get_infos"):
-            if hasattr(episode, name):
-                try:
-                    infos = getattr(episode, name)()
-                    if isinstance(infos, dict):
-                        return infos
-                except Exception:
-                    pass
-        # Common attrs in some versions
-        for name in ("last_infos", "infos"):
-            if hasattr(episode, name):
-                try:
-                    infos = getattr(episode, name)
-                    if isinstance(infos, dict):
-                        return infos
-                except Exception:
-                    pass
-        # Fallback: internal mapping used by older last_info_for implementations
-        if hasattr(episode, "_agent_to_last_info"):
-            try:
-                mapping = getattr(episode, "_agent_to_last_info")
-                if isinstance(mapping, dict):
-                    return mapping
-            except Exception:
-                pass
-        return {}
