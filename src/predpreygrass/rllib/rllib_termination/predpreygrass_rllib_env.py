@@ -2,9 +2,20 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
--adjust the kinship rewards for parents when offspring succeeds in 
-producing offspring themseleves (instead of only surviving time steps (works_4))
--
+ Limited intake per step:
+ - Predator–prey: each predator can only consume up to a fixed
+   energy bite from a caught prey per step (bite = min(prey_energy,
+   max_energy_gain_per_prey)); any remaining prey energy stays on the
+   prey so it can be bitten again later instead of being fully removed
+   in one go.
+ - If bite >= prey_energy, the prey is fully caught and removed as usual.
+ - Prey–grass: each prey can only consume up to a fixed energy bite
+   from grass per step (bite = min(grass_energy,
+   max_energy_gain_per_grass)); any remaining grass energy stays on
+   the patch and continues to regrow, enabling multiple partial
+   grazings over time.
+ - If bite >= grass_energy, the grass is fully eaten and its energy is
+   reset to zero as usual, with regeneration starting in the next step.
 """
 # external libraries (Ray required)
 import gymnasium
@@ -41,12 +52,6 @@ class PredPreyGrass(MultiAgentEnv):
         # RNG will be initialized during reset to ensure per-episode reproducibility
 
         # Rewards dictionaries
-        self.reward_predator_catch_prey_config = config["reward_predator_catch_prey"]
-        self.reward_prey_eat_grass_config = config["reward_prey_eat_grass"]
-
-        self.reward_predator_step_config = config["reward_predator_step"]
-        self.reward_prey_step_config = config["reward_prey_step"]
-        self.penalty_prey_caught_config = config["penalty_prey_caught"]
         self.reproduction_reward_predator_config = config["reproduction_reward_predator"]
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
         self.kin_kick_back_predator_config = config["kin_kick_back_reward_predator"]
@@ -91,10 +96,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Walls (static obstacles)
         self.manual_wall_positions = config["manual_wall_positions"]
         self.wall_positions = set()
-
-        # Mutation
-        self.mutation_rate_predator = config["mutation_rate_predator"]
-        self.mutation_rate_prey = config["mutation_rate_prey"]
 
         # Action range and movement mapping
         self.type_1_act_range = config["type_1_action_range"]
@@ -704,31 +705,45 @@ class PredPreyGrass(MultiAgentEnv):
             # Debug: track predator reward contributions
             self.debug_predator_total_reward += float(self.rewards[agent])
             # cumulative_reward is tracked directly in agent_stats_live
-            energy_gain = min(self.agent_energies[caught_prey], self.config["max_energy_gain_per_prey"])
-            self.agent_energies[agent] +=  energy_gain
-            self.grid_world_state[1, *predator_position] = energy_gain
-            self._per_agent_step_deltas[agent]["eat"] =  energy_gain
+            prey_energy = float(self.agent_energies[caught_prey])
+            intake_cap = float(self.config.get("max_energy_gain_per_prey", float("inf")))
+            bite = min(prey_energy, intake_cap)
+            energy_gain = bite
+
+            # Predator energy update (no hard cap unless configured)
+            self.agent_energies[agent] += energy_gain
+            self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
+            self._per_agent_step_deltas[agent]["eat"] = energy_gain
             predator_record = self.agent_stats_live.get(agent)
             if predator_record is not None:
                 predator_record["times_ate"] += 1
                 predator_record["energy_gained"] += energy_gain
                 predator_record["cumulative_reward"] += self.rewards[agent]
             # attribution prey
-            # Capture a final observation for the caught prey at the moment of termination
-            # so RLlib registers the terminal step properly.
-            self.observations[caught_prey] = self._get_observation(caught_prey)
-            self.terminations[caught_prey] = True
-            penalty = self._get_type_specific("penalty_prey_caught", caught_prey)
-            self.rewards[caught_prey] = penalty
-            self.truncations[caught_prey] = False
-            self.active_num_prey -= 1
-            self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-            prey_record = self.agent_stats_live.get(caught_prey)
-            if prey_record is not None:
-                prey_record["death_cause"] = "eaten"
-                # Add penalty to existing cumulative_reward (do not overwrite)
-                prey_record["cumulative_reward"] += penalty
-            self._finalize_agent_record(caught_prey, cause="eaten")
+            remaining_prey_energy = prey_energy - bite
+            if remaining_prey_energy > 0.0:
+                # Prey survives with reduced energy
+                self.agent_energies[caught_prey] = remaining_prey_energy
+                prey_pos = self.agent_positions[caught_prey]
+                self.grid_world_state[2, *prey_pos] = remaining_prey_energy
+                # Do not mark termination; prey continues into next step
+            else:
+                # Fully eaten prey: keep original termination path
+                # Capture a final observation for the caught prey at the moment of termination
+                # so RLlib registers the terminal step properly.
+                self.observations[caught_prey] = self._get_observation(caught_prey)
+                self.terminations[caught_prey] = True
+                penalty = self._get_type_specific("penalty_prey_caught", caught_prey)
+                self.rewards[caught_prey] = penalty
+                self.truncations[caught_prey] = False
+                self.active_num_prey -= 1
+                self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
+                prey_record = self.agent_stats_live.get(caught_prey)
+                if prey_record is not None:
+                    prey_record["death_cause"] = "eaten"
+                    # Add penalty to existing cumulative_reward (do not overwrite)
+                    prey_record["cumulative_reward"] += penalty
+                self._finalize_agent_record(caught_prey, cause="eaten")
         else:
             self.rewards[agent] = self._get_type_specific("reward_predator_step", agent)
             # Debug: track predator step rewards
@@ -749,17 +764,27 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_type_specific("reward_prey_eat_grass", agent)
             # cumulative_reward is tracked directly in agent_stats_live
-            energy_gain = min(self.grass_energies[caught_grass], self.config["max_energy_gain_per_grass"])
+            grass_energy = float(self.grass_energies[caught_grass])
+            intake_cap = float(self.config.get("max_energy_gain_per_grass", float("inf")))
+            bite = min(grass_energy, intake_cap)
+            energy_gain = bite
+
             self.agent_energies[agent] += energy_gain
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
-            self.grid_world_state[3, *prey_position] = 0
+
+            remaining_grass_energy = grass_energy - bite
+            if remaining_grass_energy > 0.0:
+                self.grass_energies[caught_grass] = remaining_grass_energy
+                self.grid_world_state[3, *prey_position] = remaining_grass_energy
+            else:
+                self.grass_energies[caught_grass] = 0.0
+                self.grid_world_state[3, *prey_position] = 0.0
             prey_record = self.agent_stats_live.get(agent)
             if prey_record is not None:
                 prey_record["times_ate"] += 1
                 prey_record["energy_gained"] += energy_gain
                 prey_record["cumulative_reward"] += self.rewards[agent]
-            self.grass_energies[caught_grass] = 0
         else:
             self.rewards[agent] = self._get_type_specific("reward_prey_step", agent)
             prey_record = self.agent_stats_live.get(agent)
@@ -794,15 +819,8 @@ class PredPreyGrass(MultiAgentEnv):
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_predator_3"
 
-            # Mutation: chance (self.mutation_rate_predator) to switch type
-            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
-            if mutated:
-                new_type = 2 if parent_type == 1 else 1
-            else:
-                new_type = parent_type
-
             # Find available new agent ID using pool allocator
-            new_agent = self._alloc_new_id("predator", new_type)
+            new_agent = self._alloc_new_id("predator", parent_type)
             if not new_agent:
                 # Capacity exhausted: record metric + info flag and still award reproduction reward.
                 self.reproduction_blocked_due_to_capacity_predator += 1
@@ -825,7 +843,7 @@ class PredPreyGrass(MultiAgentEnv):
             # And after successful reproduction, store for cooldown
             self.agent_last_reproduction[agent] = self.current_step
 
-            self._register_new_agent(new_agent, parent_agent_id=agent, mutated=mutated)
+            self._register_new_agent(new_agent, parent_agent_id=agent)
             self.agent_live_offspring_ids[agent].append(new_agent)
             self.agent_offspring_counts[agent] += 1
             parent_record = self.agent_stats_live.get(agent)
@@ -842,14 +860,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
 
-            repro_eff = self.config["reproduction_energy_efficiency"]
-            energy_given = self.initial_energy_predator * repro_eff
-            self.agent_energies[new_agent] = energy_given
+            self.agent_energies[new_agent] = self.initial_energy_predator
             self.agent_energies[agent] -= self.initial_energy_predator
             self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_predator
 
             # Write the child's actual starting energy (after reproduction efficiency) into the grid
-            self.grid_world_state[1, *new_position] = energy_given
+            self.grid_world_state[1, *new_position] = self.initial_energy_predator
             self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self.active_num_predators += 1
@@ -878,15 +894,8 @@ class PredPreyGrass(MultiAgentEnv):
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_prey_6"
 
-            # Mutation: 10% chance to switch type
-            mutated = self.rng.random() < self.mutation_rate_prey
-            if mutated:
-                new_type = 2 if parent_type == 1 else 1
-            else:
-                new_type = parent_type
-
             # Find available new agent ID using pool allocator
-            new_agent = self._alloc_new_id("prey", new_type)
+            new_agent = self._alloc_new_id("prey", parent_type)
             if not new_agent:
                 # Capacity exhausted: record metric + info flag and still award reproduction reward.
                 self.reproduction_blocked_due_to_capacity_prey += 1
@@ -907,7 +916,7 @@ class PredPreyGrass(MultiAgentEnv):
             # And after successful reproduction, store for cooldown
             self.agent_last_reproduction[agent] = self.current_step
 
-            self._register_new_agent(new_agent, parent_agent_id=agent, mutated=mutated)
+            self._register_new_agent(new_agent, parent_agent_id=agent)
             self.agent_live_offspring_ids[agent].append(new_agent)
 
             self.agent_offspring_counts[agent] += 1
@@ -924,14 +933,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
 
-            repro_eff = self.config["reproduction_energy_efficiency"]
-            energy_given = self.initial_energy_prey * repro_eff
-            self.agent_energies[new_agent] = energy_given
+            self.agent_energies[new_agent] = self.initial_energy_prey
             self.agent_energies[agent] -= self.initial_energy_prey
             self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_prey
 
             # Write the child's actual starting energy (after reproduction efficiency) into the grid
-            self.grid_world_state[2, *new_position] = energy_given
+            self.grid_world_state[2, *new_position] = self.initial_energy_prey
             self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self.active_num_prey += 1
@@ -1066,7 +1073,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return action_space
 
-    def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None, *, mutated: bool = False):
+    def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None):
         if agent_id in self.agent_stats_live or agent_id in self.agent_stats_completed:
             raise ValueError(f"Agent id {agent_id} already registered in this episode.")
 
@@ -1075,7 +1082,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
-        self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
         self.agent_stats_live[agent_id] = {
             "agent_id": agent_id,
             "birth_step": self.current_step,
@@ -1089,7 +1095,6 @@ class PredPreyGrass(MultiAgentEnv):
             "avg_energy_steps": 0,
             "cumulative_reward": 0.0,
             "policy_group": "_".join(agent_id.split("_")[:3]),
-            "mutated": mutated,
             "death_step": None,
             "death_cause": None,
             "avg_energy": 0.0,
