@@ -29,7 +29,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
-
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config["debug_mode"]
