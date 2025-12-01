@@ -2,18 +2,20 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
- - Dead-prey carcasses:
-   * When a prey is first bitten but still has remaining energy,
-     it becomes "dead" (added to dead_prey) but is not immediately
-     terminated. It acts as a static carcass:
-       - cannot move,
-       - cannot eat grass,
-       - cannot reproduce,
-       - cannot receive kin kickback rewards,
-       - cannot age further
-   * Predators can continue to take limited-intake bites from a
-     dead prey’s remaining energy until it reaches zero, after
-     which the prey is fully removed as usual.
+ Limited intake per step:
+ - Predator–prey: each predator can only consume up to a fixed
+   energy bite from a caught prey per step (bite = min(prey_energy,
+   max_energy_gain_per_prey)); any remaining prey energy stays on the
+   prey so it can be bitten again later instead of being fully removed
+   in one go.
+ - If bite >= prey_energy, the prey is fully caught and removed as usual.
+ - Prey–grass: each prey can only consume up to a fixed energy bite
+   from grass per step (bite = min(grass_energy,
+   max_energy_gain_per_grass)); any remaining grass energy stays on
+   the patch and continues to regrow, enabling multiple partial
+   grazings over time.
+ - If bite >= grass_energy, the grass is fully eaten and its energy is
+   reset to zero as usual, with regeneration starting in the next step.
 """
 # external libraries (Ray required)
 import gymnasium
@@ -113,7 +115,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_positions = {}
         self.agent_energies = {}
         self.grass_energies = {}
-        # Ages (in steps) for all currently active agents
         self.agent_ages = {}
         self.agent_stats_live = {}
         self.agent_stats_completed = {}
@@ -134,10 +135,6 @@ class PredPreyGrass(MultiAgentEnv):
 
 
         self.agents_just_ate = set()
-        # Prey that have been bitten at least once and are now "dead meat":
-        # cannot move, cannot eat grass, cannot reproduce, and should not
-        # contribute kin kickback rewards as surviving parents.
-        self.dead_prey = set()
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
@@ -378,7 +375,6 @@ class PredPreyGrass(MultiAgentEnv):
             energy = self.agent_energies[agent]
             deltas = self._per_agent_step_deltas.get(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
             parent = self.agent_parents.get(agent)
-            age = self.agent_ages[agent]
             step_data[agent] = {
                 "position": pos,
                 "energy": energy,
@@ -386,7 +382,7 @@ class PredPreyGrass(MultiAgentEnv):
                 "energy_movement": deltas["move"],
                 "energy_eating": deltas["eat"],
                 "energy_reproduction": deltas["repro"],
-                "age": age,
+                "age": self.agent_ages[agent],
                 "offspring_count": self.agent_offspring_counts[agent],
                 "offspring_ids": self.agent_live_offspring_ids.get(agent, []),
                 "parent": parent,
@@ -451,6 +447,14 @@ class PredPreyGrass(MultiAgentEnv):
             self.observations, self.rewards = obs, rews
             self.terminations, self.truncations, self.infos = terms, truncs, infos
 
+            # Debug: print predator reward invariants at episode end
+            print(
+                f"[ENV DEBUG] Episode end: "
+                f"debug_predator_total_reward={self.debug_predator_total_reward:.4f}, "
+                f"repro_events={self.debug_predator_repro_events}, "
+                f"kin_events={self.debug_predator_kin_events}"
+            )
+
             for agent_id in list(self.agent_stats_live.keys()):
                 self._finalize_agent_record(agent_id, cause="time_limit")
 
@@ -464,20 +468,16 @@ class PredPreyGrass(MultiAgentEnv):
         """
         for agent in self.agents:
             layer = 1 if "predator" in agent else 2
-
-            # Energy decay always applies while the agent/carcass exists
             if layer == 1:
                 energy_decay = self.energy_loss_per_step_predator
-            else:
+                self.agent_energies[agent] -= energy_decay
+                self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
+            elif layer == 2:
                 energy_decay = self.energy_loss_per_step_prey
+                self.agent_energies[agent] -= energy_decay
+                self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-            self.agent_energies[agent] -= energy_decay
-            self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
-
-            # Freeze age for dead prey (carcasses): they no longer accrue lifetime.
-            if not ("prey" in agent and agent in self.dead_prey):
-                self.agent_ages[agent] += 1
-
+            self.agent_ages[agent] += 1
             self._per_agent_step_deltas[agent] = {
                 "decay": -energy_decay,
                 "move": 0.0,
@@ -500,9 +500,6 @@ class PredPreyGrass(MultiAgentEnv):
         Process movement and grid updates for all agents (non-vectorized, simple loop).
         """
         for agent in action_dict.keys():
-            # Dead prey (bitten at least once) do not move anymore.
-            if "prey" in agent and agent in self.dead_prey:
-                continue
             old_position = self.agent_positions[agent]
             action = action_dict[agent]
             new_position = self._get_move(agent, action)
@@ -681,9 +678,6 @@ class PredPreyGrass(MultiAgentEnv):
         return None  # No available position found
 
     def _handle_energy_starvation(self, agent):
-        # Ensure dead-prey bookkeeping is cleaned up if a carcass-starved prey dies.
-        if "prey" in agent:
-            self.dead_prey.discard(agent)
         self.observations[agent] = self._get_observation(agent)
         self.rewards[agent] = 0
         self.terminations[agent] = True
@@ -728,12 +722,10 @@ class PredPreyGrass(MultiAgentEnv):
             # attribution prey
             remaining_prey_energy = prey_energy - bite
             if remaining_prey_energy > 0.0:
-                # Prey survives with reduced energy but becomes dead meat:
-                # it will no longer move, eat grass or reproduce.
+                # Prey survives with reduced energy
                 self.agent_energies[caught_prey] = remaining_prey_energy
                 prey_pos = self.agent_positions[caught_prey]
                 self.grid_world_state[2, *prey_pos] = remaining_prey_energy
-                self.dead_prey.add(caught_prey)
                 # Do not mark termination; prey continues into next step
             else:
                 # Fully eaten prey: keep original termination path
@@ -746,7 +738,6 @@ class PredPreyGrass(MultiAgentEnv):
                 self.truncations[caught_prey] = False
                 self.active_num_prey -= 1
                 self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-                self.dead_prey.discard(caught_prey)
                 prey_record = self.agent_stats_live.get(caught_prey)
                 if prey_record is not None:
                     prey_record["death_cause"] = "eaten"
@@ -763,13 +754,6 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _handle_prey_engagement(self, agent):
         if self.terminations.get(agent):
-            return
-        # Dead prey never eat grass; they are carcass-like resources only.
-        if agent in self.dead_prey:
-            self.rewards[agent] = self._get_type_specific("reward_prey_step", agent)
-            prey_record = self.agent_stats_live.get(agent)
-            if prey_record is not None:
-                prey_record["cumulative_reward"] += self.rewards[agent]
             return
         prey_position = tuple(self.agent_positions[agent])
         caught_grass = next(
@@ -811,9 +795,6 @@ class PredPreyGrass(MultiAgentEnv):
         """Grant kin reward to a parent when their child successfully reproduces."""
         parent = self.agent_parents.get(child_agent_id)
         if parent is None:
-            return
-        # Dead prey (carcass-like) should not receive kin kickbacks.
-        if "prey" in parent and parent in self.dead_prey:
             return
         parent_record = self.agent_stats_live.get(parent)
         if parent_record is None:
@@ -908,9 +889,7 @@ class PredPreyGrass(MultiAgentEnv):
     def _handle_prey_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
         # Chance removed as well: reproduction attempts occur whenever energy threshold is met.
-        # Dead prey (carcass-like) cannot reproduce.
-        if agent in self.dead_prey:
-            return
+        
 
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_prey_6"
