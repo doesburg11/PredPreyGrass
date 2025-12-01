@@ -85,7 +85,6 @@ if __name__ == "__main__":
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
-            dead_prey=getattr(env, "dead_prey", None),
         )
 
         terminated =  env.terminations["__all__"]

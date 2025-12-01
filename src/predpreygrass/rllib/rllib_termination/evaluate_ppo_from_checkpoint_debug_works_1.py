@@ -266,7 +266,6 @@ def step_forward(
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
-            dead_prey=getattr(env, "dead_prey", None),
         )
     except TypeError:
         visualizer.update(
@@ -304,7 +303,6 @@ def render_static_if_paused(env, visualizer):
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
-            dead_prey=getattr(env, "dead_prey", None),
         )
     except TypeError:
         # Fallback for legacy renderer without `walls` kwarg

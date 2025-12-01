@@ -114,12 +114,10 @@ class PyGameRenderer:
     def _using_type_prefix(self, step_data):
         return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
 
-    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None):
+    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
-        if dead_prey is None:
-            dead_prey = set()
 
         # Cache walls for FOV LOS clipping (if any)
         if walls:
@@ -172,7 +170,7 @@ class PyGameRenderer:
         if walls:  # Draw beneath dynamic entities
             self._draw_walls(walls)
         self._draw_grass(grass_positions, grass_energies)
-        self._draw_agents(step_data, agents_just_ate, dead_prey)
+        self._draw_agents(step_data, agents_just_ate)
         self._draw_legend(step, step_data)
         if self.enable_tooltips:
             self._draw_tooltip(step_data, grass_positions, grass_energies)
@@ -311,7 +309,7 @@ class PyGameRenderer:
             first = False
         return True
 
-    def _draw_agents(self, step_data, agents_just_ate, dead_prey):
+    def _draw_agents(self, step_data, agents_just_ate):
         for agent_id, agent in step_data.items():
             pos = tuple(map(int, agent["position"]))
             energy = agent["energy"]
@@ -330,15 +328,11 @@ class PyGameRenderer:
                 reference_energy = self.reference_energy_predator
 
             elif "prey" in agent_id:
-                # Dead prey (carcass-like) rendered in a distinct color
-                if agent_id in dead_prey:
-                    color = (128, 128, 128)  # Gray for dead prey
-                else:
-                    color = self.gui_style.prey_color  # Default prey color
-                    if "type_1" in agent_id:
-                        color = self.gui_style.prey_type_1_color
-                    elif "type_2" in agent_id:
-                        color = self.gui_style.prey_type_2_color
+                color = self.gui_style.prey_color  # Default prey color
+                if "type_1" in agent_id:
+                    color = self.gui_style.prey_type_1_color
+                elif "type_2" in agent_id:
+                    color = self.gui_style.prey_type_2_color
                 reference_energy = self.reference_energy_prey
 
             size_factor = min(energy / reference_energy, 1.0)
