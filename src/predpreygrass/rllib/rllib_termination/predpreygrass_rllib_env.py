@@ -115,6 +115,25 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_energies = {}
         # Ages (in steps) for all currently active agents
         self.agent_ages = {}
+        # Per-agent event log for detailed post-hoc analysis
+        # Structure per agent_id:
+        # {
+        #   "agent_id": str,
+        #   "birth_step": int,
+        #   "death_step": Optional[int],
+        #   "parent_id": Optional[str],
+        #   "death_cause": Optional[str],
+        #   "eating_events": [
+        #       {"t": int, "id_eaten": str, "alive_before_bite": bool,
+        #        "bite_size": float, "energy_after": float}, ...],
+        #   "reproduction_events": [
+        #       {"t": int, "child_id": str}, ...],
+        #   "reward_events": [
+        #       {"t": int, "reproduction_reward": float,
+        #        "kickback_reward": float,
+        #        "cumulative_reward": float}, ...],
+        # }
+        self.agent_event_log = {}
         self.agent_stats_live = {}
         self.agent_stats_completed = {}
         self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
@@ -705,6 +724,7 @@ class PredPreyGrass(MultiAgentEnv):
             (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
         if caught_prey:
+            was_dead_before = caught_prey in self.dead_prey
             # attribution predator
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_type_specific("reward_predator_catch_prey", agent)
@@ -734,6 +754,12 @@ class PredPreyGrass(MultiAgentEnv):
                 prey_pos = self.agent_positions[caught_prey]
                 self.grid_world_state[2, *prey_pos] = remaining_prey_energy
                 self.dead_prey.add(caught_prey)
+                # Align death_step with age logic: the first fatal bite is
+                # considered the time of death, even though the carcass may
+                # persist as food. Freeze death_step here if not already set.
+                prey_record = self.agent_stats_live.get(caught_prey)
+                if prey_record is not None and prey_record.get("death_step") is None:
+                    prey_record["death_step"] = int(self.current_step)
                 # Do not mark termination; prey continues into next step
             else:
                 # Fully eaten prey: keep original termination path
@@ -753,6 +779,20 @@ class PredPreyGrass(MultiAgentEnv):
                     # Add penalty to existing cumulative_reward (do not overwrite)
                     prey_record["cumulative_reward"] += penalty
                 self._finalize_agent_record(caught_prey, cause="eaten")
+            # Log predator eating event (whether or not prey fully eaten)
+            # alive_before_bite=True for the first ever bite on this prey id,
+            # alive_before_bite=False for all subsequent (carcass) bites.
+            evt = self.agent_event_log.get(agent)
+            if evt is not None:
+                evt.setdefault("eating_events", []).append(
+                    {
+                        "t": int(self.current_step),
+                        "id_eaten": caught_prey,
+                        "alive_before_bite": (not was_dead_before),
+                        "bite_size": float(bite),
+                        "energy_after": float(self.agent_energies[agent]),
+                    }
+                )
         else:
             self.rewards[agent] = self._get_type_specific("reward_predator_step", agent)
             # Debug: track predator step rewards
@@ -801,14 +841,40 @@ class PredPreyGrass(MultiAgentEnv):
                 prey_record["times_ate"] += 1
                 prey_record["energy_gained"] += energy_gain
                 prey_record["cumulative_reward"] += self.rewards[agent]
+            # Log prey eating event
+            evt = self.agent_event_log.get(agent)
+            if evt is not None:
+                evt.setdefault("eating_events", []).append(
+                    {
+                        "t": int(self.current_step),
+                        "id_eaten": caught_grass,
+                        "alive_before_bite": True,
+                        "bite_size": float(bite),
+                        "energy_after": float(self.agent_energies[agent]),
+                    }
+                )
         else:
             self.rewards[agent] = self._get_type_specific("reward_prey_step", agent)
             prey_record = self.agent_stats_live.get(agent)
             if prey_record is not None:
                 prey_record["cumulative_reward"] += self.rewards[agent]
 
-    def _reward_parent_for_child_reproduction(self, child_agent_id: str):
-        """Grant kin reward to a parent when their child successfully reproduces."""
+    def _reward_parent_for_child_reproduction(
+        self,
+        child_agent_id: str,
+        grandchild_agent_id: Optional[str] = None,
+    ):
+        """Grant kin reward to a parent when their child successfully reproduces.
+
+        Parameters
+        ----------
+        child_agent_id:
+            The agent that just reproduced (direct child of the parent
+            receiving the kin kickback).
+        grandchild_agent_id:
+            The newborn created by ``child_agent_id``. Used only for
+            logging; the kin reward logic itself does not depend on it.
+        """
         parent = self.agent_parents.get(child_agent_id)
         if parent is None:
             return
@@ -829,6 +895,28 @@ class PredPreyGrass(MultiAgentEnv):
             self.debug_predator_kin_events += 1
         parent_record["cumulative_reward"] += kin_reward
         parent_record["kin_kickbacks"] = parent_record.get("kin_kickbacks", 0) + 1
+        # Log kin kickback reward event and the triggering grandchild on the parent
+        evt = self.agent_event_log.get(parent)
+        if evt is not None:
+            evt.setdefault("reward_events", []).append(
+                {
+                    "t": int(self.current_step),
+                    "reproduction_reward": 0.0,
+                    "kickback_reward": float(kin_reward),
+                    "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
+                }
+            )
+            # Also add a reproduction_events entry so that, from the parent's
+            # perspective, we can directly see which grandchild produced this
+            # kin kickback. Here `child_agent_id` is the reproducing child of
+            # the parent, and grandchild_agent_id is the newborn.
+            evt.setdefault("reproduction_events", []).append(
+                {
+                    "t": int(self.current_step),
+                    "child_id": child_agent_id,
+                    "grand_child_id": grandchild_agent_id,
+                }
+            )
 
     def _handle_predator_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
@@ -848,6 +936,20 @@ class PredPreyGrass(MultiAgentEnv):
                 self.debug_predator_total_reward += float(self.rewards[agent])
                 self.debug_predator_repro_events += 1
                 # cumulative_reward is tracked directly in agent_stats_live
+                parent_record = self.agent_stats_live.get(agent)
+                if parent_record is not None:
+                    parent_record["cumulative_reward"] += self.rewards[agent]
+                    # Log direct reproduction reward event (capacity blocked)
+                    evt = self.agent_event_log.get(agent)
+                    if evt is not None:
+                        evt.setdefault("reward_events", []).append(
+                            {
+                                "t": int(self.current_step),
+                                "reproduction_reward": float(self.rewards[agent]),
+                                "kickback_reward": 0.0,
+                                "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
+                            }
+                        )
                 self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
                 self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_predator"] = self.reproduction_blocked_due_to_capacity_predator
                 return
@@ -868,6 +970,12 @@ class PredPreyGrass(MultiAgentEnv):
             parent_record = self.agent_stats_live.get(agent)
             if parent_record is not None:
                 parent_record["offspring_count"] += 1
+                # Log reproduction event for parent
+                evt = self.agent_event_log.get(agent)
+                if evt is not None:
+                    evt.setdefault("reproduction_events", []).append(
+                        {"t": int(self.current_step), "child_id": new_agent}
+                    )
 
             # Count successful predator spawns
             self.spawned_predators += 1
@@ -899,7 +1007,21 @@ class PredPreyGrass(MultiAgentEnv):
             # cumulative_reward is tracked directly in agent_stats_live
             if parent_record is not None:
                 parent_record["cumulative_reward"] += self.rewards[agent]
-            self._reward_parent_for_child_reproduction(agent)
+                # Log direct reproduction reward event
+                evt = self.agent_event_log.get(agent)
+                if evt is not None:
+                    evt.setdefault("reward_events", []).append(
+                        {
+                            "t": int(self.current_step),
+                            "reproduction_reward": float(self.rewards[agent]),
+                            "kickback_reward": 0.0,
+                            "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
+                        }
+                    )
+            # If this reproducing predator itself has a parent, that parent
+            # receives a kin kickback for this new_agent (grandchild).
+            if agent in self.agent_parents and self.agent_parents[agent] is not None:
+                self._reward_parent_for_child_reproduction(agent, grandchild_agent_id=new_agent)
 
             self.observations[new_agent] = self._get_observation(new_agent)
             self.terminations[new_agent] = False
@@ -922,6 +1044,20 @@ class PredPreyGrass(MultiAgentEnv):
                 self.reproduction_blocked_due_to_capacity_prey += 1
                 self.rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
                 # cumulative_reward is tracked directly in agent_stats_live
+                parent_record = self.agent_stats_live.get(agent)
+                if parent_record is not None:
+                    parent_record["cumulative_reward"] += self.rewards[agent]
+                    # Log direct reproduction reward event (capacity blocked)
+                    evt = self.agent_event_log.get(agent)
+                    if evt is not None:
+                        evt.setdefault("reward_events", []).append(
+                            {
+                                "t": int(self.current_step),
+                                "reproduction_reward": float(self.rewards[agent]),
+                                "kickback_reward": 0.0,
+                                "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
+                            }
+                        )
                 self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
                 self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_prey"] = self.reproduction_blocked_due_to_capacity_prey
                 return
@@ -944,6 +1080,12 @@ class PredPreyGrass(MultiAgentEnv):
             parent_record = self.agent_stats_live.get(agent)
             if parent_record is not None:
                 parent_record["offspring_count"] += 1
+                # Log reproduction event for parent
+                evt = self.agent_event_log.get(agent)
+                if evt is not None:
+                    evt.setdefault("reproduction_events", []).append(
+                        {"t": int(self.current_step), "child_id": new_agent}
+                    )
             # Count successful prey spawns
             self.spawned_prey += 1
 
@@ -970,7 +1112,21 @@ class PredPreyGrass(MultiAgentEnv):
             # cumulative_reward is tracked directly in agent_stats_live
             if parent_record is not None:
                 parent_record["cumulative_reward"] += self.rewards[agent]
-            self._reward_parent_for_child_reproduction(agent)
+                # Log direct reproduction reward event
+                evt = self.agent_event_log.get(agent)
+                if evt is not None:
+                    evt.setdefault("reward_events", []).append(
+                        {
+                            "t": int(self.current_step),
+                            "reproduction_reward": float(self.rewards[agent]),
+                            "kickback_reward": 0.0,
+                            "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
+                        }
+                    )
+            # If this reproducing prey itself has a parent, that parent
+            # receives a kin kickback for this new_agent (grandchild).
+            if agent in self.agent_parents and self.agent_parents[agent] is not None:
+                self._reward_parent_for_child_reproduction(agent, grandchild_agent_id=new_agent)
 
             self.observations[new_agent] = self._get_observation(new_agent)
             self.terminations[new_agent] = False
@@ -1103,6 +1259,17 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
+        # Initialize event-log entry
+        self.agent_event_log[agent_id] = {
+            "agent_id": agent_id,
+            "birth_step": self.current_step,
+            "death_step": None,
+            "parent_id": parent_agent_id,
+            "death_cause": None,
+            "eating_events": [],
+            "reproduction_events": [],
+            "reward_events": [],
+        }
         self.agent_stats_live[agent_id] = {
             "agent_id": agent_id,
             "birth_step": self.current_step,
@@ -1139,6 +1306,30 @@ class PredPreyGrass(MultiAgentEnv):
             record["cumulative_reward"] += reward
         if cause is not None:
             record["death_cause"] = cause
+
+        def export_agent_event_log(self, path: str) -> None:
+            """Export the per-agent event log to a JSON file.
+
+            Designed for evaluation scripts. Writes a dict keyed by agent_id,
+            where each value is that agent's event-log record.
+            """
+            import json
+
+            def _convert(obj):
+                if isinstance(obj, (int, float, str)) or obj is None:
+                    return obj
+                if isinstance(obj, dict):
+                    return {k: _convert(v) for k, v in obj.items()}
+                if isinstance(obj, (list, tuple)):
+                    return [_convert(v) for v in obj]
+                try:
+                    return obj.item()
+                except Exception:
+                    return str(obj)
+
+            payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2)
         if record.get("death_step") is None:
             record["death_step"] = self.current_step
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
@@ -1156,6 +1347,12 @@ class PredPreyGrass(MultiAgentEnv):
         lifetime = max(int(death_step - birth_step), 0)
         info.setdefault("lifetime_steps", lifetime)
         info.setdefault("parent_id", record.get("parent"))
+        # Mirror core lifecycle fields into the event log record for convenience
+        evt = self.agent_event_log.get(agent_id)
+        if evt is not None:
+            evt["death_step"] = death_step
+            evt["death_cause"] = record.get("death_cause")
+            evt.setdefault("parent_id", record.get("parent"))
         if "predator" in agent_id:
             info.setdefault("species", "predator")
         elif "prey" in agent_id:
