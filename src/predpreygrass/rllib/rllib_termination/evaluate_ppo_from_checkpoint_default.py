@@ -113,5 +113,12 @@ if __name__ == "__main__":
     if video_writer:
         video_writer.release()
 
+    # Export per-agent event log for offline analysis
+    out_dir = os.path.join(checkpoint_root, "eval_logs")
+    os.makedirs(out_dir, exist_ok=True)
+    event_log_path = os.path.join(out_dir, f"agent_event_log_{now}.json")
+    env.export_agent_event_log(event_log_path)
+    print(f"Agent event log written to: {event_log_path}")
+
     pygame.quit()
     ray.shutdown()
