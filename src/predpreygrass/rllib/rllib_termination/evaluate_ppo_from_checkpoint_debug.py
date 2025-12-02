@@ -123,7 +123,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_KIN_KICK_BACK_REPRODUCTION_REWARD_UNLIMITED_INTAKE_2025-11-29_23-33-07/PPO_PredPreyGrass_608ff_00000_0_2025-11-29_23-33-07/"
+    checkpoint_root = "PPO_KIN_KICK_BACK_REPRODUCTION_REWARD_LIMITED_INTAKE_WITH_CARCASSES_2025-11-30_20-05-40/PPO_PredPreyGrass_901ea_00000_0_2025-11-30_20-05-40/"
     checkpoint_dir = "checkpoint_000049"
   
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
@@ -548,6 +548,23 @@ if __name__ == "__main__":
         energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
         with open(energy_log_path, "w") as f:
             json.dump(energy_by_type_series, f, indent=2)
+        # Export per-agent event log for offline analysis
+        def _convert(obj):
+            if isinstance(obj, (int, float, str)) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            try:
+                return obj.item()
+            except Exception:
+                return str(obj)
+
+        event_log_path = os.path.join(eval_output_dir, f"agent_event_log_{now}.json")
+        with open(event_log_path, "w", encoding="utf-8") as f:
+            json.dump({aid: _convert(rec) for aid, rec in env.agent_event_log.items()}, f, indent=2)
+        print(f"Agent event log written to: {event_log_path}")
     # Always show plots on screen
     ceviz.plot()
     if SAVE_EVAL_RESULTS:
