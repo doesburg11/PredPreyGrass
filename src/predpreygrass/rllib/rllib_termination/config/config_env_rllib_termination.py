@@ -19,11 +19,11 @@ config_env = {
         "type_2_prey": 0.0,
     },
     "kin_kick_back_reward_predator": {
-        "type_1_predator": 3.0,
+        "type_1_predator": 3.0,  # 3.0,
         "type_2_predator": 0.0,
     },
     "kin_kick_back_reward_prey": {
-        "type_1_prey": 3.0,
+        "type_1_prey": 3.0,  # 3.0,
         "type_2_prey": 0.0,
     },
     # Energy settings
@@ -34,8 +34,8 @@ config_env = {
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # Energy intake caps
-    "max_energy_gain_per_grass": 1.5, # float('inf'),
-    "max_energy_gain_per_prey": 2.5, # float('inf'),
+    "max_energy_gain_per_grass": 1.5,  # float('inf'), # 1.5
+    "max_energy_gain_per_prey": 2.5,  # float('inf'),  # 2.5
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
