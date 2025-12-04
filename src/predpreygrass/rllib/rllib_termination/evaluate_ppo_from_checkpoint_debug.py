@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.rllib.rllib_termination.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.rllib_termination.config.config_env_rllib_termination import config_env
-from predpreygrass.rllib.rllib_termination.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.rllib_termination.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.rllib.lineage_rewards.config.config_env_lineage_rewards import config_env
+from predpreygrass.rllib.lineage_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.rllib.lineage_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -123,8 +123,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_KIN_KICKBACKS_5_0_2025-12-02_09-49-41/PPO_PredPreyGrass_d7c19_00000_0_2025-12-02_09-49-41/"
-    checkpoint_dir = "checkpoint_000049"
+    checkpoint_root = "PPO_REPRODUCTION_REWARD_LINEAGE_REWARDS_LIMITED_FERTILITY_AGE_2025-12-04_17-50-39/PPO_PredPreyGrass_5d2d7_00000_0_2025-12-04_17-50-39/"
+    checkpoint_dir = "checkpoint_000025"
   
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
     # training_dir = os.path.dirname(checkpoint_path)
@@ -372,6 +372,10 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
             offspring = stats.get("offspring_count", 0)
             off_per_step = offspring / lifetime if lifetime > 0 else 0.0
+            lineage_bonus = stats.get("lineage_reward_total", 0.0)
+            fert_cap = stats.get("max_fertility_age")
+            fert_exp = stats.get("fertility_expired_step")
+            fert_blocked = stats.get("fertility_blocked_attempts", 0)
             group_stats[group].append({
                 "uid": uid,
                 "reward": reward,
@@ -380,7 +384,10 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 "off_per_step": off_per_step,
                 "index": index,
                 "reuse": reuse,
-                "kin_kickbacks": stats.get("kin_kickbacks", 0),
+                "lineage_bonus": lineage_bonus,
+                "max_fertility_age": fert_cap,
+                "fertility_expired_step": fert_exp,
+                "fertility_blocked_attempts": fert_blocked,
             })
         return group_stats
 
@@ -393,15 +400,28 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             sorted_group = sorted(
                 group_stats[group], key=lambda x: (-x["reward"], x["index"], x["reuse"])
             )
-            lines.append(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13} | {'KinKick':>8}\n")
+            lines.append(
+                f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8} | "
+                f"{'Lineage':>8} | {'FertCap':>7} | {'FertExp':>7} | {'FBlk':>5}\n"
+            )
             for entry in sorted_group:
+                cap_val = entry["max_fertility_age"]
+                if isinstance(cap_val, (int, float)) and cap_val >= 0:
+                    fert_cap_str = str(int(cap_val))
+                else:
+                    fert_cap_str = "∞"
+                fert_exp = entry["fertility_expired_step"]
+                fert_exp_str = "--" if fert_exp is None else str(int(fert_exp))
                 lines.append(
                     f"{entry['uid']:25} | "
                     f"{entry['reward']:8.2f} | "
                     f"{entry['lifetime']:6} | "
                     f"{entry['offspring']:4} | "
-                    f"{100*entry['off_per_step']:13.2f} | "
-                    f"{entry['kin_kickbacks']:8}\n"
+                    f"{100*entry['off_per_step']:8.2f} | "
+                    f"{entry['lineage_bonus']:8.2f} | "
+                    f"{fert_cap_str:>7} | "
+                    f"{fert_exp_str:>7} | "
+                    f"{entry['fertility_blocked_attempts']:5}\n"
                 )
             # Print averages for this group
             n = len(sorted_group)
@@ -410,8 +430,18 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 avg_life = sum(e['lifetime'] for e in sorted_group) / n
                 avg_offspring = sum(e['offspring'] for e in sorted_group) / n
                 avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
-                avg_kin_kickbacks = sum(e['kin_kickbacks'] for e in sorted_group) / n
-                lines.append(f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | {100*avg_off_per_step:13.2f} | {avg_kin_kickbacks:8.2f}\n")
+                avg_lineage = sum(e['lineage_bonus'] for e in sorted_group) / n
+                avg_fert_block = sum(e['fertility_blocked_attempts'] for e in sorted_group) / n
+                fert_caps = [e['max_fertility_age'] for e in sorted_group if isinstance(e['max_fertility_age'], (int, float))]
+                avg_fert_cap = sum(fert_caps) / len(fert_caps) if fert_caps else None
+                fert_exp_vals = [e['fertility_expired_step'] for e in sorted_group if isinstance(e['fertility_expired_step'], (int, float))]
+                avg_fert_exp = sum(fert_exp_vals) / len(fert_exp_vals) if fert_exp_vals else None
+                cap_str = "--" if avg_fert_cap is None else f"{avg_fert_cap:7.1f}"
+                exp_str = "--" if avg_fert_exp is None else f"{avg_fert_exp:7.1f}"
+                lines.append(
+                    f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
+                    f"{100*avg_off_per_step:8.2f} | {avg_lineage:8.2f} | {cap_str} | {exp_str} | {avg_fert_block:5.2f}\n"
+                )
         lines.append("\n--- Aggregated Totals ---\n")
         lines.append(f"Total number of steps: {env.current_step - 1}\n")
         for group in sorted(group_stats.keys()):
@@ -444,22 +474,38 @@ def print_ranked_fitness_summary(env):
                 "lifetime": lifetime,
                 "offspring": stats.get("offspring_count", 0),
                 "off_per_step": stats.get("offspring_count", 0) / lifetime if lifetime > 0 else 0.0,
-                "kin_kickbacks": stats.get("kin_kickbacks", 0),
+                "lineage_bonus": stats.get("lineage_reward_total", 0.0),
+                "max_fertility_age": stats.get("max_fertility_age"),
+                "fertility_expired_step": stats.get("fertility_expired_step"),
+                "fertility_blocked_attempts": stats.get("fertility_blocked_attempts", 0),
             }
         )
 
     for group in sorted(group_stats.keys()):
         print(f"\n## {group.replace('_', ' ').title()} ##")
         sorted_group = sorted(group_stats[group], key=lambda x: (-x["offspring"], -x["reward"], -x["lifetime"]))
-        print(f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100 Steps':>13} | {'KinKick':>8}")
+        print(
+            f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8} | "
+            f"{'Lineage':>8} | {'FertCap':>7} | {'FertExp':>7} | {'FBlk':>5}"
+        )
         for entry in sorted_group[:10]:  # top 10
+            cap_val = entry.get("max_fertility_age")
+            if isinstance(cap_val, (int, float)) and cap_val >= 0:
+                cap_str = str(int(cap_val))
+            else:
+                cap_str = "∞"
+            fert_exp = entry.get("fertility_expired_step")
+            fert_exp_str = "--" if fert_exp is None else str(int(fert_exp))
             print(
                 f"{entry['uid']:25} | "
-                f"R={entry['reward']:.2f} | "
-                f"Life={entry['lifetime']} | "
-                f"Off={entry['offspring']} | "
-                f"Off/100 Steps={100*entry['off_per_step']:.2f} | "
-                f"{entry.get('kin_kickbacks', 0):8}"
+                f"{entry['reward']:8.2f} | "
+                f"{entry['lifetime']:6} | "
+                f"{entry['offspring']:4} | "
+                f"{100*entry['off_per_step']:8.2f} | "
+                f"{entry.get('lineage_bonus', 0.0):8.2f} | "
+                f"{cap_str:>7} | "
+                f"{fert_exp_str:>7} | "
+                f"{entry.get('fertility_blocked_attempts', 0):5}"
             )
         # Print averages for this group
         n = len(sorted_group)
@@ -468,8 +514,18 @@ def print_ranked_fitness_summary(env):
             avg_life = sum(e['lifetime'] for e in sorted_group) / n
             avg_offspring = sum(e['offspring'] for e in sorted_group) / n
             avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
-            avg_kin_kickbacks = sum(e.get('kin_kickbacks', 0) for e in sorted_group) / n
-            print(f"{'(Averages)':25} | R={avg_reward:.2f} | Life={avg_life:.1f} | Off={avg_offspring:.2f} | Off/100 Steps={100*avg_off_per_step:.2f} | {avg_kin_kickbacks:8.2f}")
+            avg_lineage = sum(e.get('lineage_bonus', 0.0) for e in sorted_group) / n
+            avg_fert_block = sum(e.get('fertility_blocked_attempts', 0) for e in sorted_group) / n
+            fert_caps = [e.get('max_fertility_age') for e in sorted_group if isinstance(e.get('max_fertility_age'), (int, float))]
+            avg_cap = sum(fert_caps) / len(fert_caps) if fert_caps else None
+            fert_exp_vals = [e.get('fertility_expired_step') for e in sorted_group if isinstance(e.get('fertility_expired_step'), (int, float))]
+            avg_exp = sum(fert_exp_vals) / len(fert_exp_vals) if fert_exp_vals else None
+            cap_str = "∞" if avg_cap is None else f"{avg_cap:.1f}"
+            exp_str = "--" if avg_exp is None else f"{avg_exp:.1f}"
+            print(
+                f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
+                f"{100*avg_off_per_step:8.2f} | {avg_lineage:8.2f} | {cap_str:>7} | {exp_str:>7} | {avg_fert_block:5.2f}"
+            )
 
 if __name__ == "__main__":
     seed = 5
@@ -538,6 +594,13 @@ if __name__ == "__main__":
     print("\n--- Offspring Counts by Type ---")
     for agent_type, count in offspring_counts.items():
         print(f"{agent_type:20}: {count}")
+
+    if hasattr(env, "reproduction_blocked_due_to_fertility_predator"):
+        print("\n--- Fertility Blocks ---")
+        print(
+            f"Predators blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_predator', 0)} | "
+            f"Prey blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_prey', 0)}"
+        )
 
     # print_ranked_reward_summary(env, total_reward)
 
