@@ -24,13 +24,16 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * **Walls occlusion**: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
+* **Reproduction kick back rewards**: On top of (own) reproduction rewards, agents receive rewards when their children reproduces ([implementation](src/predpreygrass/rllib/kick_back_rewards))
+
+* **Lineage rewards**: Agents receive rewards when their offspring survives over time ([implementation](src/predpreygrass/rllib/lineage_rewards))
+
 ### Experiments:
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](src/predpreygrass/rllib/mutating_agents#co-evolution-and-the-red-queen-effect))
 
-* Testing **cooperation** by adding lineage rewards instead of direct reproduction rewards ([results](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/selfish_gene#predpreygrass--selfish-gene-the-search-for-emergent-cooperation))
 
 ### Hyperparameter tuning
 
