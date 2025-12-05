@@ -2,18 +2,9 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
- - Dead-prey carcasses:
-   * When a prey is first bitten but still has remaining energy,
-         it becomes "dead" (added to dead_prey) but is not immediately
-         terminated. It acts as a static carcass:
-             - cannot move,
-             - cannot eat grass,
-             - cannot reproduce,
-             - does not contribute lineage survival rewards,
-             - cannot age further
-   * Predators can continue to take limited-intake bites from a
-     dead prey’s remaining energy until it reaches zero, after
-     which the prey is fully removed as usual.
+- lineage rewards for predators and prey
+- limited fertility age per agent type
+- limited age per agent type
 """
 # external libraries (Ray required)
 import gymnasium
@@ -55,9 +46,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Lineage survival reward coefficient (can be scalar or per-policy dict)
         self.lineage_reward_coeff_config = config["lineage_reward_coeff"]
         default_fertility_caps = {
-            "type_1_predator": None,
+            "type_1_predator": 80,
             "type_2_predator": None,
-            "type_1_prey": None,
+            "type_1_prey": 60,
             "type_2_prey": None,
         }
         configured_caps = config.get("max_fertility_age")
@@ -65,6 +56,27 @@ class PredPreyGrass(MultiAgentEnv):
             self.max_fertility_age_config = {**default_fertility_caps, **configured_caps}
         else:
             self.max_fertility_age_config = default_fertility_caps
+        default_age_caps = {
+            "type_1_predator": 120,
+            "type_2_predator": None,
+            "type_1_prey": 100,
+            "type_2_prey": None,
+        }
+        configured_age_caps = config.get("max_agent_age")
+        if isinstance(configured_age_caps, dict):
+            self.max_agent_age_config = {**default_age_caps, **configured_age_caps}
+        else:
+            self.max_agent_age_config = default_age_caps
+
+        default_carcass_only_caps = {
+            "type_1_predator": None,
+            "type_2_predator": None,
+        }
+        configured_carcass_caps = config.get("carcass_only_predator_age")
+        if isinstance(configured_carcass_caps, dict):
+            self.carcass_only_predator_age_config = {**default_carcass_only_caps, **configured_carcass_caps}
+        else:
+            self.carcass_only_predator_age_config = default_carcass_only_caps
 
         # Energy settings
         self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
@@ -143,6 +155,8 @@ class PredPreyGrass(MultiAgentEnv):
         #       {"t": int, "reproduction_reward": float,
         #        "lineage_reward": float,
         #        "cumulative_reward": float}, ...],
+        #   "fertility_events": [],
+        #   "lifecycle_events": [],
         # }
         self.agent_event_log = {}
         self.agent_stats_live = {}
@@ -162,6 +176,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.reproduction_blocked_due_to_capacity_prey = 0
         self.reproduction_blocked_due_to_fertility_predator = 0
         self.reproduction_blocked_due_to_fertility_prey = 0
+        self.carcass_only_live_prey_blocks_predator = 0
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
@@ -202,7 +217,7 @@ class PredPreyGrass(MultiAgentEnv):
                 for i in range(count):
                     agent_id = f"type_{type}_{agent_type}_{i}"
                     self.agents.append(agent_id)
-                    self._register_new_agent(agent_id)
+                    self._register_new_agent(agent_id, is_founder=True)
                     # _register_new_agent already adds to used_agent_ids
 
         self.grass_agents = [f"grass_{i}" for i in range(self.initial_num_grass)]
@@ -225,11 +240,6 @@ class PredPreyGrass(MultiAgentEnv):
         self._init_available_id_pools()
         # Print-once guard for termination debug logs (per episode)
         self._printed_termination_ids = set()
-        # Precompute LOS masks for each obs range (assuming static walls for now)
-        # This must be done after config and grid/wall initialization
-        self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
-        self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
-
     def _init_available_id_pools(self):
         """Build deques of never-used IDs per species/type for O(1) allocation.
 
@@ -287,6 +297,10 @@ class PredPreyGrass(MultiAgentEnv):
         self._init_reset_variables(seed)
 
         self._create_and_place_grid_world_entities()
+
+        # Recompute LOS masks after walls are placed so visibility respects obstacles
+        self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
+        self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
 
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
@@ -499,7 +513,8 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Apply all per-step updates (energy decay, age increment).
         """
-        for agent in self.agents:
+        aged_out_agents = []
+        for agent in list(self.agents):
             layer = 1 if "predator" in agent else 2
 
             # Energy decay always applies while the agent/carcass exists
@@ -515,6 +530,8 @@ class PredPreyGrass(MultiAgentEnv):
             if not ("prey" in agent and agent in self.dead_prey):
                 self.agent_ages[agent] += 1
                 self._maybe_mark_fertility_expired(agent)
+                if self._agent_age_exceeded(agent):
+                    aged_out_agents.append(agent)
 
             self._per_agent_step_deltas[agent] = {
                 "decay": -energy_decay,
@@ -522,6 +539,9 @@ class PredPreyGrass(MultiAgentEnv):
                 "eat": 0.0,
                 "repro": 0.0,
             }
+
+        for aged_agent in aged_out_agents:
+            self._terminate_agent_due_to_age(aged_agent)
 
     def _regenerate_grass_energy(self):
         """
@@ -538,6 +558,8 @@ class PredPreyGrass(MultiAgentEnv):
         Process movement and grid updates for all agents (non-vectorized, simple loop).
         """
         for agent in action_dict.keys():
+            if agent not in self.agent_positions or self.terminations.get(agent):
+                continue
             # Dead prey (bitten at least once) do not move anymore.
             if "prey" in agent and agent in self.dead_prey:
                 continue
@@ -739,12 +761,24 @@ class PredPreyGrass(MultiAgentEnv):
         #del self.agent_ages[agent]
 
     def _handle_predator_engagement(self, agent):
+        self._per_agent_step_deltas.setdefault(
+            agent,
+            {
+                "decay": 0.0,
+                "move": 0.0,
+                "eat": 0.0,
+                "repro": 0.0,
+            },
+        )
         predator_position = tuple(self.agent_positions[agent])
         caught_prey = next(
             (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
         if caught_prey:
             was_dead_before = caught_prey in self.dead_prey
+            if (not was_dead_before) and self._predator_requires_carcass_only(agent):
+                self._record_carcass_only_block(agent, caught_prey)
+                return
             # attribution predator
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_type_specific("reward_predator_catch_prey", agent)
@@ -991,6 +1025,112 @@ class PredPreyGrass(MultiAgentEnv):
                 "reason": "fertility_cap",
             }
         )
+
+    def _get_max_age_limit(self, agent_id: str):
+        caps = getattr(self, "max_agent_age_config", None)
+        if caps is None:
+            return None
+        if isinstance(caps, dict):
+            for prefix, limit in caps.items():
+                if agent_id.startswith(prefix):
+                    return limit
+            return None
+        return caps
+
+    def _agent_age_exceeded(self, agent_id: str) -> bool:
+        limit = self._get_max_age_limit(agent_id)
+        if limit is None:
+            return False
+        if isinstance(limit, (int, float)) and limit >= 0:
+            return self.agent_ages.get(agent_id, 0) >= limit
+        return False
+
+    def _get_carcass_only_age_limit(self, agent_id: str):
+        caps = getattr(self, "carcass_only_predator_age_config", None)
+        if caps is None:
+            return None
+        if isinstance(caps, dict):
+            for prefix, limit in caps.items():
+                if agent_id.startswith(prefix):
+                    return limit
+            return None
+        return caps
+
+    def _get_initial_age(self, agent_id: str, *, is_founder: bool) -> int:
+        if not is_founder:
+            return 0
+        if "predator" in agent_id:
+            limit = self._get_carcass_only_age_limit(agent_id)
+            if isinstance(limit, (int, float)) and limit is not None and limit >= 0:
+                return int(limit)
+        return 0
+
+    def _predator_requires_carcass_only(self, agent_id: str) -> bool:
+        if "predator" not in agent_id:
+            return False
+        limit = self._get_carcass_only_age_limit(agent_id)
+        if limit is None:
+            return False
+        if isinstance(limit, (int, float)) and limit >= 0:
+            return self.agent_ages.get(agent_id, 0) < limit
+        return False
+
+    def _record_carcass_only_block(self, predator_id: str, prey_id: str):
+        self.rewards[predator_id] = self._get_type_specific("reward_predator_step", predator_id)
+        record = self.agent_stats_live.get(predator_id)
+        if record is not None:
+            record["cumulative_reward"] += self.rewards[predator_id]
+            record["carcass_only_blocks"] = record.get("carcass_only_blocks", 0) + 1
+            block_count = record["carcass_only_blocks"]
+        else:
+            block_count = None
+        info = self._pending_infos.setdefault(predator_id, {})
+        info["carcass_only_live_prey_blocked"] = True
+        if block_count is not None:
+            info["carcass_only_block_count"] = block_count
+        self.carcass_only_live_prey_blocks_predator += 1
+        evt = self.agent_event_log.get(predator_id)
+        if evt is not None:
+            evt.setdefault("diet_events", []).append(
+                {
+                    "t": int(self.current_step),
+                    "event": "carcass_only_block",
+                    "prey_id": prey_id,
+                    "age": int(self.agent_ages.get(predator_id, 0)),
+                }
+            )
+
+    def _terminate_agent_due_to_age(self, agent: str):
+        if self.terminations.get(agent) or agent not in self.agent_positions:
+            return
+        layer = 1 if "predator" in agent else 2
+        if "prey" in agent:
+            self.dead_prey.discard(agent)
+            self.active_num_prey = max(self.active_num_prey - 1, 0)
+        else:
+            self.active_num_predators = max(self.active_num_predators - 1, 0)
+        self._handle_lineage_death(agent)
+        self.observations[agent] = self._get_observation(agent)
+        self.rewards[agent] = self.rewards.get(agent, 0.0)
+        self.terminations[agent] = True
+        self.truncations[agent] = False
+        self.grid_world_state[layer, *self.agent_positions[agent]] = 0
+        record = self.agent_stats_live.get(agent)
+        if record is not None:
+            record["death_cause"] = "max_age"
+            record["age_expired_step"] = int(self.current_step)
+        info = self._pending_infos.setdefault(agent, {})
+        info["terminated_due_to_age"] = True
+        evt = self.agent_event_log.get(agent)
+        if evt is not None:
+            evt.setdefault("lifecycle_events", []).append(
+                {
+                    "t": int(self.current_step),
+                    "event": "max_age_reached",
+                    "age": int(self.agent_ages.get(agent, 0)),
+                }
+            )
+        self._finalize_agent_record(agent, cause="max_age")
 
     def _handle_predator_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
@@ -1408,12 +1548,12 @@ class PredPreyGrass(MultiAgentEnv):
             return
         self._set_lineage_alive_flag(agent_id, False)
 
-    def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None):
+    def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None, *, is_founder: bool = False):
         if agent_id in self.agent_stats_live or agent_id in self.agent_stats_completed:
             raise ValueError(f"Agent id {agent_id} already registered in this episode.")
 
         self.used_agent_ids.add(agent_id)
-        self.agent_ages[agent_id] = 0
+        self.agent_ages[agent_id] = self._get_initial_age(agent_id, is_founder=is_founder)
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
@@ -1428,6 +1568,8 @@ class PredPreyGrass(MultiAgentEnv):
             "reproduction_events": [],
             "reward_events": [],
             "fertility_events": [],
+            "diet_events": [],
+            "lifecycle_events": [],
         }
         self.agent_stats_live[agent_id] = {
             "agent_id": agent_id,
@@ -1449,6 +1591,9 @@ class PredPreyGrass(MultiAgentEnv):
             "max_fertility_age": self._get_fertility_limit(agent_id),
             "fertility_expired_step": None,
             "fertility_blocked_attempts": 0,
+            "max_age": self._get_max_age_limit(agent_id),
+            "age_expired_step": None,
+            "carcass_only_blocks": 0,
         }
 
         # Initialize lineage tracking after stats to ensure helper has context
@@ -1461,6 +1606,26 @@ class PredPreyGrass(MultiAgentEnv):
         copied["offspring_ids"] = list(record.get("offspring_ids", []))
         return copied
 
+    def export_agent_event_log(self, path: str) -> None:
+        """Export the per-agent event log to a JSON file for evaluation/debugging."""
+        import json
+
+        def _convert(obj):
+            if isinstance(obj, (int, float, str)) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            try:
+                return obj.item()
+            except Exception:
+                return str(obj)
+
+        payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+
     def _finalize_agent_record(self, agent_id: str, cause: Optional[str] = None):
         record = self.agent_stats_live.pop(agent_id, None)
         if record is None:
@@ -1472,29 +1637,6 @@ class PredPreyGrass(MultiAgentEnv):
         if cause is not None:
             record["death_cause"] = cause
 
-        def export_agent_event_log(self, path: str) -> None:
-            """Export the per-agent event log to a JSON file.
-
-            Designed for evaluation scripts. Writes a dict keyed by agent_id,
-            where each value is that agent's event-log record.
-            """
-            import json
-
-            def _convert(obj):
-                if isinstance(obj, (int, float, str)) or obj is None:
-                    return obj
-                if isinstance(obj, dict):
-                    return {k: _convert(v) for k, v in obj.items()}
-                if isinstance(obj, (list, tuple)):
-                    return [_convert(v) for v in obj]
-                try:
-                    return obj.item()
-                except Exception:
-                    return str(obj)
-
-            payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2)
         if record.get("death_step") is None:
             record["death_step"] = self.current_step
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
@@ -1749,4 +1891,3 @@ class PredPreyGrass(MultiAgentEnv):
                 if self._line_of_sight_clear(center, (tx, ty)):
                     mask[tx, ty] = 1.0
         return mask
-
