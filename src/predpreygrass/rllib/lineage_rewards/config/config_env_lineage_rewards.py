@@ -31,6 +31,19 @@ config_env = {
         "type_1_prey": 80,
         "type_2_prey": None,
     },
+    "max_agent_age": {
+        # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
+        "type_1_predator": 220,
+        "type_2_predator": None,
+        "type_1_prey": 180,
+        "type_2_prey": None,
+    },
+    "carcass_only_predator_age": {
+        # Juvenile predators younger than this many steps may only bite carcasses (already-dead prey)
+        # Set to None/negative to disable the restriction for a policy group.
+        "type_1_predator": 10,
+        "type_2_predator": None,
+    },
     # Energy settings
     "energy_loss_per_step_predator": 0.15,
     "energy_loss_per_step_prey": 0.05,
