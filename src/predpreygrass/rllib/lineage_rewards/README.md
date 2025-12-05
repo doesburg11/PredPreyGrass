@@ -92,9 +92,9 @@ def _register_death(agent_id):
 
 ---
 
-## 3. Fertility Age Caps
+## 3. Fertility & Lifespan Caps
 
-### 3.1 Configuration
+### 3.1 Fertility configuration
 ```python
 "max_fertility_age": {
     "type_1_predator": 160,   # example
@@ -105,7 +105,7 @@ def _register_death(agent_id):
 - Values count **environment steps** since birth.
 - `None` (or negative) = unlimited fertility (legacy behavior).
 
-### 3.2 Runtime behavior (environment)
+### 3.2 Runtime behavior (fertility)
 1. During `_apply_time_step_update`, agent age increments and `_maybe_mark_fertility_expired` stamps the first step at which age ≥ cap.
 2. `_agent_is_fertile(agent_id)` guards `_handle_*_reproduction`.
 3. When an infertile agent tries to reproduce:
@@ -114,9 +114,48 @@ def _register_death(agent_id):
    - `agent_stats_live` logs `fertility_blocked_attempts` and `fertility_expired_step`.
    - Event log receives a `fertility_events` entry; evaluators bubble these stats to the console/CSV.
 
-### 3.3 Rationale & effect
+### 3.3 Fertility rationale & effect
 - After fertility expires, the **only** remaining reward channel for that agent is lineage payouts. This creates a clear late-life incentive to guard/feed offspring rather than chasing new births that are now impossible.
 - The cap also mirrors biological realities (senescence) and prevents immortal founders from hoarding reproduction rewards indefinitely.
+
+### 3.4 Lifespan configuration
+```python
+"max_agent_age": {
+   "type_1_predator": 220,
+   "type_2_predator": None,
+   "type_1_prey": 180,
+   "type_2_prey": None,
+}
+```
+- Values count **steps lived**. `None` (or negative) keeps the legacy immortal behavior.
+- Defaults mirror the `config_env_lineage_rewards.py` sample and can be tuned per policy group just like fertility caps.
+
+### 3.5 Runtime behavior (max age)
+1. `_apply_time_step_update` increments `agent_ages` for every non-carcass agent and calls `_agent_age_exceeded` to detect caps.
+2. Agents that reach the limit are routed through `_terminate_agent_due_to_age`, which:
+   - Removes them from the grid and active lists while calling `_handle_lineage_death` so ancestor counts stay accurate.
+   - Marks `death_cause="max_age"`, stamps `age_expired_step`, and emits an info flag `terminated_due_to_age`.
+   - Appends a `lifecycle_events` entry so evaluators can audit which agents timed out.
+3. Because age-outs happen before engagements, follow-up combat/feeding logic automatically skips the retired agent in the same step.
+
+### 3.6 Why limit lifetimes?
+- Prevents immortal founders from monopolizing lineage rewards for the entire episode, which previously dampened turnover pressure.
+- Forces lineages to refresh, keeping the event logs and reward streams focused on actively reproducing branches rather than indefinitely stable sentinels.
+- Pairs with fertility caps: once reproduction is blocked and the age limit approaches, optimal behavior is to protect descendants, not hoard energy.
+
+### 3.7 Juvenile carcass-only diet window
+```python
+"carcass_only_predator_age": {
+   "type_1_predator": 30,
+   "type_2_predator": None,
+}
+```
+- Predators younger than the configured step count may only bite carcasses (prey already in the `dead_prey` set). The helper `_predator_requires_carcass_only` enforces this per-policy window.
+- When a juvenile lands on a live prey tile, `_handle_predator_engagement` now short-circuits, applies only the idle/step reward, and logs a `diet_events` entry (`carcass_only_block`). No energy is transferred and the prey remains alive.
+- `agent_stats_live[*]["carcass_only_blocks"]`, `env.carcass_only_live_prey_blocks_predator`, and the per-step `infos` flag (`carcass_only_live_prey_blocked`) expose how often this throttle fires during training/eval.
+- Founders spawned during `reset()` start with their age equal to the configured window so they can hunt immediately; newborn predators still begin at age 0 and must rely on carcasses until they age out.
+- Set the value to `None` (or a negative integer) to disable the constraint for a policy group.
+
 
 ---
 
@@ -128,6 +167,7 @@ Limited intake mechanics (predators take multiple small bites; grass regrows slo
 2. **Guarding behavior** – Limited intake makes contested carcasses last multiple steps. Ancestors escorting kin can deny opponents those bites, protecting both kin survival and their own future lineage income.
 3. **Population stability** – Fertility caps reduce late-episode reproduction bursts. Combined with limited intake, this shifts pressure toward **maintaining** existing offspring rather than producing disposable ones.
 4. **Anti-hoarding** – Since an infertile agent can no longer convert personal energy into reproduction reward, the best use of surplus energy is to survive long enough to chaperone kin (keep lineage bonuses flowing) and to physically shield food patches for them.
+5. **Juvenile provisioning** – The carcass-only window forces young predators to rely on elders for processed food, magnifying incentives for cooperative carcass sharing and territorial defense around downed prey.
 
 These interactions seed altruistic behaviors (e.g., vacating grass for kin, intercepting predators) without explicitly coding cooperation rules—the incentives emerge from the reward redesign plus energy constraints.
 
@@ -142,7 +182,15 @@ These interactions seed altruistic behaviors (e.g., vacating grass for kin, inte
 
 ---
 
-## 6. References
+## 6. Validation & Regression Tests
+- Unit tests for the lineage rewrite live in `tests/test_lineage_rewards_validation.py` and can be run with `pytest -q tests/test_lineage_rewards_validation.py` (last run: 2025-12-04).
+- `test_lineage_reward_triggers_on_descendant_gain` programmatically registers a child via `_register_new_agent` to assert the lineage delta pays out and logs an event.
+- `test_agent_emits_max_age_termination_and_logs_event` forces an agent to the configured age cap, steps the env once, and ensures the termination path populates infos plus completed stats.
+- `test_juvenile_predator_blocked_from_live_prey` and `test_predator_can_eat_live_prey_after_window` validate the carcass-only diet window (blocked bite logging vs. normal catch once the agent ages out).
+- `test_founder_predator_starts_at_carcass_threshold` ensures reset-time founders are pre-aged past the juvenile window so the ecosystem begins with active predation.
+- Keep these tests in CI to catch regressions whenever lineage bookkeeping or cap logic changes.
+
+## 7. References
 - `predpreygrass_rllib_env.py`: `_handle_lineage_birth`, `_apply_lineage_survival_rewards`, `_agent_is_fertile`.
 - `evaluate_ppo_from_checkpoint_debug.py`: new lineage + fertility columns in reward summaries.
 - Historical behavior snapshot: `src/predpreygrass/rllib/kick_back_rewards/README.md` (original kick-back design).
