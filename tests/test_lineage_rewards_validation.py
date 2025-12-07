@@ -18,6 +18,8 @@ def _make_test_env(overrides=None):
             "n_possible_type_2_predators": 0,
             "n_possible_type_2_prey": 0,
             "initial_num_grass": 4,
+            # Allow terminated agents to remain in step outputs for testing expectations
+            "strict_rllib_output": False,
         }
     )
     if overrides:
