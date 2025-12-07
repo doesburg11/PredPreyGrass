@@ -2,7 +2,7 @@ pettingzoo==1.25.0
 stable-baselines3[extra]==2.6.0
 SuperSuit==3.9.3
 
-ray[rllib]==2.51.0
+ray[rllib]==2.52.0
 tensorboard==2.20.0
 
 numpy==1.26.4
