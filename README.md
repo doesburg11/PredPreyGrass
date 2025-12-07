@@ -3,9 +3,9 @@
 
 
 # Predator-Prey-Grass
-## Evolution in a multi-agent reinforcement learning gridworld
+## Coevolution in a multi-agent deep reinforcement learning gridworld
 
-This repo explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Reinforcement Learning** (MARL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+This repo explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
     <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
@@ -24,9 +24,9 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * **Walls occlusion**: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
-* **Reproduction kick back rewards**: On top of (own) reproduction rewards, agents receive rewards when their children reproduces ([implementation](src/predpreygrass/rllib/kick_back_rewards))
+* **Reproduction kick back rewards**: On top of direct reproduction rewards, agents receive indirect rewards when their children reproduce ([implementation](src/predpreygrass/rllib/kick_back_rewards))
 
-* **Lineage rewards**: Agents receive rewards when their offspring survives over time ([implementation](src/predpreygrass/rllib/lineage_rewards))
+* **Lineage rewards**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time ([implementation](src/predpreygrass/rllib/lineage_rewards))
 
 ### Experiments:
 
@@ -42,7 +42,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Installation of the repository
 
-**Editor used:** Visual Studio Code 1.101.0 on Linux Mint 22.0 Cinnamon
+**Editor used:** Visual Studio Code 1.106.3 on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository:
    ```bash
