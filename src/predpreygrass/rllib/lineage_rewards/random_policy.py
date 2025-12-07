@@ -35,7 +35,10 @@ def random_policy_pi(agent_id, env):
 if __name__ == "__main__":
     # Inject walls into config (if not already present)
     cfg = dict(config_env)
-    seed = cfg["seed"]
+    seed = cfg.get("seed")
+    if seed is None:
+        seed = random.SystemRandom().randint(0, 2**32 - 1)
+        cfg["seed"] = seed
     random.seed(seed)
     np.random.seed(seed)
     # Enable visibility (occlusion) channel so observations include LOS mask as final channel
