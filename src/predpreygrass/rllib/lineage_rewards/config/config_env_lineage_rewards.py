@@ -19,41 +19,41 @@ config_env = {
         "type_2_prey": 0.0,
     },
     "lineage_reward_coeff": {
-        "type_1_predator": 0.35,
+        "type_1_predator": 0.0,
         "type_2_predator": 0.0,
-        "type_1_prey": 0.6,
+        "type_1_prey": 0.0,
         "type_2_prey": 0.0,
     },
     "max_fertility_age": {
         # None ⇒ unlimited fertility window; set to an int to cap fertile age in steps
-        "type_1_predator": 100,
+        "type_1_predator": None,
         "type_2_predator": None,
-        "type_1_prey": 80,
+        "type_1_prey": None,
         "type_2_prey": None,
     },
     "max_agent_age": {
         # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
-        "type_1_predator": 220,
+        "type_1_predator": None,
         "type_2_predator": None,
-        "type_1_prey": 180,
+        "type_1_prey": None,
         "type_2_prey": None,
     },
     "carcass_only_predator_age": {
         # Juvenile predators younger than this many steps may only bite carcasses (already-dead prey)
         # Set to None/negative to disable the restriction for a policy group.
-        "type_1_predator": 10,
+        "type_1_predator": None,
         "type_2_predator": None,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,
+    "energy_loss_per_step_predator": 0.18, # 0.15
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # Energy intake caps
-    "max_energy_gain_per_grass": 1.5,  # float('inf'), # 1.5
-    "max_energy_gain_per_prey": 2.5,  # float('inf'),  # 2.5
+    "max_energy_gain_per_grass": float('inf'), # 1.5
+    "max_energy_gain_per_prey": float('inf'),  # 2.5
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
@@ -66,9 +66,9 @@ config_env = {
     "n_initial_active_type_1_prey": 10,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
-    "initial_num_grass": 100,
+    "initial_num_grass": 120,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04,
+    "energy_gain_per_step_grass": 0.04, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,
