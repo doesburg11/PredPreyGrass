@@ -45,7 +45,7 @@ config_env = {
         "type_2_predator": None,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.18, # 0.15
+    "energy_loss_per_step_predator": 0.20, # 0.15
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
@@ -66,7 +66,7 @@ config_env = {
     "n_initial_active_type_1_prey": 10,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
-    "initial_num_grass": 120,
+    "initial_num_grass": 160,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.04, # 0.04
     "verbose_engagement": False,
