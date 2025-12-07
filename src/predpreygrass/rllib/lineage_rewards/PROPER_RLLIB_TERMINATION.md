@@ -1,10 +1,10 @@
-# Environment Comparison: walls_occlusion vs rllib_termination
+# Environment Comparison: walls_occlusion vs lineage_rewards
 
-This document focusses on the feature changes from `walls oclussion` towards `rllib_termination`
+This document focusses on the feature changes from `walls oclussion` towards `lineage_rewards`
 
 ## Overview: from reusing "dead" agents to using only "unique/fresh" agents
 
-`rllib_termination` fixes a long standing work around in the `PredPreyGrass` repo. In the past (up until `walls_oclussion`), "dead" agent were "recreated" back to live to make reusement of non-active agents possible. The original goal was to limit the `possible_agent` (which needs to be predefinied and caps the number of possible_agents at run time). Although this increases the pool of (re)created agents susbstantially in practice,it on the othere side is not compeletely aligned with RLLib protocol. In our previous setup(s) we did not actually `terminated` an agent in the `RLLib` (and `Gymnasium`) sense. We used a activation/deactivation flag in our logic as a workaround. That meant in practice that agents not really terminated when dying, but that a "true" trajectory existed of multiple lives of different agents (of the same species obviously), stitched together with intervals of "inactivenes". That worked magically well but is not according to the strict RLlib protocol and thefore can result in strange unexpected learning behavior.
+`lineage_rewards` fixes a long standing work around in the `PredPreyGrass` repo. In the past (up until `walls_oclussion`), "dead" agent were "recreated" back to live to make reusement of non-active agents possible. The original goal was to limit the `possible_agent` (which needs to be predefinied and caps the number of possible_agents at run time). Although this increases the pool of (re)created agents susbstantially in practice,it on the othere side is not compeletely aligned with RLLib protocol. In our previous setup(s) we did not actually `terminated` an agent in the `RLLib` (and `Gymnasium`) sense. We used a activation/deactivation flag in our logic as a workaround. That meant in practice that agents not really terminated when dying, but that a "true" trajectory existed of multiple lives of different agents (of the same species obviously), stitched together with intervals of "inactivenes". That worked magically well but is not according to the strict RLlib protocol and thefore can result in strange unexpected learning behavior.
 
 ## Termination Protocol Change Notes: Purpose
 - Document the behavioral difference between historical agent-slot reuse and the corrected termination handling.
@@ -57,7 +57,7 @@ or Experiment Tracking
 - Hyperparameter searches using the new implementation yield more trustworthy objective signals (e.g., `score_pred`).
 
 
-Both `walls_occlusion` and `rllib_termination` environments implement the same core predator-prey-grass ecosystem with walls and line-of-sight mechanics. However, they differ significantly in their **configuration philosophy**, **ID management strategy**, and **implementation maturity**.
+Both `walls_occlusion` and `lineage_rewards` environments implement the same core predator-prey-grass ecosystem with walls and line-of-sight mechanics. However, they differ significantly in their **configuration philosophy**, **ID management strategy**, and **implementation maturity**.
 
 ---
 
@@ -80,7 +80,7 @@ self.wall_placement_mode = config.get("wall_placement_mode", "random")
 - Safer for config evolution (missing keys won't crash)
 - Nevertheless, we've removed fallback options as much as possible on purpose to minimize unexpected behavior (and unexpected parameter use) during development.
 
-**rllib_termination: Strict Direct Access**
+**lineage_rewards: Strict Direct Access**
 ```python
 self.debug_mode = config["debug_mode"]
 self.max_steps = config["max_steps"]
@@ -91,7 +91,7 @@ self.manual_wall_positions = config["manual_wall_positions"]
 - Enforces complete configuration contracts
 - Better for production: explicit about requirements
 
-**Migration impact**: When moving from walls_occlusion to rllib_termination, you MUST provide ALL config keys (no defaults available).
+**Migration impact**: When moving from walls_occlusion to lineage_rewards, you MUST provide ALL config keys (no defaults available).
 
 ---
 
@@ -114,10 +114,12 @@ def _register_new_agent(self, agent_id, parent_unique_id=None):
 - Simpler bookkeeping, less memory overhead
 - Requires disambiguation in lineage tracking
 
-**rllib_termination: Never-Reuse ID Pools**
+**lineage_rewards: Never-Reuse ID Pools**
 ```python
 # Never reuse IDs within an episode, use deque pools
-self.used_agent_ids = set()  # All IDs ever used this episode
+# Due to the proper termination proptocol resuing agents is not possible anymore
+# This results in every ID being unique anyway
+self.used_agent_ids = set()  # All IDs ever used ('alive') this episode
 self._available_id_pools = {
     "type_1_predator": deque([...]),
     "type_2_predator": deque([...]),
@@ -143,7 +145,7 @@ def _alloc_new_id(self, species: str, type_nr: int):
 
 **Trade-offs**:
 - **walls_occlusion**: More agents possible per episode (via reuse), complex lineage tracking
-- **rllib_termination**: Simpler lineage tracking, limited by total possible agents per type
+- **lineage_rewards**: Simpler lineage tracking, limited by total possible agents per type
 
 ---
 
@@ -162,13 +164,13 @@ elif self.wall_placement_mode == "random":
     # Randomly sample num_walls positions
 ```
 
-**rllib_termination: Manual Only**
+**lineage_rewards: Manual Only**
 ```python
 self.manual_wall_positions = config["manual_wall_positions"]
 # No random wall generation mode
 ```
 
-**Migration note**: rllib_termination requires explicit wall positions; no random fallback.
+**Migration note**: lineage_rewards requires explicit wall positions; no random fallback.
 
 ---
 
@@ -183,7 +185,7 @@ def _init_reset_variables(self, seed):
     self.rng = np.random.default_rng(seed)  # Re-seed on reset
 ```
 
-**rllib_termination: Reset-Only Seeding**
+**lineage_rewards: Reset-Only Seeding**
 ```python
 def _initialize_from_config(self):
     # RNG will be initialized during reset to ensure per-episode reproducibility
@@ -195,11 +197,11 @@ def _init_reset_variables(self, seed):
     self.rng = np.random.default_rng(seed)
 ```
 
-**Difference**: rllib_termination delays RNG creation until first reset, with explicit seed priority handling.
+**Difference**: lineage_rewards delays RNG creation until first reset, with explicit seed priority handling.
 
 ---
 
-### 5. Additional Tracking in rllib_termination
+### 5. Additional Tracking in lineage_rewards
 
 **Episode-level counters** (not in walls_occlusion):
 ```python
@@ -217,7 +219,7 @@ self._printed_termination_ids = set()  # Debug print guard
 
 ### 6. Precomputed LOS Masks
 
-**rllib_termination only:**
+**lineage_rewards only:**
 ```python
 def __init__(self, config=None):
     # ...
@@ -225,7 +227,7 @@ def __init__(self, config=None):
     self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
 ```
 
-**Note**: This suggests rllib_termination may have optimizations for line-of-sight calculations (though `_precompute_los_mask` method implementation not visible in snippets).
+**Note**: This suggests lineage_rewards may have optimizations for line-of-sight calculations (though `_precompute_los_mask` method implementation not visible in snippets).
 
 ---
 
@@ -238,12 +240,12 @@ if self.current_step - self.agent_last_reproduction.get(agent, -cooldown) < cool
     return
 ```
 
-**rllib_termination: Direct Access**
+**lineage_rewards: Direct Access**
 ```python
 self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
 ```
 
-**Consistent with overall pattern**: walls_occlusion uses defensive `.get()`, rllib_termination requires explicit config key.
+**Consistent with overall pattern**: walls_occlusion uses defensive `.get()`, lineage_rewards requires explicit config key.
 
 ---
 
@@ -286,7 +288,7 @@ Both share the following core mechanics:
 
 ## Migration Guide
 
-### From walls_occlusion → rllib_termination
+### From walls_occlusion → lineage_rewards
 
 **Required changes:**
 
@@ -295,7 +297,7 @@ Both share the following core mechanics:
    # walls_occlusion worked with:
    config = {"grid_size": 10}  # Other keys got defaults
    
-   # rllib_termination requires:
+   # lineage_rewards requires:
    config = {
        "debug_mode": False,
        "max_steps": 10000,
@@ -314,7 +316,7 @@ Both share the following core mechanics:
    "wall_placement_mode": "random",
    "num_walls": 20
    
-   # rllib_termination:
+   # lineage_rewards:
    "manual_wall_positions": [(x1,y1), (x2,y2), ...]  # Must specify all
    ```
 
@@ -340,7 +342,7 @@ Both share the following core mechanics:
 
 ---
 
-### From rllib_termination → walls_occlusion
+### From lineage_rewards → walls_occlusion
 
 **Required changes:**
 
@@ -382,7 +384,7 @@ Both share the following core mechanics:
 - **Flexibility**: Random walls, default configs
 - **Use case**: Research prototyping, config experimentation
 
-### rllib_termination
+### lineage_rewards
 - **Stability**: Strict contracts, explicit requirements
 - **Optimization**: ID pools, precomputed masks, capacity tracking
 - **Use case**: Reproducible experiments, lineage studies, production training
@@ -397,7 +399,7 @@ Both share the following core mechanics:
 - You want to maximize agent capacity via ID reuse
 - You prefer forgiving defaults during development
 
-**Choose rllib_termination if:**
+**Choose lineage_rewards if:**
 - You need strict reproducibility guarantees
 - You're analyzing lineage/genealogy (simpler with unique IDs)
 - You want explicit capacity limits and diagnostics
@@ -406,8 +408,8 @@ Both share the following core mechanics:
 
 **Hybrid approach:**
 - Start with walls_occlusion for rapid iteration
-- Migrate to rllib_termination for final experiments
-- Use walls_occlusion's random walls to generate fixed `manual_wall_positions` for rllib_termination
+- Migrate to lineage_rewards for final experiments
+- Use walls_occlusion's random walls to generate fixed `manual_wall_positions` for lineage_rewards
 
 ---
 
@@ -415,7 +417,7 @@ Both share the following core mechanics:
 
 Potential merged features:
 - **Config flexibility**: Support both `.get()` defaults AND strict mode (via flag)
-- **Wall modes**: Add random generation to rllib_termination
+- **Wall modes**: Add random generation to lineage_rewards
 - **ID strategy**: Make ID reuse vs never-reuse a configurable option
 - **Hybrid capacity**: Allow ID reuse with optional capacity cap
 
@@ -424,27 +426,27 @@ Potential merged features:
 ## File Locations
 
 - **walls_occlusion**: `src/predpreygrass/rllib/walls_occlusion/predpreygrass_rllib_env.py`
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_1.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_1.py`
 
 ---
 
 *Document created: 2025-12-03*
 
 ## Further feature changes
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_3.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_3.py`
 
 -kinship rewards for parents when offspring survive time steps
 
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_4.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_4.py`
 -kinship rewards for parents when offspring survive time steps
--integrated kinship rewards into config_env_rllib_termination.py
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_5.py`
+-integrated kinship rewards into config_env_lineage_rewards.py
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_5.py`
 -adjust the kinship rewards for parents when offspring succeeds in 
 producing offspring themseleves (instead of only surviving time steps (works_4))
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_6.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_6.py`
 - simplify config options
 - remove unused rewards
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_7.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_7.py`
  Limited intake per step:
  - Predator–prey: each predator can only consume up to a fixed
    energy bite from a caught prey per step (bite = min(prey_energy,
@@ -459,7 +461,7 @@ producing offspring themseleves (instead of only surviving time steps (works_4))
    grazings over time.
  - If bite >= grass_energy, the grass is fully eaten and its energy is
    reset to zero as usual, with regeneration starting in the next step.
-- **rllib_termination**: `src/predpreygrass/rllib/rllib_termination/predpreygrass_rllib_env_works_8.py`
+- **lineage_rewards**: `src/predpreygrass/rllib/lineage_rewards/predpreygrass_rllib_env_works_8.py`
  - Dead-prey carcasses:
    * When a prey is first bitten but still has remaining energy,
      it becomes "dead" (added to dead_prey) but is not immediately
@@ -474,9 +476,9 @@ producing offspring themseleves (instead of only surviving time steps (works_4))
      which the prey is fully removed as usual.
 
 
-# Kin Kickback Rewards in `rllib_termination`
+# Kin Kickback Rewards in `lineage_rewards`
 
-This document describes the "kin kickback" reward mechanism added to the `PredPreyGrass` environment in the `rllib_termination` variant.
+This document describes the "kin kickback" reward mechanism added to the `PredPreyGrass` environment in the `lineage_rewards` variant.
 
 ## Overview
 
@@ -566,7 +568,7 @@ self.agent_stats_completed[agent_id] = record
 
 ## Evaluation Outputs
 
-The kin kickback statistics are surfaced in the evaluation/debug scripts under `rllib_termination`:
+The kin kickback statistics are surfaced in the evaluation/debug scripts under `lineage_rewards`:
 
 - `evaluate_ppo_from_checkpoint_debug.py` uses `env.get_all_agent_stats()` to build per-agent stats.
 - For each agent, it records:
