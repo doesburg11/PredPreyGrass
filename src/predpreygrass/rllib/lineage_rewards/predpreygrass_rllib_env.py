@@ -1182,30 +1182,14 @@ class PredPreyGrass(MultiAgentEnv):
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("predator", parent_type)
             if not new_agent:
-                # Capacity exhausted: record metric + info flag and still award reproduction reward.
-                self.reproduction_blocked_due_to_capacity_predator += 1
-                self.rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
-                # Debug: reproduction reward even if capacity blocked
-                self.debug_predator_total_reward += float(self.rewards[agent])
-                self.debug_predator_repro_events += 1
-                # cumulative_reward is tracked directly in agent_stats_live
-                parent_record = self.agent_stats_live.get(agent)
-                if parent_record is not None:
-                    parent_record["cumulative_reward"] += self.rewards[agent]
-                    # Log direct reproduction reward event (capacity blocked)
-                    evt = self.agent_event_log.get(agent)
-                    if evt is not None:
-                        evt.setdefault("reward_events", []).append(
-                            {
-                                "t": int(self.current_step),
-                                "reproduction_reward": float(self.rewards[agent]),
-                                "lineage_reward": 0.0,
-                                "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
-                            }
-                        )
-                self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
-                self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_predator"] = self.reproduction_blocked_due_to_capacity_predator
-                return
+                cap = self.n_possible_type_1_predators if parent_type == 1 else self.n_possible_type_2_predators
+                msg = (
+                    f"[PredPreyGrass] Predator ID pool exhausted for type {parent_type} "
+                    f"at step {self.current_step}. Active predators: {self.active_num_predators}; "
+                    f"configured capacity for type: {cap}. Exiting."
+                )
+                print(msg, flush=True)
+                raise SystemExit(msg)
 
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
@@ -1300,27 +1284,14 @@ class PredPreyGrass(MultiAgentEnv):
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("prey", parent_type)
             if not new_agent:
-                # Capacity exhausted: record metric + info flag and still award reproduction reward.
-                self.reproduction_blocked_due_to_capacity_prey += 1
-                self.rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
-                # cumulative_reward is tracked directly in agent_stats_live
-                parent_record = self.agent_stats_live.get(agent)
-                if parent_record is not None:
-                    parent_record["cumulative_reward"] += self.rewards[agent]
-                    # Log direct reproduction reward event (capacity blocked)
-                    evt = self.agent_event_log.get(agent)
-                    if evt is not None:
-                        evt.setdefault("reward_events", []).append(
-                            {
-                                "t": int(self.current_step),
-                                "reproduction_reward": float(self.rewards[agent]),
-                                "lineage_reward": 0.0,
-                                "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
-                            }
-                        )
-                self._pending_infos.setdefault(agent, {})["reproduction_blocked_due_to_capacity"] = True
-                self._pending_infos[agent]["reproduction_blocked_due_to_capacity_count_prey"] = self.reproduction_blocked_due_to_capacity_prey
-                return
+                cap = self.n_possible_type_1_prey if parent_type == 1 else self.n_possible_type_2_prey
+                msg = (
+                    f"[PredPreyGrass] Prey ID pool exhausted for type {parent_type} "
+                    f"at step {self.current_step}. Active prey: {self.active_num_prey}; "
+                    f"configured capacity for type: {cap}. Exiting."
+                )
+                print(msg, flush=True)
+                raise SystemExit(msg)
 
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
