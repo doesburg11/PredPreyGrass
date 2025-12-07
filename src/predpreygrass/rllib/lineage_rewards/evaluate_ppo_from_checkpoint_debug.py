@@ -123,8 +123,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_18_NUM_GRASS_120_2025-12-06_23-11-43/PPO_PredPreyGrass_8c291_00000_0_2025-12-06_23-11-43/"
-    checkpoint_dir = "checkpoint_000009"
+    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_NUM_GRASS_160_2025-12-07_17-21-19/PPO_PredPreyGrass_c3935_00000_0_2025-12-07_17-21-19/"
+    checkpoint_dir = "checkpoint_000055"
   
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
     # training_dir = os.path.dirname(checkpoint_path)
