@@ -32,6 +32,8 @@ class PredPreyGrass(MultiAgentEnv):
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config["debug_mode"]
+        # When True, restrict step outputs to live agents only (RLlib new API expectations)
+        self.strict_rllib_output = config.get("strict_rllib_output", True)
         self.verbose_movement = config["verbose_movement"]
         self.verbose_decay = config["verbose_decay"]
         self.verbose_reproduction = config["verbose_reproduction"]
@@ -64,7 +66,12 @@ class PredPreyGrass(MultiAgentEnv):
         }
         configured_age_caps = config.get("max_agent_age")
         if isinstance(configured_age_caps, dict):
-            self.max_agent_age_config = {**default_age_caps, **configured_age_caps}
+            merged_caps = default_age_caps.copy()
+            for key, limit in configured_age_caps.items():
+                # Treat None as "use default" to keep protective caps active unless explicitly overridden
+                if limit is not None:
+                    merged_caps[key] = limit
+            self.max_agent_age_config = merged_caps
         else:
             self.max_agent_age_config = default_age_caps
 
@@ -136,6 +143,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_positions = {}
         self.agent_energies = {}
         self.grass_energies = {}
+        # Per-step return dicts
+        self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         # Ages (in steps) for all currently active agents
         self.agent_ages = {}
         # Per-agent event log for detailed post-hoc analysis
@@ -240,6 +249,11 @@ class PredPreyGrass(MultiAgentEnv):
         self._init_available_id_pools()
         # Print-once guard for termination debug logs (per episode)
         self._printed_termination_ids = set()
+        # Precompute LOS masks for each obs range (assuming static walls for now)
+        # This must be done after config and grid/wall initialization
+        self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
+        self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
+
     def _init_available_id_pools(self):
         """Build deques of never-used IDs per species/type for O(1) allocation.
 
@@ -297,10 +311,6 @@ class PredPreyGrass(MultiAgentEnv):
         self._init_reset_variables(seed)
 
         self._create_and_place_grid_world_entities()
-
-        # Recompute LOS masks after walls are placed so visibility respects obstacles
-        self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
-        self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
 
         self.active_num_predators = len(self.predator_positions)
         self.active_num_prey = len(self.prey_positions)
@@ -389,30 +399,32 @@ class PredPreyGrass(MultiAgentEnv):
         self._apply_lineage_survival_rewards()
 
         # Step 8: Assemble return dicts.
-        # Generate observations for all still-active agents AFTER engagements and reproduction.
+        # Generate observations only for still-active agents AFTER engagements and reproduction.
         get_obs = self._get_observation
-        active_obs = {agent: get_obs(agent) for agent in self.agents}
-        self.observations.update(active_obs)  # Preserve any earlier terminal snapshots
+        self.observations = {agent: get_obs(agent) for agent in self.agents}
 
-        # Union of all agent IDs referenced this step.
-        all_ids = set(self.observations) | set(self.terminations) | set(self.rewards) | set(self.truncations)
+        live_ids = set(self.agents)
+        # Preserve full termination/truncation maps before filtering to live agents
+        term_full = dict(self.terminations)
+        trunc_full = dict(self.truncations)
 
-        # Guarantee observation presence for terminated agents that didn't have a snapshot captured earlier.
-        for aid in all_ids:
-            if aid not in self.observations:
-                if "predator" in aid:
-                    obs_range = self.predator_obs_range
-                elif "prey" in aid:
-                    obs_range = self.prey_obs_range
-                else:
-                    continue  # Skip non-learning entities if any
-                channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-                self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+        if self.strict_rllib_output:
+            # RLlib new API expects only current agents in step outputs
+            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in live_ids}
+            self.terminations = {aid: self.terminations.get(aid, False) for aid in live_ids}
+            self.truncations = {aid: self.truncations.get(aid, False) for aid in live_ids}
+            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in live_ids}
+        else:
+            # Test mode: include agents that ended this step
+            ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag}
+            term_ids = live_ids | ended_ids_all
+            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in live_ids}
+            self.terminations = {aid: self.terminations.get(aid, False) for aid in term_ids}
+            self.truncations = {aid: self.truncations.get(aid, False) for aid in term_ids}
+            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in term_ids}
 
-        # Fill defaults for missing reward/termination/truncation keys (without erasing True terminations).
-        self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in all_ids}
-        self.terminations = {aid: self.terminations.get(aid, False) for aid in all_ids}
-        self.truncations = {aid: self.truncations.get(aid, False) for aid in all_ids}
+        if "__all__" in self._pending_infos:
+            self.infos["__all__"] = self._pending_infos["__all__"]
         episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
         if episode_done:
             # Any still-alive agents should be marked truncated and provided with their final cumulative reward
@@ -422,7 +434,23 @@ class PredPreyGrass(MultiAgentEnv):
             self._attach_final_cumulative_rewards_for_live_agents()
         self.terminations["__all__"] = episode_done
         self.truncations["__all__"] = False
-        self.infos = {aid: self._pending_infos.get(aid, {}) for aid in all_ids}
+
+        # After episode_done adjustments, emit final obs/flags for any ended agent not in live outputs
+        ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag} | {aid for aid, flag in self.truncations.items() if flag}
+        ended_missing = ended_ids_all - set(self.observations)
+        for aid in ended_missing:
+            if "predator" in aid:
+                obs_range = self.predator_obs_range
+            elif "prey" in aid:
+                obs_range = self.prey_obs_range
+            else:
+                continue
+            channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+            self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+            self.rewards[aid] = self.rewards.get(aid, 0.0)
+            self.terminations[aid] = term_full.get(aid, False)
+            self.truncations[aid] = trunc_full.get(aid, True)
+            self.infos[aid] = self._pending_infos.get(aid, {})
         step_data = {}
         for agent in self.agents:
             pos = self.agent_positions[agent]
@@ -830,7 +858,7 @@ class PredPreyGrass(MultiAgentEnv):
                 self.truncations[caught_prey] = False
                 self.active_num_prey -= 1
                 self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
-                self.dead_prey.discard(caught_prey)
+                self.dead_prey.add(caught_prey)
                 prey_record = self.agent_stats_live.get(caught_prey)
                 if prey_record is not None:
                     prey_record["death_cause"] = "eaten"
@@ -925,27 +953,27 @@ class PredPreyGrass(MultiAgentEnv):
             if agent_id not in self.agent_stats_live:
                 # Only living agents accrue lineage rewards
                 continue
+            # Ensure reward key exists even if no lineage delta occurs
+            self.rewards.setdefault(agent_id, 0.0)
             coeff = self._get_type_specific("lineage_reward_coeff", agent_id)
-            if coeff == 0:
-                record["prev_live_descendants"] = record.get("live_descendants", 0)
-                continue
             current = record.get("live_descendants", 0)
             previous = record.get("prev_live_descendants", 0)
             delta = current - previous
             if delta == 0:
-                continue
-            reward = coeff * float(delta)
-            if reward == 0:
                 record["prev_live_descendants"] = current
                 continue
-            self.rewards[agent_id] = self.rewards.get(agent_id, 0.0) + reward
+            reward = coeff * float(delta)
             stats_record = self.agent_stats_live.get(agent_id)
+            # Always update lineage_reward_total for visibility, even if reward is zero
             if stats_record is not None:
-                stats_record["cumulative_reward"] += reward
                 stats_record["lineage_reward_total"] = stats_record.get("lineage_reward_total", 0.0) + reward
-            if "predator" in agent_id:
-                self.debug_predator_total_reward += float(reward)
-                self.debug_predator_lineage_events += 1
+            if reward != 0:
+                self.rewards[agent_id] = self.rewards.get(agent_id, 0.0) + reward
+                if stats_record is not None:
+                    stats_record["cumulative_reward"] += reward
+                if "predator" in agent_id:
+                    self.debug_predator_total_reward += float(reward)
+                    self.debug_predator_lineage_events += 1
             evt = self.agent_event_log.get(agent_id)
             if evt is not None:
                 evt.setdefault("reward_events", []).append(
@@ -1606,26 +1634,6 @@ class PredPreyGrass(MultiAgentEnv):
         copied["offspring_ids"] = list(record.get("offspring_ids", []))
         return copied
 
-    def export_agent_event_log(self, path: str) -> None:
-        """Export the per-agent event log to a JSON file for evaluation/debugging."""
-        import json
-
-        def _convert(obj):
-            if isinstance(obj, (int, float, str)) or obj is None:
-                return obj
-            if isinstance(obj, dict):
-                return {k: _convert(v) for k, v in obj.items()}
-            if isinstance(obj, (list, tuple)):
-                return [_convert(v) for v in obj]
-            try:
-                return obj.item()
-            except Exception:
-                return str(obj)
-
-        payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(payload, f, indent=2)
-
     def _finalize_agent_record(self, agent_id: str, cause: Optional[str] = None):
         record = self.agent_stats_live.pop(agent_id, None)
         if record is None:
@@ -1637,6 +1645,29 @@ class PredPreyGrass(MultiAgentEnv):
         if cause is not None:
             record["death_cause"] = cause
 
+        def export_agent_event_log(self, path: str) -> None:
+            """Export the per-agent event log to a JSON file.
+
+            Designed for evaluation scripts. Writes a dict keyed by agent_id,
+            where each value is that agent's event-log record.
+            """
+            import json
+
+            def _convert(obj):
+                if isinstance(obj, (int, float, str)) or obj is None:
+                    return obj
+                if isinstance(obj, dict):
+                    return {k: _convert(v) for k, v in obj.items()}
+                if isinstance(obj, (list, tuple)):
+                    return [_convert(v) for v in obj]
+                try:
+                    return obj.item()
+                except Exception:
+                    return str(obj)
+
+            payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2)
         if record.get("death_step") is None:
             record["death_step"] = self.current_step
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
@@ -1891,3 +1922,4 @@ class PredPreyGrass(MultiAgentEnv):
                 if self._line_of_sight_clear(center, (tx, ty)):
                     mask[tx, ty] = 1.0
         return mask
+
