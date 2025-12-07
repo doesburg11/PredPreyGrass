@@ -64,7 +64,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "LINEAGE_REWARDS_LIMITED_FERTILITY_AGE_JUVENILES"
+    version = "NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_18_GRASS_REGROWTH_0_1"
     experiment_name = f"PPO_REPRODUCTION_REWARD_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
