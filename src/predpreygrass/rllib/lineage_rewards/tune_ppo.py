@@ -137,6 +137,7 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
+        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
