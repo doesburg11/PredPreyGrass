@@ -123,7 +123,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_2025-12-06_12-24-56/PPO_PredPreyGrass_31434_00000_0_2025-12-06_12-24-56/"
+    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_GRASS_REGROWTH_0_0_8_2025-12-08_22-37-27/PPO_PredPreyGrass_17bf4_00000_0_2025-12-08_22-37-27/"
     checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
     # training_dir = os.path.dirname(checkpoint_path)
@@ -527,7 +527,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 5
+    seed = 4
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
