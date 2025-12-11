@@ -26,10 +26,8 @@ config_env = {
     "prey_creation_energy_threshold": 6.0,
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
-    # Cooperative capture (always enabled): predators in the prey's Moore neighborhood must collectively
-    # meet/exceed the prey energy to capture; reward/energy split initially equal.
+    # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
-    "team_capture_equal_split": True,  # if False, proportional split can be added later
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
