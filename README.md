@@ -42,7 +42,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ## Installation of the repository
 
-**Editor used:** Visual Studio Code 1.106.3 on Linux Mint 22.0 Cinnamon
+**Editor used:** Visual Studio Code 1.107.0 on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository:
    ```bash
