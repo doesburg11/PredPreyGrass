@@ -5,7 +5,7 @@ This document summarizes the cooperative capture logic for the `shared_prey` env
 ## Core Mechanics
 - **Team capture only:** Predators capture prey cooperatively; Moore neighborhood (Chebyshev ≤ 1) defines helper eligibility.
 - **Energy threshold:** Helpers’ energies are summed and compared to `prey_energy + team_capture_margin`. If below threshold, prey survives.
-- **Energy split:** On success, prey energy is divided equally among helpers and added to their energy.
+- **Energy split (proportional):** On success, prey energy is split proportionally to each helper’s current energy (relative to the total helper energy) and added to their energy.
 - **Sequential prey processing:** Prey are handled in deterministic order each step. Outcomes can affect later checks in the same step.
 
 ## One-kill-per-step constraint (new)
