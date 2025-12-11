@@ -39,10 +39,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.0)
         self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.0)
 
-        # Reward/penalty settings
-        self.reward_predator_catch_prey_config = config.get("reward_predator_catch_prey", 0.0)
-        self.penalty_prey_caught_config = config.get("penalty_prey_caught", 0.0)
-        self.reward_prey_eat_grass_config = config.get("reward_prey_eat_grass", 0.0)
+        # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
         self.reproduction_reward_prey_config = config.get("reproduction_reward_prey", 0.0)
 
@@ -827,36 +824,30 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_successes += 1
         self.team_capture_helper_total += helper_count
 
-        energy_share = prey_energy / helper_count if helper_count else 0.0
-
-        base_rewards = [self._get_type_specific("reward_predator_catch_prey", pid) for pid in helpers]
-        reward_share = sum(base_rewards) / helper_count if helper_count else 0.0
+        helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in helpers}
+        total_helper_energy = sum(helper_energy_snapshot.values())
 
         for pid in helpers:
             self.agents_just_ate.add(pid)
             self._per_agent_step_deltas.setdefault(pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
-            self.agent_energies[pid] += energy_share
-            self._per_agent_step_deltas[pid]["eat"] += energy_share
+            energy_share_pid = prey_energy * (helper_energy_snapshot[pid] / total_helper_energy) if total_helper_energy > 0 else 0.0
+            self.agent_energies[pid] += energy_share_pid
+            self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
             self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
-
-            self.rewards[pid] = self.rewards.get(pid, 0.0) + reward_share
-            self.debug_predator_total_reward += float(reward_share)
             pred_record = self.agent_stats_live.get(pid)
             if pred_record is not None:
                 pred_record["times_ate"] += 1
-                pred_record["energy_gained"] += energy_share
-                pred_record["cumulative_reward"] += reward_share
+                pred_record["energy_gained"] += energy_share_pid
             info = self._pending_infos.setdefault(pid, {})
             info["team_capture_helpers"] = helper_count
-            info["team_capture_reward_share"] = reward_share
-            info["team_capture_energy_gain"] = energy_share
+            info["team_capture_energy_gain"] = energy_share_pid
             evt = self.agent_event_log.get(pid)
             if evt is not None:
                 evt.setdefault("eating_events", []).append(
                     {
                         "t": int(self.current_step),
                         "id_eaten": prey_id,
-                        "bite_size": float(energy_share),
+                        "bite_size": float(energy_share_pid),
                         "energy_after": float(self.agent_energies[pid]),
                         # True only when multiple predators participated
                         "team_capture": helper_count > 1,
@@ -872,15 +863,13 @@ class PredPreyGrass(MultiAgentEnv):
         # Prey termination handling
         self.observations[prey_id] = self._get_observation(prey_id)
         self.terminations[prey_id] = True
-        penalty = self._get_type_specific("penalty_prey_caught", prey_id)
-        self.rewards[prey_id] = penalty
+
         self.truncations[prey_id] = False
         self.active_num_prey -= 1
         self.grid_world_state[2, *prey_pos] = 0
         prey_record = self.agent_stats_live.get(prey_id)
         if prey_record is not None:
             prey_record["death_cause"] = "eaten"
-            prey_record["cumulative_reward"] += penalty
         self._finalize_agent_record(prey_id, cause="eaten")
         self._remove_agent_from_state(prey_id)
 
@@ -899,7 +888,6 @@ class PredPreyGrass(MultiAgentEnv):
         if caught_grass:
             # attribution prey
             self.agents_just_ate.add(agent)
-            self.rewards[agent] = self._get_type_specific("reward_prey_eat_grass", agent)
             # cumulative_reward is tracked directly in agent_stats_live
             grass_energy = float(self.grass_energies[caught_grass])
             bite = grass_energy
