@@ -452,27 +452,30 @@ class PredPreyGrass(MultiAgentEnv):
         self.truncations["__all__"] = False
 
         # After episode_done adjustments, emit final obs/flags for any ended agent not in live outputs
-        ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag} | {aid for aid, flag in self.truncations.items() if flag}
-        ended_missing = ended_ids_all - set(self.observations)
-        for aid in ended_missing:
-            if "predator" in aid:
-                obs_range = self.predator_obs_range
-            elif "prey" in aid:
-                obs_range = self.prey_obs_range
-            else:
-                continue
-            channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-            self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
-            self.rewards[aid] = self.rewards.get(aid, 0.0)
-            self.terminations[aid] = term_full.get(aid, False)
-            self.truncations[aid] = trunc_full.get(aid, True)
-            self.infos[aid] = self._pending_infos.get(aid, {})
+        if not self.strict_rllib_output:
+            ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag} | {aid for aid, flag in self.truncations.items() if flag}
+            ended_missing = ended_ids_all - set(self.observations)
+            for aid in ended_missing:
+                if "predator" in aid:
+                    obs_range = self.predator_obs_range
+                elif "prey" in aid:
+                    obs_range = self.prey_obs_range
+                else:
+                    continue
+                channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+                self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+                self.rewards[aid] = self.rewards.get(aid, 0.0)
+                self.terminations[aid] = term_full.get(aid, False)
+                self.truncations[aid] = trunc_full.get(aid, True)
+                self.infos[aid] = self._pending_infos.get(aid, {})
         step_data = {}
         for agent in self.agents:
+            if agent not in self.agent_positions or agent not in self.agent_energies:
+                continue
             pos = self.agent_positions[agent]
             energy = self.agent_energies[agent]
             deltas = self._per_agent_step_deltas.get(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
-            age = self.agent_ages[agent]
+            age = self.agent_ages.get(agent, 0)
             step_data[agent] = {
                 "position": pos,
                 "energy": energy,
@@ -481,7 +484,7 @@ class PredPreyGrass(MultiAgentEnv):
                 "energy_eating": deltas["eat"],
                 "energy_reproduction": deltas["repro"],
                 "age": age,
-                "offspring_count": self.agent_offspring_counts[agent],
+                "offspring_count": self.agent_offspring_counts.get(agent, 0),
                 "offspring_ids": self.agent_live_offspring_ids.get(agent, []),
             }
 
@@ -556,6 +559,16 @@ class PredPreyGrass(MultiAgentEnv):
         Apply all per-step updates (energy decay, age increment).
         """
         for agent in list(self.agents):
+            # Defensive guard: if an agent leaked out of the state containers, drop it quietly
+            # to avoid KeyErrors during rollouts (observed in RLlib worker logs).
+            if (
+                agent not in self.agent_positions
+                or agent not in self.agent_energies
+                or agent not in self.agent_ages
+            ):
+                self._remove_agent_from_state(agent)
+                continue
+
             layer = 1 if "predator" in agent else 2
 
             # Energy decay always applies while the agent exists
@@ -908,7 +921,8 @@ class PredPreyGrass(MultiAgentEnv):
             if prey_record is not None:
                 prey_record["times_ate"] += 1
                 prey_record["energy_gained"] += energy_gain
-                prey_record["cumulative_reward"] += self.rewards[agent]
+                # Reward may not have been assigned yet in this branch; guard for missing key
+                prey_record["cumulative_reward"] += self.rewards.get(agent, 0.0)
             # Log prey eating event
             evt = self.agent_event_log.get(agent)
             if evt is not None:
