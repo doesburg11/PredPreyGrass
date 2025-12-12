@@ -36,7 +36,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_modules():
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_path = "PPO_REPRODUCTION_REWARD_SHARED_PREY_2025-12-10_21-57-00/PPO_PredPreyGrass_c591b_00000_0_2025-12-10_21-57-00/"
+    checkpoint_path = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_2025-12-11_23-25-47/PPO_PredPreyGrass_575de_00000_0_2025-12-11_23-25-47/"
     checkpoint_dir = "checkpoint_000004"
     checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         if SAVE_EVAL_RESULTS:
-            eval_output_dir = os.path.join(checkpoint_root, f"eval_runs_{now}")
+            eval_output_dir = os.path.join(checkpoint_root, f"eval_multiple_runs_{now}")
             os.makedirs(eval_output_dir, exist_ok=True)
             visualizer = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now, run_nr=run + 1)
         else:
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
         total_reward = 0
         terminated = False
-        truncated = False
+        truncated = False 
 
         while not terminated and not truncated:
             action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
