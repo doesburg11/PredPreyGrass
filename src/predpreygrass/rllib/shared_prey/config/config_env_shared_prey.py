@@ -19,7 +19,7 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.15, # 0.15
+    "energy_loss_per_step_predator": 0.20, # 0.15
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     # Lowered so prey can reproduce after a few grass bites even with ongoing decay.

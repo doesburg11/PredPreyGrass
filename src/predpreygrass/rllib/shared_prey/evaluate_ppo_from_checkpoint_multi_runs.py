@@ -37,7 +37,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_modules():
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     checkpoint_path = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_2025-12-11_23-25-47/PPO_PredPreyGrass_575de_00000_0_2025-12-11_23-25-47/"
-    checkpoint_dir = "checkpoint_000004"
+    checkpoint_dir = "checkpoint_000099"
     checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
     module_paths = {
