@@ -22,7 +22,12 @@ class EpisodeReturn(RLlibCallback):
         """
         self.num_episodes += 1
         episode_return = episode.get_return()
-        episode_length = getattr(episode, "length", 0)
+        episode_length = getattr(episode, "length", None)
+        if not episode_length:
+            episode_length = getattr(episode, "total_env_steps", 0)
+        if not episode_length:
+            rewards_map = episode.get_rewards()
+            episode_length = max((len(rews) for rews in rewards_map.values()), default=0)
         self.overall_sum_of_rewards += episode_return
 
         # Accumulate rewards by group
