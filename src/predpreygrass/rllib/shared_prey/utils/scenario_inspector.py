@@ -1,3 +1,16 @@
+#+++++++++++++++++++++++++++++++++++++++++++++++++++
+# TODO add policy for distance-based capture inspection
+# - load policy modules from checkpoint
+# - use policy to move predators/prey towards/away from each other
+# - allow step-by-step execution to see how capture unfolds
+# - visualize energy changes as well
+# - expand the grid to fully utilize observation ranges
+# - possibly expand grid to 25x25 to match env config
+# - possibly add obstacles to test LOS effects
+# - allow saving/loading of scenarios
+# - consider adding a simple GUI for easier scenario editing
+# --- end TODO ---
+#+++++++++++++++++++++++++++++++++++++++++++++++++++
 """
 Scenario Inspector for shared_prey team-capture logic.
 
