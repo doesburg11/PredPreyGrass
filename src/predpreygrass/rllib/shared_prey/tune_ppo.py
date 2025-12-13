@@ -61,10 +61,14 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
+    # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
+    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
+    env_config = {**config_env, "seed": None, "strict_rllib_output": True}
+
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20"
+    version = "PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_RANDOM_SEED"
     experiment_name = f"PPO_REPRODUCTION_REWARD_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -84,9 +88,9 @@ if __name__ == "__main__":
         json.dump(config_metadata, f, indent=4)
     # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
-    sample_env = env_creator(config=config_env)
+    sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
-    sample_env.reset(seed=config_env.get("seed"))
+    sample_env.reset(seed=None)
 
     # Group spaces per policy id (first agent of each policy defines the space)
     obs_by_policy, act_by_policy = {}, {}
@@ -112,7 +116,7 @@ if __name__ == "__main__":
     # Build config dictionary for Tune
     ppo_config = (
         PPOConfig()
-        .environment(env="PredPreyGrass", env_config=config_env)
+        .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(
             policies=policies,

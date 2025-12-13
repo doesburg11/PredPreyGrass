@@ -424,15 +424,19 @@ class PredPreyGrass(MultiAgentEnv):
         term_full = dict(self.terminations)
         trunc_full = dict(self.truncations)
 
+        # Compute ended agents from full maps (before any strict filtering).
+        ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag}
+        ended_ids_all.discard("__all__")
+
         if self.strict_rllib_output:
-            # RLlib new API expects only current agents in step outputs
-            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in live_ids}
-            self.terminations = {aid: self.terminations.get(aid, False) for aid in live_ids}
-            self.truncations = {aid: self.truncations.get(aid, False) for aid in live_ids}
-            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in live_ids}
+            # RLlib expects ended agents to appear once with their final obs/flags.
+            output_ids = live_ids | ended_ids_all
+            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in output_ids}
+            self.terminations = {aid: term_full.get(aid, False) for aid in output_ids}
+            self.truncations = {aid: trunc_full.get(aid, False) for aid in output_ids}
+            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in output_ids}
         else:
             # Test mode: include agents that ended this step
-            ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag}
             term_ids = live_ids | ended_ids_all
             self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in live_ids}
             self.terminations = {aid: self.terminations.get(aid, False) for aid in term_ids}
@@ -451,10 +455,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.terminations["__all__"] = episode_done
         self.truncations["__all__"] = False
 
-        # After episode_done adjustments, emit final obs/flags for any ended agent not in live outputs
-        if not self.strict_rllib_output:
-            ended_ids_all = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag} | {aid for aid, flag in self.truncations.items() if flag}
-            ended_missing = ended_ids_all - set(self.observations)
+        # Ensure any agent flagged terminated/truncated this step has a final observation for RLlib bootstrapping.
+        ended_missing = ended_ids_all - set(self.observations)
+        if ended_missing:
+            # Always attach a terminal observation for agents that ended this step.
             for aid in ended_missing:
                 if "predator" in aid:
                     obs_range = self.predator_obs_range
@@ -465,9 +469,25 @@ class PredPreyGrass(MultiAgentEnv):
                 channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
                 self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
                 self.rewards[aid] = self.rewards.get(aid, 0.0)
-                self.terminations[aid] = term_full.get(aid, False)
-                self.truncations[aid] = trunc_full.get(aid, True)
+                self.terminations[aid] = term_full.get(aid, self.terminations.get(aid, False))
+                self.truncations[aid] = trunc_full.get(aid, self.truncations.get(aid, False))
                 self.infos[aid] = self._pending_infos.get(aid, {})
+        # Final safety net: ensure any agent flagged terminated/truncated has an observation.
+        for aid, flag in tuple(self.truncations.items()):
+            if aid == "__all__" or not flag:
+                continue
+            if aid in self.observations:
+                continue
+            if "predator" in aid:
+                obs_range = self.predator_obs_range
+            elif "prey" in aid:
+                obs_range = self.prey_obs_range
+            else:
+                continue
+            channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+            self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+            self.rewards[aid] = self.rewards.get(aid, 0.0)
+            self.infos[aid] = self._pending_infos.get(aid, {})
         step_data = {}
         for agent in self.agents:
             if agent not in self.agent_positions or agent not in self.agent_energies:
@@ -847,6 +867,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[pid] += energy_share_pid
             self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
             self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+            # Ensure a reward entry exists (keep catch reward at zero for shared_prey).
+            self.rewards[pid] = self.rewards.get(pid, 0.0)
             pred_record = self.agent_stats_live.get(pid)
             if pred_record is not None:
                 pred_record["times_ate"] += 1
@@ -1560,4 +1582,3 @@ class PredPreyGrass(MultiAgentEnv):
                 if self._line_of_sight_clear(center, (tx, ty)):
                     mask[tx, ty] = 1.0
         return mask
-

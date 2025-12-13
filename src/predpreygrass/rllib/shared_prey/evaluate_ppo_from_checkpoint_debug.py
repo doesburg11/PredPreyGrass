@@ -1,3 +1,12 @@
+#+++++++++++++++++++++++++++++++++++++
+# TODO: visualize cooperative hunting behavior
+# -Change predator color when in cooperative hunting mode
+# -Add visual indicator when multiple predators are cooperating to catch prey
+# -Track and display statistics on successful cooperative hunts vs solo hunts
+# -Add visual indicator for predator(s) that are in a Moore neighborhood of a prey
+#  but have not enough energy to eat that prey
+#+++++++++++++++++++++++++++++++++++++
+
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
 and runs them in the PredPreyGrass environment (walls_occlusion_proper_termination) for interactive debugging.
@@ -123,7 +132,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_2025-12-11_23-25-47/PPO_PredPreyGrass_575de_00000_0_2025-12-11_23-25-47/"
+    checkpoint_root = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_2025-12-12_19-32-11/PPO_PredPreyGrass_dfb06_00000_0_2025-12-12_19-32-11/"
     checkpoint_dir = "checkpoint_000004"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
     # training_dir = os.path.dirname(checkpoint_path)
@@ -527,7 +536,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 8
+    seed = 5
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
