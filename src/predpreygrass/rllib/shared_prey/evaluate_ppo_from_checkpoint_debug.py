@@ -44,6 +44,7 @@ import pygame
 import cv2
 import numpy as np
 import re
+from copy import deepcopy
 from collections import defaultdict
 
 
@@ -132,10 +133,9 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
 
     ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_2025-12-12_19-32-11/PPO_PredPreyGrass_dfb06_00000_0_2025-12-12_19-32-11/"
-    checkpoint_dir = "checkpoint_000004"
+    checkpoint_root = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_RANDOM_SEED_2025-12-13_11-09-22/PPO_PredPreyGrass_cbef7_00000_0_2025-12-13_11-09-22/"
+    checkpoint_dir = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
-    # training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
 
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
@@ -632,9 +632,105 @@ if __name__ == "__main__":
             except Exception:
                 return str(obj)
 
+        def _augment_eating_events(event_log, step_agent_data):
+            """Add energy_before plus consumer/resource positions to eating events without mutating the live log."""
+            log = deepcopy(event_log)
+
+            def _get_position(t, agent_id):
+                if not isinstance(step_agent_data, list):
+                    return None
+                if not isinstance(t, (int, float, np.integer)):
+                    return None
+                idx = int(t)
+                if idx < 0 or idx >= len(step_agent_data):
+                    return None
+                step_entry = step_agent_data[idx]
+                if not isinstance(step_entry, dict):
+                    return None
+                agent_entry = step_entry.get(agent_id)
+                if not agent_entry:
+                    return None
+                pos = agent_entry.get("position")
+                if pos is None:
+                    return None
+                if hasattr(pos, "tolist"):
+                    pos = pos.tolist()
+                elif isinstance(pos, tuple):
+                    pos = list(pos)
+                return pos
+
+            def _get_resource_position(t, resource_id):
+                if resource_id is None:
+                    return None
+                return _get_position(t, resource_id)
+
+            def _augment_single_event(evt, agent_id):
+                bite = evt.get("bite_size")
+                energy_after = evt.get("energy_after")
+                energy_before = evt.get("energy_before")
+                if energy_before is None:
+                    if isinstance(bite, (int, float)) and isinstance(energy_after, (int, float)):
+                        energy_before = float(energy_after - bite)
+                energy_resource = evt.get("energy_resource")
+                pos = evt.get("position_consumer") or evt.get("position")
+                if pos is None:
+                    pos = _get_position(evt.get("t"), agent_id)
+                if hasattr(pos, "tolist"):
+                    pos = pos.tolist()
+                elif isinstance(pos, tuple):
+                    pos = list(pos)
+                resource_id = evt.get("id_resource") or evt.get("id_eaten")
+                pos_resource = evt.get("position_resource")
+                if pos_resource is None:
+                    pos_resource = _get_resource_position(evt.get("t"), resource_id)
+                if hasattr(pos_resource, "tolist"):
+                    pos_resource = pos_resource.tolist()
+                elif isinstance(pos_resource, tuple):
+                    pos_resource = list(pos_resource)
+
+                ordered = {}
+                for key in ("t",):
+                    if key in evt:
+                        ordered[key] = evt[key]
+                if resource_id is not None:
+                    ordered["id_resource"] = resource_id
+                if energy_resource is not None:
+                    ordered["energy_resource"] = energy_resource
+                if pos_resource is not None:
+                    ordered["position_resource"] = pos_resource
+                if pos is not None:
+                    ordered["position_consumer"] = pos
+                if energy_before is not None:
+                    ordered["energy_before"] = energy_before
+                for key in ("bite_size",):
+                    if key in evt:
+                        ordered[key] = evt[key]
+                for key in ("energy_after", "team_capture", "predator_list"):
+                    if key in evt:
+                        ordered[key] = evt[key]
+                # Append any remaining keys in original order
+                for k, v in evt.items():
+                    if k in ("id_eaten",):  # drop legacy key once id_resource is set
+                        continue
+                    if k not in ordered:
+                        ordered[k] = v
+                return ordered
+
+            for agent_id, record in log.items():
+                eating_events = record.get("eating_events", [])
+                record["eating_events"] = [_augment_single_event(evt, agent_id) for evt in eating_events]
+            return log
+
         event_log_path = os.path.join(eval_output_dir, f"agent_event_log_{now}.json")
         with open(event_log_path, "w", encoding="utf-8") as f:
-            json.dump({aid: _convert(rec) for aid, rec in env.agent_event_log.items()}, f, indent=2)
+            json.dump(
+                {
+                    aid: _convert(rec)
+                    for aid, rec in _augment_eating_events(env.agent_event_log, env.per_step_agent_data).items()
+                },
+                f,
+                indent=2,
+            )
         print(f"Agent event log written to: {event_log_path}")
     # Always show plots on screen
     ceviz.plot()
