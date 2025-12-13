@@ -161,7 +161,7 @@ class PredPreyGrass(MultiAgentEnv):
         #   "parent_id": Optional[str],
         #   "death_cause": Optional[str],
         #   "eating_events": [
-        #       {"t": int, "id_eaten": str, "bite_size": float, "energy_after": float, "team_capture": bool, "predator_list": List[str]}, ...],
+        #       {"t": int, "id_resource": str, "energy_resource": float, "bite_size": float, "energy_after": float, "team_capture": bool, "predator_list": List[str]}, ...],
         #   "reproduction_events": [
         #       {"t": int, "child_id": str}, ...],
         #   "reward_events": [
@@ -435,6 +435,8 @@ class PredPreyGrass(MultiAgentEnv):
             self.terminations = {aid: term_full.get(aid, False) for aid in output_ids}
             self.truncations = {aid: trunc_full.get(aid, False) for aid in output_ids}
             self.infos = {aid: self._pending_infos.get(aid, {}) for aid in output_ids}
+            # Expose agents attribute that matches returned obs/rewards (needed by RLlib checkers).
+            self.agents = list(output_ids)
         else:
             # Test mode: include agents that ended this step
             term_ids = live_ids | ended_ids_all
@@ -881,7 +883,10 @@ class PredPreyGrass(MultiAgentEnv):
                 evt.setdefault("eating_events", []).append(
                     {
                         "t": int(self.current_step),
-                        "id_eaten": prey_id,
+                        "id_resource": prey_id,
+                        "energy_resource": prey_energy,
+                        "position_resource": tuple(prey_pos),
+                        "position_consumer": tuple(self.agent_positions[pid]),
                         "bite_size": float(energy_share_pid),
                         "energy_after": float(self.agent_energies[pid]),
                         # True only when multiple predators participated
@@ -951,7 +956,10 @@ class PredPreyGrass(MultiAgentEnv):
                 evt.setdefault("eating_events", []).append(
                     {
                         "t": int(self.current_step),
-                        "id_eaten": caught_grass,
+                        "id_resource": caught_grass,
+                        "energy_resource": grass_energy,
+                        "position_resource": tuple(prey_position),
+                        "position_consumer": tuple(prey_position),
                         "bite_size": float(bite),
                         "energy_after": float(self.agent_energies[agent]),
                     }
