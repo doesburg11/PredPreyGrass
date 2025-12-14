@@ -8,7 +8,7 @@
 This repo explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
-    <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
+    <b>Emerging cooperative hunting in Predator-Prey-Grass walls-occlusion environment</b></p>
 <p align="center">
     <img align="center" src="./assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
 </p>
