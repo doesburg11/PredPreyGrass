@@ -1,8 +1,8 @@
 config_env = {
     "seed": 41,
-    "max_steps": 1000,
+    "max_steps": 550,
     # Grid and Observation Settings
-    "grid_size": 25,
+    "grid_size": 30,
     "num_obs_channels": 4,
     "predator_obs_range": 7,
     "prey_obs_range": 9,
@@ -35,9 +35,9 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1200,
     "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 10,
+    "n_initial_active_type_1_predator": 15,
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 10,
+    "n_initial_active_type_1_prey": 15,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
     "initial_num_grass": 100,

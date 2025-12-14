@@ -68,9 +68,9 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_EPISODE_LENGTH"
+    version = "PRED_DECAY_0_20_PRED_OBS_RANGE_9_GRID_30_INITS_15"
     experiment_name = f"PPO_REPRODUCTION_REWARD_{version}_{timestamp}"
-    experiment_path = ray_results_path / experiment_name
+    experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
     # --- Save environment source file for provenance ---
