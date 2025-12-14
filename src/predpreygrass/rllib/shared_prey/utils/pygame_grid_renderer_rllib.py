@@ -1,5 +1,6 @@
 import pygame
 from dataclasses import dataclass
+from pathlib import Path
 
 
 @dataclass
@@ -45,6 +46,9 @@ class PyGameRenderer:
         fov_alpha=70,
         fov_agents=None,
         fov_respect_walls=False,
+        n_possible_type_2_predators=None,
+        n_possible_type_2_prey=None,
+        coop_flash_steps=10,
     ):
         self.grid_size = grid_size
         self.cell_size = cell_size
@@ -94,6 +98,8 @@ class PyGameRenderer:
         self.population_history_max_length = 1000
         self.population_pct_type2_predators = []
         self.population_pct_type2_prey = []
+        self.coop_flash_steps = coop_flash_steps
+        self._coop_events = []
 
         self.target_fps = 10  # Default FPS
         self.slider_rect = None  # Will be defined in _draw_legend()
@@ -111,15 +117,41 @@ class PyGameRenderer:
                 )
                 pygame.draw.rect(self.grid_surface, self.gui_style.grid_color, rect, 1)
 
+        # Load icons
+        self._load_icons()
+
+        # Optional legend suppression for type 2 species
+        self.n_possible_type_2_predators = n_possible_type_2_predators
+        self.n_possible_type_2_prey = n_possible_type_2_prey
+
     def _using_type_prefix(self, step_data):
         return any("type_1" in aid or "type_2" in aid for aid in step_data.keys())
 
-    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None):
+    def _load_icons(self):
+        """Load and cache agent icons from assets/images/icons."""
+        base = Path(__file__).resolve().parents[5] / "assets" / "images" / "icons"
+        def _load(name):
+            p = base / name
+            if not p.is_file():
+                return None
+            surf = pygame.image.load(str(p)).convert_alpha()
+            return pygame.transform.smoothscale(surf, (self.cell_size, self.cell_size))
+        self.icon_pred_type1 = _load("predator_type1.png") or _load("predator.png")
+        self.icon_pred_type2 = _load("predator_type2.png") or self.icon_pred_type1
+        self.icon_prey_type1 = _load("prey_type1.png") or _load("prey.png")
+        self.icon_prey_type2 = _load("prey_type2.png") or self.icon_prey_type1
+        self.icon_dead_prey = _load("prey_dead.png") or None
+        coop_path = base / "cooperation.png"
+        self.icon_coop = pygame.image.load(str(coop_path)).convert_alpha() if coop_path.is_file() else None
+
+    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None, coop_events=None):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
         if dead_prey is None:
             dead_prey = set()
+        if coop_events is None:
+            coop_events = []
 
         # Cache walls for FOV LOS clipping (if any)
         if walls:
@@ -173,6 +205,7 @@ class PyGameRenderer:
             self._draw_walls(walls)
         self._draw_grass(grass_positions, grass_energies)
         self._draw_agents(step_data, agents_just_ate, dead_prey)
+        self._draw_coop_overlays(step, coop_events)
         self._draw_legend(step, step_data)
         if self.enable_tooltips:
             self._draw_tooltip(step_data, grass_positions, grass_energies)
@@ -320,32 +353,31 @@ class PyGameRenderer:
             x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
             y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
 
-            # Determine type and type
+            # Determine icon and reference energy
+            icon = None
+            reference_energy = self.reference_energy_prey
             if "predator" in agent_id:
-                color = self.gui_style.predator_color  # Default predator color
-                if "type_1" in agent_id:
-                    color = self.gui_style.predator_type_1_color
-                elif "type_2" in agent_id:
-                    color = self.gui_style.predator_type_2_color
                 reference_energy = self.reference_energy_predator
-
+                icon = self.icon_pred_type2 if "type_2" in agent_id else self.icon_pred_type1
             elif "prey" in agent_id:
-                # Dead prey (carcass-like) rendered in a distinct color
-                if agent_id in dead_prey:
-                    color = (128, 128, 128)  # Gray for dead prey
-                else:
-                    color = self.gui_style.prey_color  # Default prey color
-                    if "type_1" in agent_id:
-                        color = self.gui_style.prey_type_1_color
-                    elif "type_2" in agent_id:
-                        color = self.gui_style.prey_type_2_color
                 reference_energy = self.reference_energy_prey
+                if agent_id in dead_prey and self.icon_dead_prey:
+                    icon = self.icon_dead_prey
+                else:
+                    icon = self.icon_prey_type2 if "type_2" in agent_id else self.icon_prey_type1
 
             size_factor = min(energy / reference_energy, 1.0)
-            base_radius = self.cell_size // 2 - 2
-            radius = int(base_radius * size_factor)
-
-            pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
+            if icon is not None:
+                icon_size = max(int(self.cell_size * size_factor), 6)
+                icon_surf = pygame.transform.smoothscale(icon, (icon_size, icon_size))
+                rect = icon_surf.get_rect(center=(x_pix, y_pix))
+                self.screen.blit(icon_surf, rect)
+                radius = max(icon_size // 2, 2)
+            else:
+                base_radius = self.cell_size // 2 - 2
+                radius = int(base_radius * size_factor)
+                color = self.gui_style.predator_color if "predator" in agent_id else self.gui_style.prey_color
+                pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
             # Eating halo (green ring)
             if agent_id in agents_just_ate:
@@ -382,7 +414,9 @@ class PyGameRenderer:
 
         y = self._draw_legend_population_chart(x, y)
 
-        if self._using_type_prefix(step_data):
+        if self._using_type_prefix(step_data) and not (
+            self.n_possible_type_2_predators == 0 and self.n_possible_type_2_prey == 0
+        ):
             y = self._draw_legend_type2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
@@ -409,34 +443,43 @@ class PyGameRenderer:
         y += spacing
 
         is_type_based = self._using_type_prefix(step_data)
+        allow_pred_type2 = not (self.n_possible_type_2_predators == 0)
+        allow_prey_type2 = not (self.n_possible_type_2_prey == 0)
+
+        icon_size = self.gui_style.legend_square_size
+
+        def _draw_entry(icon_surf, fallback_color, label):
+            if icon_surf is not None:
+                scaled = pygame.transform.smoothscale(icon_surf, (icon_size, icon_size))
+                rect = scaled.get_rect(center=(x + r, y + r))
+                self.screen.blit(scaled, rect)
+            else:
+                pygame.draw.circle(self.screen, fallback_color, (x + r, y + r), r)
+            self.screen.blit(font.render(label, True, (0, 0, 0)), (x + 30, y))
 
         if is_type_based:
             # type-specific predator colors
-            pygame.draw.circle(self.screen, self.gui_style.predator_type_1_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Predator (type 1)", True, (0, 0, 0)), (x + 30, y))
+            _draw_entry(self.icon_pred_type1, self.gui_style.predator_type_1_color, "Predator (type 1)")
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.predator_type_2_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Predator (type 2)", True, (0, 0, 0)), (x + 30, y))
-            y += spacing
+            if allow_pred_type2:
+                _draw_entry(self.icon_pred_type2, self.gui_style.predator_type_2_color, "Predator (type 2)")
+                y += spacing
 
             # type-specific prey colors
-            pygame.draw.circle(self.screen, self.gui_style.prey_type_1_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Prey (type 1)", True, (0, 0, 0)), (x + 30, y))
+            _draw_entry(self.icon_prey_type1, self.gui_style.prey_type_1_color, "Prey (type 1)")
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.prey_type_2_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Prey (type 2)", True, (0, 0, 0)), (x + 30, y))
-            y += spacing
+            if allow_prey_type2:
+                _draw_entry(self.icon_prey_type2, self.gui_style.prey_type_2_color, "Prey (type 2)")
+                y += spacing
 
         else:
             # Compact predator/prey legend
-            pygame.draw.circle(self.screen, self.gui_style.predator_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Predator", True, (0, 0, 0)), (x + 30, y))
+            _draw_entry(self.icon_pred_type1, self.gui_style.predator_color, "Predator")
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.prey_color, (x + r, y + r), r)
-            self.screen.blit(font.render("Prey", True, (0, 0, 0)), (x + 30, y))
+            _draw_entry(self.icon_prey_type1, self.gui_style.prey_color, "Prey")
             y += spacing
 
         # Reproduction halo
@@ -458,6 +501,28 @@ class PyGameRenderer:
         y += spacing
 
         return y
+
+    def _draw_coop_overlays(self, step, coop_events):
+        """Display cooperation icon for recent team captures."""
+        if self.icon_coop is None:
+            return
+        # Keep only recent events
+        self._coop_events.extend(coop_events)
+        cutoff = step - self.coop_flash_steps
+        self._coop_events = [e for e in self._coop_events if e.get("t", -9999) >= cutoff]
+
+        size = int(self.cell_size * 3)  # cover 3x3 (Moore neighborhood) visually
+        icon = pygame.transform.smoothscale(self.icon_coop, (size, size))
+        ml = self.gui_style.margin_left
+        mt = self.gui_style.margin_top
+        for e in self._coop_events:
+            pos = e.get("position")
+            if pos is None:
+                continue
+            cx = ml + pos[0] * self.cell_size + self.cell_size // 2
+            cy = mt + pos[1] * self.cell_size + self.cell_size // 2
+            rect = icon.get_rect(center=(cx, cy))
+            self.screen.blit(icon, rect)
 
     def _draw_legend_environment_elements(self, x, y):
         spacing = self.gui_style.legend_spacing
@@ -488,6 +553,23 @@ class PyGameRenderer:
             self.screen.blit(fov_prey_rect, (x + r - s // 2, y + r - s // 2))
             self.screen.blit(font.render("Prey_0 Field Of Vision", True, (0, 0, 0)), (x + 30, y))
             y += spacing
+
+        # Cooperative hunting icon (legend item) below FOV, above speed slider
+        icon_size = self.gui_style.legend_square_size * 3
+        icon_x = x + r + 20
+        icon_y = y
+        label_font = pygame.font.SysFont(None, self.gui_style.tooltip_font_size)
+        if self.icon_coop is not None:
+            coop_icon = pygame.transform.smoothscale(self.icon_coop, (icon_size, icon_size))
+            rect = coop_icon.get_rect(center=(icon_x, icon_y + icon_size // 2))
+            self.screen.blit(coop_icon, rect)
+        else:
+            pygame.draw.circle(self.screen, (0, 128, 0), (icon_x, icon_y + icon_size // 2), icon_size // 2)
+        label_surface = label_font.render("Cooperative hunting", True, (0, 0, 0))
+        text_x = icon_x + icon_size // 2 + 8
+        text_y = icon_y + icon_size // 2 - label_surface.get_height() // 2
+        self.screen.blit(label_surface, (text_x, text_y))
+        y = icon_y + icon_size + spacing
 
         return y
 
@@ -579,6 +661,7 @@ class PyGameRenderer:
                 y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
                 pygame.draw.line(self.screen, self.gui_style.prey_type_1_color, (x1, y1pr), (x2, y2pr), 2)
 
+        # Cooperative hunting icon below the chart
         return chart_y + chart_height + self.gui_style.legend_spacing
 
     def _draw_legend_type2_percent_chart(self, x, y):
