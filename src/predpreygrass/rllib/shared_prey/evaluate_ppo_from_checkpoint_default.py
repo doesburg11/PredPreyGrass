@@ -67,6 +67,9 @@ if __name__ == "__main__":
         fov_respect_walls=True,
         predator_obs_range=config_env.get("predator_obs_range", 7),
         prey_obs_range=config_env.get("prey_obs_range", 9),
+        n_possible_type_2_predators=config_env.get("n_possible_type_2_predators"),
+        n_possible_type_2_prey=config_env.get("n_possible_type_2_prey"),
+        coop_flash_steps=10,
     )
 
     observations, _ = env.reset(seed=SEED)

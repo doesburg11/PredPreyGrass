@@ -66,6 +66,9 @@ if __name__ == "__main__":
         fov_alpha=40,
         fov_agents=["type_1_predator_0", "type_1_prey_0"],
         fov_respect_walls=True,
+        n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+        n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
+        coop_flash_steps=10,
     )
     clock = pygame.time.Clock()
 

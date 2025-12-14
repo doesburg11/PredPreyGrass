@@ -48,9 +48,9 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
+SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = False
-MOVIE_FILENAME = "simulation.mp4"
+MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 
 
@@ -171,6 +171,8 @@ def setup_environment_and_visualizer(now):
             fov_alpha=40,
             fov_agents=["type_1_predator_0", "type_1_prey_0"],
             fov_respect_walls=True,
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
         )
     except TypeError:
         visualizer = PyGameRenderer(
@@ -179,6 +181,8 @@ def setup_environment_and_visualizer(now):
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
         )
 
     if SAVE_EVAL_RESULTS:
@@ -275,6 +279,7 @@ def step_forward(
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
             dead_prey=getattr(env, "dead_prey", None),
+            coop_events=getattr(env, "team_capture_events", None),
         )
     except TypeError:
         visualizer.update(
@@ -283,6 +288,7 @@ def step_forward(
             step=env.current_step,
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
+            coop_events=getattr(env, "team_capture_events", None),
         )
     control.fps_slider_rect = visualizer.slider_rect
 
@@ -635,6 +641,11 @@ if __name__ == "__main__":
         def _augment_eating_events(event_log, step_agent_data):
             """Add energy_before plus consumer/resource positions to eating events without mutating the live log."""
             log = deepcopy(event_log)
+
+            # Drop unwanted categories before augmenting events
+            for record in log.values():
+                record.pop("diet_events", None)
+                record.pop("lifecycle_events", None)
 
             def _get_position(t, agent_id):
                 if not isinstance(step_agent_data, list):
