@@ -186,6 +186,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_successes = 0
         self.team_capture_failures = 0
         self.team_capture_helper_total = 0
+        self.team_capture_events = []
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
@@ -907,6 +908,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.truncations[prey_id] = False
         self.active_num_prey -= 1
         self.grid_world_state[2, *prey_pos] = 0
+        # Record for cooperative-visualization overlay
+        if helper_count > 1:
+            self.team_capture_events.append({"t": int(self.current_step), "position": tuple(prey_pos), "helpers": helper_count})
+            # Keep a short history to bound memory
+            cutoff = self.current_step - 20
+            self.team_capture_events = [e for e in self.team_capture_events if e["t"] >= cutoff]
         prey_record = self.agent_stats_live.get(prey_id)
         if prey_record is not None:
             prey_record["death_cause"] = "eaten"
