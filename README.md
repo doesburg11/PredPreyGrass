@@ -16,9 +16,9 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 ### Environment; 
 
 * <img src="./assets/images/icons/cooperation.png" alt="predator icon" height="
-  36" style="vertical-align: middle;">**Cooperative hunting** : 
+  60" style="vertical-align: middle;">**Cooperative hunting** : 
   
-  Prey is eaten by a Predator in its Moore neighborhood only if the Prey's energy is smaller or equal than the Predator's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of all Predators is larger or equal to the Prey's own energy. The Prey's energy is then proportionally divided by its attacking Predator(s).  ([implementation](src/predpreygrass/rllib/shared_prey))
+  Prey is eaten by a single Predator in its Moore neighborhood only if the Predators's energy is larger or equal than the Prey's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of *all* Predators is larger or equal to the Prey's own energy. In that case, the Prey's energy is proportionally divided by its attacking Predators. ([implementation](src/predpreygrass/rllib/shared_prey))
 
 ### Other environments:
 
