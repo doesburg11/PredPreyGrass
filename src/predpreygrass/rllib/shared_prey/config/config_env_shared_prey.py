@@ -1,10 +1,10 @@
 config_env = {
     "seed": 41,
-    "max_steps": 550,
+    "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 30,
     "num_obs_channels": 4,
-    "predator_obs_range": 7,
+    "predator_obs_range": 9,
     "prey_obs_range": 9,
     # Action space settings
     "type_1_action_range": 3,
