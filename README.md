@@ -13,7 +13,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     <img align="center" src="./assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
 </p>
 
-### Environment; 
+### Environment:
 
 * <img src="./assets/images/icons/cooperation.png" alt="predator icon" height="
   60" style="vertical-align: middle;">**Cooperative hunting** : 
