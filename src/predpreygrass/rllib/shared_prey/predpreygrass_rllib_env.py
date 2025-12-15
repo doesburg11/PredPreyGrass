@@ -364,14 +364,14 @@ class PredPreyGrass(MultiAgentEnv):
         self._process_agent_movements(action_dict)
 
         # Step 4: Handle agent engagements (optimized scans with snapshots)
-        # 4a) Starvation first: snapshot of energies to avoid repeated dict lookups
-        energies = self.agent_energies
+        # Starvation
+        energies = self.agent_energies   # snapshot of energies to avoid repeated dict lookups
         handle_starv = self._handle_energy_starvation
         for agent, energy in tuple(energies.items()):
             if energy <= 0:
                 handle_starv(agent)
 
-        # 4b) Prey engagements over active prey only (skip terminated)
+        # All engagements involve prey
         prey_snapshot = tuple(self.prey_positions.keys())
         for agent in prey_snapshot:
             if self.terminations.get(agent):
