@@ -100,7 +100,7 @@ dependencies:
       - pytorch-triton==3.3.0+git96316ce5
       - pytz==2025.2
       - pyyaml==6.0.2
-      - ray==2.52.0
+      - ray==2.52.1
       - referencing==0.36.2
       - requests==2.28.1
       - rich==14.0.0
