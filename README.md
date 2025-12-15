@@ -13,14 +13,20 @@ This repo explores the interplay between **nature** (inherited traits via reprod
     <img align="center" src="./assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
 </p>
 
+### Environment; 
 
-### Environments:
+* <img src="./assets/images/icons/cooperation.png" alt="predator icon" height="
+  36" style="vertical-align: middle;">**Cooperative hunting** : 
+  
+  Prey is eaten by a Predator in its Moore neighborhood only if the Prey's energy is smaller or equal than the Predator's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of all Predators is larger or equal to the Prey's own energy. The Prey's energy is then proportionally divided by its attacking Predator(s).  ([implementation](src/predpreygrass/rllib/shared_prey))
+
+### Other environments:
 
 * **Base environment**: The two-policy base environment. ([implementation](src/predpreygrass/rllib/base_environment), [results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
 * **Mutating agents**: A four-policy extension of the base environment. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* **Centralized training**: A single-policy variant of the base environment ([implementation](https://github.com/doesburg11/PredPreyGrass/tree/main/src/predpreygrass/rllib/centralized_training))
+* **Centralized training**: A single-policy variant of the base environment ([implementation](src/predpreygrass/rllib/centralized_training))
 
 * **Walls occlusion**: An extension with walls and occluded vision ([implementation](src/predpreygrass/rllib/walls_occlusion))
 
