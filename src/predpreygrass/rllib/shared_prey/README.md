@@ -1,11 +1,11 @@
 # Shared-prey cooperative capture (Moore neighborhood)
 
-> Note: lineage survival rewards are **disabled** in `shared_prey`; only capture/consumption/reproduction rewards remain active. The lineage-focused documentation below is retained for historical reference but not active in this environment.
-
-- Predators can capture a prey only when the **sum of predator energies in the prey's Moore neighborhood (radius 1, including diagonals/center)** meets or exceeds the prey's energy (optional margin `team_capture_margin`).
-- On a successful capture, prey energy intake and the predator catch reward are split **equally** across the contributing predators (`team_capture_equal_split=True`).
+- Predators capture a prey only when the **sum of predator energies in the prey's Moore neighborhood (Chebyshev ≤ 1)** meets or exceeds the prey's energy plus `team_capture_margin`.
+- **Helper selection:** predators that already ate this step (`agents_just_ate`) are excluded, so one predator cannot eat twice in one step.
+- **Energy split (proportional):** On success, each helper gains `prey_energy * (helper_energy / total_helper_energy)`; helper energies are snapshotted before distribution to avoid feedback.
 - Toggle via `team_capture_enabled` in `config/config_env_shared_prey.py`; summary counters land in `infos['__all__']` (`team_capture_successes`, `team_capture_failures`, `team_capture_last_helpers`).
-- Predators blocked by the carcass-only window are ignored for live-prey captures; they still receive step reward only.
+- Event log entries for helpers include `team_capture=True`, `predator_list`, `energy_before/after`, `position_consumer/resource`, and `bite_size`.
+- The PyGame renderer surfaces team captures with a “Cooperative hunting” legend entry and a flashing cooperation icon around the captured prey when multiple helpers participated.
 
 # Lineage Rewards & Fertility Caps in `lineage_rewards`
 
@@ -152,31 +152,15 @@ def _register_death(agent_id):
 - Forces lineages to refresh, keeping the event logs and reward streams focused on actively reproducing branches rather than indefinitely stable sentinels.
 - Pairs with fertility caps: once reproduction is blocked and the age limit approaches, optimal behavior is to protect descendants, not hoard energy.
 
-### 3.7 Juvenile carcass-only diet window
-```python
-"carcass_only_predator_age": {
-   "type_1_predator": 30,
-   "type_2_predator": None,
-}
-```
-- Predators younger than the configured step count may only bite carcasses (prey already in the `dead_prey` set). The helper `_predator_requires_carcass_only` enforces this per-policy window.
-- When a juvenile lands on a live prey tile, `_handle_predator_engagement` now short-circuits, applies only the idle/step reward, and logs a `diet_events` entry (`carcass_only_block`). No energy is transferred and the prey remains alive.
-- `agent_stats_live[*]["carcass_only_blocks"]`, `env.carcass_only_live_prey_blocks_predator`, and the per-step `infos` flag (`carcass_only_live_prey_blocked`) expose how often this throttle fires during training/eval.
-- Founders spawned during `reset()` start with their age equal to the configured window so they can hunt immediately; newborn predators still begin at age 0 and must rely on carcasses until they age out.
-- Set the value to `None` (or a negative integer) to disable the constraint for a policy group.
-
-
----
-
 ## 4. Interplay with Limited Intake & Altruism
 
 Limited intake mechanics (predators take multiple small bites; grass regrows slowly under capped energy gain) already force agents to budget food. Adding lineage rewards and fertility caps changes how that budgeting manifests:
 
-1. **Resource sharing** – Parents, especially post-fertility, benefit more from letting juveniles consume carcasses/grass because every additional survivor adds to their lineage reward stream.
-2. **Guarding behavior** – Limited intake makes contested carcasses last multiple steps. Ancestors escorting kin can deny opponents those bites, protecting both kin survival and their own future lineage income.
+1. **Resource sharing** – Parents, especially post-fertility, benefit more from letting juveniles consume grass/prey because every additional survivor adds to their lineage reward stream.
+2. **Guarding behavior** – Limited intake makes contested food last multiple steps. Ancestors escorting kin can deny opponents those bites, protecting both kin survival and their own future lineage income.
 3. **Population stability** – Fertility caps reduce late-episode reproduction bursts. Combined with limited intake, this shifts pressure toward **maintaining** existing offspring rather than producing disposable ones.
 4. **Anti-hoarding** – Since an infertile agent can no longer convert personal energy into reproduction reward, the best use of surplus energy is to survive long enough to chaperone kin (keep lineage bonuses flowing) and to physically shield food patches for them.
-5. **Juvenile provisioning** – The carcass-only window forces young predators to rely on elders for processed food, magnifying incentives for cooperative carcass sharing and territorial defense around downed prey.
+5. **Juvenile provisioning** – Limited intake plus lineage rewards encourage elders to leave food for young kin rather than hoarding it, even without explicit rules.
 
 These interactions seed altruistic behaviors (e.g., vacating grass for kin, intercepting predators) without explicitly coding cooperation rules—the incentives emerge from the reward redesign plus energy constraints.
 
