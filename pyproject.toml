@@ -15,7 +15,7 @@ dependencies = [
     "pettingzoo==1.24.3",
     "stable-baselines3[extra]==2.6.0",
     "SuperSuit==3.9.3",
-    "ray[rllib]==2.52.0",
+    "ray[rllib]==2.52.1",
     "tensorboard==2.20.0",
     "numpy==1.26.4",
     "scipy==1.11.4",
