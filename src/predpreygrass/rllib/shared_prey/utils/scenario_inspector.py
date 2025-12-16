@@ -19,7 +19,7 @@ Usage:
 
 Scenario JSON schema (example):
 {
-  "grid_size": 7,
+  "grid_size": 25,
   "team_capture_margin": 0.0,
   "predators": [
     {"id": "p0", "x": 3, "y": 3, "energy": 6.0},
@@ -54,10 +54,15 @@ from pathlib import Path
 from typing import Dict, List, Tuple
 
 import pygame
+import textwrap
 
 from predpreygrass.rllib.shared_prey.predpreygrass_rllib_env import PredPreyGrass
 
 Coord = Tuple[int, int]
+
+# Change this value to force a specific cell size (pixels) without needing CLI flags.
+# Set to None to auto-fit the grid to the current display.
+DEFAULT_CELL_SIZE: int | None = 60
 
 
 @dataclass
@@ -80,7 +85,7 @@ class Scenario:
         predators = [Agent(a["id"], (int(a["x"]), int(a["y"])), float(a["energy"])) for a in raw.get("predators", [])]
         prey = [Agent(a["id"], (int(a["x"]), int(a["y"])), float(a["energy"])) for a in raw.get("prey", [])]
         return Scenario(
-            grid_size=int(raw.get("grid_size", 7)),
+            grid_size=int(raw.get("grid_size", 25)),
             predators=predators,
             prey=prey,
             team_capture_margin=float(raw.get("team_capture_margin", 0.0)),
@@ -214,16 +219,30 @@ def simulate_engagement(scn: Scenario) -> EngagementResult:
 
 
 class ScenarioViewer:
-    def __init__(self, scn: Scenario, result: EngagementResult):
+    def __init__(self, scn: Scenario, result: EngagementResult, cell_override: int | None = DEFAULT_CELL_SIZE):
         self.scn = scn
         self.result = result
         pygame.init()
-        self.cell = 80
-        w = scn.grid_size * self.cell
-        h = scn.grid_size * self.cell + 100  # status bar (three lines)
+        info = pygame.display.Info()
+        status_panel = 520
+        padding = 60
+        avail_w = max(200, info.current_w - padding - status_panel)
+        avail_h = max(200, info.current_h - padding)
+        fit_cell = min(avail_w // scn.grid_size, avail_h // scn.grid_size)
+        if fit_cell <= 0:
+            fit_cell = 24
+        if cell_override is not None:
+            desired = max(24, cell_override)
+            self.cell = desired
+        else:
+            self.cell = max(24, fit_cell)
+        self.status_width = status_panel
+        w = scn.grid_size * self.cell + self.status_width
+        h = scn.grid_size * self.cell
         self.screen = pygame.display.set_mode((w, h))
         pygame.display.set_caption("Scenario Inspector — space toggle view; P/R modes; +/- energy; Enter recompute")
-        self.font = pygame.font.SysFont(None, 24)
+        self.font = pygame.font.SysFont(None, max(18, self.cell // 2))
+        self.status_font = pygame.font.SysFont(None, max(36, self.font.get_height() * 2))
         self.show_post = False
         self.place_mode = "predator"
         self.place_energy = 5.0
@@ -270,9 +289,10 @@ class ScenarioViewer:
         x, y = pos
         base_x = x * self.cell + 5 + offset[0]
         base_y = y * self.cell + 5 + offset[1]
+        line_height = self.font.get_linesize()
         for i, line in enumerate(lines):
             surf = self.font.render(line, True, color)
-            self.screen.blit(surf, (base_x, base_y + i * 14))
+            self.screen.blit(surf, (base_x, base_y + i * line_height))
 
     def loop(self):
         clock = pygame.time.Clock()
@@ -308,6 +328,9 @@ class ScenarioViewer:
                     elif event.key == pygame.K_x:
                         self._reset_grid(status="Reset to empty grid — set up and press Enter to run")
                 elif event.type == pygame.MOUSEBUTTONDOWN:
+                    grid_pixels = self.scn.grid_size * self.cell
+                    if event.pos[0] >= grid_pixels or event.pos[1] >= grid_pixels:
+                        continue
                     x, y = event.pos[0] // self.cell, event.pos[1] // self.cell
                     if 0 <= x < self.scn.grid_size and 0 <= y < self.scn.grid_size:
                         occupant = self._agent_at((x, y))
@@ -364,32 +387,35 @@ class ScenarioViewer:
         return None
 
     def _draw_status(self):
-        bar_y = self.scn.grid_size * self.cell + 5
-        line1 = " | ".join(
-            [
-                f"Mode: {self.place_mode}",
-                f"Energy: {self.place_energy:.1f}",
-                "Enter: run",
-                "Space: post",
-            ]
-        )
-        line2 = " | ".join(
-            [
-                "P/R: mode",
-                "Up/Down/+/-: energy",
-                "Left: place",
-                "Right: remove",
-            ]
-        )
-        line3 = " | ".join(["C: clear", "X: reset"])
-        surf1 = self.font.render(line1, True, (0, 0, 0))
-        surf2 = self.font.render(line2, True, (0, 0, 0))
-        surf3 = self.font.render(line3, True, (0, 0, 0))
-        self.screen.blit(surf1, (5, bar_y))
-        self.screen.blit(surf2, (5, bar_y + 24))
-        self.screen.blit(surf3, (5, bar_y + 48))
-        msg = self.font.render(self.status_msg, True, (0, 0, 0))
-        self.screen.blit(msg, (5, bar_y + 72))
+        grid_px = self.scn.grid_size * self.cell
+        panel_rect = pygame.Rect(grid_px, 0, self.status_width, grid_px)
+        pygame.draw.rect(self.screen, (245, 245, 245), panel_rect)
+        pygame.draw.rect(self.screen, (210, 210, 210), panel_rect, 2)
+        info_lines = [
+            f"Mode: {self.place_mode}",
+            f"Energy: {self.place_energy:.1f}",
+            "Enter: run",
+            "Space: toggle",
+            "P/R: mode",
+            "+/- or Up/Down: energy",
+            "Left click: place",
+            "Right click: remove",
+            "C: clear",
+            "X: reset",
+        ]
+        x = grid_px + 10
+        y = 10
+        font = self.status_font
+        line_height = font.get_linesize()
+        for line in info_lines:
+            surf = font.render(line, True, (0, 0, 0))
+            self.screen.blit(surf, (x, y))
+            y += line_height + 2
+        y += line_height
+        for line in textwrap.wrap(self.status_msg, width=20):
+            surf = font.render(line, True, (0, 0, 0))
+            self.screen.blit(surf, (x, y))
+            y += line_height
 
     def _reset_grid(self, status: str):
         self.scn.predators.clear()
@@ -429,13 +455,19 @@ class ScenarioViewer:
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="Visualize team-capture engagement on a small scenario.")
     ap.add_argument("--scenario", required=False, help="Path to scenario JSON. If omitted, a built-in demo is used.")
+    ap.add_argument(
+        "--cell-size",
+        type=int,
+        default=DEFAULT_CELL_SIZE,
+        help="Override grid cell size (pixels); defaults to DEFAULT_CELL_SIZE in this file.",
+    )
     return ap.parse_args()
 
 
 def demo_scenario() -> Scenario:
     # Start with an empty grid for manual setup.
     demo = {
-        "grid_size": 7,
+        "grid_size": 25,
         "predators": [],
         "prey": [],
         "team_capture_margin": 0.0,
@@ -456,7 +488,7 @@ def main():
         for pid, rec in result.captured_prey.items():
             helpers = ",".join(rec["helpers"])
             print(f"  {pid} at {rec['pos']} eaten by [{helpers}] share={rec['energy_share']:.2f}")
-    viewer = ScenarioViewer(scn, result)
+    viewer = ScenarioViewer(scn, result, cell_override=args.cell_size)
     viewer.loop()
 
 
