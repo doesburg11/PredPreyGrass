@@ -9,6 +9,7 @@ class GuiStyle:
     margin_top: int = 10
     margin_right: int = 340
     margin_bottom: int = 10
+    min_window_height: int = 760
     legend_spacing: int = 30
     legend_font_size: int = 28
     legend_circle_radius: int = 10
@@ -74,6 +75,8 @@ class PyGameRenderer:
 
         window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
         window_height = self.gui_style.margin_top + grid_size[1] * cell_size + self.gui_style.margin_bottom
+        # Ensure legend space remains visible for small grids
+        window_height = max(window_height, self.gui_style.min_window_height)
         pygame.init()
         self.screen = pygame.display.set_mode((window_width, window_height))
         pygame.display.set_caption("PredPreyGrass Live Viewer")
