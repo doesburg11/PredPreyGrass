@@ -2,7 +2,6 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
-import numpy as np
 
 
 class EpisodeReturn(RLlibCallback):
@@ -22,6 +21,18 @@ class EpisodeReturn(RLlibCallback):
         self.num_episodes += 1
         episode_return = episode.get_return()
         self.overall_sum_of_rewards += episode_return
+        # Safely read __all__ info across RLlib API variations
+        infos = {}
+        if hasattr(episode, "get_last_infos"):
+            infos = episode.get_last_infos() or {}
+        elif hasattr(episode, "last_infos"):
+            infos = episode.last_infos or {}
+        info_all = infos.get("__all__", {})
+        coop_success = info_all.get("team_capture_successes", 0)
+        coop_fail = info_all.get("team_capture_failures", 0)
+        if metrics_logger is not None:
+            metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
+            metrics_logger.log_value("custom_metrics/team_capture_failures", coop_fail)
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -46,6 +57,7 @@ class EpisodeReturn(RLlibCallback):
 
         # Episode summary log
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
+        print(f"  - Coop: successes={coop_success} failures={coop_fail}")
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 
