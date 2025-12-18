@@ -853,6 +853,24 @@ class PredPreyGrass(MultiAgentEnv):
         total_pred_energy = sum(self.agent_energies[h] for h in helpers)
         prey_energy = float(self.agent_energies[prey_id])
         if total_pred_energy + 1e-9 < prey_energy + self.team_capture_margin:
+            # Log failed attempt when helpers exist but combined energy insufficient
+            for pid in helpers:
+                evt = self.agent_event_log.get(pid)
+                if evt is not None:
+                    evt.setdefault("failed_eating_events", []).append(
+                        {
+                            "t": int(self.current_step),
+                            "id_resource": prey_id,
+                            "energy_resource": prey_energy,
+                            "position_resource": prey_pos,
+                            "position_consumer": tuple(self.agent_positions[pid]),
+                            "bite_size": 0.0,
+                            "energy_before": float(self.agent_energies[pid]),
+                            "energy_after": float(self.agent_energies[pid]),
+                            "team_capture": len(helpers) > 1,
+                            "predator_list": helpers,
+                        }
+                    )
             self.team_capture_failures += 1
             return False
 
@@ -1280,6 +1298,7 @@ class PredPreyGrass(MultiAgentEnv):
             "parent_id": None,
             "death_cause": None,
             "eating_events": [],
+            "failed_eating_events": [],
             "reproduction_events": [],
             "reward_events": [],
             "diet_events": [],
