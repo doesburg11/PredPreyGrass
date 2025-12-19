@@ -1,5 +1,5 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+This script trains a multi-agent environment with IMPALA using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
@@ -11,7 +11,7 @@ from predpreygrass.rllib.shared_prey.utils.episode_return_callback import Episod
 from predpreygrass.rllib.shared_prey.utils.networks import build_multi_module_spec
 
 import ray
-from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.algorithms.impala import ImpalaConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -22,16 +22,17 @@ import json
 import shutil
 
 
-def get_config_ppo():
+def get_config_impala():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.shared_prey.config.config_ppo_gpu_shared_prey import config_ppo
+        from predpreygrass.rllib.shared_prey.config.config_impala_gpu_shared_prey import config_impala
     elif num_cpus == 8:
-        from predpreygrass.rllib.shared_prey.config.config_ppo_cpu_shared_prey import config_ppo
+        from predpreygrass.rllib.shared_prey.config.config_impala_cpu_shared_prey import config_impala
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.shared_prey.config.config_ppo_cpu_shared_prey import config_ppo
-    return config_ppo
+        from predpreygrass.rllib.shared_prey.config.config_impala_cpu_shared_prey import config_impala
+    # Reuse PPO config values that overlap with IMPALA settings.
+    return config_impala
 
 
 def env_creator(config):
@@ -62,7 +63,6 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
 
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
     env_config = {**config_env, "seed": None, "strict_rllib_output": True}
 
 
@@ -80,10 +80,10 @@ if __name__ == "__main__":
     env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
-    config_ppo = get_config_ppo()
+    config_impala = get_config_impala()
     config_metadata = {
         "config_env": config_env,
-        "config_ppo": config_ppo,
+        "config_impala": config_impala,
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     }
 
     # Build config dictionary for Tune
-    ppo_config = (
-        PPOConfig()
+    impala_config = (
+        ImpalaConfig()
         .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(
@@ -124,44 +124,38 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         .training(
-            train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
-            minibatch_size=config_ppo["minibatch_size"],
-            num_epochs=config_ppo["num_epochs"],
-            gamma=config_ppo["gamma"],
-            lr=config_ppo["lr"],
-            lambda_=config_ppo["lambda_"],
-            entropy_coeff=config_ppo["entropy_coeff"],
-            vf_loss_coeff=config_ppo["vf_loss_coeff"],
-            clip_param=config_ppo["clip_param"],
-            kl_coeff=config_ppo["kl_coeff"],
-            kl_target=config_ppo["kl_target"],
+            train_batch_size_per_learner=config_impala["train_batch_size_per_learner"],
+            gamma=config_impala["gamma"],
+            lr=config_impala["lr"],
+            entropy_coeff=config_impala["entropy_coeff"],
+            vf_loss_coeff=config_impala["vf_loss_coeff"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
-            num_gpus_per_learner=config_ppo["num_gpus_per_learner"],
-            num_learners=config_ppo["num_learners"],
+            num_gpus_per_learner=config_impala["num_gpus_per_learner"],
+            num_learners=config_impala["num_learners"],
         )
         .env_runners(
-            num_env_runners=config_ppo["num_env_runners"],
-            num_envs_per_env_runner=config_ppo["num_envs_per_env_runner"],
-            rollout_fragment_length=config_ppo["rollout_fragment_length"],
-            sample_timeout_s=config_ppo["sample_timeout_s"],
-            num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
+            num_env_runners=config_impala["num_env_runners"],
+            num_envs_per_env_runner=config_impala["num_envs_per_env_runner"],
+            rollout_fragment_length=config_impala["rollout_fragment_length"],
+            sample_timeout_s=config_impala["sample_timeout_s"],
+            num_cpus_per_env_runner=config_impala["num_cpus_per_env_runner"],
         )
         
         .resources(
-            num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
+            num_cpus_for_main_process=config_impala["num_cpus_for_main_process"],
         )
         .callbacks(EpisodeReturn)
     )
 
-    max_iters = config_ppo["max_iters"]
+    max_iters = config_impala["max_iters"]
     checkpoint_every = 10
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
-        ppo_config.algo_class,
-        param_space=ppo_config,
+        impala_config.algo_class,
+        param_space=impala_config,
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

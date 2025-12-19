@@ -35,19 +35,18 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_path = "PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_RANDOM_SEED_2025-12-13_11-09-22/PPO_PredPreyGrass_cbef7_00000_0_2025-12-13_11-09-22/"
-    # PPO_REPRODUCTION_REWARD_PROPORTIONALLY_SHARED_PREY_PRED_DECAY_0_20_RANDOM_SEED_2025-12-13_11-09-22/PPO_PredPreyGrass_cbef7_00000_0_2025-12-13_11-09-22/checkpoint_000099
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
-    rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_4_0_2025-12-17_19-20-08/PPO_PredPreyGrass_0479f_00000_0_2025-12-17_19-20-08/"
+    checkpoint_nr = "checkpoint_000099"
+    checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
+    rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {
         pid: os.path.join(rl_module_dir, pid)
         for pid in os.listdir(rl_module_dir)
         if os.path.isdir(os.path.join(rl_module_dir, pid))
     }
     rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
-    return rl_modules, checkpoint_root
+    return rl_modules, checkpoint_path
 
 
 if __name__ == "__main__":
@@ -59,11 +58,11 @@ if __name__ == "__main__":
         seed = SEED + run
         print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
         print(f"Using seed: {seed}")
-        rl_modules, checkpoint_root = setup_modules()
+        rl_modules, checkpoint_path = setup_modules()
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         if SAVE_EVAL_RESULTS:
-            eval_output_dir = os.path.join(checkpoint_root, f"eval_multiple_runs_PRED_DECAY_0_20_GRASS_160_GRASS_REGROWTH_0_06{now}")
+            eval_output_dir = os.path.join(checkpoint_path, f"eval_multiple_runs_PRED_DECAY_0_20_PRED_OBS_RANGE_9_GRID_30_INITS_15_{now}")
             os.makedirs(eval_output_dir, exist_ok=True)
             visualizer = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now, run_nr=run + 1)
         else:
