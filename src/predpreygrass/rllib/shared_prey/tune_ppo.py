@@ -65,10 +65,11 @@ if __name__ == "__main__":
     # Enable strict RLlib outputs so only live agent IDs are emitted each step.
     env_config = {**config_env, "seed": None, "strict_rllib_output": True}
 
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "PRED_DECAY_0_20_GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3.5"
+    version = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
