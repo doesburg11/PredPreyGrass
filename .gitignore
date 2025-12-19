@@ -1,8 +1,9 @@
-# Auxiliary folder
+# Ignored folders
 output/
+ray_results/
+
 # Rllib archive files
 src/predpreygrass/rllib/archive/
-src/predpreygrass/rllib/v2_2/trained_policies/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
