@@ -2,8 +2,10 @@
 Predator-Prey Grass RLlib Environment
 
 Additional features:
-- cooperative capture for predators (Moore neighborhood energy threshold)
-- no fertility or maximum-age caps
+- The cumulative energy predators / energy prey defines the succes rate
+- A failed attempt diminishes the energy of the predator(s) pro rata
+- Dilemmas for predators when deciding to attack prey alone or wait for help
+- Go for smaller prey alone or wait for help on larger prey
 """
 
 import gymnasium
