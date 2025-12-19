@@ -27,12 +27,21 @@ class EpisodeReturn(RLlibCallback):
             infos = episode.get_last_infos() or {}
         elif hasattr(episode, "last_infos"):
             infos = episode.last_infos or {}
-        info_all = infos.get("__all__", {})
-        coop_success = info_all.get("team_capture_successes", 0)
-        coop_fail = info_all.get("team_capture_failures", 0)
+        if isinstance(infos, dict):
+            info_all = infos.get("__all__", {})
+            if not info_all and infos:
+                info_all = next(iter(infos.values()), {})
+        else:
+            info_all = {}
+        coop_success = info_all.get("team_capture_coop_successes", 0)
+        coop_fail = info_all.get("team_capture_coop_failures", 0)
+        total_success = info_all.get("team_capture_successes", 0)
+        total_fail = info_all.get("team_capture_failures", 0)
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
             metrics_logger.log_value("custom_metrics/team_capture_failures", coop_fail)
+            metrics_logger.log_value("custom_metrics/team_capture_total_successes", total_success)
+            metrics_logger.log_value("custom_metrics/team_capture_total_failures", total_fail)
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -58,6 +67,7 @@ class EpisodeReturn(RLlibCallback):
         # Episode summary log
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
         print(f"  - Coop: successes={coop_success} failures={coop_fail}")
+        print(f"  - Total capture: successes={total_success} failures={total_fail}")
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 
