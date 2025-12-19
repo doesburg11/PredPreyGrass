@@ -129,12 +129,11 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_PRED_DECAY_0_20_PRED_OBS_RANGE_9_GRID_30_INITS_15_2025-12-14_23-00-48/PPO_PredPreyGrass_595b9_00000_0_2025-12-14_23-00-48/"
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
-    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_4_0_2025-12-17_19-20-08/PPO_PredPreyGrass_0479f_00000_0_2025-12-17_19-20-08/"
+    checkpoint_nr = "checkpoint_000099"
+    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
+    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {}
@@ -540,7 +539,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 10
+    seed = 3
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
