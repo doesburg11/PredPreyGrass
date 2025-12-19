@@ -8,7 +8,9 @@ Predators and prey both either can be of type_1 or type_2.
 from predpreygrass.rllib.shared_prey.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.shared_prey.config.config_env_shared_prey import config_env
 from predpreygrass.rllib.shared_prey.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.shared_prey.utils.networks import build_multi_module_spec
+from predpreygrass.rllib.shared_prey.utils.networks_appo import (
+    build_multi_module_spec,
+)
 
 import ray
 from ray.rllib.algorithms.appo import APPOConfig
@@ -134,7 +136,6 @@ if __name__ == "__main__":
             kl_target=config_appo["kl_target"],
             use_kl_loss=config_appo["use_kl_loss"],
             vtrace=config_appo["vtrace"],
-            vf_clip_param=config_appo["vf_clip_param"],
             grad_clip=config_appo["grad_clip"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
