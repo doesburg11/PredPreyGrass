@@ -11,7 +11,6 @@ config_appo = {
     "kl_target": 0.01,
     "use_kl_loss": True,
     "vtrace": True,
-    "vf_clip_param": 10.0,
     "grad_clip": 40.0,
     # Resources
     "num_learners": 1,
