@@ -23,7 +23,7 @@ config_env = {
     "energy_loss_per_step_prey": 0.05,  # 0.05 
     "predator_creation_energy_threshold": 12.0,
     # Lowered so prey can reproduce after a few grass bites even with ongoing decay.
-    "prey_creation_energy_threshold": 7.0,  # 6.0
+    "prey_creation_energy_threshold": 6.5,  # 6.0
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.5,  # 3.0
     # Cooperative capture predators
