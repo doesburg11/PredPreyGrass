@@ -1,8 +1,10 @@
 config_env = {
     "seed": 41,
+    # Training settings
     "max_steps": 1000,
+    "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 30,
+    "grid_size": 30,  # 25
     "num_obs_channels": 4,
     "predator_obs_range": 9,
     "prey_obs_range": 9,
@@ -20,12 +22,12 @@ config_env = {
     },
     # Energy settings
     "energy_loss_per_step_predator": 0.20, # 0.15
-    "energy_loss_per_step_prey": 0.05,
+    "energy_loss_per_step_prey": 0.05,  # 0.05 
     "predator_creation_energy_threshold": 12.0,
     # Lowered so prey can reproduce after a few grass bites even with ongoing decay.
-    "prey_creation_energy_threshold": 6.0,
+    "prey_creation_energy_threshold": 5.5,  # 6.0
     "initial_energy_predator": 5.0,
-    "initial_energy_prey": 3.0,
+    "initial_energy_prey": 2.5,  # 3.0
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     # Absolute energy caps

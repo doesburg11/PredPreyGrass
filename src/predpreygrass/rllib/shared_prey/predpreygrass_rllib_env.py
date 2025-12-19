@@ -94,6 +94,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Prebuild spaces so RLlib connectors see all agent IDs before the first reset
         _possible_ids = self._build_possible_agent_ids()
+        self.possible_agents = list(_possible_ids)
         self.action_spaces = {aid: self._build_action_space(aid) for aid in _possible_ids}
         self.observation_spaces = {aid: self._build_observation_space(aid) for aid in _possible_ids}
         self.action_space = gymnasium.spaces.Dict(self.action_spaces)
@@ -122,6 +123,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_successes = 0
         self.team_capture_failures = 0
         self.team_capture_helper_total = 0
+        self.team_capture_coop_successes = 0
+        self.team_capture_coop_failures = 0
         self.spawned_predators = 0
         self.spawned_prey = 0
         self._pending_infos = {}
@@ -188,6 +191,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_successes = 0
         self.team_capture_failures = 0
         self.team_capture_helper_total = 0
+        self.team_capture_coop_successes = 0
+        self.team_capture_coop_failures = 0
         self.team_capture_events = []
         # Episode-level spawn counters
         self.spawned_predators = 0
@@ -261,77 +266,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
         self.los_mask_prey = self._precompute_los_mask(self.prey_obs_range)
 
-    def _remove_agent_from_state(self, agent_id: str):
-        """Remove an agent from active state containers after termination."""
-        self.agent_positions.pop(agent_id, None)
-        self.agent_energies.pop(agent_id, None)
-        self.agent_ages.pop(agent_id, None)
-        if "predator" in agent_id:
-            self.predator_positions.pop(agent_id, None)
-        elif "prey" in agent_id:
-            self.prey_positions.pop(agent_id, None)
-        # Drop any pending deltas to avoid leaking stale data
-        self._per_agent_step_deltas.pop(agent_id, None)
-        # Keep agent in used_agent_ids (no reuse within episode)
-        if agent_id in self.agents:
-            try:
-                self.agents.remove(agent_id)
-            except ValueError:
-                pass
-
-    def _init_available_id_pools(self):
-        """Build deques of never-used IDs per species/type for O(1) allocation.
-
-        Pools are initialized with all possible IDs from config, then filtered to exclude
-        any IDs that are already used in this episode (initial actives). IDs are never
-        returned to the pool until reset.
-        """
-        pools = {
-            "type_1_predator": deque(),
-            "type_2_predator": deque(),
-            "type_1_prey": deque(),
-            "type_2_prey": deque(),
-        }
-
-        # Populate in deterministic order
-        for i in range(self.n_possible_type_1_predators):
-            aid = f"type_1_predator_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_1_predator"].append(aid)
-        for i in range(self.n_possible_type_2_predators):
-            aid = f"type_2_predator_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_2_predator"].append(aid)
-        for i in range(self.n_possible_type_1_prey):
-            aid = f"type_1_prey_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_1_prey"].append(aid)
-        for i in range(self.n_possible_type_2_prey):
-            aid = f"type_2_prey_{i}"
-            if aid not in self.used_agent_ids:
-                pools["type_2_prey"].append(aid)
-
-        self._available_id_pools = pools
-
-    def _alloc_new_id(self, species: str, type_nr: int):
-        """Allocate a fresh agent ID from the per-type pool or return None if exhausted.
-
-        Ensures the returned ID has not been used earlier in this episode and is not currently active.
-        """
-        key = f"type_{type_nr}_{species}"
-        dq = self._available_id_pools.get(key)
-        if dq is None:
-            return None
-        while dq:
-            cand = dq.popleft()
-            if cand not in self.used_agent_ids and cand not in self.agents:
-                return cand
-        return None
-
-    def _get_initial_age(self, agent_id: str, *, is_founder: bool) -> int:
-        # With age caps removed, all agents start at age 0 regardless of founder status.
-        return 0
-
     def reset(self, *, seed=None, options=None):
         """
         Reset the environment to its initial state.
@@ -347,7 +281,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.current_step = 0
 
-        self.potential_new_ids = list(set(self.possible_agents) - set(self.agents))        
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
@@ -416,6 +349,18 @@ class PredPreyGrass(MultiAgentEnv):
         for agent in prey_snapshot:
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
+
+        global_info = self._pending_infos.setdefault("__all__", {})
+        global_info["team_capture_successes"] = self.team_capture_successes
+        global_info["team_capture_failures"] = self.team_capture_failures
+        global_info["team_capture_coop_successes"] = self.team_capture_coop_successes
+        global_info["team_capture_coop_failures"] = self.team_capture_coop_failures
+        for agent in self.agents:
+            info = self._pending_infos.setdefault(agent, {})
+            info["team_capture_successes"] = self.team_capture_successes
+            info["team_capture_failures"] = self.team_capture_failures
+            info["team_capture_coop_successes"] = self.team_capture_coop_successes
+            info["team_capture_coop_failures"] = self.team_capture_coop_failures
 
         # Step 8: Assemble return dicts.
         # Generate observations only for still-active agents AFTER engagements and reproduction.
@@ -567,6 +512,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             truncs["__all__"] = True
             terms["__all__"] = False
+            infos["__all__"] = self._pending_infos.get("__all__", {}).copy()
 
             # Overwrite step-assembled dicts to only contain final-step relevant agents.
             self.observations, self.rewards = obs, rews
@@ -852,14 +798,36 @@ class PredPreyGrass(MultiAgentEnv):
         if not helpers:
             return False
 
+        helper_count = len(helpers)
         total_pred_energy = sum(self.agent_energies[h] for h in helpers)
         prey_energy = float(self.agent_energies[prey_id])
         if total_pred_energy + 1e-9 < prey_energy + self.team_capture_margin:
+            # Log failed attempt when helpers exist but combined energy insufficient
+            for pid in helpers:
+                evt = self.agent_event_log.get(pid)
+                if evt is not None:
+                    evt.setdefault("failed_eating_events", []).append(
+                        {
+                            "t": int(self.current_step),
+                            "id_resource": prey_id,
+                            "energy_resource": prey_energy,
+                            "position_resource": prey_pos,
+                            "position_consumer": tuple(self.agent_positions[pid]),
+                            "bite_size": 0.0,
+                            "energy_before": float(self.agent_energies[pid]),
+                            "energy_after": float(self.agent_energies[pid]),
+                            "team_capture": len(helpers) > 1,
+                            "predator_list": helpers,
+                        }
+                    )
             self.team_capture_failures += 1
+            if helper_count > 1:
+                self.team_capture_coop_failures += 1
             return False
 
-        helper_count = len(helpers)
         self.team_capture_successes += 1
+        if helper_count > 1:
+            self.team_capture_coop_successes += 1
         self.team_capture_helper_total += helper_count
 
         helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in helpers}
@@ -902,6 +870,8 @@ class PredPreyGrass(MultiAgentEnv):
         global_info["team_capture_last_helpers"] = helper_count
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
+        global_info["team_capture_coop_successes"] = self.team_capture_coop_successes
+        global_info["team_capture_coop_failures"] = self.team_capture_coop_failures
 
         # Prey termination handling
         self.observations[prey_id] = self._get_observation(prey_id)
@@ -1282,6 +1252,7 @@ class PredPreyGrass(MultiAgentEnv):
             "parent_id": None,
             "death_cause": None,
             "eating_events": [],
+            "failed_eating_events": [],
             "reproduction_events": [],
             "reward_events": [],
             "diet_events": [],
@@ -1599,3 +1570,76 @@ class PredPreyGrass(MultiAgentEnv):
                 if self._line_of_sight_clear(center, (tx, ty)):
                     mask[tx, ty] = 1.0
         return mask
+
+    def _remove_agent_from_state(self, agent_id: str):
+        """Remove an agent from active state containers after termination."""
+        self.agent_positions.pop(agent_id, None)
+        self.agent_energies.pop(agent_id, None)
+        self.agent_ages.pop(agent_id, None)
+        if "predator" in agent_id:
+            self.predator_positions.pop(agent_id, None)
+        elif "prey" in agent_id:
+            self.prey_positions.pop(agent_id, None)
+        # Drop any pending deltas to avoid leaking stale data
+        self._per_agent_step_deltas.pop(agent_id, None)
+        # Keep agent in used_agent_ids (no reuse within episode)
+        if agent_id in self.agents:
+            try:
+                self.agents.remove(agent_id)
+            except ValueError:
+                pass
+
+
+    def _alloc_new_id(self, species: str, type_nr: int):
+        """Allocate a fresh agent ID from the per-type pool or return None if exhausted.
+
+        Ensures the returned ID has not been used earlier in this episode and is not currently active.
+        """
+        key = f"type_{type_nr}_{species}"
+        dq = self._available_id_pools.get(key)
+        if dq is None:
+            return None
+        while dq:
+            cand = dq.popleft()
+            if cand not in self.used_agent_ids and cand not in self.agents:
+                return cand
+        return None
+
+    def _get_initial_age(self, agent_id: str, *, is_founder: bool) -> int:
+        # With age caps removed, all agents start at age 0 regardless of founder status.
+        return 0
+
+    def _init_available_id_pools(self):
+        """Build deques of never-used IDs per species/type for O(1) allocation.
+
+        Pools are initialized with all possible IDs from config, then filtered to exclude
+        any IDs that are already used in this episode (initial actives). IDs are never
+        returned to the pool until reset.
+        """
+        pools = {
+            "type_1_predator": deque(),
+            "type_2_predator": deque(),
+            "type_1_prey": deque(),
+            "type_2_prey": deque(),
+        }
+
+        # Populate in deterministic order
+        for i in range(self.n_possible_type_1_predators):
+            aid = f"type_1_predator_{i}"
+            if aid not in self.used_agent_ids:
+                pools["type_1_predator"].append(aid)
+        for i in range(self.n_possible_type_2_predators):
+            aid = f"type_2_predator_{i}"
+            if aid not in self.used_agent_ids:
+                pools["type_2_predator"].append(aid)
+        for i in range(self.n_possible_type_1_prey):
+            aid = f"type_1_prey_{i}"
+            if aid not in self.used_agent_ids:
+                pools["type_1_prey"].append(aid)
+        for i in range(self.n_possible_type_2_prey):
+            aid = f"type_2_prey_{i}"
+            if aid not in self.used_agent_ids:
+                pools["type_2_prey"].append(aid)
+
+        self._available_id_pools = pools
+
