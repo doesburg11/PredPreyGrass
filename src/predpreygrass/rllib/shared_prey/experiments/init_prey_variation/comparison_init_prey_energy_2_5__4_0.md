@@ -1,5 +1,13 @@
 # Shared prey eval comparison: init_prey=2.5/threshold=5.5 vs init_prey=3.0/threshold=6.0 vs init_prey=3.5/threshold=6.5 vs init_prey=4.0/threshold=7.0
 
+## Conclusions
+- Based on the outcomes: the defaults in config_env_shared_prey are changed to: 
+
+    - "prey_creation_energy_threshold": 6.5,  # was 6.0
+    - "initial_energy_prey": 3.5,  # was 3.0
+- This is based on the cooperative attempt rate (9.4%) and cooperative succes rate (91.7%), in combination with a near 1000 (=max_steps) "epsisode_len_mean" at 1000 iterations. The latter can be verified in the Tensorboard charts. The two other higher cooperative attempt/succes rates (5.5/2.5, 7.0/4.0) have an "epsisode_len_mean" at only around 800 after 1000 iterations, which implies more failure to reach 1000 max_steps at each episode.
+
+
 ## Scope
 - Log A (init_prey=2.5, prey_threshold=5.5): `src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5_2025-12-19_23-59-23/PPO_PredPreyGrass_5c0be_00000_0_2025-12-19_23-59-23/checkpoint_000099/eval_checkpoint_000099_2025-12-20_10-17-26/agent_event_log_2025-12-20_10-17-26.json`
 - Log B (init_prey=3.0, prey_threshold=6.0): `src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_0_2025-12-14_23-00-48/PPO_PredPreyGrass_595b9_00000_0_2025-12-14_23-00-48/checkpoint_000099/eval_checkpoint_000099_2025-12-15_23-08-59/agent_event_log_2025-12-15_23-08-59.json`
