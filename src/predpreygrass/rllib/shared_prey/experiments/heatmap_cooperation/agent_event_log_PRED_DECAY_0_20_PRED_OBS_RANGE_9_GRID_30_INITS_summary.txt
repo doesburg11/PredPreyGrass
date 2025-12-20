@@ -1,0 +1,12 @@
+Total eating events: 10976
+Coop events: 52 (succesful)
+Solo events: 10924
+Solo failures: 549
+Cooperative failures: 18 (failed)
+Coop bite mean/median: 1.880 / 1.715
+Solo bite mean/median: 0.516 / 0.320
+Solo fail rate: 4.64% (531 failures out of 11,455 solo attempts).
+Coop fail rate: 25.71% (18 failures out of 70 coop attempts).
+Intake (successful only): solo 5,640.28 total bite vs coop 97.75.
+Helpers on successful coop: avg 2.00, median 2.00.
+Failure shortfall (prey_energy − predator’s energy_before, per logged helper): mean 2.23, median 2.15.
