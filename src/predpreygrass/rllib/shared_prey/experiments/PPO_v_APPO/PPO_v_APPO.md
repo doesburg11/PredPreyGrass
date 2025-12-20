@@ -35,6 +35,7 @@ This comparison assumes the canonical properties of your environment:
 * **PPO** prioritizes *learning stability and interpretability*.
 * **APPO** prioritizes *throughput and wall-clock speed*.
 * In PredPreyGrass, this trade-off often changes the **observed ecology itself**.
+* See detailed eval comparison: `comparison_PPO_vs_APPO_init_prey_2_5.md`
 
 If PPG is treated as a **scientific simulator**, PPO is the safer default.
 If PPG is treated as an **engineering throughput problem**, APPO can be useful.
