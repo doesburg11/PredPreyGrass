@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     experiment_path.mkdir(parents=True, exist_ok=True)
     # --- Save environment source file for provenance ---
-    source_dir = experiment_path / "SOURCE_CODE"
+    source_dir = experiment_path / "SOURCE_CODE_ENV"
     source_dir.mkdir(exist_ok=True)
     env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
