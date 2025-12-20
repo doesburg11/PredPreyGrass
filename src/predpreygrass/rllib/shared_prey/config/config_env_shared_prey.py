@@ -23,11 +23,11 @@ config_env = {
     # Energy settings
     "energy_loss_per_step_predator": 0.20, # 0.15
     "energy_loss_per_step_prey": 0.05,  # 0.05 
+    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
     "predator_creation_energy_threshold": 12.0,
-    # Lowered so prey can reproduce after a few grass bites even with ongoing decay.
-    "prey_creation_energy_threshold": 5.5,  # 6.0
+    "prey_creation_energy_threshold": 5.5,  # was 6.5
     "initial_energy_predator": 5.0,
-    "initial_energy_prey": 2.5,  # 3.0
+    "initial_energy_prey": 2.5,  # was 3.5
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     # Absolute energy caps
