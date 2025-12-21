@@ -43,7 +43,7 @@ Controls:
 - Esc / Q / window close: exit.
 
 Logic mirrors the env: team capture always on, Moore neighborhood (Chebyshev ≤ 1),
-sequential prey processing, equal energy split among helpers; margin applied.
+sequential prey processing, energy split configurable (proportional by default); margin applied.
 """
 from __future__ import annotations
 
