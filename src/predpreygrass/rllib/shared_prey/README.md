@@ -10,11 +10,11 @@
 
 - If the energy of an agent is zero, the agent dies and is removed from the gridworld.
 
-- Predator can eat Prey and Prey can eat gras to replenish their energy.
+- Predator can eat Prey and Prey can eat grass to replenish their energy.
 
-- A Prey is eaten by (a) Predator(s) if the cumulative energy of all Predators in it's Moore neighborhood is larger or equal to the Prey's own energy.
-
-- If a Prey is eaten, it dies and is removed from the gridworld. Its energy is proportionally divided by its attacking Predator(s).
+- **Cooperative capture and energy accounting**: A Prey is eaten by (a) Predator(s) if the cumulative energy of all Predators in its Moore neighborhood is *strictly larger* than the Prey's own energy (optionally with a safety margin via `team_capture_margin`). This holds for a single Predator as well as a group.
+  - **Failed attempt (struggle cost)**: If the cumulative energy is too low, the attack fails and the Prey survives. The attacking Predators lose energy to reflect the struggle. The total penalty is `prey_energy * energy_percentage_loss_per_failed_attacked_prey` and is **subtracted proportionally** from each attacker based on their energy share. This applies to solo and team attempts. If the penalty drops a Predator to zero or below, it dies that step.
+  - **Successful capture (no struggle cost)**: When the attackers have higher cumulative energy, the Prey is removed and **no extra energy loss** is applied to Predators. The Prey's energy is then split among attackers (proportional by default, or **equal split** when `team_capture_equal_split = True`).
 
 - A Grass patch is eaten if a Prey lands on its cell.
 
@@ -45,4 +45,4 @@
     <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
 </p>
 
-- Cooperative hunting occurs, though it is not strictly imposed.
+- Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
