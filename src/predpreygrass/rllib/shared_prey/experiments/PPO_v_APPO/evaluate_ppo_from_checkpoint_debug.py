@@ -124,8 +124,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/experiments/"
-    checkpoint_root = "PPO_v_APPO/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5/APPO/APPO_PredPreyGrass/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_5_PUNISH_FAIL_CAPTURES_2025-12-21_00-06-32/PPO_PredPreyGrass_86bdb_00000_0_2025-12-21_00-06-33/"
     checkpoint_nr = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
@@ -247,13 +247,6 @@ def step_forward(
             action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
-    # print("----------------------------------------------")
-    # print(f"Step {env.current_step}")
-    # print(f"Rewards: {rewards}")
-    # print(f"Terminations: {terminations}")
-    # print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
-    # print("----------------------------------------------")
-
     snapshots.append(env.get_state_snapshot())
     if len(snapshots) > 100:
         snapshots.pop(0)
@@ -534,7 +527,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 5
+    seed = 8
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
