@@ -37,8 +37,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/experiments/"
-    checkpoint_root = "PPO_v_APPO/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5/APPO/APPO_PredPreyGrass/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_5_PUNISH_FAIL_CAPTURES_2025-12-21_00-06-32/PPO_PredPreyGrass_86bdb_00000_0_2025-12-21_00-06-33/"
     checkpoint_nr = "checkpoint_000099"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
