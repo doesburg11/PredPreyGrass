@@ -64,6 +64,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Team capture is always enabled in shared_prey
         self.team_capture_enabled = True
         self.team_capture_margin = config.get("team_capture_margin", 0.0)
+        self.team_capture_equal_split = bool(config.get("team_capture_equal_split", False))
 
         # Absolute cap for grass energy
         self.max_energy_grass = config.get("max_energy_grass", float("inf"))
@@ -866,7 +867,12 @@ class PredPreyGrass(MultiAgentEnv):
         for pid in helpers:
             self.agents_just_ate.add(pid)
             self._per_agent_step_deltas.setdefault(pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
-            energy_share_pid = prey_energy * (helper_energy_snapshot[pid] / total_helper_energy) if total_helper_energy > 0 else 0.0
+            if self.team_capture_equal_split:
+                energy_share_pid = prey_energy / helper_count
+            else:
+                energy_share_pid = (
+                    prey_energy * (helper_energy_snapshot[pid] / total_helper_energy) if total_helper_energy > 0 else 0.0
+                )
             self.agent_energies[pid] += energy_share_pid
             self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
             self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
