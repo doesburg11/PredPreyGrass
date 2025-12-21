@@ -40,9 +40,9 @@ In the **Shared Prey** environment, all predators in a prey's Moore neighborhood
 
 By default, the prey’s energy is divided **proportionally to the current energy of each participating predator**:
 
-```
-ΔE_i = E_prey * (E_i / sum_j E_j)
-```
+$$
+\Delta E_i = E_{\text{prey}} \cdot \frac{E_i}{\sum_j E_j}
+$$
 
 **Implications:**
 
@@ -64,9 +64,9 @@ This split is purely local and does not require counterfactual reasoning or cent
 
 When `team_capture_equal_split = True`, the prey’s energy is divided **equally among all participating predators**:
 
-```
-ΔE_i = E_prey / |helpers|
-```
+$$
+\Delta E_i = \frac{E_{\text{prey}}}{|\text{helpers}|}
+$$
 
 **Implications:**
 
@@ -128,4 +128,3 @@ Comparing these regimes allows us to study how reward division alone shapes emer
 </p>
 
 - Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
-
