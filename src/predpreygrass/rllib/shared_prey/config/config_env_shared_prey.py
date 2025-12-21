@@ -30,7 +30,7 @@ config_env = {
     "initial_energy_prey": 2.5,  # was 3.5
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
-    "team_capture_equal_split": True,  # If True, split prey energy equally among helpers
+    "team_capture_equal_split": False,  # If False, split prey energy proportionally among helpers
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
