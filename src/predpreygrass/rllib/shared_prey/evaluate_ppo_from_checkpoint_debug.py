@@ -1,21 +1,6 @@
-#+++++++++++++++++++++++++++++++++++++
-# TODO: visualize cooperative hunting behavior
-# -Track and display statistics on successful cooperative hunts vs solo hunts
-# -Add visual indicator for predator(s) that are in a Moore neighborhood of a prey
-#  but have not enough energy to eat that prey
-#+++++++++++++++++++++++++++++++++++++
-
 """
 This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
 and runs them in the PredPreyGrass environment (walls_occlusion_proper_termination) for interactive debugging.
-
-This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
-making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
-version of predator and prey are are faster and can cover more ground in one movement step.
-Both speed 1 and speed 2 predators and prey are mutually trained. Evaluation of only speed 1 
-predators and prey with only small change of mutation to speed 2 predators and prey generally 
-leads to dominance of speed 2 agents and extinction of speed 1 agents as the trained model shows 
-in the simulation.
 
 The simulation can be controlled in real-time using a graphical interface.
 - [Space] Pause/Unpause
