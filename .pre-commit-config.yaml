@@ -1,0 +1,45 @@
+# --------------------------------------------------------------------
+# HOW TO USE PRE-COMMIT HOOKS IN THIS REPO
+#
+# First time setup (once):
+#   pip install pre-commit black ruff
+#   pre-commit install
+#
+# Run manually on entire repo (check & fix as much as possible):
+#   pre-commit run --all-files
+#
+# Run manually on specific file(s):
+#   pre-commit run --files path/to/your_file.py
+#
+# When committing:
+#   git commit -m "Your commit message"
+#   --> Pre-commit will run automatically and block the commit if problems are found.
+#
+# If pre-commit fixes something, you must:
+#   git add .
+#   git commit -m "Apply pre-commit fixes"
+#
+# Optional manual full Ruff fix (outside pre-commit):
+#   ruff check . --fix --line-length=132
+#
+# --------------------------------------------------------------------
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace          # autofix → removes
+      - id: end-of-file-fixer            # autofix → fixes missing newline
+      - id: check-yaml                   # lints only (no auto-fix, but catches YAML errors)
+
+  - repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+      - id: black
+        args: [--line-length=132]        # autofix → reformats Python code
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.3
+    hooks:
+      - id: ruff
+        args: [--line-length=132, --fix] # autofix as much as possible, and line length
