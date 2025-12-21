@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run train_rllib_ppo_multiagentenv_debug",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/predpreygrass/rllib/v2_7/train_rllib_ppo_multiagentenv_debug.py",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONWARNINGS": "ignore::DeprecationWarning",
+        "RAY_BACKEND_LOG_LEVEL": "ERROR"
+      }
+    }
+  ]
+}
