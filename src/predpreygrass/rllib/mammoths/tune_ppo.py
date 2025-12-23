@@ -156,7 +156,7 @@ if __name__ == "__main__":
     )
 
     max_iters = config_ppo["max_iters"]
-    checkpoint_every = 10
+    checkpoint_every = 100
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
