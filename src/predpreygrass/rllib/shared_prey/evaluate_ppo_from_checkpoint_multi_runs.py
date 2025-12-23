@@ -35,9 +35,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
+    # GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_5_PUNISH_FAIL_0_1_CAPTURES_EQUAL_SPLIT_2025-12-22_20-12-39/PPO_PredPreyGrass_2ec53_00000_0_2025-12-22_20-12-39/"
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/shared_prey/ray_results/pred_decay_0_20/"
-    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5_2025-12-19_23-59-23/PPO_PredPreyGrass_5c0be_00000_0_2025-12-19_23-59-23/"
-    checkpoint_nr = "checkpoint_000099"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_5_PUNISH_FAIL_0_1_CAPTURES_EQUAL_SPLIT_2025-12-22_20-12-39/PPO_PredPreyGrass_2ec53_00000_0_2025-12-22_20-12-39/"
+    checkpoint_nr = "checkpoint_000009"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {
