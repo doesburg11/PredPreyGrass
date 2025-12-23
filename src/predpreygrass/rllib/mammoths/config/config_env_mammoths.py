@@ -1,7 +1,7 @@
 config_env = {
     "seed": 41,
     # Training settings
-    "max_steps": 1000,
+    "max_steps": 2000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
     "grid_size": 30,  # 25
@@ -21,31 +21,31 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.20, # 0.15
-    "energy_loss_per_step_prey": 0.05,  # 0.05 
-    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
-    "predator_creation_energy_threshold": 12.0,
-    "prey_creation_energy_threshold": 5.5,  # was 6.5
-    "initial_energy_predator": 5.0,
-    "initial_energy_prey": 2.5,  # was 3.5
+    "energy_loss_per_step_predator": 0.001, # 0.15
+    "energy_loss_per_step_prey": 0.01,  # 0.05 
+    "energy_percentage_loss_per_failed_attacked_prey": 0.05, # 0.1
+    "predator_creation_energy_threshold": 10.0,
+    "prey_creation_energy_threshold": 16,  # was 6.5
+    "initial_energy_predator": 3.0,
+    "initial_energy_prey": 8,  # was 3.5
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
-    "team_capture_equal_split": False,  # If False, split prey energy proportionally among helpers
+    "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Absolute energy caps
-    "max_energy_grass": 2.0,
+    "max_energy_grass": 3.0,
     # Learning agents
-    "n_possible_type_1_predators": 400,
+    "n_possible_type_1_predators": 1000,
     "n_possible_type_2_predators": 0,
-    "n_possible_type_1_prey": 1200,
+    "n_possible_type_1_prey": 500,
     "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 15,
+    "n_initial_active_type_1_predator": 20,
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 15,
+    "n_initial_active_type_1_prey": 100,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
     "initial_num_grass": 100,
-    "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.04, # 0.04
+    "initial_energy_grass": 2.5,
+    "energy_gain_per_step_grass": 0.06, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,

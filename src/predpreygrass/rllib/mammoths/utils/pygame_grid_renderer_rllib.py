@@ -139,9 +139,9 @@ class PyGameRenderer:
                 return None
             surf = pygame.image.load(str(p)).convert_alpha()
             return pygame.transform.smoothscale(surf, (self.cell_size, self.cell_size))
-        self.icon_pred_type1 = _load("predator_type1.png") or _load("predator.png")
+        self.icon_pred_type1 = _load("predator_type1.png") or _load("human_1.png")
         self.icon_pred_type2 = _load("predator_type2.png") or self.icon_pred_type1
-        self.icon_prey_type1 = _load("prey_type1.png") or _load("prey.png")
+        self.icon_prey_type1 = _load("prey_type1.png") or _load("mammoth_1.png")
         self.icon_prey_type2 = _load("prey_type2.png") or self.icon_prey_type1
         self.icon_dead_prey = _load("prey_dead.png") or None
         coop_path = base / "cooperation.png"
