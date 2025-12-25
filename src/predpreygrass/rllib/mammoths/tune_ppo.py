@@ -69,7 +69,7 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_3_5_PUNISH_FAIL_CAPTURES_EQUAL_SPLIT"
+    version = "GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     )
 
     max_iters = config_ppo["max_iters"]
-    checkpoint_every = 100
+    checkpoint_every = 10
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
