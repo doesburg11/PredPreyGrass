@@ -15,12 +15,6 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 ### Environment:
 
-[![Cooperative hunting](assets/images/cooperative_hunting_thumb.png)](assets/videos/cooperative_hunting.mp4)
-[![Cooperative hunting](assets/images/cooperative_hunting_thumb.png)](assets/videos/cooperative_hunting.mp4)
-
-
-<img src="./assets/images/icons/cooperation.png" alt="predator icon" height="160" style="vertical-align: middle;">
-
 * **Cooperative hunting** : Prey is eaten by a single Predator in its Moore neighborhood only if the Predator's energy is *strictly larger* than the Prey's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of *all* Predators is strictly larger than the Prey's own energy. On failure (cumulative energy is too low), predators "struggle" and lose energy proportional to their share of the attacking group's energy (see `energy_percentage_loss_per_failed_attacked_prey`). On success, no extra energy loss is applied; prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/shared_prey))
 
 ### Other environments:
