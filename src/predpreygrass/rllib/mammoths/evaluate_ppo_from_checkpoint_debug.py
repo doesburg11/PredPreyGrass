@@ -31,7 +31,7 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
+SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10

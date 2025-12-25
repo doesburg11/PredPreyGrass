@@ -10,7 +10,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 <p align="center">
     <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
 <p align="center">
-    <img align="center" src="./assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
+    <img align="center" src="./assets/images/gifs/cooperative_hunting_10MB.gif" width="600" height="500" />
 </p>
 
 ### Environment:
