@@ -115,8 +115,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
-    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5_2025-12-19_23-59-23/PPO_PredPreyGrass_5c0be_00000_0_2025-12-19_23-59-23/"
-    checkpoint_nr = "checkpoint_000099"
+    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2_2025-12-25_00-36-33/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
+    checkpoint_nr = "checkpoint_000049"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
