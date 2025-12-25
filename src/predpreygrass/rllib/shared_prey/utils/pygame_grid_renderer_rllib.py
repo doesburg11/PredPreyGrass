@@ -11,9 +11,10 @@ class GuiStyle:
     margin_bottom: int = 10
     min_window_height: int = 760
     legend_spacing: int = 30
-    legend_font_size: int = 28
+    legend_font_size: int = 42
     legend_circle_radius: int = 10
     legend_square_size: int = 20
+    legend_label_font_size: int = 42
     tooltip_font_size: int = 28
     tooltip_padding: int = 4
 
@@ -49,7 +50,7 @@ class PyGameRenderer:
         fov_respect_walls=False,
         n_possible_type_2_predators=None,
         n_possible_type_2_prey=None,
-        coop_flash_steps=10,
+        coop_flash_steps=5,
     ):
         self.grid_size = grid_size
         self.cell_size = cell_size
@@ -83,6 +84,7 @@ class PyGameRenderer:
 
         self.font = pygame.font.SysFont(None, int(cell_size * 0.5))
         self.font_legend = pygame.font.SysFont(None, self.gui_style.legend_font_size)
+        self.font_legend_label = pygame.font.SysFont(None, self.gui_style.legend_label_font_size)
 
         self.tooltip_font = pygame.font.SysFont(None, self.gui_style.tooltip_font_size)
 
@@ -102,6 +104,7 @@ class PyGameRenderer:
         self.population_pct_type2_predators = []
         self.population_pct_type2_prey = []
         self.coop_flash_steps = coop_flash_steps
+        self.coop_icon_cell_span = 5
         self._coop_events = []
 
         self.target_fps = 10  # Default FPS
@@ -144,7 +147,9 @@ class PyGameRenderer:
         self.icon_prey_type1 = _load("prey_type1.png") or _load("prey.png")
         self.icon_prey_type2 = _load("prey_type2.png") or self.icon_prey_type1
         self.icon_dead_prey = _load("prey_dead.png") or None
-        coop_path = base / "cooperation.png"
+        coop_path = base / "cooperation_2.png"
+        if not coop_path.is_file():
+            coop_path = base / "cooperation.png"
         self.icon_coop = pygame.image.load(str(coop_path)).convert_alpha() if coop_path.is_file() else None
 
     def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None, coop_events=None):
@@ -371,14 +376,20 @@ class PyGameRenderer:
 
             size_factor = min(energy / reference_energy, 1.0)
             if icon is not None:
-                icon_size = max(int(self.cell_size * size_factor), 6)
+                if "predator" in agent_id:
+                    icon_size = self.cell_size
+                else:
+                    icon_size = max(int(self.cell_size * size_factor), 6)
                 icon_surf = pygame.transform.smoothscale(icon, (icon_size, icon_size))
                 rect = icon_surf.get_rect(center=(x_pix, y_pix))
                 self.screen.blit(icon_surf, rect)
                 radius = max(icon_size // 2, 2)
             else:
                 base_radius = self.cell_size // 2 - 2
-                radius = int(base_radius * size_factor)
+                if "predator" in agent_id:
+                    radius = base_radius
+                else:
+                    radius = int(base_radius * size_factor)
                 color = self.gui_style.predator_color if "predator" in agent_id else self.gui_style.prey_color
                 pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
@@ -437,13 +448,7 @@ class PyGameRenderer:
     def _draw_legend_agents(self, x, y, step_data):
         spacing = self.gui_style.legend_spacing
         r = self.gui_style.legend_circle_radius
-        font = self.tooltip_font
-        font_large = self.font_legend
-
-        # Draw legend title
-        title_surface = font_large.render("Agent size depends on energy", True, (0, 0, 0))
-        self.screen.blit(title_surface, (x, y))
-        y += spacing
+        font = self.font_legend_label
 
         is_type_based = self._using_type_prefix(step_data)
         allow_pred_type2 = not (self.n_possible_type_2_predators == 0)
@@ -514,7 +519,7 @@ class PyGameRenderer:
         cutoff = step - self.coop_flash_steps
         self._coop_events = [e for e in self._coop_events if e.get("t", -9999) >= cutoff]
 
-        size = int(self.cell_size * 3)  # cover 3x3 (Moore neighborhood) visually
+        size = int(self.cell_size * self.coop_icon_cell_span)
         icon = pygame.transform.smoothscale(self.icon_coop, (size, size))
         ml = self.gui_style.margin_left
         mt = self.gui_style.margin_top
@@ -531,7 +536,7 @@ class PyGameRenderer:
         spacing = self.gui_style.legend_spacing
         r = self.gui_style.legend_circle_radius
         s = self.gui_style.legend_square_size
-        font = self.tooltip_font
+        font = self.font_legend_label
 
         # Grass
         pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
@@ -561,7 +566,7 @@ class PyGameRenderer:
         icon_size = self.gui_style.legend_square_size * 3
         icon_x = x + r + 20
         icon_y = y
-        label_font = pygame.font.SysFont(None, self.gui_style.tooltip_font_size)
+        label_font = self.font_legend_label
         if self.icon_coop is not None:
             coop_icon = pygame.transform.smoothscale(self.icon_coop, (icon_size, icon_size))
             rect = coop_icon.get_rect(center=(icon_x, icon_y + icon_size // 2))
@@ -578,7 +583,7 @@ class PyGameRenderer:
 
     def _draw_legend_type_slider(self, x, y):
         spacing = self.gui_style.legend_spacing
-        font = pygame.font.SysFont(None, 24)
+        font = self.font_legend_label
 
         y += spacing
 
@@ -617,7 +622,7 @@ class PyGameRenderer:
         spacing = self.gui_style.legend_spacing
 
         # Chart title
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
         title_surface = font_small.render("Total predator and prey population", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
         title_y = chart_y - spacing // 2 - 10
@@ -631,7 +636,7 @@ class PyGameRenderer:
         max_agents = max(max(self.population_history_predators, default=1), max(self.population_history_prey, default=1), 1)
         num_ticks = 5
         label_x = chart_x - 5
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
 
         for i in range(num_ticks + 1):
             value = int(i / num_ticks * max_agents)
@@ -674,7 +679,7 @@ class PyGameRenderer:
         chart_y = y + 40
         spacing = self.gui_style.legend_spacing
 
-        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
         title_surface = font_small.render("type 2 predator and prey population (%)", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
         title_y = chart_y - spacing // 2 - 10
