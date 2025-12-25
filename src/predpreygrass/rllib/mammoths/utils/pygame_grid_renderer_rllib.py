@@ -89,6 +89,7 @@ class PyGameRenderer:
         self.reference_energy_predator = 10.0  # referenc wrt size of predators
         self.reference_energy_prey = 3.0
         self.reference_energy_grass = 2.0
+        self.prey_icon_cell_span = 3
 
         self.halo_trigger_fraction = 0.9
         self.predator_creation_energy_threshold = 12.0
@@ -141,7 +142,7 @@ class PyGameRenderer:
             return pygame.transform.smoothscale(surf, (self.cell_size, self.cell_size))
         self.icon_pred_type1 = _load("predator_type1.png") or _load("human_1.png")
         self.icon_pred_type2 = _load("predator_type2.png") or self.icon_pred_type1
-        self.icon_prey_type1 = _load("prey_type1.png") or _load("mammoth_1.png")
+        self.icon_prey_type1 = _load("prey_type1.png") or _load("mammoth_2.jpeg")
         self.icon_prey_type2 = _load("prey_type2.png") or self.icon_prey_type1
         self.icon_dead_prey = _load("prey_dead.png") or None
         coop_path = base / "cooperation.png"
@@ -371,7 +372,10 @@ class PyGameRenderer:
 
             size_factor = min(energy / reference_energy, 1.0)
             if icon is not None:
-                icon_size = max(int(self.cell_size * size_factor), 6)
+                if "prey" in agent_id:
+                    icon_size = self.cell_size * self.prey_icon_cell_span
+                else:
+                    icon_size = max(int(self.cell_size * size_factor), 6)
                 icon_surf = pygame.transform.smoothscale(icon, (icon_size, icon_size))
                 rect = icon_surf.get_rect(center=(x_pix, y_pix))
                 self.screen.blit(icon_surf, rect)
