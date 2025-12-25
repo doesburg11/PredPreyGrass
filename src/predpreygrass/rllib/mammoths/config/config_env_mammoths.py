@@ -23,7 +23,7 @@ config_env = {
     # Energy settings
     "energy_loss_per_step_predator": 0.05, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 
-    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
+    "energy_percentage_loss_per_failed_attacked_prey": 0.05, # 0.1
     "predator_creation_energy_threshold": 10.0,
     "prey_creation_energy_threshold": 18,  # was 6.5
     "initial_energy_predator": 4.0,
