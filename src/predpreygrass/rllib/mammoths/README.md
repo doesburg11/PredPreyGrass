@@ -1,42 +1,38 @@
 # Mammoths: cooperative hunting (shared prey)
 
-- At startup Predators <img src="../../../../assets/images/icons/predator.png" alt="predator icon" height="
-  24" style="vertical-align: middle;">, Prey <img src="../../../../assets/images/icons/prey.png" alt="prey icon" height="
-  24" style="vertical-align: middle;"> and Grass are randomly positioned on the gridworld. Walls are surrounding the gridworld and are possibly manually placed within the gridworld. 
+## Environment and logic (full description)
 
-- Predators and Prey can move in a Moore neighborhood. Predators cannot share a cell with other Predators. Prey cannot share a cell with other Prey. Neither Predator nor Prey can move to a Wall cell.
+### Entities and roles
+- **Predators (humans / hunters)<img src="../../../../assets/images/icons/human.png" alt="predator icon" height="
+  36" style="vertical-align: middle;">**: `type_1_predator` agents that move, lose energy, hunt, and reproduce.
+- **Prey (mammoths)<img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
+  36" style="vertical-align: middle;">**: `type_1_prey` agents that move, lose energy, eat grass, and reproduce.
+- **Grass**: static resource patches that regrow energy over time.
+- **Walls** (optional): impassable cells that can be manually placed.
 
-- Predators and Prey possess energy which depletes every time step.
+### Grid, observations, and visibility
+- The world is a 2D grid (`grid_size` x `grid_size`).
+- Each agent observes a local square window around itself (Moore neighborhood), with separate ranges for predators and prey (`predator_obs_range`, `prey_obs_range`).
+- Observations include channels for predators, prey, and grass energy; optional line-of-sight masking can hide entities behind walls.
 
-- If the energy of an agent is zero, the agent dies and is removed from the gridworld.
+### Startup
+- At startup, humans, mammoths, and grass are randomly positioned on the gridworld. Walls surround the gridworld and can optionally be placed within it.
 
-- Predator can eat Prey and Prey can eat grass to replenish their energy.
+### Actions and movement
+- Each agent selects a movement action mapped to a displacement in its Moore neighborhood.
+- Predators cannot share a cell with other predators, and prey cannot share a cell with other prey.
+- Movement into wall cells is blocked.
 
-- **Cooperative capture and energy accounting**: A Prey is eaten by (a) Predator(s) if the cumulative energy of all Predators in its Moore neighborhood is *strictly larger* than the Prey's own energy (optionally with a safety margin via `team_capture_margin`). This holds for a single Predator as well as a group.
-  - **Failed attempt (struggle cost)**: If the cumulative energy is too low, the attack fails and the Prey survives. The attacking Predators lose energy to reflect the struggle. The total penalty is `prey_energy * energy_percentage_loss_per_failed_attacked_prey` and is **subtracted proportionally** from each attacker based on their energy share. This applies to solo and team attempts. If the penalty drops a Predator to zero or below, it dies that step.
-  - **Successful capture (no struggle cost)**: When the attackers have higher cumulative energy, the Prey is removed and **no extra energy loss** is applied to Predators. The Prey's energy is then split among attackers (proportional by default, or **equal split** when `team_capture_equal_split = True`).
+### Energy, decay, and death
+- All agents have an energy state. Each step, energy decays by a fixed per-step amount (`energy_loss_per_step_predator`, `energy_loss_per_step_prey`).
+- If an agent's energy reaches 0 or below, it dies and is removed from the gridworld.
 
-- A Grass patch is eaten if a Prey lands on its cell.
+### Foraging and hunting dynamics
+- **Prey grazing**: when a mammoth lands on grass, it consumes grass energy and gains that energy (grass energy decreases and can regrow later).
+- **Predator hunting**: humans can hunt for mammoths to replenish their energy. They only succeed in hunting and eating if the cumulative energy of humans in the mammoth's Moore neighborhood is greater than the mammoth's energy. On success, the mammoth is removed and its energy is divided among helpers (proportional by default or equal split with `team_capture_equal_split = True`).
+- On failure, the mammoth survives and helpers lose energy equal to `E_prey * energy_percentage_loss_per_failed_attacked_prey`, split proportional to their energy share.
 
-- If a Grass patch is eaten, its energy is set to zero and the corresponding Prey receives its energy.
-
-- Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
-
-- When a Predator or Prey reaches a certain energy threshold by eating, it asexually reproduces. Its child is placed in the Moore neighborhood of its parent. The initial energy of a child is deducted from the parent.
-
-- Agents only receive a reward when they reproduce. All other behavior is emergent. The sparse rewards configuration shows that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
-
-- The game ends when either the number of Predators or the number of Prey is zero.
-
-## Energy Division After Cooperative Prey Capture
-
-### Proportional Split vs Equal Split
-
-In the **Mammoths** environment, all predators in a prey's Moore neighborhood participate in the attempt. Once the cumulative predator energy in that neighborhood exceeds the prey's energy (optionally with `team_capture_margin`), the prey is removed and its energy is redistributed among the participating predators. If the attempt fails, a struggle penalty is applied to the attackers proportional to their energy share (see `energy_percentage_loss_per_failed_attacked_prey`). Two alternative energy-division rules are supported on successful capture:
-
----
-
-### 1. Proportional Split (default)
+#### 1. Proportional Split (default)
 
 By default, the prey’s energy is divided **proportionally to the current energy of each participating predator**:
 
@@ -60,7 +56,7 @@ This split is purely local and does not require counterfactual reasoning or cent
 
 ---
 
-### 2. Equal Split (optional)
+#### 2. Equal Split (optional)
 
 When `team_capture_equal_split = True`, the prey’s energy is divided **equally among all participating predators**:
 
@@ -93,11 +89,22 @@ Equal splitting removes implicit hierarchy and favors inclusive cooperation, but
 | Assumptions       | Minimal, local           | Minimal, local            |
 | Credit assignment | Implicit                 | Uniform                   |
 
+
+### Reproduction
+- Humans reproduce asexually when their energy exceeds `predator_creation_energy_threshold`.
+- Mammoths reproduce asexually when their energy exceeds `prey_creation_energy_threshold`.
+- A child is spawned in a nearby free cell and its starting energy is deducted from the parent.
+
+### Rewards and termination
+- Rewards are sparse: agents receive reward only on successful reproduction.
+- There is **no explicit cooperation reward**; cooperative hunting emerges from the capture rules and energy accounting.
+- An episode ends when either humans or mammoths go extinct, or when `max_steps` is reached.
+
 ---
 
 ### Research relevance
 
-Both division rules preserve the **minimal-assumption philosophy** of the environment:
+Both division rules (equal or proportional split) preserve the **minimal-assumption philosophy** of the environment:
 
 * No explicit cooperation reward
 * No kin selection or shared team reward
@@ -113,7 +120,7 @@ Comparing these regimes allows us to study how reward division alone shapes emer
 
 # MADRL training
 
-- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
+- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
 
   - **Predator** 
   - **Prey**
@@ -128,3 +135,4 @@ Comparing these regimes allows us to study how reward division alone shapes emer
 </p>
 
 - Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
+- Human hunters tend to cluster together.
