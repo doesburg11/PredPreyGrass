@@ -8,14 +8,14 @@
 This repo explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
-    <b>Emerging human cooperation hunting Mammoths</b></p>
+    <b>Emerging human cooperative hunting of Mammoths</b></p>
 <p align="center">
     <img align="center" src="./assets/images/gifs/cooperative_hunting_10MB.gif" width="600" height="500" />
 </p>
 
 ### Environment:
 
-* **Cooperative hunting ** : Prey is eaten by a single Predator in its Moore neighborhood only if the Predator's energy is *strictly larger* than the Prey's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of *all* Predators is strictly larger than the Prey's own energy. On failure (cumulative energy is too low), predators "struggle" and lose energy proportional to their share of the attacking group's energy (see `energy_percentage_loss_per_failed_attacked_prey`). On success, no extra energy loss is applied; prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/shared_prey))
+* **Mammoth hunting** : Mammoths are only hunted down and eaten by a human(s) in its Moore neighborhood if the cumulative human energy is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/mammoths))
 
 ### Other environments:
 
@@ -31,8 +31,7 @@ This repo explores the interplay between **nature** (inherited traits via reprod
 
 * **Lineage rewards**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time ([implementation](src/predpreygrass/rllib/lineage_rewards))
 
-* **Cooperative hunting** : Prey is eaten by a single Predator in its Moore neighborhood only if the Predator's energy is *strictly larger* than the Prey's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of *all* Predators is strictly larger than the Prey's own energy. On failure (cumulative energy is too low), predators "struggle" and lose energy proportional to their share of the attacking group's energy (see `energy_percentage_loss_per_failed_attacked_prey`). On success, no extra energy loss is applied; prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/shared_prey))
-
+* **Shared prey** : Prey is eaten by a single Predator in its Moore neighborhood only if the Predator's energy is *strictly larger* than the Prey's energy. If there are multiple Predators in the Prey's Moore neighborhood, the Prey gets eaten if the cumulative energy of *all* Predators is strictly larger than the Prey's own energy. On failure (cumulative energy is too low), predators "struggle" and lose energy proportional to their share of the attacking group's energy (see `energy_percentage_loss_per_failed_attacked_prey`). On success, no extra energy loss is applied; prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/shared_prey)). This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators.
 
 
 ### Experiments:
