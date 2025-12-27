@@ -148,6 +148,7 @@ class PredPreyGrass(MultiAgentEnv):
         if seed is None:
             seed = self.config.get("seed")
         self.rng = np.random.default_rng(seed)
+        self.rng_state = self.rng.bit_generator.state
 
         self.agent_positions = {}
         self.predator_positions = {}
@@ -381,12 +382,15 @@ class PredPreyGrass(MultiAgentEnv):
         if self.strict_rllib_output:
             # RLlib expects ended agents to appear once with their final obs/flags.
             output_ids = live_ids | ended_ids_all
-            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in output_ids}
-            self.terminations = {aid: term_full.get(aid, False) for aid in output_ids}
-            self.truncations = {aid: trunc_full.get(aid, False) for aid in output_ids}
-            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in output_ids}
+            ordered_output_ids = [aid for aid in self.agents if aid in output_ids]
+            missing_ids = output_ids - set(ordered_output_ids)
+            ordered_output_ids.extend(sorted(missing_ids))
+            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in ordered_output_ids}
+            self.terminations = {aid: term_full.get(aid, False) for aid in ordered_output_ids}
+            self.truncations = {aid: trunc_full.get(aid, False) for aid in ordered_output_ids}
+            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in ordered_output_ids}
             # Expose agents attribute that matches returned obs/rewards (needed by RLlib checkers).
-            self.agents = list(output_ids)
+            self.agents = ordered_output_ids
         else:
             # Test mode: include agents that ended this step
             term_ids = live_ids | ended_ids_all
@@ -753,7 +757,7 @@ class PredPreyGrass(MultiAgentEnv):
             for j in range(self.grid_size)
             if (i, j) not in wall_positions
         }
-        free_positions = list(all_positions - occupied_positions)
+        free_positions = sorted(all_positions - occupied_positions)
 
         if free_positions:
             return free_positions[self.rng.integers(len(free_positions))]
@@ -1181,6 +1185,7 @@ class PredPreyGrass(MultiAgentEnv):
             },
             "used_agent_ids": list(self.used_agent_ids),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
+            "rng_state": self.rng.bit_generator.state,
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1211,6 +1216,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
         self.agent_offspring_counts = snapshot.get("agent_offspring_counts", {}).copy()
+        rng_state = snapshot.get("rng_state")
+        if rng_state is not None:
+            self.rng.bit_generator.state = rng_state
         stored_live_offspring = snapshot.get("agent_live_offspring_ids", {})
         if stored_live_offspring:
             for agent_id, offspring_ids in stored_live_offspring.items():
