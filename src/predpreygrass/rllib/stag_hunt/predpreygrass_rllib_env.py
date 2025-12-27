@@ -81,6 +81,20 @@ class PredPreyGrass(MultiAgentEnv):
             self.energy_loss_per_step_type_1_prey = self.energy_loss_per_step_prey
             self.energy_loss_per_step_type_2_prey = self.energy_loss_per_step_prey
             self.energy_loss_per_step_prey_default = self.energy_loss_per_step_prey
+        bite_size_prey = config.get("bite_size_prey", float("inf"))
+        if isinstance(bite_size_prey, dict):
+            default_bite_size = bite_size_prey.get("default", bite_size_prey.get("type_1_prey", float("inf")))
+            self.bite_size_prey_by_type = {
+                "type_1_prey": bite_size_prey.get("type_1_prey", float("inf")),
+                "type_2_prey": bite_size_prey.get("type_2_prey", float("inf")),
+                "default": default_bite_size,
+            }
+        else:
+            self.bite_size_prey_by_type = {
+                "type_1_prey": bite_size_prey,
+                "type_2_prey": bite_size_prey,
+                "default": bite_size_prey,
+            }
         self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
 
         # Reward settings
@@ -1002,14 +1016,15 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)
             # cumulative_reward is tracked directly in agent_stats_live
             grass_energy = float(self.grass_energies[caught_grass])
-            bite = grass_energy
+            bite_size = max(0.0, self._get_prey_bite_size(agent))
+            bite = min(grass_energy, bite_size)
             energy_gain = bite
 
             self.agent_energies[agent] += energy_gain
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
             self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
 
-            remaining_grass_energy = grass_energy - bite
+            remaining_grass_energy = max(0.0, grass_energy - bite)
             if remaining_grass_energy > 0.0:
                 self.grass_energies[caught_grass] = remaining_grass_energy
                 self.grid_world_state[3, *prey_position] = remaining_grass_energy
@@ -1574,6 +1589,13 @@ class PredPreyGrass(MultiAgentEnv):
         if agent_id.startswith("type_2_prey"):
             return self.initial_energy_prey_by_type["type_2_prey"]
         return self.initial_energy_prey_by_type["default"]
+
+    def _get_prey_bite_size(self, agent_id: str) -> float:
+        if agent_id.startswith("type_1_prey"):
+            return self.bite_size_prey_by_type["type_1_prey"]
+        if agent_id.startswith("type_2_prey"):
+            return self.bite_size_prey_by_type["type_2_prey"]
+        return self.bite_size_prey_by_type["default"]
 
     #-------- Reset placement methods grid world entities --------
     def _create_and_place_grid_world_entities(self):

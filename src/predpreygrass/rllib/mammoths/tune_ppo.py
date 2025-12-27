@@ -58,6 +58,11 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
+    try:
+        print(f"[Ray] nodes={ray.nodes()}", flush=True)
+        print(f"[Ray] cluster_resources={ray.cluster_resources()}", flush=True)
+    except Exception as exc:
+        print(f"[Ray] cluster info unavailable: {exc}", flush=True)
 
     register_env("PredPreyGrass", env_creator)
 
@@ -69,7 +74,7 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_EQUAL_SPLIT_FALS E"
+    version = "MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05_EQUAL_SPLIT"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
