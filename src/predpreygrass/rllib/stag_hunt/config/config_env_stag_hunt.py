@@ -30,12 +30,16 @@ config_env = {
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,
-        "type_2_prey": 4.0,
+        "type_2_prey": 1.8,
     },
     "initial_energy_predator": 4.0,
     "initial_energy_prey": {
         "type_1_prey": 10.0,
-        "type_2_prey": 2.0,
+        "type_2_prey": 1.0,
+    },
+    "bite_size_prey": {
+        "type_1_prey": 3.0,
+        "type_2_prey": 0.3,
     },
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
@@ -53,7 +57,7 @@ config_env = {
     "n_initial_active_type_2_prey": 10,
     # Grass settings
     "initial_num_grass": 100,
-    "initial_energy_grass": 4.0,
+    "initial_energy_grass": 3.0,
     "energy_gain_per_step_grass": 0.08, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,

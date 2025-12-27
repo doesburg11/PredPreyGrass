@@ -54,22 +54,17 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # --- Main training setup ---
-
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
     register_env("PredPreyGrass", env_creator)
-
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
-    env_config = {**config_env, "seed": None, "strict_rllib_output": True}
-
-
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/pred_decay_0_20/"
+    env_config = {**config_env, "seed": None}
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_EQUAL_SPLIT_FALS E"
+    version = "STAG_HUNT_V1"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
