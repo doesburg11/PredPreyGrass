@@ -23,7 +23,7 @@ config_env = {
     # Energy settings
     "energy_loss_per_step_predator": 0.05, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 
-    "energy_percentage_loss_per_failed_attacked_prey": 0.05, # 0.1
+    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
     "predator_creation_energy_threshold": 10.0,
     "prey_creation_energy_threshold": 18,  # was 6.5
     "initial_energy_predator": 4.0,
@@ -34,7 +34,7 @@ config_env = {
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
-    "n_possible_type_1_predators": 1000,
+    "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
     "n_possible_type_2_prey": 0,
