@@ -35,10 +35,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    # GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2_2025-12-25_00-36-33/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/checkpoint_000049
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/pred_decay_0_20/"
-    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2_2025-12-25_00-36-33/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
-    checkpoint_nr = "checkpoint_000049"
+    # STAG_HUNT_INIT_RABBIT_50_MAMMOTHS_GRASS_RESTRAINED_2025-12-28_13-03-43/PPO_PredPreyGrass_41b22_00000_0_2025-12-28_13-03-43/
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/"
+    checkpoint_root = "STAG_HUNT_INIT_RABBIT_50_MAMMOTHS_GRASS_RESTRAINED_2025-12-28_13-03-43/PPO_PredPreyGrass_41b22_00000_0_2025-12-28_13-03-43/"
+    checkpoint_nr = "checkpoint_000001"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {

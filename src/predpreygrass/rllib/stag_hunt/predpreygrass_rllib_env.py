@@ -463,7 +463,11 @@ class PredPreyGrass(MultiAgentEnv):
 
         if "__all__" in self._pending_infos:
             self.infos["__all__"] = self._pending_infos["__all__"]
-        episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
+        type1_predators = sum(1 for pid in self.predator_positions if pid.startswith("type_1_predator"))
+        type1_prey = sum(1 for pid in self.prey_positions if pid.startswith("type_1_prey"))
+        type2_prey = sum(1 for pid in self.prey_positions if pid.startswith("type_2_prey"))
+        require_type2_prey = (self.n_possible_type_2_prey > 0) or (self.n_initial_active_type_2_prey > 0)
+        episode_done = type1_predators <= 0 or type1_prey <= 0 or (require_type2_prey and type2_prey <= 0)
         if episode_done:
             # Any still-alive agents should be marked truncated and provided with their final cumulative reward
             for agent in self.agents:
@@ -1017,7 +1021,12 @@ class PredPreyGrass(MultiAgentEnv):
             # cumulative_reward is tracked directly in agent_stats_live
             grass_energy = float(self.grass_energies[caught_grass])
             bite_size = max(0.0, self._get_prey_bite_size(agent))
-            bite = min(grass_energy, bite_size)
+            if agent.startswith("type_1_prey"):
+                rabbit_bite_size = max(0.0, self.bite_size_prey_by_type.get("type_2_prey", 0.0))
+                max_bite_allowed = max(0.0, grass_energy - rabbit_bite_size)
+                bite = min(bite_size, max_bite_allowed, grass_energy)
+            else:
+                bite = min(grass_energy, bite_size)
             energy_gain = bite
 
             self.agent_energies[agent] += energy_gain
