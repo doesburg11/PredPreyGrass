@@ -32,7 +32,7 @@ from collections import defaultdict
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = False
+SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 
@@ -114,10 +114,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    # MAMMOTHS_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_2025-12-27_09-29-59/PPO_PredPreyGrass_3bc44_00000_0_2025-12-27_09-30-00/
+    # MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
-    checkpoint_root = "MAMMOTHS_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_2025-12-27_09-29-59/PPO_PredPreyGrass_3bc44_00000_0_2025-12-27_09-30-00/"
-    checkpoint_nr = "checkpoint_000036"
+    checkpoint_root = "MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
+    checkpoint_nr = "checkpoint_000099"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
@@ -525,7 +525,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 2
+    seed = 1
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
