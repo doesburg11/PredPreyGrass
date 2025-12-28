@@ -38,14 +38,14 @@ config_env = {
         "type_2_prey": 1.5,
     },
     "bite_size_prey": {
-        "type_1_prey": 2.7,
+        "type_1_prey": 3.0,
         "type_2_prey": 0.3,
     },
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Absolute energy caps
-    "max_energy_grass": 3.0,
+    "max_energy_grass": 3.5,
     # Learning agents
     "n_possible_type_1_predators": 1000,
     "n_possible_type_2_predators": 0,
