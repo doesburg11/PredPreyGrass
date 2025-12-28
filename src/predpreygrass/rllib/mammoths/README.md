@@ -131,7 +131,7 @@ Comparing these regimes allows us to study how reward division alone shapes emer
 <p align="center">
     <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
 <p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
+    <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_mammoths_15MB.gif" width="600" height="500" />
 </p>
 
 - Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
