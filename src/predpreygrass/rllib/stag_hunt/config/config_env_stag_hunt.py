@@ -24,21 +24,21 @@ config_env = {
     "energy_loss_per_step_predator": 0.05, # 0.15
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
-        "type_2_prey": 0.01,
+        "type_2_prey": 0.02,
     },
     "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,
-        "type_2_prey": 1.8,
+        "type_2_prey": 2.5,
     },
     "initial_energy_predator": 4.0,
     "initial_energy_prey": {
         "type_1_prey": 10.0,
-        "type_2_prey": 1.0,
+        "type_2_prey": 1.5,
     },
     "bite_size_prey": {
-        "type_1_prey": 3.0,
+        "type_1_prey": 2.7,
         "type_2_prey": 0.3,
     },
     # Cooperative capture predators
@@ -47,14 +47,14 @@ config_env = {
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
-    "n_possible_type_1_predators": 2000,
+    "n_possible_type_1_predators": 1000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
-    "n_possible_type_2_prey": 1000,
-    "n_initial_active_type_1_predator": 10,
+    "n_possible_type_2_prey": 2000,
+    "n_initial_active_type_1_predator": 20,
     "n_initial_active_type_2_predator": 0,
     "n_initial_active_type_1_prey": 10,
-    "n_initial_active_type_2_prey": 10,
+    "n_initial_active_type_2_prey": 50,
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 3.0,

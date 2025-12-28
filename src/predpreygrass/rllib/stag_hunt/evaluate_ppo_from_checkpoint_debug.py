@@ -112,12 +112,11 @@ def policy_pi(observation, policy_module, deterministic=True):
         dist = torch.distributions.Categorical(logits=logits)
         return dist.sample().item()
 
-
 def setup_environment_and_visualizer(now):
-    # MAMMOTHS_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_2025-12-27_09-29-59/PPO_PredPreyGrass_3bc44_00000_0_2025-12-27_09-30-00/
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/pred_decay_0_20/"
-    checkpoint_root = "MAMMOTHS_FAILED_ATTACK_PREY_0_01_DECAY_PRED_0_04_ENERGY_GAIN_GRASS_0_1_2025-12-27_09-29-59/PPO_PredPreyGrass_3bc44_00000_0_2025-12-27_09-30-00/"
-    checkpoint_nr = "checkpoint_000036"
+    # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/"
+    checkpoint_root = "STAG_HUNT_INIT_RABBIT_50_MAMMOTHS_GRASS_RESTRAINED_2025-12-28_13-03-43/PPO_PredPreyGrass_41b22_00000_0_2025-12-28_13-03-43/"
+    checkpoint_nr = "checkpoint_000000"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
@@ -179,7 +178,6 @@ def setup_environment_and_visualizer(now):
         pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
 
     return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
-
 
 def step_backwards_if_requested(
     control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
@@ -525,7 +523,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 2
+    seed = 9
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
@@ -598,10 +596,6 @@ if __name__ == "__main__":
             f"Predators blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_predator', 0)} | "
             f"Prey blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_prey', 0)}"
         )
-
-    # print_ranked_reward_summary(env, total_reward)
-
-    # print("Death statistics:", env.death_agents_stats)
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
