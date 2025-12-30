@@ -199,6 +199,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = 0
         self.active_num_prey = 0
         self._printed_termination_ids = set()
+        self._printed_capacity_exhaustion = set()
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -327,6 +328,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._init_available_id_pools()
         # Print-once guard for termination debug logs (per episode)
         self._printed_termination_ids = set()
+        self._printed_capacity_exhaustion = set()
         # Precompute LOS masks for each obs range (assuming static walls for now)
         # This must be done after config and grid/wall initialization
         self.los_mask_predator = self._precompute_los_mask(self.predator_obs_range)
@@ -463,11 +465,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         if "__all__" in self._pending_infos:
             self.infos["__all__"] = self._pending_infos["__all__"]
-        type1_predators = sum(1 for pid in self.predator_positions if pid.startswith("type_1_predator"))
-        type1_prey = sum(1 for pid in self.prey_positions if pid.startswith("type_1_prey"))
-        type2_prey = sum(1 for pid in self.prey_positions if pid.startswith("type_2_prey"))
-        require_type2_prey = (self.n_possible_type_2_prey > 0) or (self.n_initial_active_type_2_prey > 0)
-        episode_done = type1_predators <= 0 or type1_prey <= 0 or (require_type2_prey and type2_prey <= 0)
+        total_predators = len(self.predator_positions)
+        total_prey = len(self.prey_positions)
+        episode_done = total_predators <= 0 or total_prey <= 0
         if episode_done:
             # Any still-alive agents should be marked truncated and provided with their final cumulative reward
             for agent in self.agents:
@@ -1074,13 +1074,17 @@ class PredPreyGrass(MultiAgentEnv):
             new_agent = self._alloc_new_id("predator", parent_type)
             if not new_agent:
                 cap = self.n_possible_type_1_predators if parent_type == 1 else self.n_possible_type_2_predators
-                msg = (
-                    f"[PredPreyGrass] Predator ID pool exhausted for type {parent_type} "
-                    f"at step {self.current_step}. Active predators: {self.active_num_predators}; "
-                    f"configured capacity for type: {cap}. Exiting."
-                )
-                print(msg, flush=True)
-                raise SystemExit(msg)
+                self.reproduction_blocked_due_to_capacity_predator += 1
+                key = f"predator_{parent_type}"
+                if key not in self._printed_capacity_exhaustion:
+                    msg = (
+                        f"[PredPreyGrass] Predator ID pool exhausted for type {parent_type} "
+                        f"at step {self.current_step}. Active predators: {self.active_num_predators}; "
+                        f"configured capacity for type: {cap}. Blocking further reproduction."
+                    )
+                    print(msg, flush=True)
+                    self._printed_capacity_exhaustion.add(key)
+                return
 
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
@@ -1161,13 +1165,17 @@ class PredPreyGrass(MultiAgentEnv):
             new_agent = self._alloc_new_id("prey", parent_type)
             if not new_agent:
                 cap = self.n_possible_type_1_prey if parent_type == 1 else self.n_possible_type_2_prey
-                msg = (
-                    f"[PredPreyGrass] Prey ID pool exhausted for type {parent_type} "
-                    f"at step {self.current_step}. Active prey: {self.active_num_prey}; "
-                    f"configured capacity for type: {cap}. Exiting."
-                )
-                print(msg, flush=True)
-                raise SystemExit(msg)
+                self.reproduction_blocked_due_to_capacity_prey += 1
+                key = f"prey_{parent_type}"
+                if key not in self._printed_capacity_exhaustion:
+                    msg = (
+                        f"[PredPreyGrass] Prey ID pool exhausted for type {parent_type} "
+                        f"at step {self.current_step}. Active prey: {self.active_num_prey}; "
+                        f"configured capacity for type: {cap}. Blocking further reproduction."
+                    )
+                    print(msg, flush=True)
+                    self._printed_capacity_exhaustion.add(key)
+                return
 
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {

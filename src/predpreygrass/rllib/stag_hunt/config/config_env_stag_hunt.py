@@ -30,7 +30,7 @@ config_env = {
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,
-        "type_2_prey": 2.5,
+        "type_2_prey": 2.7,
     },
     "initial_energy_predator": 4.0,
     "initial_energy_prey": {
@@ -45,16 +45,16 @@ config_env = {
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Absolute energy caps
-    "max_energy_grass": 3.5,
+    "max_energy_grass": 3.0,
     # Learning agents
-    "n_possible_type_1_predators": 1000,
+    "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
-    "n_possible_type_2_prey": 2000,
-    "n_initial_active_type_1_predator": 20,
+    "n_possible_type_2_prey": 1000,
+    "n_initial_active_type_1_predator": 10,
     "n_initial_active_type_2_predator": 0,
     "n_initial_active_type_1_prey": 10,
-    "n_initial_active_type_2_prey": 50,
+    "n_initial_active_type_2_prey": 10,
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 3.0,
