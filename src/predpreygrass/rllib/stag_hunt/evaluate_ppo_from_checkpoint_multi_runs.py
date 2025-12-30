@@ -38,7 +38,7 @@ def setup_modules():
     # STAG_HUNT_EPOCH_20/PPO_PredPreyGrass_e65c8_00000_0_2025-12-29_23-58-33
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/"
     checkpoint_root = "STAG_HUNT_EPOCH_20/PPO_PredPreyGrass_e65c8_00000_0_2025-12-29_23-58-33/"
-    checkpoint_nr = "checkpoint_000005"
+    checkpoint_nr = "checkpoint_000007"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {

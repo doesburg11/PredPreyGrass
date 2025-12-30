@@ -27,21 +27,34 @@ class EpisodeReturn(RLlibCallback):
             infos = episode.get_last_infos() or {}
         elif hasattr(episode, "last_infos"):
             infos = episode.last_infos or {}
-        if isinstance(infos, dict):
-            info_all = infos.get("__all__", {})
-            if not info_all and infos:
-                info_all = next(iter(infos.values()), {})
-        else:
+        if not isinstance(infos, dict):
+            infos = {}
+
+        # Prefer __all__ when available; otherwise scan agent infos for the counters.
+        info_all = infos.get("__all__", {})
+        if not info_all:
             info_all = {}
+            for candidate in infos.values():
+                if not isinstance(candidate, dict):
+                    continue
+                if "team_capture_successes" in candidate or "team_capture_coop_successes" in candidate:
+                    info_all = candidate
+                    break
+
         coop_success = info_all.get("team_capture_coop_successes", 0)
         coop_fail = info_all.get("team_capture_coop_failures", 0)
         total_success = info_all.get("team_capture_successes", 0)
         total_fail = info_all.get("team_capture_failures", 0)
         if metrics_logger is not None:
-            metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
-            metrics_logger.log_value("custom_metrics/team_capture_failures", coop_fail)
+            metrics_logger.log_value("custom_metrics/team_capture_coop_successes", coop_success)
+            metrics_logger.log_value("custom_metrics/team_capture_coop_failures", coop_fail)
             metrics_logger.log_value("custom_metrics/team_capture_total_successes", total_success)
             metrics_logger.log_value("custom_metrics/team_capture_total_failures", total_fail)
+        if hasattr(episode, "custom_metrics"):
+            episode.custom_metrics["team_capture_coop_successes"] = coop_success
+            episode.custom_metrics["team_capture_coop_failures"] = coop_fail
+            episode.custom_metrics["team_capture_total_successes"] = total_success
+            episode.custom_metrics["team_capture_total_failures"] = total_fail
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
