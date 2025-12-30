@@ -1,130 +1,63 @@
-# Stag_hunt: cooperative hunting (shared prey)
+# Stag_hunt: cooperative hunting with two prey types
 
-- At startup Predators <img src="../../../../assets/images/icons/predator.png" alt="predator icon" height="
-  24" style="vertical-align: middle;">, Prey <img src="../../../../assets/images/icons/prey.png" alt="prey icon" height="
-  24" style="vertical-align: middle;"> and Grass are randomly positioned on the gridworld. Walls are surrounding the gridworld and are possibly manually placed within the gridworld. 
+## Overview
 
-- Predators and Prey can move in a Moore neighborhood. Predators cannot share a cell with other Predators. Prey cannot share a cell with other Prey. Neither Predator nor Prey can move to a Wall cell.
+- The environment is a gridworld with Predators, Prey, and Grass.
+- Prey come in two types:
+  - Mammoths (type_1_prey)
+  - Rabbits (type_2_prey)
+- Walls surround the grid and can be manually placed inside the grid if desired.
 
-- Predators and Prey possess energy which depletes every time step.
+## Movement and occupancy
 
-- If the energy of an agent is zero, the agent dies and is removed from the gridworld.
+- Agents move in a Moore neighborhood (8 directions plus stay).
+- Predators cannot share a cell with other Predators.
+- Prey cannot share a cell with other Prey.
+- Agents cannot move into Wall cells.
 
-- Predator can eat Prey and Prey can eat grass to replenish their energy.
+## Energy, death, and grass
 
-- **Cooperative capture and energy accounting**: A Prey is eaten by (a) Predator(s) if the cumulative energy of all Predators in its Moore neighborhood is *strictly larger* than the Prey's own energy (optionally with a safety margin via `team_capture_margin`). This holds for a single Predator as well as a group.
-  - **Failed attempt (struggle cost)**: If the cumulative energy is too low, the attack fails and the Prey survives. The attacking Predators lose energy to reflect the struggle. The total penalty is `prey_energy * energy_percentage_loss_per_failed_attacked_prey` and is **subtracted proportionally** from each attacker based on their energy share. This applies to solo and team attempts. If the penalty drops a Predator to zero or below, it dies that step.
-  - **Successful capture (no struggle cost)**: When the attackers have higher cumulative energy, the Prey is removed and **no extra energy loss** is applied to Predators. The Prey's energy is then split among attackers (proportional by default, or **equal split** when `team_capture_equal_split = True`).
+- Predators and Prey lose energy every step.
+- If an agent's energy drops to 0 or below, it dies and is removed.
+- Prey eat grass by landing on a grass cell. Grass energy is reduced by the prey's bite size (clamped to 0).
+- Rabbits have a smaller bite size; Mammoths have a larger bite size.
+- Mammoth feeding leaves at least the rabbit bite size in the patch so rabbits can still feed.
 
-- A Grass patch is eaten if a Prey lands on its cell.
+## Predation and cooperative capture
 
-- If a Grass patch is eaten, its energy is set to zero and the corresponding Prey receives its energy.
+- Predators (Humans) attempt capture for any prey in their Moore neighborhood.
+- A prey is captured if the cumulative predator energy in its Moore neighborhood is larger than the prey's own energy.
+- Rabbits are low-energy and can usually be captured by a single predator.
+- Mammoths are high-energy and therefore typically require multiple predators, unless a single predator has
+  accumulated enough energy.
+- Failed capture applies a struggle penalty: total penalty is
+  `prey_energy * energy_percentage_loss_per_failed_attacked_prey`, split proportionally across attackers.
+- Successful capture removes the prey and redistributes its energy among attackers:
+  - proportional split by predator energy (default), or
+  - equal split when `team_capture_equal_split = True`.
 
-- Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
+## Reproduction and rewards
 
-- When a Predator or Prey reaches a certain energy threshold by eating, it asexually reproduces. Its child is placed in the Moore neighborhood of its parent. The initial energy of a child is deducted from the parent.
+- Predators and Prey reproduce asexually when they reach their type-specific energy threshold.
+- Offspring spawn in the Moore neighborhood; the parent pays the offspring's initial energy.
+- Rewards are sparse: agents are only rewarded on reproduction. Eating affects energy, not reward.
 
-- Agents only receive a reward when they reproduce. All other behavior is emergent. The sparse rewards configuration shows that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
+## Episode end
 
-- The game ends when either the number of Predators or the number of Prey is zero.
-
-## Energy Division After Cooperative Prey Capture
-
-### Proportional Split vs Equal Split
-
-In the **Stag_hunt** environment, all predators in a prey's Moore neighborhood participate in the attempt. Once the cumulative predator energy in that neighborhood exceeds the prey's energy (optionally with `team_capture_margin`), the prey is removed and its energy is redistributed among the participating predators. If the attempt fails, a struggle penalty is applied to the attackers proportional to their energy share (see `energy_percentage_loss_per_failed_attacked_prey`). Two alternative energy-division rules are supported on successful capture:
-
----
-
-### 1. Proportional Split (default)
-
-By default, the prey’s energy is divided **proportionally to the current energy of each participating predator**:
-
-$$
-\Delta E_i = E_{\text{prey}} \cdot \frac{E_i}{\sum_j E_j}
-$$
-
-**Implications:**
-
-* Predators with higher energy receive a larger share of the prey.
-* Contribution is implicit: bringing more energy to the coalition yields a higher payoff.
-* Cooperation is encouraged **only when necessary** (i.e. when no single predator can meet the capture threshold alone).
-* This rule tends to produce **hierarchical cooperation**:
-
-  * strong predators dominate kills,
-  * weaker predators may trail or be excluded,
-  * “rich-get-richer” dynamics can emerge.
-
-**Interpretation:**
-This split is purely local and does not require counterfactual reasoning or centralized credit assignment. Cooperation emerges as a *means* to enable capture, not as a rewarded objective.
-
----
-
-### 2. Equal Split (optional)
-
-When `team_capture_equal_split = True`, the prey’s energy is divided **equally among all participating predators**:
-
-$$
-\Delta E_i = \frac{E_{\text{prey}}}{|\text{helpers}|}
-$$
-
-**Implications:**
-
-* All helpers receive the same payoff regardless of their individual energy.
-* Low-energy predators are incentivized to stay close to others, as participation alone guarantees reward.
-* This often leads to **increased spatial clustering and pack-like movement**.
-* However, it also introduces **free-rider incentives**:
-
-  * predators may join late or contribute little energy while still receiving an equal share.
-
-**Interpretation:**
-Equal splitting removes implicit hierarchy and favors inclusive cooperation, but at the cost of increased exploitation pressure. Whether stable cooperation emerges becomes a learning problem rather than a structural guarantee.
-
----
-
-### Comparison Summary
-
-| Aspect            | Proportional Split       | Equal Split               |
-| ----------------- | ------------------------ | ------------------------- |
-| Reward basis      | Current energy           | Presence                  |
-| Cooperation style | Hierarchical / selective | Inclusive / pack-oriented |
-| Free-riding       | Discouraged              | Encouraged                |
-| Spatial behavior  | Looser coordination      | Stronger clustering       |
-| Assumptions       | Minimal, local           | Minimal, local            |
-| Credit assignment | Implicit                 | Uniform                   |
-
----
-
-### Research relevance
-
-Both division rules preserve the **minimal-assumption philosophy** of the environment:
-
-* No explicit cooperation reward
-* No kin selection or shared team reward
-* No centralized or counterfactual credit assignment
-
-The difference lies in **what kind of cooperation agents are able to learn**:
-
-* proportional split emphasizes *power-based coalition formation*,
-* equal split emphasizes *presence-based cooperation and coordination*.
-
-Comparing these regimes allows us to study how reward division alone shapes emergent cooperative behavior in multi-agent reinforcement learning.
-
+- The episode ends when all predators (humans) are extinct, or all prey (mammoths + rabbits) are extinct,
+  or when `max_steps` is reached.
 
 # MADRL training
 
-- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
-
-  - **Predator** 
-  - **Prey**
-
-  - Predators and Prey **learn movement strategies** based on their **partial observations**.
+- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
+- Predators and Prey learn movement strategies based on partial observations.
 
 # Results
+
 <p align="center">
     <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
 <p align="center">
     <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
 </p>
 
-- Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
+- Cooperative hunting occurs, though it is not explicitly rewarded.

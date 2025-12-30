@@ -359,7 +359,7 @@ class CombinedEvolutionVisualizer:
 
     def plot(self):
         steps = self.time_steps
-        n_charts = 3
+        n_charts = 2
         if self.energy_by_type_series:
             n_charts += 1
         plt.figure(figsize=(24, 6))
@@ -378,37 +378,16 @@ class CombinedEvolutionVisualizer:
         # 2. type-specific counts
         plt.subplot(1, n_charts, 2)
         for group, counts in self.type_counts_dict.items():
-            label = group.replace("type_1", "Low-type").replace("type_2", "High-type").replace("_", " ").capitalize()
-            plt.plot(steps, counts, label=label, color=color_map.get(group, "black"), linewidth=2)
+            plt.plot(steps, counts, label=group, color=color_map.get(group, "black"), linewidth=2)
         plt.title("Agent Population by type Type")
         plt.xlabel("Step")
         plt.ylabel("Count")
         plt.legend()
         plt.grid(True)
 
-        # 3. High-type proportions
-        plt.subplot(1, n_charts, 3)
-        predator_props, prey_props = [], []
-        for i in steps:
-            pred1 = self.type_counts_dict["type_1_predator"][i]
-            pred2 = self.type_counts_dict["type_2_predator"][i]
-            prey1 = self.type_counts_dict["type_1_prey"][i]
-            prey2 = self.type_counts_dict["type_2_prey"][i]
-            predator_props.append(pred2 / (pred1 + pred2) if (pred1 + pred2) > 0 else 0)
-            prey_props.append(prey2 / (prey1 + prey2) if (prey1 + prey2) > 0 else 0)
-
-        plt.plot(steps, [p * 100 for p in predator_props], label="High-type Predator %", color="#cc0000", linewidth=2)
-        plt.plot(steps, [p * 100 for p in prey_props], label="High-type Prey %", color="#0000cc", linewidth=2)
-        plt.title("High-type Agent Relative")
-        plt.ylabel("Percentage (%)")
-        plt.xlabel("Step")
-        plt.ylim(0, 100)
-        plt.legend()
-        plt.grid(True)
-
-        # 4. Aggregate Energy by Type
+        # 3. Aggregate Energy by Type
         if self.energy_by_type_series:
-            plt.subplot(1, n_charts, 4)
+            plt.subplot(1, n_charts, 3)
             steps = list(range(len(self.energy_by_type_series)))
             energy_keys = ["predator", "prey", "grass"]
             color_map = {"predator": "red", "prey": "blue", "grass": "green", "total": "black"}

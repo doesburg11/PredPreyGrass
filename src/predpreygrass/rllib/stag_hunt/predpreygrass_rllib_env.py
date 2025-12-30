@@ -96,6 +96,10 @@ class PredPreyGrass(MultiAgentEnv):
                 "default": bite_size_prey,
             }
         self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
+        self.failed_attack_kills_predator = bool(config.get("failed_attack_kills_predator", False))
+        self.death_penalty_predator = float(config.get("death_penalty_predator", 0.0))
+        self.death_penalty_type_1_prey = float(config.get("death_penalty_type_1_prey", 0.0))
+        self.death_penalty_type_2_prey = float(config.get("death_penalty_type_2_prey", 0.0))
 
         # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
@@ -835,19 +839,22 @@ class PredPreyGrass(MultiAgentEnv):
 
         return None  # No available position found
 
-    def _handle_energy_starvation(self, agent):
+    def _handle_energy_starvation(self, agent, *, cause="starved"):
         position = self.agent_positions.get(agent)
         obs = None if position is None else self._get_observation(agent)
         if obs is not None:
             self.observations[agent] = obs
-        self.rewards[agent] = 0
+        self.rewards[agent] = self.rewards.get(agent, 0.0)
+        penalty = self._get_death_penalty(agent)
+        if penalty:
+            self.rewards[agent] += penalty
         self.terminations[agent] = True
         self.truncations[agent] = False
 
         if position is not None:
             layer = 1 if "predator" in agent else 2
             self.grid_world_state[layer, *position] = 0
-        self._finalize_agent_record(agent, cause="starved")
+        self._finalize_agent_record(agent, cause=cause)
 
         if "predator" in agent:
             self.active_num_predators -= 1
@@ -879,8 +886,34 @@ class PredPreyGrass(MultiAgentEnv):
         total_pred_energy = sum(self.agent_energies[h] for h in helpers)
         prey_energy = float(self.agent_energies[prey_id])
         if total_pred_energy <= prey_energy + self.team_capture_margin:
-            # Apply energy penalty to all helpers on failed attempt.
+            # Handle failed attempt: optionally kill helpers, otherwise apply energy penalty.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in helpers}
+            if self.failed_attack_kills_predator:
+                # Log failed attempt when helpers exist but combined energy insufficient
+                for pid in helpers:
+                    evt = self.agent_event_log.get(pid)
+                    if evt is not None:
+                        evt.setdefault("failed_eating_events", []).append(
+                            {
+                                "t": int(self.current_step),
+                                "id_resource": prey_id,
+                                "energy_resource": prey_energy,
+                                "position_resource": prey_pos,
+                                "position_consumer": tuple(self.agent_positions[pid]),
+                                "bite_size": 0.0,
+                                "energy_before": float(helper_energy_snapshot[pid]),
+                                "energy_after": float(self.agent_energies[pid]),
+                                "team_capture": len(helpers) > 1,
+                                "predator_list": helpers,
+                            }
+                        )
+                for pid in helpers:
+                    if not self.terminations.get(pid, False):
+                        self._handle_energy_starvation(pid, cause="failed_attack")
+                self.team_capture_failures += 1
+                if helper_count > 1:
+                    self.team_capture_coop_failures += 1
+                return False
             total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
             if total_penalty > 0.0:
                 if total_pred_energy > 0.0:
@@ -986,6 +1019,10 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Prey termination handling
         self.observations[prey_id] = self._get_observation(prey_id)
+        self.rewards[prey_id] = self.rewards.get(prey_id, 0.0)
+        penalty = self._get_death_penalty(prey_id)
+        if penalty:
+            self.rewards[prey_id] += penalty
         self.terminations[prey_id] = True
 
         self.truncations[prey_id] = False
@@ -1539,6 +1576,15 @@ class PredPreyGrass(MultiAgentEnv):
                     energy_totals["type_2_prey"] += energy
 
         return energy_totals
+
+    def _get_death_penalty(self, agent_id: str) -> float:
+        if "predator" in agent_id:
+            return self.death_penalty_predator
+        if agent_id.startswith("type_1_prey"):
+            return self.death_penalty_type_1_prey
+        if agent_id.startswith("type_2_prey"):
+            return self.death_penalty_type_2_prey
+        return 0.0
 
     def get_total_offspring_by_type(self):
         """
