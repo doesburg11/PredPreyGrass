@@ -1,7 +1,7 @@
 # Ignored folders
 output/
 ray_results/
-
+ray_results_failed
 # Rllib archive files
 src/predpreygrass/rllib/archive/
 # Byte-compiled / optimized / DLL files
