@@ -621,7 +621,7 @@ class PredPreyGrass(MultiAgentEnv):
                 or agent not in self.agent_energies
                 or agent not in self.agent_ages
             ):
-                print(f"Warning: Agent {agent} missing from state during time step update; removing it.")
+                # print(f"Warning: Agent {agent} missing from state during time step update; removing it.")
                 self._remove_agent_from_state(agent)
                 continue
 
