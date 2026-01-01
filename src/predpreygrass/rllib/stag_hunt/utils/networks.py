@@ -11,7 +11,7 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
     Also widens the first FC layer for large action spaces (>20 actions).
     """   
     # obs_space is a Box with shape (C, H, W)
-    #   C = number of channels (layers of information: mask, predators, prey, grass → usually 4)
+    #   C = number of channels (channels of information: mask, predators, prey, grass → usually 4)
     #   H = height of the square observation window (e.g. 7 for predators, 9 for prey)
     #   W = width of the square observation window (equal to H here)
     C, H, W = obs_space.shape
