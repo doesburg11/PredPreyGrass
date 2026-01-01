@@ -1,5 +1,11 @@
 # Cooperative Hunting: Features "Shared Prey" environment
 
+<p align="center">
+    <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
+<p align="center">
+    <img align="center" src="./../../../../assets/images/gifs/shared_prey.gif" width="600" height="500" />
+</p>
+
 - At startup Predators <img src="../../../../assets/images/icons/predator.png" alt="predator icon" height="
   24" style="vertical-align: middle;">, Prey <img src="../../../../assets/images/icons/prey.png" alt="prey icon" height="
   24" style="vertical-align: middle;"> and Grass are randomly positioned on the gridworld. Walls are surrounding the gridworld and are possibly manually placed within the gridworld. 
