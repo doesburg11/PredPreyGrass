@@ -130,3 +130,4 @@ Comparing these regimes allows us to study how reward division alone shapes emer
 
 - Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
 - Prey usually possess less energy than prey, so cooperative hunting is usually not necessary.
+- Prey kills are usually done by a single predator and are around 10-20% cooperative (two or more predators).
