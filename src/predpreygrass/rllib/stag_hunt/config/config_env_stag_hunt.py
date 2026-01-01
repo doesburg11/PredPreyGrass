@@ -5,9 +5,9 @@ config_env = {
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
     "grid_size": 30,  # 25
-    "num_obs_channels": 4,
-    "predator_obs_range": 5,
-    "prey_obs_range": 7,
+    "num_obs_channels": 5, # obsolete
+    "predator_obs_range": 9,
+    "prey_obs_range": 9,
     # Action space settings
     "type_1_action_range": 3,
     "type_2_action_range": 3,
@@ -20,21 +20,21 @@ config_env = {
         "type_1_prey": 10.0,
         "type_2_prey": 10.0,
     },
-    "death_penalty_predator": -1.0,
-    "death_penalty_type_1_prey": -1.0,
-    "death_penalty_type_2_prey": -1.0,
+    "death_penalty_predator": 0.0,
+    "death_penalty_type_1_prey": 0.0,
+    "death_penalty_type_2_prey": 0.0,
     # Energy settings
     "energy_loss_per_step_predator": 0.05, 
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
         "type_2_prey": 0.02,
     },
-    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.0
-    "failed_attack_kills_predator": True,
-    "energy_treshold_creation_predator": 14.0,
+    "energy_percentage_loss_per_failed_attacked_prey": 0.00, # 0.0
+    "failed_attack_kills_predator": False,
+    "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,
-        "type_2_prey": 2.0,
+        "type_2_prey": 2.7,
     },
     "initial_energy_predator": 4.0,
     "initial_energy_prey": {
@@ -54,15 +54,15 @@ config_env = {
     "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
-    "n_possible_type_2_prey": 2000,
+    "n_possible_type_2_prey": 1000,
     "n_initial_active_type_1_predator": 10,
     "n_initial_active_type_2_predator": 0,
     "n_initial_active_type_1_prey": 10,
-    "n_initial_active_type_2_prey": 50,
+    "n_initial_active_type_2_prey": 10,
     # Grass settings
-    "initial_num_grass": 150, # 100
+    "initial_num_grass": 100, # 100
     "initial_energy_grass": 3.0,
-    "energy_gain_per_step_grass": 0.1, # 0.08
+    "energy_gain_per_step_grass": 0.08, # 0.08
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,

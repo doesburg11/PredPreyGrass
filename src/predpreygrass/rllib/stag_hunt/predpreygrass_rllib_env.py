@@ -111,6 +111,14 @@ class PredPreyGrass(MultiAgentEnv):
         # Grid and observation
         self.grid_size = config.get("grid_size", 0)
         self.num_obs_channels = config.get("num_obs_channels", 0)
+        # Channel layout: 0 walls, 1 predators, 2 type_1_prey, 3 type_2_prey, 4 grass
+        self.wall_channel = 0
+        self.predator_channel = 1
+        self.type_1_prey_channel = 2
+        self.type_2_prey_channel = 3
+        self.grass_channel = 4
+        if self.num_obs_channels < (self.grass_channel + 1):
+            self.num_obs_channels = self.grass_channel + 1
         self.predator_obs_range = config.get("predator_obs_range", 0)
         self.prey_obs_range = config.get("prey_obs_range", 0)
         self.include_visibility_channel = config.get("include_visibility_channel", False)
@@ -613,13 +621,14 @@ class PredPreyGrass(MultiAgentEnv):
                 or agent not in self.agent_energies
                 or agent not in self.agent_ages
             ):
+                print(f"Warning: Agent {agent} missing from state during time step update; removing it.")
                 self._remove_agent_from_state(agent)
                 continue
 
-            layer = 1 if "predator" in agent else 2
+            channel = self.predator_channel if "predator" in agent else self._get_prey_channel(agent)
 
             # Energy decay always applies while the agent exists
-            if layer == 1:
+            if channel == self.predator_channel:  # Predator channel
                 energy_decay = self.energy_loss_per_step_predator
             else:
                 if "type_1_prey" in agent:
@@ -630,7 +639,7 @@ class PredPreyGrass(MultiAgentEnv):
                     energy_decay = self.energy_loss_per_step_prey_default
 
             self.agent_energies[agent] -= energy_decay
-            self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
+            self.grid_world_state[channel, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self.agent_ages[agent] += 1
 
@@ -649,7 +658,7 @@ class PredPreyGrass(MultiAgentEnv):
             old_energy = self.grass_energies[grass]
             new_energy = min(old_energy + self.energy_gain_per_step_grass, self.max_energy_grass)
             self.grass_energies[grass] = new_energy
-            self.grid_world_state[3, pos[0], pos[1]] = new_energy
+            self.grid_world_state[self.grass_channel, pos[0], pos[1]] = new_energy
 
     def _process_agent_movements(self, action_dict):
         """
@@ -663,12 +672,13 @@ class PredPreyGrass(MultiAgentEnv):
             new_position = self._get_move(agent, action)
             if "predator" in agent:
                 self.predator_positions[agent] = tuple(new_position)
-                self.grid_world_state[1, old_position[0], old_position[1]] = 0
-                self.grid_world_state[1, new_position[0], new_position[1]] = self.agent_energies[agent]
+                self.grid_world_state[self.predator_channel, old_position[0], old_position[1]] = 0
+                self.grid_world_state[self.predator_channel, new_position[0], new_position[1]] = self.agent_energies[agent]
             elif "prey" in agent:
+                prey_channel = self._get_prey_channel(agent)
                 self.prey_positions[agent] = tuple(new_position)
-                self.grid_world_state[2, old_position[0], old_position[1]] = 0
-                self.grid_world_state[2, new_position[0], new_position[1]] = self.agent_energies[agent]
+                self.grid_world_state[prey_channel, old_position[0], old_position[1]] = 0
+                self.grid_world_state[prey_channel, new_position[0], new_position[1]] = self.agent_energies[agent]
             record = self.agent_stats_live.get(agent)
             if record is not None:
                 record["avg_energy_sum"] += self.agent_energies[agent]
@@ -699,14 +709,20 @@ class PredPreyGrass(MultiAgentEnv):
         # Clip new position to stay within grid bounds
         new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))
 
-        agent_type_nr = 1 if "predator" in agent else 2
         # Default: no block
         self._last_move_block_reason[agent] = None
         # Block entry into wall cells
         if new_position in self.wall_positions:
             new_position = current_position
             self._last_move_block_reason[agent] = "wall"
-        elif self.grid_world_state[agent_type_nr, *new_position] > 0:
+        elif "predator" in agent:
+            if self.grid_world_state[self.predator_channel, *new_position] > 0:
+                new_position = current_position
+                self._last_move_block_reason[agent] = "occupied"
+        elif (
+            self.grid_world_state[self.type_1_prey_channel, *new_position] > 0
+            or self.grid_world_state[self.type_2_prey_channel, *new_position] > 0
+        ):
             new_position = current_position
             self._last_move_block_reason[agent] = "occupied"
         elif self.respect_los_for_movement and new_position != current_position:
@@ -852,8 +868,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.truncations[agent] = False
 
         if position is not None:
-            layer = 1 if "predator" in agent else 2
-            self.grid_world_state[layer, *position] = 0
+            channel = self._get_agent_channel(agent)
+            self.grid_world_state[channel, *position] = 0
         self._finalize_agent_record(agent, cause=cause)
 
         if "predator" in agent:
@@ -925,7 +941,7 @@ class PredPreyGrass(MultiAgentEnv):
                                 pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
                             )
                             self._per_agent_step_deltas[pid]["eat"] -= penalty_share
-                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+                            self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
                 else:
                     penalty_share = total_penalty / helper_count
                     for pid in helpers:
@@ -935,7 +951,7 @@ class PredPreyGrass(MultiAgentEnv):
                                 pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
                             )
                             self._per_agent_step_deltas[pid]["eat"] -= penalty_share
-                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+                            self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
 
             # Log failed attempt when helpers exist but combined energy insufficient
             for pid in helpers:
@@ -983,7 +999,7 @@ class PredPreyGrass(MultiAgentEnv):
                 )
             self.agent_energies[pid] += energy_share_pid
             self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
-            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+            self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
             # Ensure a reward entry exists (keep catch reward at zero for stag_hunt).
             self.rewards[pid] = self.rewards.get(pid, 0.0)
             pred_record = self.agent_stats_live.get(pid)
@@ -1027,7 +1043,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.truncations[prey_id] = False
         self.active_num_prey -= 1
-        self.grid_world_state[2, *prey_pos] = 0
+        self.grid_world_state[self._get_prey_channel(prey_id), *prey_pos] = 0
         # Record for cooperative-visualization overlay
         if helper_count > 1:
             self.team_capture_events.append({"t": int(self.current_step), "position": tuple(prey_pos), "helpers": helper_count})
@@ -1068,15 +1084,15 @@ class PredPreyGrass(MultiAgentEnv):
 
             self.agent_energies[agent] += energy_gain
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
-            self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
+            self.grid_world_state[self._get_prey_channel(agent), *prey_position] = self.agent_energies[agent]
 
             remaining_grass_energy = max(0.0, grass_energy - bite)
             if remaining_grass_energy > 0.0:
                 self.grass_energies[caught_grass] = remaining_grass_energy
-                self.grid_world_state[3, *prey_position] = remaining_grass_energy
+                self.grid_world_state[self.grass_channel, *prey_position] = remaining_grass_energy
             else:
                 self.grass_energies[caught_grass] = 0.0
-                self.grid_world_state[3, *prey_position] = 0.0
+                self.grid_world_state[self.grass_channel, *prey_position] = 0.0
             prey_record = self.agent_stats_live.get(agent)
             if prey_record is not None:
                 prey_record["times_ate"] += 1
@@ -1161,8 +1177,8 @@ class PredPreyGrass(MultiAgentEnv):
             self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_predator
 
             # Write the child's actual starting energy (after reproduction efficiency) into the grid
-            self.grid_world_state[1, *new_position] = self.initial_energy_predator
-            self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
+            self.grid_world_state[self.predator_channel, *new_position] = self.initial_energy_predator
+            self.grid_world_state[self.predator_channel, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self.active_num_predators += 1
 
@@ -1254,8 +1270,9 @@ class PredPreyGrass(MultiAgentEnv):
             self._per_agent_step_deltas[agent]["repro"] = -child_energy
 
             # Write the child's actual starting energy (after reproduction efficiency) into the grid
-            self.grid_world_state[2, *new_position] = child_energy
-            self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
+            prey_channel = self._get_prey_channel(new_agent)
+            self.grid_world_state[prey_channel, *new_position] = child_energy
+            self.grid_world_state[prey_channel, *self.agent_positions[agent]] = self.agent_energies[agent]
 
             self.active_num_prey += 1
 
@@ -1660,6 +1677,18 @@ class PredPreyGrass(MultiAgentEnv):
             return self.bite_size_prey_by_type["type_2_prey"]
         return self.bite_size_prey_by_type["default"]
 
+    def _get_prey_channel(self, agent_id: str) -> int:
+        if agent_id.startswith("type_1_prey"):
+            return self.type_1_prey_channel
+        if agent_id.startswith("type_2_prey"):
+            return self.type_2_prey_channel
+        return self.type_1_prey_channel
+
+    def _get_agent_channel(self, agent_id: str) -> int:
+        if "predator" in agent_id:
+            return self.predator_channel
+        return self._get_prey_channel(agent_id)
+
     #-------- Reset placement methods grid world entities --------
     def _create_and_place_grid_world_entities(self):
         """
@@ -1735,7 +1764,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[agent] = pos
             self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
+            self.grid_world_state[self.predator_channel, *pos] = self.initial_energy_predator
 
     #-------- Placement method for prey --------
     def _place_prey(self, prey_list, prey_positions):
@@ -1746,7 +1775,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.prey_positions[agent] = pos
             init_energy = self._get_initial_prey_energy(agent)
             self.agent_energies[agent] = init_energy
-            self.grid_world_state[2, *pos] = init_energy
+            self.grid_world_state[self._get_prey_channel(agent), *pos] = init_energy
 
     #-------- Placement method for grass --------
     def _place_grass(self, grass_positions):
@@ -1756,7 +1785,7 @@ class PredPreyGrass(MultiAgentEnv):
             pos = grass_positions[i]
             self.grass_positions[grass] = pos
             self.grass_energies[grass] = self.initial_energy_grass
-            self.grid_world_state[3, *pos] = self.initial_energy_grass
+            self.grid_world_state[self.grass_channel, *pos] = self.initial_energy_grass
 
 
     def _precompute_los_mask(self, observation_range):
