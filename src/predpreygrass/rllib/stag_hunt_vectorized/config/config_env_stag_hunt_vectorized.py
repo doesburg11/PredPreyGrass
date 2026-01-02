@@ -24,7 +24,7 @@ config_env = {
     "death_penalty_type_1_prey": 0.0,
     "death_penalty_type_2_prey": 0.0,
     # Energy settings
-    "energy_loss_per_step_predator": 0.08, # 0.05
+    "energy_loss_per_step_predator": 0.09, # 0.05
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
         "type_2_prey": 0.02,
