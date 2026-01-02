@@ -12,7 +12,7 @@ config_ppo = {
     "clip_param": 0.3,
     # Resources
     "num_learners": 1,
-    "num_env_runners": 6,
+    "num_env_runners": 5,
     "num_envs_per_env_runner": 1,
     "num_gpus_per_learner": 0,
     "num_cpus_for_main_process": 1,

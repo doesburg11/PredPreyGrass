@@ -1,14 +1,17 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
-It uses a custom environment that simulates a predator-prey-grass ecosystem.
-The environment is a grid world where predators and prey move around.
-Predators try to catch prey, and prey try to eat grass.
-Predators and prey both either can be of type_1 or type_2.
+Old stag_hunt environment with the new PPO config used for vectorized runs.
+Use this to isolate PPO-config effects without the vectorized env changes.
 """
-from predpreygrass.rllib.stag_hunt_vectorized.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import config_env
-from predpreygrass.rllib.stag_hunt_vectorized.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.stag_hunt_vectorized.utils.networks import build_multi_module_spec
+from predpreygrass.rllib.stag_hunt.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import (
+    config_env,
+)
+from predpreygrass.rllib.stag_hunt_vectorized.utils.episode_return_callback import (
+    EpisodeReturn,
+)
+from predpreygrass.rllib.stag_hunt_vectorized.utils.networks import (
+    build_multi_module_spec,
+)
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -25,12 +28,18 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_gpu_stag_hunt_vectorized import config_ppo
+        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_gpu_stag_hunt_vectorized import (
+            config_ppo,
+        )
     elif num_cpus == 8:
-        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import config_ppo
+        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
+            config_ppo,
+        )
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import config_ppo
+        from predpreygrass.rllib.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
+            config_ppo,
+        )
     return config_ppo
 
 
@@ -64,15 +73,17 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_vectorized/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_PRED_LOSS_0_09"
+    version = "STAG_HUNT_OLDENV_NEWPPO"
     experiment_name = f"{version}_{timestamp}"
-    experiment_path = ray_results_path / experiment_name 
+    experiment_path = ray_results_path / experiment_name
 
     experiment_path.mkdir(parents=True, exist_ok=True)
     # --- Save environment source file for provenance ---
     source_dir = experiment_path / "SOURCE_CODE_ENV"
     source_dir.mkdir(exist_ok=True)
-    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
+    env_file = (
+        Path(__file__).resolve().parent.parent / "stag_hunt" / "predpreygrass_rllib_env.py"
+    )
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
@@ -82,7 +93,6 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
@@ -143,7 +153,6 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
-        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
@@ -169,5 +178,5 @@ if __name__ == "__main__":
         ),
     )
 
-    result = tuner.fit()
+    tuner.fit()
     ray.shutdown()

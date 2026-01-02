@@ -174,6 +174,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.observation_space = gymnasium.spaces.Dict(self.observation_spaces)
         self.action_space_struct = self.action_spaces
         self.observation_space_struct = self.observation_spaces
+        self._spaces_initialized = True
 
 
         # Initialize bookkeeping needed before ID pool construction
@@ -226,8 +227,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.predator_positions = {}
         self.prey_positions = {}
         self.grass_positions = {}
+        self.predator_positions_by_xy = {}
         self.agent_energies = {}
         self.grass_energies = {}
+        self.grass_positions_by_xy = {}
         # Per-step return dicts
         self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         # Ages (in steps) for all currently active agents
@@ -274,16 +277,18 @@ class PredPreyGrass(MultiAgentEnv):
         self.spawned_prey = 0
         self.agents_just_ate = set()
 
-        # Pre-build per-agent spaces for all possible agents (needed by RLlib connectors)
-        possible_ids = self._build_possible_agent_ids()
-        self.action_spaces = {aid: self._build_action_space(aid) for aid in possible_ids}
-        self.observation_spaces = {aid: self._build_observation_space(aid) for aid in possible_ids}
-        # Gym Dict wrappers for RLlib connectors expecting a space struct
-        self.action_space = gymnasium.spaces.Dict(self.action_spaces)
-        self.observation_space = gymnasium.spaces.Dict(self.observation_spaces)
-        # Provide explicit structs for connector normalization
-        self.action_space_struct = self.action_spaces
-        self.observation_space_struct = self.observation_spaces
+        if not getattr(self, "_spaces_initialized", False):
+            # Pre-build per-agent spaces for all possible agents (needed by RLlib connectors)
+            possible_ids = self._build_possible_agent_ids()
+            self.action_spaces = {aid: self._build_action_space(aid) for aid in possible_ids}
+            self.observation_spaces = {aid: self._build_observation_space(aid) for aid in possible_ids}
+            # Gym Dict wrappers for RLlib connectors expecting a space struct
+            self.action_space = gymnasium.spaces.Dict(self.action_spaces)
+            self.observation_space = gymnasium.spaces.Dict(self.observation_spaces)
+            # Provide explicit structs for connector normalization
+            self.action_space_struct = self.action_spaces
+            self.observation_space_struct = self.observation_spaces
+            self._spaces_initialized = True
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
@@ -361,7 +366,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.current_step = 0
 
-        observations = {agent: self._get_observation(agent) for agent in self.agents}
+        observations = self._get_observations_batch(self.agents)
         return observations, {}
 
     def step(self, action_dict):
@@ -397,6 +402,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Collect all agents marked terminated and still present in the active maps
         terminations = self.terminations
         agent_positions = self.agent_positions
+        pred_positions_by_xy = self.predator_positions_by_xy
         to_remove = [a for a, t in terminations.items() if t and a in agent_positions]
 
         if to_remove:
@@ -408,7 +414,9 @@ class PredPreyGrass(MultiAgentEnv):
             for agent in to_remove:
                 agent_positions.pop(agent, None)
                 energies.pop(agent, None)
-                predator_pos.pop(agent, None)
+                pos = predator_pos.pop(agent, None)
+                if pos is not None:
+                    pred_positions_by_xy.pop(pos, None)
                 prey_pos.pop(agent, None)
 
             # Rebuild active agent list without repeated O(n) list.remove calls
@@ -443,8 +451,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Step 8: Assemble return dicts.
         # Generate observations only for still-active agents AFTER engagements and reproduction.
-        get_obs = self._get_observation
-        self.observations = {agent: get_obs(agent) for agent in self.agents}
+        self.observations = self._get_observations_batch(self.agents)
 
         live_ids = set(self.agents)
         # Preserve full termination/truncation maps before filtering to live agents
@@ -556,9 +563,15 @@ class PredPreyGrass(MultiAgentEnv):
             terminated_this_step = {aid for aid, t in self.terminations.items() if t}
             active_now = set(self.agents)
 
+            active_obs = self._get_observations_batch(list(active_now))
             # Active agents -> truncated=True, terminated=False
             for agent in active_now:
-                obs[agent] = self._get_observation(agent)
+                obs_value = active_obs.get(agent)
+                if obs_value is None:
+                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
+                    obs_value = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
+                obs[agent] = obs_value
                 rews[agent] = self.rewards.get(agent, 0.0)
                 truncs[agent] = True
                 terms[agent] = False
@@ -613,6 +626,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Apply all per-step updates (energy decay, age increment).
         """
+        active_agents = []
         for agent in list(self.agents):
             # Defensive guard: if an agent leaked out of the state containers, drop it quietly
             # to avoid KeyErrors during rollouts (observed in RLlib worker logs).
@@ -624,27 +638,61 @@ class PredPreyGrass(MultiAgentEnv):
                 # print(f"Warning: Agent {agent} missing from state during time step update; removing it.")
                 self._remove_agent_from_state(agent)
                 continue
+            active_agents.append(agent)
 
-            channel = self.predator_channel if "predator" in agent else self._get_prey_channel(agent)
+        if not active_agents:
+            return
 
-            # Energy decay always applies while the agent exists
-            if channel == self.predator_channel:  # Predator channel
-                energy_decay = self.energy_loss_per_step_predator
-            else:
-                if "type_1_prey" in agent:
-                    energy_decay = self.energy_loss_per_step_type_1_prey
-                elif "type_2_prey" in agent:
-                    energy_decay = self.energy_loss_per_step_type_2_prey
-                else:
-                    energy_decay = self.energy_loss_per_step_prey_default
+        positions = np.asarray(
+            [self.agent_positions[agent] for agent in active_agents],
+            dtype=np.int32,
+        )
+        energies = np.asarray(
+            [self.agent_energies[agent] for agent in active_agents],
+            dtype=np.float32,
+        )
+        ages = np.asarray(
+            [self.agent_ages[agent] for agent in active_agents],
+            dtype=np.int32,
+        )
+        is_pred = np.fromiter(
+            ("predator" in agent for agent in active_agents),
+            dtype=bool,
+            count=len(active_agents),
+        )
+        is_type1_prey = np.fromiter(
+            (agent.startswith("type_1_prey") for agent in active_agents),
+            dtype=bool,
+            count=len(active_agents),
+        )
+        is_type2_prey = np.fromiter(
+            (agent.startswith("type_2_prey") for agent in active_agents),
+            dtype=bool,
+            count=len(active_agents),
+        )
 
-            self.agent_energies[agent] -= energy_decay
-            self.grid_world_state[channel, *self.agent_positions[agent]] = self.agent_energies[agent]
+        energy_decay = np.where(
+            is_pred,
+            self.energy_loss_per_step_predator,
+            self.energy_loss_per_step_prey_default,
+        )
+        energy_decay = np.where(is_type1_prey, self.energy_loss_per_step_type_1_prey, energy_decay)
+        energy_decay = np.where(is_type2_prey, self.energy_loss_per_step_type_2_prey, energy_decay)
 
-            self.agent_ages[agent] += 1
+        channels = np.full(len(active_agents), self.type_1_prey_channel, dtype=np.int32)
+        channels[is_type2_prey] = self.type_2_prey_channel
+        channels[is_pred] = self.predator_channel
 
+        energies = energies - energy_decay
+        ages = ages + 1
+
+        self.grid_world_state[channels, positions[:, 0], positions[:, 1]] = energies
+
+        for idx, agent in enumerate(active_agents):
+            self.agent_energies[agent] = float(energies[idx])
+            self.agent_ages[agent] = int(ages[idx])
             self._per_agent_step_deltas[agent] = {
-                "decay": -energy_decay,
+                "decay": -float(energy_decay[idx]),
                 "move": 0.0,
                 "eat": 0.0,
                 "repro": 0.0,
@@ -662,29 +710,109 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _process_agent_movements(self, action_dict):
         """
-        Process movement and grid updates for all agents (non-vectorized, simple loop).
+        Process movement and grid updates for all agents.
         """
-        for agent in action_dict.keys():
-            if agent not in self.agent_positions or self.terminations.get(agent):
-                continue
-            old_position = self.agent_positions[agent]
-            action = action_dict[agent]
-            new_position = self._get_move(agent, action)
-            if "predator" in agent:
-                self.predator_positions[agent] = tuple(new_position)
-                self.grid_world_state[self.predator_channel, old_position[0], old_position[1]] = 0
-                self.grid_world_state[self.predator_channel, new_position[0], new_position[1]] = self.agent_energies[agent]
-            elif "prey" in agent:
-                prey_channel = self._get_prey_channel(agent)
-                self.prey_positions[agent] = tuple(new_position)
-                self.grid_world_state[prey_channel, old_position[0], old_position[1]] = 0
-                self.grid_world_state[prey_channel, new_position[0], new_position[1]] = self.agent_energies[agent]
+        agent_positions = self.agent_positions
+        pred_positions_by_xy = self.predator_positions_by_xy
+        agents = [
+            agent
+            for agent in action_dict.keys()
+            if agent in agent_positions and not self.terminations.get(agent)
+        ]
+        if not agents:
+            return
+
+        if not hasattr(self, "_action_move_array_type_1"):
+            size = max(self.action_to_move_tuple_type_1_agents) + 1
+            arr = np.zeros((size, 2), dtype=np.int32)
+            for idx, move in self.action_to_move_tuple_type_1_agents.items():
+                arr[idx] = move
+            self._action_move_array_type_1 = arr
+        if not hasattr(self, "_action_move_array_type_2"):
+            size = max(self.action_to_move_tuple_type_2_agents) + 1
+            arr = np.zeros((size, 2), dtype=np.int32)
+            for idx, move in self.action_to_move_tuple_type_2_agents.items():
+                arr[idx] = move
+            self._action_move_array_type_2 = arr
+
+        actions = np.fromiter((int(action_dict[agent]) for agent in agents), dtype=np.int32, count=len(agents))
+        old_positions = np.asarray([agent_positions[agent] for agent in agents], dtype=np.int32)
+        is_pred = np.fromiter((("predator" in agent) for agent in agents), dtype=bool, count=len(agents))
+        is_type_1 = np.fromiter((("type_1" in agent) for agent in agents), dtype=bool, count=len(agents))
+        is_type_2_prey = np.fromiter((agent.startswith("type_2_prey") for agent in agents), dtype=bool, count=len(agents))
+        energies = np.fromiter((self.agent_energies[agent] for agent in agents), dtype=np.float32, count=len(agents))
+
+        move_vectors = np.zeros_like(old_positions)
+        if np.any(is_type_1):
+            move_vectors[is_type_1] = self._action_move_array_type_1[actions[is_type_1]]
+        if np.any(~is_type_1):
+            move_vectors[~is_type_1] = self._action_move_array_type_2[actions[~is_type_1]]
+
+        candidate = old_positions + move_vectors
+        np.clip(candidate, 0, self.grid_size - 1, out=candidate)
+
+        gws = self.grid_world_state
+        wall_mask = gws[self.wall_channel, candidate[:, 0], candidate[:, 1]] > 0
+
+        for idx, agent in enumerate(agents):
+            old_x, old_y = int(old_positions[idx, 0]), int(old_positions[idx, 1])
+            new_x, new_y = int(candidate[idx, 0]), int(candidate[idx, 1])
+            blocked = False
+            self._last_move_block_reason[agent] = None
+
+            if wall_mask[idx]:
+                blocked = True
+                self._last_move_block_reason[agent] = "wall"
+                new_x, new_y = old_x, old_y
+            else:
+                if is_pred[idx]:
+                    if gws[self.predator_channel, new_x, new_y] > 0:
+                        blocked = True
+                        self._last_move_block_reason[agent] = "occupied"
+                        new_x, new_y = old_x, old_y
+                else:
+                    if (
+                        gws[self.type_1_prey_channel, new_x, new_y] > 0
+                        or gws[self.type_2_prey_channel, new_x, new_y] > 0
+                    ):
+                        blocked = True
+                        self._last_move_block_reason[agent] = "occupied"
+                        new_x, new_y = old_x, old_y
+
+            if not blocked and self.respect_los_for_movement and (new_x != old_x or new_y != old_y):
+                dx = new_x - old_x
+                dy = new_y - old_y
+                if abs(dx) == 1 and abs(dy) == 1:
+                    ortho1 = (old_x + dx, old_y)
+                    ortho2 = (old_x, old_y + dy)
+                    if ortho1 in self.wall_positions or ortho2 in self.wall_positions:
+                        self._last_move_block_reason[agent] = "corner_cut"
+                        new_x, new_y = old_x, old_y
+                elif not self._line_of_sight_clear((old_x, old_y), (new_x, new_y)):
+                    self._last_move_block_reason[agent] = "los"
+                    new_x, new_y = old_x, old_y
+
+            new_position = (new_x, new_y)
+            old_position = (old_x, old_y)
+            if is_pred[idx]:
+                self.predator_positions[agent] = new_position
+                gws[self.predator_channel, old_x, old_y] = 0.0
+                gws[self.predator_channel, new_x, new_y] = energies[idx]
+                if new_position != old_position:
+                    pred_positions_by_xy.pop(old_position, None)
+                    pred_positions_by_xy[new_position] = agent
+            else:
+                prey_channel = self.type_2_prey_channel if is_type_2_prey[idx] else self.type_1_prey_channel
+                self.prey_positions[agent] = new_position
+                gws[prey_channel, old_x, old_y] = 0.0
+                gws[prey_channel, new_x, new_y] = energies[idx]
+
             record = self.agent_stats_live.get(agent)
             if record is not None:
-                record["avg_energy_sum"] += self.agent_energies[agent]
+                record["avg_energy_sum"] += energies[idx]
                 record["avg_energy_steps"] += 1
-                record["distance_traveled"] += float(np.linalg.norm(np.array(new_position) - np.array(old_position)))
-            self.agent_positions[agent] = tuple(new_position)
+                record["distance_traveled"] += float(np.hypot(new_x - old_x, new_y - old_y))
+            self.agent_positions[agent] = new_position
 
     def _get_move(self, agent, action: int):
         """
@@ -776,6 +904,80 @@ class PredPreyGrass(MultiAgentEnv):
                 y += sy
         # Check final cell (excluded by earlier condition); not necessary for movement blocking beyond destination.
         return True
+
+    def _get_observations_batch(self, agents):
+        if not agents:
+            return {}
+        observations = {}
+        predators = [agent for agent in agents if "predator" in agent]
+        if predators:
+            observations.update(
+                self._get_observations_for_group(
+                    predators,
+                    self.predator_obs_range,
+                    self.los_mask_predator,
+                )
+            )
+        prey = [agent for agent in agents if "prey" in agent]
+        if prey:
+            observations.update(
+                self._get_observations_for_group(
+                    prey,
+                    self.prey_obs_range,
+                    self.los_mask_prey,
+                )
+            )
+        return observations
+
+    def _get_observations_for_group(self, agents, obs_range, visibility_mask):
+        extra = 1 if self.include_visibility_channel else 0
+        total_channels = self.num_obs_channels + extra
+        observations = {}
+        if obs_range <= 0:
+            zero_obs = np.zeros((total_channels, obs_range, obs_range), dtype=np.float32)
+            for agent in agents:
+                observations[agent] = zero_obs.copy()
+            return observations
+
+        positions = []
+        valid_agents = []
+        zero_obs = np.zeros((total_channels, obs_range, obs_range), dtype=np.float32)
+        for agent in agents:
+            position = self.agent_positions.get(agent)
+            if position is None:
+                observations[agent] = zero_obs.copy()
+                continue
+            positions.append(position)
+            valid_agents.append(agent)
+
+        if not valid_agents:
+            return observations
+
+        positions = np.asarray(positions, dtype=np.int32)
+        batch = self._build_observation_batch_from_positions(positions, obs_range, visibility_mask)
+        for agent_id, obs in zip(valid_agents, batch):
+            observations[agent_id] = obs
+        return observations
+
+    def _build_observation_batch_from_positions(self, positions, obs_range, visibility_mask):
+        offset = (obs_range - 1) // 2
+        gws = self.grid_world_state
+        if offset > 0:
+            gws = np.pad(gws, ((0, 0), (offset, offset), (offset, offset)), mode="constant")
+        x = positions[:, 0] + offset
+        y = positions[:, 1] + offset
+        window = np.arange(-offset, offset + 1, dtype=np.int32)
+        x_idx = x[:, None] + window[None, :]
+        y_idx = y[:, None] + window[None, :]
+        obs = gws[:, x_idx[:, :, None], y_idx[:, None, :]]
+        obs = np.transpose(obs, (1, 0, 2, 3))
+        if self.mask_observation_with_visibility:
+            obs[:, 1:self.num_obs_channels] *= visibility_mask
+        if self.include_visibility_channel:
+            mask = visibility_mask.astype(np.float32, copy=False)
+            mask_batch = np.broadcast_to(mask, (obs.shape[0], obs_range, obs_range))
+            obs = np.concatenate((obs, mask_batch[:, None, :, :]), axis=1)
+        return obs.astype(np.float32, copy=False)
 
     def _get_observation(self, agent):
         # Generate an observation for the agent.
@@ -880,12 +1082,20 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _predators_in_moore_neighborhood(self, center):
         """Return active predators whose positions are within Chebyshev distance 1 of center."""
+        if not hasattr(self, "_moore_offsets_list"):
+            self._moore_offsets_list = [(dx, dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)]
         cx, cy = center
         preds = []
-        for pid, pos in self.predator_positions.items():
-            if self.terminations.get(pid):
+        pred_positions_by_xy = self.predator_positions_by_xy
+        terminations = self.terminations
+        grid_size = self.grid_size
+        for dx, dy in self._moore_offsets_list:
+            x = cx + dx
+            y = cy + dy
+            if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
                 continue
-            if max(abs(pos[0] - cx), abs(pos[1] - cy)) <= 1:
+            pid = pred_positions_by_xy.get((x, y))
+            if pid is not None and not terminations.get(pid):
                 preds.append(pid)
         return preds
 
@@ -1065,9 +1275,7 @@ class PredPreyGrass(MultiAgentEnv):
         if self._handle_team_capture(agent):
             return
         prey_position = tuple(self.agent_positions[agent])
-        caught_grass = next(
-            (g for g, pos in self.grass_positions.items() if "grass" in g and np.array_equal(prey_position, pos)), None
-        )
+        caught_grass = self.grass_positions_by_xy.get(prey_position)
         if caught_grass:
             # attribution prey
             self.agents_just_ate.add(agent)
@@ -1171,6 +1379,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
+            self.predator_positions_by_xy[new_position] = new_agent
 
             self.agent_energies[new_agent] = self.initial_energy_predator
             self.agent_energies[agent] -= self.initial_energy_predator
@@ -1334,9 +1543,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_positions = snapshot["agent_positions"].copy()
         self.agent_energies = snapshot["agent_energies"].copy()
         self.predator_positions = snapshot["predator_positions"].copy()
+        self.predator_positions_by_xy = {pos: pid for pid, pos in self.predator_positions.items()}
         self.prey_positions = snapshot["prey_positions"].copy()
         self.grass_positions = snapshot["grass_positions"].copy()
         self.grass_energies = snapshot["grass_energies"].copy()
+        self.grass_positions_by_xy = {pos: grass for grass, pos in self.grass_positions.items()}
         self.grid_world_state = snapshot["grid_world_state"].copy()
         self.agents = snapshot["agents"].copy()
         self.active_num_predators = snapshot["active_num_predators"]
@@ -1428,8 +1639,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         # Ensure per-agent spaces exist for consumers like the random policy script
-        self.action_spaces[agent_id] = self._build_action_space(agent_id)
-        self.observation_spaces[agent_id] = self._build_observation_space(agent_id)
+        if agent_id not in self.action_spaces:
+            self.action_spaces[agent_id] = self._build_action_space(agent_id)
+        if agent_id not in self.observation_spaces:
+            self.observation_spaces[agent_id] = self._build_observation_space(agent_id)
         # Initialize event-log entry
         self.agent_event_log[agent_id] = {
             "agent_id": agent_id,
@@ -1759,12 +1972,14 @@ class PredPreyGrass(MultiAgentEnv):
     #-------- Placement method for predators --------
     def _place_predators(self, predator_list, predator_positions):
         self.predator_positions = {}
+        self.predator_positions_by_xy = {}
         for i, agent in enumerate(predator_list):
             pos = predator_positions[i]
             self.agent_positions[agent] = pos
             self.predator_positions[agent] = pos
             self.agent_energies[agent] = self.initial_energy_predator
             self.grid_world_state[self.predator_channel, *pos] = self.initial_energy_predator
+            self.predator_positions_by_xy[pos] = agent
 
     #-------- Placement method for prey --------
     def _place_prey(self, prey_list, prey_positions):
@@ -1781,11 +1996,13 @@ class PredPreyGrass(MultiAgentEnv):
     def _place_grass(self, grass_positions):
         self.grass_positions = {}
         self.grass_energies = {}
+        self.grass_positions_by_xy = {}
         for i, grass in enumerate(self.grass_agents):
             pos = grass_positions[i]
             self.grass_positions[grass] = pos
             self.grass_energies[grass] = self.initial_energy_grass
             self.grid_world_state[self.grass_channel, *pos] = self.initial_energy_grass
+            self.grass_positions_by_xy[pos] = grass
 
 
     def _precompute_los_mask(self, observation_range):
@@ -1806,7 +2023,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_energies.pop(agent_id, None)
         self.agent_ages.pop(agent_id, None)
         if "predator" in agent_id:
-            self.predator_positions.pop(agent_id, None)
+            pos = self.predator_positions.pop(agent_id, None)
+            if pos is not None:
+                self.predator_positions_by_xy.pop(pos, None)
         elif "prey" in agent_id:
             self.prey_positions.pop(agent_id, None)
         # Drop any pending deltas to avoid leaking stale data
