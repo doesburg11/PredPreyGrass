@@ -3,6 +3,8 @@
 ## Overview
 
 - The environment is a gridworld with Predators, Prey, and Grass.
+- Predators come in one type:
+  - Humans (type_1_predator)
 - Prey come in two types:
   - Mammoths (type_1_prey)
   - Rabbits (type_2_prey)
@@ -11,13 +13,13 @@
 ## Movement and occupancy
 
 - Agents move in a Moore neighborhood (8 directions plus stay).
-- Predators cannot share a cell with other Predators.
-- Prey cannot share a cell with other Prey.
+- Predators cannot share a cell with other predators.
+- Prey cannot share a cell with other prey.
 - Agents cannot move into Wall cells.
 
 ## Energy, death, and grass
 
-- Predators and Prey lose energy every step.
+- Predators and prey lose energy every step.
 - If an agent's energy drops to 0 or below, it dies and is removed.
 - Prey eat grass by landing on a grass cell. Grass energy is reduced by the prey's bite size (clamped to 0).
 - Rabbits have a smaller bite size; Mammoths have a larger bite size.
@@ -25,22 +27,24 @@
 
 ## Predation and cooperative capture
 
-- Predators (Humans) attempt capture for any prey in their Moore neighborhood.
+- Predators (humans) attempt capture for any prey in their Moore neighborhood.
 - A prey is captured if the cumulative predator energy in its Moore neighborhood is larger than the prey's own energy.
 - Rabbits are low-energy and can usually be captured by a single predator.
 - Mammoths are high-energy and therefore typically require multiple predators, unless a single predator has
   accumulated enough energy.
 - Failed capture applies a struggle penalty: total penalty is
   `prey_energy * energy_percentage_loss_per_failed_attacked_prey`, split proportionally across attackers.
+- Optionally, predators are getting killed in a failed attempt to kill prey.
 - Successful capture removes the prey and redistributes its energy among attackers:
   - proportional split by predator energy (default), or
   - equal split when `team_capture_equal_split = True`.
 
 ## Reproduction and rewards
 
-- Predators and Prey reproduce asexually when they reach their type-specific energy threshold.
+- Predators and prey reproduce asexually when they reach their type-specific energy threshold.
 - Offspring spawn in the Moore neighborhood; the parent pays the offspring's initial energy.
 - Rewards are sparse: agents are only rewarded on reproduction. Eating affects energy, not reward.
+- Optionally, a negative reward can be implemented for agents dying.
 
 ## Episode end
 
