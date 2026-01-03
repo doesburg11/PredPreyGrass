@@ -93,8 +93,7 @@ In `config_ppo_gpu_stag_hunt_vectorized.py`:
 - `num_epochs`: 20 → 10
 - `num_envs_per_env_runner`: 3 → 4
 
-This reduced learner cost and increased sampling pressure; still only modest throughput gains unless
-combined with the vectorized env.
+This reduced learner cost and increased sampling pressure.
 
 ## Isolation experiments (env vs PPO config)
 Two helper scripts were added to isolate the effects:
@@ -167,6 +166,27 @@ What this means for direction:
 - The vectorized env is still useful if you later tune PPO to be more sample-bound
   (fewer epochs, larger minibatch size, different model sizes), but it is not the
   critical path today.
+
+## Note on num_epochs (context from earlier write-up)
+The earlier `num_epochs` write-up stated that increasing `num_epochs` improves
+stability but increases wall time. That statement is context-dependent and can be
+true when the update count per iteration is low and learning is underfitting.
+
+In the current setup:
+- Updates/iter = `num_epochs * train_batch_size_per_learner / minibatch_size`.
+- With `20 * 1024 / 128 = 160` updates/iter, training already collapses around
+  ~200 iterations. Increasing `num_epochs` alone is therefore unlikely to improve
+  stability and may worsen it by making policy updates more aggressive.
+
+If experimenting with higher `num_epochs` for stability, do it by keeping the
+effective update count in check:
+- Increase `minibatch_size` (e.g., 256) or lower LR/clip to reduce update aggressiveness.
+- Example: `num_epochs=30`, `minibatch_size=256` → updates/iter = 120.
+
+Alternative stability knobs that often help without increasing epochs:
+- Lower LR (e.g., 3e-4 → 2e-4).
+- Lower `clip_param` (0.3 → 0.2).
+- Add small entropy (0.005–0.01).
 
 ## Other operational changes
 - Evaluation was fully removed from `tune_ppo.py` to avoid eval overhead during speed testing.

@@ -4,7 +4,7 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 30,  # 25
+    "grid_size": 30, 
     "num_obs_channels": 5, # obsolete
     "predator_obs_range": 9,
     "prey_obs_range": 9,
@@ -24,7 +24,7 @@ config_env = {
     "death_penalty_type_1_prey": 0.0,
     "death_penalty_type_2_prey": 0.0,
     # Energy settings
-    "energy_loss_per_step_predator": 0.08, # 0.05
+    "energy_loss_per_step_predator": 0.10, # 0.05
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
         "type_2_prey": 0.02,
