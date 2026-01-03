@@ -1,63 +1,178 @@
-# Stag_hunt: cooperative hunting with two prey types
+# Stag Hunt Vectorization Investigation
 
-## Overview
+## Goal
+Speed up the RLlib `PredPreyGrass` environment by vectorizing hot paths (especially observation building),
+then verify the impact on training throughput.
 
-- The environment is a gridworld with Predators, Prey, and Grass.
-- Prey come in two types:
-  - Mammoths (type_1_prey)
-  - Rabbits (type_2_prey)
-- Walls surround the grid and can be manually placed inside the grid if desired.
+## Key environment changes (vectorized path)
+- Vectorized observation batching and reused it in `reset()` and `step()`.
+- Vectorized time-step updates and agent movements while preserving the sequential occupancy rules.
+- Cached position maps for O(1) lookup:
+  - `predator_positions_by_xy`
+  - `grass_positions_by_xy`
+- Avoided rebuilding action/observation spaces on every reset (cached once).
+- Optimized neighborhood checks (`_predators_in_moore_neighborhood`) with cached offsets + dict lookups.
+- Added or fixed bookkeeping for position maps on spawn, move, and removal.
 
-## Movement and occupancy
+## Benchmark tooling
+Script: `src/predpreygrass/rllib/stag_hunt_vectorized/tests/benchmark_observations.py`
 
-- Agents move in a Moore neighborhood (8 directions plus stay).
-- Predators cannot share a cell with other Predators.
-- Prey cannot share a cell with other Prey.
-- Agents cannot move into Wall cells.
+Useful flags:
+- `--active-multiplier`, `--active-type-1-predator`, `--active-type-1-prey`, `--active-type-2-prey`
+- `--obs-range`, `--predator-obs-range`, `--prey-obs-range`
+- `--grid-size`
+- `--bench-steps`, `--bench-steps-noobs`
+- `--profile-steps`, `--profile-sort`, `--profile-top`
 
-## Energy, death, and grass
+## Micro-bench results (observation batch vs loop)
+All results are from local runs and may vary. These were recorded after the vectorized observation path
+was introduced and iterated on.
 
-- Predators and Prey lose energy every step.
-- If an agent's energy drops to 0 or below, it dies and is removed.
-- Prey eat grass by landing on a grass cell. Grass energy is reduced by the prey's bite size (clamped to 0).
-- Rabbits have a smaller bite size; Mammoths have a larger bite size.
-- Mammoth feeding leaves at least the rabbit bite size in the patch so rabbits can still feed.
+Default config (30 agents, obs range 9):
+- batch: ~0.07 ms
+- loop:  ~0.31 ms
+- speedup: ~4.2x
 
-## Predation and cooperative capture
+Double active agents (60 agents):
+- batch: ~0.10 ms
+- loop:  ~0.61 ms
+- speedup: ~6.1x
 
-- Predators (Humans) attempt capture for any prey in their Moore neighborhood.
-- A prey is captured if the cumulative predator energy in its Moore neighborhood is larger than the prey's own energy.
-- Rabbits are low-energy and can usually be captured by a single predator.
-- Mammoths are high-energy and therefore typically require multiple predators, unless a single predator has
-  accumulated enough energy.
-- Failed capture applies a struggle penalty: total penalty is
-  `prey_energy * energy_percentage_loss_per_failed_attacked_prey`, split proportionally across attackers.
-- Successful capture removes the prey and redistributes its energy among attackers:
-  - proportional split by predator energy (default), or
-  - equal split when `team_capture_equal_split = True`.
+Obs range 13 (30 agents):
+- batch: ~0.09 ms
+- loop:  ~0.31 ms
+- speedup: ~3.3x
 
-## Reproduction and rewards
+Explicit 90 agents (30/30/30):
+- batch: ~0.13 ms
+- loop:  ~0.91 ms
+- speedup: ~6.9x
 
-- Predators and Prey reproduce asexually when they reach their type-specific energy threshold.
-- Offspring spawn in the Moore neighborhood; the parent pays the offspring's initial energy.
-- Rewards are sparse: agents are only rewarded on reproduction. Eating affects energy, not reward.
+Larger grid (40) + larger predator range (13):
+- batch: ~0.08 ms
+- loop:  ~0.32 ms
+- speedup: ~3.9x
 
-## Episode end
+## Step benchmarks (end-to-end env step)
+`--bench-steps 200` (30 agents):
+- early in the work: ~2.33 ms/step (p50 ~2.67 ms)
+- after vectorization/profiling fixes: ~0.45–0.60 ms/step (p50 ~0.36–0.54 ms)
 
-- The episode ends when all predators (humans) are extinct, or all prey (mammoths + rabbits) are extinct,
-  or when `max_steps` is reached.
+`--bench-steps-noobs 200`:
+- ~2.18 ms/step (no-observation variant) before deeper step optimizations
 
-# MADRL training
+Net: step time improved by roughly ~4–5x from the initial post-obs-vectorization baseline.
 
-- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
-- Predators and Prey learn movement strategies based on partial observations.
+## Profiling highlights and fixes
+Profiler runs (`--profile-steps`) showed early time sinks in:
+- Observation space building and Gym space validation.
+- Per-reset space rebuilds.
+- Python-level loops in movement and neighborhood checks.
 
-# Results
+Fixes:
+- Cached spaces to avoid per-reset rebuilds.
+- Rewrote observation building to operate on batched positions.
+- Vectorized movement update and neighborhood checks.
 
-<p align="center">
-    <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
-<p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
-</p>
+## Training throughput checks (RLlib/Tune metrics)
+Metrics used:
+- `ray/tune/env_runners/throughput_since_last_reduce`
+- `ray/tune/env_runners/num_env_steps_sampled`
+- `ray/tune/timers/env_runner_sampling_timer`
+- `ray/tune/timing/iter_minutes`
+- `ray/tune/timing/avg_minutes_per_iter`
+- `ray/tune/timing/total_hours_elapsed`
 
-- Cooperative hunting occurs, though it is not explicitly rewarded.
+Findings so far:
+- `env_runner_sampling_timer` is consistently lower with the vectorized env.
+- Overall throughput and `iter_minutes` do not move much unless learner cost is reduced.
+  The learner/optimizer dominates once sampling is faster.
+
+## PPO config tweaks tested
+In `config_ppo_gpu_stag_hunt_vectorized.py`:
+- `num_epochs`: 20 → 10
+- `num_envs_per_env_runner`: 3 → 4
+
+This reduced learner cost and increased sampling pressure; still only modest throughput gains unless
+combined with the vectorized env.
+
+## Isolation experiments (env vs PPO config)
+Two helper scripts were added to isolate the effects:
+- `tune_ppo_oldenv_newppo.py`: old env + new PPO config
+- `tune_ppo_newenv_oldppo.py`: new env + old PPO config
+
+Run both for ~150–200 iterations and compare the same window (e.g., iters 50–200) using the
+metrics above to attribute the speedup between env vs PPO config.
+
+## Preliminary attribution (4-run comparison)
+Based on the four-run plots (steady-state `timing/iter_minutes`, approximate):
+- Old env + old PPO: ~1.38–1.45 min/iter
+- New env + old PPO: ~1.38–1.45 min/iter (no meaningful change)
+- Old env + new PPO: ~0.88–0.95 min/iter (large drop)
+- New env + new PPO: ~0.86–0.92 min/iter (small additional drop)
+
+Interpretation:
+- Wall-clock speedup is dominated by PPO config changes (~90–95% of the drop).
+- Vectorized env reduces sampling time, but contributes only a small portion of the
+  iteration-time reduction at current learner settings.
+
+## Exact attribution (medians, window min-step=50 max-step=275)
+Baseline: OLDENV_OLDPPO
+- `iter_minutes`: 1.382676
+- `sampling_timer`: 6.801683
+- `throughput`: 12.414350
+
+PPO config effect (OLDENV_NEWPPO vs baseline):
+- `iter_minutes`: 0.905285 (Δ -0.477391, -34.53%)
+- `sampling_timer`: 7.258529 (Δ +0.456846, +6.72%)
+- `throughput`: 18.997942 (Δ +6.583592, +53.03%)
+
+Env effect (NEWENV_OLDPPO vs baseline):
+- `iter_minutes`: 1.399214 (Δ +0.016538, +1.20%)
+- `sampling_timer`: 5.788202 (Δ -1.013481, -14.90%)
+- `throughput`: 12.273310 (Δ -0.141040, -1.14%)
+
+Combined (NEWENV_NEWPPO vs baseline):
+- `iter_minutes`: 0.912353 (Δ -0.470323, -34.02%)
+- `sampling_timer`: 6.646901 (Δ -0.154782, -2.28%)
+- `throughput`: 18.798769 (Δ +6.384419, +51.43%)
+
+Interpretation:
+- Wall-clock speedup is almost entirely due to PPO config changes (~-34.5%).
+- Vectorized env reduces sampling time (~-15%) but does not reduce `iter_minutes`
+  because learner cost dominates.
+
+## Investigation narrative and conclusions
+Summary of what we tried and what worked:
+- We cloned `stag_hunt` into `stag_hunt_vectorized` and vectorized the env (especially
+  observation building and parts of `step()`).
+- Goal was to reduce end-to-end training time of `tune_ppo.py`.
+- Micro-benchmarks showed large env speedups (obs batching ~3-7x; step ~4-5x).
+- Training throughput did not improve meaningfully with the vectorized env at the
+  original PPO settings. The learner dominated wall-clock time.
+- PPO config changes (reducing `num_epochs` from 20 to 10) produced a large wall-clock
+  improvement (~-34% iter time), but the run quality degraded earlier (episode length
+  broke down sooner).
+- Increasing `train_batch_size_per_learner` to 2048 while keeping `num_epochs=20`
+  caused CUDA OOM (the learner batch no longer fit on the 15.5 GB GPU). This shows
+  learner batch size is the memory bottleneck; env vectorization does not reduce GPU
+  memory usage for the learner.
+
+What this means for direction:
+- For current hardware and PPO settings, wall-clock speed is driven by learner cost,
+  not env stepping. Vectorization reduces sampling time but does not reduce
+  `iter_minutes` unless sampling becomes the bottleneck.
+- If the primary goal is faster training time at the current PPO regime, the PPO
+  settings are the main lever; env vectorization is not the dominant factor.
+- The vectorized env is still useful if you later tune PPO to be more sample-bound
+  (fewer epochs, larger minibatch size, different model sizes), but it is not the
+  critical path today.
+
+## Other operational changes
+- Evaluation was fully removed from `tune_ppo.py` to avoid eval overhead during speed testing.
+
+## Summary
+- Observation batching is ~3–7x faster than the looped version across tested scenarios.
+- End-to-end `step()` improved by ~4–5x from the early post-obs-vectorization baseline.
+- Training throughput improvement is gated by learner cost; reducing epochs or batch complexity
+  is required to see wall-clock gains from the faster env.
