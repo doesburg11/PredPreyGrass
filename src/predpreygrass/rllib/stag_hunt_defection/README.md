@@ -1,5 +1,11 @@
 # Stag Hunt Defection (Join-or-Free-Ride)
 
+<p align="center">
+    <b>Emerging human cooperation, defection and free-riding</b></p>
+<p align="center">
+    <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
+</p>
+
 This module is a full copy of `stag_hunt` with a minimal change that introduces
 true defection. The ecology stays intact; only the cooperative hunting decision
 is made voluntary at capture time. Predators can now free-ride on others who join

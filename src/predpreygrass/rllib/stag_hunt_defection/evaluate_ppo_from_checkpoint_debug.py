@@ -36,7 +36,7 @@ from collections import defaultdict
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = False
+SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 
@@ -135,8 +135,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_defection/ray_results/"
-    checkpoint_root = "STAG_HUNT_INIT_RABBIT_50_MAMMOTHS_GRASS_RESTRAINED_2025-12-28_13-03-43/PPO_PredPreyGrass_41b22_00000_0_2025-12-28_13-03-43/"
-    checkpoint_nr = "checkpoint_000000"
+    checkpoint_root = "STAG_HUNT_DEFECT_PRED_LOSS_0_08_2026-01-05_01-26-09/PPO_PredPreyGrass_225cc_00000_0_2026-01-05_01-26-10/"
+    checkpoint_nr = "checkpoint_000029"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
@@ -320,6 +320,7 @@ def render_static_if_paused(env, visualizer):
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
             dead_prey=getattr(env, "dead_prey", None),
+            coop_events=getattr(env, "team_capture_events", None),
         )
     except TypeError:
         # Fallback for legacy renderer without `walls` kwarg
@@ -329,6 +330,7 @@ def render_static_if_paused(env, visualizer):
             step=env.current_step,
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
+            coop_events=getattr(env, "team_capture_events", None),
         )
 
 def parse_uid(uid):
@@ -553,7 +555,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 9
+    seed = 4
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
