@@ -1,4 +1,4 @@
-# Stag_hunt: cooperative hunting with large and small prey
+# "Stag hunt": cooperative and solo hunting with large and small prey
 
 ## Overview
 
@@ -33,8 +33,7 @@
 - Predators (humans) attempt capture for any prey in their Moore neighborhood.
 - A prey is captured if the cumulative predator energy in its Moore neighborhood is larger than the prey's own energy.
 - Rabbits are low-energy and can usually be captured by a single predator.
-- Mammoths are high-energy and therefore typically require multiple predators, unless a single predator has
-  accumulated enough energy.
+- Mammoths are high-energy and therefore typically require multiple cooperative predators.
 - Failed capture applies a struggle penalty: total penalty is
   `prey_energy * energy_percentage_loss_per_failed_attacked_prey`, split proportionally across attackers.
 - Optionally, predators are getting killed in a failed attempt to kill prey.
@@ -60,11 +59,5 @@
 - All three agent types learn movement strategies based on partial observations of the full state (gridworld).
 
 # Results
-
-<p align="center">
-    <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
-<p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_9MB.gif" width="600" height="500" />
-</p>
 
 - Cooperative hunting occurs, though it is not explicitly rewarded.
