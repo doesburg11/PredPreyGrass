@@ -115,8 +115,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt/ray_results/"
-    checkpoint_root = "STAG_HUNT_INIT_RABBIT_50_MAMMOTHS_GRASS_RESTRAINED_2025-12-28_13-03-43/PPO_PredPreyGrass_41b22_00000_0_2025-12-28_13-03-43/"
-    checkpoint_nr = "checkpoint_000000"
+    checkpoint_root = "STAG_HUNT_PRED_LOSS_0_08/PPO_PredPreyGrass_3c565_00000_0_2026-01-01_18-06-38/"
+    checkpoint_nr = "checkpoint_000019"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
