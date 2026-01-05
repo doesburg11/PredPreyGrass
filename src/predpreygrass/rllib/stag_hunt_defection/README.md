@@ -5,9 +5,6 @@ true defection. The ecology stays intact; only the cooperative hunting decision
 is made voluntary at capture time. Predators can now free-ride on others who join
 and pay a cost.
 
-The defection module is non-vectorized only. The original `stag_hunt` and
-`stag_hunt_vectorized` remain unchanged.
-
 ## What changed (high level)
 
 - Predators have a second action component `join_hunt` that controls whether they
@@ -100,6 +97,25 @@ Non-joiners do not count toward success.
 If a joiner drops to `<= 0` energy after paying the join cost, it dies with
 cause `exhausted_hunt`.
 
+## Detailed change table
+
+| Change area | Original stag_hunt | Defection version | Configure/observe |
+| --- | --- | --- | --- |
+| Predator action space | `Discrete(move)` | `MultiDiscrete([move, join_hunt])` with `join_hunt` in `{0,1}` | `predpreygrass_rllib_env.py`, per-step `join_hunt` |
+| Capture eligibility | All nearby predators can contribute | Only joiners contribute; free riders do not count | `join_hunt` per step |
+| Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
+| Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
+| Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` | `team_capture_join_cost`, event `join_cost` |
+| Failure penalties | Apply to all helpers | Apply only to joiners | `energy_percentage_loss_per_failed_attacked_prey`, `failed_attack_kills_predator` |
+| Defection metrics | Not defined | Join/defect rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
+
+Explanation notes:
+- "Nearby" means Moore neighborhood (Chebyshev distance <= 1), same as the base env.
+- "Joiners" are predators with `join_hunt = 1` on that step; "free riders" are `join_hunt = 0`.
+- A scavenger pool exists only if at least one free rider is present; otherwise joiners split full prey energy.
+- "Solo capture" means exactly one joiner; "coop capture" means two or more joiners.
+- Join/defect rates are per predator-step; capture metrics use successful capture events only.
+
 ## New config keys
 
 Defined in `config/config_env_stag_hunt.py`:
@@ -121,6 +137,7 @@ Per-agent info additions (predators):
 - `team_capture_scavenger_gain`: energy gained via scavenging (free riders only).
 - `team_capture_join_cost`: join cost paid (joiners only).
 - `team_capture_joined`: `True` if agent joined, else `False`.
+- `join_hunt`: per-step join choice for all predators (logged every step).
 
 Global info additions:
 
@@ -132,17 +149,106 @@ Event log additions (predator eating/failed events):
 - `join_hunt`: boolean per event.
 - `join_cost`: join cost applied (0 for free riders).
 
+Per-step agent data additions:
+
+- `per_step_agent_data[step][predator_id]["join_hunt"]` records the join choice
+  for every predator each step, independent of capture outcomes.
+
+## Measuring defection/cooperation/solo
+
+Use the helper script in `utils/defection_metrics.py` to summarize metrics from a
+short rollout (defaults come from `config_env_stag_hunt.py`):
+
+```bash
+PYTHONPATH=src python -m predpreygrass.rllib.stag_hunt_defection.utils.defection_metrics
+```
+
+It reports:
+
+- Join vs defect rates per predator-step.
+- Solo vs cooperative capture rates (successful captures only).
+- Free-rider exposure on successful captures.
+
+RLlib training runs (e.g., `tune_ppo.py`) already use the `EpisodeReturn`
+callback, which now logs these defection/cooperation metrics to `custom_metrics`
+so they appear in TensorBoard.
+
+## Sample results (from last evaluation output)
+
+These tables capture the exact metrics you shared from the latest
+`evaluate_ppo_from_checkpoint_multi_runs.py` run (seeds 1-10). The aggregate
+uses a `min_steps` filter of 500 (kept 4 of 10 runs).
+
+### Aggregate (kept runs only; steps >= 500)
+
+| Steps | Join steps | Defect steps | Total predator steps | Join rate | Defect rate | Captures | Solo | Coop | Solo rate | Coop rate | Joiners total | Free riders total | Free rider rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 4000 | 150878 | 32016 | 182894 | 82% | 18% | 1809 | 471 | 1338 | 26% | 74% | 4929 | 190 | 4% |
+
+### Per-run detailed table (all runs; kept if steps >= 500)
+
+| Run | Steps | Kept | Join steps | Defect steps | Total predator steps | Join rate | Defect rate | Captures | Solo | Coop | Solo rate | Coop rate | Joiners total | Free riders total | Free rider rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 1000 | yes | 37296 | 7716 | 45012 | 83% | 17% | 383 | 56 | 327 | 15% | 85% | 1128 | 54 | 5% |
+| 2 | 206 | no | 7711 | 1937 | 9648 | 80% | 20% | 270 | 204 | 66 | 76% | 24% | 380 | 12 | 3% |
+| 3 | 1000 | yes | 37491 | 7782 | 45273 | 83% | 17% | 401 | 73 | 328 | 18% | 82% | 1230 | 45 | 4% |
+| 4 | 286 | no | 8745 | 2271 | 11016 | 79% | 21% | 286 | 228 | 58 | 80% | 20% | 387 | 9 | 2% |
+| 5 | 324 | no | 9873 | 2949 | 12822 | 77% | 23% | 336 | 268 | 68 | 80% | 20% | 443 | 9 | 2% |
+| 6 | 1000 | yes | 39368 | 7806 | 47174 | 83% | 17% | 526 | 180 | 346 | 34% | 66% | 1352 | 43 | 3% |
+| 7 | 1000 | yes | 36723 | 8712 | 45435 | 81% | 19% | 499 | 162 | 337 | 32% | 68% | 1219 | 48 | 4% |
+| 8 | 299 | no | 11846 | 2576 | 14422 | 82% | 18% | 329 | 216 | 113 | 66% | 34% | 551 | 7 | 1% |
+| 9 | 134 | no | 4171 | 1016 | 5187 | 80% | 20% | 231 | 189 | 42 | 82% | 18% | 299 | 4 | 1% |
+| 10 | 229 | no | 6740 | 1971 | 8711 | 77% | 23% | 260 | 210 | 50 | 81% | 19% | 335 | 10 | 3% |
+
+Notes:
+- Join/defect rates are per predator-step.
+- Solo/coop rates are over successful captures only.
+- Free rider rate is `free_riders_total / (joiners_total + free_riders_total)`.
+- Rates shown as whole percentages (rounded).
+
+### Results summary and conclusion
+
+Across these runs, predators join most of the time (~80% join vs ~20% defect),
+showing that cooperation is common but defection is non-trivial. Successful
+captures split between solo and cooperative outcomes depending on run length:
+shorter runs skew heavily toward solo captures, while the longer (kept) runs
+show a strong cooperative majority (~74% coop). Free-rider exposure on successful
+captures is consistently low (about 1% to 5%), which indicates that free riding
+occurs but does not dominate capture outcomes in this configuration. Overall,
+the mechanism achieves its goal: it introduces measurable defection behavior
+without collapsing cooperation, yielding a stable mix of join and defect choices
+that can be probed by norms or punishment in later experiments.
+
 ## Training and evaluation
 
 Typical entry points:
 
 - Train: `python src/predpreygrass/rllib/stag_hunt_defection/tune_ppo.py`
-- Resume: `python src/predpreygrass/rllib/stag_hunt_defection/tune_ppo_resume.py`
 - Random rollouts: `python src/predpreygrass/rllib/stag_hunt_defection/random_policy.py`
 - Debug/eval: `evaluate_ppo_from_checkpoint_debug.py`
 - Multi-run eval: `evaluate_ppo_from_checkpoint_multi_runs.py`
 
 All scripts in this module are already wired to the defection env and config.
+Evaluation scripts decode MultiDiscrete actions, so checkpoints trained with
+join/defect behavior are evaluated correctly.
+
+## Quick Start
+
+From the repo root:
+
+```bash
+# Train
+PYTHONPATH=src python src/predpreygrass/rllib/stag_hunt_defection/tune_ppo.py
+
+# Random rollout viewer
+PYTHONPATH=src python src/predpreygrass/rllib/stag_hunt_defection/random_policy.py
+
+# Evaluate a checkpoint (debug viewer)
+PYTHONPATH=src python src/predpreygrass/rllib/stag_hunt_defection/evaluate_ppo_from_checkpoint_debug.py
+
+# Evaluate multiple runs (batch)
+PYTHONPATH=src python src/predpreygrass/rllib/stag_hunt_defection/evaluate_ppo_from_checkpoint_multi_runs.py
+```
 
 ## Compatibility notes
 

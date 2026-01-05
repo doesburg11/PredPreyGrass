@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt import config_env
+from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
 from predpreygrass.rllib.stag_hunt_defection.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.stag_hunt_defection.utils.networks import build_multi_module_spec
 
@@ -25,12 +25,12 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_gpu_stag_hunt import config_ppo
+        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_gpu_stag_hunt_defection import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_cpu_stag_hunt import config_ppo
+        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_cpu_stag_hunt_defection import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_cpu_stag_hunt import config_ppo
+        from predpreygrass.rllib.stag_hunt_defection.config.config_ppo_cpu_stag_hunt_defection import config_ppo
     return config_ppo
 
 
