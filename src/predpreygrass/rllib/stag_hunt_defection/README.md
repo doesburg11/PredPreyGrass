@@ -6,8 +6,8 @@
     <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
-This module is a full copy of `stag_hunt` with a minimal change that introduces
-true defection. The ecology stays intact; only the cooperative hunting decision
+This module is a full copy of `stag_hunt` with an addition that introduces
+defection. The ecology stays intact; only the cooperative hunting decision
 is made voluntary at capture time. Predators can now free-ride on others who join
 and pay a cost.
 
@@ -17,18 +17,17 @@ and pay a cost.
   contribute to a team capture.
 - Capture uses only joiners, not all nearby predators.
 - Joiners pay a fixed energy cost on successful capture.
-- Non-joiners can receive a small scavenger spillover.
+- Defectors (non-joiners) can receive a small scavenger spillover.
 - Everything else stays the same: movement, energy decay, reproduction, LOS,
   grass growth, walls, and the original team-capture margin/split logic.
 
 ## Files and structure
 
-This directory mirrors `stag_hunt` in full. Key files:
+This directory `stag_hunt_defection` mirrors `stag_hunt`. Key files:
 
 - `predpreygrass_rllib_env.py`: defection-enabled environment.
-- `config/config_env_stag_hunt.py`: default env config with defection knobs.
-- `tune_ppo.py`, `tune_ppo_resume.py`: training entry points wired to this module.
-- `random_policy.py`: quick rollout viewer (predators now sample MultiDiscrete).
+- `config/config_env_stag_hunt_defection.py`: default env config with defection knobs.
+- `random_policy.py`: quick rollout viewer (predators now random sample MultiDiscrete).
 - `utils/*`: copied helpers (renderer, callbacks, scenario inspector, etc).
 
 All imports inside this module point to `predpreygrass.rllib.stag_hunt_defection.*`
