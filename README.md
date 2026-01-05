@@ -15,30 +15,30 @@ This project studies how cooperative behavior emerges and stabilizes in a spatia
 
 ### Environment:
 
-* **[Mammoth hunting](src/predpreygrass/rllib/mammoths)** : Mammoths are only hunted down and eaten by a human(s) in its Moore neighborhood if the cumulative human energy is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). ([implementation](src/predpreygrass/rllib/mammoths))
+* **[Mammoth hunting](src/predpreygrass/rllib/mammoths)** : Mammoths are only hunted down and eaten by a human(s) in its Moore neighborhood if the cumulative human energy is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](src/predpreygrass/rllib/mammoths))
 
 ### Other environments:
 
-* **[Base environment](src/predpreygrass/rllib/base_environment)**: The two-policy base environment. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* **[Base environment](src/predpreygrass/rllib/base_environment)**: The two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* **[Mutating agents](src/predpreygrass/rllib/mutating_agents)**: A four-policy extension of the base environment. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
+* **[Mutating agents](src/predpreygrass/rllib/mutating_agents)**: A four-policy extension of the base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
 
-* **[Centralized training](src/predpreygrass/rllib/centralized_training)**: A single-policy variant of the base environment
+* **[Centralized training](src/predpreygrass/rllib/centralized_training)**: A single-policy variant of the base environment. Only reproduction rewards.
 
-* **[Walls occlusion](src/predpreygrass/rllib/walls_occlusion)**: An extension with walls and occluded vision
+* **[Walls occlusion](src/predpreygrass/rllib/walls_occlusion)**: An extension with walls and occluded vision. Only reproduction rewards.
 
-* **[Reproduction kick back rewards](src/predpreygrass/rllib/kick_back_rewards)**: On top of direct reproduction rewards, agents receive indirect rewards when their children reproduce 
+* **[Reproduction kick back rewards](src/predpreygrass/rllib/kick_back_rewards)**: On top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
 
-* **[Lineage rewards](src/predpreygrass/rllib/lineage_rewards)**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time
+* **[Lineage rewards](src/predpreygrass/rllib/lineage_rewards)**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time.
 
-* **[Shared prey](src/predpreygrass/rllib/shared_prey)** : This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators.
+* **[Shared prey](src/predpreygrass/rllib/shared_prey)** : This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
 
 
 ### Experiments:
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/src/predpreygrass/rllib/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey ([implementation](src/predpreygrass/rllib/mutating_agents), [results](src/predpreygrass/rllib/mutating_agents#co-evolution-and-the-red-queen-effect))
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey. ([implementation](src/predpreygrass/rllib/mutating_agents), [results](src/predpreygrass/rllib/mutating_agents#co-evolution-and-the-red-queen-effect))
 
 
 ### Hyperparameter tuning
@@ -79,8 +79,6 @@ Or a random policy:
 python ./src/predpreygrass/rllib/base_environment/random_policy.py
 
 ```
-
-
 
 ## References
 
