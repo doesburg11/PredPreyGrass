@@ -14,7 +14,7 @@ pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
 from predpreygrass.rllib.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt import config_env
+from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
 from predpreygrass.rllib.stag_hunt_defection.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries

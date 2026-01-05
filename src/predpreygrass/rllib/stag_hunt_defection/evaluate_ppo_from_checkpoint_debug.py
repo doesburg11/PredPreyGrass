@@ -11,9 +11,13 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 from predpreygrass.rllib.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt import config_env
+from predpreygrass.rllib.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
 from predpreygrass.rllib.stag_hunt_defection.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
 from predpreygrass.rllib.stag_hunt_defection.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.rllib.stag_hunt_defection.utils.defection_metrics import (
+    aggregate_capture_outcomes_from_event_log,
+    aggregate_join_choices,
+)
 
 # external libraries
 import ray
@@ -106,11 +110,27 @@ def policy_pi(observation, policy_module, deterministic=True):
     logits = action_output.get("action_dist_inputs")
     if logits is None:
         raise KeyError("policy_pi: action_dist_inputs not found in action_output.")
+    if logits.dim() == 2 and logits.size(0) == 1:
+        logits = logits[0]
+
+    action_space = getattr(policy_module, "action_space", None)
+    if hasattr(action_space, "nvec"):
+        actions = []
+        idx = 0
+        for n in list(action_space.nvec):
+            segment = logits[idx:idx + n]
+            if deterministic:
+                act = int(torch.argmax(segment).item())
+            else:
+                act = int(torch.distributions.Categorical(logits=segment).sample().item())
+            actions.append(act)
+            idx += n
+        return actions
+
     if deterministic:
-        return torch.argmax(logits, dim=-1).item()
-    else:
-        dist = torch.distributions.Categorical(logits=logits)
-        return dist.sample().item()
+        return int(torch.argmax(logits, dim=-1).item())
+    dist = torch.distributions.Categorical(logits=logits)
+    return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
     # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
@@ -357,6 +377,16 @@ def print_ranked_reward_summary(env, total_reward):
     for line in lines[1:]:  # skip duplicate first line
         print(line.rstrip())
 
+
+def compute_defection_metrics(env):
+    join_stats = aggregate_join_choices(env.per_step_agent_data)
+    capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
+    return {
+        "steps": env.current_step,
+        "join_defect": join_stats,
+        "capture_outcomes": capture_stats,
+    }
+
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     def _get_group_stats(env):
@@ -597,6 +627,8 @@ if __name__ == "__main__":
             f"Prey blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_prey', 0)}"
         )
 
+    defection_metrics = compute_defection_metrics(env)
+
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
         energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
@@ -720,6 +752,10 @@ if __name__ == "__main__":
                 indent=2,
             )
         print(f"Agent event log written to: {event_log_path}")
+        defection_metrics_path = os.path.join(eval_output_dir, "defection_metrics.json")
+        with open(defection_metrics_path, "w") as f:
+            json.dump(defection_metrics, f, indent=2)
+        print(f"Defection metrics written to: {defection_metrics_path}")
     # Always show plots on screen
     ceviz.plot()
     if SAVE_EVAL_RESULTS:
@@ -727,6 +763,9 @@ if __name__ == "__main__":
         agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
         with open(agent_fitness_path, "w") as f:
             json.dump(env.get_all_agent_stats(), f, indent=2)
+
+    print("Defection metrics:")
+    print(json.dumps(defection_metrics, indent=2))
 
     print_ranked_fitness_summary(env)
 

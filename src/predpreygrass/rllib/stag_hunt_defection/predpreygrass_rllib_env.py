@@ -445,6 +445,8 @@ class PredPreyGrass(MultiAgentEnv):
             info["team_capture_failures"] = self.team_capture_failures
             info["team_capture_coop_successes"] = self.team_capture_coop_successes
             info["team_capture_coop_failures"] = self.team_capture_coop_failures
+            if "predator" in agent:
+                info["join_hunt"] = bool(self.predator_join_intent.get(agent, True))
 
         # Step 8: Assemble return dicts.
         # Generate observations only for still-active agents AFTER engagements and reproduction.
@@ -546,6 +548,8 @@ class PredPreyGrass(MultiAgentEnv):
                 "offspring_count": self.agent_offspring_counts.get(agent, 0),
                 "offspring_ids": self.agent_live_offspring_ids.get(agent, []),
             }
+            if "predator" in agent:
+                step_data[agent]["join_hunt"] = bool(self.predator_join_intent.get(agent, True))
 
         self.per_step_agent_data.append(step_data)
         self._per_agent_step_deltas.clear()
