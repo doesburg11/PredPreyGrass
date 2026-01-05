@@ -1,13 +1,16 @@
-# Stag_hunt: cooperative hunting with two prey types
+# Stag_hunt: cooperative hunting with large and small prey
 
 ## Overview
 
 - The environment is a gridworld with Predators, Prey, and Grass.
 - Predators come in one type:
-  - Humans (type_1_predator)
+  - Humans <img src="../../../../assets/images/icons/human_1.png" alt="predator icon" height="
+  36" style="vertical-align: middle;"> (type_1_predator)
 - Prey come in two types:
-  - Mammoths (type_1_prey)
-  - Rabbits (type_2_prey)
+  - Large prey; Mammoths <img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
+  36" style="vertical-align: middle;"> (type_1_prey)
+  - Small prey; Rabbits <img src="../../../../assets/images/icons/prey.png" alt="predator icon" height="
+  36" style="vertical-align: middle;"> (type_2_prey)
 - Walls surround the grid and can be manually placed inside the grid if desired.
 
 ## Movement and occupancy
@@ -53,8 +56,8 @@
 
 # MADRL training
 
-- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
-- Predators and Prey learn movement strategies based on partial observations.
+- Humans (predators), mammoths (prey) and rabbits (prey) are as groups independently (decentralized) trained via their own RLlib policy module.
+- All three agent types learn movement strategies based on partial observations of the full state (gridworld).
 
 # Results
 
