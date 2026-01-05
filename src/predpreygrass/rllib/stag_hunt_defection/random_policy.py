@@ -68,7 +68,7 @@ if __name__ == "__main__":
         fov_respect_walls=True,
         n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
         n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
-        coop_flash_steps=10,
+        coop_flash_steps=5,
     )
     clock = pygame.time.Clock()
 
@@ -92,6 +92,7 @@ if __name__ == "__main__":
             per_step_agent_data=env.per_step_agent_data,
             walls=getattr(env, "wall_positions", None),
             dead_prey=getattr(env, "dead_prey", None),
+            coop_events=getattr(env, "team_capture_events", None),
         )
 
         terminated =  env.terminations["__all__"]

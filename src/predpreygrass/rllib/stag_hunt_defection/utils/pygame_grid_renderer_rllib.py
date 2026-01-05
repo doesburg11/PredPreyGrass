@@ -10,13 +10,19 @@ class GuiStyle:
     margin_right: int = 520
     margin_bottom: int = 10
     min_window_height: int = 760
-    legend_spacing: int = 45
-    legend_font_size: int = 42
+    legend_spacing: int = 30
+    legend_font_size: int = 36
     legend_circle_radius: int = 20
     legend_square_size: int = 40
-    legend_label_font_size: int = 42
+    legend_label_font_size: int = 36
     tooltip_font_size: int = 28
     tooltip_padding: int = 4
+    coop_legend_spacing: int = 0
+    slider_legend_spacing: int = 16
+    slider_label_gap: int = 8
+    chart_top_padding: int = 10
+    chart_height: int = 80
+    chart_offset: int = 40
 
     predator_color: tuple = (255, 0, 0)
     prey_color: tuple = (0, 0, 255)
@@ -32,6 +38,8 @@ class GuiStyle:
     halo_reproduction_thickness: int = 3
     halo_eating_thickness: int = 3
     wall_color: tuple = (80, 80, 80)  # Dark gray for walls
+    defect_outline_color: tuple = (255, 0, 0)
+    defect_outline_thickness: int = 3
 
 
 class PyGameRenderer:
@@ -152,12 +160,20 @@ class PyGameRenderer:
         self.icon_prey_type1 = _load("prey_type1.png") or _load("stag_hunt_2.jpeg") or _load("mammoth_2.jpeg")
         self.icon_prey_type2 = _load("prey_type2.png") or _load("prey.png") or self.icon_prey_type1
         self.icon_dead_prey = _load("prey_dead.png") or None
-        coop_path = base / "cooperation_2.png"
-        if not coop_path.is_file():
-            coop_path = base / "cooperation.png"
+        coop_path = base / "successful_cooperation.png"
         self.icon_coop = pygame.image.load(str(coop_path)).convert_alpha() if coop_path.is_file() else None
 
-    def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None, coop_events=None):
+    def update(
+        self,
+        grass_positions,
+        grass_energies=None,
+        step=0,
+        agents_just_ate=None,
+        per_step_agent_data=None,
+        walls=None,
+        dead_prey=None,
+        coop_events=None,
+    ):
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -436,6 +452,21 @@ class PyGameRenderer:
                     width=self.gui_style.halo_reproduction_thickness,
                 )
 
+            # Defection marker: red square outline around defecting predators.
+            if "predator" in agent_id and agent.get("join_hunt") is False:
+                cell_rect = pygame.Rect(
+                    self.gui_style.margin_left + pos[0] * self.cell_size,
+                    self.gui_style.margin_top + pos[1] * self.cell_size,
+                    self.cell_size,
+                    self.cell_size,
+                )
+                pygame.draw.rect(
+                    self.screen,
+                    self.gui_style.defect_outline_color,
+                    cell_rect,
+                    width=self.gui_style.defect_outline_thickness,
+                )
+
     def _draw_legend(self, step, step_data):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
         y = self.gui_style.margin_top + 10
@@ -492,7 +523,24 @@ class PyGameRenderer:
             label_x = max(base_label_x, x + entry_icon_size + 10)
             label_y = center_y - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
-            return max(spacing, entry_icon_size + 5)
+            item_height = max(entry_icon_size, label_surface.get_height())
+            return max(spacing, item_height + 8)
+
+        def _draw_defection_marker(label):
+            entry_icon_size = icon_size
+            rect = pygame.Rect(x, y, entry_icon_size, entry_icon_size)
+            pygame.draw.rect(
+                self.screen,
+                self.gui_style.defect_outline_color,
+                rect,
+                width=self.gui_style.defect_outline_thickness,
+            )
+            label_surface = font.render(label, True, (0, 0, 0))
+            label_x = max(base_label_x, x + entry_icon_size + 10)
+            label_y = y + entry_icon_size // 2 - label_surface.get_height() // 2
+            self.screen.blit(label_surface, (label_x, label_y))
+            item_height = max(entry_icon_size, label_surface.get_height())
+            return max(spacing, item_height + 8)
 
         if is_type_based:
             # type-specific predator colors
@@ -513,6 +561,9 @@ class PyGameRenderer:
 
             y += _draw_entry(self.icon_prey_type1, self.gui_style.prey_color, "Prey")
 
+        if any("predator" in aid and "join_hunt" in data for aid, data in step_data.items()):
+            y += _draw_defection_marker("Defecting predator")
+
         # Reproduction halo
         pygame.draw.circle(
             self.screen,
@@ -524,7 +575,9 @@ class PyGameRenderer:
         label_surface = font.render("Reproduction halo", True, (0, 0, 0))
         label_y = y + r - label_surface.get_height() // 2
         self.screen.blit(label_surface, (base_label_x, label_y))
-        y += spacing
+        halo_diameter = 2 * (r + 2 + self.gui_style.halo_reproduction_thickness)
+        halo_height = max(halo_diameter, label_surface.get_height())
+        y += max(spacing, halo_height + 8)
 
         # Eating halo
         pygame.draw.circle(
@@ -533,12 +586,14 @@ class PyGameRenderer:
         label_surface = font.render("Eating halo", True, (0, 0, 0))
         label_y = y + r - label_surface.get_height() // 2
         self.screen.blit(label_surface, (base_label_x, label_y))
-        y += spacing
+        halo_diameter = 2 * (r + 2 + self.gui_style.halo_eating_thickness)
+        halo_height = max(halo_diameter, label_surface.get_height())
+        y += max(spacing, halo_height + 8)
 
         return y
 
     def _draw_coop_overlays(self, step, coop_events):
-        """Display cooperation icon for recent team captures."""
+        """Display cooperation icons for recent team captures."""
         if self.icon_coop is None:
             return
         # Keep only recent events
@@ -547,7 +602,7 @@ class PyGameRenderer:
         self._coop_events = [e for e in self._coop_events if e.get("t", -9999) >= cutoff]
 
         size = int(self.cell_size * self.coop_icon_cell_span)
-        icon = pygame.transform.smoothscale(self.icon_coop, (size, size))
+        success_icon = pygame.transform.smoothscale(self.icon_coop, (size, size))
         ml = self.gui_style.margin_left
         mt = self.gui_style.margin_top
         for e in self._coop_events:
@@ -556,8 +611,8 @@ class PyGameRenderer:
                 continue
             cx = ml + pos[0] * self.cell_size + self.cell_size // 2
             cy = mt + pos[1] * self.cell_size + self.cell_size // 2
-            rect = icon.get_rect(center=(cx, cy))
-            self.screen.blit(icon, rect)
+            rect = success_icon.get_rect(center=(cx, cy))
+            self.screen.blit(success_icon, rect)
 
     def _draw_legend_environment_elements(self, x, y):
         spacing = self.gui_style.legend_spacing
@@ -571,7 +626,8 @@ class PyGameRenderer:
         label_surface = font.render("Grass", True, (0, 0, 0))
         label_y = y + r - label_surface.get_height() // 2
         self.screen.blit(label_surface, (label_x, label_y))
-        y += spacing
+        grass_height = max(s, label_surface.get_height())
+        y += max(spacing, grass_height + 8)
 
         if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
             # Predator FOV legend (with alpha blending)
@@ -581,7 +637,8 @@ class PyGameRenderer:
             label_surface = font.render("Hunter_0 Field Of Vision", True, (0, 0, 0))
             label_y = y + r - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
-            y += spacing
+            fov_height = max(s, label_surface.get_height())
+            y += max(spacing, fov_height + 8)
             # Prey FOV legend (with alpha blending)
             fov_prey_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_prey_rect.fill(self.fov_color_prey)
@@ -589,7 +646,8 @@ class PyGameRenderer:
             label_surface = font.render("Stag_hunt_0 Field Of Vision", True, (0, 0, 0))
             label_y = y + r - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
-            y += spacing
+            fov_height = max(s, label_surface.get_height())
+            y += max(spacing, fov_height + 8)
 
         # Cooperative hunting icon (legend item) below FOV, above speed slider
         icon_size = self.gui_style.legend_square_size * 3
@@ -603,16 +661,16 @@ class PyGameRenderer:
             self.screen.blit(coop_icon, rect)
         else:
             pygame.draw.circle(self.screen, (0, 128, 0), (icon_x, icon_y + icon_size // 2), icon_size // 2)
-        label_surface = label_font.render("Cooperative hunting", True, (0, 0, 0))
+        label_surface = label_font.render("Effective cooperative hunting", True, (0, 0, 0))
         text_x = max(label_x, icon_left + icon_size + 20)
         text_y = icon_y + icon_size // 2 - label_surface.get_height() // 2
         self.screen.blit(label_surface, (text_x, text_y))
-        y = icon_y + icon_size + spacing
+        y = icon_y + icon_size + self.gui_style.coop_legend_spacing
 
         return y
 
     def _draw_legend_type_slider(self, x, y):
-        spacing = self.gui_style.legend_spacing
+        spacing = self.gui_style.slider_legend_spacing
         font = self.font_legend_label
 
         y += spacing
@@ -620,7 +678,7 @@ class PyGameRenderer:
         slider_label_surface = font.render("Speed (steps/sec)", True, (0, 0, 0))
         self.screen.blit(slider_label_surface, (x, y))
 
-        y += spacing
+        y += slider_label_surface.get_height() + self.gui_style.slider_label_gap
 
         slider_x = x
         slider_y = y
@@ -642,14 +700,14 @@ class PyGameRenderer:
 
         self.slider_rect = pygame.Rect(slider_x, slider_y, slider_width, slider_height)
 
-        return y + spacing  # Return new Y position for chart continuation
+        return slider_y + slider_height + spacing + 10  # Return new Y position for chart continuation
 
     def _draw_legend_population_chart(self, x, y):
         chart_width = 260
-        chart_height = 100
+        chart_height = self.gui_style.chart_height
         chart_x = x + 30
-        chart_top_padding = 20
-        chart_y = y + chart_top_padding
+        chart_top_padding = self.gui_style.chart_top_padding
+        chart_y = y + chart_top_padding + self.gui_style.chart_offset
 
         # Chart title
         font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)

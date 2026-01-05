@@ -201,6 +201,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_helper_total = 0
         self.team_capture_coop_successes = 0
         self.team_capture_coop_failures = 0
+        self.team_capture_events = []
+        self.team_capture_failed_events = []
+        self.team_capture_failed_events = []
         self.spawned_predators = 0
         self.spawned_prey = 0
         self._pending_infos = {}
@@ -980,6 +983,13 @@ class PredPreyGrass(MultiAgentEnv):
                 self.team_capture_failures += 1
                 if helper_count > 1:
                     self.team_capture_coop_failures += 1
+                    self.team_capture_failed_events.append(
+                        {"t": int(self.current_step), "position": tuple(prey_pos), "helpers": helper_count}
+                    )
+                    cutoff = self.current_step - 20
+                    self.team_capture_failed_events = [
+                        e for e in self.team_capture_failed_events if e["t"] >= cutoff
+                    ]
                 return False
             total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
             if total_penalty > 0.0:
@@ -1031,6 +1041,13 @@ class PredPreyGrass(MultiAgentEnv):
             self.team_capture_failures += 1
             if helper_count > 1:
                 self.team_capture_coop_failures += 1
+                self.team_capture_failed_events.append(
+                    {"t": int(self.current_step), "position": tuple(prey_pos), "helpers": helper_count}
+                )
+                cutoff = self.current_step - 20
+                self.team_capture_failed_events = [
+                    e for e in self.team_capture_failed_events if e["t"] >= cutoff
+                ]
             return False
 
         self.team_capture_successes += 1
