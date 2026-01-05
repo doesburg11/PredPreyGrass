@@ -3,19 +3,19 @@
 
 
 # Predator-Prey-Grass
-## Emerging coevolution and cooperation through multi-agent deep reinforcement learning 
+## Emerging coevolution, cooperation, defection and free-riding through multi-agent deep reinforcement learning 
 
-This project studies how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
+This project studies how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment. This gives rise to coevolution, cooperation, defection and free-riding.
 
 <p align="center">
-    <b>Emerging human cooperative hunting of Mammoths</b></p>
+    <b>Emerging coevolution, cooperation, defection and free-riding</b></p>
 <p align="center">
-    <img align="center" src="./assets/images/gifs/cooperative_hunting_mammoths_15MB.gif" width="600" height="500" />
+    <img align="center" src="./assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
 ### Environment:
 
-* **[Mammoth hunting](src/predpreygrass/rllib/mammoths)** : Mammoths are only hunted down and eaten by a human(s) in its Moore neighborhood if the cumulative human energy is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](src/predpreygrass/rllib/mammoths))
+* **[Stag hunt with defection](src/predpreygrass/rllib/stag_hunt_defection)** : Humans can hunt solo for rabbits and cooperatively for mammoths. At each step humans decide either to cooperate at an energy cost, or to defect at zero energy cost, giving opportunities to free-riding if sufficent cooperation already was assembled in an attack. ([implementation](src/predpreygrass/rllib/stag_hunt_defection))
 
 ### Other environments:
 
@@ -31,7 +31,12 @@ This project studies how cooperative behavior emerges and stabilizes in a spatia
 
 * **[Lineage rewards](src/predpreygrass/rllib/lineage_rewards)**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time.
 
-* **[Shared prey](src/predpreygrass/rllib/shared_prey)** : This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+* **[Shared prey](src/predpreygrass/rllib/shared_prey)**: This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+
+* **[Mammoth hunting](src/predpreygrass/rllib/mammoths)**: Mammoths are only hunted down and eaten by a human(s) in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](src/predpreygrass/rllib/mammoths))
+
+* **["Stag hunt"](src/predpreygrass/rllib/stag_hunt)**: Cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
+
 
 
 ### Experiments:
