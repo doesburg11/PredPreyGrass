@@ -66,10 +66,10 @@ def _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr):
 
 
 def setup_modules():
-    # STAG_HUNT_DEFECT_PRED_LOSS_0_08_2026-01-05_01-26-09/PPO_PredPreyGrass_225cc_00000_0_2026-01-05_01-26-10/checkpoint_000029
+    # STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_defection/ray_results/"
-    checkpoint_root = "STAG_HUNT_DEFECT_PRED_LOSS_0_08_2026-01-05_01-26-09/PPO_PredPreyGrass_225cc_00000_0_2026-01-05_01-26-10/"
-    checkpoint_nr = "checkpoint_000029"
+    checkpoint_root = "STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/"
+    checkpoint_nr = "checkpoint_000049"
     checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {
