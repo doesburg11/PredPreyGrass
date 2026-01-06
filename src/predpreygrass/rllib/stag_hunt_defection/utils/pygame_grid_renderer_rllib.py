@@ -33,13 +33,14 @@ class GuiStyle:
     prey_type_2_color: tuple = (100, 100, 255)
     grid_color: tuple = (200, 200, 200)
     background_color: tuple = (255, 255, 255)
-    halo_reproduction_color: tuple = (255, 0, 0)
+    halo_reproduction_color: tuple = (0, 120, 255)
     halo_eating_color: tuple = (0, 128, 0)  # Bright green
-    halo_reproduction_thickness: int = 3
+    halo_reproduction_thickness: int = 5
     halo_eating_thickness: int = 3
     wall_color: tuple = (80, 80, 80)  # Dark gray for walls
     defect_outline_color: tuple = (255, 0, 0)
     defect_outline_thickness: int = 3
+    coop_outline_color: tuple = (0, 200, 0)
 
 
 class PyGameRenderer:
@@ -452,20 +453,28 @@ class PyGameRenderer:
                     width=self.gui_style.halo_reproduction_thickness,
                 )
 
-            # Defection marker: red square outline around defecting predators.
-            if "predator" in agent_id and agent.get("join_hunt") is False:
+            # Join/defect markers: green for joiners, red for defectors.
+            if "predator" in agent_id and "join_hunt" in agent:
                 cell_rect = pygame.Rect(
                     self.gui_style.margin_left + pos[0] * self.cell_size,
                     self.gui_style.margin_top + pos[1] * self.cell_size,
                     self.cell_size,
                     self.cell_size,
                 )
-                pygame.draw.rect(
-                    self.screen,
-                    self.gui_style.defect_outline_color,
-                    cell_rect,
-                    width=self.gui_style.defect_outline_thickness,
-                )
+                if agent.get("join_hunt") is False:
+                    pygame.draw.rect(
+                        self.screen,
+                        self.gui_style.defect_outline_color,
+                        cell_rect,
+                        width=self.gui_style.defect_outline_thickness,
+                    )
+                elif agent.get("join_hunt") is True:
+                    pygame.draw.rect(
+                        self.screen,
+                        self.gui_style.coop_outline_color,
+                        cell_rect,
+                        width=self.gui_style.defect_outline_thickness,
+                    )
 
     def _draw_legend(self, step, step_data):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
@@ -542,9 +551,25 @@ class PyGameRenderer:
             item_height = max(entry_icon_size, label_surface.get_height())
             return max(spacing, item_height + 8)
 
+        def _draw_coop_marker(label):
+            entry_icon_size = icon_size
+            rect = pygame.Rect(x, y, entry_icon_size, entry_icon_size)
+            pygame.draw.rect(
+                self.screen,
+                self.gui_style.coop_outline_color,
+                rect,
+                width=self.gui_style.defect_outline_thickness,
+            )
+            label_surface = font.render(label, True, (0, 0, 0))
+            label_x = max(base_label_x, x + entry_icon_size + 10)
+            label_y = y + entry_icon_size // 2 - label_surface.get_height() // 2
+            self.screen.blit(label_surface, (label_x, label_y))
+            item_height = max(entry_icon_size, label_surface.get_height())
+            return max(spacing, item_height + 8)
+
         if is_type_based:
             # type-specific predator colors
-            y += _draw_entry(self.icon_pred_type1, self.gui_style.predator_type_1_color, "Hunter")
+            y += _draw_entry(self.icon_pred_type1, self.gui_style.predator_type_1_color, "Human hunter")
 
             if allow_pred_type2:
                 y += _draw_entry(self.icon_pred_type2, self.gui_style.predator_type_2_color, "Predator (type 2)")
@@ -553,7 +578,7 @@ class PyGameRenderer:
             y += _draw_entry(self.icon_prey_type1, self.gui_style.prey_type_1_color, "Mammoth", icon_scale=2)
 
             if allow_prey_type2:
-                y += _draw_entry(self.icon_prey_type2, self.gui_style.prey_type_2_color, "Deer")
+                y += _draw_entry(self.icon_prey_type2, self.gui_style.prey_type_2_color, "Rabbit")
 
         else:
             # Compact predator/prey legend
@@ -562,7 +587,8 @@ class PyGameRenderer:
             y += _draw_entry(self.icon_prey_type1, self.gui_style.prey_color, "Prey")
 
         if any("predator" in aid and "join_hunt" in data for aid, data in step_data.items()):
-            y += _draw_defection_marker("Defecting predator")
+            y += _draw_coop_marker("Cooperating human")
+            y += _draw_defection_marker("Defecting human")
 
         # Reproduction halo
         pygame.draw.circle(
@@ -634,7 +660,7 @@ class PyGameRenderer:
             fov_pred_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_pred_rect.fill(self.fov_color_predator)
             self.screen.blit(fov_pred_rect, (x + r - s // 2, y + r - s // 2))
-            label_surface = font.render("Hunter_0 Field Of Vision", True, (0, 0, 0))
+            label_surface = font.render("Human Field Of Vision", True, (0, 0, 0))
             label_y = y + r - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
             fov_height = max(s, label_surface.get_height())
@@ -643,7 +669,7 @@ class PyGameRenderer:
             fov_prey_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_prey_rect.fill(self.fov_color_prey)
             self.screen.blit(fov_prey_rect, (x + r - s // 2, y + r - s // 2))
-            label_surface = font.render("Stag_hunt_0 Field Of Vision", True, (0, 0, 0))
+            label_surface = font.render("Prey Field Of Vision", True, (0, 0, 0))
             label_y = y + r - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
             fov_height = max(s, label_surface.get_height())
@@ -781,23 +807,25 @@ class PyGameRenderer:
                     self.population_history_prey_type2[i] / max_agents * chart_height
                 )
                 pygame.draw.line(self.screen, rabbit_color, (x1, y1r), (x2, y2r), 3)
-        # Legend below chart
+        # Legend below chart (single horizontal row)
         legend_y = chart_y + chart_height + font_small.get_height() + 6
         line_len = 16
-        legend_y_line = legend_y + 6
+        item_gap = 18
+        y_line = legend_y + 6
         legend_items = [
             ("Humans", predator_color),
             ("Mammoths", mammoth_color),
             ("Rabbits", rabbit_color),
         ]
-        for idx, (label, color) in enumerate(legend_items):
-            y_line = legend_y_line + idx * (font_small.get_height() + 6)
-            start = (chart_x, y_line)
-            end = (chart_x + line_len, y_line)
+        x_cursor = chart_x
+        for label, color in legend_items:
+            start = (x_cursor, y_line)
+            end = (x_cursor + line_len, y_line)
             pygame.draw.line(self.screen, color, start, end, 3)
             label_surface = font_small.render(label, True, (0, 0, 0))
             label_y = y_line - label_surface.get_height() // 2
             self.screen.blit(label_surface, (end[0] + 6, label_y))
+            x_cursor = end[0] + 6 + label_surface.get_width() + item_gap
 
         # Cooperative hunting icon below the chart
         return legend_y + font_small.get_height() + 6

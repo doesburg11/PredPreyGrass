@@ -81,7 +81,7 @@ Capture succeeds if:
 sum(energy of J) > E + margin
 ```
 
-Non-joiners do not count toward success.
+Defectors (non-joiners) do not count toward success.
 
 ### Success payouts
 - If `F` is non-empty, a scavenger pool is reserved: `E * s`.
@@ -97,6 +97,14 @@ Non-joiners do not count toward success.
   applied to joiners as before.
 - `failed_attack_kills_predator` also applies only to joiners.
 - Free riders never pay failure costs.
+
+### Why defectors cannot solo-capture
+`join_hunt = 0` means “refuse to contribute.” If defectors could still capture
+alone, defection would become a safe default (no cost, still gets prey), which
+weakens the social dilemma. Requiring `join_hunt = 1` for any capture keeps the
+choice meaningful: cooperation enables success, defection can only free-ride.
+This preserves the minimal-change goal and avoids a degenerate policy like
+“defect unless others are present.”
 
 ### Death from join cost
 If a joiner drops to `<= 0` energy after paying the join cost, it dies with

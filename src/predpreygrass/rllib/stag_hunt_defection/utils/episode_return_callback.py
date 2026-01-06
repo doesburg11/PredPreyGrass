@@ -24,12 +24,34 @@ class EpisodeReturn(RLlibCallback):
             infos = {}
         return infos
 
+    @staticmethod
+    def _get_user_data(episode):
+        # RLlib >=2.9 uses custom_data; older versions expose user_data.
+        user_data = getattr(episode, "user_data", None)
+        if isinstance(user_data, dict):
+            return user_data
+        user_data = getattr(episode, "custom_data", None)
+        if isinstance(user_data, dict):
+            return user_data
+        user_data = {}
+        if hasattr(episode, "custom_data"):
+            try:
+                setattr(episode, "_custom_data", user_data)
+            except Exception:
+                pass
+        elif hasattr(episode, "user_data"):
+            try:
+                setattr(episode, "user_data", user_data)
+            except Exception:
+                pass
+        return user_data
+
     def on_episode_step(self, *, episode, **kwargs):
         infos = self._get_last_infos(episode)
         if not infos:
             return
 
-        user_data = episode.user_data
+        user_data = self._get_user_data(episode)
         join_steps = user_data.get("join_steps", 0)
         defect_steps = user_data.get("defect_steps", 0)
 
@@ -122,27 +144,28 @@ class EpisodeReturn(RLlibCallback):
             episode.custom_metrics["team_capture_total_failures"] = total_fail
 
         # Join/defect and capture-style metrics
-        join_steps = episode.user_data.get("join_steps", 0)
-        defect_steps = episode.user_data.get("defect_steps", 0)
+        user_data = self._get_user_data(episode)
+        join_steps = user_data.get("join_steps", 0)
+        defect_steps = user_data.get("defect_steps", 0)
         total_pred_steps = join_steps + defect_steps
         join_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
         defect_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
 
-        solo_captures = episode.user_data.get("solo_captures", 0)
-        coop_captures = episode.user_data.get("coop_captures", 0)
+        solo_captures = user_data.get("solo_captures", 0)
+        coop_captures = user_data.get("coop_captures", 0)
         capture_successes = solo_captures + coop_captures
         solo_rate = solo_captures / capture_successes if capture_successes else 0.0
         coop_rate = coop_captures / capture_successes if capture_successes else 0.0
 
-        joiners_total = episode.user_data.get("joiners_total", 0)
-        free_riders_total = episode.user_data.get("free_riders_total", 0)
+        joiners_total = user_data.get("joiners_total", 0)
+        free_riders_total = user_data.get("free_riders_total", 0)
         free_rider_rate = (
             free_riders_total / (joiners_total + free_riders_total)
             if (joiners_total + free_riders_total)
             else 0.0
         )
-        multi_capture_steps = episode.user_data.get("multi_capture_steps", 0)
-        multi_capture_successes_skipped = episode.user_data.get("multi_capture_successes_skipped", 0)
+        multi_capture_steps = user_data.get("multi_capture_steps", 0)
+        multi_capture_successes_skipped = user_data.get("multi_capture_successes_skipped", 0)
 
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/join_steps", join_steps)
