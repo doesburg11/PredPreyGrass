@@ -97,6 +97,7 @@ class PredPreyGrass(MultiAgentEnv):
             }
         self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
         self.failed_attack_kills_predator = bool(config.get("failed_attack_kills_predator", False))
+        self.failed_attack_reward_penalty = max(0.0, float(config.get("failed_attack_reward_penalty", 0.0)))
         self.death_penalty_predator = float(config.get("death_penalty_predator", 0.0))
         self.death_penalty_type_1_prey = float(config.get("death_penalty_type_1_prey", 0.0))
         self.death_penalty_type_2_prey = float(config.get("death_penalty_type_2_prey", 0.0))
@@ -956,6 +957,10 @@ class PredPreyGrass(MultiAgentEnv):
         if total_pred_energy <= prey_energy + self.team_capture_margin:
             # Handle failed attempt: optionally kill joiners, otherwise apply energy penalty.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
+            reward_penalty = self.failed_attack_reward_penalty
+            if reward_penalty:
+                for pid in joiners:
+                    self.rewards[pid] = self.rewards.get(pid, 0.0) - reward_penalty
             if self.failed_attack_kills_predator:
                 # Log failed attempt when joiners exist but combined energy insufficient
                 for pid in joiners:

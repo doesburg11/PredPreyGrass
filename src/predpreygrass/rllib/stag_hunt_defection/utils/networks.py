@@ -43,7 +43,15 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
     # Adjust the fully-connected (FC) hidden sizes based on the action space.
     # If the agent has many actions (e.g., prey with 25 moves), we give it a wider first FC layer
     # so it has more capacity to rank actions effectively.
-    num_actions = act_space.n if hasattr(act_space, "n") else None
+    num_actions = None
+    action_info = "None"
+    if hasattr(act_space, "n"):
+        num_actions = act_space.n
+        action_info = str(num_actions)
+    elif hasattr(act_space, "nvec"):
+        nvec = list(act_space.nvec)
+        num_actions = int(sum(nvec))
+        action_info = f"nvec={nvec} (sum={num_actions})"
     if num_actions is not None and num_actions > 20:
         fcnet_hiddens = [384, 256]
         head_note = "wide"
@@ -59,7 +67,7 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
         print(
             f"[MODEL] {policy_name} → obs CxHxW={C}x{H}x{W}, "
             f"L={L} (RF={rf}), conv=[{conv_str}], "
-            f"actions={num_actions}, head={head_note}"
+            f"actions={action_info}, head={head_note}"
         )
 
 

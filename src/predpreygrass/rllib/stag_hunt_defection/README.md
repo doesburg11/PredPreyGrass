@@ -96,6 +96,7 @@ Defectors (non-joiners) do not count toward success.
 - The existing penalty `energy_percentage_loss_per_failed_attacked_prey` is
   applied to joiners as before.
 - `failed_attack_kills_predator` also applies only to joiners.
+- If `failed_attack_reward_penalty` > 0, joiners also receive a direct negative reward.
 - Free riders never pay failure costs.
 
 ### Why defectors cannot solo-capture
@@ -117,7 +118,7 @@ cause `exhausted_hunt`.
 | Predator action space | `Discrete(move)` | `MultiDiscrete([move, join_hunt])` with `join_hunt` in `{0,1}` | `predpreygrass_rllib_env.py`, per-step `join_hunt` |
 | Capture eligibility | All nearby predators can contribute | Only joiners contribute; free riders do not count | `join_hunt` per step |
 | Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
-| Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
+| Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders equally share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
 | Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` | `team_capture_join_cost`, event `join_cost` |
 | Failure penalties | Apply to all helpers | Apply only to joiners | `energy_percentage_loss_per_failed_attacked_prey`, `failed_attack_kills_predator` |
 | Defection metrics | Not defined | Join/defect rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
@@ -136,6 +137,7 @@ Defined in `config/config_env_stag_hunt.py`:
 - `team_capture_join_cost` (float): fixed energy cost paid by joiners on success.
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
   reserved for nearby non-joiners (only when non-joiners are present).
+- `failed_attack_reward_penalty` (float): per-joiner reward penalty on failed capture.
 
 These are in addition to existing team-capture controls:
 
@@ -191,6 +193,61 @@ so they appear in TensorBoard.
 These tables capture the exact metrics you shared from the latest
 `evaluate_ppo_from_checkpoint_multi_runs.py` run (seeds 1-10). The aggregate
 uses a `min_steps` filter of 500 (kept 4 of 10 runs).
+
+## Opportunity-conditioned preference (mammoth vs rabbit)
+
+To avoid comparing this spatial ecology to a one-shot stag-hunt game, we use an
+opportunity-conditioned preference test: only predator-steps where a prey is
+adjacent (Moore neighborhood) are counted. The key question is whether
+predators choose to `join_hunt` more often when mammoths are available than when
+only rabbits are available.
+
+From the latest eval folder:
+`eval_checkpoint_000049_2026-01-06_23-24-46`
+
+- Any prey available: join rate 0.844 (4446 / 5269)
+- Mammoth available: join rate 0.848 (4305 / 5079)
+- Rabbit available: join rate 0.749 (170 / 227)
+- Mammoth only: join rate 0.848 (4276 / 5042)
+- Rabbit only: join rate 0.742 (141 / 190)
+- Both available: join rate 0.784 (29 / 37)
+
+Interpretation:
+- Joining is consistently higher when mammoths are present (0.848) than when
+  only rabbits are present (0.742).
+- This indicates a revealed preference to cooperate for the higher-risk,
+  higher-return prey, even though rabbit captures are easier.
+- The “both available” bucket is small but still shows a high join rate,
+  suggesting predators do not simply default to solo rabbit hunting when a
+  mammoth is in reach.
+
+This is a more “pure” stag-hunt indicator because it conditions on local
+opportunity rather than global capture counts, and it reflects the actual
+join/defect choice made at the moment of potential cooperation.
+
+### Attempt-based preference (unique attempts)
+
+From the same eval folder (unique attempts grouped by `(t, prey_id)`):
+
+- Mammoth attempts: 3509 (87.1% of all attempts)
+- Rabbit attempts: 521 (12.9% of all attempts)
+- Mammoth share of cooperative attempts: 96.9%
+- Rabbit share of cooperative attempts: 3.1%
+
+Risk/return profile:
+
+- Mammoth success rate: 8.0% overall (coop 22.1%, solo 0.48%)
+- Rabbit success rate: 78.7% overall (coop 97.4%, solo 77.2%)
+- Energy per success: mammoth 13.07 vs rabbit 1.57
+- Joiner net gain per success: mammoth 12.27 vs rabbit 1.35
+
+Interpretation:
+- Predators attempt mammoths far more often, and almost all cooperative attempts
+  target mammoths.
+- Mammoths are high risk but high return; rabbits are low risk and low return.
+- Combined with the opportunity-conditioned join rates above, this supports a
+  preference for the high-risk/high-return cooperative option when it is
+  available.
 
 ### Aggregate (kept runs only; steps >= 500)
 

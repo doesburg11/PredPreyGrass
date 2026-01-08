@@ -17,6 +17,7 @@ from predpreygrass.rllib.stag_hunt_defection.utils.pygame_grid_renderer_rllib im
 from predpreygrass.rllib.stag_hunt_defection.utils.defection_metrics import (
     aggregate_capture_outcomes_from_event_log,
     aggregate_join_choices,
+    compute_opportunity_preference_metrics,
 )
 
 # external libraries
@@ -36,7 +37,7 @@ from collections import defaultdict
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = True
+SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 
@@ -376,10 +377,12 @@ def print_ranked_reward_summary(env, total_reward):
 def compute_defection_metrics(env):
     join_stats = aggregate_join_choices(env.per_step_agent_data)
     capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
+    opportunity_stats = compute_opportunity_preference_metrics(env.per_step_agent_data)
     return {
         "steps": env.current_step,
         "join_defect": join_stats,
         "capture_outcomes": capture_stats,
+        "opportunity_preferences": opportunity_stats,
     }
 
 def save_reward_summary_to_file(env, total_reward, output_dir):

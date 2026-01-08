@@ -25,6 +25,190 @@ class EpisodeReturn(RLlibCallback):
         return infos
 
     @staticmethod
+    def _get_last_actions(episode):
+        actions = {}
+        if hasattr(episode, "get_last_actions"):
+            actions = episode.get_last_actions() or {}
+        elif hasattr(episode, "last_actions"):
+            actions = episode.last_actions or {}
+        elif hasattr(episode, "_agent_to_last_action"):
+            actions = episode._agent_to_last_action or {}
+        if not isinstance(actions, dict):
+            actions = {}
+        return actions
+
+    @staticmethod
+    def _decode_join_hunt_action(action):
+        if action is None:
+            return None
+        if isinstance(action, dict):
+            if "join_hunt" in action:
+                return bool(action["join_hunt"])
+            return None
+        try:
+            if len(action) >= 2:
+                return bool(int(action[1]))
+        except Exception:
+            return None
+        return None
+
+    @staticmethod
+    def _resolve_env(episode, **kwargs):
+        """Best-effort: return the *underlying* (unwrapped) sub-environment.
+
+        In RLlib's EnvRunner/VectorEnv stacks, `env_runner.env` is often a wrapper
+        that does not expose our debug/metrics attributes (e.g. `per_step_agent_data`).
+        We therefore aggressively unwrap common container/wrapper shapes.
+        """
+
+        def _looks_like_target_env(obj) -> bool:
+            if obj is None:
+                return False
+            # Attributes we rely on for fallbacks.
+            return any(
+                hasattr(obj, attr)
+                for attr in (
+                    "per_step_agent_data",
+                    "agent_event_log",
+                    "team_capture_successes",
+                    "team_capture_coop_successes",
+                    "predator_join_intent",
+                )
+            )
+
+        def _safe_int(val, default=0):
+            try:
+                return int(val)
+            except Exception:
+                return default
+
+        def _unwrap(obj, env_index=None, max_depth=10):
+            seen = set()
+            current = obj
+            depth = 0
+            idx = _safe_int(env_index, 0)
+
+            while current is not None and depth < max_depth:
+                depth += 1
+                obj_id = id(current)
+                if obj_id in seen:
+                    break
+                seen.add(obj_id)
+
+                if _looks_like_target_env(current):
+                    return current
+
+                # Common container shapes.
+                if isinstance(current, (list, tuple)):
+                    if current:
+                        current = current[idx] if 0 <= idx < len(current) else current[0]
+                        continue
+                    return None
+
+                # Gymnasium-style unwrapping.
+                unwrapped = getattr(current, "unwrapped", None)
+                if unwrapped is not None and unwrapped is not current:
+                    current = unwrapped
+                    continue
+
+                # RLlib BaseEnv / VectorEnv access.
+                if hasattr(current, "get_sub_environments"):
+                    try:
+                        subs = current.get_sub_environments() or []
+                    except Exception:
+                        subs = []
+                    if subs:
+                        current = subs[idx] if 0 <= idx < len(subs) else subs[0]
+                        continue
+
+                for attr in ("envs", "_envs"):
+                    subs = getattr(current, attr, None)
+                    if isinstance(subs, (list, tuple)) and subs:
+                        current = subs[idx] if 0 <= idx < len(subs) else subs[0]
+                        break
+                else:
+                    subs = None
+                if subs is not None:
+                    continue
+
+                # Single-env wrappers.
+                for attr in ("env", "_env", "vector_env", "_vector_env"):
+                    inner = getattr(current, attr, None)
+                    if inner is not None and inner is not current:
+                        current = inner
+                        break
+                else:
+                    break
+
+            return current if _looks_like_target_env(current) else None
+
+        env_index = kwargs.get("env_index")
+        if env_index is None:
+            env_index = getattr(episode, "env_id", None)
+        if env_index is None:
+            env_index = getattr(episode, "env_index", None)
+
+        # Direct env passed in.
+        env = kwargs.get("env")
+        resolved = _unwrap(env, env_index)
+        if resolved is not None:
+            return resolved
+
+        env_runner = kwargs.get("env_runner") or kwargs.get("runner")
+        if env_runner is not None:
+            for attr in ("env", "_env", "envs", "_envs", "vector_env", "_vector_env", "base_env"):
+                candidate = getattr(env_runner, attr, None)
+                resolved = _unwrap(candidate, env_index)
+                if resolved is not None:
+                    return resolved
+
+        base_env = kwargs.get("base_env")
+        if base_env is None:
+            worker = kwargs.get("worker")
+            if worker is not None:
+                base_env = getattr(worker, "base_env", None)
+        resolved = _unwrap(base_env, env_index)
+        if resolved is not None:
+            return resolved
+
+        return None
+
+    @staticmethod
+    def _count_join_defect_from_env(env):
+        join_steps = 0
+        defect_steps = 0
+        step_data_list = getattr(env, "per_step_agent_data", None)
+        if not isinstance(step_data_list, list):
+            return join_steps, defect_steps
+        for step_data in step_data_list:
+            if not isinstance(step_data, dict):
+                continue
+            for agent_id, data in step_data.items():
+                if "predator" not in agent_id or not isinstance(data, dict):
+                    continue
+                if "join_hunt" not in data:
+                    continue
+                if data["join_hunt"]:
+                    join_steps += 1
+                else:
+                    defect_steps += 1
+        return join_steps, defect_steps
+
+    @staticmethod
+    def _count_free_riders_from_env(env):
+        total = 0
+        event_log = getattr(env, "agent_event_log", None)
+        if not isinstance(event_log, dict):
+            return total
+        for agent_id, record in event_log.items():
+            if "predator" not in agent_id or not isinstance(record, dict):
+                continue
+            for evt in record.get("eating_events", []) or []:
+                if not evt.get("join_hunt", True):
+                    total += 1
+        return total
+
+    @staticmethod
     def _get_user_data(episode):
         # RLlib >=2.9 uses custom_data; older versions expose user_data.
         user_data = getattr(episode, "user_data", None)
@@ -48,12 +232,11 @@ class EpisodeReturn(RLlibCallback):
 
     def on_episode_step(self, *, episode, **kwargs):
         infos = self._get_last_infos(episode)
-        if not infos:
-            return
 
         user_data = self._get_user_data(episode)
         join_steps = user_data.get("join_steps", 0)
         defect_steps = user_data.get("defect_steps", 0)
+        saw_join_hunt = False
 
         for agent_id, info in infos.items():
             if agent_id == "__all__" or not isinstance(info, dict):
@@ -62,10 +245,47 @@ class EpisodeReturn(RLlibCallback):
                 continue
             if "join_hunt" not in info:
                 continue
+            saw_join_hunt = True
             if info["join_hunt"]:
                 join_steps += 1
             else:
                 defect_steps += 1
+
+        if not saw_join_hunt:
+            actions = self._get_last_actions(episode)
+            for agent_id, action in actions.items():
+                if "predator" not in agent_id:
+                    continue
+                join_hunt = self._decode_join_hunt_action(action)
+                if join_hunt is None:
+                    continue
+                saw_join_hunt = True
+                if join_hunt:
+                    join_steps += 1
+                else:
+                    defect_steps += 1
+
+        if not saw_join_hunt:
+            env = self._resolve_env(episode, **kwargs)
+            if env is not None:
+                last_idx = user_data.get("_last_env_step_idx", -1)
+                step_data_list = getattr(env, "per_step_agent_data", None)
+                if isinstance(step_data_list, list):
+                    current_idx = len(step_data_list) - 1
+                    if current_idx > last_idx:
+                        for step_data in step_data_list[last_idx + 1 : current_idx + 1]:
+                            if not isinstance(step_data, dict):
+                                continue
+                            for agent_id, data in step_data.items():
+                                if "predator" not in agent_id or not isinstance(data, dict):
+                                    continue
+                                if "join_hunt" not in data:
+                                    continue
+                                if data["join_hunt"]:
+                                    join_steps += 1
+                                else:
+                                    defect_steps += 1
+                        user_data["_last_env_step_idx"] = current_idx
 
         user_data["join_steps"] = join_steps
         user_data["defect_steps"] = defect_steps
@@ -132,6 +352,13 @@ class EpisodeReturn(RLlibCallback):
         coop_fail = info_all.get("team_capture_coop_failures", 0)
         total_success = info_all.get("team_capture_successes", 0)
         total_fail = info_all.get("team_capture_failures", 0)
+
+        env = self._resolve_env(episode, **kwargs)
+        if env is not None and (not info_all or (total_success == 0 and total_fail == 0)):
+            coop_success = getattr(env, "team_capture_coop_successes", coop_success)
+            coop_fail = getattr(env, "team_capture_coop_failures", coop_fail)
+            total_success = getattr(env, "team_capture_successes", total_success)
+            total_fail = getattr(env, "team_capture_failures", total_fail)
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_coop_successes", coop_success)
             metrics_logger.log_value("custom_metrics/team_capture_coop_failures", coop_fail)
@@ -147,18 +374,40 @@ class EpisodeReturn(RLlibCallback):
         user_data = self._get_user_data(episode)
         join_steps = user_data.get("join_steps", 0)
         defect_steps = user_data.get("defect_steps", 0)
+        if env is not None and (join_steps + defect_steps) == 0:
+            env_join_steps, env_defect_steps = self._count_join_defect_from_env(env)
+            if env_join_steps or env_defect_steps:
+                join_steps = env_join_steps
+                defect_steps = env_defect_steps
+                user_data["join_steps"] = join_steps
+                user_data["defect_steps"] = defect_steps
         total_pred_steps = join_steps + defect_steps
         join_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
         defect_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
 
         solo_captures = user_data.get("solo_captures", 0)
         coop_captures = user_data.get("coop_captures", 0)
+        if env is not None and (solo_captures + coop_captures) == 0:
+            env_total_success = getattr(env, "team_capture_successes", 0) or 0
+            if env_total_success:
+                env_coop_success = getattr(env, "team_capture_coop_successes", 0) or 0
+                coop_captures = int(env_coop_success)
+                solo_captures = int(max(env_total_success - coop_captures, 0))
+                user_data["solo_captures"] = solo_captures
+                user_data["coop_captures"] = coop_captures
         capture_successes = solo_captures + coop_captures
         solo_rate = solo_captures / capture_successes if capture_successes else 0.0
         coop_rate = coop_captures / capture_successes if capture_successes else 0.0
 
         joiners_total = user_data.get("joiners_total", 0)
         free_riders_total = user_data.get("free_riders_total", 0)
+        if env is not None and (joiners_total == 0 or free_riders_total == 0):
+            if joiners_total == 0:
+                joiners_total = int(getattr(env, "team_capture_helper_total", 0) or 0)
+                user_data["joiners_total"] = joiners_total
+            if free_riders_total == 0:
+                free_riders_total = self._count_free_riders_from_env(env)
+                user_data["free_riders_total"] = free_riders_total
         free_rider_rate = (
             free_riders_total / (joiners_total + free_riders_total)
             if (joiners_total + free_riders_total)
@@ -176,6 +425,8 @@ class EpisodeReturn(RLlibCallback):
             metrics_logger.log_value("custom_metrics/coop_captures", coop_captures)
             metrics_logger.log_value("custom_metrics/solo_rate", solo_rate)
             metrics_logger.log_value("custom_metrics/coop_rate", coop_rate)
+            metrics_logger.log_value("custom_metrics/joiners_total", joiners_total)
+            metrics_logger.log_value("custom_metrics/free_riders_total", free_riders_total)
             metrics_logger.log_value("custom_metrics/free_rider_rate", free_rider_rate)
             metrics_logger.log_value("custom_metrics/multi_capture_steps", multi_capture_steps)
             metrics_logger.log_value(
@@ -191,6 +442,8 @@ class EpisodeReturn(RLlibCallback):
             episode.custom_metrics["coop_captures"] = coop_captures
             episode.custom_metrics["solo_rate"] = solo_rate
             episode.custom_metrics["coop_rate"] = coop_rate
+            episode.custom_metrics["joiners_total"] = joiners_total
+            episode.custom_metrics["free_riders_total"] = free_riders_total
             episode.custom_metrics["free_rider_rate"] = free_rider_rate
             episode.custom_metrics["multi_capture_steps"] = multi_capture_steps
             episode.custom_metrics["multi_capture_successes_skipped"] = multi_capture_successes_skipped
@@ -230,7 +483,11 @@ class EpisodeReturn(RLlibCallback):
                 solo_captures, coop_captures, solo_rate, coop_rate
             )
         )
-        print(f"  - Free-rider rate (success only): {free_rider_rate:.2f}")
+        print(
+            "  - Free-rider rate (success only): {:.2f} (free_riders_total={} joiners_total={})".format(
+                free_rider_rate, free_riders_total, joiners_total
+            )
+        )
         if multi_capture_steps:
             print(
                 "  - Multi-capture steps skipped: steps={} successes_skipped={}".format(
