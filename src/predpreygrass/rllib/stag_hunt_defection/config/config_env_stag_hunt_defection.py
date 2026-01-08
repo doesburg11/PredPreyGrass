@@ -1,7 +1,7 @@
 config_env = {
     "seed": 41,
     # Training settings
-    "max_steps": 200,
+    "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
     "grid_size": 30, 
@@ -23,27 +23,28 @@ config_env = {
     "death_penalty_predator": 0.0,
     "death_penalty_type_1_prey": 0.0,
     "death_penalty_type_2_prey": 0.0,
+    "failed_attack_reward_penalty": 0.0, # per-joiner reward penalty on failed capture
     # Energy settings
     "energy_loss_per_step_predator": 0.08,
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
-        "type_2_prey": 0.01,
+        "type_2_prey": 0.015,
     },
     "energy_percentage_loss_per_failed_attacked_prey": 0.00, # 0.0
     "failed_attack_kills_predator": False,
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
-        "type_1_prey": 20.0,  # 18.0
-        "type_2_prey": 2.5,  # 2.7
+        "type_1_prey": 18.0,  # 18.0
+        "type_2_prey": 2.7,  # 2.7
     },
     "initial_energy_predator": 4.0,
     "initial_energy_prey": {
-        "type_1_prey": 12.0,  # 10.0
-        "type_2_prey": 1.3,  # 1.5
+        "type_1_prey": 10.0,  # 10.0
+        "type_2_prey": 1.5,  # 1.5
     },
     "bite_size_prey": {
         "type_1_prey": 3.0,
-        "type_2_prey": 0.25,
+        "type_2_prey": 0.3,
     },
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
