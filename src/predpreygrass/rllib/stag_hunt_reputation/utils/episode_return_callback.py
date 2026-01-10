@@ -489,12 +489,12 @@ class EpisodeReturn(RLlibCallback):
             )
             if rep_join_high_total > 0:
                 metrics_logger.log_value(
-                    "custom_metrics/join_rate_high_rep",
+                    "custom_metrics/join_rate_high_reputation",
                     rep_join_high / rep_join_high_total,
                 )
             if rep_join_low_total > 0:
                 metrics_logger.log_value(
-                    "custom_metrics/join_rate_low_rep",
+                    "custom_metrics/join_rate_low_reputation",
                     rep_join_low / rep_join_low_total,
                 )
             if capture_rep_stats:
@@ -502,11 +502,11 @@ class EpisodeReturn(RLlibCallback):
                     captures_b = capture_rep_stats[bucket]["captures"]
                     exposure_b = capture_rep_stats[bucket]["free_rider_exposures"]
                     metrics_logger.log_value(
-                        f"custom_metrics/capture_{bucket}_rep",
+                        f"custom_metrics/capture_{bucket}_reputation",
                         captures_b,
                     )
                     metrics_logger.log_value(
-                        f"custom_metrics/free_rider_exposure_{bucket}_rep",
+                        f"custom_metrics/free_rider_exposure_{bucket}_reputation",
                         exposure_b,
                     )
 
@@ -525,14 +525,14 @@ class EpisodeReturn(RLlibCallback):
             episode.custom_metrics["multi_capture_steps"] = multi_capture_steps
             episode.custom_metrics["multi_capture_successes_skipped"] = multi_capture_successes_skipped
             if rep_join_high_total > 0:
-                episode.custom_metrics["join_rate_high_rep"] = rep_join_high / rep_join_high_total
+                episode.custom_metrics["join_rate_high_reputation"] = rep_join_high / rep_join_high_total
             if rep_join_low_total > 0:
-                episode.custom_metrics["join_rate_low_rep"] = rep_join_low / rep_join_low_total
+                episode.custom_metrics["join_rate_low_reputation"] = rep_join_low / rep_join_low_total
             if capture_rep_stats:
                 for bucket in ("high", "low"):
-                    episode.custom_metrics[f"capture_{bucket}_rep"] = capture_rep_stats[bucket]["captures"]
+                    episode.custom_metrics[f"capture_{bucket}_reputation"] = capture_rep_stats[bucket]["captures"]
                     episode.custom_metrics[
-                        f"free_rider_exposure_{bucket}_rep"
+                        f"free_rider_exposure_{bucket}_reputation"
                     ] = capture_rep_stats[bucket]["free_rider_exposures"]
 
         # Accumulate rewards by group

@@ -5,10 +5,10 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.rllib.stag_hunt_reputation.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.stag_hunt_reputation.config.config_env_stag_hunt_reputation import config_env
-from predpreygrass.rllib.stag_hunt_reputation.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.stag_hunt_reputation.utils.networks import build_multi_module_spec
+from predpreygrass.rllib.mammoths_defect.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.rllib.mammoths_defect.config.config_env_mammoths_defect import config_env
+from predpreygrass.rllib.mammoths_defect.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.rllib.mammoths_defect.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -25,12 +25,12 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.stag_hunt_reputation.config.config_ppo_gpu_stag_hunt_reputation import config_ppo
+        from predpreygrass.rllib.mammoths_defect.config.config_ppo_gpu_mammoths_defect import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.rllib.stag_hunt_reputation.config.config_ppo_cpu_stag_hunt_reputation import config_ppo
+        from predpreygrass.rllib.mammoths_defect.config.config_ppo_cpu_mammoths_defect import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.stag_hunt_reputation.config.config_ppo_cpu_stag_hunt_reputation import config_ppo
+        from predpreygrass.rllib.mammoths_defect.config.config_ppo_cpu_mammoths_defect import config_ppo
     return config_ppo
 
 
@@ -54,17 +54,21 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # --- Main training setup ---
+
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
-
     register_env("PredPreyGrass", env_creator)
+
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    env_config = {**config_env, "seed": None}
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_reputation/ray_results/"
+    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
+    env_config = {**config_env, "seed": None, "strict_rllib_output": True}
+
+
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "AUTO_NO_RABBITS_NO_DEFECT"
+    version = "MAMMOTHS_DEFECT_BASE_PRED_DECAY_0_03"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
@@ -76,12 +80,14 @@ if __name__ == "__main__":
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
-    model_preset = "auto"  # "auto" or "tiny"
-    
-    model_metadata = {
-        "preset": model_preset,
-        "override_model_config": None,
+    config_metadata = {
+        "config_env": config_env,
+        "config_ppo": config_ppo,
     }
+    with open(experiment_path / "run_config.json", "w") as f:
+        json.dump(config_metadata, f, indent=4)
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
+
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
     sample_env.reset(seed=None)
@@ -99,25 +105,7 @@ if __name__ == "__main__":
     sample_env.action_space_struct = sample_env.action_spaces
 
     # Build one MultiRLModuleSpec in one go
-    multi_module_spec = build_multi_module_spec(
-        obs_by_policy,
-        act_by_policy,
-        preset=model_preset, # "auto" or "tiny"
-    )
-
-    # Persist full config (including resolved model configs) for provenance.
-    model_configs_by_policy = {
-        pid: spec.model_config for pid, spec in multi_module_spec.rl_module_specs.items()
-    }
-    config_metadata = {
-        "config_env": config_env,
-        "config_ppo": config_ppo,
-        "model": model_metadata,
-        "model_configs_by_policy": model_configs_by_policy,
-    }
-    with open(experiment_path / "run_config.json", "w") as f:
-        json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
+    multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
 
     # Policies dict for RLlib
     policies = {

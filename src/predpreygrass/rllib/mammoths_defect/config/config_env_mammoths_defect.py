@@ -4,8 +4,8 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 30, 
-    "num_obs_channels": 4, # obsolete
+    "grid_size": 30,  # 25
+    "num_obs_channels": 4,
     "predator_obs_range": 9,
     "prey_obs_range": 9,
     # Action space settings
@@ -20,38 +20,23 @@ config_env = {
         "type_1_prey": 10.0,
         "type_2_prey": 0.0,
     },
-    "death_penalty_predator": 0.0,
-    "death_penalty_type_1_prey": 0.0,
-    "death_penalty_type_2_prey": 0.0,
-    "failed_attack_reward_penalty": 0.0, # per-joiner reward penalty on failed capture
     # Energy settings
-    "energy_loss_per_step_predator": 0.05,
-    "energy_loss_per_step_prey": {
-        "type_1_prey": 0.1,
-        "type_2_prey": 0.0,
-    },
-    "energy_percentage_loss_per_failed_attacked_prey": 0.00, # 0.0
-    "failed_attack_kills_predator": False,
-    "energy_treshold_creation_predator": 10.0,
-    "energy_treshold_creation_prey": {
-        "type_1_prey": 18.0,  # 18.0
-        "type_2_prey": 0.0,  # 2.7
-    },
+    "energy_loss_per_step_predator": 0.03, # 0.15
+    "energy_loss_per_step_prey": 0.1,  # 0.05 
+    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
+    "predator_creation_energy_threshold": 10.0,
+    "prey_creation_energy_threshold": 18,  # was 6.5
     "initial_energy_predator": 4.0,
-    "initial_energy_prey": {
-        "type_1_prey": 10.0,  # 10.0
-        "type_2_prey": 0.0,  # 1.5
-    },
-    "bite_size_prey": {
-        "type_1_prey": 4.0,
-        "type_2_prey": 0.0,
-    },
+    "initial_energy_prey": 10.0,  # was 3.5
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
-    # Voluntary participation + free-riding
-    "team_capture_join_cost": 0.0,  # 0.2  # fixed energy cost paid only by joining predators on success
-    "team_capture_scavenger_fraction": 0.0,  #0.1  # fraction of prey energy reserved for nearby non-joiners
+    # Optional defection / free-riding toggles
+    "defection_enabled": True,          # when True, predators choose join_hunt (MultiDiscrete action)
+    "team_capture_join_cost": 0.1,       # fixed energy cost per joiner on success
+    "team_capture_scavenger_fraction": 0.05,  # fraction of prey energy reserved for non-joiners nearby
+    "failed_attack_reward_penalty": 0.0, # optional reward penalty on failed attacks (joiners only)
+    "force_all_join": False,             # keep MultiDiscrete action but force join_hunt=1 (useful for warmup)
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
@@ -64,9 +49,9 @@ config_env = {
     "n_initial_active_type_1_prey": 10,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
-    "initial_num_grass": 100, # 100
+    "initial_num_grass": 100,
     "initial_energy_grass": 4.0,
-    "energy_gain_per_step_grass": 0.08, # 0.08
+    "energy_gain_per_step_grass": 0.08, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,
@@ -77,16 +62,6 @@ config_env = {
     # a per-agent line-of-sight (LOS) mask so entities behind walls are hidden from the agent.
     # This does NOT change the number of observation channels.
     "mask_observation_with_visibility": False,
-    # Reputation signal (predators only)
-    "reputation_enabled": False,
-    "reputation_window": 50,            # rolling window size (set <=0 to use EMA)
-    "reputation_ema_alpha": 0.1,        # used when window <= 0
-    "reputation_opportunity_only": True, # count only steps with prey nearby
-    "reputation_min_samples": 5,        # keep neutral rep until this many samples
-    "reputation_noise_std": 0.0,        # optional noise added to observed rep
-    "include_reputation_channel": False, # add spatial channel with per-predator rep
-    "include_reputation_summary": False, # add summary channel (mean rep in range)
-    "reputation_visibility_range": None, # defaults to predator_obs_range when None
     # Optionally append a visibility channel for debugging/learning signal purposes.
     # Keep this False if your trained checkpoints assume a fixed num_obs_channels.
     "include_visibility_channel": False,
