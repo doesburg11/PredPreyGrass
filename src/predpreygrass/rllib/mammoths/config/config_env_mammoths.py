@@ -1,7 +1,7 @@
 config_env = {
     "seed": 41,
     # Training settings
-    "max_steps": 100,
+    "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
     "grid_size": 30,  # 25
