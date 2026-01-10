@@ -29,8 +29,8 @@ from predpreygrass.rllib.mammoths_defect.utils.networks import build_multi_modul
 # Curriculum knobs
 PHASE1_MAX_ITERS = 500
 FINETUNE_ITERS = 1000
-DEF_JOIN_COST = 0.1
-DEF_SCAVENGER_FRAC = 0.05
+DEF_JOIN_COST = 0.05
+DEF_SCAVENGER_FRAC = 0.025
 DEF_FAILED_PENALTY = 0.0
 # Metric-based stop for Phase 1
 PHASE1_METRIC_KEY = "env_runners/agent_episode_returns_mean/type_1_predator_0"
