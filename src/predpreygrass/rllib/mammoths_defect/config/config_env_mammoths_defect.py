@@ -21,9 +21,9 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.03, # 0.15
+    "energy_loss_per_step_predator": 0.01, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 
-    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
+    "energy_percentage_loss_per_failed_attacked_prey": 0.03, # fraction of each joiner's energy lost on failed capture (e.g. 0.1)
     "predator_creation_energy_threshold": 10.0,
     "prey_creation_energy_threshold": 18,  # was 6.5
     "initial_energy_predator": 4.0,
@@ -33,9 +33,8 @@ config_env = {
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Optional defection / free-riding toggles
     "defection_enabled": True,          # when True, predators choose join_hunt (MultiDiscrete action)
-    "team_capture_join_cost": 0.1,       # fixed energy cost per joiner on success
-    "team_capture_scavenger_fraction": 0.05,  # fraction of prey energy reserved for non-joiners nearby
-    "failed_attack_reward_penalty": 0.0, # optional reward penalty on failed attacks (joiners only)
+    "team_capture_join_cost": 0.0,       # fixed energy cost per joiner on success
+    "team_capture_scavenger_fraction": 0.0,  # fraction of prey energy reserved for non-joiners nearby
     "force_all_join": False,             # keep MultiDiscrete action but force join_hunt=1 (useful for warmup)
     # Absolute energy caps
     "max_energy_grass": 3.0,

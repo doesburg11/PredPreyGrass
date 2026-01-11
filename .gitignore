@@ -2,6 +2,7 @@
 output/
 ray_results/
 ray_results_failed
+ray_results_archive/
 # Rllib archive files
 src/predpreygrass/rllib/archive/
 # Byte-compiled / optimized / DLL files

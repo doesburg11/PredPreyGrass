@@ -47,7 +47,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_scavenger_fraction = max(
             0.0, min(1.0, float(config.get("team_capture_scavenger_fraction", 0.0)))
         )
-        self.failed_attack_reward_penalty = float(config.get("failed_attack_reward_penalty", 0.0))
 
         # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
@@ -881,28 +880,17 @@ class PredPreyGrass(MultiAgentEnv):
         if total_pred_energy <= prey_energy + self.team_capture_margin:
             # Apply energy penalty to all helpers on failed attempt.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
-            total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
-            if total_penalty > 0.0:
-                if total_pred_energy > 0.0:
-                    for pid in joiners:
-                        penalty_share = total_penalty * (helper_energy_snapshot[pid] / total_pred_energy)
-                        if penalty_share:
-                            self.agent_energies[pid] -= penalty_share
-                            self._per_agent_step_deltas.setdefault(
-                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
-                            )
-                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
-                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
-                else:
-                    penalty_share = total_penalty / helper_count
-                    for pid in joiners:
-                        if penalty_share:
-                            self.agent_energies[pid] -= penalty_share
-                            self._per_agent_step_deltas.setdefault(
-                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
-                            )
-                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
-                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+            penalty_frac = self.energy_percentage_loss_per_failed_attacked_prey
+            if penalty_frac > 0.0:
+                for pid in joiners:
+                    penalty_share = helper_energy_snapshot[pid] * penalty_frac
+                    if penalty_share:
+                        self.agent_energies[pid] -= penalty_share
+                        self._per_agent_step_deltas.setdefault(
+                            pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
+                        )
+                        self._per_agent_step_deltas[pid]["eat"] -= penalty_share
+                        self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
 
             # Log failed attempt when helpers exist but combined energy insufficient
             for pid in joiners:

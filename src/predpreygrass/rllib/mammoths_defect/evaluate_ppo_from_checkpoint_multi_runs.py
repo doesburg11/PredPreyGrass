@@ -5,6 +5,7 @@ from predpreygrass.rllib.mammoths_defect.utils.matplot_renderer import CombinedE
 # external libraries
 import os
 import json
+import numpy as np
 from datetime import datetime
 import ray
 import torch
@@ -24,21 +25,42 @@ def policy_mapping_fn(agent_id):
     raise ValueError(f"Invalid agent_id format: {agent_id}")
 
 
-def policy_pi(observation, policy_module, deterministic=True):
+def policy_pi(observation, policy_module, action_space, deterministic=True):
     obs_tensor = torch.tensor(observation).float().unsqueeze(0)
     with torch.no_grad():
         action_output = policy_module._forward_inference({"obs": obs_tensor})
     logits = action_output.get("action_dist_inputs")
     if logits is None:
         raise KeyError("Missing 'action_dist_inputs' in output.")
-    return torch.argmax(logits, dim=-1).item() if deterministic else torch.distributions.Categorical(logits=logits).sample().item()
+    if logits.ndim > 1:
+        logits = logits[0]
+    logits = logits.detach().cpu().flatten()
+
+    if hasattr(action_space, "nvec"):
+        # MultiDiscrete: split logits per dimension.
+        actions = []
+        idx = 0
+        for size in action_space.nvec:
+            size = int(size)
+            part = logits[idx:idx + size]
+            if deterministic:
+                action = int(torch.argmax(part).item())
+            else:
+                action = int(torch.distributions.Categorical(logits=part).sample().item())
+            actions.append(action)
+            idx += size
+        return np.array(actions, dtype=np.int64)
+
+    if deterministic:
+        return int(torch.argmax(logits).item())
+    return int(torch.distributions.Categorical(logits=logits).sample().item())
 
 
 def setup_modules():
-    # GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2_2025-12-25_00-36-33/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/checkpoint_000049
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/pred_decay_0_20/"
-    checkpoint_root = "GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_V_2_2025-12-25_00-36-33/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
-    checkpoint_nr = "checkpoint_000049"
+    # /home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/"
+    checkpoint_root = "MAMMOTHS_DEFECT_CURRICULUM_FAIL_LOSS_0_03_PHASE2_DEF_ON_2026-01-11_00-14-14/"
+    checkpoint_nr = "checkpoint_000300"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {
@@ -74,7 +96,14 @@ if __name__ == "__main__":
         truncated = False 
 
         while not terminated and not truncated:
-            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
+            action_dict = {
+                aid: policy_pi(
+                    observations[aid],
+                    rl_modules[policy_mapping_fn(aid)],
+                    env.action_spaces[aid],
+                )
+                for aid in env.agents
+            }
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
             if visualizer:
                 visualizer.record(
