@@ -29,10 +29,13 @@ from predpreygrass.rllib.mammoths_defect.utils.networks import build_multi_modul
 # Curriculum knobs
 PHASE1_MAX_ITERS = 500
 FINETUNE_ITERS = 1000
-DEF_JOIN_COST = 0.05
-DEF_SCAVENGER_FRAC = 0.025
-DEF_FAILED_PENALTY = 0.0
-# Metric-based stop for Phase 1
+# Phase 2 settings
+DEF_JOIN_COST = 0.0
+DEF_SCAVENGER_FRAC = 0.0
+DEF_FAILED_PENALTY = 0.0 # 0.0
+PHASE2_INITIAL_TYPE_1_PREDATORS = 30
+PHASE2_ENERGY_LOSS_PER_STEP_PREDATOR = 0.03
+
 PHASE1_METRIC_KEY = "env_runners/agent_episode_returns_mean/type_1_predator_0"
 PHASE1_METRIC_FALLBACKS = (
     "env_runners/custom_metrics/predator_episode_return_mean",
@@ -41,8 +44,10 @@ PHASE1_METRIC_FALLBACKS = (
     "env_runners/episode_return_mean",
     "episode_reward_mean",
 )
-PHASE1_METRIC_TARGET = 10.0
-PHASE1_METRIC_WINDOW = 20
+PHASE1_METRIC_TARGET = 20.0
+PHASE1_METRIC_WINDOW = 10
+# Optional: resume Phase 2 from an existing checkpoint (skips Phase 1 if found).
+PHASE2_RESTORE_CHECKPOINT = ""
 
 
 def _get_metric(result: dict, path: str):
@@ -204,7 +209,7 @@ if __name__ == "__main__":
         "force_all_join": False,
         "team_capture_join_cost": 0.0,
         "team_capture_scavenger_fraction": 0.0,
-        "failed_attack_reward_penalty": 0.0,
+        "energy_percentage_loss_per_failed_attacked_prey": 0.0,
     }
     # Phase 2: defection on, join flag active
     phase2_env = {
@@ -213,68 +218,78 @@ if __name__ == "__main__":
         "force_all_join": False,
         "team_capture_join_cost": DEF_JOIN_COST,
         "team_capture_scavenger_fraction": DEF_SCAVENGER_FRAC,
-        "failed_attack_reward_penalty": DEF_FAILED_PENALTY,
+        "energy_percentage_loss_per_failed_attacked_prey": DEF_FAILED_PENALTY,
+        "n_initial_active_type_1_predator": PHASE2_INITIAL_TYPE_1_PREDATORS,
+        "energy_loss_per_step_predator": PHASE2_ENERGY_LOSS_PER_STEP_PREDATOR,
     }
 
     config_ppo = get_config_ppo()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    base_version = "MAMMOTHS_DEFECT_CURRICULUM"
+    base_version = "MAMMOTHS_DEFECT_CURRICULUM_FAIL_0_01_ENERGY_LOSS_PRED_0_03"
     ray_results_dir = Path(__file__).parent / "ray_results"
     ray_results_dir.mkdir(parents=True, exist_ok=True)
     experiment_root = ray_results_dir / f"{base_version}_{timestamp}"
     experiment_root.mkdir(parents=True, exist_ok=True)
 
-    # Phase 1 setup
-    phase1_name = f"{base_version}_PHASE1_DEF_ON_FREE_{timestamp}"
-    phase1_dir = ray_results_dir / phase1_name
-    phase1_dir.mkdir(parents=True, exist_ok=True)
-    obs_by_policy, act_by_policy = build_spaces(phase1_env)
-    multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
-    phase1_cfg = build_ppo_config_obj(phase1_env, {**config_ppo, "max_iters": PHASE1_MAX_ITERS}, multi_module_spec)
-    algo1 = phase1_cfg.build(logger_creator=make_logger(phase1_dir))
     with open(experiment_root / "run_config_phase1.json", "w") as f:
         json.dump({"config_env": phase1_env, "config_ppo": config_ppo}, f, indent=4)
 
-    print(
-        f"[Phase 1] defection_enabled={phase1_env.get('defection_enabled')} "
-        f"target={PHASE1_METRIC_TARGET} window={PHASE1_METRIC_WINDOW} "
-        f"max_iters={PHASE1_MAX_ITERS}",
-        flush=True,
-    )
-    metric_window = deque(maxlen=PHASE1_METRIC_WINDOW)
     best_ckpt = None
-    for i in range(1, PHASE1_MAX_ITERS + 1):
-        res = algo1.train()
-        val, used_path = _first_finite_metric(res, *PHASE1_METRIC_FALLBACKS)
-        if val is None:
-            val = _mean_predator_return(res)
-            used_path = "computed_mean_predator_return" if val is not None else None
-        iter_num = res.get("training_iteration", i)
-        if val is None:
-            print(f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} missing; no usable fallback metric", flush=True)
-        else:
-            metric_window.append(val)
-            suffix = f"(via {used_path})" if used_path and used_path != PHASE1_METRIC_KEY else ""
-            print(f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} last={val:.3f} {suffix}".rstrip(), flush=True)
-            if len(metric_window) == PHASE1_METRIC_WINDOW:
-                avg = sum(metric_window) / len(metric_window)
-                if not math.isfinite(avg):
-                    metric_window.clear()
-                    print(
-                        f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} window_avg non-finite; resetting window",
-                        flush=True,
-                    )
-                else:
-                    print(
-                        f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} window_avg({PHASE1_METRIC_WINDOW})={avg:.3f}",
-                        flush=True,
-                    )
-                    if avg >= PHASE1_METRIC_TARGET:
-                        print(f"[Phase1] Target reached at iter {iter_num}", flush=True)
-                        break
-        ckpt_path = algo1.save(str(phase1_dir / f"checkpoint_{iter_num:06d}"))
-        best_ckpt = ckpt_path
-    algo1.stop()
+    restore_path = Path(PHASE2_RESTORE_CHECKPOINT) if PHASE2_RESTORE_CHECKPOINT else None
+    if restore_path and restore_path.exists():
+        best_ckpt = str(restore_path)
+        print(f"[Phase 1] Skipping Phase 1; using checkpoint {best_ckpt}", flush=True)
+    else:
+        if restore_path:
+            print(f"[Phase 1] Checkpoint not found at {restore_path}; running Phase 1.", flush=True)
+        # Phase 1 setup
+        phase1_name = f"{base_version}_PHASE1_DEF_ON_FREE_{timestamp}"
+        phase1_dir = ray_results_dir / phase1_name
+        phase1_dir.mkdir(parents=True, exist_ok=True)
+        obs_by_policy, act_by_policy = build_spaces(phase1_env)
+        multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
+        phase1_cfg = build_ppo_config_obj(phase1_env, {**config_ppo, "max_iters": PHASE1_MAX_ITERS}, multi_module_spec)
+        algo1 = phase1_cfg.build(logger_creator=make_logger(phase1_dir))
+
+        print(
+            f"[Phase 1] defection_enabled={phase1_env.get('defection_enabled')} "
+            f"target={PHASE1_METRIC_TARGET} window={PHASE1_METRIC_WINDOW} "
+            f"max_iters={PHASE1_MAX_ITERS}",
+            flush=True,
+        )
+        metric_window = deque(maxlen=PHASE1_METRIC_WINDOW)
+        for i in range(1, PHASE1_MAX_ITERS + 1):
+            res = algo1.train()
+            val, used_path = _first_finite_metric(res, *PHASE1_METRIC_FALLBACKS)
+            if val is None:
+                val = _mean_predator_return(res)
+                used_path = "computed_mean_predator_return" if val is not None else None
+            iter_num = res.get("training_iteration", i)
+            if val is None:
+                print(f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} missing; no usable fallback metric", flush=True)
+            else:
+                metric_window.append(val)
+                suffix = f"(via {used_path})" if used_path and used_path != PHASE1_METRIC_KEY else ""
+                print(f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} last={val:.3f} {suffix}".rstrip(), flush=True)
+                if len(metric_window) == PHASE1_METRIC_WINDOW:
+                    avg = sum(metric_window) / len(metric_window)
+                    if not math.isfinite(avg):
+                        metric_window.clear()
+                        print(
+                            f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} window_avg non-finite; resetting window",
+                            flush=True,
+                        )
+                    else:
+                        print(
+                            f"[Phase1] iter={iter_num} {PHASE1_METRIC_KEY} window_avg({PHASE1_METRIC_WINDOW})={avg:.3f}",
+                            flush=True,
+                        )
+                        if avg >= PHASE1_METRIC_TARGET:
+                            print(f"[Phase1] Target reached at iter {iter_num}", flush=True)
+                            break
+            ckpt_path = algo1.save(str(phase1_dir / f"checkpoint_{iter_num:06d}"))
+            best_ckpt = ckpt_path
+        algo1.stop()
 
     # Phase 2 setup
     with open(experiment_root / "run_config_phase2.json", "w") as f:
