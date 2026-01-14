@@ -15,7 +15,7 @@ This project studies how cooperative behavior emerges and stabilizes in a spatia
 
 ### Environment:
 
-* **[Stag hunt with defection](src/predpreygrass/rllib/stag_hunt_defection)** : Humans can hunt solo for rabbits and cooperatively for mammoths. At each step humans decide either to cooperate at an energy cost, or to defect at zero energy cost, giving opportunities to free-riding if sufficent cooperation already was assembled in an attack. ([implementation](src/predpreygrass/rllib/stag_hunt_defection))
+* **[Stag hunt with defection](src/predpreygrass/rllib/stag_hunt_defection)** : Humans can hunt solo for rabbits but cannot kill mammoths alone, so they have to cooperate. At each step humans decide either to cooperate at an energy cost, or to defect at zero energy cost, giving opportunities to free-riding if sufficent cooperation already was assembled in an attack. ([implementation](src/predpreygrass/rllib/stag_hunt_defection))
 
 ### Other environments:
 
