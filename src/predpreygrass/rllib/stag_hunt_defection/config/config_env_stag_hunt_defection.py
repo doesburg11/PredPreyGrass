@@ -5,7 +5,7 @@ config_env = {
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
     "grid_size": 30, 
-    "num_obs_channels": 5, # obsolete
+    "num_obs_channels": 4, # obsolete
     "predator_obs_range": 9,
     "prey_obs_range": 9,
     # Action space settings
