@@ -73,6 +73,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_equal_split = bool(config.get("team_capture_equal_split", False))
         # Defection controls
         self.force_all_join = bool(config.get("force_all_join", False))
+        self.force_join_prob = float(config.get("force_join_prob", 0.0))
+        if self.force_join_prob < 0.0:
+            self.force_join_prob = 0.0
+        elif self.force_join_prob > 1.0:
+            self.force_join_prob = 1.0
 
         # Absolute cap for grass energy
         self.max_energy_grass = config.get("max_energy_grass", float("inf"))
@@ -650,6 +655,12 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 move, join_hunt = action, 1
             join_hunt = 1 if int(join_hunt) != 0 else 0
+            if self.force_join_prob > 0.0:
+                rng = getattr(self, "rng", None)
+                if rng is None:
+                    rng = np.random.default_rng()
+                if rng.random() < self.force_join_prob:
+                    join_hunt = 1
             return int(move), join_hunt
 
         # Prey: move-only
