@@ -206,7 +206,7 @@ if __name__ == "__main__":
     phase1_env = {
         **base_env_cfg,
         "defection_enabled": True,
-        "force_all_join": False,
+        "force_all_join": True,
         "team_capture_join_cost": 0.0,
         "team_capture_scavenger_fraction": 0.0,
         "energy_percentage_loss_per_failed_attacked_prey": 0.0,
