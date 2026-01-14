@@ -4,7 +4,7 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 30,  # 25
+    "grid_size": 25,  # 25
     "num_obs_channels": 4,
     "predator_obs_range": 9,
     "prey_obs_range": 9,
@@ -21,9 +21,9 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.01, # 0.15
+    "energy_loss_per_step_predator": 0.05, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 
-    "energy_percentage_loss_per_failed_attacked_prey": 0.03, # fraction of each joiner's energy lost on failed capture (e.g. 0.1)
+    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # fraction of each joiner's energy lost on failed capture (e.g. 0.1)
     "predator_creation_energy_threshold": 10.0,
     "prey_creation_energy_threshold": 18,  # was 6.5
     "initial_energy_predator": 4.0,
@@ -36,9 +36,8 @@ config_env = {
     "team_capture_join_cost": 0.0,       # fixed energy cost per joiner on success
     "team_capture_scavenger_fraction": 0.0,  # fraction of prey energy reserved for non-joiners nearby
     "force_all_join": False,             # keep MultiDiscrete action but force join_hunt=1 (useful for warmup)
+    "force_join_prob": 1.0,             # probabilistically force join_hunt=1 when force_all_join is False
     # Absolute energy caps
-    "max_energy_grass": 3.0,
-    # Learning agents
     "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
@@ -50,6 +49,7 @@ config_env = {
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 4.0,
+    "max_energy_grass": 4.0,
     "energy_gain_per_step_grass": 0.08, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,
