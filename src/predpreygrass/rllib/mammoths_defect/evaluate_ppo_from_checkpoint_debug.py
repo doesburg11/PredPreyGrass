@@ -35,6 +35,7 @@ SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
+DISPLAY_SCALE = 0.6  # 0.7 shrinks the grid/legend by 30%
 
 
 def env_creator(config):
@@ -106,19 +107,44 @@ def policy_pi(observation, policy_module, deterministic=True):
     logits = action_output.get("action_dist_inputs")
     if logits is None:
         raise KeyError("policy_pi: action_dist_inputs not found in action_output.")
+    if isinstance(logits, dict):
+        logits = logits.get("logits") or logits.get("action_dist_inputs") or next(iter(logits.values()))
+    if logits.ndim > 1:
+        logits = logits[0]
+    logits = logits.detach().cpu().flatten()
+
+    action_space = getattr(policy_module, "action_space", None)
+    if action_space is not None and hasattr(action_space, "nvec"):
+        # MultiDiscrete: split logits per dimension.
+        actions = []
+        idx = 0
+        for size in action_space.nvec:
+            size = int(size)
+            part = logits[idx:idx + size]
+            if deterministic:
+                action = int(torch.argmax(part).item())
+            else:
+                action = int(torch.distributions.Categorical(logits=part).sample().item())
+            actions.append(action)
+            idx += size
+        return np.array(actions, dtype=np.int64)
+
     if deterministic:
-        return torch.argmax(logits, dim=-1).item()
-    else:
-        dist = torch.distributions.Categorical(logits=logits)
-        return dist.sample().item()
+        return int(torch.argmax(logits).item())
+    return int(torch.distributions.Categorical(logits=logits).sample().item())
 
 
 def setup_environment_and_visualizer(now):
     # MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/pred_decay_0_20/"
-    checkpoint_root = "MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
-    checkpoint_nr = "checkpoint_000099"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/"
+    checkpoint_root = "/MAMMOTHS_DEFECT_BASE_ADAPTIVE_PRED_DECAY_2026-01-13_00-34-28/PPO_PredPreyGrass_3d227_00000_0_2026-01-13_00-34-28/"
+    checkpoint_nr = "checkpoint_000075"
+    if os.path.isabs(checkpoint_root):
+        checkpoint_path = os.path.join(checkpoint_root, checkpoint_nr)
+        if not os.path.isdir(checkpoint_path):
+            checkpoint_path = os.path.join(ray_results_dir, checkpoint_root.lstrip(os.sep), checkpoint_nr)
+    else:
+        checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
@@ -145,6 +171,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
@@ -161,6 +188,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
