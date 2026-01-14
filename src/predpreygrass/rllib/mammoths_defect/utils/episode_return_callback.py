@@ -321,16 +321,23 @@ class EpisodeReturn(RLlibCallback):
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
         predator_total = prey_total = 0.0
+        predator_steps = prey_steps = 0
         predator_totals = []
         prey_totals = []
 
         for agent_id, rewards in episode.get_rewards().items():
+            try:
+                step_count = len(rewards)
+            except Exception:
+                step_count = 1
             total = sum(rewards)
             if "predator" in agent_id:
                 predator_total += total
+                predator_steps += step_count
                 predator_totals.append(total)
             elif "prey" in agent_id:
                 prey_total += total
+                prey_steps += step_count
                 prey_totals.append(total)
 
             for group in ["type_1_predator", "type_2_predator", "type_1_prey", "type_2_prey"]:
@@ -340,10 +347,14 @@ class EpisodeReturn(RLlibCallback):
 
         predator_mean = predator_total / max(1, len(predator_totals))
         prey_mean = prey_total / max(1, len(prey_totals))
+        predator_step_mean = predator_total / max(1, predator_steps)
+        prey_step_mean = prey_total / max(1, prey_steps)
 
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/predator_episode_return_mean", predator_mean)
             metrics_logger.log_value("custom_metrics/prey_episode_return_mean", prey_mean)
+            metrics_logger.log_value("custom_metrics/predator_reward_per_step_mean", predator_step_mean)
+            metrics_logger.log_value("custom_metrics/prey_reward_per_step_mean", prey_step_mean)
 
         # Episode summary log
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
