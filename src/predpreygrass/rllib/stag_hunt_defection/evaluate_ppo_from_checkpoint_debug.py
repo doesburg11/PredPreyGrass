@@ -36,10 +36,11 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
+SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
+DISPLAY_SCALE = 0.5
 
 
 def env_creator(config):
@@ -134,7 +135,7 @@ def policy_pi(observation, policy_module, deterministic=True):
     return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
-    # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
+    # MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_defection/ray_results/"
     checkpoint_root = "STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/"
     checkpoint_nr = "checkpoint_000049"
@@ -165,6 +166,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
