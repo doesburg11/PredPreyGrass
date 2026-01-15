@@ -4,8 +4,8 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 25,  # 25
-    "num_obs_channels": 4,
+    "grid_size": 30,  # 25
+    "num_obs_channels": 5,
     "predator_obs_range": 9,
     "prey_obs_range": 9,
     # Action space settings
@@ -21,7 +21,7 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.05, # 0.15
+    "energy_loss_per_step_predator": 0.08, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 
     "energy_percentage_loss_per_failed_attacked_prey": 0.0, # fraction of each joiner's energy lost on failed capture (e.g. 0.1)
     "predator_creation_energy_threshold": 10.0,
@@ -44,12 +44,12 @@ config_env = {
     "n_possible_type_2_prey": 0,
     "n_initial_active_type_1_predator": 50,
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 10,
+    "n_initial_active_type_1_prey": 20,
     "n_initial_active_type_2_prey": 0,
     # Grass settings
     "initial_num_grass": 100,
-    "initial_energy_grass": 4.0,
-    "max_energy_grass": 4.0,
+    "initial_energy_grass": 3.0,
+    "max_energy_grass": 3.0,
     "energy_gain_per_step_grass": 0.08, # 0.04
     "verbose_engagement": False,
     "verbose_movement": False,

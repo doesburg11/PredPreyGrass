@@ -59,8 +59,8 @@ def policy_pi(observation, policy_module, action_space, deterministic=True):
 def setup_modules():
     # MAMMOTHS_DEFECT_BASE_ADAPTIVE_PRED_DECAY_2026-01-13_18-48-53/PPO_PredPreyGrass_20435_00000_0_2026-01-13_18-48-53
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/"
-    checkpoint_root = "/MAMMOTHS_DEFECT_BASE_ADAPTIVE_PRED_DECAY_2026-01-13_00-34-28/PPO_PredPreyGrass_3d227_00000_0_2026-01-13_00-34-28/"
-    checkpoint_nr = "checkpoint_000075"
+    checkpoint_root = "MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59/"
+    checkpoint_nr = "checkpoint_000099"
     checkpoint_path = os.path.abspath(ray_results_dir + checkpoint_root + checkpoint_nr)
     rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     module_paths = {

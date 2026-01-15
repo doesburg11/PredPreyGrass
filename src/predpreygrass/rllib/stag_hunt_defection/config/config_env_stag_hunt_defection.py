@@ -4,8 +4,8 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 30, 
-    "num_obs_channels": 4, # obsolete
+    "grid_size": 50, 
+    "num_obs_channels": 5, # obsolete
     "predator_obs_range": 9,
     "prey_obs_range": 9,
     # Action space settings
@@ -59,10 +59,10 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
     "n_possible_type_2_prey": 2000,
-    "n_initial_active_type_1_predator": 10,
+    "n_initial_active_type_1_predator": 200, # 10
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 10,
-    "n_initial_active_type_2_prey": 10,
+    "n_initial_active_type_1_prey": 80, # 10
+    "n_initial_active_type_2_prey": 0, # 10
     # Grass settings
     "initial_num_grass": 100, # 100
     "initial_energy_grass": 3.0,

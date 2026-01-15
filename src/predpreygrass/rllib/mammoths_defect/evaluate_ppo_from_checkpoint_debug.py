@@ -31,8 +31,8 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = True
+SAVE_EVAL_RESULTS = False
+SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 DISPLAY_SCALE = 0.6  # 0.7 shrinks the grid/legend by 30%
@@ -137,8 +137,8 @@ def policy_pi(observation, policy_module, deterministic=True):
 def setup_environment_and_visualizer(now):
     # MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/"
-    checkpoint_root = "/MAMMOTHS_DEFECT_BASE_ADAPTIVE_PRED_DECAY_2026-01-13_00-34-28/PPO_PredPreyGrass_3d227_00000_0_2026-01-13_00-34-28/"
-    checkpoint_nr = "checkpoint_000075"
+    checkpoint_root = "MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59/"
+    checkpoint_nr = "checkpoint_000099"
     if os.path.isabs(checkpoint_root):
         checkpoint_path = os.path.join(checkpoint_root, checkpoint_nr)
         if not os.path.isdir(checkpoint_path):
