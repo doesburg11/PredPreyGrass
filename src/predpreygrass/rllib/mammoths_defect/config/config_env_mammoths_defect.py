@@ -33,8 +33,8 @@ config_env = {
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Optional defection / free-riding toggles
     "defection_enabled": True,          # when True, predators choose join_hunt (MultiDiscrete action)
-    "team_capture_join_cost": 0.0,       # fixed energy cost per joiner on success
-    "team_capture_scavenger_fraction": 0.0,  # fraction of prey energy reserved for non-joiners nearby
+    "team_capture_join_cost": 0.1,       # fixed energy cost per joiner on success
+    "team_capture_scavenger_fraction": 0.1,  # fraction of prey energy reserved for non-joiners nearby
     "force_all_join": False,             # keep MultiDiscrete action but force join_hunt=1 (useful for warmup)
     "force_join_prob": 1.0,             # probabilistically force join_hunt=1 when force_all_join is False
     # Absolute energy caps

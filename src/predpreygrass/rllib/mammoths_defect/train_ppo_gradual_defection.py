@@ -36,15 +36,15 @@ from predpreygrass.rllib.mammoths_defect.utils.networks import build_multi_modul
 PHASE1_MAX_ITERS = 500
 PHASE2_MAX_ITERS = 1000
 # Phase 2 settings
-PHASE2_DEF_JOIN_COST = 0.0
-PHASE2_DEF_SCAVENGER_FRAC = 0.0
-PHASE2_DEF_FAILED_PENALTY = 0.0  # 0.0
+PHASE2_DEF_JOIN_COST = 0.5
+PHASE2_DEF_SCAVENGER_FRAC = 0.2
+PHASE2_DEF_FAILED_PENALTY = 0.05  # 0.0
 PHASE2_INITIAL_TYPE_1_PREDATORS = 50
-PHASE2_ENERGY_LOSS_PER_STEP_PREDATOR = 0.15
+PHASE2_ENERGY_LOSS_PER_STEP_PREDATOR = 0.08  # 0.15
 # Gradual join enforcement (0.0 = no forced join, 1.0 = always join)
 PHASE1_FORCE_JOIN_PROB_START = 1.0
-PHASE1_FORCE_JOIN_PROB_MIN = 0.8
-PHASE2_FORCE_JOIN_PROB_START = 0.8
+PHASE1_FORCE_JOIN_PROB_MIN = 1.0
+PHASE2_FORCE_JOIN_PROB_START = 1.0
 PHASE2_FORCE_JOIN_PROB_MIN = 0.0
 # Performance-gated schedule (reduce join_prob only when metric stays high)
 JOIN_PROB_METRIC_KEY = "env_runners/episode_len_mean"
@@ -65,7 +65,7 @@ PHASE1_METRIC_FALLBACKS = (
 PHASE1_METRIC_TARGET = 20.0
 PHASE1_METRIC_WINDOW = 10
 # Optional: resume Phase 2 from an existing checkpoint (skips Phase 1 if found).
-PHASE2_RESTORE_CHECKPOINT = ""
+PHASE2_RESTORE_CHECKPOINT = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths_defect/ray_results/MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59/checkpoint_000099"
 
 
 def _get_metric(result: dict, path: str):
@@ -208,6 +208,31 @@ class PPOTorchLearnerNoForeach(PPOTorchLearner):
             params=params,
             lr_or_lr_schedule=config.lr,
         )
+
+    def _set_optimizer_state(self, state: dict) -> None:
+        super()._set_optimizer_state(state)
+        # RLlib converts optimizer state to tensors; sanitize Adam betas/lr and
+        # force foreach off to avoid PyTorch foreach+Tensor beta errors.
+        for optimizer in getattr(self, "_named_optimizers", {}).values():
+            if not isinstance(optimizer, torch.optim.Optimizer):
+                continue
+            optimizer.defaults["foreach"] = False
+            for group in optimizer.param_groups:
+                group["foreach"] = False
+                if "capturable" in group:
+                    group["capturable"] = True
+                lr = group.get("lr")
+                if isinstance(lr, torch.Tensor):
+                    try:
+                        group["lr"] = float(lr)
+                    except Exception:
+                        pass
+                betas = group.get("betas")
+                if isinstance(betas, (list, tuple)) and len(betas) == 2:
+                    try:
+                        group["betas"] = (float(betas[0]), float(betas[1]))
+                    except Exception:
+                        pass
 
 
 def get_config_ppo():
