@@ -126,6 +126,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_stats_completed = {}
         self.per_step_agent_data = []
         self._per_agent_step_deltas = {}
+        self._per_agent_join_choice = {}
+        self._per_agent_join_forced_prob = {}
+        self._per_agent_join_forced_all = {}
         self._next_lifetime_id = 0
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
@@ -196,6 +199,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_stats_completed = {}
         self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
         self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
+        self._per_agent_join_choice = {}
+        self._per_agent_join_forced_prob = {}
+        self._per_agent_join_forced_all = {}
         self._next_lifetime_id = 0
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
@@ -480,9 +486,19 @@ class PredPreyGrass(MultiAgentEnv):
             }
             if "predator" in agent:
                 step_data[agent]["join_hunt"] = bool(self.predator_join_intent.get(agent, True))
+                join_choice = self._per_agent_join_choice.get(agent)
+                if join_choice is not None:
+                    step_data[agent]["join_choice"] = bool(join_choice)
+                if self._per_agent_join_forced_prob.get(agent):
+                    step_data[agent]["join_forced_prob"] = True
+                if self._per_agent_join_forced_all.get(agent):
+                    step_data[agent]["join_forced_all"] = True
 
         self.per_step_agent_data.append(step_data)
         self._per_agent_step_deltas.clear()
+        self._per_agent_join_choice.clear()
+        self._per_agent_join_forced_prob.clear()
+        self._per_agent_join_forced_all.clear()
 
         # Increment step counter
         self.current_step += 1
@@ -626,6 +642,9 @@ class PredPreyGrass(MultiAgentEnv):
         Return (move_action, join_hunt) with join_hunt=None for prey agents.
         """
         if "predator" in agent:
+            self._per_agent_join_choice[agent] = None
+            self._per_agent_join_forced_prob[agent] = False
+            self._per_agent_join_forced_all[agent] = False
             if not self.defection_enabled:
                 # Legacy: single discrete move action, always join
                 if isinstance(action, dict):
@@ -644,6 +663,7 @@ class PredPreyGrass(MultiAgentEnv):
                     move = action[0] if len(action) > 0 else 0
                 else:
                     move = action
+                self._per_agent_join_forced_all[agent] = True
                 return int(move), 1
 
             if isinstance(action, dict):
@@ -655,12 +675,17 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 move, join_hunt = action, 1
             join_hunt = 1 if int(join_hunt) != 0 else 0
+            self._per_agent_join_choice[agent] = bool(join_hunt)
+            forced_prob = False
             if self.force_join_prob > 0.0:
                 rng = getattr(self, "rng", None)
                 if rng is None:
                     rng = np.random.default_rng()
                 if rng.random() < self.force_join_prob:
+                    if join_hunt == 0:
+                        forced_prob = True
                     join_hunt = 1
+            self._per_agent_join_forced_prob[agent] = forced_prob
             return int(move), join_hunt
 
         # Prey: move-only

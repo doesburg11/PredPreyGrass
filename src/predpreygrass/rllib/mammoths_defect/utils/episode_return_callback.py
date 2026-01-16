@@ -196,6 +196,35 @@ class EpisodeReturn(RLlibCallback):
         return total
 
     @staticmethod
+    def _count_join_choice_forced_from_env(env):
+        total = 0
+        join_steps = 0
+        defect_steps = 0
+        forced_prob_steps = 0
+        forced_all_steps = 0
+        step_data_list = getattr(env, "per_step_agent_data", None)
+        if not isinstance(step_data_list, list):
+            return total, join_steps, defect_steps, forced_prob_steps, forced_all_steps
+        for step_data in step_data_list:
+            if not isinstance(step_data, dict):
+                continue
+            for agent_id, data in step_data.items():
+                if "predator" not in agent_id or not isinstance(data, dict):
+                    continue
+                if "join_choice" not in data:
+                    continue
+                total += 1
+                if data.get("join_choice"):
+                    join_steps += 1
+                else:
+                    defect_steps += 1
+                if data.get("join_forced_prob"):
+                    forced_prob_steps += 1
+                if data.get("join_forced_all"):
+                    forced_all_steps += 1
+        return total, join_steps, defect_steps, forced_prob_steps, forced_all_steps
+
+    @staticmethod
     def _get_user_data(episode):
         user_data = getattr(episode, "user_data", None)
         if isinstance(user_data, dict):
@@ -307,6 +336,27 @@ class EpisodeReturn(RLlibCallback):
         join_rate = join_steps / max(1, join_steps + defect_steps)
         env_for_free = self._resolve_env(episode, **kwargs)
         free_riders = self._count_free_riders_from_env(env_for_free) if env_for_free is not None else 0
+        policy_join_rate = None
+        forced_prob_rate = None
+        forced_prob_given_defect = None
+        forced_all_rate = None
+        env_force_join_prob = None
+        if env_for_free is not None:
+            (
+                total_choices,
+                raw_joins,
+                raw_defects,
+                forced_prob,
+                forced_all,
+            ) = self._count_join_choice_forced_from_env(env_for_free)
+            if total_choices > 0:
+                policy_join_rate = raw_joins / total_choices
+                forced_prob_rate = forced_prob / total_choices
+                forced_all_rate = forced_all / total_choices
+                forced_prob_given_defect = forced_prob / max(1, raw_defects)
+            env_force_join_prob = getattr(env_for_free, "force_join_prob", None)
+            if env_force_join_prob is None and isinstance(getattr(env_for_free, "config", None), dict):
+                env_force_join_prob = env_for_free.config.get("force_join_prob")
 
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
@@ -317,6 +367,25 @@ class EpisodeReturn(RLlibCallback):
             metrics_logger.log_value("custom_metrics/defect_steps", defect_steps)
             metrics_logger.log_value("custom_metrics/join_rate", join_rate)
             metrics_logger.log_value("custom_metrics/free_rider_events", free_riders)
+            if policy_join_rate is not None:
+                metrics_logger.log_value("custom_metrics/policy_join_rate", policy_join_rate)
+            if forced_prob_rate is not None:
+                metrics_logger.log_value("custom_metrics/forced_join_prob_rate", forced_prob_rate)
+            if forced_all_rate is not None:
+                metrics_logger.log_value("custom_metrics/forced_join_all_rate", forced_all_rate)
+            if forced_prob_given_defect is not None:
+                metrics_logger.log_value(
+                    "custom_metrics/forced_join_prob_given_defect",
+                    forced_prob_given_defect,
+                )
+            if env_force_join_prob is not None:
+                try:
+                    metrics_logger.log_value(
+                        "custom_metrics/force_join_prob_env",
+                        float(env_force_join_prob),
+                    )
+                except Exception:
+                    pass
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -363,6 +432,18 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
         print(f"  - Join/Defect: join_steps={join_steps} defect_steps={defect_steps} join_rate={join_rate:.2f} free_riders={free_riders}")
+        if policy_join_rate is not None:
+            print(
+                "  - Join Policy: "
+                f"policy_join_rate={policy_join_rate:.3f} "
+                f"forced_join_prob_rate={forced_prob_rate:.3f} "
+                f"forced_join_prob_given_defect={forced_prob_given_defect:.3f}"
+            )
+        if env_force_join_prob is not None:
+            try:
+                print(f"  - Force join prob (env): {float(env_force_join_prob):.3f}")
+            except Exception:
+                print(f"  - Force join prob (env): {env_force_join_prob}")
 
         for group, totals in group_rewards.items():
             print(f"  - {group}: Total = {sum(totals):.2f}")
@@ -378,3 +459,43 @@ class EpisodeReturn(RLlibCallback):
         result["timing/iter_minutes"] = iter_time / 60.0
         result["timing/avg_minutes_per_iter"] = total_elapsed / 60.0 / iter_num
         result["timing/total_hours_elapsed"] = total_elapsed / 3600.0
+
+        algorithm = kwargs.get("algorithm")
+        join_prob = None
+        if algorithm is not None:
+            env_cfg = getattr(algorithm.config, "env_config", None)
+            if isinstance(env_cfg, dict):
+                join_prob = env_cfg.get("force_join_prob")
+        if join_prob is not None:
+            try:
+                result["custom_metrics/force_join_prob"] = float(join_prob)
+            except Exception:
+                pass
+
+        def _get_nested_metric(payload, path: str):
+            if path in payload:
+                return payload[path]
+            current = payload
+            for part in path.split("/"):
+                if not isinstance(current, dict) or part not in current:
+                    return None
+                current = current[part]
+            return current
+
+        steps_sampled = _get_nested_metric(result, "env_runners/num_env_steps_sampled")
+        if steps_sampled is not None:
+            try:
+                val = float(steps_sampled)
+                if val == val:
+                    result["custom_metrics/env_steps_sampled"] = val
+            except Exception:
+                pass
+
+        steps_sampled_life = _get_nested_metric(result, "env_runners/num_env_steps_sampled_lifetime")
+        if steps_sampled_life is not None:
+            try:
+                val = float(steps_sampled_life)
+                if val == val:
+                    result["custom_metrics/env_steps_sampled_lifetime"] = val
+            except Exception:
+                pass
