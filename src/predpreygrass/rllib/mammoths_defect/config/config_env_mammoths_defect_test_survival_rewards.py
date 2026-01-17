@@ -13,13 +13,22 @@ config_env = {
     "type_2_action_range": 0,
     # Rewards
     "reproduction_reward_predator": {
-        "type_1_predator": 10.0,
+        "type_1_predator": 0.0,
         "type_2_predator": 0.0,
     },
     "reproduction_reward_prey": {
-        "type_1_prey": 10.0,
+        "type_1_prey": 0.0,
         "type_2_prey": 0.0,
     },
+    "reward_per_step_predator": {
+        "type_1_predator": 0.0,  # 1.0 / max_steps
+        "type_2_predator": 0.0,
+    },
+    "reward_per_step_prey": {
+        "type_1_prey": 0.0,
+        "type_2_prey": 0.0,
+    },
+    "extinction_penalty": -1.0,
     # Energy settings
     "energy_loss_per_step_predator": 0.08, # 0.15
     "energy_loss_per_step_prey": 0.1,  # 0.05 

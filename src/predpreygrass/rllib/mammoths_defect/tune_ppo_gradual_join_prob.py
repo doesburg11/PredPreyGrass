@@ -22,11 +22,12 @@ import json
 import shutil
 
 
-# Join-probability schedule (1.0 -> 0.0 over 1000 iterations, step=0.1 every 100 iters)
-JOIN_PROB_START = 1.0
+# Join-probability schedule (start -> 0.0 over 1000 iterations, step=0.1 every 100 iters)
+JOIN_PROB_START = float(config_env.get("force_join_prob", 1.0))
 JOIN_PROB_END = 0.0
 JOIN_PROB_STEP = 0.1
 JOIN_PROB_INTERVAL = 100
+JOIN_PROB_WARMUP_ITERS = 400
 
 
 def _clamp_prob(value: float) -> float:
@@ -110,7 +111,7 @@ class EpisodeReturnJoinSchedule(EpisodeReturn):
 
     def on_train_result(self, *, result, **kwargs):
         iter_num = result.get("training_iteration", 0)
-        steps = iter_num // JOIN_PROB_INTERVAL
+        steps = max(0, (iter_num - JOIN_PROB_WARMUP_ITERS) // JOIN_PROB_INTERVAL)
         join_prob = JOIN_PROB_START - JOIN_PROB_STEP * steps
         join_prob = max(JOIN_PROB_END, _clamp_prob(join_prob))
 
@@ -163,12 +164,9 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
 
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
     env_config = {
         **config_env,
         "seed": None,
-        "strict_rllib_output": True,
-        "force_join_prob": JOIN_PROB_START,
     }
 
 
@@ -195,6 +193,7 @@ if __name__ == "__main__":
             "end": JOIN_PROB_END,
             "step": JOIN_PROB_STEP,
             "interval": JOIN_PROB_INTERVAL,
+            "warmup_iters": JOIN_PROB_WARMUP_ITERS,
         },
     }
     with open(experiment_path / "run_config.json", "w") as f:

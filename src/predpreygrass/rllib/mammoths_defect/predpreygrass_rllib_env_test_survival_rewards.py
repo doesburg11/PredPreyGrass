@@ -51,6 +51,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
         self.reproduction_reward_prey_config = config.get("reproduction_reward_prey", 0.0)
+        self.reward_per_step_predator_config = config.get("reward_per_step_predator", 0.0)
+        self.reward_per_step_prey_config = config.get("reward_per_step_prey", 0.0)
+        self.extinction_penalty = float(config.get("extinction_penalty", 0.0))
 
         # Verbosity/debug toggles
         self.debug_mode = config.get("debug_mode", False)
@@ -377,6 +380,16 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
 
+        if self.active_num_predators > 0 and self.active_num_prey > 0:
+            for agent in self.agents:
+                if "predator" in agent:
+                    step_reward = self._get_type_specific("reward_per_step_predator", agent)
+                elif "prey" in agent:
+                    step_reward = self._get_type_specific("reward_per_step_prey", agent)
+                else:
+                    continue
+                self._add_reward(agent, float(step_reward))
+
         global_info = self._pending_infos.setdefault("__all__", {})
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
@@ -428,6 +441,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.infos["__all__"] = self._pending_infos["__all__"]
         episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
         if episode_done:
+            if self.extinction_penalty:
+                for agent_id in list(self.agent_positions.keys()):
+                    self._add_reward(agent_id, self.extinction_penalty)
             # Any still-alive agents should be marked truncated and provided with their final cumulative reward
             for agent in self.agents:
                 if not self.terminations.get(agent, False):
@@ -1710,6 +1726,15 @@ class PredPreyGrass(MultiAgentEnv):
                     return raw_val[k]
             raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
         return raw_val
+
+    def _add_reward(self, agent_id: str, amount: float) -> None:
+        if amount == 0.0:
+            return
+        self.rewards[agent_id] = self.rewards.get(agent_id, 0.0) + amount
+        record = self.agent_stats_live.get(agent_id)
+        if record is not None:
+            record["cumulative_reward"] += amount
+            record["_cumulative_reward_forced"] = True
 
     #-------- Reset placement methods grid world entities --------
     def _create_and_place_grid_world_entities(self):
