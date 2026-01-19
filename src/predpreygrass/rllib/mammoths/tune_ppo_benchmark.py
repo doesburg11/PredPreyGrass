@@ -5,10 +5,10 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.rllib.mammoths.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.mammoths.config.config_env_mammoths import config_env
-from predpreygrass.rllib.mammoths.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.rllib.mammoths.utils.networks import build_multi_module_spec
+from predpreygrass.rllib.mammoths.predpreygrass_rllib_env_benchmark import PredPreyGrass
+from predpreygrass.rllib.mammoths.config.config_env_mammoths_benchmark import config_env
+from predpreygrass.rllib.mammoths.utils.episode_return_callback_benchmark import EpisodeReturn
+from predpreygrass.rllib.mammoths.utils.networks_benchmark import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -25,7 +25,7 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.mammoths.config.config_ppo_gpu_mammoths import config_ppo
+        from predpreygrass.rllib.mammoths.config.config_ppo_gpu_mammoths_benchmark import config_ppo
     elif num_cpus == 8:
         from predpreygrass.rllib.mammoths.config.config_ppo_cpu_mammoths import config_ppo
     else:
@@ -58,11 +58,6 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
-    try:
-        print(f"[Ray] nodes={ray.nodes()}", flush=True)
-        print(f"[Ray] cluster_resources={ray.cluster_resources()}", flush=True)
-    except Exception as exc:
-        print(f"[Ray] cluster info unavailable: {exc}", flush=True)
 
     register_env("PredPreyGrass", env_creator)
 
@@ -74,7 +69,7 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_DECAY_PRED_0_08_NUM_EPOCHS_25_BATCHSIZE_2048_MINIBATCH_256"
+    version = "BENCHMARK_MAMMOTHS_COPY"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
@@ -82,10 +77,10 @@ if __name__ == "__main__":
     # --- Save environment source file for provenance ---
     source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
-    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
-    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
+    env_file = Path(__file__).parent / "predpreygrass_rllib_env_benchmark.py"
+    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_benchmark_{version}.py")
     script_file = Path(__file__)
-    shutil.copy2(script_file, source_dir / f"tune_ppo_{version}.py")
+    shutil.copy2(script_file, source_dir / f"tune_ppo_benchmark_{version}.py")
 
     config_ppo = get_config_ppo()
     config_metadata = {
@@ -129,6 +124,15 @@ if __name__ == "__main__":
         .multi_agent(
             policies=policies,
             policy_mapping_fn=policy_mapping_fn,
+        )
+        .evaluation(
+            evaluation_interval=1,
+            evaluation_duration=10,
+            evaluation_duration_unit="episodes",
+            evaluation_config={
+                "explore": False,
+                "env_config": {**config_env, "seed": 41, "strict_rllib_output": True},
+            },
         )
         .training(
             train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],

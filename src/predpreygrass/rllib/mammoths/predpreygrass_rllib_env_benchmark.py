@@ -1,11 +1,11 @@
 """
-Predator-Prey Grass RLlib Environment (mammoths_defect)
+Predator-Prey Grass RLlib Environment
 
-Key mechanics:
-- Team capture: predators cooperate to bring down a mammoth; equal or proportional split.
-- Optional defection: when enabled, predators choose join vs free-ride (MultiDiscrete move+join_hunt).
-- Join cost and scavenger fraction: joiners can pay a flat cost; nearby free-riders can skim a fraction.
-- Failed hunts can penalize joiners; success divides prey energy among helpers (and optionally scavengers).
+Additional features:
+- The cumulative energy predators / energy prey defines the succes rate
+- A failed attempt diminishes the energy of the predator(s) pro rata
+- Dilemmas for predators when deciding to attack prey alone or wait for help
+- Go for smaller prey alone or wait for help on larger prey
 """
 
 import gymnasium
@@ -41,19 +41,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.0)
         self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.0)
         self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
-        # Optional defection / join toggle
-        self.defection_enabled = bool(config.get("defection_enabled", False))
-        self.team_capture_join_cost = max(0.0, float(config.get("team_capture_join_cost", 0.0)))
-        self.team_capture_scavenger_fraction = max(
-            0.0, min(1.0, float(config.get("team_capture_scavenger_fraction", 0.0)))
-        )
 
         # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
         self.reproduction_reward_prey_config = config.get("reproduction_reward_prey", 0.0)
-        self.reward_per_step_predator_config = config.get("reward_per_step_predator", 0.0)
-        self.reward_per_step_prey_config = config.get("reward_per_step_prey", 0.0)
-        self.extinction_penalty = float(config.get("extinction_penalty", 0.0))
 
         # Verbosity/debug toggles
         self.debug_mode = config.get("debug_mode", False)
@@ -63,7 +54,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_obs_channels = config.get("num_obs_channels", 0)
         self.predator_obs_range = config.get("predator_obs_range", 0)
         self.prey_obs_range = config.get("prey_obs_range", 0)
-        self.include_joiner_channel = bool(config.get("include_joiner_channel", False))
         self.include_visibility_channel = config.get("include_visibility_channel", False)
         self.respect_los_for_movement = config.get("respect_los_for_movement", False)
         self.mask_observation_with_visibility = config.get("mask_observation_with_visibility", False)
@@ -75,13 +65,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_enabled = True
         self.team_capture_margin = config.get("team_capture_margin", 0.0)
         self.team_capture_equal_split = bool(config.get("team_capture_equal_split", False))
-        # Defection controls
-        self.force_all_join = bool(config.get("force_all_join", False))
-        self.force_join_prob = float(config.get("force_join_prob", 0.0))
-        if self.force_join_prob < 0.0:
-            self.force_join_prob = 0.0
-        elif self.force_join_prob > 1.0:
-            self.force_join_prob = 1.0
 
         # Absolute cap for grass energy
         self.max_energy_grass = config.get("max_energy_grass", float("inf"))
@@ -130,10 +113,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_stats_completed = {}
         self.per_step_agent_data = []
         self._per_agent_step_deltas = {}
-        self._per_agent_join_choice = {}
-        self._per_agent_join_forced_prob = {}
-        self._per_agent_join_forced_all = {}
-        self._joiner_map = None
         self._next_lifetime_id = 0
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
@@ -161,7 +140,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = 0
         self.active_num_prey = 0
         self._printed_termination_ids = set()
-        self.predator_join_intent = {}
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -170,7 +148,6 @@ class PredPreyGrass(MultiAgentEnv):
         if seed is None:
             seed = self.config.get("seed")
         self.rng = np.random.default_rng(seed)
-        self.rng_state = self.rng.bit_generator.state
 
         self.agent_positions = {}
         self.predator_positions = {}
@@ -204,9 +181,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_stats_completed = {}
         self.per_step_agent_data = []  # One entry per step; each is {agent_id: {position, energy, ...}}
         self._per_agent_step_deltas = {}  # Internal temp storage to track energy deltas during step
-        self._per_agent_join_choice = {}
-        self._per_agent_join_forced_prob = {}
-        self._per_agent_join_forced_all = {}
         self._next_lifetime_id = 0
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
@@ -226,7 +200,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.spawned_predators = 0
         self.spawned_prey = 0
         self.agents_just_ate = set()
-        self.predator_join_intent = {}
 
         # Pre-build per-agent spaces for all possible agents (needed by RLlib connectors)
         possible_ids = self._build_possible_agent_ids()
@@ -310,7 +283,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.current_step = 0
 
-        self._update_joiner_map()
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
@@ -380,16 +352,6 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
 
-        if self.active_num_predators > 0 and self.active_num_prey > 0:
-            for agent in self.agents:
-                if "predator" in agent:
-                    step_reward = self._get_type_specific("reward_per_step_predator", agent)
-                elif "prey" in agent:
-                    step_reward = self._get_type_specific("reward_per_step_prey", agent)
-                else:
-                    continue
-                self._add_reward(agent, float(step_reward))
-
         global_info = self._pending_infos.setdefault("__all__", {})
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
@@ -405,7 +367,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 8: Assemble return dicts.
         # Generate observations only for still-active agents AFTER engagements and reproduction.
         get_obs = self._get_observation
-        self._update_joiner_map()
         self.observations = {agent: get_obs(agent) for agent in self.agents}
 
         live_ids = set(self.agents)
@@ -420,15 +381,12 @@ class PredPreyGrass(MultiAgentEnv):
         if self.strict_rllib_output:
             # RLlib expects ended agents to appear once with their final obs/flags.
             output_ids = live_ids | ended_ids_all
-            ordered_output_ids = [aid for aid in self.agents if aid in output_ids]
-            missing_ids = output_ids - set(ordered_output_ids)
-            ordered_output_ids.extend(sorted(missing_ids))
-            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in ordered_output_ids}
-            self.terminations = {aid: term_full.get(aid, False) for aid in ordered_output_ids}
-            self.truncations = {aid: trunc_full.get(aid, False) for aid in ordered_output_ids}
-            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in ordered_output_ids}
+            self.rewards = {aid: self.rewards.get(aid, 0.0) for aid in output_ids}
+            self.terminations = {aid: term_full.get(aid, False) for aid in output_ids}
+            self.truncations = {aid: trunc_full.get(aid, False) for aid in output_ids}
+            self.infos = {aid: self._pending_infos.get(aid, {}) for aid in output_ids}
             # Expose agents attribute that matches returned obs/rewards (needed by RLlib checkers).
-            self.agents = ordered_output_ids
+            self.agents = list(output_ids)
         else:
             # Test mode: include agents that ended this step
             term_ids = live_ids | ended_ids_all
@@ -441,9 +399,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.infos["__all__"] = self._pending_infos["__all__"]
         episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
         if episode_done:
-            if self.extinction_penalty:
-                for agent_id in list(self.agent_positions.keys()):
-                    self._add_reward(agent_id, self.extinction_penalty)
             # Any still-alive agents should be marked truncated and provided with their final cumulative reward
             for agent in self.agents:
                 if not self.terminations.get(agent, False):
@@ -463,7 +418,7 @@ class PredPreyGrass(MultiAgentEnv):
                     obs_range = self.prey_obs_range
                 else:
                     continue
-                channels = self._obs_channel_count()
+                channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
                 self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
                 self.rewards[aid] = self.rewards.get(aid, 0.0)
                 self.terminations[aid] = term_full.get(aid, self.terminations.get(aid, False))
@@ -481,7 +436,7 @@ class PredPreyGrass(MultiAgentEnv):
                 obs_range = self.prey_obs_range
             else:
                 continue
-            channels = self._obs_channel_count()
+            channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
             self.observations[aid] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
             self.rewards[aid] = self.rewards.get(aid, 0.0)
             self.infos[aid] = self._pending_infos.get(aid, {})
@@ -504,21 +459,9 @@ class PredPreyGrass(MultiAgentEnv):
                 "offspring_count": self.agent_offspring_counts.get(agent, 0),
                 "offspring_ids": self.agent_live_offspring_ids.get(agent, []),
             }
-            if "predator" in agent:
-                step_data[agent]["join_hunt"] = bool(self.predator_join_intent.get(agent, True))
-                join_choice = self._per_agent_join_choice.get(agent)
-                if join_choice is not None:
-                    step_data[agent]["join_choice"] = bool(join_choice)
-                if self._per_agent_join_forced_prob.get(agent):
-                    step_data[agent]["join_forced_prob"] = True
-                if self._per_agent_join_forced_all.get(agent):
-                    step_data[agent]["join_forced_all"] = True
 
         self.per_step_agent_data.append(step_data)
         self._per_agent_step_deltas.clear()
-        self._per_agent_join_choice.clear()
-        self._per_agent_join_forced_prob.clear()
-        self._per_agent_join_forced_all.clear()
 
         # Increment step counter
         self.current_step += 1
@@ -556,7 +499,7 @@ class PredPreyGrass(MultiAgentEnv):
                         rng = self.prey_obs_range
                     else:
                         continue
-                    channels = self._obs_channel_count()
+                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
                     obs[agent] = np.zeros((channels, rng, rng), dtype=np.float32)
 
                 rews[agent] = self.rewards.get(agent, 0.0)
@@ -638,10 +581,7 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
             old_position = self.agent_positions[agent]
             action = action_dict[agent]
-            move_action, join_hunt = self._split_action(agent, action)
-            if join_hunt is not None:
-                self.predator_join_intent[agent] = bool(join_hunt)
-            new_position = self._get_move(agent, move_action)
+            new_position = self._get_move(agent, action)
             if "predator" in agent:
                 self.predator_positions[agent] = tuple(new_position)
                 self.grid_world_state[1, old_position[0], old_position[1]] = 0
@@ -656,66 +596,6 @@ class PredPreyGrass(MultiAgentEnv):
                 record["avg_energy_steps"] += 1
                 record["distance_traveled"] += float(np.linalg.norm(np.array(new_position) - np.array(old_position)))
             self.agent_positions[agent] = tuple(new_position)
-
-    def _split_action(self, agent, action):
-        """
-        Return (move_action, join_hunt) with join_hunt=None for prey agents.
-        """
-        if "predator" in agent:
-            self._per_agent_join_choice[agent] = None
-            self._per_agent_join_forced_prob[agent] = False
-            self._per_agent_join_forced_all[agent] = False
-            if not self.defection_enabled:
-                # Legacy: single discrete move action, always join
-                if isinstance(action, dict):
-                    move = action.get("move", action.get("action", 0))
-                elif isinstance(action, (tuple, list, np.ndarray)) and getattr(action, "shape", ()) != ():
-                    move = action[0] if len(action) > 0 else 0
-                else:
-                    move = action
-                return int(move), 1
-
-            # Defection enabled: expect (move, join_hunt)
-            if self.force_all_join:
-                if isinstance(action, dict):
-                    move = action.get("move", action.get("action", 0))
-                elif isinstance(action, (tuple, list, np.ndarray)) and getattr(action, "shape", ()) != ():
-                    move = action[0] if len(action) > 0 else 0
-                else:
-                    move = action
-                self._per_agent_join_forced_all[agent] = True
-                return int(move), 1
-
-            if isinstance(action, dict):
-                move = action.get("move", action.get("action", 0))
-                join_hunt = action.get("join_hunt", action.get("join", 1))
-            elif isinstance(action, (tuple, list, np.ndarray)) and getattr(action, "shape", ()) != ():
-                move = action[0] if len(action) > 0 else 0
-                join_hunt = action[1] if len(action) > 1 else 1
-            else:
-                move, join_hunt = action, 1
-            join_hunt = 1 if int(join_hunt) != 0 else 0
-            self._per_agent_join_choice[agent] = bool(join_hunt)
-            forced_prob = False
-            if self.force_join_prob > 0.0:
-                rng = getattr(self, "rng", None)
-                if rng is None:
-                    rng = np.random.default_rng()
-                if rng.random() < self.force_join_prob:
-                    if join_hunt == 0:
-                        forced_prob = True
-                    join_hunt = 1
-            self._per_agent_join_forced_prob[agent] = forced_prob
-            return int(move), join_hunt
-
-        # Prey: move-only
-        if isinstance(action, dict):
-            move = action.get("move", action.get("action", 0))
-        elif isinstance(action, (tuple, list, np.ndarray)) and getattr(action, "shape", ()) != ():
-            move = action[0] if len(action) > 0 else 0
-        else:
-            move = action
-        return int(move), None
 
     def _get_move(self, agent, action: int):
         """
@@ -807,11 +687,11 @@ class PredPreyGrass(MultiAgentEnv):
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         position = self.agent_positions.get(agent)
         if position is None:
-            channels = self._obs_channel_count()
+            channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
             return np.zeros((channels, obs_range, obs_range), dtype=np.float32)
         xp, yp = position
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, obs_range)
-        channels = self._obs_channel_count()
+        channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
         # Allocate observation tensor
         obs = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
         gws = self.grid_world_state  # local reference
@@ -820,14 +700,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Dynamic channels (predators, prey, grass)
         obs[1:self.num_obs_channels, xolo:xohi, yolo:yohi] = gws[1:, xlo:xhi, ylo:yhi]
 
-        joiner_index = None
-        if self.include_joiner_channel:
-            joiner_index = self.num_obs_channels
-            if self._joiner_map is None:
-                self._update_joiner_map()
-            if self._joiner_map is not None:
-                obs[joiner_index, xolo:xohi, yolo:yohi] = self._joiner_map[xlo:xhi, ylo:yhi]
-
         if self.include_visibility_channel or self.mask_observation_with_visibility:
             # Use precomputed LOS mask without copying (treated read-only)
             visibility_mask = self.los_mask_predator if "predator" in agent else self.los_mask_prey
@@ -835,8 +707,6 @@ class PredPreyGrass(MultiAgentEnv):
                 # Apply mask to dynamic channels (exclude channel 0 walls)
                 for c in range(1, self.num_obs_channels):
                     obs[c] *= visibility_mask
-                if joiner_index is not None:
-                    obs[joiner_index] *= visibility_mask
             if self.include_visibility_channel:
                 obs[channels - 1] = visibility_mask
         return obs
@@ -883,7 +753,7 @@ class PredPreyGrass(MultiAgentEnv):
             for j in range(self.grid_size)
             if (i, j) not in wall_positions
         }
-        free_positions = sorted(all_positions - occupied_positions)
+        free_positions = list(all_positions - occupied_positions)
 
         if free_positions:
             return free_positions[self.rng.integers(len(free_positions))]
@@ -930,36 +800,37 @@ class PredPreyGrass(MultiAgentEnv):
         if not helpers:
             return False
 
-        if self.defection_enabled and not self.force_all_join:
-            joiners = [h for h in helpers if self.predator_join_intent.get(h, True)]
-            free_riders = [h for h in helpers if h not in joiners]
-        else:
-            joiners = helpers
-            free_riders = []
-
-        if not joiners:
-            return False
-
-        helper_count = len(joiners)
-        total_pred_energy = sum(self.agent_energies[h] for h in joiners)
+        helper_count = len(helpers)
+        total_pred_energy = sum(self.agent_energies[h] for h in helpers)
         prey_energy = float(self.agent_energies[prey_id])
         if total_pred_energy <= prey_energy + self.team_capture_margin:
             # Apply energy penalty to all helpers on failed attempt.
-            helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
-            penalty_frac = self.energy_percentage_loss_per_failed_attacked_prey
-            if penalty_frac > 0.0:
-                for pid in joiners:
-                    penalty_share = helper_energy_snapshot[pid] * penalty_frac
-                    if penalty_share:
-                        self.agent_energies[pid] -= penalty_share
-                        self._per_agent_step_deltas.setdefault(
-                            pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
-                        )
-                        self._per_agent_step_deltas[pid]["eat"] -= penalty_share
-                        self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+            helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in helpers}
+            total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
+            if total_penalty > 0.0:
+                if total_pred_energy > 0.0:
+                    for pid in helpers:
+                        penalty_share = total_penalty * (helper_energy_snapshot[pid] / total_pred_energy)
+                        if penalty_share:
+                            self.agent_energies[pid] -= penalty_share
+                            self._per_agent_step_deltas.setdefault(
+                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
+                            )
+                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
+                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
+                else:
+                    penalty_share = total_penalty / helper_count
+                    for pid in helpers:
+                        if penalty_share:
+                            self.agent_energies[pid] -= penalty_share
+                            self._per_agent_step_deltas.setdefault(
+                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
+                            )
+                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
+                            self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
 
             # Log failed attempt when helpers exist but combined energy insufficient
-            for pid in joiners:
+            for pid in helpers:
                 evt = self.agent_event_log.get(pid)
                 if evt is not None:
                     evt.setdefault("failed_eating_events", []).append(
@@ -972,14 +843,12 @@ class PredPreyGrass(MultiAgentEnv):
                             "bite_size": 0.0,
                             "energy_before": float(helper_energy_snapshot[pid]),
                             "energy_after": float(self.agent_energies[pid]),
-                            "team_capture": len(joiners) > 1,
-                            "predator_list": joiners,
-                            "free_riders": free_riders,
-                            "join_hunt": True,
+                            "team_capture": len(helpers) > 1,
+                            "predator_list": helpers,
                         }
                     )
             # Post-penalty starvation check (apply immediately within this step).
-            for pid in joiners:
+            for pid in helpers:
                 if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
                     self._handle_energy_starvation(pid)
             self.team_capture_failures += 1
@@ -992,27 +861,20 @@ class PredPreyGrass(MultiAgentEnv):
             self.team_capture_coop_successes += 1
         self.team_capture_helper_total += helper_count
 
-        helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
+        helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in helpers}
         total_helper_energy = sum(helper_energy_snapshot.values())
-        scavenger_fraction = self.team_capture_scavenger_fraction if free_riders else 0.0
-        scavenger_energy_total = prey_energy * scavenger_fraction
-        joiner_energy_pool = prey_energy - scavenger_energy_total
-        join_cost = self.team_capture_join_cost
 
-        for pid in joiners:
+        for pid in helpers:
             self.agents_just_ate.add(pid)
             self._per_agent_step_deltas.setdefault(pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
             if self.team_capture_equal_split:
-                energy_share_pid = joiner_energy_pool / helper_count
+                energy_share_pid = prey_energy / helper_count
             else:
                 energy_share_pid = (
-                    joiner_energy_pool * (helper_energy_snapshot[pid] / total_helper_energy) if total_helper_energy > 0 else 0.0
+                    prey_energy * (helper_energy_snapshot[pid] / total_helper_energy) if total_helper_energy > 0 else 0.0
                 )
             self.agent_energies[pid] += energy_share_pid
             self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
-            if join_cost:
-                self.agent_energies[pid] -= join_cost
-                self._per_agent_step_deltas[pid]["eat"] -= join_cost
             self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
             # Ensure a reward entry exists (keep catch reward at zero for mammoths).
             self.rewards[pid] = self.rewards.get(pid, 0.0)
@@ -1022,11 +884,7 @@ class PredPreyGrass(MultiAgentEnv):
                 pred_record["energy_gained"] += energy_share_pid
             info = self._pending_infos.setdefault(pid, {})
             info["team_capture_helpers"] = helper_count
-            info["team_capture_free_riders"] = len(free_riders)
             info["team_capture_energy_gain"] = energy_share_pid
-            info["team_capture_scavenger_gain"] = 0.0
-            info["team_capture_join_cost"] = join_cost
-            info["team_capture_joined"] = True
             evt = self.agent_event_log.get(pid)
             if evt is not None:
                 evt.setdefault("eating_events", []).append(
@@ -1040,62 +898,12 @@ class PredPreyGrass(MultiAgentEnv):
                         "energy_after": float(self.agent_energies[pid]),
                         # True only when multiple predators participated
                         "team_capture": helper_count > 1,
-                        "predator_list": joiners,
-                        "free_riders": free_riders,
-                        "join_hunt": True,
-                        "join_cost": join_cost,
+                        "predator_list": helpers,
                     }
                 )
 
-        scavenger_share = scavenger_energy_total / len(free_riders) if free_riders else 0.0
-        if scavenger_share:
-            for pid in free_riders:
-                self.agents_just_ate.add(pid)
-                self._per_agent_step_deltas.setdefault(
-                    pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
-                )
-                self.agent_energies[pid] += scavenger_share
-                self._per_agent_step_deltas[pid]["eat"] += scavenger_share
-                self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
-                self.rewards[pid] = self.rewards.get(pid, 0.0)
-                pred_record = self.agent_stats_live.get(pid)
-                if pred_record is not None:
-                    pred_record["times_ate"] += 1
-                    pred_record["energy_gained"] += scavenger_share
-                info = self._pending_infos.setdefault(pid, {})
-                info["team_capture_helpers"] = helper_count
-                info["team_capture_free_riders"] = len(free_riders)
-                info["team_capture_energy_gain"] = 0.0
-                info["team_capture_scavenger_gain"] = scavenger_share
-                info["team_capture_join_cost"] = 0.0
-                info["team_capture_joined"] = False
-                evt = self.agent_event_log.get(pid)
-                if evt is not None:
-                    evt.setdefault("eating_events", []).append(
-                        {
-                            "t": int(self.current_step),
-                            "id_resource": prey_id,
-                            "energy_resource": prey_energy,
-                            "position_resource": tuple(prey_pos),
-                            "position_consumer": tuple(self.agent_positions[pid]),
-                            "bite_size": float(scavenger_share),
-                            "energy_after": float(self.agent_energies[pid]),
-                            "team_capture": helper_count > 1,
-                            "predator_list": joiners,
-                            "free_riders": free_riders,
-                            "join_hunt": False,
-                            "join_cost": 0.0,
-                        }
-                    )
-
-        if join_cost:
-            for pid in joiners:
-                if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
-                    self._handle_energy_starvation(pid)
-
         global_info = self._pending_infos.setdefault("__all__", {})
         global_info["team_capture_last_helpers"] = helper_count
-        global_info["team_capture_last_free_riders"] = len(free_riders)
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
         global_info["team_capture_coop_successes"] = self.team_capture_coop_successes
@@ -1373,7 +1181,6 @@ class PredPreyGrass(MultiAgentEnv):
             },
             "used_agent_ids": list(self.used_agent_ids),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
-            "rng_state": self.rng.bit_generator.state,
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1404,9 +1211,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
         self.agent_offspring_counts = snapshot.get("agent_offspring_counts", {}).copy()
-        rng_state = snapshot.get("rng_state")
-        if rng_state is not None:
-            self.rng.bit_generator.state = rng_state
         stored_live_offspring = snapshot.get("agent_live_offspring_ids", {})
         if stored_live_offspring:
             for agent_id, offspring_ids in stored_live_offspring.items():
@@ -1438,7 +1242,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the observation space for a specific agent.
         """
-        extra = self._obs_channel_count() - self.num_obs_channels
+        extra = 1 if getattr(self, "include_visibility_channel", False) else 0
         if "predator" in agent_id:
             predator_shape = (self.num_obs_channels + extra, self.predator_obs_range, self.predator_obs_range)
             obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
@@ -1452,45 +1256,13 @@ class PredPreyGrass(MultiAgentEnv):
 
         return obs_space
 
-    def _obs_channel_count(self) -> int:
-        extra = 0
-        if self.include_joiner_channel:
-            extra += 1
-        if self.include_visibility_channel:
-            extra += 1
-        return self.num_obs_channels + extra
-
-    def _update_joiner_map(self) -> None:
-        if not self.include_joiner_channel:
-            self._joiner_map = None
-            return
-        joiner_map = np.zeros((self.grid_size, self.grid_size), dtype=np.float32)
-        for pid, pos in self.predator_positions.items():
-            if self.terminations.get(pid):
-                continue
-            if self.predator_join_intent.get(pid, True):
-                joiner_map[pos[0], pos[1]] = 1.0
-        self._joiner_map = joiner_map
-
     def _build_action_space(self, agent_id):
         """
         Build the action space for a specific agent.
         """
-        if "type_1_predator" in agent_id:
-            move_space = self.type_1_act_range**2
-            if self.defection_enabled:
-                action_space = gymnasium.spaces.MultiDiscrete([move_space, 2])
-            else:
-                action_space = gymnasium.spaces.Discrete(move_space)
-        elif "type_2_predator" in agent_id:
-            move_space = self.type_2_act_range**2
-            if self.defection_enabled:
-                action_space = gymnasium.spaces.MultiDiscrete([move_space, 2])
-            else:
-                action_space = gymnasium.spaces.Discrete(move_space)
-        elif "type_1_prey" in agent_id:
+        if "type_1" in agent_id:
             action_space = gymnasium.spaces.Discrete(self.type_1_act_range**2)
-        elif "type_2_prey" in agent_id:
+        elif "type_2" in agent_id:
             action_space = gymnasium.spaces.Discrete(self.type_2_act_range**2)
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
@@ -1539,8 +1311,6 @@ class PredPreyGrass(MultiAgentEnv):
             "death_cause": None,
             "avg_energy": 0.0,
         }
-        if "predator" in agent_id:
-            self.predator_join_intent[agent_id] = True
 
         return self.agent_stats_live[agent_id]
 
@@ -1726,15 +1496,6 @@ class PredPreyGrass(MultiAgentEnv):
                     return raw_val[k]
             raise KeyError(f"Type-specific key '{agent_id}' not found under '{key}'")
         return raw_val
-
-    def _add_reward(self, agent_id: str, amount: float) -> None:
-        if amount == 0.0:
-            return
-        self.rewards[agent_id] = self.rewards.get(agent_id, 0.0) + amount
-        record = self.agent_stats_live.get(agent_id)
-        if record is not None:
-            record["cumulative_reward"] += amount
-            record["_cumulative_reward_forced"] = True
 
     #-------- Reset placement methods grid world entities --------
     def _create_and_place_grid_world_entities(self):
