@@ -71,19 +71,21 @@ if __name__ == "__main__":
     env_config = {**config_env, "seed": None, "strict_rllib_output": True}
 
 
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05_EQUAL_SPLIT"
+    version = "MAMMOTHS_DECAY_PRED_0_08_NUM_EPOCHS_25_BATCHSIZE_2048_MINIBATCH_256"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
     # --- Save environment source file for provenance ---
-    source_dir = experiment_path / "SOURCE_CODE_ENV"
+    source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
     env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
+    script_file = Path(__file__)
+    shutil.copy2(script_file, source_dir / f"tune_ppo_{version}.py")
 
     config_ppo = get_config_ppo()
     config_metadata = {
