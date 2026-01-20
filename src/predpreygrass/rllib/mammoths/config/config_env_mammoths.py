@@ -38,7 +38,7 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
     "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 50,
+    "n_initial_active_type_1_predator": 30,
     "n_initial_active_type_2_predator": 0,
     "n_initial_active_type_1_prey": 20,
     "n_initial_active_type_2_prey": 0,
