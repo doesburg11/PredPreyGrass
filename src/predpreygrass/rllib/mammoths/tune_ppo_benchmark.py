@@ -126,9 +126,11 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         .evaluation(
-            evaluation_interval=1,
-            evaluation_duration=10,
+            evaluation_interval=5,
+            evaluation_duration=2,
             evaluation_duration_unit="episodes",
+            evaluation_parallel_to_training=True,
+            evaluation_num_env_runners=1,
             evaluation_config={
                 "explore": False,
                 "env_config": {**config_env, "seed": 41, "strict_rllib_output": True},

@@ -74,7 +74,7 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_DECAY_PRED_0_08_NUM_EPOCHS_25_BATCHSIZE_2048_MINIBATCH_256"
+    version = "MAMMOTHS_DECAY_PRED_0_08_NUM_EPOCHS_15_PRED_30"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
@@ -159,7 +159,16 @@ if __name__ == "__main__":
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
-        .callbacks(EpisodeReturn)
+        # .evaluation(
+        #     evaluation_interval=5,
+        #     evaluation_duration=2,
+        #     evaluation_duration_unit="episodes",
+        #     evaluation_config={
+        #         "explore": False,
+        #         "env_config": {**config_env, "seed": 41, "strict_rllib_output": True},
+        #     },
+        # )
+       .callbacks(EpisodeReturn)
     )
 
     max_iters = config_ppo["max_iters"]
