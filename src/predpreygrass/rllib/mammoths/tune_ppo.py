@@ -16,10 +16,41 @@ from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
 import os
+import ast
+import importlib.util
 from datetime import datetime
 from pathlib import Path
 import json
 import shutil
+
+
+def copy_imported_modules(source_dir: Path) -> None:
+    """
+    Copy all imported modules in the current script to the source_dir, 
+    for reproducibility.
+    Args:
+        source_dir (Path): The directory where the imported modules will be copied.
+    """
+    script_path = Path(__file__).resolve()
+    tree = ast.parse(script_path.read_text(encoding="utf-8"))
+    modules = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                modules.add(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+
+    for name in sorted(modules):
+        if not name.startswith("predpreygrass."):
+            continue
+        spec = importlib.util.find_spec(name)
+        if not spec or not spec.origin or not spec.origin.endswith(".py"):
+            continue
+        shutil.copy2(spec.origin, source_dir / Path(spec.origin).name)
+
+    shutil.copy2(script_path, source_dir / script_path.name)
 
 
 def get_config_ppo():
@@ -58,12 +89,6 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
-    try:
-        print(f"[Ray] nodes={ray.nodes()}", flush=True)
-        print(f"[Ray] cluster_resources={ray.cluster_resources()}", flush=True)
-    except Exception as exc:
-        print(f"[Ray] cluster info unavailable: {exc}", flush=True)
-
     register_env("PredPreyGrass", env_creator)
 
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
@@ -74,18 +99,14 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_DECAY_PRED_0_08_NUM_EPOCHS_15_PRED_30"
+    version = "MAMMOTHS_BENCHMARK"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
-    # --- Save environment source file for provenance ---
     source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
-    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
-    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
-    script_file = Path(__file__)
-    shutil.copy2(script_file, source_dir / f"tune_ppo_{version}.py")
+    copy_imported_modules(source_dir)
 
     config_ppo = get_config_ppo()
     config_metadata = {
@@ -154,8 +175,8 @@ if __name__ == "__main__":
             rollout_fragment_length=config_ppo["rollout_fragment_length"],
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
-        )
-        
+            batch_mode="truncate_episodes",
+        )     
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
