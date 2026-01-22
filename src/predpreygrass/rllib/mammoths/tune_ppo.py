@@ -99,7 +99,7 @@ if __name__ == "__main__":
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "MAMMOTHS_BENCHMARK"
+    version = "MAMMOTHS_BENCHMARK_PREY_SIZE_X_1_2"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
