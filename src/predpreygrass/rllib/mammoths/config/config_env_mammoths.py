@@ -21,13 +21,13 @@ config_env = {
         "type_2_prey": 0.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.05,
-    "energy_loss_per_step_prey": 0.12,  # 0.1
-    "energy_percentage_loss_per_failed_attacked_prey": 0.0, # 0.1
+    "energy_loss_per_step_predator": 0.05,  # 0.05
+    "energy_loss_per_step_prey": 0.1,  # 0.1
+    "energy_percentage_loss_per_failed_attacked_prey": 0.02, # 0.0
     "predator_creation_energy_threshold": 10.0, 
-    "prey_creation_energy_threshold": 21.6, # +20% # 18.0
+    "prey_creation_energy_threshold": 18.0, # 18.0
     "initial_energy_predator": 4.0,
-    "initial_energy_prey": 12.0,  # 10.0
+    "initial_energy_prey": 10.0,  # 10.0
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
@@ -38,12 +38,12 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
     "n_possible_type_2_prey": 0,
-    "n_initial_active_type_1_predator": 50,
+    "n_initial_active_type_1_predator": 50, # 50
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 20,  # 10
+    "n_initial_active_type_1_prey": 20,  # 20
     "n_initial_active_type_2_prey": 0,
     # Grass settings
-    "initial_num_grass": 120,  # 100
+    "initial_num_grass": 100,  # 100
     "initial_energy_grass": 4.0,  
     "energy_gain_per_step_grass": 0.08, 
     "verbose_engagement": False,

@@ -3,8 +3,6 @@ from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
 import numbers
-import torch
-import subprocess
 
 
 class EpisodeReturn(RLlibCallback):
@@ -180,11 +178,20 @@ class EpisodeReturn(RLlibCallback):
         coop_fail = coop_fail or 0
         total_success = total_success or 0
         total_fail = total_fail or 0
+
+        coop_denom = coop_success + coop_fail
+        total_denom = total_success + total_fail
+        coop_success_rate = (coop_success / coop_denom * 100.0) if coop_denom else 0.0
+        total_success_rate = (total_success / total_denom * 100.0) if total_denom else 0.0
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
             metrics_logger.log_value("custom_metrics/team_capture_failures", coop_fail)
             metrics_logger.log_value("custom_metrics/team_capture_total_successes", total_success)
             metrics_logger.log_value("custom_metrics/team_capture_total_failures", total_fail)
+            metrics_logger.log_value("custom_metrics/team_capture_successes_rate", coop_success_rate)
+            metrics_logger.log_value(
+                "custom_metrics/team_capture_total_successes_rate", total_success_rate
+            )
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -225,14 +232,18 @@ class EpisodeReturn(RLlibCallback):
         iter_time = now - self.last_iteration_time
         self.last_iteration_time = now
 
-        result["timing/iter_minutes"] = iter_time / 60.0
-        result["timing/avg_minutes_per_iter"] = total_elapsed / 60.0 / iter_num
-        result["timing/total_hours_elapsed"] = total_elapsed / 3600.0
+        timing_iter_minutes = iter_time / 60.0
+        timing_avg_minutes_per_iter = total_elapsed / 60.0 / iter_num
+        timing_total_hours_elapsed = total_elapsed / 3600.0
 
         custom_metrics = result.get("custom_metrics")
         if not isinstance(custom_metrics, dict):
             custom_metrics = {}
             result["custom_metrics"] = custom_metrics
+
+        custom_metrics["timing_iter_minutes"] = timing_iter_minutes
+        custom_metrics["timing_avg_minutes_per_iter"] = timing_avg_minutes_per_iter
+        custom_metrics["timing_total_hours_elapsed"] = timing_total_hours_elapsed
 
         # Stable display metrics: carry forward last non-zero episode stats.
         env_stats = result.get("env_runners", {})
@@ -248,44 +259,5 @@ class EpisodeReturn(RLlibCallback):
         if num_eps and len_mean is not None:
             self._last_episode_len_mean = len_mean
             self._last_episode_return_mean = ret_mean
-        if self._last_episode_len_mean is not None:
-            custom_metrics["episode_len_mean_nonzero"] = self._last_episode_len_mean
-        if self._last_episode_return_mean is not None:
-            custom_metrics["episode_return_mean_nonzero"] = (
-                self._last_episode_return_mean
-            )
 
-        # GPU memory stats for OOM risk tracking (values in MiB)
-        if torch.cuda.is_available():
-            mb = 1024 * 1024
-            result["gpu/mem_allocated_mib"] = torch.cuda.memory_allocated() / mb
-            result["gpu/mem_reserved_mib"] = torch.cuda.memory_reserved() / mb
-            result["gpu/mem_peak_allocated_mib"] = torch.cuda.max_memory_allocated() / mb
-            torch.cuda.reset_peak_memory_stats()
-            custom_metrics["gpu_mem_allocated_mib"] = result["gpu/mem_allocated_mib"]
-            custom_metrics["gpu_mem_reserved_mib"] = result["gpu/mem_reserved_mib"]
-            custom_metrics["gpu_mem_peak_allocated_mib"] = result["gpu/mem_peak_allocated_mib"]
 
-        # Global GPU stats from nvidia-smi (works even when driver has no CUDA device)
-        try:
-            smi = subprocess.run(
-                [
-                    "nvidia-smi",
-                    "--query-gpu=memory.used,memory.total,utilization.gpu",
-                    "--format=csv,noheader,nounits",
-                ],
-                check=True,
-                capture_output=True,
-                text=True,
-                timeout=2,
-            )
-            line = smi.stdout.strip().splitlines()[0]
-            used_str, total_str, util_str = [v.strip() for v in line.split(",")]
-            result["gpu/global_mem_used_mib"] = float(used_str)
-            result["gpu/global_mem_total_mib"] = float(total_str)
-            result["gpu/global_util_percent"] = float(util_str)
-            custom_metrics["gpu_global_mem_used_mib"] = result["gpu/global_mem_used_mib"]
-            custom_metrics["gpu_global_mem_total_mib"] = result["gpu/global_mem_total_mib"]
-            custom_metrics["gpu_global_util_percent"] = result["gpu/global_util_percent"]
-        except Exception:
-            pass
