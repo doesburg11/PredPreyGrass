@@ -62,7 +62,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.max_steps = config.get("max_steps", 0)
 
         # Team capture is always enabled in mammoths
-        self.team_capture_enabled = True
         self.team_capture_margin = config.get("team_capture_margin", 0.0)
         self.team_capture_equal_split = bool(config.get("team_capture_equal_split", False))
 
