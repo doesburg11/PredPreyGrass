@@ -4,7 +4,7 @@ config_env = {
     "max_steps": 1000,
     "strict_rllib_output": True, # When True, only alive agent IDs are emitted each step.
     # Grid and Observation Settings
-    "grid_size": 50, 
+    "grid_size": 30, 
     "num_obs_channels": 5, # obsolete
     "predator_obs_range": 9,
     "prey_obs_range": 9,
@@ -23,15 +23,13 @@ config_env = {
     "death_penalty_predator": 0.0,
     "death_penalty_type_1_prey": 0.0,
     "death_penalty_type_2_prey": 0.0,
-    "failed_attack_reward_penalty": 0.0, # per-joiner reward penalty on failed capture
     # Energy settings
     "energy_loss_per_step_predator": 0.08,
     "energy_loss_per_step_prey": {
         "type_1_prey": 0.1,
-        "type_2_prey": 0.015,
+        "type_2_prey": 0.01,
     },
     "energy_percentage_loss_per_failed_attacked_prey": 0.00, # 0.0
-    "failed_attack_kills_predator": False,
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,  # 18.0
@@ -59,10 +57,10 @@ config_env = {
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
     "n_possible_type_2_prey": 2000,
-    "n_initial_active_type_1_predator": 200, # 10
+    "n_initial_active_type_1_predator": 10, # 10
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 80, # 10
-    "n_initial_active_type_2_prey": 0, # 10
+    "n_initial_active_type_1_prey": 10, # 10
+    "n_initial_active_type_2_prey": 10, # 10
     # Grass settings
     "initial_num_grass": 100, # 100
     "initial_energy_grass": 3.0,

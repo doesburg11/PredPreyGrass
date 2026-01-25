@@ -96,8 +96,6 @@ class PredPreyGrass(MultiAgentEnv):
                 "default": bite_size_prey,
             }
         self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
-        self.failed_attack_kills_predator = bool(config.get("failed_attack_kills_predator", False))
-        self.failed_attack_reward_penalty = max(0.0, float(config.get("failed_attack_reward_penalty", 0.0)))
         self.death_penalty_predator = float(config.get("death_penalty_predator", 0.0))
         self.death_penalty_type_1_prey = float(config.get("death_penalty_type_1_prey", 0.0))
         self.death_penalty_type_2_prey = float(config.get("death_penalty_type_2_prey", 0.0))
@@ -957,45 +955,6 @@ class PredPreyGrass(MultiAgentEnv):
         if total_pred_energy <= prey_energy + self.team_capture_margin:
             # Handle failed attempt: optionally kill joiners, otherwise apply energy penalty.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
-            reward_penalty = self.failed_attack_reward_penalty
-            if reward_penalty:
-                for pid in joiners:
-                    self.rewards[pid] = self.rewards.get(pid, 0.0) - reward_penalty
-            if self.failed_attack_kills_predator:
-                # Log failed attempt when joiners exist but combined energy insufficient
-                for pid in joiners:
-                    evt = self.agent_event_log.get(pid)
-                    if evt is not None:
-                        evt.setdefault("failed_eating_events", []).append(
-                            {
-                                "t": int(self.current_step),
-                                "id_resource": prey_id,
-                                "energy_resource": prey_energy,
-                                "position_resource": prey_pos,
-                                "position_consumer": tuple(self.agent_positions[pid]),
-                                "bite_size": 0.0,
-                                "energy_before": float(helper_energy_snapshot[pid]),
-                                "energy_after": float(self.agent_energies[pid]),
-                                "team_capture": len(joiners) > 1,
-                                "predator_list": joiners,
-                                "free_riders": free_riders,
-                                "join_hunt": True,
-                            }
-                        )
-                for pid in joiners:
-                    if not self.terminations.get(pid, False):
-                        self._handle_energy_starvation(pid, cause="failed_attack")
-                self.team_capture_failures += 1
-                if helper_count > 1:
-                    self.team_capture_coop_failures += 1
-                    self.team_capture_failed_events.append(
-                        {"t": int(self.current_step), "position": tuple(prey_pos), "helpers": helper_count}
-                    )
-                    cutoff = self.current_step - 20
-                    self.team_capture_failed_events = [
-                        e for e in self.team_capture_failed_events if e["t"] >= cutoff
-                    ]
-                return False
             total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
             if total_penalty > 0.0:
                 if total_pred_energy > 0.0:

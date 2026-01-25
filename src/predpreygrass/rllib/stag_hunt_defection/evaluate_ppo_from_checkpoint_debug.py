@@ -40,7 +40,7 @@ SAVE_EVAL_RESULTS = False
 SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
-DISPLAY_SCALE = 0.5
+DISPLAY_SCALE = 0.6
 
 
 def env_creator(config):
