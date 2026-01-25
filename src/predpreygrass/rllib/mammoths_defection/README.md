@@ -1,12 +1,10 @@
-# Mammoths: cooperative hunting (shared prey)
+# Mammoths Defection: cooperative hunting with defection
 
 ## Environment and logic (full description)
 
 ### Entities and roles
-- **Predators (humans / hunters)<img src="../../../../assets/images/icons/human_1.png" alt="predator icon" height="
-  36" style="vertical-align: middle;">**: `type_1_predator` agents that move, lose energy, hunt, and reproduce.
-- **Prey (mammoths)<img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
-  36" style="vertical-align: middle;">**: `type_1_prey` agents that move, lose energy, eat grass, and reproduce.
+- **Predators (humans / hunters)<img src="../../../../assets/images/icons/human_1.png" alt="predator icon" height="36" style="vertical-align: middle;">**: `type_1_predator` agents that move, lose energy, hunt, and reproduce.
+- **Prey (mammoths)<img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="prey icon" height="36" style="vertical-align: middle;">**: `type_1_prey` agents that move, lose energy, eat grass, and reproduce.
 - **Grass**: static resource patches that regrow energy over time.
 - **Walls** (optional): impassable cells that can be manually placed.
 
@@ -19,7 +17,7 @@
 - At startup, humans, mammoths, and grass are randomly positioned on the gridworld. Walls surround the gridworld and can optionally be placed within it.
 
 ### Actions and movement
-- Each agent selects a movement action mapped to a displacement in its Moore neighborhood.
+- Each agent selects a movement action mapped to a displacement in its Moore neighborhood (including stay).
 - Predators cannot share a cell with other predators, and prey cannot share a cell with other prey.
 - Movement into wall cells is blocked.
 
@@ -29,66 +27,45 @@
 
 ### Foraging and hunting dynamics
 - **Prey grazing**: when a mammoth lands on grass, it consumes grass energy and gains that energy (grass energy decreases and can regrow later).
-- **Predator hunting**: humans can hunt for mammoths to replenish their energy. They only succeed in hunting and eating if the cumulative energy of humans in the mammoth's Moore neighborhood is greater than the mammoth's energy. On success, the mammoth is removed and its energy is divided among helpers (proportional by default or equal split with `team_capture_equal_split = True`).
-- On failure, the mammoth survives and helpers lose energy equal to `E_prey * energy_percentage_loss_per_failed_attacked_prey`, split proportional to their energy share.
+- **Predator hunting**: humans can hunt for mammoths via a two-step "freeze then resolve" process (see below).
 
-#### 1. Proportional Split (default)
+### Team capture with defection (step-by-step)
 
-By default, the prey’s energy is divided **proportionally to the current energy of each participating predator**:
+This variant models cooperation vs free-riding without a separate "join/defect" action. Defection is inferred from the movement decision.
 
-$$
-\Delta E_i = E_{\text{prey}} \cdot \frac{E_i}{\sum_j E_j}
-$$
+#### Step t: identify participants and freeze prey
+1. For each predator, find all adjacent mammoths (Moore neighborhood) at step t.
+2. Each predator is assigned to **at most one** mammoth: the adjacent mammoth with the **highest energy** (ties broken by prey id).
+3. For each mammoth, the **participant set** is all predators assigned to it at step t.
+4. If the participant set is non-empty, that mammoth is **frozen at step t+1** (it cannot move).
+5. The participant set is fixed at step t (predators cannot join or leave the participant set in t+1).
 
-**Implications:**
+#### Step t+1: classify actions and resolve capture
+4. Each participant chooses a movement action.
+5. **Cooperators** are participants whose **intended move** keeps them within the mammoth's Moore neighborhood at t+1.
+   - This includes staying put, moving onto the mammoth, or moving to any adjacent Moore cell.
+6. **Defectors** are participants whose **intended move** leaves the Moore neighborhood at t+1.
+   - A predator is still a defector even if the move is blocked and it ends up staying in place.
 
-* Predators with higher energy receive a larger share of the prey.
-* Contribution is implicit: bringing more energy to the coalition yields a higher payoff.
-* Cooperation is encouraged **only when necessary** (i.e. when no single predator can meet the capture threshold alone).
-* This rule tends to produce **hierarchical cooperation**:
+#### Success condition
+7. Capture succeeds if:
+   - `sum(E_cooperators) > E_mammoth + team_capture_margin`
+   - This uses cooperator energy at the start of step t+1 (before paying any cooperator cost).
 
-  * strong predators dominate kills,
-  * weaker predators may trail or be excluded,
-  * “rich-get-richer” dynamics can emerge.
+#### Costs and rewards
+8. Each cooperator pays a fixed cost `team_capture_coop_cost` **every time**, even if the capture fails.
+9. On success:
+   - The mammoth is removed.
+   - Its energy is split **equally among all participants** (cooperators + defectors).
+   - Each participant receives: `E_mammoth / N_participants`.
+10. On failure:
+   - The mammoth survives and can move again at step t+2.
+   - No energy is transferred to predators (but cooperators already paid their cost).
 
-**Interpretation:**
-This split is purely local and does not require counterfactual reasoning or centralized credit assignment. Cooperation emerges as a *means* to enable capture, not as a rewarded objective.
-
----
-
-#### 2. Equal Split (optional)
-
-When `team_capture_equal_split = True`, the prey’s energy is divided **equally among all participating predators**:
-
-$$
-\Delta E_i = \frac{E_{\text{prey}}}{|\text{helpers}|}
-$$
-
-**Implications:**
-
-* All helpers receive the same payoff regardless of their individual energy.
-* Low-energy predators are incentivized to stay close to others, as participation alone guarantees reward.
-* This often leads to **increased spatial clustering and pack-like movement**.
-* However, it also introduces **free-rider incentives**:
-
-  * predators may join late or contribute little energy while still receiving an equal share.
-
-**Interpretation:**
-Equal splitting removes implicit hierarchy and favors inclusive cooperation, but at the cost of increased exploitation pressure. Whether stable cooperation emerges becomes a learning problem rather than a structural guarantee.
-
----
-
-### Comparison Summary
-
-| Aspect            | Proportional Split       | Equal Split               |
-| ----------------- | ------------------------ | ------------------------- |
-| Reward basis      | Current energy           | Presence                  |
-| Cooperation style | Hierarchical / selective | Inclusive / pack-oriented |
-| Free-riding       | Discouraged              | Encouraged                |
-| Spatial behavior  | Looser coordination      | Stronger clustering       |
-| Assumptions       | Minimal, local           | Minimal, local            |
-| Credit assignment | Implicit                 | Uniform                   |
-
+#### Social dilemma
+- Defectors reduce the cooperator energy sum, lowering the chance of success.
+- If capture succeeds, defectors still share the reward without paying the cost.
+- This creates a free-riding dilemma: defecting is immediately attractive but can undermine long-term group success.
 
 ### Reproduction
 - Humans reproduce asexually when their energy exceeds `predator_creation_energy_threshold`.
@@ -102,30 +79,27 @@ Equal splitting removes implicit hierarchy and favors inclusive cooperation, but
 
 ---
 
-### Research relevance
+### Metrics (logged via EpisodeReturn callback)
 
-Both division rules (equal or proportional split) preserve the **minimal-assumption philosophy** of the environment:
+Per-episode capture totals:
+- `team_capture_episode_attempts`: number of capture resolutions in the episode.
+- `team_capture_episode_participants`: total participant slots across attempts.
+- `team_capture_episode_cooperators`: total cooperator slots across attempts.
+- `team_capture_episode_defectors`: total defector slots across attempts.
+- `team_capture_episode_successes`: successful captures in the episode.
+- `team_capture_episode_failures`: failed captures in the episode.
 
-* No explicit cooperation reward
-* No kin selection or shared team reward
-* No centralized or counterfactual credit assignment
-
-The difference lies in **what kind of cooperation agents are able to learn**:
-
-* proportional split emphasizes *power-based coalition formation*,
-* equal split emphasizes *presence-based cooperation and coordination*.
-
-Comparing these regimes allows us to study how reward division alone shapes emergent cooperative behavior in multi-agent reinforcement learning.
-
+Cumulative (since training start):
+- `team_capture_total_participants`: total participant slots across all episodes.
+- `team_capture_total_defectors`: total defector slots across all episodes.
+- `team_capture_total_defection_rate`: `total_defectors / total_participants * 100`.
 
 # MADRL training
 
 - Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
-
-  - **Predator** 
+  - **Predator**
   - **Prey**
-
-  - Predators and Prey **learn movement strategies** based on their **partial observations**.
+- Predators and Prey learn movement strategies based on their partial observations.
 
 # Results
 <p align="center">
@@ -134,5 +108,5 @@ Comparing these regimes allows us to study how reward division alone shapes emer
     <img align="center" src="./../../../../assets/images/gifs/cooperative_hunting_mammoths_15MB.gif" width="600" height="500" />
 </p>
 
-- Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
-- Human hunters tend to cluster together.
+- Cooperative hunting can emerge even without explicit rewards for cooperation.
+- Human hunters tend to cluster together when cooperation is beneficial.

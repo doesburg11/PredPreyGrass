@@ -23,15 +23,13 @@ config_env = {
     # Energy settings
     "energy_loss_per_step_predator": 0.05,  # 0.05
     "energy_loss_per_step_prey": 0.1,  # 0.1
-    "energy_percentage_loss_per_failed_attacked_prey": 0.01, # 0.0
     "predator_creation_energy_threshold": 10.0, 
     "prey_creation_energy_threshold": 18.0, # 18.0
     "initial_energy_predator": 4.0,
     "initial_energy_prey": 10.0,  # 10.0
     # Cooperative capture predators
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
-    "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
-    "team_capture_coop_cost": 0.1,  # fixed energy cost paid by cooperators (applies even on failed capture)
+    "team_capture_coop_cost": 0.0,  # fixed energy cost paid by cooperators (applies even on failed capture)
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
