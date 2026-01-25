@@ -40,7 +40,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 0.0)
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.0)
         self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.0)
-        self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
 
         # Reward settings
         self.reproduction_reward_predator_config = config.get("reproduction_reward_predator", 0.0)
@@ -63,7 +62,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Team capture is always enabled in mammoths
         self.team_capture_margin = config.get("team_capture_margin", 0.0)
-        self.team_capture_equal_split = bool(config.get("team_capture_equal_split", False))
         self.team_capture_coop_cost = config.get("team_capture_coop_cost", 0.0)
 
         # Absolute cap for grass energy
@@ -127,6 +125,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_helper_total = 0
         self.team_capture_coop_successes = 0
         self.team_capture_coop_failures = 0
+        self.team_capture_episode_attempts = 0
+        self.team_capture_episode_participants = 0
+        self.team_capture_episode_cooperators = 0
+        self.team_capture_episode_defectors = 0
+        self.team_capture_episode_successes = 0
+        self.team_capture_episode_failures = 0
         self.spawned_predators = 0
         self.spawned_prey = 0
         self._pending_infos = {}
@@ -198,6 +202,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_coop_successes = 0
         self.team_capture_coop_failures = 0
         self.team_capture_events = []
+        self.team_capture_episode_attempts = 0
+        self.team_capture_episode_participants = 0
+        self.team_capture_episode_cooperators = 0
+        self.team_capture_episode_defectors = 0
+        self.team_capture_episode_successes = 0
+        self.team_capture_episode_failures = 0
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
@@ -828,8 +838,6 @@ class PredPreyGrass(MultiAgentEnv):
             return False
         if move_vec is None:
             return False
-        if move_vec == (0, 0):
-            return True
         current_pos = self.agent_positions.get(predator_id)
         if current_pos is None:
             return False
@@ -838,7 +846,7 @@ class PredPreyGrass(MultiAgentEnv):
             current_pos[1] + move_vec[1],
         )
         intended = tuple(np.clip(intended, 0, self.grid_size - 1))
-        return intended == prey_pos
+        return max(abs(intended[0] - prey_pos[0]), abs(intended[1] - prey_pos[1])) <= 1
 
     def _handle_team_capture(self, prey_id, participants, action_dict):
         if self.terminations.get(prey_id):
@@ -874,8 +882,21 @@ class PredPreyGrass(MultiAgentEnv):
                 self.grid_world_state[1, *self.agent_positions[pid]] = self.agent_energies[pid]
 
         participant_count = len(live_participants)
+        self.team_capture_episode_attempts += 1
+        self.team_capture_episode_participants += participant_count
+        self.team_capture_episode_cooperators += len(cooperators)
+        self.team_capture_episode_defectors += len(defectors)
         if not success:
+            self.team_capture_episode_failures += 1
+            self.team_capture_failures += 1
+            if len(cooperators) > 1:
+                self.team_capture_coop_failures += 1
             for pid in live_participants:
+                info = self._pending_infos.setdefault(pid, {})
+                info["team_capture_helpers"] = participant_count
+                info["team_capture_cooperators"] = len(cooperators)
+                info["team_capture_defectors"] = len(defectors)
+                info["team_capture_is_cooperator"] = pid in cooperators
                 evt = self.agent_event_log.get(pid)
                 if evt is not None:
                     evt.setdefault("failed_eating_events", []).append(
@@ -894,14 +915,26 @@ class PredPreyGrass(MultiAgentEnv):
                             "defectors": defectors,
                         }
                     )
-            self.team_capture_failures += 1
-            if len(cooperators) > 1:
-                self.team_capture_coop_failures += 1
+            global_info = self._pending_infos.setdefault("__all__", {})
+            global_info["team_capture_last_helpers"] = participant_count
+            global_info["team_capture_last_cooperators"] = len(cooperators)
+            global_info["team_capture_last_defectors"] = len(defectors)
+            global_info["team_capture_episode_attempts"] = self.team_capture_episode_attempts
+            global_info["team_capture_episode_participants"] = self.team_capture_episode_participants
+            global_info["team_capture_episode_cooperators"] = self.team_capture_episode_cooperators
+            global_info["team_capture_episode_defectors"] = self.team_capture_episode_defectors
+            global_info["team_capture_episode_successes"] = self.team_capture_episode_successes
+            global_info["team_capture_episode_failures"] = self.team_capture_episode_failures
+            global_info["team_capture_successes"] = self.team_capture_successes
+            global_info["team_capture_failures"] = self.team_capture_failures
+            global_info["team_capture_coop_successes"] = self.team_capture_coop_successes
+            global_info["team_capture_coop_failures"] = self.team_capture_coop_failures
             for pid in cooperators:
                 if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
                     self._handle_energy_starvation(pid)
             return False
 
+        self.team_capture_episode_successes += 1
         self.team_capture_successes += 1
         if len(cooperators) > 1:
             self.team_capture_coop_successes += 1
@@ -945,6 +978,14 @@ class PredPreyGrass(MultiAgentEnv):
 
         global_info = self._pending_infos.setdefault("__all__", {})
         global_info["team_capture_last_helpers"] = participant_count
+        global_info["team_capture_last_cooperators"] = len(cooperators)
+        global_info["team_capture_last_defectors"] = len(defectors)
+        global_info["team_capture_episode_attempts"] = self.team_capture_episode_attempts
+        global_info["team_capture_episode_participants"] = self.team_capture_episode_participants
+        global_info["team_capture_episode_cooperators"] = self.team_capture_episode_cooperators
+        global_info["team_capture_episode_defectors"] = self.team_capture_episode_defectors
+        global_info["team_capture_episode_successes"] = self.team_capture_episode_successes
+        global_info["team_capture_episode_failures"] = self.team_capture_episode_failures
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
         global_info["team_capture_coop_successes"] = self.team_capture_coop_successes
@@ -969,12 +1010,33 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _schedule_pending_captures(self):
         pending = {}
-        for prey_id, prey_pos in self.prey_positions.items():
-            if self.terminations.get(prey_id):
+        prey_positions = {
+            prey_id: prey_pos
+            for prey_id, prey_pos in self.prey_positions.items()
+            if not self.terminations.get(prey_id)
+        }
+        if not prey_positions:
+            self.pending_captures = {}
+            return
+
+        prey_energy = {prey_id: float(self.agent_energies.get(prey_id, 0.0)) for prey_id in prey_positions}
+
+        for predator_id, predator_pos in self.predator_positions.items():
+            if self.terminations.get(predator_id):
                 continue
-            participants = self._predators_in_moore_neighborhood(prey_pos)
-            if participants:
-                pending[prey_id] = participants
+            adjacent_prey = [
+                prey_id
+                for prey_id, prey_pos in prey_positions.items()
+                if max(abs(prey_pos[0] - predator_pos[0]), abs(prey_pos[1] - predator_pos[1])) <= 1
+            ]
+            if not adjacent_prey:
+                continue
+            best_prey = sorted(
+                adjacent_prey,
+                key=lambda pid: (-prey_energy.get(pid, 0.0), pid),
+            )[0]
+            pending.setdefault(best_prey, []).append(predator_id)
+
         self.pending_captures = pending
 
     def _handle_prey_engagement(self, agent):

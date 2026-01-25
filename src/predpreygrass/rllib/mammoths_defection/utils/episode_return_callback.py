@@ -15,6 +15,9 @@ class EpisodeReturn(RLlibCallback):
         self.last_iteration_time = self.start_time
         self._last_episode_len_mean = None
         self._last_episode_return_mean = None
+        self.total_capture_participants = 0
+        self.total_capture_defectors = 0
+        self.total_capture_attempts = 0
 
     @staticmethod
     def _get_last_infos(episode):
@@ -151,6 +154,12 @@ class EpisodeReturn(RLlibCallback):
         coop_fail = info_all.get("team_capture_coop_failures")
         total_success = info_all.get("team_capture_successes")
         total_fail = info_all.get("team_capture_failures")
+        episode_attempts = info_all.get("team_capture_episode_attempts")
+        episode_participants = info_all.get("team_capture_episode_participants")
+        episode_cooperators = info_all.get("team_capture_episode_cooperators")
+        episode_defectors = info_all.get("team_capture_episode_defectors")
+        episode_successes = info_all.get("team_capture_episode_successes")
+        episode_failures = info_all.get("team_capture_episode_failures")
 
         env_for_capture = self._resolve_env(episode, **kwargs)
         if env_for_capture is not None:
@@ -158,6 +167,12 @@ class EpisodeReturn(RLlibCallback):
             env_coop_fail = getattr(env_for_capture, "team_capture_coop_failures", None)
             env_total_success = getattr(env_for_capture, "team_capture_successes", None)
             env_total_fail = getattr(env_for_capture, "team_capture_failures", None)
+            env_episode_attempts = getattr(env_for_capture, "team_capture_episode_attempts", None)
+            env_episode_participants = getattr(env_for_capture, "team_capture_episode_participants", None)
+            env_episode_cooperators = getattr(env_for_capture, "team_capture_episode_cooperators", None)
+            env_episode_defectors = getattr(env_for_capture, "team_capture_episode_defectors", None)
+            env_episode_successes = getattr(env_for_capture, "team_capture_episode_successes", None)
+            env_episode_failures = getattr(env_for_capture, "team_capture_episode_failures", None)
 
             def _pick_value(info_val, env_val):
                 if env_val is None:
@@ -173,11 +188,35 @@ class EpisodeReturn(RLlibCallback):
             coop_fail = _pick_value(coop_fail, env_coop_fail)
             total_success = _pick_value(total_success, env_total_success)
             total_fail = _pick_value(total_fail, env_total_fail)
+            episode_attempts = _pick_value(episode_attempts, env_episode_attempts)
+            episode_participants = _pick_value(episode_participants, env_episode_participants)
+            episode_cooperators = _pick_value(episode_cooperators, env_episode_cooperators)
+            episode_defectors = _pick_value(episode_defectors, env_episode_defectors)
+            episode_successes = _pick_value(episode_successes, env_episode_successes)
+            episode_failures = _pick_value(episode_failures, env_episode_failures)
 
         coop_success = coop_success or 0
         coop_fail = coop_fail or 0
         total_success = total_success or 0
         total_fail = total_fail or 0
+        episode_attempts = episode_attempts or 0
+        episode_participants = episode_participants or 0
+        episode_cooperators = episode_cooperators or 0
+        episode_defectors = episode_defectors or 0
+        episode_successes = episode_successes or 0
+        episode_failures = episode_failures or 0
+
+        if episode_attempts:
+            self.total_capture_attempts += int(episode_attempts)
+        if episode_participants:
+            self.total_capture_participants += int(episode_participants)
+        if episode_defectors:
+            self.total_capture_defectors += int(episode_defectors)
+        total_defection_rate = (
+            (self.total_capture_defectors / self.total_capture_participants * 100.0)
+            if self.total_capture_participants
+            else 0.0
+        )
 
         coop_denom = coop_success + coop_fail
         total_denom = total_success + total_fail
@@ -192,6 +231,15 @@ class EpisodeReturn(RLlibCallback):
             metrics_logger.log_value(
                 "custom_metrics/team_capture_total_successes_rate", total_success_rate
             )
+            metrics_logger.log_value("custom_metrics/team_capture_episode_attempts", episode_attempts)
+            metrics_logger.log_value("custom_metrics/team_capture_episode_participants", episode_participants)
+            metrics_logger.log_value("custom_metrics/team_capture_episode_cooperators", episode_cooperators)
+            metrics_logger.log_value("custom_metrics/team_capture_episode_defectors", episode_defectors)
+            metrics_logger.log_value("custom_metrics/team_capture_episode_successes", episode_successes)
+            metrics_logger.log_value("custom_metrics/team_capture_episode_failures", episode_failures)
+            metrics_logger.log_value("custom_metrics/team_capture_total_participants", self.total_capture_participants)
+            metrics_logger.log_value("custom_metrics/team_capture_total_defectors", self.total_capture_defectors)
+            metrics_logger.log_value("custom_metrics/team_capture_total_defection_rate", total_defection_rate)
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -218,6 +266,19 @@ class EpisodeReturn(RLlibCallback):
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
         print(f"  - Coop: successes={coop_success} failures={coop_fail}")
         print(f"  - Total capture: successes={total_success} failures={total_fail}")
+        print(
+            "  - Episode capture totals:"
+            f" attempts={episode_attempts}"
+            f" participants={episode_participants}"
+            f" cooperators={episode_cooperators}"
+            f" defectors={episode_defectors}"
+        )
+        print(
+            "  - Total capture totals:"
+            f" participants={self.total_capture_participants}"
+            f" defectors={self.total_capture_defectors}"
+            f" defection_rate={total_defection_rate:.2f}%"
+        )
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 
@@ -259,5 +320,3 @@ class EpisodeReturn(RLlibCallback):
         if num_eps and len_mean is not None:
             self._last_episode_len_mean = len_mean
             self._last_episode_return_mean = ret_mean
-
-
