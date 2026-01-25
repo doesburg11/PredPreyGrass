@@ -95,8 +95,6 @@ Defectors (non-joiners) do not count toward success.
 - Failure penalties apply only to joiners.
 - The existing penalty `energy_percentage_loss_per_failed_attacked_prey` is
   applied to joiners as before.
-- `failed_attack_kills_predator` also applies only to joiners.
-- If `failed_attack_reward_penalty` > 0, joiners also receive a direct negative reward.
 - Free riders never pay failure costs.
 
 ### Why defectors cannot solo-capture
@@ -120,7 +118,7 @@ cause `exhausted_hunt`.
 | Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
 | Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders equally share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
 | Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` | `team_capture_join_cost`, event `join_cost` |
-| Failure penalties | Apply to all helpers | Apply only to joiners | `energy_percentage_loss_per_failed_attacked_prey`, `failed_attack_kills_predator` |
+| Failure penalties | Apply to all helpers | Apply only to joiners | `energy_percentage_loss_per_failed_attacked_prey` |
 | Defection metrics | Not defined | Join/defect rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
 
 Explanation notes:
@@ -137,7 +135,6 @@ Defined in `config/config_env_stag_hunt.py`:
 - `team_capture_join_cost` (float): fixed energy cost paid by joiners on success.
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
   reserved for nearby non-joiners (only when non-joiners are present).
-- `failed_attack_reward_penalty` (float): per-joiner reward penalty on failed capture.
 
 These are in addition to existing team-capture controls:
 
