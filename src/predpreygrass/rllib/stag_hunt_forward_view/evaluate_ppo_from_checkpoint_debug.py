@@ -214,23 +214,21 @@ def _find_run_config_path(checkpoint_path: str):
 def prepare_eval_output_dir(eval_output_dir: Path, env_cfg: dict, checkpoint_path: str) -> None:
     eval_output_dir.mkdir(parents=True, exist_ok=True)
 
-    config_dir = eval_output_dir / "REPRODUCE_CODE" / "CONFIG"
-    if not config_dir.exists():
-        config_dir.mkdir(parents=True, exist_ok=True)
-        with open(config_dir / "config_env.json", "w") as f:
-            json.dump(env_cfg, f, indent=4)
-        run_config = _find_run_config_path(checkpoint_path)
-        if run_config:
-            shutil.copy2(run_config, config_dir / "run_config.json")
+    reproduce_dir = eval_output_dir / "REPRODUCE_CODE"
+    reproduce_dir.mkdir(parents=True, exist_ok=True)
+    copy_module_snapshot(reproduce_dir)
+    write_pip_freeze(reproduce_dir / "pip_freeze_eval.txt")
+
+    config_dir = reproduce_dir / "CONFIG"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    with open(config_dir / "config_env.json", "w") as f:
+        json.dump(env_cfg, f, indent=4)
+    run_config = _find_run_config_path(checkpoint_path)
+    if run_config:
+        shutil.copy2(run_config, config_dir / "run_config.json")
 
     with open(eval_output_dir / "config_env.json", "w") as f:
         json.dump(env_cfg, f, indent=4)
-
-    reproduce_dir = eval_output_dir / "REPRODUCE_CODE"
-    if not reproduce_dir.exists():
-        reproduce_dir.mkdir(exist_ok=True)
-        copy_module_snapshot(reproduce_dir)
-        write_pip_freeze(reproduce_dir / "pip_freeze_eval.txt")
 
 
 def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
@@ -336,8 +334,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_2_2026-01-28_11-36-54/PPO_PredPreyGrass_43faf_00000_0_2026-01-28_11-36-55/"
-        checkpoint_nr = "checkpoint_000002"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.03_SCAVENGER_0.1_2026-01-27_05-11-38/PPO_PredPreyGrass_47179_00000_0_2026-01-27_05-11-38/"
+        checkpoint_nr = "checkpoint_000076"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
