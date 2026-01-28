@@ -4,6 +4,14 @@ from pathlib import Path
 import numpy as np
 
 
+def _resolve_icons_base() -> Path:
+    path = Path(__file__).resolve()
+    for parent in path.parents:
+        if parent.name == "REPRODUCE_CODE":
+            return parent / "assets" / "images" / "icons"
+    return path.parents[5] / "assets" / "images" / "icons"
+
+
 @dataclass
 class GuiStyle:
     margin_left: int = 10
@@ -190,7 +198,7 @@ class PyGameRenderer:
 
     def _load_icons(self):
         """Load and cache agent icons from assets/images/icons."""
-        base = Path(__file__).resolve().parents[5] / "assets" / "images" / "icons"
+        base = _resolve_icons_base()
         def _load(name):
             p = base / name
             if not p.is_file():
