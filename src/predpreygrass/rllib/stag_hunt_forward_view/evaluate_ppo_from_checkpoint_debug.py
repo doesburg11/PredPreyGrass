@@ -8,43 +8,217 @@ The simulation can be controlled in real-time using a graphical interface.
 - [<-] Step Backward
 - Tooltips are available to inspect agent IDs, positions, energies.
 
-The environment is rendered using PyGame, and the simulation can be recorded as a video. 
+The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
-from predpreygrass.rllib.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env
-from predpreygrass.rllib.stag_hunt_forward_view.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.stag_hunt_forward_view.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
-from predpreygrass.rllib.stag_hunt_forward_view.utils.defection_metrics import (
-    aggregate_capture_outcomes_from_event_log,
-    aggregate_join_choices,
-    compute_opportunity_preference_metrics,
-)
+import ast
+import importlib.util
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from collections import defaultdict
+from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
 
-# external libraries
+import cv2
+import numpy as np
+import pygame
 import ray
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import torch
-from datetime import datetime
-import os
-import json
-import pygame
-import cv2
-import numpy as np
-import re
-from copy import deepcopy
-from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = False
+TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
+
+PredPreyGrass = None
+config_env = None
+CombinedEvolutionVisualizer = None
+PreyDeathCauseVisualizer = None
+PyGameRenderer = None
+ViewerControlHelper = None
+LoopControlHelper = None
+aggregate_capture_outcomes_from_event_log = None
+aggregate_join_choices = None
+compute_opportunity_preference_metrics = None
+
+
+SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
 DISPLAY_SCALE = 0.7
 
 
+def prepend_example_sources() -> None:
+    if not TRAINED_EXAMPLE_DIR:
+        return
+    example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
+    source_dirs = [
+        example_dir / "SOURCE_CODE",
+        example_dir / "eval" / "SOURCE_CODE",
+    ]
+    for path in source_dirs:
+        if path.is_dir():
+            path_str = str(path)
+            if path_str not in sys.path:
+                sys.path.insert(0, path_str)
+
+
+def load_predpreygrass_modules() -> None:
+    global PredPreyGrass
+    global config_env
+    global CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+    global PyGameRenderer, ViewerControlHelper, LoopControlHelper
+    global aggregate_capture_outcomes_from_event_log, aggregate_join_choices, compute_opportunity_preference_metrics
+
+    from predpreygrass.rllib.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env as _config_env
+    from predpreygrass.rllib.stag_hunt_forward_view.utils.matplot_renderer import (
+        CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
+        PreyDeathCauseVisualizer as _PreyDeathCauseVisualizer,
+    )
+    from predpreygrass.rllib.stag_hunt_forward_view.utils.pygame_grid_renderer_rllib import (
+        PyGameRenderer as _PyGameRenderer,
+        ViewerControlHelper as _ViewerControlHelper,
+        LoopControlHelper as _LoopControlHelper,
+    )
+    from predpreygrass.rllib.stag_hunt_forward_view.utils.defection_metrics import (
+        aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
+        aggregate_join_choices as _aggregate_join_choices,
+        compute_opportunity_preference_metrics as _compute_opportunity_preference_metrics,
+    )
+
+    PredPreyGrass = _PredPreyGrass
+    config_env = _config_env
+    CombinedEvolutionVisualizer = _CombinedEvolutionVisualizer
+    PreyDeathCauseVisualizer = _PreyDeathCauseVisualizer
+    PyGameRenderer = _PyGameRenderer
+    ViewerControlHelper = _ViewerControlHelper
+    LoopControlHelper = _LoopControlHelper
+    aggregate_capture_outcomes_from_event_log = _aggregate_capture_outcomes_from_event_log
+    aggregate_join_choices = _aggregate_join_choices
+    compute_opportunity_preference_metrics = _compute_opportunity_preference_metrics
+
+
 def env_creator(config):
     return PredPreyGrass(config)
+
+
+def _copy_init_files(origin: Path, source_dir: Path, root_name: str) -> None:
+    parts = origin.parts
+    if root_name not in parts:
+        return
+    idx = parts.index(root_name)
+    for parent in origin.parents:
+        if len(parent.parts) <= idx:
+            break
+        if parent.parts[idx] != root_name:
+            continue
+        init_path = parent / "__init__.py"
+        if init_path.is_file():
+            rel_init = Path(*init_path.parts[idx:])
+            dest_init = source_dir / rel_init
+            dest_init.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(init_path, dest_init)
+
+
+def copy_imported_modules(source_dir: Path) -> None:
+    script_path = Path(__file__).resolve()
+    tree = ast.parse(script_path.read_text(encoding="utf-8"))
+    modules = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                modules.add(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+
+    for name in sorted(modules):
+        if not name.startswith("predpreygrass."):
+            continue
+        spec = importlib.util.find_spec(name)
+        if not spec or not spec.origin or not spec.origin.endswith(".py"):
+            continue
+        origin = Path(spec.origin).resolve()
+        parts = origin.parts
+        if "predpreygrass" in parts:
+            idx = parts.index("predpreygrass")
+            rel = Path(*parts[idx:])
+            dest = source_dir / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, dest)
+            _copy_init_files(origin, source_dir, "predpreygrass")
+        else:
+            shutil.copy2(origin, source_dir / origin.name)
+
+    shutil.copy2(script_path, source_dir / script_path.name)
+
+
+def write_pip_freeze(output_path: Path) -> None:
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output_path.write_text(result.stdout)
+        if result.stderr:
+            (output_path.parent / "pip_freeze_eval_stderr.txt").write_text(result.stderr)
+    except Exception as exc:
+        output_path.write_text(f"pip freeze failed: {exc}")
+
+
+def _find_run_config_path(checkpoint_path: str):
+    candidates = [
+        Path(checkpoint_path).parent / "run_config.json",
+        Path(checkpoint_path).parent.parent / "run_config.json",
+    ]
+    if TRAINED_EXAMPLE_DIR:
+        candidates.append(Path(TRAINED_EXAMPLE_DIR).expanduser().resolve() / "CONFIG" / "run_config.json")
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    return None
+
+
+def prepare_eval_output_dir(eval_output_dir: Path, env_cfg: dict, checkpoint_path: str) -> None:
+    eval_output_dir.mkdir(parents=True, exist_ok=True)
+
+    config_dir = eval_output_dir / "CONFIG"
+    if not config_dir.exists():
+        config_dir.mkdir(exist_ok=True)
+        write_pip_freeze(config_dir / "pip_freeze_eval.txt")
+        with open(config_dir / "config_env.json", "w") as f:
+            json.dump(env_cfg, f, indent=4)
+        run_config = _find_run_config_path(checkpoint_path)
+        if run_config:
+            shutil.copy2(run_config, config_dir / "run_config.json")
+
+    with open(eval_output_dir / "config_env.json", "w") as f:
+        json.dump(env_cfg, f, indent=4)
+
+    source_dir = eval_output_dir / "SOURCE_CODE"
+    if not source_dir.exists():
+        source_dir.mkdir(exist_ok=True)
+        copy_imported_modules(source_dir)
+
+
+def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
+    checkpoint_dir = example_dir / "checkpoint"
+    if checkpoint_dir.is_dir():
+        return checkpoint_dir
+    candidates = sorted(example_dir.glob("checkpoint_*"))
+    if len(candidates) == 1:
+        return candidates[0]
+    if not candidates:
+        raise FileNotFoundError(f"No checkpoint found in {example_dir}")
+    raise FileExistsError(f"Multiple checkpoints found in {example_dir}; please keep only one.")
 
 
 def _load_training_env_config_from_run(checkpoint_path, base_cfg):
@@ -53,26 +227,21 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
     into the provided base_cfg. This aligns evaluation observations with the
     shapes the policy network was trained on (avoids matmul shape errors).
     """
-    candidates = [
-        os.path.join(os.path.dirname(checkpoint_path), "run_config.json"),
-        os.path.join(os.path.dirname(os.path.dirname(checkpoint_path)), "run_config.json"),
-    ]
     training_env_cfg = None
-    for cand in candidates:
-        if os.path.isfile(cand):
-            try:
-                with open(cand, "r") as f:
-                    rc = json.load(f)
-                # Prefer explicit env_config if present; else, fall back to top-level keys
-                if isinstance(rc, dict):
-                    if isinstance(rc.get("env_config"), dict):
-                        training_env_cfg = rc["env_config"]
-                    else:
-                        # Heuristic: intersect with known keys in base_cfg
-                        training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
-                break
-            except Exception:
-                pass
+    cand = _find_run_config_path(checkpoint_path)
+    if cand and cand.is_file():
+        try:
+            with open(cand, "r") as f:
+                rc = json.load(f)
+            # Prefer explicit env_config if present; else, fall back to top-level keys
+            if isinstance(rc, dict):
+                if isinstance(rc.get("env_config"), dict):
+                    training_env_cfg = rc["env_config"]
+                else:
+                    # Heuristic: intersect with known keys in base_cfg
+                    training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
+        except Exception:
+            pass
 
     if not isinstance(training_env_cfg, dict):
         return base_cfg  # nothing to merge
@@ -136,20 +305,26 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 def setup_environment_and_visualizer(now):
     # MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-    checkpoint_root = "STAG_HUNT_FORWARD_VIEW_2026-01-24_20-13-33/PPO_PredPreyGrass_c6e2d_00000_0_2026-01-24_20-13-33/"
-    checkpoint_nr = "checkpoint_000012"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
-    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
+    if TRAINED_EXAMPLE_DIR:
+        example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
+        checkpoint_path = resolve_trained_example_checkpoint(example_dir)
+        eval_root = example_dir / "eval" / "runs"
+        eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
+    else:
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
+        checkpoint_nr = "checkpoint_000099"
+        checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
+        eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
-    rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
+    rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
     module_paths = {}
 
-    if os.path.isdir(rl_module_dir):
+    if rl_module_dir.is_dir():
         for pid in os.listdir(rl_module_dir):
-            path = os.path.join(rl_module_dir, pid)
-            if os.path.isdir(path):
-                module_paths[pid] = path
+            path = rl_module_dir / pid
+            if path.is_dir():
+                module_paths[pid] = str(path)
     else:
         raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
 
@@ -157,7 +332,7 @@ def setup_environment_and_visualizer(now):
 
     # Build config based on config_env and align observation-related keys with training run config
     cfg = dict(config_env)
-    cfg = _load_training_env_config_from_run(checkpoint_path, cfg)
+    cfg = _load_training_env_config_from_run(str(checkpoint_path), cfg)
 
     env = env_creator(config=cfg)
     grid_size = (env.grid_size, env.grid_size)
@@ -191,11 +366,9 @@ def setup_environment_and_visualizer(now):
         )
 
     if SAVE_EVAL_RESULTS:
-        os.makedirs(eval_output_dir, exist_ok=True)
-        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
-        ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
-        pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
+        prepare_eval_output_dir(Path(eval_output_dir), cfg, str(checkpoint_path))
+        ceviz = CombinedEvolutionVisualizer(destination_path=str(eval_output_dir), timestamp=now)
+        pdviz = PreyDeathCauseVisualizer(destination_path=str(eval_output_dir), timestamp=now)
     else:
         ceviz = CombinedEvolutionVisualizer(destination_path=None, timestamp=now)
         pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
@@ -553,7 +726,9 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 5
+    prepend_example_sources()
+    load_predpreygrass_modules()
+    seed = 8
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))

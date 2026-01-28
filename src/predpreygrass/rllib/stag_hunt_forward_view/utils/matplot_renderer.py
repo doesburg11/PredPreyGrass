@@ -288,8 +288,9 @@ class AverageAgeVisualizer:
 
 
 class PopulationChart:
-    def __init__(self, destination_path=None):
+    def __init__(self, destination_path=None, destination_filename="visuals"):
         self.destination_path = destination_path
+        self.destination_filename = destination_filename
         self.time_steps = []
         self.predator_counts = []
         self.prey_counts = []
@@ -311,7 +312,7 @@ class PopulationChart:
         plt.tight_layout()
 
         if self.destination_path:
-            plot_dir = os.path.join(self.destination_path, "summary_plots")
+            plot_dir = os.path.join(self.destination_path, self.destination_filename)
             os.makedirs(plot_dir, exist_ok=True)
             filepath = os.path.join(plot_dir, "population_chart.png")
             plt.savefig(filepath)
@@ -321,7 +322,7 @@ class PopulationChart:
 
 
 class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots", run_nr=None):
+    def __init__(self, destination_path=None, timestamp=None, destination_filename="visuals", run_nr=None):
         self.destination_path = destination_path
         self.destination_filename = destination_filename
         self.timestamp = timestamp
@@ -407,8 +408,12 @@ class CombinedEvolutionVisualizer:
         plt.tight_layout()
 
         if self.destination_path:
-            os.makedirs(os.path.join(self.destination_path, "summary_plots"), exist_ok=True)
-            path = os.path.join(self.destination_path, "summary_plots", "evolution_summary_" + str(self.run_nr) + ".png")
+            os.makedirs(os.path.join(self.destination_path, self.destination_filename), exist_ok=True)
+            path = os.path.join(
+                self.destination_path,
+                self.destination_filename,
+                "evolution_summary_" + str(self.run_nr) + ".png",
+            )
             plt.savefig(path)
             # plt.show()
         else:
@@ -416,7 +421,7 @@ class CombinedEvolutionVisualizer:
 
 
 class PreyDeathCauseVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="summary_plots"):
+    def __init__(self, destination_path=None, timestamp=None, destination_filename="visuals"):
         self.timestamp = timestamp
         self.destination_path = destination_path
         self.destination_filename = destination_filename
