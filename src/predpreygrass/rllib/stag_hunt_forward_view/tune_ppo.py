@@ -5,6 +5,31 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+import json
+import shutil
+import subprocess
+
+
+def _prepend_snapshot_source() -> None:
+    script_path = Path(__file__).resolve()
+    try:
+        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
+            source_root = script_path.parents[3]
+            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
+                source_root_str = str(source_root)
+                if source_root_str not in sys.path:
+                    sys.path.insert(0, source_root_str)
+    except IndexError:
+        return
+
+
+_prepend_snapshot_source()
+
+
 from predpreygrass.rllib.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env
 from predpreygrass.rllib.stag_hunt_forward_view.utils.episode_return_callback import EpisodeReturn
@@ -15,72 +40,64 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
-import os
-import ast
-import importlib.util
-import subprocess
-import sys
-from datetime import datetime
-from pathlib import Path
-import json
-import shutil
+
+_SNAPSHOT_EXCLUDE_DIRS = {
+    "ray_results",
+    "ray_results_failed",
+    "trained_examples",
+    "__pycache__",
+}
 
 
-def _copy_init_files(origin: Path, source_dir: Path, root_name: str) -> None:
-    parts = origin.parts
-    if root_name not in parts:
-        return
-    idx = parts.index(root_name)
-    for parent in origin.parents:
-        if len(parent.parts) <= idx:
+def copy_module_snapshot(reproduce_dir: Path) -> None:
+    """Copy only the local module tree into REPRODUCE_CODE for reproducibility."""
+    module_dir = Path(__file__).resolve().parent
+    module_name = module_dir.name
+
+    pkg_root = reproduce_dir / "predpreygrass"
+    rllib_root = pkg_root / "rllib"
+    rllib_root.mkdir(parents=True, exist_ok=True)
+
+    pkg_init = pkg_root / "__init__.py"
+    if not pkg_init.exists():
+        pkg_init.write_text("")
+    rllib_init = rllib_root / "__init__.py"
+    if not rllib_init.exists():
+        rllib_init.write_text("")
+
+    dest_dir = rllib_root / module_name
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    def _ignore(path: str, entries):
+        ignored = []
+        for entry in entries:
+            if entry in _SNAPSHOT_EXCLUDE_DIRS:
+                ignored.append(entry)
+                continue
+            if entry.endswith(".pyc"):
+                ignored.append(entry)
+        return ignored
+
+    shutil.copytree(module_dir, dest_dir, ignore=_ignore)
+
+    assets_src = None
+    for parent in module_dir.parents:
+        if parent.name == "REPRODUCE_CODE":
+            candidate = parent / "assets" / "images" / "icons"
+            if candidate.is_dir():
+                assets_src = candidate
             break
-        if parent.parts[idx] != root_name:
-            continue
-        init_path = parent / "__init__.py"
-        if init_path.is_file():
-            rel_init = Path(*init_path.parts[idx:])
-            dest_init = source_dir / rel_init
-            dest_init.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(init_path, dest_init)
-
-
-def copy_imported_modules(source_dir: Path) -> None:
-    """
-    Copy all imported modules in the current script to the source_dir,
-    for reproducibility.
-    Args:
-        source_dir (Path): The directory where the imported modules will be copied.
-    """
-    script_path = Path(__file__).resolve()
-    tree = ast.parse(script_path.read_text(encoding="utf-8"))
-    modules = set()
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                modules.add(alias.name)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            modules.add(node.module)
-
-    for name in sorted(modules):
-        if not name.startswith("predpreygrass."):
-            continue
-        spec = importlib.util.find_spec(name)
-        if not spec or not spec.origin or not spec.origin.endswith(".py"):
-            continue
-        origin = Path(spec.origin).resolve()
-        parts = origin.parts
-        if "predpreygrass" in parts:
-            idx = parts.index("predpreygrass")
-            rel = Path(*parts[idx:])
-            dest = source_dir / rel
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(origin, dest)
-            _copy_init_files(origin, source_dir, "predpreygrass")
-        else:
-            shutil.copy2(origin, source_dir / origin.name)
-
-    shutil.copy2(script_path, source_dir / script_path.name)
+    if assets_src is None:
+        candidate = module_dir.parents[4] / "assets" / "images" / "icons"
+        if candidate.is_dir():
+            assets_src = candidate
+    if assets_src:
+        assets_dest = reproduce_dir / "assets" / "images" / "icons"
+        if assets_dest.exists():
+            shutil.rmtree(assets_dest)
+        assets_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(assets_src, assets_dest)
 
 
 def write_pip_freeze(output_path: Path) -> None:
@@ -138,17 +155,21 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
     env_config = {**config_env, "seed": None}
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-    ray_results_path = Path(ray_results_dir).expanduser()
+    trained_example_dir = os.getenv("TRAINED_EXAMPLE_DIR")
+    if trained_example_dir:
+        ray_results_path = Path(trained_example_dir).expanduser().resolve() / "ray_results"
+    else:
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
+        ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_FORWARD_VIEW"
+    version = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_2"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
-    source_dir = experiment_path / "SOURCE_CODE"
-    source_dir.mkdir(exist_ok=True)
-    copy_imported_modules(source_dir)
+    reproduce_dir = experiment_path / "REPRODUCE_CODE"
+    reproduce_dir.mkdir(exist_ok=True)
+    copy_module_snapshot(reproduce_dir)
 
     config_ppo = get_config_ppo()
     config_metadata = {
@@ -159,21 +180,14 @@ if __name__ == "__main__":
         json.dump(config_metadata, f, indent=4)
     # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
-    config_dir = experiment_path / "CONFIG"
-    config_dir.mkdir(exist_ok=True)
-    write_pip_freeze(config_dir / "pip_freeze_train.txt")
+    config_dir = reproduce_dir / "CONFIG"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    write_pip_freeze(reproduce_dir / "pip_freeze_train.txt")
     with open(config_dir / "config_env.json", "w") as f:
         json.dump(config_env, f, indent=4)
     with open(config_dir / "config_ppo.json", "w") as f:
         json.dump(config_ppo, f, indent=4)
     shutil.copy2(experiment_path / "run_config.json", config_dir / "run_config.json")
-
-    promote_dir = experiment_path / "PROMOTE"
-    promote_dir.mkdir(exist_ok=True)
-    repo_root = Path(__file__).resolve().parents[4]
-    promote_template = repo_root / "src" / "predpreygrass" / "rllib" / "tools" / "promote_trained_example_template.py"
-    if promote_template.is_file():
-        shutil.copy2(promote_template, promote_dir / "promote_trained_example.py")
 
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
