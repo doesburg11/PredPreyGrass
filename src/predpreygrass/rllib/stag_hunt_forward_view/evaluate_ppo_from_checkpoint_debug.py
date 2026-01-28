@@ -10,8 +10,6 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
-import ast
-import importlib.util
 import json
 import os
 import re
@@ -33,6 +31,22 @@ import torch
 
 
 TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
+
+
+def _prepend_snapshot_source() -> None:
+    script_path = Path(__file__).resolve()
+    try:
+        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
+            source_root = script_path.parents[3]
+            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
+                source_root_str = str(source_root)
+                if source_root_str not in sys.path:
+                    sys.path.insert(0, source_root_str)
+    except IndexError:
+        return
+
+
+_prepend_snapshot_source()
 
 PredPreyGrass = None
 config_env = None
@@ -58,7 +72,9 @@ def prepend_example_sources() -> None:
         return
     example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
     source_dirs = [
+        example_dir / "REPRODUCE_CODE",
         example_dir / "SOURCE_CODE",
+        example_dir / "eval" / "REPRODUCE_CODE",
         example_dir / "eval" / "SOURCE_CODE",
     ]
     for path in source_dirs:
@@ -108,55 +124,62 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 
-def _copy_init_files(origin: Path, source_dir: Path, root_name: str) -> None:
-    parts = origin.parts
-    if root_name not in parts:
-        return
-    idx = parts.index(root_name)
-    for parent in origin.parents:
-        if len(parent.parts) <= idx:
+_SNAPSHOT_EXCLUDE_DIRS = {
+    "ray_results",
+    "ray_results_failed",
+    "trained_examples",
+    "__pycache__",
+}
+
+
+def copy_module_snapshot(source_dir: Path) -> None:
+    module_dir = Path(__file__).resolve().parent
+    module_name = module_dir.name
+
+    pkg_root = source_dir / "predpreygrass"
+    rllib_root = pkg_root / "rllib"
+    rllib_root.mkdir(parents=True, exist_ok=True)
+
+    pkg_init = pkg_root / "__init__.py"
+    if not pkg_init.exists():
+        pkg_init.write_text("")
+    rllib_init = rllib_root / "__init__.py"
+    if not rllib_init.exists():
+        rllib_init.write_text("")
+
+    dest_dir = rllib_root / module_name
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    def _ignore(path: str, entries):
+        ignored = []
+        for entry in entries:
+            if entry in _SNAPSHOT_EXCLUDE_DIRS:
+                ignored.append(entry)
+                continue
+            if entry.endswith(".pyc"):
+                ignored.append(entry)
+        return ignored
+
+    shutil.copytree(module_dir, dest_dir, ignore=_ignore)
+
+    assets_src = None
+    for parent in module_dir.parents:
+        if parent.name == "REPRODUCE_CODE":
+            candidate = parent / "assets" / "images" / "icons"
+            if candidate.is_dir():
+                assets_src = candidate
             break
-        if parent.parts[idx] != root_name:
-            continue
-        init_path = parent / "__init__.py"
-        if init_path.is_file():
-            rel_init = Path(*init_path.parts[idx:])
-            dest_init = source_dir / rel_init
-            dest_init.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(init_path, dest_init)
-
-
-def copy_imported_modules(source_dir: Path) -> None:
-    script_path = Path(__file__).resolve()
-    tree = ast.parse(script_path.read_text(encoding="utf-8"))
-    modules = set()
-
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            for alias in node.names:
-                modules.add(alias.name)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            modules.add(node.module)
-
-    for name in sorted(modules):
-        if not name.startswith("predpreygrass."):
-            continue
-        spec = importlib.util.find_spec(name)
-        if not spec or not spec.origin or not spec.origin.endswith(".py"):
-            continue
-        origin = Path(spec.origin).resolve()
-        parts = origin.parts
-        if "predpreygrass" in parts:
-            idx = parts.index("predpreygrass")
-            rel = Path(*parts[idx:])
-            dest = source_dir / rel
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(origin, dest)
-            _copy_init_files(origin, source_dir, "predpreygrass")
-        else:
-            shutil.copy2(origin, source_dir / origin.name)
-
-    shutil.copy2(script_path, source_dir / script_path.name)
+    if assets_src is None:
+        candidate = module_dir.parents[4] / "assets" / "images" / "icons"
+        if candidate.is_dir():
+            assets_src = candidate
+    if assets_src:
+        assets_dest = source_dir / "assets" / "images" / "icons"
+        if assets_dest.exists():
+            shutil.rmtree(assets_dest)
+        assets_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(assets_src, assets_dest)
 
 
 def write_pip_freeze(output_path: Path) -> None:
@@ -180,6 +203,7 @@ def _find_run_config_path(checkpoint_path: str):
         Path(checkpoint_path).parent.parent / "run_config.json",
     ]
     if TRAINED_EXAMPLE_DIR:
+        candidates.append(Path(TRAINED_EXAMPLE_DIR).expanduser().resolve() / "REPRODUCE_CODE" / "CONFIG" / "run_config.json")
         candidates.append(Path(TRAINED_EXAMPLE_DIR).expanduser().resolve() / "CONFIG" / "run_config.json")
     for cand in candidates:
         if cand.is_file():
@@ -190,10 +214,9 @@ def _find_run_config_path(checkpoint_path: str):
 def prepare_eval_output_dir(eval_output_dir: Path, env_cfg: dict, checkpoint_path: str) -> None:
     eval_output_dir.mkdir(parents=True, exist_ok=True)
 
-    config_dir = eval_output_dir / "CONFIG"
+    config_dir = eval_output_dir / "REPRODUCE_CODE" / "CONFIG"
     if not config_dir.exists():
-        config_dir.mkdir(exist_ok=True)
-        write_pip_freeze(config_dir / "pip_freeze_eval.txt")
+        config_dir.mkdir(parents=True, exist_ok=True)
         with open(config_dir / "config_env.json", "w") as f:
             json.dump(env_cfg, f, indent=4)
         run_config = _find_run_config_path(checkpoint_path)
@@ -203,10 +226,11 @@ def prepare_eval_output_dir(eval_output_dir: Path, env_cfg: dict, checkpoint_pat
     with open(eval_output_dir / "config_env.json", "w") as f:
         json.dump(env_cfg, f, indent=4)
 
-    source_dir = eval_output_dir / "SOURCE_CODE"
-    if not source_dir.exists():
-        source_dir.mkdir(exist_ok=True)
-        copy_imported_modules(source_dir)
+    reproduce_dir = eval_output_dir / "REPRODUCE_CODE"
+    if not reproduce_dir.exists():
+        reproduce_dir.mkdir(exist_ok=True)
+        copy_module_snapshot(reproduce_dir)
+        write_pip_freeze(reproduce_dir / "pip_freeze_eval.txt")
 
 
 def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
@@ -312,8 +336,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
-        checkpoint_nr = "checkpoint_000099"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_2_2026-01-28_11-36-54/PPO_PredPreyGrass_43faf_00000_0_2026-01-28_11-36-55/"
+        checkpoint_nr = "checkpoint_000002"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
@@ -728,7 +752,7 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
-    seed = 8
+    seed = 3
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
