@@ -354,6 +354,8 @@ class EpisodeReturn(RLlibCallback):
         total_fail = info_all.get("team_capture_failures", 0)
         mammoth_success = info_all.get("team_capture_mammoth_successes", 0)
         mammoth_fail = info_all.get("team_capture_mammoth_failures", 0)
+        rabbit_success = info_all.get("team_capture_rabbit_successes", 0)
+        rabbit_fail = info_all.get("team_capture_rabbit_failures", 0)
 
         env = self._resolve_env(episode, **kwargs)
         if env is not None and (not info_all or (total_success == 0 and total_fail == 0)):
@@ -364,9 +366,15 @@ class EpisodeReturn(RLlibCallback):
         if env is not None and (mammoth_success + mammoth_fail) == 0:
             mammoth_success = getattr(env, "team_capture_mammoth_successes", mammoth_success)
             mammoth_fail = getattr(env, "team_capture_mammoth_failures", mammoth_fail)
+        if env is not None and (rabbit_success + rabbit_fail) == 0:
+            rabbit_success = getattr(env, "team_capture_rabbit_successes", rabbit_success)
+            rabbit_fail = getattr(env, "team_capture_rabbit_failures", rabbit_fail)
         mammoth_attempts = mammoth_success + mammoth_fail
         mammoth_success_rate = mammoth_success / mammoth_attempts if mammoth_attempts else 0.0
         mammoth_success_rate_pct = mammoth_success_rate * 100.0
+        rabbit_attempts = rabbit_success + rabbit_fail
+        rabbit_success_rate = rabbit_success / rabbit_attempts if rabbit_attempts else 0.0
+        rabbit_success_rate_pct = rabbit_success_rate * 100.0
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_coop_successes", coop_success)
             metrics_logger.log_value("custom_metrics/team_capture_coop_failures", coop_fail)
@@ -376,6 +384,10 @@ class EpisodeReturn(RLlibCallback):
             metrics_logger.log_value("custom_metrics/mammoth_capture_failures", mammoth_fail)
             metrics_logger.log_value("custom_metrics/mammoth_capture_attempts", mammoth_attempts)
             metrics_logger.log_value("custom_metrics/mammoth_capture_success_rate", mammoth_success_rate_pct)
+            metrics_logger.log_value("custom_metrics/rabbit_capture_successes", rabbit_success)
+            metrics_logger.log_value("custom_metrics/rabbit_capture_failures", rabbit_fail)
+            metrics_logger.log_value("custom_metrics/rabbit_capture_attempts", rabbit_attempts)
+            metrics_logger.log_value("custom_metrics/rabbit_capture_success_rate", rabbit_success_rate_pct)
         if hasattr(episode, "custom_metrics"):
             episode.custom_metrics["team_capture_coop_successes"] = coop_success
             episode.custom_metrics["team_capture_coop_failures"] = coop_fail
@@ -385,6 +397,10 @@ class EpisodeReturn(RLlibCallback):
             episode.custom_metrics["mammoth_capture_failures"] = mammoth_fail
             episode.custom_metrics["mammoth_capture_attempts"] = mammoth_attempts
             episode.custom_metrics["mammoth_capture_success_rate"] = mammoth_success_rate_pct
+            episode.custom_metrics["rabbit_capture_successes"] = rabbit_success
+            episode.custom_metrics["rabbit_capture_failures"] = rabbit_fail
+            episode.custom_metrics["rabbit_capture_attempts"] = rabbit_attempts
+            episode.custom_metrics["rabbit_capture_success_rate"] = rabbit_success_rate_pct
 
         # Join/defect and capture-style metrics
         user_data = self._get_user_data(episode)

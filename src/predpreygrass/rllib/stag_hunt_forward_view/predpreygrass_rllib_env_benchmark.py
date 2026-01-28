@@ -95,6 +95,7 @@ class PredPreyGrass(MultiAgentEnv):
                 "type_2_prey": bite_size_prey,
                 "default": bite_size_prey,
             }
+        self.energy_percentage_loss_per_failed_attacked_prey = config.get("energy_percentage_loss_per_failed_attacked_prey", 0.0)
         self.death_penalty_predator = float(config.get("death_penalty_predator", 0.0))
         self.death_penalty_type_1_prey = float(config.get("death_penalty_type_1_prey", 0.0))
         self.death_penalty_type_2_prey = float(config.get("death_penalty_type_2_prey", 0.0))
@@ -214,8 +215,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_coop_failures = 0
         self.team_capture_mammoth_successes = 0
         self.team_capture_mammoth_failures = 0
-        self.team_capture_rabbit_successes = 0
-        self.team_capture_rabbit_failures = 0
         self.team_capture_events = []
         self.team_capture_failed_events = []
         self.team_capture_failed_events = []
@@ -292,8 +291,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_coop_failures = 0
         self.team_capture_mammoth_successes = 0
         self.team_capture_mammoth_failures = 0
-        self.team_capture_rabbit_successes = 0
-        self.team_capture_rabbit_failures = 0
         self.team_capture_events = []
         # Episode-level spawn counters
         self.spawned_predators = 0
@@ -458,15 +455,6 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= self._get_prey_creation_threshold(agent):
                 self._handle_prey_reproduction(agent)
 
-        mammoth_attempts = self.team_capture_mammoth_successes + self.team_capture_mammoth_failures
-        rabbit_attempts = self.team_capture_rabbit_successes + self.team_capture_rabbit_failures
-        mammoth_success_rate = (
-            self.team_capture_mammoth_successes / mammoth_attempts if mammoth_attempts else 0.0
-        )
-        rabbit_success_rate = (
-            self.team_capture_rabbit_successes / rabbit_attempts if rabbit_attempts else 0.0
-        )
-
         global_info = self._pending_infos.setdefault("__all__", {})
         global_info["team_capture_successes"] = self.team_capture_successes
         global_info["team_capture_failures"] = self.team_capture_failures
@@ -474,10 +462,6 @@ class PredPreyGrass(MultiAgentEnv):
         global_info["team_capture_coop_failures"] = self.team_capture_coop_failures
         global_info["team_capture_mammoth_successes"] = self.team_capture_mammoth_successes
         global_info["team_capture_mammoth_failures"] = self.team_capture_mammoth_failures
-        global_info["team_capture_mammoth_success_rate"] = mammoth_success_rate
-        global_info["team_capture_rabbit_successes"] = self.team_capture_rabbit_successes
-        global_info["team_capture_rabbit_failures"] = self.team_capture_rabbit_failures
-        global_info["team_capture_rabbit_success_rate"] = rabbit_success_rate
         for agent in self.agents:
             info = self._pending_infos.setdefault(agent, {})
             info["team_capture_successes"] = self.team_capture_successes
@@ -486,10 +470,6 @@ class PredPreyGrass(MultiAgentEnv):
             info["team_capture_coop_failures"] = self.team_capture_coop_failures
             info["team_capture_mammoth_successes"] = self.team_capture_mammoth_successes
             info["team_capture_mammoth_failures"] = self.team_capture_mammoth_failures
-            info["team_capture_mammoth_success_rate"] = mammoth_success_rate
-            info["team_capture_rabbit_successes"] = self.team_capture_rabbit_successes
-            info["team_capture_rabbit_failures"] = self.team_capture_rabbit_failures
-            info["team_capture_rabbit_success_rate"] = rabbit_success_rate
             if "predator" in agent:
                 info["join_hunt"] = bool(self.predator_join_intent.get(agent, True))
 
@@ -1043,12 +1023,11 @@ class PredPreyGrass(MultiAgentEnv):
         helper_count = len(joiners)
         total_pred_energy = sum(self.agent_energies[h] for h in joiners)
         prey_energy = float(self.agent_energies[prey_id])
-        join_cost = self.team_capture_join_cost
         is_mammoth = prey_id.startswith("type_1_prey")
-        is_rabbit = prey_id.startswith("type_2_prey")
         if total_pred_energy <= prey_energy + self.team_capture_margin:
-            # Handle failed attempt: apply join cost to joiners.
+            # Handle failed attempt: optionally kill joiners, otherwise apply energy penalty.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
+            join_cost = self.team_capture_join_cost
             if join_cost:
                 for pid in joiners:
                     self.agent_energies[pid] -= join_cost
@@ -1057,6 +1036,29 @@ class PredPreyGrass(MultiAgentEnv):
                     )
                     self._per_agent_step_deltas[pid]["eat"] -= join_cost
                     self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
+            total_penalty = prey_energy * self.energy_percentage_loss_per_failed_attacked_prey
+            if total_penalty > 0.0:
+                if total_pred_energy > 0.0:
+                    for pid in joiners:
+                        penalty_share = total_penalty * (helper_energy_snapshot[pid] / total_pred_energy)
+                        if penalty_share:
+                            self.agent_energies[pid] -= penalty_share
+                            self._per_agent_step_deltas.setdefault(
+                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
+                            )
+                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
+                            self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
+                else:
+                    penalty_share = total_penalty / helper_count
+                    for pid in joiners:
+                        if penalty_share:
+                            self.agent_energies[pid] -= penalty_share
+                            self._per_agent_step_deltas.setdefault(
+                                pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
+                            )
+                            self._per_agent_step_deltas[pid]["eat"] -= penalty_share
+                            self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
+
             # Log failed attempt when joiners exist but combined energy insufficient
             for pid in joiners:
                 evt = self.agent_event_log.get(pid)
@@ -1085,8 +1087,6 @@ class PredPreyGrass(MultiAgentEnv):
             self.team_capture_failures += 1
             if is_mammoth:
                 self.team_capture_mammoth_failures += 1
-            elif is_rabbit:
-                self.team_capture_rabbit_failures += 1
             if helper_count > 1:
                 self.team_capture_coop_failures += 1
                 self.team_capture_failed_events.append(
@@ -1101,8 +1101,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.team_capture_successes += 1
         if is_mammoth:
             self.team_capture_mammoth_successes += 1
-        elif is_rabbit:
-            self.team_capture_rabbit_successes += 1
         if helper_count > 1:
             self.team_capture_coop_successes += 1
         self.team_capture_helper_total += helper_count
@@ -1112,6 +1110,7 @@ class PredPreyGrass(MultiAgentEnv):
         scavenger_fraction = self.team_capture_scavenger_fraction if free_riders else 0.0
         scavenger_energy_total = prey_energy * scavenger_fraction
         joiner_energy_pool = prey_energy - scavenger_energy_total
+        join_cost = self.team_capture_join_cost
 
         for pid in joiners:
             self.agents_just_ate.add(pid)

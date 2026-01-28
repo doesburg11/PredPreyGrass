@@ -18,10 +18,30 @@ from ray.tune import Tuner, RunConfig, CheckpointConfig
 import os
 import ast
 import importlib.util
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 import json
 import shutil
+
+
+def _copy_init_files(origin: Path, source_dir: Path, root_name: str) -> None:
+    parts = origin.parts
+    if root_name not in parts:
+        return
+    idx = parts.index(root_name)
+    for parent in origin.parents:
+        if len(parent.parts) <= idx:
+            break
+        if parent.parts[idx] != root_name:
+            continue
+        init_path = parent / "__init__.py"
+        if init_path.is_file():
+            rel_init = Path(*init_path.parts[idx:])
+            dest_init = source_dir / rel_init
+            dest_init.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(init_path, dest_init)
 
 
 def copy_imported_modules(source_dir: Path) -> None:
@@ -48,9 +68,35 @@ def copy_imported_modules(source_dir: Path) -> None:
         spec = importlib.util.find_spec(name)
         if not spec or not spec.origin or not spec.origin.endswith(".py"):
             continue
-        shutil.copy2(spec.origin, source_dir / Path(spec.origin).name)
+        origin = Path(spec.origin).resolve()
+        parts = origin.parts
+        if "predpreygrass" in parts:
+            idx = parts.index("predpreygrass")
+            rel = Path(*parts[idx:])
+            dest = source_dir / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(origin, dest)
+            _copy_init_files(origin, source_dir, "predpreygrass")
+        else:
+            shutil.copy2(origin, source_dir / origin.name)
 
     shutil.copy2(script_path, source_dir / script_path.name)
+
+
+def write_pip_freeze(output_path: Path) -> None:
+    """Write the current environment's pip freeze to output_path."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output_path.write_text(result.stdout)
+        if result.stderr:
+            (output_path.parent / "pip_freeze_train_stderr.txt").write_text(result.stderr)
+    except Exception as exc:
+        output_path.write_text(f"pip freeze failed: {exc}")
 
 
 def get_config_ppo():
@@ -112,6 +158,22 @@ if __name__ == "__main__":
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
     # print(f"Saved config to: {experiment_path/'run_config.json'}")
+
+    config_dir = experiment_path / "CONFIG"
+    config_dir.mkdir(exist_ok=True)
+    write_pip_freeze(config_dir / "pip_freeze_train.txt")
+    with open(config_dir / "config_env.json", "w") as f:
+        json.dump(config_env, f, indent=4)
+    with open(config_dir / "config_ppo.json", "w") as f:
+        json.dump(config_ppo, f, indent=4)
+    shutil.copy2(experiment_path / "run_config.json", config_dir / "run_config.json")
+
+    promote_dir = experiment_path / "PROMOTE"
+    promote_dir.mkdir(exist_ok=True)
+    repo_root = Path(__file__).resolve().parents[4]
+    promote_template = repo_root / "src" / "predpreygrass" / "rllib" / "tools" / "promote_trained_example_template.py"
+    if promote_template.is_file():
+        shutil.copy2(promote_template, promote_dir / "promote_trained_example.py")
 
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting

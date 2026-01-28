@@ -47,6 +47,9 @@ def aggregate_capture_outcomes(info_all_list: list[dict]) -> dict:
     coop = 0
     joiners_total = 0
     free_riders_total = 0
+    coop_participants_total = 0
+    coop_free_riders_total = 0
+    coop_captures_with_free_riders = 0
     for info in info_all_list:
         if "team_capture_last_helpers" not in info:
             continue
@@ -58,9 +61,15 @@ def aggregate_capture_outcomes(info_all_list: list[dict]) -> dict:
             solo += 1
         else:
             coop += 1
+            coop_participants_total += helpers + free_riders
+            coop_free_riders_total += free_riders
+            if free_riders > 0:
+                coop_captures_with_free_riders += 1
         joiners_total += helpers
         free_riders_total += free_riders
     captures = solo + coop
+    coop_defection_rate = _safe_div(coop_free_riders_total, coop_participants_total)
+    coop_free_rider_presence_rate = _safe_div(coop_captures_with_free_riders, coop)
     return {
         "captures_successful": captures,
         "solo_captures": solo,
@@ -70,6 +79,11 @@ def aggregate_capture_outcomes(info_all_list: list[dict]) -> dict:
         "joiners_total": joiners_total,
         "free_riders_total": free_riders_total,
         "free_rider_rate": _safe_div(free_riders_total, joiners_total + free_riders_total),
+        "coop_participants_total": coop_participants_total,
+        "coop_free_riders_total": coop_free_riders_total,
+        "coop_defection_rate": coop_defection_rate,
+        "coop_captures_with_free_riders": coop_captures_with_free_riders,
+        "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
     }
 
 
@@ -93,6 +107,9 @@ def aggregate_capture_outcomes_from_event_log(event_log: dict) -> dict:
     coop = 0
     joiners_total = 0
     free_riders_total = 0
+    coop_participants_total = 0
+    coop_free_riders_total = 0
+    coop_captures_with_free_riders = 0
     for entry in captures.values():
         joiners = len(entry["joiners"])
         if joiners <= 0:
@@ -101,9 +118,15 @@ def aggregate_capture_outcomes_from_event_log(event_log: dict) -> dict:
             solo += 1
         else:
             coop += 1
+            coop_participants_total += joiners + len(entry["free_riders"])
+            coop_free_riders_total += len(entry["free_riders"])
+            if entry["free_riders"]:
+                coop_captures_with_free_riders += 1
         joiners_total += joiners
         free_riders_total += len(entry["free_riders"])
     captures_successful = solo + coop
+    coop_defection_rate = _safe_div(coop_free_riders_total, coop_participants_total)
+    coop_free_rider_presence_rate = _safe_div(coop_captures_with_free_riders, coop)
     return {
         "captures_successful": captures_successful,
         "solo_captures": solo,
@@ -113,6 +136,11 @@ def aggregate_capture_outcomes_from_event_log(event_log: dict) -> dict:
         "joiners_total": joiners_total,
         "free_riders_total": free_riders_total,
         "free_rider_rate": _safe_div(free_riders_total, joiners_total + free_riders_total),
+        "coop_participants_total": coop_participants_total,
+        "coop_free_riders_total": coop_free_riders_total,
+        "coop_defection_rate": coop_defection_rate,
+        "coop_captures_with_free_riders": coop_captures_with_free_riders,
+        "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
     }
 
 

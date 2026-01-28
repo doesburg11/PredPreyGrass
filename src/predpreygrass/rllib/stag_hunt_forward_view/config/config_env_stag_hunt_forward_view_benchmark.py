@@ -29,6 +29,7 @@ config_env = {
         "type_1_prey": 0.1,
         "type_2_prey": 0.01,
     },
+    "energy_percentage_loss_per_failed_attacked_prey": 0.00, # 0.0
     "energy_treshold_creation_predator": 10.0,
     "energy_treshold_creation_prey": {
         "type_1_prey": 18.0,  # 18.0
@@ -47,8 +48,8 @@ config_env = {
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Voluntary participation + free-riding
-    "team_capture_join_cost": 0.02,  # fixed energy cost paid by joining predators on success or failure
-    "team_capture_scavenger_fraction": 0.2,  # fraction of prey energy reserved for nearby non-joiners
+    "team_capture_join_cost": 0.2,  # fixed energy cost paid only by joining predators on success
+    "team_capture_scavenger_fraction": 0.1,  # fraction of prey energy reserved for nearby non-joiners
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
