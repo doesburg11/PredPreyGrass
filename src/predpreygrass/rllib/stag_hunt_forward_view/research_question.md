@@ -18,7 +18,7 @@ This framing preserves the full ecological richness of the environment while all
 This `stag_hunt_forward_view` variant includes two changes relative to the base `stag_hunt` ecology:
 
 - **Voluntary participation (defection):** predators choose `join_hunt` each step; only joiners contribute to capture.
-- **Join cost and scavenging:** joiners pay `team_capture_join_cost` on successful captures; non-joiners can receive a small scavenger share.
+- **Join cost and scavenging:** joiners pay `team_capture_join_cost` on cooperative captures (success or failure); non-joiners can receive a small scavenger share.
 - **Forward-view observations:** predator observations are shifted forward based on the last intended move (prey stay centered).
 
 These additions create a richer social dilemma but also introduce a confound (observation change) that must be controlled in comparisons.

@@ -414,10 +414,10 @@ class EpisodeReturn(RLlibCallback):
                 user_data["join_steps"] = join_steps
                 user_data["defect_steps"] = defect_steps
         total_pred_steps = join_steps + defect_steps
-        join_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
-        defect_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
-        join_rate_pct = join_rate * 100.0
-        defect_rate_pct = defect_rate * 100.0
+        join_decision_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
+        defect_decision_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
+        join_decision_rate_pct = join_decision_rate * 100.0
+        defect_decision_rate_pct = defect_decision_rate * 100.0
 
         solo_captures = user_data.get("solo_captures", 0)
         coop_captures = user_data.get("coop_captures", 0)
@@ -430,10 +430,10 @@ class EpisodeReturn(RLlibCallback):
                 user_data["solo_captures"] = solo_captures
                 user_data["coop_captures"] = coop_captures
         capture_successes = solo_captures + coop_captures
-        solo_rate = solo_captures / capture_successes if capture_successes else 0.0
-        coop_rate = coop_captures / capture_successes if capture_successes else 0.0
-        solo_rate_pct = solo_rate * 100.0
-        coop_rate_pct = coop_rate * 100.0
+        solo_capture_rate = solo_captures / capture_successes if capture_successes else 0.0
+        coop_capture_rate = coop_captures / capture_successes if capture_successes else 0.0
+        solo_capture_rate_pct = solo_capture_rate * 100.0
+        coop_capture_rate_pct = coop_capture_rate * 100.0
 
         joiners_total = user_data.get("joiners_total", 0)
         free_riders_total = user_data.get("free_riders_total", 0)
@@ -444,27 +444,27 @@ class EpisodeReturn(RLlibCallback):
             if free_riders_total == 0:
                 free_riders_total = self._count_free_riders_from_env(env)
                 user_data["free_riders_total"] = free_riders_total
-        free_rider_rate = (
+        free_rider_share = (
             free_riders_total / (joiners_total + free_riders_total)
             if (joiners_total + free_riders_total)
             else 0.0
         )
-        free_rider_rate_pct = free_rider_rate * 100.0
+        free_rider_share_pct = free_rider_share * 100.0
         multi_capture_steps = user_data.get("multi_capture_steps", 0)
         multi_capture_successes_skipped = user_data.get("multi_capture_successes_skipped", 0)
 
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/join_steps", join_steps)
             metrics_logger.log_value("custom_metrics/defect_steps", defect_steps)
-            metrics_logger.log_value("custom_metrics/join_rate", join_rate_pct)
-            metrics_logger.log_value("custom_metrics/defect_rate", defect_rate_pct)
+            metrics_logger.log_value("custom_metrics/join_decision_rate", join_decision_rate_pct)
+            metrics_logger.log_value("custom_metrics/defect_decision_rate", defect_decision_rate_pct)
             metrics_logger.log_value("custom_metrics/solo_captures", solo_captures)
             metrics_logger.log_value("custom_metrics/coop_captures", coop_captures)
-            metrics_logger.log_value("custom_metrics/solo_rate", solo_rate_pct)
-            metrics_logger.log_value("custom_metrics/coop_rate", coop_rate_pct)
+            metrics_logger.log_value("custom_metrics/solo_capture_rate", solo_capture_rate_pct)
+            metrics_logger.log_value("custom_metrics/coop_capture_rate", coop_capture_rate_pct)
             metrics_logger.log_value("custom_metrics/joiners_total", joiners_total)
             metrics_logger.log_value("custom_metrics/free_riders_total", free_riders_total)
-            metrics_logger.log_value("custom_metrics/free_rider_rate", free_rider_rate_pct)
+            metrics_logger.log_value("custom_metrics/free_rider_share", free_rider_share_pct)
             metrics_logger.log_value("custom_metrics/multi_capture_steps", multi_capture_steps)
             metrics_logger.log_value(
                 "custom_metrics/multi_capture_successes_skipped", multi_capture_successes_skipped
@@ -473,15 +473,15 @@ class EpisodeReturn(RLlibCallback):
         if hasattr(episode, "custom_metrics"):
             episode.custom_metrics["join_steps"] = join_steps
             episode.custom_metrics["defect_steps"] = defect_steps
-            episode.custom_metrics["join_rate"] = join_rate_pct
-            episode.custom_metrics["defect_rate"] = defect_rate_pct
+            episode.custom_metrics["join_decision_rate"] = join_decision_rate_pct
+            episode.custom_metrics["defect_decision_rate"] = defect_decision_rate_pct
             episode.custom_metrics["solo_captures"] = solo_captures
             episode.custom_metrics["coop_captures"] = coop_captures
-            episode.custom_metrics["solo_rate"] = solo_rate_pct
-            episode.custom_metrics["coop_rate"] = coop_rate_pct
+            episode.custom_metrics["solo_capture_rate"] = solo_capture_rate_pct
+            episode.custom_metrics["coop_capture_rate"] = coop_capture_rate_pct
             episode.custom_metrics["joiners_total"] = joiners_total
             episode.custom_metrics["free_riders_total"] = free_riders_total
-            episode.custom_metrics["free_rider_rate"] = free_rider_rate_pct
+            episode.custom_metrics["free_rider_share"] = free_rider_share_pct
             episode.custom_metrics["multi_capture_steps"] = multi_capture_steps
             episode.custom_metrics["multi_capture_successes_skipped"] = multi_capture_successes_skipped
 
@@ -511,18 +511,18 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Coop: successes={coop_success} failures={coop_fail}")
         print(f"  - Total capture: successes={total_success} failures={total_fail}")
         print(
-            "  - Join/Defect: join_steps={} defect_steps={} join_rate={:.2f} defect_rate={:.2f}".format(
-                join_steps, defect_steps, join_rate_pct, defect_rate_pct
+            "  - Join/Defect: join_steps={} defect_steps={} join_decision_rate={:.2f} defect_decision_rate={:.2f}".format(
+                join_steps, defect_steps, join_decision_rate_pct, defect_decision_rate_pct
             )
         )
         print(
-            "  - Solo/Coop captures: solo={} coop={} solo_rate={:.2f} coop_rate={:.2f}".format(
-                solo_captures, coop_captures, solo_rate_pct, coop_rate_pct
+            "  - Solo/Coop captures: solo={} coop={} solo_capture_rate={:.2f} coop_capture_rate={:.2f}".format(
+                solo_captures, coop_captures, solo_capture_rate_pct, coop_capture_rate_pct
             )
         )
         print(
-            "  - Free-rider rate (success only): {:.2f} (free_riders_total={} joiners_total={})".format(
-                free_rider_rate_pct, free_riders_total, joiners_total
+            "  - Free-rider share (success only): {:.2f} (free_riders_total={} joiners_total={})".format(
+                free_rider_share_pct, free_riders_total, joiners_total
             )
         )
         if multi_capture_steps:

@@ -17,7 +17,7 @@ now free-ride on others who join and pay a cost.
   contribute to a team capture.
 - Capture uses only joiners, not all nearby predators.
 - Joiners pay a fixed energy cost on successful capture.
-- Defectors (non-joiners) can receive a small scavenger spillover.
+- Defectors (non-joiners) can divede a scavenger spillover `team_capture_scavenger_fraction`, a fraction of the prey energy.
 - Predator observations are shifted forward based on the last intended move.
 - Everything else stays the same: movement, energy decay, reproduction, LOS,
   grass growth, walls, and the original team-capture margin/split logic.
@@ -54,6 +54,27 @@ paths also point at `.../stag_hunt_forward_view/ray_results/`.
 - If the predator stays put, the last facing direction is kept; facing is randomized at reset.
 - Intended actions update facing even if the move is blocked.
 - Prey observations remain centered (full around-the-agent view).
+
+Rationale: predators/humans tend to have forward-facing eyes, which increases binocular
+overlap and depth perception for judging distance to prey. Prey species more often have
+laterally placed eyes that maximize field of view for threat detection, at the cost of
+reduced depth perception. This ecological trade-off motivates forward-shifted predator
+observations but centered prey observations. [1][2]
+
+Visualization (grid-world style; centered vs forward-shifted):
+
+<p align="center">
+  <img align="center" src="./../../../../assets/images/readme/forward_view_observation_shift.svg" width="960" />
+</p>
+
+Diagonal moves push the window into a corner, and the human LOS mask is computed
+from that shifted position (right panel shows an example LOS mask with a wall).
+
+In code: `view_center = position + facing * offset`, with `offset = (predator_obs_range - 1) // 2`.
+
+References:
+[1] University of Nebraska State Museum — *Animal Detective* teacher guide (eyes of prey on sides for wider field of view; predators front for depth/stereoscopy). https://museum.unl.edu/file_download/inline/UNSMAnimalDetGuide.pdf
+[2] Royal Saskatchewan Museum — *Predator & Prey: Adaptations* (prey eyes on sides for wide field of view; predators front for binocular vision/depth). https://royalsaskmuseum.ca/pub/Educate/Student%20Resources/Life%20Sciences/predator-and-prey-adaptations.pdf
 
 ## New action semantics
 
@@ -109,13 +130,18 @@ Defectors (non-joiners) do not count toward success.
 - If `F` is empty, the scavenger pool is zero.
 - Joiners split the remaining energy (`E - scavenger_pool`) either equally or
   proportionally (based on `team_capture_equal_split`).
-- Each joiner pays `c_join` after receiving its share.
+- Each joiner pays `c_join` **only if there is more than one joiner** (cooperative capture).
 - Each free rider gets `scavenger_pool / |F|`.
 
 ### Failure handling
-- Failure penalties apply only to joiners.
-- Joiners always pay the fixed `team_capture_join_cost` on failed attempts.
+- On failed **cooperative** attempts, only joiners pay `c_join`.
+- There is **no extra failure penalty** beyond `c_join`.
 - Free riders never pay failure costs.
+
+### Solo vs cooperative cost rule (explicit)
+**Join cost is a cooperation-only cost.** If exactly one predator joins (`|J| == 1`),
+then `team_capture_join_cost = 0` for that attempt (success or failure). The cost is
+applied only when `|J| > 1`.
 
 ### Why defectors cannot solo-capture
 `join_hunt = 0` means “refuse to contribute.” If defectors could still capture
@@ -126,8 +152,8 @@ This preserves the minimal-change goal and avoids a degenerate policy like
 “defect unless others are present.”
 
 ### Death from join cost
-If a joiner drops to `<= 0` energy after paying the join cost, it dies with
-cause `exhausted_hunt`.
+If a joiner drops to `<= 0` energy after paying the join cost on a **cooperative**
+attempt, it dies with cause `exhausted_hunt`.
 
 ## Detailed change table
 
@@ -137,22 +163,22 @@ cause `exhausted_hunt`.
 | Capture eligibility | All nearby predators can contribute | Only joiners contribute; free riders do not count | `join_hunt` per step |
 | Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
 | Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders equally share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
-| Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` | `team_capture_join_cost`, event `join_cost` |
+| Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` **only when coop** | `team_capture_join_cost`, event `join_cost` |
 | Failure penalties | Apply to all helpers | Apply only to joiners | `team_capture_join_cost` |
-| Defection metrics | Not defined | Join/defect rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
+| Defection metrics | Not defined | Join/defect decision rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
 
 Explanation notes:
 - "Nearby" means Moore neighborhood (Chebyshev distance <= 1), same as the base env.
 - "Joiners" are predators with `join_hunt = 1` on that step; "free riders" are `join_hunt = 0`.
 - A scavenger pool exists only if at least one free rider is present; otherwise joiners split full prey energy.
 - "Solo capture" means exactly one joiner; "coop capture" means two or more joiners.
-- Join/defect rates are per predator-step; capture metrics use successful capture events only.
+- Join/defect decision rates are per predator-step; capture metrics use successful capture events only.
 
 ## New config keys
 
 Defined in `config/config_env_stag_hunt.py`:
 
-- `team_capture_join_cost` (float): fixed energy cost paid by joiners on success and failure.
+- `team_capture_join_cost` (float): fixed energy cost paid by joiners on **cooperative** attempts (success or failure).
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
   reserved for nearby non-joiners (only when non-joiners are present).
 
@@ -167,7 +193,7 @@ Per-agent info additions (predators):
 
 - `team_capture_free_riders`: number of non-joiners near the capture.
 - `team_capture_scavenger_gain`: energy gained via scavenging (free riders only).
-- `team_capture_join_cost`: join cost paid (joiners only).
+- `team_capture_join_cost`: join cost paid (joiners only; zero for solo joiners).
 - `team_capture_joined`: `True` if agent joined, else `False`.
 - `join_hunt`: per-step join choice for all predators (logged every step).
 
@@ -179,7 +205,7 @@ Event log additions (predator eating/failed events):
 
 - `free_riders`: list of free-riding predators nearby.
 - `join_hunt`: boolean per event.
-- `join_cost`: join cost applied (0 for free riders).
+- `join_cost`: join cost applied (0 for free riders and solo joiners).
 
 Per-step agent data additions:
 
@@ -197,13 +223,26 @@ PYTHONPATH=src python -m predpreygrass.rllib.stag_hunt_forward_view.utils.defect
 
 It reports:
 
-- Join vs defect rates per predator-step.
+- Join vs defect decision rates per predator-step.
 - Solo vs cooperative capture rates (successful captures only).
 - Free-rider exposure on successful captures.
 
 RLlib training runs (e.g., `tune_ppo.py`) already use the `EpisodeReturn`
 callback, which now logs these defection/cooperation metrics to `custom_metrics`
 so they appear in TensorBoard.
+
+### Metric naming (2026-01-31)
+
+To make denominators explicit, several metrics were renamed. New runs use the
+new names in TensorBoard and JSON outputs; older runs keep the old names.
+
+Old name → New name:
+- `join_rate` → `join_decision_rate` (per predator decision step)
+- `defect_rate` → `defect_decision_rate`
+- `solo_rate` → `solo_capture_rate` (successful captures only)
+- `coop_rate` → `coop_capture_rate`
+- `free_rider_rate` → `free_rider_share`
+- `coop_defection_rate` → `coop_free_rider_rate`
 
 ## Sample results (from last evaluation output)
 
@@ -222,19 +261,19 @@ only rabbits are available.
 From the latest eval folder:
 `eval_checkpoint_000049_2026-01-06_23-24-46`
 
-- Any prey available: join rate 0.844 (4446 / 5269)
-- Mammoth available: join rate 0.848 (4305 / 5079)
-- Rabbit available: join rate 0.749 (170 / 227)
-- Mammoth only: join rate 0.848 (4276 / 5042)
-- Rabbit only: join rate 0.742 (141 / 190)
-- Both available: join rate 0.784 (29 / 37)
+- Any prey available: join decision rate 0.844 (4446 / 5269)
+- Mammoth available: join decision rate 0.848 (4305 / 5079)
+- Rabbit available: join decision rate 0.749 (170 / 227)
+- Mammoth only: join decision rate 0.848 (4276 / 5042)
+- Rabbit only: join decision rate 0.742 (141 / 190)
+- Both available: join decision rate 0.784 (29 / 37)
 
 Interpretation:
 - Joining is consistently higher when mammoths are present (0.848) than when
   only rabbits are present (0.742).
 - This indicates a revealed preference to cooperate for the higher-risk,
   higher-return prey, even though rabbit captures are easier.
-- The “both available” bucket is small but still shows a high join rate,
+- The “both available” bucket is small but still shows a high join decision rate,
   suggesting predators do not simply default to solo rabbit hunting when a
   mammoth is in reach.
 
@@ -262,19 +301,19 @@ Interpretation:
 - Predators attempt mammoths far more often, and almost all cooperative attempts
   target mammoths.
 - Mammoths are high risk but high return; rabbits are low risk and low return.
-- Combined with the opportunity-conditioned join rates above, this supports a
+- Combined with the opportunity-conditioned join decision rates above, this supports a
   preference for the high-risk/high-return cooperative option when it is
   available.
 
 ### Aggregate (kept runs only; steps >= 500)
 
-| Steps | Join steps | Defect steps | Total predator steps | Join rate | Defect rate | Captures | Solo | Coop | Solo rate | Coop rate | Joiners total | Free riders total | Free rider rate |
+| Steps | Join steps | Defect steps | Total predator steps | Join decision rate | Defect decision rate | Captures | Solo | Coop | Solo capture rate | Coop capture rate | Joiners total | Free riders total | Free rider share |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 4000 | 150878 | 32016 | 182894 | 82% | 18% | 1809 | 471 | 1338 | 26% | 74% | 4929 | 190 | 4% |
 
 ### Per-run detailed table (all runs; kept if steps >= 500)
 
-| Run | Steps | Kept | Join steps | Defect steps | Total predator steps | Join rate | Defect rate | Captures | Solo | Coop | Solo rate | Coop rate | Joiners total | Free riders total | Free rider rate |
+| Run | Steps | Kept | Join steps | Defect steps | Total predator steps | Join decision rate | Defect decision rate | Captures | Solo | Coop | Solo capture rate | Coop capture rate | Joiners total | Free riders total | Free rider share |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | 1000 | yes | 37296 | 7716 | 45012 | 83% | 17% | 383 | 56 | 327 | 15% | 85% | 1128 | 54 | 5% |
 | 2 | 206 | no | 7711 | 1937 | 9648 | 80% | 20% | 270 | 204 | 66 | 76% | 24% | 380 | 12 | 3% |
@@ -288,9 +327,9 @@ Interpretation:
 | 10 | 229 | no | 6740 | 1971 | 8711 | 77% | 23% | 260 | 210 | 50 | 81% | 19% | 335 | 10 | 3% |
 
 Notes:
-- Join/defect rates are per predator-step.
-- Solo/coop rates are over successful captures only.
-- Free rider rate is `free_riders_total / (joiners_total + free_riders_total)`.
+- Join/defect decision rates are per predator-step.
+- Solo/coop capture rates are over successful captures only.
+- Free rider share is `free_riders_total / (joiners_total + free_riders_total)`.
 - Rates shown as whole percentages (rounded).
 
 ### Results summary and conclusion

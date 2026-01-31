@@ -48,7 +48,7 @@ config_env = {
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Voluntary participation + free-riding
-    "team_capture_join_cost": 0.2,  # fixed energy cost paid only by joining predators on success
+    "team_capture_join_cost": 0.2,  # fixed energy cost paid by joiners on cooperative attempts (success or failure)
     "team_capture_scavenger_fraction": 0.1,  # fraction of prey energy reserved for nearby non-joiners
     # Absolute energy caps
     "max_energy_grass": 3.0,

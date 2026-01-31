@@ -116,6 +116,21 @@ def _extract_rate(per_run, key_path, default=None):
     return node
 
 
+def _first_key(node, keys):
+    for key in keys:
+        if isinstance(node, dict) and key in node:
+            return node[key]
+    return None
+
+
+def _extract_any(per_run, key_paths, default=None):
+    for key_path in key_paths:
+        value = _extract_rate(per_run, key_path, default=None)
+        if value is not None:
+            return value
+    return default
+
+
 def plot_aggregate_metrics(aggregate, visuals_dir: Path, event_log_metrics=None):
     if not aggregate:
         return []
@@ -124,38 +139,38 @@ def plot_aggregate_metrics(aggregate, visuals_dir: Path, event_log_metrics=None)
     join_defect = aggregate.get("join_defect", {})
     capture = aggregate.get("capture_outcomes", {})
 
-    join_rate = join_defect.get("join_rate")
-    defect_rate = join_defect.get("defect_rate")
+    join_rate = _first_key(join_defect, ["join_decision_rate", "join_rate"])
+    defect_rate = _first_key(join_defect, ["defect_decision_rate", "defect_rate"])
     if join_rate is not None and defect_rate is not None:
         outputs.append(
             _plot_bar(
                 [join_rate, defect_rate],
-                ["join_rate", "defect_rate"],
-                "Join vs Defect Rate (aggregate)",
+                ["join_decision_rate", "defect_decision_rate"],
+                "Join vs Defect Decision Rate (aggregate)",
                 "rate",
                 visuals_dir,
                 "moral_join_defect_rate.png",
             )
         )
 
-    coop_rate = capture.get("coop_rate")
-    solo_rate = capture.get("solo_rate")
+    coop_rate = _first_key(capture, ["coop_capture_rate", "coop_rate"])
+    solo_rate = _first_key(capture, ["solo_capture_rate", "solo_rate"])
     if coop_rate is not None and solo_rate is not None:
         outputs.append(
             _plot_bar(
                 [coop_rate, solo_rate],
-                ["coop_rate", "solo_rate"],
-                "Coop vs Solo Rate (aggregate)",
+                ["coop_capture_rate", "solo_capture_rate"],
+                "Coop vs Solo Capture Rate (aggregate)",
                 "rate",
                 visuals_dir,
                 "moral_coop_solo_rate.png",
             )
         )
 
-    coop_defection_rate = capture.get("coop_defection_rate")
+    coop_defection_rate = _first_key(capture, ["coop_free_rider_rate", "coop_defection_rate"])
     coop_free_rider_presence_rate = capture.get("coop_free_rider_presence_rate")
     if event_log_metrics:
-        coop_defection_rate = event_log_metrics.get("coop_defection_rate", coop_defection_rate)
+        coop_defection_rate = event_log_metrics.get("coop_free_rider_rate", coop_defection_rate)
         coop_free_rider_presence_rate = event_log_metrics.get(
             "coop_free_rider_presence_rate", coop_free_rider_presence_rate
         )
@@ -164,7 +179,7 @@ def plot_aggregate_metrics(aggregate, visuals_dir: Path, event_log_metrics=None)
         labels = []
         if coop_defection_rate is not None:
             values.append(coop_defection_rate)
-            labels.append("coop_defection_rate")
+            labels.append("coop_free_rider_rate")
         if coop_free_rider_presence_rate is not None:
             values.append(coop_free_rider_presence_rate)
             labels.append("coop_free_rider_presence")
@@ -208,11 +223,11 @@ def plot_per_run_metrics(per_runs, visuals_dir: Path):
     coop_rates = []
 
     for run in per_runs:
-        jr = _extract_rate(run, ["join_defect", "join_rate"])
-        dr = _extract_rate(run, ["join_defect", "defect_rate"])
-        fr = _extract_rate(run, ["capture_outcomes", "coop_defection_rate"])
+        jr = _extract_any(run, [["join_defect", "join_decision_rate"], ["join_defect", "join_rate"]])
+        dr = _extract_any(run, [["join_defect", "defect_decision_rate"], ["join_defect", "defect_rate"]])
+        fr = _extract_any(run, [["capture_outcomes", "coop_free_rider_rate"], ["capture_outcomes", "coop_defection_rate"]])
         fpr = _extract_rate(run, ["capture_outcomes", "coop_free_rider_presence_rate"])
-        cr = _extract_rate(run, ["capture_outcomes", "coop_rate"])
+        cr = _extract_any(run, [["capture_outcomes", "coop_capture_rate"], ["capture_outcomes", "coop_rate"]])
         if jr is not None:
             join_rates.append(jr)
         if dr is not None:
@@ -228,8 +243,8 @@ def plot_per_run_metrics(per_runs, visuals_dir: Path):
         outputs.append(
             _plot_box(
                 [join_rates, defect_rates],
-                ["join_rate", "defect_rate"],
-                "Join/Defect Rate per Run",
+                ["join_decision_rate", "defect_decision_rate"],
+                "Join/Defect Decision Rate per Run",
                 "rate",
                 visuals_dir,
                 "moral_join_defect_per_run.png",
@@ -241,7 +256,7 @@ def plot_per_run_metrics(per_runs, visuals_dir: Path):
         labels = []
         if coop_defection_rates:
             data.append(coop_defection_rates)
-            labels.append("coop_defection_rate")
+            labels.append("coop_free_rider_rate")
         if coop_free_rider_presence_rates:
             data.append(coop_free_rider_presence_rates)
             labels.append("coop_free_rider_presence")
@@ -261,9 +276,9 @@ def plot_per_run_metrics(per_runs, visuals_dir: Path):
             _plot_scatter(
                 join_rates,
                 coop_defection_rates,
-                "join_rate",
-                "coop_defection_rate",
-                "Join Rate vs Coop Defection Rate",
+                "join_decision_rate",
+                "coop_free_rider_rate",
+                "Join Decision Rate vs Coop Free-Rider Rate",
                 visuals_dir,
                 "moral_join_vs_coop_defection_scatter.png",
             )
@@ -366,7 +381,7 @@ def plot_event_based_metrics(event_logs, visuals_dir: Path):
             if free_riders > 0:
                 coop_captures_with_free_riders += 1
 
-    coop_defection_rate = (
+    coop_free_rider_rate = (
         coop_free_riders_total / coop_participants_total if coop_participants_total else None
     )
     coop_free_rider_presence_rate = (
@@ -376,7 +391,7 @@ def plot_event_based_metrics(event_logs, visuals_dir: Path):
         "coop_captures": coop_captures,
         "coop_participants_total": coop_participants_total,
         "coop_free_riders_total": coop_free_riders_total,
-        "coop_defection_rate": coop_defection_rate,
+        "coop_free_rider_rate": coop_free_rider_rate,
         "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
     }
 

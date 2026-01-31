@@ -61,10 +61,10 @@ compute_opportunity_preference_metrics = None
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = False
+SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
-DISPLAY_SCALE = 0.7
+DISPLAY_SCALE = 1.0
 
 
 def prepend_example_sources() -> None:
@@ -326,7 +326,6 @@ def policy_pi(observation, policy_module, deterministic=True):
     return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
-    # MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59
     if TRAINED_EXAMPLE_DIR:
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
@@ -334,8 +333,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.03_SCAVENGER_0.1_2026-01-27_05-11-38/PPO_PredPreyGrass_47179_00000_0_2026-01-27_05-11-38/"
-        checkpoint_nr = "checkpoint_000076"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
+        checkpoint_nr = "checkpoint_000009"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
@@ -354,7 +353,6 @@ def setup_environment_and_visualizer(now):
 
     # Build config based on config_env and align observation-related keys with training run config
     cfg = dict(config_env)
-    cfg = _load_training_env_config_from_run(str(checkpoint_path), cfg)
 
     env = env_creator(config=cfg)
     grid_size = (env.grid_size, env.grid_size)
@@ -389,10 +387,24 @@ def setup_environment_and_visualizer(now):
 
     if SAVE_EVAL_RESULTS:
         prepare_eval_output_dir(Path(eval_output_dir), cfg, str(checkpoint_path))
-        ceviz = CombinedEvolutionVisualizer(destination_path=str(eval_output_dir), timestamp=now)
+        ceviz = CombinedEvolutionVisualizer(
+            destination_path=str(eval_output_dir),
+            timestamp=now,
+            n_possible_type_1_predators=cfg.get("n_possible_type_1_predators"),
+            n_possible_type_1_prey=cfg.get("n_possible_type_1_prey"),
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
+        )
         pdviz = PreyDeathCauseVisualizer(destination_path=str(eval_output_dir), timestamp=now)
     else:
-        ceviz = CombinedEvolutionVisualizer(destination_path=None, timestamp=now)
+        ceviz = CombinedEvolutionVisualizer(
+            destination_path=None,
+            timestamp=now,
+            n_possible_type_1_predators=cfg.get("n_possible_type_1_predators"),
+            n_possible_type_1_prey=cfg.get("n_possible_type_1_prey"),
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
+        )
         pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
 
     return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
@@ -750,7 +762,7 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
-    seed = 3
+    seed = 6 # 63
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
@@ -762,7 +774,9 @@ if __name__ == "__main__":
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
+        movie_path = Path(eval_output_dir) / "visuals" / MOVIE_FILENAME
+        movie_path.parent.mkdir(parents=True, exist_ok=True)
+        video_writer = cv2.VideoWriter(str(movie_path), fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None
 

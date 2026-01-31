@@ -204,7 +204,7 @@ class EvolutionVisualizer:
         plt.xlabel("Step")
         plt.ylabel("Number of Agents")
         plt.title("Agent Population by type (Absolute Count)")
-        plt.legend()
+        plt.legend(loc="upper right")
         plt.grid(True)
 
         # Second subplot: Proportions of type_2 agents only
@@ -229,7 +229,7 @@ class EvolutionVisualizer:
         plt.xlabel("Step")
         plt.ylabel("Proportion")
         plt.title("Proportion of High-type Agents")
-        plt.legend()
+        plt.legend(loc="upper right")
         plt.grid(True)
 
         plt.tight_layout()
@@ -322,11 +322,25 @@ class PopulationChart:
 
 
 class CombinedEvolutionVisualizer:
-    def __init__(self, destination_path=None, timestamp=None, destination_filename="visuals", run_nr=None):
+    def __init__(
+        self,
+        destination_path=None,
+        timestamp=None,
+        destination_filename="visuals",
+        run_nr=None,
+        n_possible_type_1_predators=None,
+        n_possible_type_1_prey=None,
+        n_possible_type_2_predators=None,
+        n_possible_type_2_prey=None,
+    ):
         self.destination_path = destination_path
         self.destination_filename = destination_filename
         self.timestamp = timestamp
         self.run_nr = run_nr
+        self.allow_type1_predators = n_possible_type_1_predators != 0 if n_possible_type_1_predators is not None else True
+        self.allow_type1_prey = n_possible_type_1_prey != 0 if n_possible_type_1_prey is not None else True
+        self.allow_type2_predators = n_possible_type_2_predators != 0 if n_possible_type_2_predators is not None else True
+        self.allow_type2_prey = n_possible_type_2_prey != 0 if n_possible_type_2_prey is not None else True
         # Population counts
         self.time_steps = []
         self.predator_counts = []
@@ -364,12 +378,17 @@ class CombinedEvolutionVisualizer:
         if self.energy_by_type_series:
             n_charts += 1
         plt.figure(figsize=(24, 6))
-        color_map = {"type_1_predator": "#ff9999", "type_2_predator": "red", "type_1_prey": "#9999ff", "type_2_prey": "blue"}
+        color_map = {
+            "type_1_predator": "#ff9999",
+            "type_2_predator": "red",
+            "type_1_prey": "#8B5A2B",
+            "type_2_prey": "blue",
+        }
 
         # 1. Total predator and prey count
         plt.subplot(1, n_charts, 1)
         plt.plot(steps, self.predator_counts, label="Predators", color="red", linewidth=2)
-        plt.plot(steps, self.prey_counts, label="Prey", color="blue", linewidth=2)
+        plt.plot(steps, self.prey_counts, label="Prey", color="#8B5A2B", linewidth=2)
         plt.title("Agent Population by Type")
         plt.xlabel("Step")
         plt.ylabel("Count")
@@ -379,6 +398,14 @@ class CombinedEvolutionVisualizer:
         # 2. type-specific counts
         plt.subplot(1, n_charts, 2)
         for group, counts in self.type_counts_dict.items():
+            if group == "type_1_predator" and not self.allow_type1_predators:
+                continue
+            if group == "type_1_prey" and not self.allow_type1_prey:
+                continue
+            if group == "type_2_predator" and not self.allow_type2_predators:
+                continue
+            if group == "type_2_prey" and not self.allow_type2_prey:
+                continue
             plt.plot(steps, counts, label=group, color=color_map.get(group, "black"), linewidth=2)
         plt.title("Agent Population by type Type")
         plt.xlabel("Step")
@@ -390,29 +417,59 @@ class CombinedEvolutionVisualizer:
         if self.energy_by_type_series:
             plt.subplot(1, n_charts, 3)
             steps = list(range(len(self.energy_by_type_series)))
-            energy_keys = ["predator", "prey", "grass"]
-            color_map = {"predator": "red", "prey": "blue", "grass": "green", "total": "black"}
+            energy_keys = [
+                "type_1_predator",
+                "type_2_predator",
+                "type_1_prey",
+                "type_2_prey",
+                "grass",
+            ]
+            color_map = {
+                "type_1_predator": "#ff9999",
+                "type_2_predator": "red",
+                "type_1_prey": "#8B5A2B",
+                "type_2_prey": "blue",
+                "grass": "green",
+                "total": "black",
+            }
             for k in energy_keys:
-                series = [entry[k] for entry in self.energy_by_type_series]
-                plt.plot(steps, series, label=k.capitalize(), linewidth=2, color=color_map[k])
-            # Add total energy line
-            total_series = [sum(entry[k] for k in energy_keys) for entry in self.energy_by_type_series]
+                if k == "type_1_predator" and not self.allow_type1_predators:
+                    continue
+                if k == "type_2_predator" and not self.allow_type2_predators:
+                    continue
+                if k == "type_1_prey" and not self.allow_type1_prey:
+                    continue
+                if k == "type_2_prey" and not self.allow_type2_prey:
+                    continue
+                series = [entry.get(k, 0.0) for entry in self.energy_by_type_series]
+                label = k.replace("_", " ").title()
+                plt.plot(steps, series, label=label, linewidth=2, color=color_map[k])
+
+            # Add total energy line (prefer aggregate predator/prey if present)
+            total_series = []
+            for entry in self.energy_by_type_series:
+                if all(key in entry for key in ("predator", "prey", "grass")):
+                    total = entry["predator"] + entry["prey"] + entry["grass"]
+                else:
+                    total = sum(entry.get(k, 0.0) for k in energy_keys)
+                total_series.append(total)
             plt.plot(steps, total_series, label="Total", linestyle="--", linewidth=2, color=color_map["total"])
 
             plt.title("Total Energy per Agent Type")
             plt.xlabel("Step")
             plt.ylabel("Energy")
-            plt.legend()
+            plt.legend(loc="upper right")
             plt.grid(True)
 
         plt.tight_layout()
 
         if self.destination_path:
             os.makedirs(os.path.join(self.destination_path, self.destination_filename), exist_ok=True)
+            suffix = self.run_nr if self.run_nr is not None else self.timestamp
             path = os.path.join(
                 self.destination_path,
                 self.destination_filename,
-                "evolution_summary_" + str(self.run_nr) + ".png",
+                "evolution_summary_" + str(suffix) + ".png",
             )
             plt.savefig(path)
             # plt.show()
