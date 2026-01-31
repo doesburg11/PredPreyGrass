@@ -1044,18 +1044,19 @@ class PredPreyGrass(MultiAgentEnv):
         total_pred_energy = sum(self.agent_energies[h] for h in joiners)
         prey_energy = float(self.agent_energies[prey_id])
         join_cost = self.team_capture_join_cost
+        applied_join_cost = join_cost if helper_count > 1 else 0.0
         is_mammoth = prey_id.startswith("type_1_prey")
         is_rabbit = prey_id.startswith("type_2_prey")
         if total_pred_energy <= prey_energy + self.team_capture_margin:
             # Handle failed attempt: apply join cost to joiners.
             helper_energy_snapshot = {pid: self.agent_energies[pid] for pid in joiners}
-            if join_cost:
+            if applied_join_cost:
                 for pid in joiners:
-                    self.agent_energies[pid] -= join_cost
+                    self.agent_energies[pid] -= applied_join_cost
                     self._per_agent_step_deltas.setdefault(
                         pid, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0}
                     )
-                    self._per_agent_step_deltas[pid]["eat"] -= join_cost
+                    self._per_agent_step_deltas[pid]["eat"] -= applied_join_cost
                     self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
             # Log failed attempt when joiners exist but combined energy insufficient
             for pid in joiners:
@@ -1075,13 +1076,14 @@ class PredPreyGrass(MultiAgentEnv):
                             "predator_list": joiners,
                             "free_riders": free_riders,
                             "join_hunt": True,
-                            "join_cost": join_cost,
+                            "join_cost": applied_join_cost,
                         }
                     )
             # Post-penalty starvation check (apply immediately within this step).
-            for pid in joiners:
-                if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
-                    self._handle_energy_starvation(pid)
+            if applied_join_cost:
+                for pid in joiners:
+                    if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
+                        self._handle_energy_starvation(pid)
             self.team_capture_failures += 1
             if is_mammoth:
                 self.team_capture_mammoth_failures += 1
@@ -1126,9 +1128,9 @@ class PredPreyGrass(MultiAgentEnv):
                 )
             self.agent_energies[pid] += energy_share_pid
             self._per_agent_step_deltas[pid]["eat"] += energy_share_pid
-            if join_cost:
-                self.agent_energies[pid] -= join_cost
-                self._per_agent_step_deltas[pid]["eat"] -= join_cost
+            if applied_join_cost:
+                self.agent_energies[pid] -= applied_join_cost
+                self._per_agent_step_deltas[pid]["eat"] -= applied_join_cost
             self.grid_world_state[self.predator_channel, *self.agent_positions[pid]] = self.agent_energies[pid]
             # Ensure a reward entry exists (keep catch reward at zero for stag_hunt).
             self.rewards[pid] = self.rewards.get(pid, 0.0)
@@ -1141,7 +1143,7 @@ class PredPreyGrass(MultiAgentEnv):
             info["team_capture_free_riders"] = len(free_riders)
             info["team_capture_energy_gain"] = energy_share_pid
             info["team_capture_scavenger_gain"] = 0.0
-            info["team_capture_join_cost"] = join_cost
+            info["team_capture_join_cost"] = applied_join_cost
             info["team_capture_joined"] = True
             evt = self.agent_event_log.get(pid)
             if evt is not None:
@@ -1159,7 +1161,7 @@ class PredPreyGrass(MultiAgentEnv):
                         "predator_list": joiners,
                         "free_riders": free_riders,
                         "join_hunt": True,
-                        "join_cost": join_cost,
+                        "join_cost": applied_join_cost,
                     }
                 )
 
@@ -1204,7 +1206,7 @@ class PredPreyGrass(MultiAgentEnv):
                         }
                     )
 
-        if join_cost:
+        if applied_join_cost:
             for pid in joiners:
                 if self.agent_energies.get(pid, 0.0) <= 0 and not self.terminations.get(pid, False):
                     self._handle_energy_starvation(pid, cause="exhausted_hunt")

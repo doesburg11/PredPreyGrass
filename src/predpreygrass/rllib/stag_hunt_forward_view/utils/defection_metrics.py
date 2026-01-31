@@ -37,8 +37,8 @@ def aggregate_join_choices(per_step_agent_data: list[dict]) -> dict:
         "join_steps": join,
         "defect_steps": defect,
         "total_predator_steps": total,
-        "join_rate": _safe_div(join, total),
-        "defect_rate": _safe_div(defect, total),
+        "join_decision_rate": _safe_div(join, total),
+        "defect_decision_rate": _safe_div(defect, total),
     }
 
 
@@ -68,20 +68,20 @@ def aggregate_capture_outcomes(info_all_list: list[dict]) -> dict:
         joiners_total += helpers
         free_riders_total += free_riders
     captures = solo + coop
-    coop_defection_rate = _safe_div(coop_free_riders_total, coop_participants_total)
+    coop_free_rider_rate = _safe_div(coop_free_riders_total, coop_participants_total)
     coop_free_rider_presence_rate = _safe_div(coop_captures_with_free_riders, coop)
     return {
         "captures_successful": captures,
         "solo_captures": solo,
         "coop_captures": coop,
-        "solo_rate": _safe_div(solo, captures),
-        "coop_rate": _safe_div(coop, captures),
+        "solo_capture_rate": _safe_div(solo, captures),
+        "coop_capture_rate": _safe_div(coop, captures),
         "joiners_total": joiners_total,
         "free_riders_total": free_riders_total,
-        "free_rider_rate": _safe_div(free_riders_total, joiners_total + free_riders_total),
+        "free_rider_share": _safe_div(free_riders_total, joiners_total + free_riders_total),
         "coop_participants_total": coop_participants_total,
         "coop_free_riders_total": coop_free_riders_total,
-        "coop_defection_rate": coop_defection_rate,
+        "coop_free_rider_rate": coop_free_rider_rate,
         "coop_captures_with_free_riders": coop_captures_with_free_riders,
         "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
     }
@@ -125,20 +125,20 @@ def aggregate_capture_outcomes_from_event_log(event_log: dict) -> dict:
         joiners_total += joiners
         free_riders_total += len(entry["free_riders"])
     captures_successful = solo + coop
-    coop_defection_rate = _safe_div(coop_free_riders_total, coop_participants_total)
+    coop_free_rider_rate = _safe_div(coop_free_riders_total, coop_participants_total)
     coop_free_rider_presence_rate = _safe_div(coop_captures_with_free_riders, coop)
     return {
         "captures_successful": captures_successful,
         "solo_captures": solo,
         "coop_captures": coop,
-        "solo_rate": _safe_div(solo, captures_successful),
-        "coop_rate": _safe_div(coop, captures_successful),
+        "solo_capture_rate": _safe_div(solo, captures_successful),
+        "coop_capture_rate": _safe_div(coop, captures_successful),
         "joiners_total": joiners_total,
         "free_riders_total": free_riders_total,
-        "free_rider_rate": _safe_div(free_riders_total, joiners_total + free_riders_total),
+        "free_rider_share": _safe_div(free_riders_total, joiners_total + free_riders_total),
         "coop_participants_total": coop_participants_total,
         "coop_free_riders_total": coop_free_riders_total,
-        "coop_defection_rate": coop_defection_rate,
+        "coop_free_rider_rate": coop_free_rider_rate,
         "coop_captures_with_free_riders": coop_captures_with_free_riders,
         "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
     }
@@ -222,7 +222,7 @@ def compute_opportunity_preference_metrics(per_step_agent_data: list[dict]) -> d
                     buckets["rabbit_only"]["join_steps"] += 1
 
     for stats in buckets.values():
-        stats["join_rate"] = _safe_div(stats["join_steps"], stats["predator_steps"])
+        stats["join_decision_rate"] = _safe_div(stats["join_steps"], stats["predator_steps"])
 
     return buckets
 
@@ -252,20 +252,20 @@ def main() -> None:
     print("Join/Defect (per predator-step)")
     print(f"  join_steps={join_stats['join_steps']}")
     print(f"  defect_steps={join_stats['defect_steps']}")
-    print(f"  join_rate={join_stats['join_rate']:.3f}")
-    print(f"  defect_rate={join_stats['defect_rate']:.3f}")
+    print(f"  join_decision_rate={join_stats['join_decision_rate']:.3f}")
+    print(f"  defect_decision_rate={join_stats['defect_decision_rate']:.3f}")
     print("")
     print("Capture Outcomes (successful only)")
     print(f"  captures={capture_stats['captures_successful']}")
     print(f"  solo_captures={capture_stats['solo_captures']}")
     print(f"  coop_captures={capture_stats['coop_captures']}")
-    print(f"  solo_rate={capture_stats['solo_rate']:.3f}")
-    print(f"  coop_rate={capture_stats['coop_rate']:.3f}")
+    print(f"  solo_capture_rate={capture_stats['solo_capture_rate']:.3f}")
+    print(f"  coop_capture_rate={capture_stats['coop_capture_rate']:.3f}")
     print("")
     print("Free-Rider Exposure (successful only)")
     print(f"  joiners_total={capture_stats['joiners_total']}")
     print(f"  free_riders_total={capture_stats['free_riders_total']}")
-    print(f"  free_rider_rate={capture_stats['free_rider_rate']:.3f}")
+    print(f"  free_rider_share={capture_stats['free_rider_share']:.3f}")
 
 
 if __name__ == "__main__":

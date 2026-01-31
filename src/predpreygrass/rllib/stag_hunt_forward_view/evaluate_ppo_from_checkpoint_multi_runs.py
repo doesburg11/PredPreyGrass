@@ -42,6 +42,9 @@ SAVE_EVAL_RESULTS = True
 N_RUNS = 10  # Number of evaluation runs
 SEED = 1
 MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
+SURVIVAL_MIN_STEP = 1000
+SURVIVAL_WINDOW = 1
+SURVIVAL_REQUIRED_TYPES = ("type_1_predator", "type_1_prey", "type_2_prey")
 
 
 def prepend_example_sources() -> None:
@@ -230,6 +233,18 @@ def policy_pi(observation, policy_module, deterministic=True):
         return int(torch.argmax(logits, dim=-1).item())
     return int(torch.distributions.Categorical(logits=logits).sample().item())
 
+
+def _count_required_types(agent_ids):
+    counts = {k: 0 for k in SURVIVAL_REQUIRED_TYPES}
+    for aid in agent_ids:
+        if "type_1_predator" in aid:
+            counts["type_1_predator"] += 1
+        elif "type_1_prey" in aid:
+            counts["type_1_prey"] += 1
+        elif "type_2_prey" in aid:
+            counts["type_2_prey"] += 1
+    return counts
+
 def _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr):
     base = Path(ray_results_dir) / checkpoint_root
     if base.name.startswith("checkpoint_"):
@@ -237,15 +252,50 @@ def _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr):
     return base / checkpoint_nr
 
 
+def write_survival_summary(output_dir: Path, survivor_runs: list[dict], now: str) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    summary_txt = output_dir / "survival_summary.txt"
+    summary_json = output_dir / "survival_summary.json"
+
+    header = (
+        "Runs with all required types > 0 at final step\n"
+        f"Timestamp: {now}\n"
+        f"Final step only (min step {SURVIVAL_MIN_STEP})\n"
+        f"Required types: {', '.join(SURVIVAL_REQUIRED_TYPES)}\n"
+    )
+    if survivor_runs:
+        runs_line = ", ".join(f"run {m['run']} (seed {m['seed']})" for m in survivor_runs)
+    else:
+        runs_line = "None found."
+    summary_txt.write_text(header + runs_line + "\n")
+
+    payload = {
+        "timestamp": now,
+        "window": SURVIVAL_WINDOW,
+        "min_step": SURVIVAL_MIN_STEP,
+        "required_types": list(SURVIVAL_REQUIRED_TYPES),
+        "n_runs": len(survivor_runs),
+        "runs": [
+            {
+                "run": m.get("run"),
+                "seed": m.get("seed"),
+                "survival_last_counts": m.get("survival_last_counts", {}),
+            }
+            for m in survivor_runs
+        ],
+    }
+    summary_json.write_text(json.dumps(payload, indent=2))
+
+
 def setup_modules():
     if TRAINED_EXAMPLE_DIR:
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # STAG_HUNT_FORWARD_VIEW_2026-01-24_20-13-33/PPO_PredPreyGrass_c6e2d_00000_0_2026-01-24_20-13-33
+        # STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.03_SCAVENGER_0.1_2026-01-27_05-11-38/PPO_PredPreyGrass_47179_00000_0_2026-01-27_05-11-38/"
-        checkpoint_nr = "checkpoint_000076"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
+        checkpoint_nr = "checkpoint_000009"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
     rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
@@ -294,6 +344,10 @@ if __name__ == "__main__":
                 timestamp=now,
                 destination_filename="visuals",
                 run_nr=run + 1,
+                n_possible_type_1_predators=config_env.get("n_possible_type_1_predators"),
+                n_possible_type_1_prey=config_env.get("n_possible_type_1_prey"),
+                n_possible_type_2_predators=config_env.get("n_possible_type_2_predators"),
+                n_possible_type_2_prey=config_env.get("n_possible_type_2_prey"),
             )
         else:
             visualizer = None
@@ -302,6 +356,7 @@ if __name__ == "__main__":
         terminated = False
         truncated = False 
 
+        counts_history = []
         while not terminated and not truncated:
             action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
@@ -310,6 +365,7 @@ if __name__ == "__main__":
                     agent_ids=env.agents,
                 )
 
+            counts_history.append(_count_required_types(env.agents))
             total_reward += sum(rewards.values())
             # print(f"Step {i} Total Reward so far: {total_reward:.2f}")
             terminated = terminations.get("__all__", False)
@@ -321,9 +377,21 @@ if __name__ == "__main__":
         defection_metrics = compute_defection_metrics(env)
         print("Defection metrics:")
         print(json.dumps(defection_metrics, indent=2))
+        survival_ok = False
+        survival_window = []
+        if env.current_step >= SURVIVAL_MIN_STEP and counts_history:
+            survival_window = counts_history[-SURVIVAL_WINDOW:]
+            survival_ok = bool(survival_window) and all(
+                all(c[k] > 0 for k in SURVIVAL_REQUIRED_TYPES) for c in survival_window
+            )
+
         per_run_metrics.append(
             {
+                "run": run + 1,
+                "seed": seed,
                 "steps": defection_metrics.get("steps", 0),
+                "survival_ok": survival_ok,
+                "survival_last_counts": counts_history[-1] if counts_history else {},
                 **defection_metrics.get("join_defect", {}),
                 **defection_metrics.get("capture_outcomes", {}),
             }
@@ -345,6 +413,23 @@ if __name__ == "__main__":
                 json.dump(defection_metrics, f, indent=2)
 
     filtered_runs = [m for m in per_run_metrics if m.get("steps", 0) >= MIN_STEPS_FOR_STATS]
+    survivor_runs = [m for m in per_run_metrics if m.get("survival_ok")]
+    if survivor_runs:
+        print(
+            "\n=== Runs with all required types > 0 at final step ===\n"
+            f"Final step only (min step {SURVIVAL_MIN_STEP})\n"
+            + ", ".join(f"run {m['run']} (seed {m['seed']})" for m in survivor_runs)
+        )
+    else:
+        print(
+            "\n=== Runs with all required types > 0 at final step ===\n"
+            "None found."
+        )
+    if SAVE_EVAL_RESULTS:
+        aggregate_output_dir = get_aggregate_output_dir(checkpoint_path, now)
+        summary_dir = aggregate_output_dir / "summary_data"
+        write_survival_summary(summary_dir, survivor_runs, now)
+        print(f"SURVIVAL_RUNS -> {summary_dir / 'survival_summary.txt'}")
     if filtered_runs:
         def _aggregate_runs(runs):
             total_steps = sum(m.get("steps", 0) for m in runs)
@@ -360,14 +445,14 @@ if __name__ == "__main__":
             coop_free_riders_total = sum(m.get("coop_free_riders_total", 0) for m in runs)
             coop_captures_with_free_riders = sum(m.get("coop_captures_with_free_riders", 0) for m in runs)
 
-            join_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
-            defect_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
+            join_decision_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
+            defect_decision_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
             captures_total = solo_captures + coop_captures
-            solo_rate = solo_captures / captures_total if captures_total else 0.0
-            coop_rate = coop_captures / captures_total if captures_total else 0.0
+            solo_capture_rate = solo_captures / captures_total if captures_total else 0.0
+            coop_capture_rate = coop_captures / captures_total if captures_total else 0.0
             fr_total = joiners_total + free_riders_total
-            free_rider_rate = free_riders_total / fr_total if fr_total else 0.0
-            coop_defection_rate = (
+            free_rider_share = free_riders_total / fr_total if fr_total else 0.0
+            coop_free_rider_rate = (
                 coop_free_riders_total / coop_participants_total if coop_participants_total else 0.0
             )
             coop_free_rider_presence_rate = (
@@ -382,21 +467,21 @@ if __name__ == "__main__":
                     "join_steps": join_steps,
                     "defect_steps": defect_steps,
                     "total_predator_steps": total_pred_steps,
-                    "join_rate": join_rate,
-                    "defect_rate": defect_rate,
+                    "join_decision_rate": join_decision_rate,
+                    "defect_decision_rate": defect_decision_rate,
                 },
                 "capture_outcomes": {
                     "captures_successful": captures_successful,
                     "solo_captures": solo_captures,
                     "coop_captures": coop_captures,
-                    "solo_rate": solo_rate,
-                    "coop_rate": coop_rate,
+                    "solo_capture_rate": solo_capture_rate,
+                    "coop_capture_rate": coop_capture_rate,
                     "joiners_total": joiners_total,
                     "free_riders_total": free_riders_total,
-                    "free_rider_rate": free_rider_rate,
+                    "free_rider_share": free_rider_share,
                     "coop_participants_total": coop_participants_total,
                     "coop_free_riders_total": coop_free_riders_total,
-                    "coop_defection_rate": coop_defection_rate,
+                    "coop_free_rider_rate": coop_free_rider_rate,
                     "coop_captures_with_free_riders": coop_captures_with_free_riders,
                     "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
                 },
@@ -433,19 +518,19 @@ if __name__ == "__main__":
                 "join_steps",
                 "defect_steps",
                 "total_predator_steps",
-                "join_rate",
-                "defect_rate",
+                "join_decision_rate",
+                "defect_decision_rate",
                 "captures_successful",
                 "solo_captures",
                 "coop_captures",
-                "solo_rate",
-                "coop_rate",
+                "solo_capture_rate",
+                "coop_capture_rate",
                 "joiners_total",
                 "free_riders_total",
-                "free_rider_rate",
+                "free_rider_share",
                 "coop_participants_total",
                 "coop_free_riders_total",
-                "coop_defection_rate",
+                "coop_free_rider_rate",
                 "coop_captures_with_free_riders",
                 "coop_free_rider_presence_rate",
             ]
