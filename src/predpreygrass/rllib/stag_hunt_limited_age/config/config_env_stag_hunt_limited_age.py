@@ -28,7 +28,7 @@ config_env = {
     "age_steps_per_year": 1,  # 1 step = 1 year
     # Per-type Gompertz params: h(age)=A + B*exp(C*age_years)
     # These are calibrated for age-only mean lifespans (energy ignored):
-    # humans ~80 years, mammoths ~30 years, rabbits ~5 years.
+    # humans ~80 years, mammoths ~50 years, rabbits ~45 years.
     "age_mortality_A": {
         "type_1_predator": 0.0001,
         "type_2_predator": 0.0001,
@@ -36,16 +36,16 @@ config_env = {
         "type_2_prey": 0.0001,
     },
     "age_mortality_B": {
-        "type_1_predator": 0.0000566,
+        "type_1_predator": 0.0000566, # age ~ 80
         "type_2_predator": 0.0000566,
-        "type_1_prey": 0.00488,
-        "type_2_prey": 0.0111,
+        "type_1_prey": 6.0e-21, # age ~ 500
+        "type_2_prey": 6.0e-21, # age ~ 500
     },
     "age_mortality_C": {
         "type_1_predator": 0.085,
         "type_2_predator": 0.085,
         "type_1_prey": 0.085,
-        "type_2_prey": 1.0,
+        "type_2_prey": 0.085,
     },
     # Energy settings
     "energy_loss_per_step_predator": 0.08,
@@ -79,7 +79,7 @@ config_env = {
     "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
-    "n_possible_type_2_prey": 2000,
+    "n_possible_type_2_prey": 3000,
     "n_initial_active_type_1_predator": 10, # 10
     "n_initial_active_type_2_predator": 0,
     "n_initial_active_type_1_prey": 10, # 10

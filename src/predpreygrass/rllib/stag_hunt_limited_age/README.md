@@ -6,15 +6,24 @@
     <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
-This module is a full copy of `stag_hunt` with an addition that introduces
-defection and forward-shifted predator observations. The ecology stays intact; only
+This module is a full copy of `stag_hunt_forward_view` with one additional change:
+**stochastic age-related mortality**. The ecology stays intact; only
 the cooperative hunting decision is made voluntary at capture time. Predators can
 now free-ride on others who join and pay a cost.
 
-This fork adds age-related mortality so agents cannot live forever; the risk
-of death increases with age (see config for parameters).
+## Changes vs `stag_hunt_forward_view`
 
-## What changed (high level)
+- Agents (predators + prey) have age-related mortality with a per-step probability
+  of dying that increases with age (Gompertz–Makeham).
+- Default parameters (in `config_env_stag_hunt_limited_age.py`) target **age-only**
+  mean lifespans: humans ~80 years, mammoths ~50 years, rabbits ~45 years.
+  Energy starvation still applies first.
+- `death_cause` is attached to per-agent infos at termination; eval scripts write
+  death-cause summaries (see below).
+
+Everything else is identical to `stag_hunt_forward_view`.
+
+## Inherited behavior (from `stag_hunt_forward_view`)
 
 - Predators have a second action component `join_hunt` that controls whether they
   contribute to a team capture.
@@ -22,14 +31,12 @@ of death increases with age (see config for parameters).
 - Joiners pay a fixed energy cost on successful capture.
 - Defectors (non-joiners) can divede a scavenger spillover `team_capture_scavenger_fraction`, a fraction of the prey energy.
 - Predator observations are shifted forward based on the last intended move.
-- Agents have stochastic age-related mortality (Gompertz–Makeham); see config for per-type params.
 - Everything else stays the same: movement, energy decay, reproduction, LOS,
   grass growth, walls, and the original team-capture margin/split logic.
 
 ## Differences vs `stag_hunt_defection`
 
-This module is identical to `stag_hunt_defection` except for predator observations and
-viewer overlays:
+This module matches `stag_hunt_defection` plus:
 
 - Predator observations are forward-shifted (edge/corner placement in the obs window).
 - Predator facing is updated from intended moves (even if blocked), with random facing at reset.
@@ -37,10 +44,11 @@ viewer overlays:
 - The PyGame FOV overlay uses predator facing to shift the drawn window and automatically
   reassigns the overlay to the lowest-index living predator/prey if the originally tracked
   agent dies.
+- Age-related mortality (Gompertz–Makeham) for predators and prey.
 
 ## Files and structure
 
-This directory `stag_hunt_limited_age` mirrors `stag_hunt` plus defection. Key files:
+This directory `stag_hunt_limited_age` mirrors `stag_hunt_forward_view`. Key files:
 
 - `predpreygrass_rllib_env.py`: defection-enabled environment.
 - `config/config_env_stag_hunt_limited_age.py`: default env config with defection knobs.

@@ -333,8 +333,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_limited_age/ray_results/"
-        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
-        checkpoint_nr = "checkpoint_000009"
+        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_4_2026-02-01_16-13-20/PPO_PredPreyGrass_8b528_00000_0_2026-02-01_16-13-20/"
+        checkpoint_nr = "checkpoint_000019"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
@@ -594,6 +594,26 @@ def compute_defection_metrics(env):
         "opportunity_preferences": opportunity_stats,
     }
 
+
+def compute_death_cause_summary(agent_stats: dict) -> dict:
+    by_cause = {}
+    by_type = {}
+    total_deaths = 0
+    for agent_id, rec in agent_stats.items():
+        cause = rec.get("death_cause")
+        if not cause:
+            continue
+        total_deaths += 1
+        by_cause[cause] = by_cause.get(cause, 0) + 1
+        policy_group = rec.get("policy_group") or "_".join(agent_id.split("_")[:3])
+        type_counts = by_type.setdefault(policy_group, {})
+        type_counts[cause] = type_counts.get(cause, 0) + 1
+    return {
+        "total_deaths": total_deaths,
+        "by_cause": by_cause,
+        "by_type": by_type,
+    }
+
 def save_reward_summary_to_file(env, total_reward, output_dir):
     reward_log_path = os.path.join(output_dir, "reward_summary.txt")
     def _get_group_stats(env):
@@ -762,7 +782,7 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
-    seed = 6 # 63
+    seed = 21 # 63
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
@@ -839,6 +859,7 @@ if __name__ == "__main__":
         )
 
     defection_metrics = compute_defection_metrics(env)
+    death_causes = compute_death_cause_summary(env.get_all_agent_stats())
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
@@ -967,6 +988,10 @@ if __name__ == "__main__":
         with open(defection_metrics_path, "w") as f:
             json.dump(defection_metrics, f, indent=2)
         print(f"Defection metrics written to: {defection_metrics_path}")
+        death_causes_path = os.path.join(eval_output_dir, "death_causes.json")
+        with open(death_causes_path, "w") as f:
+            json.dump(death_causes, f, indent=2)
+        print(f"Death causes written to: {death_causes_path}")
     # Always show plots on screen
     ceviz.plot()
     if SAVE_EVAL_RESULTS:
@@ -977,6 +1002,8 @@ if __name__ == "__main__":
 
     print("Defection metrics:")
     print(json.dumps(defection_metrics, indent=2))
+    print("Death causes:")
+    print(json.dumps(death_causes, indent=2))
 
     print_ranked_fitness_summary(env)
 

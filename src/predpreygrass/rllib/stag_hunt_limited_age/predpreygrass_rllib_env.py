@@ -1761,6 +1761,7 @@ class PredPreyGrass(MultiAgentEnv):
         lifetime = max(int(death_step - birth_step), 0)
         info.setdefault("lifetime_steps", lifetime)
         info.setdefault("parent_id", record.get("parent"))
+        info.setdefault("death_cause", record.get("death_cause"))
         # Mirror core lifecycle fields into the event log record for convenience
         evt = self.agent_event_log.get(agent_id)
         if evt is not None:
@@ -1783,6 +1784,7 @@ class PredPreyGrass(MultiAgentEnv):
             lifetime = max(int(self.current_step - birth_step), 0)
             info.setdefault("lifetime_steps", lifetime)
             info.setdefault("parent_id", record.get("parent"))
+            info.setdefault("death_cause", record.get("death_cause"))
             if "predator" in agent_id:
                 info.setdefault("species", "predator")
             elif "prey" in agent_id:

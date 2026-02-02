@@ -39,7 +39,7 @@ aggregate_join_choices = None
 
 
 SAVE_EVAL_RESULTS = True
-N_RUNS = 10  # Number of evaluation runs
+N_RUNS = 100  # Number of evaluation runs
 SEED = 1
 MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
 SURVIVAL_MIN_STEP = 1000
@@ -292,10 +292,10 @@ def setup_modules():
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # STAG_HUNT_LIMITED_AGE_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20
+        # STAG_HUNT_LIMITED_AGE_JOIN_COST_0.02_SCAVENGER_0.4_2026-02-01_16-13-20/PPO_PredPreyGrass_8b528_00000_0_2026-02-01_16-13-20
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_limited_age/ray_results/"
-        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
-        checkpoint_nr = "checkpoint_000009"
+        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_4_2026-02-01_16-13-20/PPO_PredPreyGrass_8b528_00000_0_2026-02-01_16-13-20/"
+        checkpoint_nr = "checkpoint_000019"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
     rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
@@ -317,6 +317,26 @@ def compute_defection_metrics(env):
         "capture_outcomes": capture_stats,
     }
     return metrics
+
+
+def compute_death_cause_summary(agent_stats: dict) -> dict:
+    by_cause = {}
+    by_type = {}
+    total_deaths = 0
+    for agent_id, rec in agent_stats.items():
+        cause = rec.get("death_cause")
+        if not cause:
+            continue
+        total_deaths += 1
+        by_cause[cause] = by_cause.get(cause, 0) + 1
+        policy_group = rec.get("policy_group") or "_".join(agent_id.split("_")[:3])
+        type_counts = by_type.setdefault(policy_group, {})
+        type_counts[cause] = type_counts.get(cause, 0) + 1
+    return {
+        "total_deaths": total_deaths,
+        "by_cause": by_cause,
+        "by_type": by_type,
+    }
 
 
 if __name__ == "__main__":
@@ -375,6 +395,7 @@ if __name__ == "__main__":
         print(f"Total Steps: {env.current_step}")
         agent_stats = env.get_all_agent_stats()
         defection_metrics = compute_defection_metrics(env)
+        death_causes = compute_death_cause_summary(agent_stats)
         print("Defection metrics:")
         print(json.dumps(defection_metrics, indent=2))
         survival_ok = False
@@ -392,6 +413,7 @@ if __name__ == "__main__":
                 "steps": defection_metrics.get("steps", 0),
                 "survival_ok": survival_ok,
                 "survival_last_counts": counts_history[-1] if counts_history else {},
+                "death_causes": death_causes,
                 **defection_metrics.get("join_defect", {}),
                 **defection_metrics.get("capture_outcomes", {}),
             }
@@ -411,6 +433,8 @@ if __name__ == "__main__":
                     f.write(f"{aid:20}: {r:.2f}\n")
             with open(summary_data_dir / f"defection_metrics_{run + 1}.json", "w") as f:
                 json.dump(defection_metrics, f, indent=2)
+            with open(summary_data_dir / f"death_causes_{run + 1}.json", "w") as f:
+                json.dump(death_causes, f, indent=2)
 
     filtered_runs = [m for m in per_run_metrics if m.get("steps", 0) >= MIN_STEPS_FOR_STATS]
     survivor_runs = [m for m in per_run_metrics if m.get("survival_ok")]
@@ -444,6 +468,25 @@ if __name__ == "__main__":
             coop_participants_total = sum(m.get("coop_participants_total", 0) for m in runs)
             coop_free_riders_total = sum(m.get("coop_free_riders_total", 0) for m in runs)
             coop_captures_with_free_riders = sum(m.get("coop_captures_with_free_riders", 0) for m in runs)
+
+            def _merge_counts(dest, src):
+                for k, v in src.items():
+                    dest[k] = dest.get(k, 0) + v
+
+            def _merge_nested_counts(dest, src):
+                for group, counts in src.items():
+                    group_dest = dest.setdefault(group, {})
+                    for k, v in counts.items():
+                        group_dest[k] = group_dest.get(k, 0) + v
+
+            total_deaths = 0
+            death_by_cause = {}
+            death_by_type = {}
+            for m in runs:
+                d = m.get("death_causes") or {}
+                total_deaths += d.get("total_deaths", 0)
+                _merge_counts(death_by_cause, d.get("by_cause", {}))
+                _merge_nested_counts(death_by_type, d.get("by_type", {}))
 
             join_decision_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
             defect_decision_rate = defect_steps / total_pred_steps if total_pred_steps else 0.0
@@ -484,6 +527,11 @@ if __name__ == "__main__":
                     "coop_free_rider_rate": coop_free_rider_rate,
                     "coop_captures_with_free_riders": coop_captures_with_free_riders,
                     "coop_free_rider_presence_rate": coop_free_rider_presence_rate,
+                },
+                "death_causes": {
+                    "total_deaths": total_deaths,
+                    "by_cause": death_by_cause,
+                    "by_type": death_by_type,
                 },
             }
 
