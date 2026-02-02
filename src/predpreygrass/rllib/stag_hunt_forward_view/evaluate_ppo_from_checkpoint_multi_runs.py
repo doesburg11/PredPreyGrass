@@ -14,6 +14,13 @@ from ray.tune.registry import register_env
 
 
 TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
+SAVE_EVAL_RESULTS = True
+N_RUNS = 10  # Number of evaluation runs
+SEED = 1
+MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
+SURVIVAL_MIN_STEP = 1000
+SURVIVAL_WINDOW = 1
+SURVIVAL_REQUIRED_TYPES = ("type_1_predator", "type_1_prey", "type_2_prey")
 
 
 def _prepend_snapshot_source() -> None:
@@ -38,13 +45,6 @@ aggregate_capture_outcomes_from_event_log = None
 aggregate_join_choices = None
 
 
-SAVE_EVAL_RESULTS = True
-N_RUNS = 10  # Number of evaluation runs
-SEED = 1
-MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
-SURVIVAL_MIN_STEP = 1000
-SURVIVAL_WINDOW = 1
-SURVIVAL_REQUIRED_TYPES = ("type_1_predator", "type_1_prey", "type_2_prey")
 
 
 def prepend_example_sources() -> None:
@@ -292,10 +292,10 @@ def setup_modules():
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20
+        # STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
-        checkpoint_nr = "checkpoint_000009"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/"
+        checkpoint_nr = "checkpoint_000099"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
     rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
