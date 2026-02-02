@@ -333,8 +333,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/"
-        checkpoint_nr = "checkpoint_000009"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/"
+        checkpoint_nr = "checkpoint_000099"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
@@ -762,7 +762,7 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
-    seed = 6 # 63
+    seed = 2
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
