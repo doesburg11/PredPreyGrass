@@ -762,7 +762,7 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
-    seed = 2
+    seed = 9
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
