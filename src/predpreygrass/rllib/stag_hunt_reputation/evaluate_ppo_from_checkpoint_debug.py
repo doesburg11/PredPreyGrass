@@ -8,42 +8,239 @@ The simulation can be controlled in real-time using a graphical interface.
 - [<-] Step Backward
 - Tooltips are available to inspect agent IDs, positions, energies.
 
-The environment is rendered using PyGame, and the simulation can be recorded as a video. 
+The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
-from predpreygrass.rllib.stag_hunt_reputation.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.rllib.stag_hunt_reputation.config.config_env_stag_hunt_reputation import config_env
-from predpreygrass.rllib.stag_hunt_reputation.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.rllib.stag_hunt_reputation.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
-from predpreygrass.rllib.stag_hunt_reputation.utils.reputation_metrics import (
-    aggregate_capture_outcomes_from_event_log,
-    aggregate_join_choices,
-    compute_opportunity_preference_metrics,
-)
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+from collections import defaultdict
+from copy import deepcopy
+from datetime import datetime
+from pathlib import Path
 
-# external libraries
+import cv2
+import numpy as np
+import pygame
 import ray
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import torch
-from datetime import datetime
-import os
-import json
-import pygame
-import cv2
-import numpy as np
-import re
-from copy import deepcopy
-from collections import defaultdict
+
+
+TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
+
+
+def _prepend_snapshot_source() -> None:
+    script_path = Path(__file__).resolve()
+    try:
+        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
+            source_root = script_path.parents[3]
+            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
+                source_root_str = str(source_root)
+                if source_root_str not in sys.path:
+                    sys.path.insert(0, source_root_str)
+    except IndexError:
+        return
+
+
+_prepend_snapshot_source()
+
+PredPreyGrass = None
+config_env = None
+CombinedEvolutionVisualizer = None
+PreyDeathCauseVisualizer = None
+PyGameRenderer = None
+ViewerControlHelper = None
+LoopControlHelper = None
+aggregate_capture_outcomes_from_event_log = None
+aggregate_join_choices = None
+compute_opportunity_preference_metrics = None
 
 
 SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = False
+SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
+DISPLAY_SCALE = 1.0
+
+
+def prepend_example_sources() -> None:
+    if not TRAINED_EXAMPLE_DIR:
+        return
+    example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
+    source_dirs = [
+        example_dir / "REPRODUCE_CODE",
+        example_dir / "SOURCE_CODE",
+        example_dir / "eval" / "REPRODUCE_CODE",
+        example_dir / "eval" / "SOURCE_CODE",
+    ]
+    for path in source_dirs:
+        if path.is_dir():
+            path_str = str(path)
+            if path_str not in sys.path:
+                sys.path.insert(0, path_str)
+
+
+def load_predpreygrass_modules() -> None:
+    global PredPreyGrass
+    global config_env
+    global CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+    global PyGameRenderer, ViewerControlHelper, LoopControlHelper
+    global aggregate_capture_outcomes_from_event_log, aggregate_join_choices, compute_opportunity_preference_metrics
+
+    from predpreygrass.rllib.stag_hunt_reputation.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.stag_hunt_reputation.config.config_env_stag_hunt_reputation import config_env as _config_env
+    from predpreygrass.rllib.stag_hunt_reputation.utils.matplot_renderer import (
+        CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
+        PreyDeathCauseVisualizer as _PreyDeathCauseVisualizer,
+    )
+    from predpreygrass.rllib.stag_hunt_reputation.utils.pygame_grid_renderer_rllib import (
+        PyGameRenderer as _PyGameRenderer,
+        ViewerControlHelper as _ViewerControlHelper,
+        LoopControlHelper as _LoopControlHelper,
+    )
+    from predpreygrass.rllib.stag_hunt_reputation.utils.reputation_metrics import (
+        aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
+        aggregate_join_choices as _aggregate_join_choices,
+        compute_opportunity_preference_metrics as _compute_opportunity_preference_metrics,
+    )
+
+    PredPreyGrass = _PredPreyGrass
+    config_env = _config_env
+    CombinedEvolutionVisualizer = _CombinedEvolutionVisualizer
+    PreyDeathCauseVisualizer = _PreyDeathCauseVisualizer
+    PyGameRenderer = _PyGameRenderer
+    ViewerControlHelper = _ViewerControlHelper
+    LoopControlHelper = _LoopControlHelper
+    aggregate_capture_outcomes_from_event_log = _aggregate_capture_outcomes_from_event_log
+    aggregate_join_choices = _aggregate_join_choices
+    compute_opportunity_preference_metrics = _compute_opportunity_preference_metrics
 
 
 def env_creator(config):
     return PredPreyGrass(config)
+
+
+_SNAPSHOT_EXCLUDE_DIRS = {
+    "ray_results",
+    "ray_results_failed",
+    "trained_examples",
+    "__pycache__",
+}
+
+
+def copy_module_snapshot(source_dir: Path) -> None:
+    module_dir = Path(__file__).resolve().parent
+    module_name = module_dir.name
+
+    pkg_root = source_dir / "predpreygrass"
+    rllib_root = pkg_root / "rllib"
+    rllib_root.mkdir(parents=True, exist_ok=True)
+
+    pkg_init = pkg_root / "__init__.py"
+    if not pkg_init.exists():
+        pkg_init.write_text("")
+    rllib_init = rllib_root / "__init__.py"
+    if not rllib_init.exists():
+        rllib_init.write_text("")
+
+    dest_dir = rllib_root / module_name
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    def _ignore(path: str, entries):
+        ignored = []
+        for entry in entries:
+            if entry in _SNAPSHOT_EXCLUDE_DIRS:
+                ignored.append(entry)
+                continue
+            if entry.endswith(".pyc"):
+                ignored.append(entry)
+        return ignored
+
+    shutil.copytree(module_dir, dest_dir, ignore=_ignore)
+
+    assets_src = None
+    for parent in module_dir.parents:
+        if parent.name == "REPRODUCE_CODE":
+            candidate = parent / "assets" / "images" / "icons"
+            if candidate.is_dir():
+                assets_src = candidate
+            break
+    if assets_src is None:
+        candidate = module_dir.parents[4] / "assets" / "images" / "icons"
+        if candidate.is_dir():
+            assets_src = candidate
+    if assets_src:
+        assets_dest = source_dir / "assets" / "images" / "icons"
+        if assets_dest.exists():
+            shutil.rmtree(assets_dest)
+        assets_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(assets_src, assets_dest)
+
+
+def write_pip_freeze(output_path: Path) -> None:
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output_path.write_text(result.stdout)
+        if result.stderr:
+            (output_path.parent / "pip_freeze_eval_stderr.txt").write_text(result.stderr)
+    except Exception as exc:
+        output_path.write_text(f"pip freeze failed: {exc}")
+
+
+def _find_run_config_path(checkpoint_path: str):
+    candidates = [
+        Path(checkpoint_path).parent / "run_config.json",
+        Path(checkpoint_path).parent.parent / "run_config.json",
+    ]
+    if TRAINED_EXAMPLE_DIR:
+        candidates.append(Path(TRAINED_EXAMPLE_DIR).expanduser().resolve() / "REPRODUCE_CODE" / "CONFIG" / "run_config.json")
+        candidates.append(Path(TRAINED_EXAMPLE_DIR).expanduser().resolve() / "CONFIG" / "run_config.json")
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    return None
+
+
+def prepare_eval_output_dir(eval_output_dir: Path, env_cfg: dict, checkpoint_path: str) -> None:
+    eval_output_dir.mkdir(parents=True, exist_ok=True)
+
+    reproduce_dir = eval_output_dir / "REPRODUCE_CODE"
+    reproduce_dir.mkdir(parents=True, exist_ok=True)
+    copy_module_snapshot(reproduce_dir)
+    write_pip_freeze(reproduce_dir / "pip_freeze_eval.txt")
+
+    config_dir = reproduce_dir / "CONFIG"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    with open(config_dir / "config_env.json", "w") as f:
+        json.dump(env_cfg, f, indent=4)
+    run_config = _find_run_config_path(checkpoint_path)
+    if run_config:
+        shutil.copy2(run_config, config_dir / "run_config.json")
+
+    with open(eval_output_dir / "config_env.json", "w") as f:
+        json.dump(env_cfg, f, indent=4)
+
+
+def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
+    checkpoint_dir = example_dir / "checkpoint"
+    if checkpoint_dir.is_dir():
+        return checkpoint_dir
+    candidates = sorted(example_dir.glob("checkpoint_*"))
+    if len(candidates) == 1:
+        return candidates[0]
+    if not candidates:
+        raise FileNotFoundError(f"No checkpoint found in {example_dir}")
+    raise FileExistsError(f"Multiple checkpoints found in {example_dir}; please keep only one.")
 
 
 def _load_training_env_config_from_run(checkpoint_path, base_cfg):
@@ -52,26 +249,21 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
     into the provided base_cfg. This aligns evaluation observations with the
     shapes the policy network was trained on (avoids matmul shape errors).
     """
-    candidates = [
-        os.path.join(os.path.dirname(checkpoint_path), "run_config.json"),
-        os.path.join(os.path.dirname(os.path.dirname(checkpoint_path)), "run_config.json"),
-    ]
     training_env_cfg = None
-    for cand in candidates:
-        if os.path.isfile(cand):
-            try:
-                with open(cand, "r") as f:
-                    rc = json.load(f)
-                # Prefer explicit env_config if present; else, fall back to top-level keys
-                if isinstance(rc, dict):
-                    if isinstance(rc.get("env_config"), dict):
-                        training_env_cfg = rc["env_config"]
-                    else:
-                        # Heuristic: intersect with known keys in base_cfg
-                        training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
-                break
-            except Exception:
-                pass
+    cand = _find_run_config_path(checkpoint_path)
+    if cand and cand.is_file():
+        try:
+            with open(cand, "r") as f:
+                rc = json.load(f)
+            # Prefer explicit env_config if present; else, fall back to top-level keys
+            if isinstance(rc, dict):
+                if isinstance(rc.get("env_config"), dict):
+                    training_env_cfg = rc["env_config"]
+                else:
+                    # Heuristic: intersect with known keys in base_cfg
+                    training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
+        except Exception:
+            pass
 
     if not isinstance(training_env_cfg, dict):
         return base_cfg  # nothing to merge
@@ -134,22 +326,26 @@ def policy_pi(observation, policy_module, deterministic=True):
     return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
-    # Example checkpoint root:
-    # STAG_HUNT_REPUTATION_BASE_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_reputation/ray_results/"
-    checkpoint_root = "STAG_HUNT_REPUTATION_BASE_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/"
-    checkpoint_nr = "checkpoint_000049"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
-    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
+    if TRAINED_EXAMPLE_DIR:
+        example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
+        checkpoint_path = resolve_trained_example_checkpoint(example_dir)
+        eval_root = example_dir / "eval" / "runs"
+        eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
+    else:
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_reputation/ray_results/"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/"
+        checkpoint_nr = "checkpoint_000099"
+        checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
+        eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 
-    rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
+    rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
     module_paths = {}
 
-    if os.path.isdir(rl_module_dir):
+    if rl_module_dir.is_dir():
         for pid in os.listdir(rl_module_dir):
-            path = os.path.join(rl_module_dir, pid)
-            if os.path.isdir(path):
-                module_paths[pid] = path
+            path = rl_module_dir / pid
+            if path.is_dir():
+                module_paths[pid] = str(path)
     else:
         raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
 
@@ -157,7 +353,6 @@ def setup_environment_and_visualizer(now):
 
     # Build config based on config_env and align observation-related keys with training run config
     cfg = dict(config_env)
-    cfg = _load_training_env_config_from_run(checkpoint_path, cfg)
 
     env = env_creator(config=cfg)
     grid_size = (env.grid_size, env.grid_size)
@@ -166,6 +361,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
@@ -190,13 +386,25 @@ def setup_environment_and_visualizer(now):
         )
 
     if SAVE_EVAL_RESULTS:
-        os.makedirs(eval_output_dir, exist_ok=True)
-        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
-        ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
-        pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
+        prepare_eval_output_dir(Path(eval_output_dir), cfg, str(checkpoint_path))
+        ceviz = CombinedEvolutionVisualizer(
+            destination_path=str(eval_output_dir),
+            timestamp=now,
+            n_possible_type_1_predators=cfg.get("n_possible_type_1_predators"),
+            n_possible_type_1_prey=cfg.get("n_possible_type_1_prey"),
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
+        )
+        pdviz = PreyDeathCauseVisualizer(destination_path=str(eval_output_dir), timestamp=now)
     else:
-        ceviz = CombinedEvolutionVisualizer(destination_path=None, timestamp=now)
+        ceviz = CombinedEvolutionVisualizer(
+            destination_path=None,
+            timestamp=now,
+            n_possible_type_1_predators=cfg.get("n_possible_type_1_predators"),
+            n_possible_type_1_prey=cfg.get("n_possible_type_1_prey"),
+            n_possible_type_2_predators=cfg.get("n_possible_type_2_predators"),
+            n_possible_type_2_prey=cfg.get("n_possible_type_2_prey"),
+        )
         pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
 
     return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
@@ -375,7 +583,7 @@ def print_ranked_reward_summary(env, total_reward):
         print(line.rstrip())
 
 
-def compute_reputation_metrics(env):
+def compute_defection_metrics(env):
     join_stats = aggregate_join_choices(env.per_step_agent_data)
     capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
     opportunity_stats = compute_opportunity_preference_metrics(env.per_step_agent_data)
@@ -552,7 +760,9 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 1
+    prepend_example_sources()
+    load_predpreygrass_modules()
+    seed = 2
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
@@ -564,7 +774,9 @@ if __name__ == "__main__":
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
+        movie_path = Path(eval_output_dir) / "visuals" / MOVIE_FILENAME
+        movie_path.parent.mkdir(parents=True, exist_ok=True)
+        video_writer = cv2.VideoWriter(str(movie_path), fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None
 
@@ -626,7 +838,8 @@ if __name__ == "__main__":
             f"Prey blocked: {getattr(env, 'reproduction_blocked_due_to_fertility_prey', 0)}"
         )
 
-    reputation_metrics = compute_reputation_metrics(env)
+    defection_metrics = compute_defection_metrics(env)
+    reputation_metrics = defection_metrics
 
     if SAVE_EVAL_RESULTS:
         save_reward_summary_to_file(env, total_reward, eval_output_dir)
@@ -751,6 +964,10 @@ if __name__ == "__main__":
                 indent=2,
             )
         print(f"Agent event log written to: {event_log_path}")
+        defection_metrics_path = os.path.join(eval_output_dir, "defection_metrics.json")
+        with open(defection_metrics_path, "w") as f:
+            json.dump(defection_metrics, f, indent=2)
+        print(f"Defection metrics written to: {defection_metrics_path}")
         reputation_metrics_path = os.path.join(eval_output_dir, "reputation_metrics.json")
         with open(reputation_metrics_path, "w") as f:
             json.dump(reputation_metrics, f, indent=2)
@@ -763,6 +980,8 @@ if __name__ == "__main__":
         with open(agent_fitness_path, "w") as f:
             json.dump(env.get_all_agent_stats(), f, indent=2)
 
+    print("Defection metrics:")
+    print(json.dumps(defection_metrics, indent=2))
     print("Reputation metrics:")
     print(json.dumps(reputation_metrics, indent=2))
 
