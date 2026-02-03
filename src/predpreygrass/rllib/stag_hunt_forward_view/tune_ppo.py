@@ -162,7 +162,7 @@ if __name__ == "__main__":
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
         ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4"
+    version = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_03_SCAVENGER_0_2"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
