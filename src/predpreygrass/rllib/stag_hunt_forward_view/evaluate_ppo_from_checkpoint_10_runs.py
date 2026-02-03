@@ -190,8 +190,8 @@ def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
 def get_eval_output_dir(checkpoint_path: Path, now: str) -> Path:
     if TRAINED_EXAMPLE_DIR:
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
-        return example_dir / "eval" / "runs" / f"eval_multiple_runs_STAG_HUNT_FORWARD_VIEW_{now}"
-    return checkpoint_path / f"eval_multiple_runs_STAG_HUNT_FORWARD_VIEW_{now}"
+        return example_dir / "eval" / "runs" / f"eval_10_runs_STAG_HUNT_FORWARD_VIEW_{now}"
+    return checkpoint_path / f"eval_10_runs_STAG_HUNT_FORWARD_VIEW_{now}"
 
 
 def get_aggregate_output_dir(checkpoint_path: Path, now: str) -> Path:
@@ -420,25 +420,28 @@ if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
     register_env("PredPreyGrass", lambda config: PredPreyGrass(config))
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    target_steps = config_env.get("max_steps", 1000)
     per_run_metrics = []
+    discarded_runs = []
+    attempt = 0
 
-    for run in range(N_RUNS):
-        seed = SEED + run
-        print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
+    while len(per_run_metrics) < N_RUNS:
+        attempt += 1
+        run = len(per_run_metrics) + 1
+        seed = SEED + attempt - 1
+        print(f"\n=== Evaluation Run {run} / {N_RUNS} (attempt {attempt}) ===")
         print(f"Using seed: {seed}")
         rl_modules, checkpoint_path = setup_modules()
         env = PredPreyGrass(config=config_env)
-        observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
+        observations, _ = env.reset(seed=seed)  # Use different seed per attempt
         if SAVE_EVAL_RESULTS:
             eval_output_dir = get_eval_output_dir(checkpoint_path, now)
-            if run == 0:
-                prepare_eval_output_dir(eval_output_dir, config_env)
             eval_output_dir.mkdir(parents=True, exist_ok=True)
             visualizer = CombinedEvolutionVisualizer(
                 destination_path=str(eval_output_dir),
                 timestamp=now,
                 destination_filename="visuals",
-                run_nr=run + 1,
+                run_nr=run,
                 n_possible_type_1_predators=config_env.get("n_possible_type_1_predators"),
                 n_possible_type_1_prey=config_env.get("n_possible_type_1_prey"),
                 n_possible_type_2_predators=config_env.get("n_possible_type_2_predators"),
@@ -468,9 +471,17 @@ if __name__ == "__main__":
 
         print(f"Evaluation complete! Total Reward: {total_reward:.2f}")
         print(f"Total Steps: {env.current_step}")
+        if env.current_step < target_steps:
+            print(
+                f"Run ended early at {env.current_step} steps (< {target_steps}); discarding."
+            )
+            discarded_runs.append(
+                {"attempt": attempt, "seed": seed, "steps": env.current_step}
+            )
+            continue
         agent_stats = env.get_all_agent_stats()
         defection_metrics = compute_defection_metrics(env)
-        defection_metrics["run"] = run + 1
+        defection_metrics["run"] = run
         defection_metrics["seed"] = seed
         print("Defection metrics:")
         print(json.dumps(defection_metrics, indent=2))
@@ -484,7 +495,7 @@ if __name__ == "__main__":
 
         per_run_metrics.append(
             {
-                "run": run + 1,
+                "run": run,
                 "seed": seed,
                 "steps": defection_metrics.get("steps", 0),
                 "survival_ok": survival_ok,
@@ -496,20 +507,27 @@ if __name__ == "__main__":
             }
         )
         if SAVE_EVAL_RESULTS:
+            if len(per_run_metrics) == 1:
+                prepare_eval_output_dir(eval_output_dir, config_env)
             visualizer.plot()
             config_env_dir = eval_output_dir / "config_env"
             config_env_dir.mkdir(exist_ok=True)
             summary_data_dir = eval_output_dir / "summary_data"
             summary_data_dir.mkdir(exist_ok=True)
-            with open(config_env_dir / f"config_env_{run + 1}.json", "w") as f:
+            with open(config_env_dir / f"config_env_{run}.json", "w") as f:
                 json.dump(config_env, f, indent=4)
-            with open(summary_data_dir / f"reward_summary_{run + 1}.txt", "w") as f:
+            with open(summary_data_dir / f"reward_summary_{run}.txt", "w") as f:
                 f.write(f"Total Reward: {total_reward:.2f}\n")
                 for aid, rec in agent_stats.items():
                     r = rec.get("cumulative_reward", 0.0)
                     f.write(f"{aid:20}: {r:.2f}\n")
-            with open(summary_data_dir / f"defection_metrics_{run + 1}.json", "w") as f:
+            with open(summary_data_dir / f"defection_metrics_{run}.json", "w") as f:
                 json.dump(defection_metrics, f, indent=2)
+
+    if discarded_runs:
+        print(
+            f"\nDiscarded {len(discarded_runs)} runs that ended before {target_steps} steps."
+        )
 
     filtered_runs = [m for m in per_run_metrics if m.get("steps", 0) >= MIN_STEPS_FOR_STATS]
     survivor_runs = [m for m in per_run_metrics if m.get("survival_ok")]
