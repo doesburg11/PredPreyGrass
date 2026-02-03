@@ -294,8 +294,8 @@ def setup_modules():
     else:
         # STAG_HUNT_LIMITED_AGE_JOIN_COST_0.02_SCAVENGER_0.4_2026-02-01_16-13-20/PPO_PredPreyGrass_8b528_00000_0_2026-02-01_16-13-20
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_limited_age/ray_results/"
-        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_4_2026-02-01_16-13-20/PPO_PredPreyGrass_8b528_00000_0_2026-02-01_16-13-20/"
-        checkpoint_nr = "checkpoint_000019"
+        checkpoint_root = "STAG_HUNT_LIMITED_AGE_JOIN_COST_0_02_SCAVENGER_0_4_2026-02-02_09-34-23/PPO_PredPreyGrass_fa60f_00000_0_2026-02-02_09-34-24/"
+        checkpoint_nr = "checkpoint_000028"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
     rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"
