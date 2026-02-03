@@ -5,6 +5,31 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
+import os
+import sys
+from datetime import datetime
+from pathlib import Path
+import json
+import shutil
+import subprocess
+
+
+def _prepend_snapshot_source() -> None:
+    script_path = Path(__file__).resolve()
+    try:
+        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
+            source_root = script_path.parents[3]
+            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
+                source_root_str = str(source_root)
+                if source_root_str not in sys.path:
+                    sys.path.insert(0, source_root_str)
+    except IndexError:
+        return
+
+
+_prepend_snapshot_source()
+
+
 from predpreygrass.rllib.stag_hunt_reputation.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.rllib.stag_hunt_reputation.config.config_env_stag_hunt_reputation import config_env
 from predpreygrass.rllib.stag_hunt_reputation.utils.episode_return_callback import EpisodeReturn
@@ -15,11 +40,80 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
-import os
-from datetime import datetime
-from pathlib import Path
-import json
-import shutil
+
+_SNAPSHOT_EXCLUDE_DIRS = {
+    "ray_results",
+    "ray_results_failed",
+    "trained_examples",
+    "__pycache__",
+}
+
+
+def copy_module_snapshot(reproduce_dir: Path) -> None:
+    """Copy only the local module tree into REPRODUCE_CODE for reproducibility."""
+    module_dir = Path(__file__).resolve().parent
+    module_name = module_dir.name
+
+    pkg_root = reproduce_dir / "predpreygrass"
+    rllib_root = pkg_root / "rllib"
+    rllib_root.mkdir(parents=True, exist_ok=True)
+
+    pkg_init = pkg_root / "__init__.py"
+    if not pkg_init.exists():
+        pkg_init.write_text("")
+    rllib_init = rllib_root / "__init__.py"
+    if not rllib_init.exists():
+        rllib_init.write_text("")
+
+    dest_dir = rllib_root / module_name
+    if dest_dir.exists():
+        shutil.rmtree(dest_dir)
+
+    def _ignore(path: str, entries):
+        ignored = []
+        for entry in entries:
+            if entry in _SNAPSHOT_EXCLUDE_DIRS:
+                ignored.append(entry)
+                continue
+            if entry.endswith(".pyc"):
+                ignored.append(entry)
+        return ignored
+
+    shutil.copytree(module_dir, dest_dir, ignore=_ignore)
+
+    assets_src = None
+    for parent in module_dir.parents:
+        if parent.name == "REPRODUCE_CODE":
+            candidate = parent / "assets" / "images" / "icons"
+            if candidate.is_dir():
+                assets_src = candidate
+            break
+    if assets_src is None:
+        candidate = module_dir.parents[4] / "assets" / "images" / "icons"
+        if candidate.is_dir():
+            assets_src = candidate
+    if assets_src:
+        assets_dest = reproduce_dir / "assets" / "images" / "icons"
+        if assets_dest.exists():
+            shutil.rmtree(assets_dest)
+        assets_dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(assets_src, assets_dest)
+
+
+def write_pip_freeze(output_path: Path) -> None:
+    """Write the current environment's pip freeze to output_path."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        output_path.write_text(result.stdout)
+        if result.stderr:
+            (output_path.parent / "pip_freeze_train_stderr.txt").write_text(result.stderr)
+    except Exception as exc:
+        output_path.write_text(f"pip freeze failed: {exc}")
 
 
 def get_config_ppo():
@@ -61,27 +155,40 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
     env_config = {**config_env, "seed": None}
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_reputation/ray_results/"
-    ray_results_path = Path(ray_results_dir).expanduser()
+    trained_example_dir = os.getenv("TRAINED_EXAMPLE_DIR")
+    if trained_example_dir:
+        ray_results_path = Path(trained_example_dir).expanduser().resolve() / "ray_results"
+    else:
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_reputation/ray_results/"
+        ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "AUTO_NO_RABBITS_NO_DEFECT"
+    version = "STAG_HUNT_REPUTATION_JOIN_COST_0_02_SCAVENGER_0_4"
     experiment_name = f"{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
-    # --- Save environment source file for provenance ---
-    source_dir = experiment_path / "SOURCE_CODE_ENV"
-    source_dir.mkdir(exist_ok=True)
-    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
-    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
+    reproduce_dir = experiment_path / "REPRODUCE_CODE"
+    reproduce_dir.mkdir(exist_ok=True)
+    copy_module_snapshot(reproduce_dir)
 
     config_ppo = get_config_ppo()
-    model_preset = "auto"  # "auto" or "tiny"
-    
-    model_metadata = {
-        "preset": model_preset,
-        "override_model_config": None,
+    config_metadata = {
+        "config_env": config_env,
+        "config_ppo": config_ppo,
     }
+    with open(experiment_path / "run_config.json", "w") as f:
+        json.dump(config_metadata, f, indent=4)
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
+
+    config_dir = reproduce_dir / "CONFIG"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    write_pip_freeze(reproduce_dir / "pip_freeze_train.txt")
+    with open(config_dir / "config_env.json", "w") as f:
+        json.dump(config_env, f, indent=4)
+    with open(config_dir / "config_ppo.json", "w") as f:
+        json.dump(config_ppo, f, indent=4)
+    shutil.copy2(experiment_path / "run_config.json", config_dir / "run_config.json")
+
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
     sample_env.reset(seed=None)
@@ -99,25 +206,7 @@ if __name__ == "__main__":
     sample_env.action_space_struct = sample_env.action_spaces
 
     # Build one MultiRLModuleSpec in one go
-    multi_module_spec = build_multi_module_spec(
-        obs_by_policy,
-        act_by_policy,
-        preset=model_preset, # "auto" or "tiny"
-    )
-
-    # Persist full config (including resolved model configs) for provenance.
-    model_configs_by_policy = {
-        pid: spec.model_config for pid, spec in multi_module_spec.rl_module_specs.items()
-    }
-    config_metadata = {
-        "config_env": config_env,
-        "config_ppo": config_ppo,
-        "model": model_metadata,
-        "model_configs_by_policy": model_configs_by_policy,
-    }
-    with open(experiment_path / "run_config.json", "w") as f:
-        json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
+    multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
 
     # Policies dict for RLlib
     policies = {

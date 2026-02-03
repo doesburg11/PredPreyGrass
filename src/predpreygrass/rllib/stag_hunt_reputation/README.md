@@ -1,14 +1,15 @@
 # Stag Hunt Reputation
 
-This module extends the stag-hunt defection environment with a lightweight
-predator reputation signal. It **does not** change capture rules; it only
-tracks join/defect history and exposes it in observations and metrics.
+This module extends the **forward-view** stag-hunt defection environment with a
+lightweight predator reputation signal. It **does not** change capture rules;
+it only tracks join/defect history and exposes it in observations and metrics.
 
 ## What this adds
 
 - Per-predator reputation score in [0, 1] based on join decisions.
 - Optional spatial reputation channel and/or per-agent reputation summary.
 - Extra metrics for conditional cooperation (join rate vs partner reputation).
+- All forward-view predator observation logic from `stag_hunt_forward_view`.
 
 All reputation features are opt-in and default to off.
 
@@ -37,6 +38,34 @@ In `config/config_env_stag_hunt_reputation.py`:
 - `include_reputation_channel` (bool)
 - `include_reputation_summary` (bool)
 - `reputation_visibility_range` (int or None)
+
+## Example: reputation in observations
+
+When enabled, two optional signals can appear in each predator's observation:
+
+- **Spatial reputation channel** (grid): stores nearby predators' reputation at
+  their positions (same spatial frame as other channels).
+- **Summary scalar**: mean reputation of predators within visibility range.
+
+Example config:
+
+```
+config_env.update({
+    "reputation_enabled": True,
+    "include_reputation_channel": True,
+    "include_reputation_summary": True,
+    "reputation_window": 50,
+})
+```
+
+Example values in a step (conceptual):
+
+```
+obs = {
+  "grid": [..., reputation_channel, ...],   # extra channel appended
+  "reputation_mean_in_range": 0.63,         # scalar summary for this predator
+}
+```
 
 ## Files and structure
 

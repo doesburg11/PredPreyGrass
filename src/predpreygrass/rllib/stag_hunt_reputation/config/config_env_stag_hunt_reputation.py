@@ -78,14 +78,14 @@ config_env = {
     # This does NOT change the number of observation channels.
     "mask_observation_with_visibility": False,
     # Reputation signal (predators only)
-    "reputation_enabled": False,
+    "reputation_enabled": True,
     "reputation_window": 50,            # rolling window size (set <=0 to use EMA)
     "reputation_ema_alpha": 0.1,        # used when window <= 0
     "reputation_opportunity_only": True, # count only steps with prey nearby
     "reputation_min_samples": 5,        # keep neutral rep until this many samples
     "reputation_noise_std": 0.0,        # optional noise added to observed rep
-    "include_reputation_channel": False, # add spatial channel with per-predator rep
-    "include_reputation_summary": False, # add summary channel (mean rep in range)
+    "include_reputation_channel": True, # add spatial channel with per-predator rep
+    "include_reputation_summary": True, # add summary channel (mean rep in range)
     "reputation_visibility_range": None, # defaults to predator_obs_range when None
     # Optionally append a visibility channel for debugging/learning signal purposes.
     # Keep this False if your trained checkpoints assume a fixed num_obs_channels.
