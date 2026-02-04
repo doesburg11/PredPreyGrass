@@ -4,6 +4,8 @@ import math
 import shutil
 import subprocess
 import sys
+import csv
+from typing import Any
 from datetime import datetime
 from pathlib import Path
 
@@ -294,6 +296,132 @@ def _compute_join_cost_stats(agent_event_log: dict) -> dict:
         "join_cost_per_predator_max": max_cost,
     }
 
+
+def _jsonify(obj: Any):
+    if obj is None or isinstance(obj, (int, float, str, bool)):
+        return obj
+    if isinstance(obj, dict):
+        return {k: _jsonify(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_jsonify(v) for v in obj]
+    if hasattr(obj, "tolist"):
+        try:
+            return obj.tolist()
+        except Exception:
+            pass
+    if hasattr(obj, "item"):
+        try:
+            return obj.item()
+        except Exception:
+            pass
+    return str(obj)
+
+
+def write_trajectory_logs(output_dir: Path, run: int, per_step_agent_data: list[dict], agent_event_log: dict) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    per_step_path = output_dir / f"per_step_agent_data_{run}.json"
+    event_log_path = output_dir / f"agent_event_log_{run}.json"
+
+    per_step_payload = _jsonify(per_step_agent_data)
+    event_log_payload = _jsonify(agent_event_log)
+
+    per_step_path.write_text(json.dumps(per_step_payload, indent=2))
+    event_log_path.write_text(json.dumps(event_log_payload, indent=2))
+
+
+def write_join_costs_per_predator(output_dir: Path, run: int, agent_event_log: dict) -> None:
+    rows = []
+    for aid, record in agent_event_log.items():
+        if "predator" not in aid:
+            continue
+        events = list(record.get("eating_events", [])) + list(record.get("failed_eating_events", []))
+        if not events:
+            continue
+        total_cost = 0.0
+        cost_events = 0
+        for evt in events:
+            cost = float(evt.get("join_cost", 0.0) or 0.0)
+            if cost:
+                total_cost += cost
+                cost_events += 1
+        rows.append(
+            {
+                "predator_id": aid,
+                "join_cost_total": total_cost,
+                "join_cost_events": cost_events,
+                "hunt_events": len(events),
+                "join_cost_per_event": (total_cost / cost_events) if cost_events else 0.0,
+            }
+        )
+
+    rows.sort(key=lambda r: (r["join_cost_total"], r["join_cost_events"]), reverse=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = output_dir / f"join_costs_per_predator_{run}.csv"
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "predator_id",
+                "join_cost_total",
+                "join_cost_events",
+                "hunt_events",
+                "join_cost_per_event",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def write_mammoth_team_attacks(output_dir: Path, run: int, agent_event_log: dict) -> None:
+    attacks = {}
+    for aid, record in agent_event_log.items():
+        if "predator" not in aid:
+            continue
+        for evt in record.get("eating_events", []):
+            prey_id = evt.get("id_resource") or evt.get("id_eaten")
+            if prey_id is None or "type_1_prey" not in str(prey_id):
+                continue
+            key = (evt.get("t"), str(prey_id))
+            entry = attacks.setdefault(
+                key,
+                {
+                    "t": evt.get("t"),
+                    "prey_id": prey_id,
+                    "success": True,
+                },
+            )
+            entry["success"] = True
+            entry["joiners"] = list(evt.get("predator_list", []) or [])
+            entry["free_riders"] = list(evt.get("free_riders", []) or [])
+            entry["team_capture"] = bool(evt.get("team_capture"))
+            entry["join_cost"] = evt.get("join_cost", 0.0)
+            entry["energy_resource"] = evt.get("energy_resource")
+        for evt in record.get("failed_eating_events", []):
+            prey_id = evt.get("id_resource") or evt.get("id_eaten")
+            if prey_id is None or "type_1_prey" not in str(prey_id):
+                continue
+            key = (evt.get("t"), str(prey_id))
+            entry = attacks.setdefault(
+                key,
+                {
+                    "t": evt.get("t"),
+                    "prey_id": prey_id,
+                    "success": False,
+                },
+            )
+            # keep success=True if a success record also exists for this key
+            entry["success"] = entry.get("success", False)
+            entry["joiners"] = list(evt.get("predator_list", []) or [])
+            entry["free_riders"] = list(evt.get("free_riders", []) or [])
+            entry["team_capture"] = bool(evt.get("team_capture"))
+            entry["join_cost"] = evt.get("join_cost", 0.0)
+            entry["energy_resource"] = evt.get("energy_resource")
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    out_path = output_dir / f"mammoth_team_attacks_{run}.json"
+    ordered = sorted(attacks.values(), key=lambda item: (item.get("t", -1), str(item.get("prey_id", ""))))
+    out_path.write_text(json.dumps(ordered, indent=2))
+
 def _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr):
     base = Path(ray_results_dir) / checkpoint_root
     if base.name.startswith("checkpoint_"):
@@ -523,6 +651,9 @@ if __name__ == "__main__":
                     f.write(f"{aid:20}: {r:.2f}\n")
             with open(summary_data_dir / f"defection_metrics_{run}.json", "w") as f:
                 json.dump(defection_metrics, f, indent=2)
+            write_join_costs_per_predator(summary_data_dir, run, env.agent_event_log)
+            write_trajectory_logs(summary_data_dir, run, env.per_step_agent_data, env.agent_event_log)
+            write_mammoth_team_attacks(summary_data_dir, run, env.agent_event_log)
 
     if discarded_runs:
         print(

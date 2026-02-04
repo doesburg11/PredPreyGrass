@@ -33,6 +33,15 @@ REQUIRE_N_RUNS = 10  # only include evals with this many runs in the summary; se
 REQUIRE_FAILURE_METRICS = True  # skip evals without failure metrics in the summary
 
 
+def _repo_root() -> Path:
+    # This file lives at repo_root/src/predpreygrass/rllib/stag_hunt_forward_view/utils/...
+    return Path(__file__).resolve().parents[5]
+
+
+def _assets_plots_dir() -> Path:
+    return _repo_root() / "assets" / OUTPUT_PLOTS_DIR
+
+
 def _load_json(path: Path):
     if not path.is_file():
         return None
@@ -88,9 +97,14 @@ def _extract_metrics(aggregate):
     join_defect = aggregate.get("join_defect", {})
     capture = aggregate.get("capture_outcomes", {})
     failures = aggregate.get("capture_failures", {})
+    join_costs = aggregate.get("join_costs", {})
     n_runs = aggregate.get("n_runs")
     if n_runs is None:
         n_runs = aggregate.get("per_run_stats", {}).get("n_runs")
+
+    join_cost_total = join_costs.get("join_cost_total")
+    captures_successful = capture.get("captures_successful")
+    coop_captures = capture.get("coop_captures")
 
     return {
         "n_runs": n_runs,
@@ -132,6 +146,23 @@ def _extract_metrics(aggregate):
         "team_capture_rabbit_attempts": failures.get("team_capture_rabbit_attempts"),
         "team_capture_rabbit_failures": failures.get("team_capture_rabbit_failures"),
         "team_capture_rabbit_successes": failures.get("team_capture_rabbit_successes"),
+        "join_cost_total": join_costs.get("join_cost_total"),
+        "join_cost_events": join_costs.get("join_cost_events"),
+        "predators_with_join_cost": join_costs.get("predators_with_join_cost"),
+        "predators_total": join_costs.get("predators_total"),
+        "join_cost_per_event": join_costs.get("join_cost_per_event"),
+        "join_cost_per_predator": join_costs.get("join_cost_per_predator"),
+        "join_cost_per_predator_all": join_costs.get("join_cost_per_predator_all"),
+        "join_cost_per_successful_capture": (
+            (join_cost_total / captures_successful)
+            if join_cost_total is not None and captures_successful
+            else None
+        ),
+        "join_cost_per_coop_capture": (
+            (join_cost_total / coop_captures)
+            if join_cost_total is not None and coop_captures
+            else None
+        ),
     }
 
 
@@ -175,6 +206,10 @@ def _summarize_group(rows):
     team_capture_rabbit_attempts = _sum_metric(rows, "team_capture_rabbit_attempts")
     team_capture_rabbit_failures = _sum_metric(rows, "team_capture_rabbit_failures")
     team_capture_rabbit_successes = _sum_metric(rows, "team_capture_rabbit_successes")
+    join_cost_total = _sum_metric(rows, "join_cost_total")
+    join_cost_events = _sum_metric(rows, "join_cost_events")
+    predators_with_join_cost = _sum_metric(rows, "predators_with_join_cost")
+    predators_total = _sum_metric(rows, "predators_total")
 
     return {
         "n_eval_dirs": len(rows),
@@ -217,6 +252,15 @@ def _summarize_group(rows):
         "team_capture_rabbit_failures": team_capture_rabbit_failures,
         "team_capture_rabbit_successes": team_capture_rabbit_successes,
         "team_capture_rabbit_failure_rate": _safe_div(team_capture_rabbit_failures, team_capture_rabbit_attempts),
+        "join_cost_total": join_cost_total,
+        "join_cost_events": join_cost_events,
+        "predators_with_join_cost": predators_with_join_cost,
+        "predators_total": predators_total,
+        "join_cost_per_event": _safe_div(join_cost_total, join_cost_events),
+        "join_cost_per_predator": _safe_div(join_cost_total, predators_with_join_cost),
+        "join_cost_per_predator_all": _safe_div(join_cost_total, predators_total),
+        "join_cost_per_successful_capture": _safe_div(join_cost_total, captures_successful),
+        "join_cost_per_coop_capture": _safe_div(join_cost_total, coop_captures),
     }
 
 
@@ -359,6 +403,38 @@ def _generate_plots(summary_rows, plots_dir: Path):
             labels=["free_rider_rate", "presence_rate"],
         ),
     )
+    _add_plot(
+        "Join Cost per Predator",
+        _plot_series(
+            plots_dir,
+            scav,
+            [
+                _series("join_cost_per_predator"),
+                _series("join_cost_per_predator_all"),
+            ],
+            "Join Cost per Predator",
+            "Total Join Cost",
+            "join_cost_per_predator.png",
+            labels=["predators_with_cost", "all_predators"],
+            ylim=None,
+        ),
+    )
+    _add_plot(
+        "Join Cost per Successful Capture",
+        _plot_series(
+            plots_dir,
+            scav,
+            [
+                _series("join_cost_per_successful_capture"),
+                _series("join_cost_per_coop_capture"),
+            ],
+            "Join Cost per Successful Capture",
+            "Total Join Cost",
+            "join_cost_per_capture.png",
+            labels=["per_success", "per_coop_capture"],
+            ylim=None,
+        ),
+    )
 
     return outputs
 
@@ -430,6 +506,58 @@ def _write_report(report_path: Path, summary_rows, plots, summary_csv_path: Path
                     _fmt(row.get("scavenger_fraction")),
                     _fmt(row.get("team_capture_mammoth_failure_rate")),
                     _fmt(row.get("team_capture_rabbit_failure_rate")),
+                ]
+            )
+            + " |"
+        )
+
+    lines.append("")
+    lines.append("Join cost summary")
+    lines.append("")
+    header = [
+        "scavenger",
+        "join_cost_total",
+        "join_cost_events",
+        "predators_with_cost",
+        "predators_total",
+        "join_cost_per_event",
+        "join_cost_per_predator",
+        "join_cost_per_predator_all",
+    ]
+    lines.append("| " + " | ".join(header) + " |")
+    lines.append("| " + " | ".join(["---"] * len(header)) + " |")
+    for row in sorted(summary_rows, key=lambda r: float(r["scavenger_fraction"])):
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _fmt(row.get("scavenger_fraction")),
+                    _fmt(row.get("join_cost_total")),
+                    _fmt(row.get("join_cost_events")),
+                    _fmt(row.get("predators_with_join_cost")),
+                    _fmt(row.get("predators_total")),
+                    _fmt(row.get("join_cost_per_event")),
+                    _fmt(row.get("join_cost_per_predator")),
+                    _fmt(row.get("join_cost_per_predator_all")),
+                ]
+            )
+            + " |"
+        )
+
+    lines.append("")
+    lines.append("Join cost per successful capture")
+    lines.append("")
+    header = ["scavenger", "join_cost_per_successful_capture", "join_cost_per_coop_capture"]
+    lines.append("| " + " | ".join(header) + " |")
+    lines.append("| " + " | ".join(["---"] * len(header)) + " |")
+    for row in sorted(summary_rows, key=lambda r: float(r["scavenger_fraction"])):
+        lines.append(
+            "| "
+            + " | ".join(
+                [
+                    _fmt(row.get("scavenger_fraction")),
+                    _fmt(row.get("join_cost_per_successful_capture")),
+                    _fmt(row.get("join_cost_per_coop_capture")),
                 ]
             )
             + " |"
@@ -548,6 +676,15 @@ def main():
         "team_capture_rabbit_attempts",
         "team_capture_rabbit_failures",
         "team_capture_rabbit_successes",
+        "join_cost_total",
+        "join_cost_events",
+        "predators_with_join_cost",
+        "predators_total",
+        "join_cost_per_event",
+        "join_cost_per_predator",
+        "join_cost_per_predator_all",
+        "join_cost_per_successful_capture",
+        "join_cost_per_coop_capture",
         "eval_path",
     ]
 
@@ -634,6 +771,15 @@ def main():
         "team_capture_rabbit_attempts",
         "team_capture_rabbit_failures",
         "team_capture_rabbit_successes",
+        "join_cost_total",
+        "join_cost_events",
+        "predators_with_join_cost",
+        "predators_total",
+        "join_cost_per_event",
+        "join_cost_per_predator",
+        "join_cost_per_predator_all",
+        "join_cost_per_successful_capture",
+        "join_cost_per_coop_capture",
     ]
 
     summary_payload = []
@@ -663,7 +809,7 @@ def main():
 
     print(f"Wrote {len(summary_payload)} summary rows to {summary_output}")
 
-    plots_dir = output_path.parent / OUTPUT_PLOTS_DIR
+    plots_dir = _assets_plots_dir()
     plots = _generate_plots(summary_payload, plots_dir)
     report_path = Path(__file__).resolve().parents[1] / OUTPUT_REPORT_MD
     _write_report(report_path, summary_payload, plots, summary_output, output_path)
