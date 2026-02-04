@@ -26,6 +26,8 @@ angle = acos(dot / (distance * |facing|))   # in degrees
 Legend: P = predator, R = prey, arrow = facing.
 
 ![Deliberate vs coincidental example](../../../../assets/eval_comparison_summary_plots/deliberate_vs_coincidental.svg)
+![Alignment border cases](../../../../assets/eval_comparison_summary_plots/alignment_border_cases.svg)
+![Alignment example grid](../../../../assets/eval_comparison_summary_plots/alignment_examples_grid.svg)
 
 **Caveat**
 Facing reflects the last non-zero movement, not necessarily movement in the current step. If the predator is stationary, the arrow may be stale.
