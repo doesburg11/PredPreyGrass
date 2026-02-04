@@ -17,7 +17,7 @@ from ray.tune.registry import register_env
 
 TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
 SAVE_EVAL_RESULTS = True
-N_RUNS = 10  # Number of evaluation runs
+N_RUNS = int(os.getenv("EVAL_N_RUNS", "10"))  # Number of evaluation runs (override via env)
 SEED = 1
 MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
 SURVIVAL_MIN_STEP = 1000
