@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1040" viewBox="0 0 1200 1040">
 <defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L6,3 z" fill="#1f2937"/></marker></defs>
 <style>
   .title { font: 14px sans-serif; font-weight: 600; }
@@ -125,4 +125,64 @@
 <text x="876.0" y="388.0" text-anchor="middle" fill="#fff" class="label">R</text>
 <line x1="876.0" y1="416.0" x2="896.0" y2="416.0" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
 <text x="780" y="558" class="note">predator didn’t move; facing from earlier step</text>
+<text x="20" y="590" class="title">Diagonal facing aligned</text>
+<rect x="20" y="600" width="360" height="220" fill="#fafafa" stroke="#ccc"/>
+<line x1="36" y1="616" x2="36" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="68" y1="616" x2="68" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="100" y1="616" x2="100" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="132" y1="616" x2="132" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="164" y1="616" x2="164" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="196" y1="616" x2="196" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="616" x2="196" y2="616" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="648" x2="196" y2="648" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="680" x2="196" y2="680" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="712" x2="196" y2="712" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="744" x2="196" y2="744" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="36" y1="776" x2="196" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<circle cx="148.0" cy="728.0" r="11" fill="#3b82f6"/>
+<text x="148.0" y="732.0" text-anchor="middle" fill="#fff" class="label">P</text>
+<circle cx="116.0" cy="696.0" r="9" fill="#f59e0b"/>
+<text x="116.0" y="700.0" text-anchor="middle" fill="#fff" class="label">R</text>
+<line x1="148.0" y1="728.0" x2="128.0" y2="708.0" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="20" y="838" class="note">facing=(-1,-1), prey at dx=-1,dy=-1 → deliberate</text>
+<text x="400" y="590" class="title">Diagonal facing side</text>
+<rect x="400" y="600" width="360" height="220" fill="#fafafa" stroke="#ccc"/>
+<line x1="416" y1="616" x2="416" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="448" y1="616" x2="448" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="480" y1="616" x2="480" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="512" y1="616" x2="512" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="544" y1="616" x2="544" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="576" y1="616" x2="576" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="616" x2="576" y2="616" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="648" x2="576" y2="648" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="680" x2="576" y2="680" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="712" x2="576" y2="712" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="744" x2="576" y2="744" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="416" y1="776" x2="576" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<circle cx="528.0" cy="696.0" r="11" fill="#3b82f6"/>
+<text x="528.0" y="700.0" text-anchor="middle" fill="#fff" class="label">P</text>
+<circle cx="496.0" cy="696.0" r="9" fill="#f59e0b"/>
+<text x="496.0" y="700.0" text-anchor="middle" fill="#fff" class="label">R</text>
+<line x1="528.0" y1="696.0" x2="508.0" y2="676.0" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="400" y="838" class="note">facing=(-1,-1), prey at dx=-1,dy=0 → not deliberate</text>
+<text x="780" y="590" class="title">Diagonal facing opposite</text>
+<rect x="780" y="600" width="360" height="220" fill="#fafafa" stroke="#ccc"/>
+<line x1="796" y1="616" x2="796" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="828" y1="616" x2="828" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="860" y1="616" x2="860" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="892" y1="616" x2="892" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="924" y1="616" x2="924" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="956" y1="616" x2="956" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="616" x2="956" y2="616" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="648" x2="956" y2="648" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="680" x2="956" y2="680" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="712" x2="956" y2="712" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="744" x2="956" y2="744" stroke="#e0e0e0" stroke-width="1"/>
+<line x1="796" y1="776" x2="956" y2="776" stroke="#e0e0e0" stroke-width="1"/>
+<circle cx="876.0" cy="696.0" r="11" fill="#3b82f6"/>
+<text x="876.0" y="700.0" text-anchor="middle" fill="#fff" class="label">P</text>
+<circle cx="908.0" cy="728.0" r="9" fill="#f59e0b"/>
+<text x="908.0" y="732.0" text-anchor="middle" fill="#fff" class="label">R</text>
+<line x1="876.0" y1="696.0" x2="856.0" y2="676.0" stroke="#1f2937" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="780" y="838" class="note">facing=(-1,-1), prey at dx=+1,dy=+1 → not deliberate</text>
 </svg>
