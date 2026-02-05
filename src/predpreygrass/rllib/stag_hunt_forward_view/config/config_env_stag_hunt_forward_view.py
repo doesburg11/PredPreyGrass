@@ -47,19 +47,21 @@ config_env = {
     "team_capture_margin": 0.0,  # optional safety margin; set >0 to demand extra energy
     "team_capture_equal_split": True,  # If False, split prey energy proportionally among helpers
     # Voluntary participation + free-riding
-    "team_capture_join_cost": 0.02,  # fixed energy cost paid by joiners on cooperative attempts (success or failure)
-    "team_capture_scavenger_fraction": 0.1,  # fraction of prey energy reserved for nearby non-joiners
+    "team_capture_attempt_cost": 0.005,  # base energy cost for any hunt attempt (solo AND cooperative)
+    "team_capture_attempt_cost_on_failure_only": False,  # if False, all attempts cost on success AND failure
+    "team_capture_join_cost": 0.02,  # extra cost paid by joiners on cooperative attempts (success or failure)
+    "team_capture_scavenger_fraction": 0.5,  # fraction of prey energy reserved for nearby non-joiners
     # Absolute energy caps
     "max_energy_grass": 3.0,
     # Learning agents
     "n_possible_type_1_predators": 2000,
     "n_possible_type_2_predators": 0,
     "n_possible_type_1_prey": 1000,
-    "n_possible_type_2_prey": 0, # 2000
-    "n_initial_active_type_1_predator": 80, # 10
+    "n_possible_type_2_prey": 2000, # 2000
+    "n_initial_active_type_1_predator": 10, # 10
     "n_initial_active_type_2_predator": 0,
-    "n_initial_active_type_1_prey": 80, # 10
-    "n_initial_active_type_2_prey": 0, # 10
+    "n_initial_active_type_1_prey": 10, # 10
+    "n_initial_active_type_2_prey": 10, # 10
     # Grass settings
     "initial_num_grass": 100, # 100
     "initial_energy_grass": 3.0,
