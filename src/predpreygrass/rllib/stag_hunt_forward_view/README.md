@@ -41,7 +41,7 @@ viewer overlays:
 This directory `stag_hunt_forward_view` mirrors `stag_hunt` plus defection. Key files:
 
 - `predpreygrass_rllib_env.py`: defection-enabled environment.
-- `config/config_env_stag_hunt_defection.py`: default env config with defection knobs.
+- `config/config_env_stag_hunt_forward_view.py`: default env config with defection knobs.
 - `random_policy.py`: quick rollout viewer (predators now random sample MultiDiscrete).
 - `utils/*`: copied helpers (renderer, callbacks, scenario inspector, etc).
 
@@ -230,7 +230,7 @@ Per-step agent data additions:
 ## Measuring defection/cooperation/solo
 
 Use the helper script in `utils/defection_metrics.py` to summarize metrics from a
-short rollout (defaults come from `config_env_stag_hunt.py`):
+short rollout (defaults come from `config_env_stag_hunt_forward_view.py`):
 
 ```bash
 PYTHONPATH=src python -m predpreygrass.rllib.stag_hunt_forward_view.utils.defection_metrics
