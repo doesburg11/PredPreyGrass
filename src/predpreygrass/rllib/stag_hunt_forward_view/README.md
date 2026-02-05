@@ -16,7 +16,9 @@ now free-ride on others who join and pay a cost.
 - Predators have a second action component `join_hunt` that controls whether they
   contribute to a team capture.
 - Capture uses only joiners, not all nearby predators.
-- Joiners pay a fixed energy cost on successful capture.
+- Joiners pay a base attempt cost on any hunt (solo or cooperative), plus an extra
+  cooperation cost only when multiple joiners participate. The attempt cost can be
+  configured to apply only on failed attempts.
 - Defectors (non-joiners) can divede a scavenger spillover `team_capture_scavenger_fraction`, a fraction of the prey energy.
 - Predator observations are shifted forward based on the last intended move.
 - Everything else stays the same: movement, energy decay, reproduction, LOS,
@@ -109,7 +111,9 @@ Let:
 - `F` = nearby predators with `join_hunt = 0`
 - `E` = prey energy
 - `margin` = `team_capture_margin`
+- `c_attempt` = `team_capture_attempt_cost`
 - `c_join` = `team_capture_join_cost`
+- `attempt_cost_on_failure_only` = `team_capture_attempt_cost_on_failure_only`
 - `s` = `team_capture_scavenger_fraction`
 
 ### Eligibility
@@ -130,18 +134,22 @@ Defectors (non-joiners) do not count toward success.
 - If `F` is empty, the scavenger pool is zero.
 - Joiners split the remaining energy (`E - scavenger_pool`) either equally or
   proportionally (based on `team_capture_equal_split`).
+- Each joiner pays `c_attempt` on success unless `attempt_cost_on_failure_only` is true.
 - Each joiner pays `c_join` **only if there is more than one joiner** (cooperative capture).
 - Each free rider gets `scavenger_pool / |F|`.
 
 ### Failure handling
-- On failed **cooperative** attempts, only joiners pay `c_join`.
-- There is **no extra failure penalty** beyond `c_join`.
+- On any failed attempt, joiners pay `c_attempt` (even if `attempt_cost_on_failure_only` is true).
+- On failed **cooperative** attempts, joiners also pay `c_join`.
 - Free riders never pay failure costs.
 
 ### Solo vs cooperative cost rule (explicit)
 **Join cost is a cooperation-only cost.** If exactly one predator joins (`|J| == 1`),
 then `team_capture_join_cost = 0` for that attempt (success or failure). The cost is
 applied only when `|J| > 1`.
+**Attempt cost applies to any joiner attempt.** Solo and cooperative joiners both pay
+`team_capture_attempt_cost` unless `attempt_cost_on_failure_only = True` and the
+attempt succeeds.
 
 ### Why defectors cannot solo-capture
 `join_hunt = 0` means “refuse to contribute.” If defectors could still capture
@@ -164,7 +172,8 @@ attempt, it dies with cause `exhausted_hunt`.
 | Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
 | Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders equally share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
 | Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` **only when coop** | `team_capture_join_cost`, event `join_cost` |
-| Failure penalties | Apply to all helpers | Apply only to joiners | `team_capture_join_cost` |
+| Attempt cost | None | Joiners pay `team_capture_attempt_cost` on any attempt (or only on failures if configured) | `team_capture_attempt_cost`, `team_capture_attempt_cost_on_failure_only`, event `attempt_cost` |
+| Failure penalties | Apply to all helpers | Joiners pay `team_capture_attempt_cost`, plus `team_capture_join_cost` if coop | `team_capture_attempt_cost`, `team_capture_join_cost` |
 | Defection metrics | Not defined | Join/defect decision rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
 
 Explanation notes:
@@ -176,9 +185,11 @@ Explanation notes:
 
 ## New config keys
 
-Defined in `config/config_env_stag_hunt.py`:
+Defined in `config/config_env_stag_hunt_forward_view.py`:
 
-- `team_capture_join_cost` (float): fixed energy cost paid by joiners on **cooperative** attempts (success or failure).
+- `team_capture_attempt_cost` (float): base energy cost paid by joiners on any attempt.
+- `team_capture_attempt_cost_on_failure_only` (bool): if `True`, apply attempt cost only on failed attempts.
+- `team_capture_join_cost` (float): extra energy cost paid by joiners on **cooperative** attempts (success or failure).
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
   reserved for nearby non-joiners (only when non-joiners are present).
 
@@ -194,6 +205,8 @@ Per-agent info additions (predators):
 - `team_capture_free_riders`: number of non-joiners near the capture.
 - `team_capture_scavenger_gain`: energy gained via scavenging (free riders only).
 - `team_capture_join_cost`: join cost paid (joiners only; zero for solo joiners).
+- `team_capture_attempt_cost`: attempt cost paid by joiners (zero for free riders).
+- `team_capture_total_cost`: combined attempt + join cost paid by joiners.
 - `team_capture_joined`: `True` if agent joined, else `False`.
 - `join_hunt`: per-step join choice for all predators (logged every step).
 
@@ -206,6 +219,8 @@ Event log additions (predator eating/failed events):
 - `free_riders`: list of free-riding predators nearby.
 - `join_hunt`: boolean per event.
 - `join_cost`: join cost applied (0 for free riders and solo joiners).
+- `attempt_cost`: attempt cost applied (0 for free riders).
+- `total_hunt_cost`: attempt + join cost applied (0 for free riders).
 
 Per-step agent data additions:
 
@@ -230,6 +245,34 @@ It reports:
 RLlib training runs (e.g., `tune_ppo.py`) already use the `EpisodeReturn`
 callback, which now logs these defection/cooperation metrics to `custom_metrics`
 so they appear in TensorBoard.
+
+## Dominant hunt-style classification (reporting only)
+
+Some analysis (e.g., `eval_hunt_style_report.md`) uses a **dominant hunt-style** label per agent **per run**.
+This is **not a fixed trait** and **not a per-step rule**. It is a summary label used only for reporting.
+
+How it is assigned:
+- For each predator and each run, we count event types from the event logs:
+  - **solo join events** (`join_hunt=True` and `team_capture=False`)
+  - **cooperative join events** (`join_hunt=True` and `team_capture=True`)
+  - **free‑ride events** (`join_hunt=False`)
+- The agent is labeled by whichever join style dominates **within that run**:
+  - `group_hunter` if coop events > solo events
+  - `solo_hunter` if solo events > coop events
+  - `free_rider` if the agent has **no join events at all** but does have free‑ride events
+  - `mixed_joiner` if solo == coop (ties)
+
+Important implications:
+- An agent can **free‑ride early and cooperate later** in the same run.
+- The label is **recomputed for every run** (not persistent across runs).
+- This is a **reporting abstraction**, not a behavioral constraint in the environment.
+
+Examples (real log, run 1):
+Log source: `src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_3_2026-01-29_15-52-24/PPO_PredPreyGrass_1fe3e_00000_0_2026-01-29_15-52-25/checkpoint_000099/eval_10_runs_STAG_HUNT_FORWARD_VIEW_2026-02-04_23-06-13/summary_data/agent_event_log_1.json`
+
+1. `type_1_predator_0`: solo=5, coop=6, free‑ride=0 → `group_hunter` (coop > solo).
+2. `type_1_predator_2`: solo=8, coop=3, free‑ride=0 → `solo_hunter` (solo > coop).
+3. `type_1_predator_110`: solo=0, coop=0, free‑ride=1 → `free_rider` (no join events, but free‑ride exists).
 
 ### Metric naming (2026-01-31)
 
