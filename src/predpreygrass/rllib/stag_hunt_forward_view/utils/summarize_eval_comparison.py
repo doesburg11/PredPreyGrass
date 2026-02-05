@@ -16,9 +16,10 @@ from datetime import datetime
 from pathlib import Path
 
 
-RAY_RESULTS_DIR = (
+RAY_RESULTS_DIR = os.getenv(
+    "RAY_RESULTS_DIR",
     "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/"
-    "stag_hunt_forward_view/ray_results"
+    "stag_hunt_forward_view/ray_results/join_cost_0.02",
 )
 
 # Edit these settings directly.
@@ -29,7 +30,7 @@ OUTPUT_PLOTS_DIR = "eval_comparison_summary_plots"
 INCLUDE_ALL_EVALS = True
 SCAVENGER_FILTERS = [0.0, 0.1, 0.2, 0.3, 0.4]
 EVAL_NAME_FILTER = None  # e.g. "eval_10_runs" to only include matching eval dirs
-REQUIRE_N_RUNS = 10  # only include evals with this many runs in the summary; set None to disable
+REQUIRE_N_RUNS = 30  # only include evals with this many runs in the summary; set None to disable
 REQUIRE_FAILURE_METRICS = True  # skip evals without failure metrics in the summary
 
 

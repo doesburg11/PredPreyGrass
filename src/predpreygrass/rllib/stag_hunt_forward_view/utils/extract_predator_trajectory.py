@@ -236,11 +236,9 @@ def _row_from_step(step_idx: int, step_data: dict, events: list[dict], step_snap
     alignment = _alignment_from_events(events, pos, facing, step_snapshot)
     row = {
         "step": step_idx,
-        "position_x": pos[0] if len(pos) > 0 else None,
-        "position_y": pos[1] if len(pos) > 1 else None,
+        "position": [pos[0], pos[1]] if len(pos) > 1 else None,
         "energy": step_data.get("energy"),
         "energy_decay": step_data.get("energy_decay"),
-        "energy_movement": step_data.get("energy_movement"),
         "energy_eating": step_data.get("energy_eating"),
         "energy_reproduction": step_data.get("energy_reproduction"),
         "age": step_data.get("age"),

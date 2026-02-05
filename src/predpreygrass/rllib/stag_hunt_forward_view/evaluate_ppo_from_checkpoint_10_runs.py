@@ -17,7 +17,7 @@ from ray.tune.registry import register_env
 
 TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
 SAVE_EVAL_RESULTS = True
-N_RUNS = int(os.getenv("EVAL_N_RUNS", "10"))  # Number of evaluation runs (override via env)
+N_RUNS = int(os.getenv("EVAL_N_RUNS", "30"))  # Number of evaluation runs (override via env)
 SEED = 1
 MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
 SURVIVAL_MIN_STEP = 1000
@@ -250,50 +250,86 @@ def _count_required_types(agent_ids):
 
 def _compute_join_cost_stats(agent_event_log: dict) -> dict:
     predator_ids = [aid for aid in agent_event_log.keys() if "predator" in aid]
-    predator_costs = {}
-    predator_events = {}
+    predator_join_costs = {}
+    predator_join_events = {}
+    predator_attempt_costs = {}
+    predator_attempt_events = {}
 
     for aid in predator_ids:
         record = agent_event_log.get(aid) or {}
-        total_cost = 0.0
-        total_events = 0
+        join_cost_total = 0.0
+        join_cost_events = 0
+        attempt_cost_total = 0.0
+        attempt_cost_events = 0
         for evt in record.get("eating_events", []):
-            cost = float(evt.get("join_cost", 0.0) or 0.0)
-            if cost:
-                total_cost += cost
-                total_events += 1
+            join_cost = float(evt.get("join_cost", 0.0) or 0.0)
+            if join_cost:
+                join_cost_total += join_cost
+                join_cost_events += 1
+            attempt_cost = float(evt.get("attempt_cost", 0.0) or 0.0)
+            if attempt_cost:
+                attempt_cost_total += attempt_cost
+                attempt_cost_events += 1
         for evt in record.get("failed_eating_events", []):
-            cost = float(evt.get("join_cost", 0.0) or 0.0)
-            if cost:
-                total_cost += cost
-                total_events += 1
-        if total_events:
-            predator_costs[aid] = total_cost
-            predator_events[aid] = total_events
+            join_cost = float(evt.get("join_cost", 0.0) or 0.0)
+            if join_cost:
+                join_cost_total += join_cost
+                join_cost_events += 1
+            attempt_cost = float(evt.get("attempt_cost", 0.0) or 0.0)
+            if attempt_cost:
+                attempt_cost_total += attempt_cost
+                attempt_cost_events += 1
+        if join_cost_events:
+            predator_join_costs[aid] = join_cost_total
+            predator_join_events[aid] = join_cost_events
+        if attempt_cost_events:
+            predator_attempt_costs[aid] = attempt_cost_total
+            predator_attempt_events[aid] = attempt_cost_events
 
-    total_cost = sum(predator_costs.values())
-    total_events = sum(predator_events.values())
-    predators_with_cost = len(predator_costs)
+    join_cost_total = sum(predator_join_costs.values())
+    join_cost_events = sum(predator_join_events.values())
+    predators_with_join_cost = len(predator_join_costs)
     predators_total = len(predator_ids)
 
-    per_predator_costs = list(predator_costs.values())
-    min_cost = min(per_predator_costs) if per_predator_costs else 0.0
-    max_cost = max(per_predator_costs) if per_predator_costs else 0.0
+    attempt_cost_total = sum(predator_attempt_costs.values())
+    attempt_cost_events = sum(predator_attempt_events.values())
+    predators_with_attempt_cost = len(predator_attempt_costs)
+
+    per_predator_join_costs = list(predator_join_costs.values())
+    min_join_cost = min(per_predator_join_costs) if per_predator_join_costs else 0.0
+    max_join_cost = max(per_predator_join_costs) if per_predator_join_costs else 0.0
+    per_predator_attempt_costs = list(predator_attempt_costs.values())
+    min_attempt_cost = min(per_predator_attempt_costs) if per_predator_attempt_costs else 0.0
+    max_attempt_cost = max(per_predator_attempt_costs) if per_predator_attempt_costs else 0.0
 
     return {
-        "join_cost_total": total_cost,
-        "join_cost_events": total_events,
-        "predators_with_join_cost": predators_with_cost,
+        "join_cost_total": join_cost_total,
+        "join_cost_events": join_cost_events,
+        "predators_with_join_cost": predators_with_join_cost,
         "predators_total": predators_total,
-        "join_cost_per_event": (total_cost / total_events) if total_events else 0.0,
+        "join_cost_per_event": (join_cost_total / join_cost_events) if join_cost_events else 0.0,
         "join_cost_per_predator": (
-            total_cost / predators_with_cost if predators_with_cost else 0.0
+            join_cost_total / predators_with_join_cost if predators_with_join_cost else 0.0
         ),
         "join_cost_per_predator_all": (
-            total_cost / predators_total if predators_total else 0.0
+            join_cost_total / predators_total if predators_total else 0.0
         ),
-        "join_cost_per_predator_min": min_cost,
-        "join_cost_per_predator_max": max_cost,
+        "join_cost_per_predator_min": min_join_cost,
+        "join_cost_per_predator_max": max_join_cost,
+        "attempt_cost_total": attempt_cost_total,
+        "attempt_cost_events": attempt_cost_events,
+        "predators_with_attempt_cost": predators_with_attempt_cost,
+        "attempt_cost_per_event": (
+            attempt_cost_total / attempt_cost_events if attempt_cost_events else 0.0
+        ),
+        "attempt_cost_per_predator": (
+            attempt_cost_total / predators_with_attempt_cost if predators_with_attempt_cost else 0.0
+        ),
+        "attempt_cost_per_predator_all": (
+            attempt_cost_total / predators_total if predators_total else 0.0
+        ),
+        "attempt_cost_per_predator_min": min_attempt_cost,
+        "attempt_cost_per_predator_max": max_attempt_cost,
     }
 
 
@@ -337,20 +373,41 @@ def write_join_costs_per_predator(output_dir: Path, run: int, agent_event_log: d
         events = list(record.get("eating_events", [])) + list(record.get("failed_eating_events", []))
         if not events:
             continue
-        total_cost = 0.0
-        cost_events = 0
+        join_cost_total = 0.0
+        join_cost_events = 0
+        attempt_cost_total = 0.0
+        attempt_cost_events = 0
+        total_hunt_cost = 0.0
+        total_hunt_cost_events = 0
         for evt in events:
-            cost = float(evt.get("join_cost", 0.0) or 0.0)
-            if cost:
-                total_cost += cost
-                cost_events += 1
+            join_cost = float(evt.get("join_cost", 0.0) or 0.0)
+            attempt_cost = float(evt.get("attempt_cost", 0.0) or 0.0)
+            if join_cost:
+                join_cost_total += join_cost
+                join_cost_events += 1
+            if attempt_cost:
+                attempt_cost_total += attempt_cost
+                attempt_cost_events += 1
+            if join_cost or attempt_cost:
+                total_hunt_cost += join_cost + attempt_cost
+                total_hunt_cost_events += 1
         rows.append(
             {
                 "predator_id": aid,
-                "join_cost_total": total_cost,
-                "join_cost_events": cost_events,
+                "join_cost_total": join_cost_total,
+                "join_cost_events": join_cost_events,
+                "attempt_cost_total": attempt_cost_total,
+                "attempt_cost_events": attempt_cost_events,
+                "total_hunt_cost": total_hunt_cost,
+                "total_hunt_cost_events": total_hunt_cost_events,
                 "hunt_events": len(events),
-                "join_cost_per_event": (total_cost / cost_events) if cost_events else 0.0,
+                "join_cost_per_event": (join_cost_total / join_cost_events) if join_cost_events else 0.0,
+                "attempt_cost_per_event": (
+                    attempt_cost_total / attempt_cost_events if attempt_cost_events else 0.0
+                ),
+                "total_hunt_cost_per_event": (
+                    total_hunt_cost / total_hunt_cost_events if total_hunt_cost_events else 0.0
+                ),
             }
         )
 
@@ -364,8 +421,14 @@ def write_join_costs_per_predator(output_dir: Path, run: int, agent_event_log: d
                 "predator_id",
                 "join_cost_total",
                 "join_cost_events",
+                "attempt_cost_total",
+                "attempt_cost_events",
+                "total_hunt_cost",
+                "total_hunt_cost_events",
                 "hunt_events",
                 "join_cost_per_event",
+                "attempt_cost_per_event",
+                "total_hunt_cost_per_event",
             ],
         )
         writer.writeheader()
@@ -469,9 +532,9 @@ def setup_modules():
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # STAG_HUNT_FORWARD_VIEW_JOIN_COST_0.02_SCAVENGER_0.1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/checkpoint_000099
-        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_1_2026-01-25_14-20-20/PPO_PredPreyGrass_99161_00000_0_2026-01-25_14-20-20/checkpoint_000099"
+        # join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/checkpoint_000099
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/join_cost_0.02"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/checkpoint_000099"
         checkpoint_nr = "checkpoint_000099"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
@@ -705,6 +768,9 @@ if __name__ == "__main__":
             join_cost_total = sum(m.get("join_cost_total", 0.0) for m in runs)
             join_cost_events = sum(m.get("join_cost_events", 0) for m in runs)
             predators_with_join_cost = sum(m.get("predators_with_join_cost", 0) for m in runs)
+            attempt_cost_total = sum(m.get("attempt_cost_total", 0.0) for m in runs)
+            attempt_cost_events = sum(m.get("attempt_cost_events", 0) for m in runs)
+            predators_with_attempt_cost = sum(m.get("predators_with_attempt_cost", 0) for m in runs)
             predators_total = sum(m.get("predators_total", 0) for m in runs)
 
             join_decision_rate = join_steps / total_pred_steps if total_pred_steps else 0.0
@@ -731,6 +797,13 @@ if __name__ == "__main__":
             )
             join_cost_per_predator_all = (
                 join_cost_total / predators_total if predators_total else 0.0
+            )
+            attempt_cost_per_event = attempt_cost_total / attempt_cost_events if attempt_cost_events else 0.0
+            attempt_cost_per_predator = (
+                attempt_cost_total / predators_with_attempt_cost if predators_with_attempt_cost else 0.0
+            )
+            attempt_cost_per_predator_all = (
+                attempt_cost_total / predators_total if predators_total else 0.0
             )
 
             return {
@@ -797,6 +870,12 @@ if __name__ == "__main__":
                     "join_cost_per_event": join_cost_per_event,
                     "join_cost_per_predator": join_cost_per_predator,
                     "join_cost_per_predator_all": join_cost_per_predator_all,
+                    "attempt_cost_total": attempt_cost_total,
+                    "attempt_cost_events": attempt_cost_events,
+                    "predators_with_attempt_cost": predators_with_attempt_cost,
+                    "attempt_cost_per_event": attempt_cost_per_event,
+                    "attempt_cost_per_predator": attempt_cost_per_predator,
+                    "attempt_cost_per_predator_all": attempt_cost_per_predator_all,
                 },
             }
 
@@ -873,6 +952,12 @@ if __name__ == "__main__":
                 "join_cost_per_event",
                 "join_cost_per_predator",
                 "join_cost_per_predator_all",
+                "attempt_cost_total",
+                "attempt_cost_events",
+                "predators_with_attempt_cost",
+                "attempt_cost_per_event",
+                "attempt_cost_per_predator",
+                "attempt_cost_per_predator_all",
             ]
             stats = {
                 "n_runs": len(filtered_runs),
