@@ -18,6 +18,8 @@ now free-ride on others who join and pay a cost.
 - **Results snapshot:** cooperation remains reproductively advantageous. See **Eval comparison summary (join_cost_0.02)**.
 - **Caveats:** comparisons are not always matched across prey/cost settings. See **Comparison summary (defection vs forward-view)** and **Matched comparison (next step)**.
 
+**Key conclusion (from current evals):** **cooperative group hunters have higher reproductive success than solo hunters, and both outperform free‑riders.** (See **Eval comparison summary (join_cost_0.02)** and `eval_comparison_report.md`.)
+
 ## Contents
 
 - [What changed (high level)](#what-changed-high-level)
