@@ -11,6 +11,30 @@ defection and forward-shifted predator observations. The ecology stays intact; o
 the cooperative hunting decision is made voluntary at capture time. Predators can
 now free-ride on others who join and pay a cost.
 
+## Quick summary
+
+- **What this is:** a stag-hunt ecology with optional cooperation, defection, and forward-view predator observations. See **What changed** and **Forward-view observations**.
+- **How defection works:** joiners pay costs; non-joiners can free-ride. See **Join-or-Free-Ride capture logic**.
+- **Results snapshot:** cooperation remains reproductively advantageous. See **Eval comparison summary (join_cost_0.02)**.
+- **Caveats:** comparisons are not always matched across prey/cost settings. See **Comparison summary (defection vs forward-view)** and **Matched comparison (next step)**.
+
+## Contents
+
+- [What changed (high level)](#what-changed-high-level)
+- [Differences vs `stag_hunt_defection`](#differences-vs-stag_hunt_defection)
+- [Comparison summary (defection vs forward-view)](#comparison-summary-defection-vs-forward-view)
+- [Matched comparison (next step)](#matched-comparison-next-step)
+- [Files and structure](#files-and-structure)
+- [Forward-view observations (predators only)](#forward-view-observations-predators-only)
+- [New action semantics](#new-action-semantics)
+- [Join-or-Free-Ride capture logic](#join-or-free-ride-capture-logic)
+- [Measuring defection/cooperation/solo](#measuring-defectioncooperationsolo)
+- [Facing/Alignment Explainer](#facingalignment-explainer)
+- [Sample results (from last evaluation output)](#sample-results-from-last-evaluation-output)
+- [Eval comparison summary (join_cost_0.02)](#eval-comparison-summary-join_cost_002)
+- [Opportunity-conditioned preference (mammoth vs rabbit)](#opportunity-conditioned-preference-mammoth-vs-rabbit)
+- [Training and evaluation](#training-and-evaluation)
+
 ## What changed (high level)
 
 - Predators have a second action component `join_hunt` that controls whether they
@@ -35,6 +59,34 @@ viewer overlays:
 - The PyGame FOV overlay uses predator facing to shift the drawn window and automatically
   reassigns the overlay to the lowest-index living predator/prey if the originally tracked
   agent dies.
+
+## Comparison summary (defection vs forward-view)
+
+Short qualitative read of the **current** 1000-step plots (see `COMPARISON_STAG_HUNT.md`
+for the full note):
+
+- Defection-only plots: rabbits (`type_2_prey`) crash early; mammoths persist with
+  oscillations; predators remain high and oscillatory.
+- Forward-view plots (join_cost_0.02 evals with rabbits removed): strong early predator
+  overshoot, prey recovery, and sustained oscillations without extinction.
+- **Caveat:** these are *not* matched settings. The forward-view plots use join costs and
+  removed rabbits, so differences may be driven by prey mix and costs, not only
+  forward-view observations.
+
+## Matched comparison (next step)
+
+To make the comparison causal, regenerate forward-view evals under the same prey mix
+and cost settings as `stag_hunt_defection`:
+
+- Use the same `max_steps`, seeds, and eval script (e.g., `evaluate_ppo_from_checkpoint_multi_runs.py`)
+  for both envs.
+- Match prey mix by setting `n_initial_active_type_2_prey` and `n_possible_type_2_prey` in
+  `config/config_env_stag_hunt_forward_view.py` to the values in
+  `stag_hunt_defection/config/config_env_stag_hunt_defection.py`.
+- Match cost parameters (`team_capture_attempt_cost`, `team_capture_join_cost`,
+  `team_capture_scavenger_fraction`) to the defection config before running evals.
+- Compare the resulting `summary_plots/iters=1000` side-by-side and update
+  `COMPARISON_STAG_HUNT.md`.
 
 ## Files and structure
 
@@ -274,6 +326,44 @@ Log source: `src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/join_cos
 2. `type_1_predator_2`: solo=8, coop=3, free‑ride=0 → `solo_hunter` (solo > coop).
 3. `type_1_predator_110`: solo=0, coop=0, free‑ride=1 → `free_rider` (no join events, but free‑ride exists).
 
+## Facing/Alignment Explainer
+
+This note explains how the “deliberate vs coincidental” label is computed for predator attack attempts in
+`extract_predator_trajectory.py`.
+
+**Facing**
+- `facing_x` / `facing_y` are the predator’s last non-zero movement direction (normalized to -1, 0, 1).
+- If the predator does not move on a step, facing stays at its previous non-zero direction.
+
+**Alignment computation (per event step)**
+- For each step that has `eat` or `failed` events, we look up predator and prey positions from
+  `per_step_agent_data_{run}.json`.
+- We compute the vector from predator to prey and compare it to facing:
+
+```text
+dx = prey_x - predator_x
+dy = prey_y - predator_y
+distance = sqrt(dx^2 + dy^2)
+dot = dx * facing_x + dy * facing_y
+angle = acos(dot / (distance * |facing|))   # in degrees
+```
+
+**Labels**
+- `alignment_prey_in_front` is true when `dot > 0` (prey in front half-plane).
+- `alignment_deliberate` is true when `distance <= 3.0` and `angle <= 45°`.
+- If multiple prey are involved in the same step, we use the closest one for the alignment fields.
+
+**Visuals**
+Legend: P = predator, R = prey, arrow = facing.
+
+![Deliberate vs coincidental example](../../../../assets/eval_comparison_summary_plots/deliberate_vs_coincidental.svg)
+![Alignment border cases](../../../../assets/eval_comparison_summary_plots/alignment_border_cases.svg)
+![Alignment example grid](../../../../assets/eval_comparison_summary_plots/alignment_examples_grid.svg)
+
+**Caveat**
+Facing reflects the last non-zero movement, not necessarily movement in the current step. If the predator is
+stationary, the arrow may be stale.
+
 ### Metric naming (2026-01-31)
 
 To make denominators explicit, several metrics were renamed. New runs use the
@@ -292,6 +382,24 @@ Old name → New name:
 These tables capture the exact metrics you shared from the latest
 `evaluate_ppo_from_checkpoint_multi_runs.py` run (seeds 1-10). The aggregate
 uses a `min_steps` filter of 500 (kept 4 of 10 runs).
+
+## Eval comparison summary (join_cost_0.02)
+
+Condensed findings from `eval_comparison_report.md` (5 trainings, 30 eval runs each,
+1000 steps):
+
+- Join decisions stay high at scavenger 0.0–0.2 but drop sharply at 0.3–0.4, while
+  free‑rider share rises (more defection pressure).
+- Cooperative attempts are far more successful than solo attempts, even though
+  overall failure rates remain high.
+- `net_joiner_advantage` is consistently positive, meaning **joiners reproduce more**
+  on average even after paying attempt + join costs.
+- By dominant hunt style, **group hunters > solo hunters > free‑riders** in
+  reproduction reward.
+
+Full tables, plots, and derivations: `eval_comparison_report.md`.
+
+![Reproduction Reward by Hunt Style](../../../../assets/eval_hunt_style_plots/repro_by_hunt_style.svg)
 
 ## Opportunity-conditioned preference (mammoth vs rabbit)
 
