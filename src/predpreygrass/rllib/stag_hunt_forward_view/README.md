@@ -168,6 +168,7 @@ Let:
 - `c_attempt` = `team_capture_attempt_cost`
 - `c_join` = `team_capture_join_cost`
 - `attempt_cost_on_failure_only` = `team_capture_attempt_cost_on_failure_only`
+- `join_cost_on_failure_only` = `team_capture_join_cost_on_failure_only`
 - `s` = `team_capture_scavenger_fraction`
 
 ### Eligibility
@@ -189,18 +190,20 @@ Defectors (non-joiners) do not count toward success.
 - Joiners split the remaining energy (`E - scavenger_pool`) either equally or
   proportionally (based on `team_capture_equal_split`).
 - Each joiner pays `c_attempt` on success unless `attempt_cost_on_failure_only` is true.
-- Each joiner pays `c_join` **only if there is more than one joiner** (cooperative capture).
+- Each joiner pays `c_join` on success **only if there is more than one joiner** and
+  `join_cost_on_failure_only` is false.
 - Each free rider gets `scavenger_pool / |F|`.
 
 ### Failure handling
 - On any failed attempt, joiners pay `c_attempt` (even if `attempt_cost_on_failure_only` is true).
-- On failed **cooperative** attempts, joiners also pay `c_join`.
+- On failed **cooperative** attempts, joiners also pay `c_join` (regardless of
+  `join_cost_on_failure_only`).
 - Free riders never pay failure costs.
 
 ### Solo vs cooperative cost rule (explicit)
 **Join cost is a cooperation-only cost.** If exactly one predator joins (`|J| == 1`),
 then `team_capture_join_cost = 0` for that attempt (success or failure). The cost is
-applied only when `|J| > 1`.
+applied only when `|J| > 1`, and on success only if `join_cost_on_failure_only` is false.
 **Attempt cost applies to any joiner attempt.** Solo and cooperative joiners both pay
 `team_capture_attempt_cost` unless `attempt_cost_on_failure_only = True` and the
 attempt succeeds.
@@ -225,7 +228,7 @@ attempt, it dies with cause `exhausted_hunt`.
 | Capture eligibility | All nearby predators can contribute | Only joiners contribute; free riders do not count | `join_hunt` per step |
 | Capture condition | Sum(nearby energies) > `E + margin` | Sum(joiner energies) > `E + margin` | `team_capture_margin` |
 | Reward split | All helpers split full prey energy | Joiners split `E - scavenger_pool`; free riders equally share `scavenger_pool` | `team_capture_scavenger_fraction`, `team_capture_equal_split` |
-| Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` **only when coop** | `team_capture_join_cost`, event `join_cost` |
+| Cooperation cost | None on success | Joiners pay fixed `team_capture_join_cost` **only when coop** (optionally failure-only) | `team_capture_join_cost`, `team_capture_join_cost_on_failure_only`, event `join_cost` |
 | Attempt cost | None | Joiners pay `team_capture_attempt_cost` on any attempt (or only on failures if configured) | `team_capture_attempt_cost`, `team_capture_attempt_cost_on_failure_only`, event `attempt_cost` |
 | Failure penalties | Apply to all helpers | Joiners pay `team_capture_attempt_cost`, plus `team_capture_join_cost` if coop | `team_capture_attempt_cost`, `team_capture_join_cost` |
 | Defection metrics | Not defined | Join/defect decision rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
@@ -243,7 +246,8 @@ Defined in `config/config_env_stag_hunt_forward_view.py`:
 
 - `team_capture_attempt_cost` (float): base energy cost paid by joiners on any attempt.
 - `team_capture_attempt_cost_on_failure_only` (bool): if `True`, apply attempt cost only on failed attempts.
-- `team_capture_join_cost` (float): extra energy cost paid by joiners on **cooperative** attempts (success or failure).
+- `team_capture_join_cost` (float): extra energy cost paid by joiners on **cooperative** attempts.
+- `team_capture_join_cost_on_failure_only` (bool): if `True`, apply join cost only on failed cooperative attempts.
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
   reserved for nearby non-joiners (only when non-joiners are present).
 
