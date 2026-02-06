@@ -532,9 +532,9 @@ def setup_modules():
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/checkpoint_000099
+        # /home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_5_2026-02-04_23-51-56/PPO_PredPreyGrass_1b536_00000_0_2026-02-04_23-51-56/checkpoint_000099
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_forward_view/ray_results/join_cost_0.02"
-        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_4_2026-01-30_22-23-41/PPO_PredPreyGrass_f38df_00000_0_2026-01-30_22-23-42/checkpoint_000099"
+        checkpoint_root = "STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_5_2026-02-04_23-51-56/PPO_PredPreyGrass_1b536_00000_0_2026-02-04_23-51-56/checkpoint_000099"
         checkpoint_nr = "checkpoint_000099"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
