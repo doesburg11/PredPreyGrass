@@ -71,6 +71,27 @@ Failure rate by attempt type
 | 0.3000 | 0.7037 | 0.9703 |
 | 0.4000 | 0.6229 | 0.9756 |
 
+Alignment: deliberate vs coincidental (facing-based proxy)
+
+These stats classify each **predator event** (eat/failed) as “deliberate” when the
+predator is facing within 45° of the prey and within 3 grid cells at the event step.
+This is a **proxy for intent**, not a definitive label. Counts are per predator event
+(so a cooperative capture contributes one event per participating predator).
+
+| scavenger | deliberate_share | deliberate_success_rate | coincidental_success_rate |
+| --- | --- | --- | --- |
+| 0.0000 | 0.2163 | 0.1610 | 0.1588 |
+| 0.1000 | 0.2215 | 0.1713 | 0.1628 |
+| 0.2000 | 0.2177 | 0.1320 | 0.1266 |
+| 0.3000 | 0.2125 | 0.1596 | 0.1458 |
+| 0.4000 | 0.2026 | 0.1503 | 0.1726 |
+
+**Interpretation:** deliberate alignment events are ~20–22% of attempts. Success rates
+for deliberate vs coincidental attempts are **close**, with only small differences and
+no consistent dominance across scavenger settings. This suggests the facing-based
+alignment signal is a **weak separator** of success and should be treated as an
+auxiliary, qualitative proxy rather than a strong behavioral conclusion.
+
 Payoff vs Behavior (Net of Costs)
 
 | scavenger | join_rate | defect_rate | coop_fail_rate | solo_fail_rate | free_rider_share | net_joiner_advantage |
