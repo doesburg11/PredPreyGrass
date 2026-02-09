@@ -3,7 +3,7 @@
 ## Environment and logic (full description)
 
 ### Entities and roles
-- **Predators (humans / hunters)<img src="../../../../assets/images/icons/human_1.png" alt="predator icon" height="
+- **Predators (humans / hunters)<img src="../../../../assets/images/icons/male.png" alt="predator icon" height="
   36" style="vertical-align: middle;">**: `type_1_predator` agents that move, lose energy, hunt, and reproduce.
 - **Prey (mammoths)<img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
   36" style="vertical-align: middle;">**: `type_1_prey` agents that move, lose energy, eat grass, and reproduce.
