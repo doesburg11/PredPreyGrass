@@ -209,7 +209,7 @@ def main() -> Path:
     right_x = middle_x + panel_w + PANEL_GAP
 
     icons_dir = Path(__file__).resolve().parents[5] / "assets" / "images" / "icons"
-    predator_icon = _encode_icon(icons_dir / "human_1.png")
+    predator_icon = _encode_icon(icons_dir / "male.png")
     prey_icon = _encode_icon(icons_dir / "prey.png")
     predator_uri = f"data:image/png;base64,{predator_icon}" if predator_icon else None
     prey_uri = f"data:image/png;base64,{prey_icon}" if prey_icon else None

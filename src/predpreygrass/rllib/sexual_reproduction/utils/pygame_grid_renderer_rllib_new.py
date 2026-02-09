@@ -3,6 +3,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+def _resolve_icons_base() -> Path:
+    path = Path(__file__).resolve()
+    for parent in path.parents:
+        if parent.name == "REPRODUCE_CODE":
+            return parent / "assets" / "images" / "icons"
+    return path.parents[5] / "assets" / "images" / "icons"
+
+
 @dataclass
 class GuiStyle:
     margin_left: int = 10
@@ -35,6 +43,37 @@ class GuiStyle:
 
 
 class PyGameRenderer:
+    @staticmethod
+    def _scaled_gui_style(scale: float) -> GuiStyle:
+        style = GuiStyle()
+        if scale == 1.0:
+            return style
+        fields = (
+            "margin_left",
+            "margin_top",
+            "margin_right",
+            "margin_bottom",
+            "min_window_height",
+            "legend_spacing",
+            "legend_font_size",
+            "legend_circle_radius",
+            "legend_square_size",
+            "legend_label_font_size",
+            "tooltip_font_size",
+            "tooltip_padding",
+            "halo_reproduction_thickness",
+            "halo_eating_thickness",
+        )
+        for name in fields:
+            value = getattr(style, name)
+            setattr(style, name, max(1, int(round(value * scale))))
+        return style
+
+    def _px(self, value: int) -> int:
+        if value == 0:
+            return 0
+        return max(1, int(round(value * self.scale)))
+
     def __init__(
         self,
         grid_size,
@@ -51,12 +90,14 @@ class PyGameRenderer:
         n_possible_type_2_predators=None,
         n_possible_type_2_prey=None,
         coop_flash_steps=5,
+        scale=1.0,
     ):
         self.grid_size = grid_size
-        self.cell_size = cell_size
+        self.scale = float(scale)
+        self.cell_size = max(1, int(round(cell_size * self.scale)))
         self.enable_speed_slider = enable_speed_slider
         self.enable_tooltips = enable_tooltips
-        self.gui_style = GuiStyle()
+        self.gui_style = self._scaled_gui_style(self.scale)
 
         # Observation/FOV overlay configuration
         self.predator_obs_range = predator_obs_range
@@ -74,15 +115,15 @@ class PyGameRenderer:
         # Cached walls (set of (x,y)) updated every frame in update(); used only when fov_respect_walls=True
         self._walls_set = set()
 
-        window_width = self.gui_style.margin_left + grid_size[0] * cell_size + self.gui_style.margin_right
-        window_height = self.gui_style.margin_top + grid_size[1] * cell_size + self.gui_style.margin_bottom
+        window_width = self.gui_style.margin_left + grid_size[0] * self.cell_size + self.gui_style.margin_right
+        window_height = self.gui_style.margin_top + grid_size[1] * self.cell_size + self.gui_style.margin_bottom
         # Ensure legend space remains visible for small grids
         window_height = max(window_height, self.gui_style.min_window_height)
         pygame.init()
         self.screen = pygame.display.set_mode((window_width, window_height))
         pygame.display.set_caption("PredPreyGrass Live Viewer")
 
-        self.font = pygame.font.SysFont(None, int(cell_size * 0.5))
+        self.font = pygame.font.SysFont(None, int(self.cell_size * 0.5))
         self.font_legend = pygame.font.SysFont(None, self.gui_style.legend_font_size)
         self.font_legend_label = pygame.font.SysFont(None, self.gui_style.legend_label_font_size)
 
@@ -92,7 +133,6 @@ class PyGameRenderer:
         self.reference_energy_prey = 3.0
         self.reference_energy_grass = 2.0
         self.prey_icon_cell_span = 3
-        self.prey_type2_icon_cell_span = 1
 
         self.halo_trigger_fraction = 0.9
         self.predator_creation_energy_threshold = 12.0
@@ -102,9 +142,6 @@ class PyGameRenderer:
         self.population_history_steps = []
         self.population_history_predators = []
         self.population_history_prey = []
-        self.population_history_predators_type1 = []
-        self.population_history_prey_type1 = []
-        self.population_history_prey_type2 = []
         self.population_history_max_length = 1000
         self.population_pct_type2_predators = []
         self.population_pct_type2_prey = []
@@ -140,7 +177,7 @@ class PyGameRenderer:
 
     def _load_icons(self):
         """Load and cache agent icons from assets/images/icons."""
-        base = Path(__file__).resolve().parents[5] / "assets" / "images" / "icons"
+        base = _resolve_icons_base()
         def _load(name):
             p = base / name
             if not p.is_file():
@@ -148,9 +185,9 @@ class PyGameRenderer:
             surf = pygame.image.load(str(p)).convert_alpha()
             return pygame.transform.smoothscale(surf, (self.cell_size, self.cell_size))
         self.icon_pred_type1 = _load("predator_type1.png") or _load("male.png")
-        self.icon_pred_type2 = _load("predator_type2.png") or self.icon_pred_type1
-        self.icon_prey_type1 = _load("prey_type1.png") or _load("stag_hunt_2.jpeg") or _load("mammoth_2.jpeg")
-        self.icon_prey_type2 = _load("prey_type2.png") or _load("prey.png") or self.icon_prey_type1
+        self.icon_pred_type2 = _load("predator_type2.png") or _load("female.png") or self.icon_pred_type1
+        self.icon_prey_type1 = _load("prey_type1.png") or _load("mammoth_2.jpeg")
+        self.icon_prey_type2 = _load("prey_type2.png") or self.icon_prey_type1
         self.icon_dead_prey = _load("prey_dead.png") or None
         coop_path = base / "cooperation_2.png"
         if not coop_path.is_file():
@@ -178,23 +215,16 @@ class PyGameRenderer:
         self.screen.fill(self.gui_style.background_color)
 
         # Count predator and prey population using step_data
-        num_predators = num_prey = 0
-        num_type2_predators = num_type2_prey = 0
-        num_predators_type1 = num_prey_type1 = num_prey_type2 = 0
+        num_predators = num_prey = num_type2_predators = num_type2_prey = 0
         for agent_id in step_data:
             if "predator" in agent_id:
                 num_predators += 1
                 if "type_2" in agent_id:
                     num_type2_predators += 1
-                elif "type_1" in agent_id:
-                    num_predators_type1 += 1
             elif "prey" in agent_id:
                 num_prey += 1
                 if "type_2" in agent_id:
                     num_type2_prey += 1
-                    num_prey_type2 += 1
-                elif "type_1" in agent_id:
-                    num_prey_type1 += 1
 
         pct_predators_type2 = (num_type2_predators / num_predators) if num_predators > 0 else 0
         pct_prey_type2 = (num_type2_prey / num_prey) if num_prey > 0 else 0
@@ -211,18 +241,12 @@ class PyGameRenderer:
         self.population_history_steps.append(step)
         self.population_history_predators.append(num_predators)
         self.population_history_prey.append(num_prey)
-        self.population_history_predators_type1.append(num_predators_type1)
-        self.population_history_prey_type1.append(num_prey_type1)
-        self.population_history_prey_type2.append(num_prey_type2)
 
         # Keep history length bounded
         if len(self.population_history_steps) > self.population_history_max_length:
             self.population_history_steps.pop(0)
             self.population_history_predators.pop(0)
             self.population_history_prey.pop(0)
-            self.population_history_predators_type1.pop(0)
-            self.population_history_prey_type1.pop(0)
-            self.population_history_prey_type2.pop(0)
 
         self._draw_grid()
         if self.show_fov and (self.predator_obs_range or self.prey_obs_range):
@@ -267,7 +291,12 @@ class PyGameRenderer:
         cs = self.cell_size
         for pos in positions:
             x, y = map(int, pos)
-            rect = pygame.Rect(ml + x * cs + 1, mt + y * cs + 1, cs - 2, cs - 2)
+            rect = pygame.Rect(
+                ml + x * cs + self._px(1),
+                mt + y * cs + self._px(1),
+                cs - self._px(2),
+                cs - self._px(2),
+            )
             pygame.draw.rect(self.screen, self.gui_style.wall_color, rect)
 
     def _draw_fov_overlays(self, step_data):
@@ -395,10 +424,7 @@ class PyGameRenderer:
             size_factor = min(energy / reference_energy, 1.0)
             if icon is not None:
                 if "prey" in agent_id:
-                    if "type_2" in agent_id:
-                        icon_size = self.cell_size * self.prey_type2_icon_cell_span
-                    else:
-                        icon_size = self.cell_size * self.prey_icon_cell_span
+                    icon_size = self.cell_size * self.prey_icon_cell_span
                 elif "predator" in agent_id:
                     icon_size = self.cell_size
                 else:
@@ -408,7 +434,7 @@ class PyGameRenderer:
                 self.screen.blit(icon_surf, rect)
                 radius = max(icon_size // 2, 2)
             else:
-                base_radius = self.cell_size // 2 - 2
+                base_radius = self.cell_size // 2 - self._px(2)
                 if "predator" in agent_id:
                     radius = base_radius
                 else:
@@ -422,7 +448,7 @@ class PyGameRenderer:
                     self.screen,
                     self.gui_style.halo_eating_color,
                     (x_pix, y_pix),
-                    max(radius + 5, 6),
+                    max(radius + self._px(5), self._px(6)),
                     width=self.gui_style.halo_eating_thickness,
                 )
 
@@ -432,13 +458,13 @@ class PyGameRenderer:
                     self.screen,
                     self.gui_style.halo_reproduction_color,
                     (x_pix, y_pix),
-                    max(radius + 5, 6),
+                    max(radius + self._px(5), self._px(6)),
                     width=self.gui_style.halo_reproduction_thickness,
                 )
 
     def _draw_legend(self, step, step_data):
-        x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
-        y = self.gui_style.margin_top + 10
+        x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + self._px(20)
+        y = self.gui_style.margin_top + self._px(10)
 
         y = self._draw_legend_step_counter(x, y, step)
 
@@ -451,7 +477,10 @@ class PyGameRenderer:
 
         y = self._draw_legend_population_chart(x, y)
 
-        # Type-2 percent chart removed per UI request
+        if self._using_type_prefix(step_data) and not (
+            self.n_possible_type_2_predators == 0 and self.n_possible_type_2_prey == 0
+        ):
+            y = self._draw_legend_type2_percent_chart(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
         spacing = self.gui_style.legend_spacing
@@ -461,7 +490,7 @@ class PyGameRenderer:
 
         label_width = step_label_surface.get_width()
         step_number_surface = font_large.render(f"{step}", True, (255, 0, 0))
-        self.screen.blit(step_number_surface, (x + label_width + 5, y))  # +5 pixels spacing
+        self.screen.blit(step_number_surface, (x + label_width + self._px(5), y))
 
         return y + spacing
 
@@ -475,7 +504,7 @@ class PyGameRenderer:
         allow_prey_type2 = not (self.n_possible_type_2_prey == 0)
 
         icon_size = self.gui_style.legend_square_size
-        base_label_x = x + icon_size + 10
+        base_label_x = x + icon_size + self._px(10)
 
         def _draw_entry(icon_surf, fallback_color, label, icon_scale=1):
             entry_icon_size = icon_size * icon_scale
@@ -489,23 +518,23 @@ class PyGameRenderer:
                 radius = min(r, entry_icon_size // 2)
                 pygame.draw.circle(self.screen, fallback_color, (center_x, center_y), radius)
             label_surface = font.render(label, True, (0, 0, 0))
-            label_x = max(base_label_x, x + entry_icon_size + 10)
+            label_x = max(base_label_x, x + entry_icon_size + self._px(10))
             label_y = center_y - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
-            return max(spacing, entry_icon_size + 5)
+            return max(spacing, entry_icon_size + self._px(5))
 
         if is_type_based:
             # type-specific predator colors
-            y += _draw_entry(self.icon_pred_type1, self.gui_style.predator_type_1_color, "Hunter")
+            y += _draw_entry(self.icon_pred_type1, self.gui_style.predator_type_1_color, "Male")
 
             if allow_pred_type2:
-                y += _draw_entry(self.icon_pred_type2, self.gui_style.predator_type_2_color, "Predator (type 2)")
+                y += _draw_entry(self.icon_pred_type2, self.gui_style.predator_type_2_color, "Female")
 
             # type-specific prey colors
             y += _draw_entry(self.icon_prey_type1, self.gui_style.prey_type_1_color, "Mammoth", icon_scale=2)
 
             if allow_prey_type2:
-                y += _draw_entry(self.icon_prey_type2, self.gui_style.prey_type_2_color, "Deer")
+                y += _draw_entry(self.icon_prey_type2, self.gui_style.prey_type_2_color, "Prey (type 2)")
 
         else:
             # Compact predator/prey legend
@@ -518,7 +547,7 @@ class PyGameRenderer:
             self.screen,
             self.gui_style.halo_reproduction_color,
             (x + r, y + r),
-            r + 2,
+            r + self._px(2),
             width=self.gui_style.halo_reproduction_thickness,
         )
         label_surface = font.render("Reproduction halo", True, (0, 0, 0))
@@ -528,7 +557,11 @@ class PyGameRenderer:
 
         # Eating halo
         pygame.draw.circle(
-            self.screen, self.gui_style.halo_eating_color, (x + r, y + r), r + 2, width=self.gui_style.halo_eating_thickness
+            self.screen,
+            self.gui_style.halo_eating_color,
+            (x + r, y + r),
+            r + self._px(2),
+            width=self.gui_style.halo_eating_thickness,
         )
         label_surface = font.render("Eating halo", True, (0, 0, 0))
         label_y = y + r - label_surface.get_height() // 2
@@ -564,7 +597,7 @@ class PyGameRenderer:
         r = self.gui_style.legend_circle_radius
         s = self.gui_style.legend_square_size
         font = self.font_legend_label
-        label_x = x + r + s // 2 + 10
+        label_x = x + r + s // 2 + self._px(10)
 
         # Grass
         pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
@@ -586,7 +619,7 @@ class PyGameRenderer:
             fov_prey_rect = pygame.Surface((s, s), pygame.SRCALPHA)
             fov_prey_rect.fill(self.fov_color_prey)
             self.screen.blit(fov_prey_rect, (x + r - s // 2, y + r - s // 2))
-            label_surface = font.render("Stag_hunt_0 Field Of Vision", True, (0, 0, 0))
+            label_surface = font.render("Mammoth_0 Field Of Vision", True, (0, 0, 0))
             label_y = y + r - label_surface.get_height() // 2
             self.screen.blit(label_surface, (label_x, label_y))
             y += spacing
@@ -604,7 +637,7 @@ class PyGameRenderer:
         else:
             pygame.draw.circle(self.screen, (0, 128, 0), (icon_x, icon_y + icon_size // 2), icon_size // 2)
         label_surface = label_font.render("Cooperative hunting", True, (0, 0, 0))
-        text_x = max(label_x, icon_left + icon_size + 20)
+        text_x = max(label_x, icon_left + icon_size + self._px(20))
         text_y = icon_y + icon_size // 2 - label_surface.get_height() // 2
         self.screen.blit(label_surface, (text_x, text_y))
         y = icon_y + icon_size + spacing
@@ -648,15 +681,14 @@ class PyGameRenderer:
         chart_width = 260
         chart_height = 100
         chart_x = x + 30
-        chart_top_padding = 20
-        chart_y = y + chart_top_padding
+        chart_y = y + 40
+        spacing = self.gui_style.legend_spacing
 
         # Chart title
         font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
         title_surface = font_small.render("Population", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
-        title_gap = font_small.get_height() + 8
-        title_y = chart_y - title_gap
+        title_y = chart_y - spacing // 2 - 10
         self.screen.blit(title_surface, (title_x, title_y))
 
         # Chart box
@@ -664,12 +696,7 @@ class PyGameRenderer:
         pygame.draw.rect(self.screen, (0, 0, 0), pygame.Rect(chart_x, chart_y, chart_width, chart_height), 1)
 
         # Y axis
-        max_agents = max(
-            max(self.population_history_predators_type1, default=1),
-            max(self.population_history_prey_type1, default=1),
-            max(self.population_history_prey_type2, default=1),
-            1,
-        )
+        max_agents = max(max(self.population_history_predators, default=1), max(self.population_history_prey, default=1), 1)
         num_ticks = 5
         label_x = chart_x - 5
         font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
@@ -688,74 +715,50 @@ class PyGameRenderer:
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
-            y_pos = chart_y + chart_height + 5
+            y_pos = chart_y + chart_height + self._px(5)
             label_surface = font_small.render(f"{label_value}", True, (0, 0, 0))
             label_width = label_surface.get_width()
             self.screen.blit(label_surface, (x_pos - label_width // 2, y_pos))
-
-        predator_color = self.gui_style.predator_type_1_color
-        mammoth_color = (139, 69, 19)
-        rabbit_color = (80, 130, 200)
 
         # Draw line chart
         if self.population_history_steps:
             for i in range(1, len(self.population_history_steps)):
                 x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
                 x2 = chart_x + int(i / self.population_history_max_length * chart_width)
-                y1p = chart_y + chart_height - int(
-                    self.population_history_predators_type1[i - 1] / max_agents * chart_height
-                )
-                y2p = chart_y + chart_height - int(
-                    self.population_history_predators_type1[i] / max_agents * chart_height
-                )
-                pygame.draw.line(self.screen, predator_color, (x1, y1p), (x2, y2p), 3)
-                y1m = chart_y + chart_height - int(
-                    self.population_history_prey_type1[i - 1] / max_agents * chart_height
-                )
-                y2m = chart_y + chart_height - int(
-                    self.population_history_prey_type1[i] / max_agents * chart_height
-                )
-                pygame.draw.line(self.screen, mammoth_color, (x1, y1m), (x2, y2m), 3)
-                y1r = chart_y + chart_height - int(
-                    self.population_history_prey_type2[i - 1] / max_agents * chart_height
-                )
-                y2r = chart_y + chart_height - int(
-                    self.population_history_prey_type2[i] / max_agents * chart_height
-                )
-                pygame.draw.line(self.screen, rabbit_color, (x1, y1r), (x2, y2r), 3)
+                y1p = chart_y + chart_height - int(self.population_history_predators[i - 1] / max_agents * chart_height)
+                y2p = chart_y + chart_height - int(self.population_history_predators[i] / max_agents * chart_height)
+                pygame.draw.line(self.screen, self.gui_style.predator_type_1_color, (x1, y1p), (x2, y2p), 2)
+                y1pr = chart_y + chart_height - int(self.population_history_prey[i - 1] / max_agents * chart_height)
+                y2pr = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
+                pygame.draw.line(self.screen, self.gui_style.prey_type_1_color, (x1, y1pr), (x2, y2pr), 2)
         # Legend below chart
-        legend_y = chart_y + chart_height + font_small.get_height() + 6
-        line_len = 16
-        legend_y_line = legend_y + 6
-        legend_items = [
-            ("Humans", predator_color),
-            ("Mammoths", mammoth_color),
-            ("Rabbits", rabbit_color),
-        ]
-        for idx, (label, color) in enumerate(legend_items):
-            y_line = legend_y_line + idx * (font_small.get_height() + 6)
-            start = (chart_x, y_line)
-            end = (chart_x + line_len, y_line)
-            pygame.draw.line(self.screen, color, start, end, 3)
-            label_surface = font_small.render(label, True, (0, 0, 0))
-            label_y = y_line - label_surface.get_height() // 2
-            self.screen.blit(label_surface, (end[0] + 6, label_y))
+        legend_y = chart_y + chart_height + font_small.get_height() + self._px(10)
+        line_len = 20
+        red_start = (chart_x, legend_y + 8)
+        red_end = (chart_x + line_len, legend_y + 8)
+        pygame.draw.line(self.screen, self.gui_style.predator_type_1_color, red_start, red_end, 3)
+        self.screen.blit(font_small.render("Hunters", True, (0, 0, 0)), (red_end[0] + 8, legend_y))
+
+        legend_x2 = chart_x + chart_width // 2
+        blue_start = (legend_x2, legend_y + 8)
+        blue_end = (legend_x2 + line_len, legend_y + 8)
+        pygame.draw.line(self.screen, self.gui_style.prey_type_1_color, blue_start, blue_end, 3)
+        self.screen.blit(font_small.render("Mammoths", True, (0, 0, 0)), (blue_end[0] + 8, legend_y))
 
         # Cooperative hunting icon below the chart
-        return legend_y + font_small.get_height() + 6
+        return legend_y + font_small.get_height() + self.gui_style.legend_spacing
 
     def _draw_legend_type2_percent_chart(self, x, y):
         chart_width = 260
         chart_height = 100
         chart_x = x + 30
-        chart_top_padding = 20
-        chart_y = y + chart_top_padding
+        chart_y = y + 40
+        spacing = self.gui_style.legend_spacing
 
         font_small = pygame.font.SysFont(None, int(self.gui_style.legend_label_font_size * 0.8), bold=False)
         title_surface = font_small.render("type 2 predator and prey population (%)", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
-        title_gap = font_small.get_height() + 8
-        title_y = chart_y - title_gap
+        title_y = chart_y - spacing // 2 - 10
         self.screen.blit(title_surface, (title_x, title_y))
 
         pygame.draw.rect(self.screen, (230, 230, 230), pygame.Rect(chart_x, chart_y, chart_width, chart_height))
@@ -776,7 +779,7 @@ class PyGameRenderer:
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
-            y_pos = chart_y + chart_height + 5
+            y_pos = chart_y + chart_height + self._px(5)
             label_surface = font_small.render(f"{label_value}", True, (0, 0, 0))
             self.screen.blit(label_surface, (x_pos - label_surface.get_width() // 2, y_pos))
 
@@ -793,7 +796,7 @@ class PyGameRenderer:
             y2_prey = chart_y + chart_height - int(self.population_pct_type2_prey[i] * chart_height)
             pygame.draw.line(self.screen, self.gui_style.prey_type_2_color, (x1, y1_prey), (x2, y2_prey), 2)
 
-        return chart_y + chart_height + 12
+        return chart_y + chart_height + spacing
 
     def _draw_tooltip(self, step_data, grass_positions, grass_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
@@ -878,8 +881,8 @@ class PyGameRenderer:
             width = label_width + value_width + 12
             height = len(lines) * line_height
 
-            tooltip_x = mouse_x + 10
-            tooltip_y = mouse_y + 10
+            tooltip_x = mouse_x + self._px(10)
+            tooltip_y = mouse_y + self._px(10)
 
             bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
             pygame.draw.rect(self.screen, (255, 255, 200), bg_rect)
