@@ -29,7 +29,7 @@ from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 import torch
 
-SEED = 27 
+SEED = 2
 SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = True
 MOVIE_FILENAME = "cooperative_hunting.mp4"
@@ -330,8 +330,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results/"
-        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-08_22-25-52/PPO_PredPreyGrass_bf52f_00000_0_2026-02-08_22-25-53/"
-        checkpoint_nr = "checkpoint_000077"
+        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-09_23-24-52/PPO_PredPreyGrass_27c47_00000_0_2026-02-09_23-24-53/"
+        checkpoint_nr = "checkpoint_000039"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 

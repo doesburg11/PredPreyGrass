@@ -28,8 +28,8 @@ config_env = {
         "female": 100.0,  # Female initial energy
     },
     "predator_idle_cost_by_sex": {  # Idle metabolism by sex
-        "male": 0.9,  # Male idle cost
-        "female": 0.7,  # Female idle cost
+        "male": 1.4,  # Male idle cost
+        "female": 1.2,  # Female idle cost
     },
     "predator_action_cost_by_sex": {  # Action energy costs by sex
         "attack": {
@@ -82,7 +82,7 @@ config_env = {
     "predator_child_age_max": 10,  # Max age for "child" status
     "energy_treshold_creation_prey": {  # Asexual prey spawn thresholds
         "type_1_prey": 220.0,  # Type 1 prey threshold
-        "type_2_prey": 70.0,  # Type 2 prey threshold
+        "type_2_prey": 60.0,  # Type 2 prey threshold
     },
     "initial_energy_predator": 110.0,  # Fallback predator initial energy
     "initial_energy_prey": {  # Prey initial energy by type
