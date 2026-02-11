@@ -72,11 +72,11 @@ def prepend_example_sources() -> None:
 def load_predpreygrass_modules() -> None:
     global PredPreyGrass, config_env, PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
-    from predpreygrass.rllib.sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.rllib.sexual_reproduction.config.config_env_sexual_reproduction import (
+    from predpreygrass.rllib.checkpoint_genomes.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.checkpoint_genomes.config.config_env_checkpoint_genomes import (
         config_env as _config_env,
     )
-    from predpreygrass.rllib.sexual_reproduction.utils.pygame_grid_renderer_rllib import (
+    from predpreygrass.rllib.checkpoint_genomes.utils.pygame_grid_renderer_rllib import (
         PyGameRenderer as _PyGameRenderer,
         ViewerControlHelper as _ViewerControlHelper,
         LoopControlHelper as _LoopControlHelper,

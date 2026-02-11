@@ -89,18 +89,18 @@ def load_predpreygrass_modules() -> None:
     global PyGameRenderer, ViewerControlHelper, LoopControlHelper
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices, compute_opportunity_preference_metrics
 
-    from predpreygrass.rllib.sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.rllib.sexual_reproduction.config.config_env_sexual_reproduction import config_env as _config_env
-    from predpreygrass.rllib.sexual_reproduction.utils.matplot_renderer import (
+    from predpreygrass.rllib.checkpoint_genomes.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.checkpoint_genomes.config.config_env_checkpoint_genomes import config_env as _config_env
+    from predpreygrass.rllib.checkpoint_genomes.utils.matplot_renderer import (
         CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
         PreyDeathCauseVisualizer as _PreyDeathCauseVisualizer,
     )
-    from predpreygrass.rllib.sexual_reproduction.utils.pygame_grid_renderer_rllib import (
+    from predpreygrass.rllib.checkpoint_genomes.utils.pygame_grid_renderer_rllib import (
         PyGameRenderer as _PyGameRenderer,
         ViewerControlHelper as _ViewerControlHelper,
         LoopControlHelper as _LoopControlHelper,
     )
-    from predpreygrass.rllib.sexual_reproduction.utils.defection_metrics import (
+    from predpreygrass.rllib.checkpoint_genomes.utils.defection_metrics import (
         aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
         aggregate_join_choices as _aggregate_join_choices,
         compute_opportunity_preference_metrics as _compute_opportunity_preference_metrics,
@@ -123,6 +123,7 @@ def env_creator(config):
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "genomes",
     "ray_results",
     "ray_results_failed",
     "trained_examples",

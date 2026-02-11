@@ -1,6 +1,7 @@
 # Ignored folders
 output/
 ray_results/
+genomes/
 ray_results_failed
 ray_results_archive/
 # Rllib archive files

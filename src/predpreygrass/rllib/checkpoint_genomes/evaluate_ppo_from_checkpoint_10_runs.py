@@ -70,12 +70,12 @@ def load_predpreygrass_modules() -> None:
     global PredPreyGrass, config_env, CombinedEvolutionVisualizer
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices
 
-    from predpreygrass.rllib.sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.rllib.sexual_reproduction.config.config_env_sexual_reproduction import config_env as _config_env
-    from predpreygrass.rllib.sexual_reproduction.utils.matplot_renderer import (
+    from predpreygrass.rllib.checkpoint_genomes.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.checkpoint_genomes.config.config_env_checkpoint_genomes import config_env as _config_env
+    from predpreygrass.rllib.checkpoint_genomes.utils.matplot_renderer import (
         CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
     )
-    from predpreygrass.rllib.sexual_reproduction.utils.defection_metrics import (
+    from predpreygrass.rllib.checkpoint_genomes.utils.defection_metrics import (
         aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
         aggregate_join_choices as _aggregate_join_choices,
     )
@@ -88,6 +88,7 @@ def load_predpreygrass_modules() -> None:
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "genomes",
     "ray_results",
     "ray_results_failed",
     "trained_examples",
@@ -987,7 +988,7 @@ if __name__ == "__main__":
             with open(summary_dir / "defection_metrics_aggregate.json", "w") as f:
                 json.dump(aggregate_metrics, f, indent=2)
             try:
-                from predpreygrass.rllib.sexual_reproduction.utils.summarize_capture_failures import (
+                from predpreygrass.rllib.checkpoint_genomes.utils.summarize_capture_failures import (
                     build_capture_failure_summary,
                 )
 

@@ -5,7 +5,6 @@ import shutil
 import subprocess
 import sys
 import csv
-from typing import Any
 from datetime import datetime
 from pathlib import Path
 
@@ -17,7 +16,7 @@ from ray.tune.registry import register_env
 
 TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
 SAVE_EVAL_RESULTS = True
-N_RUNS = int(os.getenv("EVAL_N_RUNS", "30"))  # Number of evaluation runs (override via env)
+N_RUNS = 10  # Number of evaluation runs
 SEED = 1
 MIN_STEPS_FOR_STATS = 500 # Minimum steps per run to include in aggregate stats
 SURVIVAL_MIN_STEP = 1000
@@ -70,12 +69,12 @@ def load_predpreygrass_modules() -> None:
     global PredPreyGrass, config_env, CombinedEvolutionVisualizer
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices
 
-    from predpreygrass.rllib.sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.rllib.sexual_reproduction.config.config_env_sexual_reproduction import config_env as _config_env
-    from predpreygrass.rllib.sexual_reproduction.utils.matplot_renderer import (
+    from predpreygrass.rllib.checkpoint_genomes.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.rllib.checkpoint_genomes.config.config_env_checkpoint_genomes import config_env as _config_env
+    from predpreygrass.rllib.checkpoint_genomes.utils.matplot_renderer import (
         CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
     )
-    from predpreygrass.rllib.sexual_reproduction.utils.defection_metrics import (
+    from predpreygrass.rllib.checkpoint_genomes.utils.defection_metrics import (
         aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
         aggregate_join_choices as _aggregate_join_choices,
     )
@@ -88,6 +87,7 @@ def load_predpreygrass_modules() -> None:
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "genomes",
     "ray_results",
     "ray_results_failed",
     "trained_examples",
@@ -192,8 +192,8 @@ def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
 def get_eval_output_dir(checkpoint_path: Path, now: str) -> Path:
     if TRAINED_EXAMPLE_DIR:
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
-        return example_dir / "eval" / "runs" / f"eval_10_runs_SEXUAL_REPRODUCTION_{now}"
-    return checkpoint_path / f"eval_10_runs_SEXUAL_REPRODUCTION_{now}"
+        return example_dir / "eval" / "runs" / f"eval_multiple_runs_SEXUAL_REPRODUCTION_{now}"
+    return checkpoint_path / f"eval_multiple_runs_SEXUAL_REPRODUCTION_{now}"
 
 
 def get_aggregate_output_dir(checkpoint_path: Path, now: str) -> Path:
@@ -333,38 +333,6 @@ def _compute_join_cost_stats(agent_event_log: dict) -> dict:
     }
 
 
-def _jsonify(obj: Any):
-    if obj is None or isinstance(obj, (int, float, str, bool)):
-        return obj
-    if isinstance(obj, dict):
-        return {k: _jsonify(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [_jsonify(v) for v in obj]
-    if hasattr(obj, "tolist"):
-        try:
-            return obj.tolist()
-        except Exception:
-            pass
-    if hasattr(obj, "item"):
-        try:
-            return obj.item()
-        except Exception:
-            pass
-    return str(obj)
-
-
-def write_trajectory_logs(output_dir: Path, run: int, per_step_agent_data: list[dict], agent_event_log: dict) -> None:
-    output_dir.mkdir(parents=True, exist_ok=True)
-    per_step_path = output_dir / f"per_step_agent_data_{run}.json"
-    event_log_path = output_dir / f"agent_event_log_{run}.json"
-
-    per_step_payload = _jsonify(per_step_agent_data)
-    event_log_payload = _jsonify(agent_event_log)
-
-    per_step_path.write_text(json.dumps(per_step_payload, indent=2))
-    event_log_path.write_text(json.dumps(event_log_payload, indent=2))
-
-
 def write_join_costs_per_predator(output_dir: Path, run: int, agent_event_log: dict) -> None:
     rows = []
     for aid, record in agent_event_log.items():
@@ -472,7 +440,6 @@ def write_mammoth_team_attacks(output_dir: Path, run: int, agent_event_log: dict
                     "success": False,
                 },
             )
-            # keep success=True if a success record also exists for this key
             entry["success"] = entry.get("success", False)
             entry["joiners"] = list(evt.get("predator_list", []) or [])
             entry["free_riders"] = list(evt.get("free_riders", []) or [])
@@ -533,7 +500,7 @@ def setup_modules():
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
         # SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/checkpoint_000009
-        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results"
+        ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results/"
         checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/"
         checkpoint_nr = "checkpoint_000009"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
@@ -611,28 +578,25 @@ if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
     register_env("PredPreyGrass", lambda config: PredPreyGrass(config))
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    target_steps = config_env.get("max_steps", 1000)
     per_run_metrics = []
-    discarded_runs = []
-    attempt = 0
 
-    while len(per_run_metrics) < N_RUNS:
-        attempt += 1
-        run = len(per_run_metrics) + 1
-        seed = SEED + attempt - 1
-        print(f"\n=== Evaluation Run {run} / {N_RUNS} (attempt {attempt}) ===")
+    for run in range(N_RUNS):
+        seed = SEED + run
+        print(f"\n=== Evaluation Run {run + 1} / {N_RUNS} ===")
         print(f"Using seed: {seed}")
         rl_modules, checkpoint_path = setup_modules()
         env = PredPreyGrass(config=config_env)
-        observations, _ = env.reset(seed=seed)  # Use different seed per attempt
+        observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         if SAVE_EVAL_RESULTS:
             eval_output_dir = get_eval_output_dir(checkpoint_path, now)
+            if run == 0:
+                prepare_eval_output_dir(eval_output_dir, config_env)
             eval_output_dir.mkdir(parents=True, exist_ok=True)
             visualizer = CombinedEvolutionVisualizer(
                 destination_path=str(eval_output_dir),
                 timestamp=now,
                 destination_filename="visuals",
-                run_nr=run,
+                run_nr=run + 1,
                 n_possible_type_1_predators=config_env.get("n_possible_type_1_predators"),
                 n_possible_type_1_prey=config_env.get("n_possible_type_1_prey"),
                 n_possible_type_2_predators=config_env.get("n_possible_type_2_predators"),
@@ -662,17 +626,9 @@ if __name__ == "__main__":
 
         print(f"Evaluation complete! Total Reward: {total_reward:.2f}")
         print(f"Total Steps: {env.current_step}")
-        if env.current_step < target_steps:
-            print(
-                f"Run ended early at {env.current_step} steps (< {target_steps}); discarding."
-            )
-            discarded_runs.append(
-                {"attempt": attempt, "seed": seed, "steps": env.current_step}
-            )
-            continue
         agent_stats = env.get_all_agent_stats()
         defection_metrics = compute_defection_metrics(env)
-        defection_metrics["run"] = run
+        defection_metrics["run"] = run + 1
         defection_metrics["seed"] = seed
         print("Defection metrics:")
         print(json.dumps(defection_metrics, indent=2))
@@ -686,7 +642,7 @@ if __name__ == "__main__":
 
         per_run_metrics.append(
             {
-                "run": run,
+                "run": run + 1,
                 "seed": seed,
                 "steps": defection_metrics.get("steps", 0),
                 "survival_ok": survival_ok,
@@ -698,30 +654,22 @@ if __name__ == "__main__":
             }
         )
         if SAVE_EVAL_RESULTS:
-            if len(per_run_metrics) == 1:
-                prepare_eval_output_dir(eval_output_dir, config_env)
             visualizer.plot()
             config_env_dir = eval_output_dir / "config_env"
             config_env_dir.mkdir(exist_ok=True)
             summary_data_dir = eval_output_dir / "summary_data"
             summary_data_dir.mkdir(exist_ok=True)
-            with open(config_env_dir / f"config_env_{run}.json", "w") as f:
+            with open(config_env_dir / f"config_env_{run + 1}.json", "w") as f:
                 json.dump(config_env, f, indent=4)
-            with open(summary_data_dir / f"reward_summary_{run}.txt", "w") as f:
+            with open(summary_data_dir / f"reward_summary_{run + 1}.txt", "w") as f:
                 f.write(f"Total Reward: {total_reward:.2f}\n")
                 for aid, rec in agent_stats.items():
                     r = rec.get("cumulative_reward", 0.0)
                     f.write(f"{aid:20}: {r:.2f}\n")
-            with open(summary_data_dir / f"defection_metrics_{run}.json", "w") as f:
+            with open(summary_data_dir / f"defection_metrics_{run + 1}.json", "w") as f:
                 json.dump(defection_metrics, f, indent=2)
-            write_join_costs_per_predator(summary_data_dir, run, env.agent_event_log)
-            write_trajectory_logs(summary_data_dir, run, env.per_step_agent_data, env.agent_event_log)
-            write_mammoth_team_attacks(summary_data_dir, run, env.agent_event_log)
-
-    if discarded_runs:
-        print(
-            f"\nDiscarded {len(discarded_runs)} runs that ended before {target_steps} steps."
-        )
+            write_join_costs_per_predator(summary_data_dir, run + 1, env.agent_event_log)
+            write_mammoth_team_attacks(summary_data_dir, run + 1, env.agent_event_log)
 
     filtered_runs = [m for m in per_run_metrics if m.get("steps", 0) >= MIN_STEPS_FOR_STATS]
     survivor_runs = [m for m in per_run_metrics if m.get("survival_ok")]
@@ -987,7 +935,7 @@ if __name__ == "__main__":
             with open(summary_dir / "defection_metrics_aggregate.json", "w") as f:
                 json.dump(aggregate_metrics, f, indent=2)
             try:
-                from predpreygrass.rllib.sexual_reproduction.utils.summarize_capture_failures import (
+                from predpreygrass.rllib.checkpoint_genomes.utils.summarize_capture_failures import (
                     build_capture_failure_summary,
                 )
 
