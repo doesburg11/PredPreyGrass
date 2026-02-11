@@ -498,10 +498,10 @@ def setup_modules():
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
     else:
-        # SEXUAL_REPRODUCTION_2026-02-09_23-24-52/PPO_PredPreyGrass_27c47_00000_0_2026-02-09_23-24-53/checkpoint_000039
+        # SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/checkpoint_000009
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results/"
-        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-09_23-24-52/PPO_PredPreyGrass_27c47_00000_0_2026-02-09_23-24-53/"
-        checkpoint_nr = "checkpoint_000039"
+        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/"
+        checkpoint_nr = "checkpoint_000009"
         checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
 
     rl_module_dir = Path(checkpoint_path) / "learner_group" / "learner" / "rl_module"

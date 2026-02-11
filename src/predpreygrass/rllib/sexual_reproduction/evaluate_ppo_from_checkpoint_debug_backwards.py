@@ -330,8 +330,8 @@ def setup_environment_and_visualizer(now):
         eval_output_dir = eval_root / f"eval_{checkpoint_path.name}_{now}"
     else:
         ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results/"
-        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-09_23-24-52/PPO_PredPreyGrass_27c47_00000_0_2026-02-09_23-24-53/"
-        checkpoint_nr = "checkpoint_000039"
+        checkpoint_root = "SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/"
+        checkpoint_nr = "checkpoint_000009"
         checkpoint_path = Path(ray_results_dir) / checkpoint_root / checkpoint_nr
         eval_output_dir = Path(checkpoint_path) / f"eval_{checkpoint_nr}_{now}"
 

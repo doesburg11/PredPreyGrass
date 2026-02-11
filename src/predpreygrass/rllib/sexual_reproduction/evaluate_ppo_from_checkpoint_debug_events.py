@@ -24,10 +24,10 @@ TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
 
 RAY_RESULTS_DIR = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/sexual_reproduction/ray_results/"
 CHECKPOINT_ROOT = (
-    "SEXUAL_REPRODUCTION_2026-02-09_23-24-52/"
-    "PPO_PredPreyGrass_27c47_00000_0_2026-02-09_23-24-53"
+    "SEXUAL_REPRODUCTION_2026-02-10_12-55-20/"
+    "PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20"
 )
-CHECKPOINT_NR = "checkpoint_000039"
+CHECKPOINT_NR = "checkpoint_000009"
 
 
 def _prepend_snapshot_source() -> None:
