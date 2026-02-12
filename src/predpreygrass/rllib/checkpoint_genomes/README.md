@@ -111,6 +111,10 @@ python src/predpreygrass/rllib/checkpoint_genomes/generation_loop.py
 - Per-genome checkpoints: `gen_###/genome_###/checkpoint_000000`
 - Evaluation summaries: `eval/runs/.../summary_data/defection_metrics_aggregate.json`
 
+**Generation Loop Note**
+The loop now evaluates the final generation as well. You should expect `fitness.json`
+and `eval/` outputs for the last `gen_###` directory.
+
 **Fitness Key Examples**
 You can select any scalar metric from `defection_metrics_aggregate.json`. Common options:
 - `capture_outcomes.coop_capture_rate`

@@ -1,0 +1,42 @@
+{
+  "width": 30,
+  "height": 30,
+  "gmax": 5.5,
+  "grass_regrow_prob": 0.05,
+  "grass_regrow_amount": 1.0,
+  "initial_grass_prob": 0.2,
+  "initial_grass_amount": 3.0,
+  "initial_prey": 20,
+  "initial_predators": 6,
+  "prey_energy_init": 12.0,
+  "predator_energy_init": 20.0,
+  "prey_eat_amount": 2.0,
+  "prey_energy_gain": 3.0,
+  "predator_kill_gain": 30.0,
+  "predator_fail_cost": 2.0,
+  "base_metabolism_prey": 0.2,
+  "base_metabolism_predator": 0.3,
+  "speed_cost": 0.08,
+  "vision_cost": 0.04,
+  "move_cost": 0.05,
+  "repro_threshold_prey": 25.0,
+  "repro_threshold_predator": 40.0,
+  "repro_cooldown": 5,
+  "parent_energy_share": 0.6,
+  "mutation_sigma": 0.1,
+  "max_age": 200,
+  "num_obs_channels": 4,
+  "prey_obs_range": 5,
+  "predator_obs_range": 7,
+  "trait_ranges_prey": {
+    "speed": [0.5, 3.0],
+    "vision": [1.0, 8.0],
+    "metabolism": [0.05, 0.4]
+  },
+  "trait_ranges_predator": {
+    "speed": [0.6, 3.2],
+    "vision": [1.0, 9.0],
+    "metabolism": [0.08, 0.6],
+    "attack_power": [0.5, 2.0]
+  }
+}

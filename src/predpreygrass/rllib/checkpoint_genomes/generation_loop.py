@@ -257,7 +257,7 @@ def main():
 
     genomes = _init_population(seed_ckpt, out_root, population_size, sigma)
 
-    for gen in range(generations):
+    for gen in range(generations + 1):
         gen_dir = out_root / f"gen_{gen:03d}"
         if gen > 0:
             gen_dir.mkdir(parents=True, exist_ok=True)
@@ -277,6 +277,9 @@ def main():
 
         scored.sort(key=lambda item: item[1], reverse=True)
         elites = scored[: max(elite, 0)]
+
+        if gen >= generations:
+            break
 
         next_gen_dir = out_root / f"gen_{gen + 1:03d}"
         next_gen_dir.mkdir(parents=True, exist_ok=True)
