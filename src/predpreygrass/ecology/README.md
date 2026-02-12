@@ -286,6 +286,89 @@ To generate richer evolutionary dynamics:
 -   Introduce competing predator morphs
 -   Measure evolving assortment coefficient explicitly
 
-------------------------------------------------------------------------
 
-Generated from the PredPreyGrass spatial ecology simulation.
+# Mathematical Derivation of the Selection Gradient
+
+
+Let \(c_i \in [0,1]\) be individual cooperation, and for the local hunting group \(g\):
+
+$$
+S_g = \sum_{j \in g} c_j = c_i + S_{-i}
+$$
+
+Kill probability:
+
+$$
+p_{\text{kill}}(S_g) = 1 - (1 - p_0)^{S_g}
+$$
+
+Expected energy gain (contributors-only proportional sharing):
+
+$$
+G_i = p_{\text{kill}}(S_g)\,E\,\frac{c_i}{S_g}
+$$
+
+Cost per tick:
+
+$$
+C_i = \kappa c_i
+$$
+
+Fitness proxy:
+
+$$
+W_i = E\frac{c_i}{S_g}\Bigl[1 - (1 - p_0)^{S_g}\Bigr] - \kappa c_i
+$$
+
+Define:
+
+$$
+f(S) = 1 - (1 - p_0)^S
+$$
+
+Then \(W_i = E\frac{c_i}{S_g}f(S_g) - \kappa c_i\).
+
+Selection gradient:
+
+$$
+\frac{\partial W_i}{\partial c_i}
+=
+E\left[
+\frac{\partial}{\partial c_i}\left(\frac{c_i}{S_g}\right)f(S_g)
++
+\frac{c_i}{S_g}f'(S_g)\frac{\partial S_g}{\partial c_i}
+\right]
+-\kappa
+$$
+
+Use:
+
+$$
+\frac{\partial S_g}{\partial c_i}=1,\qquad
+\frac{\partial}{\partial c_i}\left(\frac{c_i}{S_g}\right)=\frac{S_g-c_i}{S_g^2}=\frac{S_{-i}}{S_g^2}
+$$
+
+and:
+
+$$
+f'(S_g) = (1-p_0)^{S_g}\ln\left(\frac{1}{1-p_0}\right)
+$$
+
+Final result:
+
+$$
+\frac{\partial W_i}{\partial c_i}
+=
+E\left[
+\frac{S_{-i}}{S_g^2}\Bigl(1-(1-p_0)^{S_g}\Bigr)
++
+\frac{c_i}{S_g}(1-p_0)^{S_g}\ln\left(\frac{1}{1-p_0}\right)
+\right]
+-\kappa
+$$
+
+Cooperation is selected for when:
+
+$$
+\frac{\partial W_i}{\partial c_i} > 0
+$$
