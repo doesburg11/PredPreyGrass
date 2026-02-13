@@ -52,7 +52,7 @@ STEPS = 2500
 # --- Predator energetics ---
 METAB_PRED = 0.06
 MOVE_COST = 0.008
-COOP_COST = 0.18          # cost per tick * coop_level
+COOP_COST = 0.20          # cost per tick * coop_level
 BIRTH_THRESH_PRED = 3.0
 MUT_RATE = 0.03
 MUT_SIGMA = 0.08
@@ -60,9 +60,8 @@ LOCAL_BIRTH_R = 1
 
 # --- Hunt mechanics ---
 HUNT_R = 1
-P0 = 0.08
+P0 = 0.18
 KILL_ENERGY = 4.0
-SHARE_MIN_COOP = 0.02
 
 # --- Prey dynamics ---
 PREY_MOVE_PROB = 0.25
@@ -85,6 +84,8 @@ PREY_DENSITY_ALPHA = 0.35   # overlay strength
 CLUSTER_ALPHA = 1.0         # base clustering heatmap alpha
 
 SEED = None                 # set to int for reproducibility (e.g. 42)
+RESTART_ON_EXTINCTION = True
+MAX_RESTARTS = 30           # max additional attempts if extinction occurs early
 
 
 # ============================================================
@@ -179,11 +180,11 @@ def step_world(preds: List[Predator], preys: List[Prey]) -> Tuple[List[Predator]
 
             prey_killed_indices.add(victim)
 
-            eligible = [(i, preds[i].coop) for i in pred_idxs if preds[i].coop > SHARE_MIN_COOP]
-            if eligible:
-                tot = sum(w for _, w in eligible)
-                for i, w in eligible:
-                    preds[i].energy += KILL_ENERGY * (w / tot)
+            n_hunters = len(pred_idxs)
+            if n_hunters > 0:
+                share = KILL_ENERGY / n_hunters
+                for i in pred_idxs:
+                    preds[i].energy += share
 
     if prey_killed_indices:
         preys = [pr for i, pr in enumerate(preys) if i not in prey_killed_indices]
@@ -265,10 +266,20 @@ def mask_zeros_for_lognorm(arr: np.ndarray) -> np.ma.MaskedArray:
 # RUN SIMULATION
 # ============================================================
 
-def run_sim() -> Tuple[
-    List[int], List[int], List[float], List[float], List[List[Predator]], List[List[Prey]], List[Predator]
+def run_sim(seed_override: int | None = None) -> Tuple[
+    List[int],
+    List[int],
+    List[float],
+    List[float],
+    List[List[Predator]],
+    List[List[Prey]],
+    List[Predator],
+    bool,
+    int | None,
 ]:
-    if SEED is not None:
+    if seed_override is not None:
+        random.seed(seed_override)
+    elif SEED is not None:
         random.seed(SEED)
 
     preds: List[Predator] = [
@@ -287,6 +298,8 @@ def run_sim() -> Tuple[
 
     preds_snaps: List[List[Predator]] = []
     preys_snaps: List[List[Prey]] = []
+
+    extinction_step: int | None = None
 
     for t in range(STEPS):
         preds, preys = step_world(preds, preys)
@@ -314,11 +327,23 @@ def run_sim() -> Tuple[
         if (t + 1) % 200 == 0:
             print(f"t={t+1:4d} preds={pred_n:4d} preys={prey_n:4d} mean_coop={mu:.3f} var={var:.3f}")
 
-        if pred_n == 0 and prey_n == 0:
-            print(f"Total extinction at step {t}.")
+        if pred_n == 0 or prey_n == 0:
+            extinction_step = t + 1
+            print(f"Extinction at step {extinction_step}: preds={pred_n} preys={prey_n}")
             break
 
-    return pred_hist, prey_hist, mean_coop_hist, var_coop_hist, preds_snaps, preys_snaps, preds
+    success = extinction_step is None
+    return (
+        pred_hist,
+        prey_hist,
+        mean_coop_hist,
+        var_coop_hist,
+        preds_snaps,
+        preys_snaps,
+        preds,
+        success,
+        extinction_step,
+    )
 
 
 # ============================================================
@@ -385,9 +410,6 @@ def animate_world(preds_snaps: List[List[Predator]], preys_snaps: List[List[Prey
     # Base: clustering heatmap
     clust0 = compute_local_clustering_field(preds_snaps[0], CLUST_R)
     clust_im = ax.imshow(clust0, origin="lower", alpha=CLUSTER_ALPHA, interpolation="nearest")
-    clust_cb = plt.colorbar(clust_im, ax=ax)
-    clust_cb.set_label("Local mean cooperation level")
-
     # Overlay: prey density with LogNorm (mask zeros)
     prey0 = compute_prey_density(preys_snaps[0])
     prey0m = mask_zeros_for_lognorm(prey0)
@@ -403,6 +425,9 @@ def animate_world(preds_snaps: List[List[Predator]], preys_snaps: List[List[Prey
     )
     prey_cb = plt.colorbar(prey_im, ax=ax)
     prey_cb.set_label("Prey density (log scale; zeros masked)")
+
+    clust_cb = plt.colorbar(clust_im, ax=ax)
+    clust_cb.set_label("Local mean cooperation level")
 
     # Predators: open circles, edge color by coop
     empty_xy = np.empty((0, 2), dtype=float)
@@ -482,12 +507,49 @@ def animate_world(preds_snaps: List[List[Predator]], preys_snaps: List[List[Prey
 # ============================================================
 
 def main() -> None:
-    pred_hist, prey_hist, mean_coop_hist, var_coop_hist, preds_snaps, preys_snaps, preds_final = run_sim()
+    attempts = 0
+    while True:
+        seed = None
+        if SEED is not None:
+            seed = SEED + attempts
+
+        (
+            pred_hist,
+            prey_hist,
+            mean_coop_hist,
+            var_coop_hist,
+            preds_snaps,
+            preys_snaps,
+            preds_final,
+            success,
+            extinction_step,
+        ) = run_sim(seed_override=seed)
+
+        if not RESTART_ON_EXTINCTION or success:
+            break
+
+        attempts += 1
+        if attempts > MAX_RESTARTS:
+            print(
+                f"Failed to reach full {STEPS} steps after {MAX_RESTARTS} restarts "
+                f"(last extinction at step {extinction_step})."
+            )
+            break
+        print(f"Restarting (attempt {attempts}/{MAX_RESTARTS})...")
 
     plot_lv_style(pred_hist, prey_hist)
     plot_trait_evolution(mean_coop_hist, var_coop_hist)
 
     if preds_final:
+        # Summary stats for the final window and current population
+        tail_n = min(200, len(mean_coop_hist))
+        if tail_n > 0:
+            tail_mean = sum(mean_coop_hist[-tail_n:]) / tail_n
+            tail_var = sum(var_coop_hist[-tail_n:]) / tail_n
+            print(f"Mean coop (last {tail_n}): {tail_mean:.3f}")
+            print(f"Var  coop (last {tail_n}): {tail_var:.4f}")
+        final_mean = sum(p.coop for p in preds_final) / len(preds_final)
+        print(f"Mean coop (final pop): {final_mean:.3f}")
         plot_clustering_heatmap(preds_final)
     else:
         print("No predators at end -> clustering heatmap skipped.")
