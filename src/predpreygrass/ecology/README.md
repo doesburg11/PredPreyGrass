@@ -199,6 +199,23 @@ Thus fixation is expected.
 
 ------------------------------------------------------------------------
 
+# 8. Public-Goods Sharing (Social Dilemma Regime)
+
+Here we switch to *pure public sharing*: all hunters share the kill
+equally, regardless of contribution. With this change and a suitable
+cost/benefit balance, cooperation no longer fixates.
+
+![Public-Goods Mean Cooperation](./07_trait_mean_public_goods.png)
+
+Mean cooperation stabilizes at an intermediate level (~0.5–0.65) rather
+than fixing at 1.0. This is a stable social-dilemma regime: increasing
+cooperation would improve group success, but individual costs prevent
+full cooperation. The resulting equilibrium reflects persistent
+coexistence of higher and lower contributors rather than full fixation.
+
+Example parameters for the figure above: `P0 = 0.14`, `COOP_COST = 0.15`
+(public sharing; no exclusion).
+
 # 8. Why No Social Dilemma Emerges
 
 For a dilemma, we require:
