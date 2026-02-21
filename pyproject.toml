@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "predpreygrass"
-version = "0.1.0"
+version = "0.1"
 description = "A multi-agent reinforcement learning environment with predators, prey, and grass."
 authors = [
     { name = "Peter van Doesburg", email = "petervandoesburg11@gmail.com" }
@@ -15,7 +15,7 @@ dependencies = [
     "pettingzoo==1.24.3",
     "stable-baselines3[extra]==2.6.0",
     "SuperSuit==3.9.3",
-    "ray[rllib]==2.53.0",
+    "ray[rllib]==2.54.0",
     "tensorboard==2.20.0",
     "numpy==1.26.4",
     "scipy==1.11.4",
