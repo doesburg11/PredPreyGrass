@@ -420,6 +420,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_last_reproduction = {}
         self._malthusian_finalized_at_step = None
+        # RLlib new API stack requirement: a given agent_id may not reappear
+        # after it has terminated within the same episode.
+        self._used_agent_ids_this_episode = set()
 
         # aggregates per step
         self.active_num_predators = 0
@@ -662,7 +665,10 @@ class PredPreyGrass(MultiAgentEnv):
         # Agents that died/terminated during this step
         dead_this_step = {a for a, t in terminations.items() if t}
         # Agents that acted this step (RLlib provided actions for them)
-        acted_this_step = set(action_dict.keys())
+        acted_this_step = {
+            a for a in action_dict.keys()
+            if a in live_next_step or a in dead_this_step
+        }
 
         # Observations: only for agents alive into next step
         observations = {a: observations[a] for a in live_next_step if a in observations}
@@ -1030,17 +1036,15 @@ class PredPreyGrass(MultiAgentEnv):
         """
         if self.current_step >= self.max_steps:
             self._finalize_malthusian_episode()
-            for agent in self.possible_agents:
-                if agent in self.agents:  # Active agents get observation
-                    observations[agent] = self._get_observation(agent)
-                else:  # Inactive agents get empty observation
-                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    channels = self.num_obs_channels + (1 if self.include_visibility_channel else 0)
-                    observations[agent] = np.zeros((channels, obs_range, obs_range), dtype=np.float32)
-
+            # IMPORTANT: Only report currently active agents here.
+            # Emitting already-terminated agents again violates RLlib's
+            # SingleAgentEpisode contract on the new API stack.
+            for agent in list(self.agents):
+                observations[agent] = self._get_observation(agent)
                 rewards[agent] = 0.0
                 truncations[agent] = True
                 terminations[agent] = False
+                infos[agent] = dict(self.last_episode_summary)
 
             truncations["__all__"] = True
             terminations["__all__"] = False
@@ -1319,15 +1323,13 @@ class PredPreyGrass(MultiAgentEnv):
             potential_new_ids = [
                 f"type_{new_type}_predator_{i}"
                 for i in range(self.config.get(f"n_possible_type_{new_type}_predators", 25))
-                if f"type_{new_type}_predator_{i}" not in self.agents
+                if f"type_{new_type}_predator_{i}" not in self._used_agent_ids_this_episode
             ]
             if not potential_new_ids:
-                # Always grant reproduction reward, even if no slot available
-                rewards[agent] = self._get_type_specific("reproduction_reward_predator", agent)
-                self.cumulative_rewards.setdefault(agent, 0)
-                self.cumulative_rewards[agent] += rewards[agent]
                 self._log(
-                    self.verbose_reproduction, f"[REPRODUCTION] No available predator slots at type {new_type} for spawning" "red"
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available predator slots at type {new_type} for spawning",
+                    "red",
                 )
                 return
 
@@ -1417,15 +1419,13 @@ class PredPreyGrass(MultiAgentEnv):
             potential_new_ids = [
                 f"type_{new_type}_prey_{i}"
                 for i in range(self.config.get(f"n_possible_type_{new_type}_prey", 25))
-                if f"type_{new_type}_prey_{i}" not in self.agents
+                if f"type_{new_type}_prey_{i}" not in self._used_agent_ids_this_episode
             ]
             if not potential_new_ids:
-                # Always grant reproduction reward, even if no slot available
-                rewards[agent] = self._get_type_specific("reproduction_reward_prey", agent)
-                self.cumulative_rewards.setdefault(agent, 0)
-                self.cumulative_rewards[agent] += rewards[agent]
                 self._log(
-                    self.verbose_reproduction, f"[REPRODUCTION] No available prey slots at type {new_type} for spawning", "red"
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available prey slots at type {new_type} for spawning",
+                    "red",
                 )
                 return
 
@@ -1537,6 +1537,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_ages": self.agent_ages.copy(),
             "death_cause_prey": self.death_cause_prey.copy(),
             "agent_last_reproduction": self.agent_last_reproduction.copy(),
+            "_used_agent_ids_this_episode": set(self._used_agent_ids_this_episode),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
             "cell_to_island_id": self.cell_to_island_id.copy(),
             "island_id_to_cells": {iid: set(cells) for iid, cells in self.island_id_to_cells.items()},
@@ -1569,6 +1570,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_ages = snapshot["agent_ages"].copy()
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
+        self._used_agent_ids_this_episode = set(
+            snapshot.get("_used_agent_ids_this_episode", self._used_agent_ids_this_episode)
+        )
         self.per_step_agent_data = snapshot["per_step_agent_data"].copy()
         self.cell_to_island_id = snapshot.get("cell_to_island_id", {}).copy()
         self.island_id_to_cells = {
@@ -1637,6 +1641,7 @@ class PredPreyGrass(MultiAgentEnv):
         return action_space
 
     def _register_new_agent(self, agent_id: str, parent_unique_id: str = None):
+        self._used_agent_ids_this_episode.add(agent_id)
         reuse_index = self.agent_activation_counts[agent_id]
         unique_id = f"{agent_id}_{reuse_index}"
         self.unique_agents[agent_id] = unique_id

@@ -86,11 +86,81 @@ This module currently includes:
   - `phi[species,island]` computed from explicit ecology metrics per agent (offspring, survival, foraging/captures, relative energy change, death indicator),
   - `mu[species,island]` updated with an exponentiated update rule,
   - reset-time initial agent placement sampled per-island from `mu`,
-  - strict single-env training default (`num_env_runners=1`, `num_envs_per_env_runner=1`) so `mu` is not split across worker-local env copies.
+  - strict single-env training default (`num_env_runners=1`, `num_envs_per_env_runner=1`) so `mu` is not split across worker-local env copies,
+  - callback logging of Malthusian diagnostics (`mu`, `phi`, and `phi` components) into RLlib metrics,
+  - RLlib-safe dynamic-agent handling: agent IDs are not reused within the same episode after termination,
+  - reproduction reward is granted only on successful spawn (no reward for failed attempts due to slot/local-cell limits),
+  - calmer default reproduction settings in `config_env.py` (`reproduction_reward=10.0`, `chance=0.25`, `cooldown=8`) to avoid reward inflation.
 
 Current default `phi` scoring (from `config_env.py`) is:
 
 `phi_agent = 2.0*offspring + 1.0*survival + 0.5*foraging + 0.25*energy_delta_rel - 1.0*death + 0.0*reward`
+
+## Logged Malthusian Metrics
+
+During training, the callback reads episode-end `infos["__all__"]` and logs:
+
+- `malthusian/mu/<species>/island_<id>`
+- `malthusian/phi/<species>/island_<id>`
+- `malthusian/phi_component/<component>/<species>/island_<id>`
+- `malthusian/count/<species>/island_<id>`
+- `malthusian/count_total/<species>`
+- `malthusian/count_total/predators`
+- `malthusian/count_total/prey`
+
+This makes it possible to inspect ecological dynamics over time in Tune results and TensorBoard.
+
+## Nature vs Nurture (Simple)
+
+In this setup:
+
+- **Nature** = policy/species differences (`type_1_*` vs `type_2_*` policies).
+- **Nurture** = island-specific ecology (local opponents, local resources, local crowding).
+
+How to interpret your Malthusian curves:
+
+- If `mu` stays uniform, nurture is weak (or `phi` has little island contrast).
+- If `mu` becomes species-specific and non-uniform, the ecology is sorting behaviors into niches.
+- If a species concentrates on one island (`mu` near 1.0 there), that island is currently the best niche for that species under your `phi` definition.
+
+So the mechanism is usually **nature x nurture**:
+
+- policy differences create different behavioral tendencies,
+- island ecology selects among those tendencies,
+- `phi -> mu` turns that selection into population reallocation next episodes.
+
+## Current Results Snapshot (2026-02-27)
+
+Run inspected:
+
+- `~/Dropbox/02_marl_results/predpreygrass_results/ray_results/PPO_MALTHUSIAN_HARD_ISLANDS_2026-02-27_18-23-00`
+- Trial: `PPO_PredPreyGrass_f741c_00000_0_2026-02-27_18-23-00`
+- Snapshot point: training iteration 56
+
+Observed metrics at iteration 56:
+
+- `env_runners/episode_return_mean`: `420.0`
+- total counts: predators `6` (type_1 `3`, type_2 `3`), prey `50` (type_1 `25`, type_2 `25`)
+- `mu` (allocation) is non-uniform for all species:
+  - `type_1_predator`: `[0.256, 0.234, 0.290, 0.220]` (highest island 2)
+  - `type_2_predator`: `[0.185, 0.246, 0.114, 0.456]` (highest island 3)
+  - `type_1_prey`: `[0.450, 0.140, 0.127, 0.284]` (highest island 0)
+  - `type_2_prey`: `[0.097, 0.361, 0.097, 0.444]` (highest island 3)
+- per-island prey counts show niche concentration:
+  - `type_1_prey` counts: `[23, 0, 0, 2]`
+  - `type_2_prey` counts: `[0, 10, 0, 15]`
+
+Conclusions from this snapshot:
+
+- The Malthusian loop is active: `mu` is adapting (not uniform) and species allocations diverge across islands.
+- Prey species show clearer niche separation than predators at this point.
+- Predator fitness signals are sparse/noisier (small populations, many `phi` values near 0 or death-penalty levels), so predator `mu` is less stable.
+- No global collapse is visible in this snapshot (both prey species at full configured mass; predators persist at baseline mass).
+
+Notes:
+
+- This is a point-in-time snapshot, not a final claim about convergence.
+- Re-check over longer horizons to confirm whether prey specialization persists and whether predator allocations stabilize.
 
 ## Why This Is a Good Base
 
