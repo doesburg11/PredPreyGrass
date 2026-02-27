@@ -14,7 +14,7 @@ pointing at `malthusian_rl` when using walls.
 """
 
 from predpreygrass.rllib.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.malthusian_rl.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
+from predpreygrass.rllib.malthusian_rl.config.config_env import config_env as base_config_env
 from predpreygrass.rllib.malthusian_rl.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
