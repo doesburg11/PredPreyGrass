@@ -104,9 +104,9 @@ config_env = {
     "max_energy_predator": float('inf'),
     "max_energy_prey": float('inf'),
     "max_energy_grass": 2.0,
-    "reproduction_cooldown_steps": 0,
-    "reproduction_chance_predator": 1.0,
-    "reproduction_chance_prey": 1.0,
+    "reproduction_cooldown_steps": 8,
+    "reproduction_chance_predator": 0.25,
+    "reproduction_chance_prey": 0.25,
     # Energy transfer and reproduction efficiency
     "energy_transfer_efficiency": 1.0,
     "reproduction_energy_efficiency": 1.0,

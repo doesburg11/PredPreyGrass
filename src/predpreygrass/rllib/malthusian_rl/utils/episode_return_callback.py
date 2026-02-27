@@ -48,7 +48,7 @@ class EpisodeReturn(RLlibCallback):
                     los_count += int(info.get("los_rejected", 0))
         self._episode_los_rejected[eid] = self._episode_los_rejected.get(eid, 0) + los_count
 
-    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
+    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, env=None, env_index=None, **kwargs):
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -90,6 +90,13 @@ class EpisodeReturn(RLlibCallback):
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
         los_rejected = self._episode_los_rejected.pop(episode_id, 0)
         metrics_logger.log_value("los_rejected_moves", los_rejected, reduce="mean")
+
+        # Log Malthusian diagnostics from env-provided episode summary when available.
+        global_info = self._episode_global_info(episode)
+        if not global_info:
+            global_info = self._episode_global_info_from_env(env=env, env_index=env_index)
+        if global_info:
+            self._log_malthusian_metrics(global_info, metrics_logger)
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
@@ -138,3 +145,161 @@ class EpisodeReturn(RLlibCallback):
             except Exception:
                 pass
         return {}
+
+    def _episode_global_info(self, episode) -> dict:
+        """
+        Return episode-level info dictionary from env (infos['__all__']) if present.
+        """
+        infos = self._episode_last_infos(episode)
+        if not isinstance(infos, dict):
+            return {}
+        global_info = infos.get("__all__", {})
+        if isinstance(global_info, dict) and global_info:
+            return global_info
+
+        # RLlib new API stack may not preserve infos["__all__"] in episodes.
+        # Fallback: find a per-agent info payload carrying the episode summary.
+        for info in infos.values():
+            if not isinstance(info, dict):
+                continue
+            if (
+                "mu_by_species" in info
+                or "phi_by_species" in info
+                or "counts_by_species" in info
+            ):
+                return info
+        return {}
+
+    def _episode_global_info_from_env(self, env=None, env_index=None) -> dict:
+        """
+        Best-effort extraction of episode summary directly from env wrappers.
+        Needed because some RLlib stacks don't preserve infos['__all__'].
+        """
+        if env is None:
+            return {}
+
+        candidates = [env]
+        if hasattr(env, "envs"):
+            try:
+                candidates.extend(list(getattr(env, "envs")))
+            except Exception:
+                pass
+        if hasattr(env, "get_sub_environments"):
+            try:
+                candidates.extend(list(env.get_sub_environments()))
+            except Exception:
+                pass
+
+        if env_index is not None and isinstance(env_index, int):
+            try:
+                if hasattr(env, "envs") and 0 <= env_index < len(env.envs):
+                    candidates.insert(0, env.envs[env_index])
+            except Exception:
+                pass
+
+        for cand in candidates:
+            if cand is None:
+                continue
+            for obj in (cand, getattr(cand, "unwrapped", None)):
+                if obj is None:
+                    continue
+                summary = getattr(obj, "last_episode_summary", None)
+                if isinstance(summary, dict) and summary:
+                    return summary
+        return {}
+
+    def _log_malthusian_metrics(self, global_info: dict, metrics_logger: MetricsLogger):
+        """
+        Flatten and log mu/phi/count summaries into RLlib metrics for TensorBoard/Tune.
+        """
+        mu = global_info.get("mu_by_species", {})
+        phi = global_info.get("phi_by_species", {})
+        components = global_info.get("phi_components_by_species", {})
+        counts = global_info.get("counts_by_species", {})
+
+        if isinstance(mu, dict):
+            for species, island_map in mu.items():
+                if not isinstance(island_map, dict):
+                    continue
+                for island_id, value in island_map.items():
+                    try:
+                        v = float(value)
+                    except Exception:
+                        continue
+                    metrics_logger.log_value(
+                        f"malthusian/mu/{species}/island_{island_id}",
+                        v,
+                        reduce="mean",
+                    )
+
+        if isinstance(phi, dict):
+            for species, island_map in phi.items():
+                if not isinstance(island_map, dict):
+                    continue
+                for island_id, value in island_map.items():
+                    try:
+                        v = float(value)
+                    except Exception:
+                        continue
+                    metrics_logger.log_value(
+                        f"malthusian/phi/{species}/island_{island_id}",
+                        v,
+                        reduce="mean",
+                    )
+
+        if isinstance(components, dict):
+            for species, island_map in components.items():
+                if not isinstance(island_map, dict):
+                    continue
+                for island_id, comp_map in island_map.items():
+                    if not isinstance(comp_map, dict):
+                        continue
+                    for comp_name, value in comp_map.items():
+                        try:
+                            v = float(value)
+                        except Exception:
+                            continue
+                        metrics_logger.log_value(
+                            f"malthusian/phi_component/{comp_name}/{species}/island_{island_id}",
+                            v,
+                            reduce="mean",
+                        )
+
+        if isinstance(counts, dict):
+            predator_total = 0.0
+            prey_total = 0.0
+            for species, island_map in counts.items():
+                if not isinstance(island_map, dict):
+                    continue
+                species_total = 0.0
+                for island_id, value in island_map.items():
+                    try:
+                        v = float(value)
+                    except Exception:
+                        continue
+                    species_total += v
+                    metrics_logger.log_value(
+                        f"malthusian/count/{species}/island_{island_id}",
+                        v,
+                        reduce="mean",
+                    )
+                metrics_logger.log_value(
+                    f"malthusian/count_total/{species}",
+                    species_total,
+                    reduce="mean",
+                )
+                if "predator" in species:
+                    predator_total += species_total
+                elif "prey" in species:
+                    prey_total += species_total
+
+            metrics_logger.log_value(
+                "malthusian/count_total/predators",
+                predator_total,
+                reduce="mean",
+            )
+            metrics_logger.log_value(
+                "malthusian/count_total/prey",
+                prey_total,
+                reduce="mean",
+            )
