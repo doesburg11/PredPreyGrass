@@ -1,5 +1,5 @@
 from predpreygrass.rllib.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.malthusian_rl.config.config_env_eval import config_env
+from predpreygrass.rllib.malthusian_rl.config.config_env import config_env
 from predpreygrass.rllib.malthusian_rl.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries

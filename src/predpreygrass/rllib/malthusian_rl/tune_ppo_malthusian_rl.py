@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
 from predpreygrass.rllib.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.rllib.malthusian_rl.config.config_env_perimeter_four_gaps_walls import config_env
+from predpreygrass.rllib.malthusian_rl.config.config_env import config_env
 from predpreygrass.rllib.malthusian_rl.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.malthusian_rl.utils.networks import build_multi_module_spec
 
@@ -63,11 +63,21 @@ if __name__ == "__main__":
     ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_PERIMETER_FOUR_GAPS_{timestamp}"
+    experiment_name = f"PPO_MALTHUSIAN_HARD_ISLANDS_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
 
     config_ppo = get_config_ppo()
+    if config_env.get("enable_malthusian_update", False):
+        runners = int(config_ppo.get("num_env_runners", 1))
+        envs_per_runner = int(config_ppo.get("num_envs_per_env_runner", 1))
+        if runners != 1 or envs_per_runner != 1:
+            raise ValueError(
+                "Malthusian runs require a single environment instance "
+                "(num_env_runners=1 and num_envs_per_env_runner=1) "
+                "to keep mu updates globally coherent."
+            )
+
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,

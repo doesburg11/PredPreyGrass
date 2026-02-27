@@ -20,16 +20,77 @@ Conceptually:
 - `phi[species, island]`: local fitness signal,
 - `mu[species, island]`: fraction of that species allocated to each island for the next epoch.
 
+## Leibo Malthusian RL Explained
+
+Leibo et al. (2019) introduce Malthusian RL as a two-timescale learning process:
+
+1. Behavioral timescale (inside episodes):
+   - Agents execute policies in an environment.
+   - Standard RL learning happens from trajectories and returns.
+
+2. Ecological timescale (between episodes):
+   - For each species and island, compute a fitness signal `phi[s, i]`.
+   - Update species distribution over islands `mu[s, i]` so islands with higher `phi` receive a larger share of that species in later episodes.
+
+The key idea is that adaptation pressure is not only from immediate rewards, but from a population-allocation feedback loop.
+
+In simplified form:
+
+- Run episode(s) with current `mu`.
+- Measure per-species island fitness `phi`.
+- Update allocation with a multiplicative/softmax-like rule:
+  `mu_next[s, i] ∝ mu[s, i] * exp(eta * phi[s, i])` (often normalized/stabilized in practice).
+- Use `mu_next` to choose where each species is instantiated in the next training episodes.
+
+Important conceptual points from the paper:
+
+- Species are policy-sharing groups: one policy per species.
+- Malthusian pressure is primarily inter-episode allocation pressure.
+- Multi-island structure is required for this pressure to be meaningful.
+- Heterogeneous species (different policies) are central in the stronger coexistence/specialization experiments.
+
+## Comparison: Leibo vs This Codebase
+
+The table below is the practical mapping from paper concepts to this repository.
+
+| Dimension | Leibo (paper concept) | Current implementation here | Match |
+|---|---|---|---|
+| Archipelago structure | Multiple islands/environments | Hard islands from wall-defined connected components on one grid | Strong |
+| Species as policy groups | One policy per species | `type_1_predator`, `type_2_predator`, `type_1_prey`, `type_2_prey` each map to separate policies | Strong |
+| Inter-episode allocation | `mu` controls species allocation over islands | Reset placement samples per-species counts per island from `mu` | Strong |
+| Fitness signal `phi` | Per-species, per-island performance signal | Per-agent ecology-weighted score aggregated by species+spawn island | Strong generalization |
+| Allocation update | Multiplicative/softmax-like update from `phi` | Exponentiated/logit update with normalization and optional floor | Strong |
+| Episode horizon | Often fixed horizons | Fixed horizon via `max_steps`; no extinction-based `__all__` termination | Strong |
+| Globality of `mu` during training | Single ecological process | Enforced with `num_env_runners=1`, `num_envs_per_env_runner=1` | Strong |
+| Within-episode demography | Not the central mechanism | Explicit birth/death/reproduction dynamics are active | Divergence (intentional generalization) |
+| Migration | Task-dependent | Hard islands by default (no migration gates) | Compatible |
+
+What this means in practice:
+
+- This module now captures the core Malthusian control loop (measure `phi`, update `mu`, reallocate next episode).
+- It is a Leibo-inspired generalization rather than a strict reproduction, mainly because explicit within-episode reproduction/death dynamics are included and `phi` is ecology-weighted by default.
+- If strict paper-style ablation is desired, configure a "replication mode" by minimizing/turning off within-episode reproduction effects and simplifying `phi` to return-based fitness.
+
 ## Current Status of This Module
 
-This module currently preserves the walls/occlusion environment mechanics as the starting point:
+This module currently includes:
 
 - static/manual walls,
+- default hard-island map (4 disconnected equal-size islands on 25x25),
+- default heterogeneous species setup enabled (4 policy species: `type_1_predator`, `type_2_predator`, `type_1_prey`, `type_2_prey`),
 - LOS-aware observations and movement constraints,
 - local movement and local spawn near parent,
-- multi-policy RLlib training/evaluation scripts.
+- multi-policy RLlib training/evaluation scripts,
+- fixed-horizon episode handling (`max_steps`),
+- episode-end Malthusian scaffold:
+  - `phi[species,island]` computed from explicit ecology metrics per agent (offspring, survival, foraging/captures, relative energy change, death indicator),
+  - `mu[species,island]` updated with an exponentiated update rule,
+  - reset-time initial agent placement sampled per-island from `mu`,
+  - strict single-env training default (`num_env_runners=1`, `num_envs_per_env_runner=1`) so `mu` is not split across worker-local env copies.
 
-The explicit archipelago update (`phi -> mu`) is not yet wired into the training loop by default. This module is intended as the place to add it.
+Current default `phi` scoring (from `config_env.py`) is:
+
+`phi_agent = 2.0*offspring + 1.0*survival + 0.5*foraging + 0.25*energy_delta_rel - 1.0*death + 0.0*reward`
 
 ## Why This Is a Good Base
 
@@ -78,12 +139,10 @@ Typical config knobs to control:
 
 ## Suggested Next Additions
 
-1. Precompute `island_id` for every free grid cell (flood fill over non-wall cells).
-2. Track each living agent's island from its position.
-3. Log per-island species stats each epoch (births, deaths, energy delta, captures).
-4. Compute `phi[species, island]` from those stats.
-5. Update `mu[species, island]` at epoch boundaries.
-6. Use `mu` to bias initial spawn / replenishment by island.
+1. Add trainer-side logging/plots for `phi` and `mu` trajectories per species and island.
+2. If scaling back to parallel env runners, add explicit global `mu` synchronization across workers at episode boundaries.
+3. Add optional migration controls (rare gates or transfer budget) to move from hard-island to soft-island experiments.
+4. Tune `malthusian_phi_weights` against your exact research target (for example reducing direct reward term to zero or adjusting death penalty).
 
 ## References
 

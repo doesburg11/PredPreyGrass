@@ -49,6 +49,27 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.max_steps = config.get("max_steps", 10000)
         self.rng = np.random.default_rng(config.get("seed", 42))
+        # Malthusian scaffold: episode-end fitness (phi) and allocation (mu) update.
+        self.enable_malthusian_update = bool(config.get("enable_malthusian_update", True))
+        self.malthusian_eta = float(config.get("malthusian_eta", 0.2))
+        self.malthusian_mu_floor = float(config.get("malthusian_mu_floor", 0.0))
+        default_phi_weights = {
+            "offspring": 2.0,
+            "survival": 1.0,
+            "foraging": 0.5,
+            "energy": 0.25,
+            "death": -1.0,
+            "reward": 0.0,
+        }
+        cfg_phi_weights = config.get("malthusian_phi_weights", {})
+        self.malthusian_phi_weights = default_phi_weights.copy()
+        if isinstance(cfg_phi_weights, dict):
+            for key in default_phi_weights:
+                if key in cfg_phi_weights:
+                    self.malthusian_phi_weights[key] = float(cfg_phi_weights[key])
+        self.malthusian_phi_clip = config.get("malthusian_phi_clip", None)
+        if self.malthusian_phi_clip is not None:
+            self.malthusian_phi_clip = float(self.malthusian_phi_clip)
 
         # Rewards dictionaries
         self.reward_predator_catch_prey_config = config.get("reward_predator_catch_prey", 0.0)
@@ -76,6 +97,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.n_initial_active_type_2_predator = config.get("n_initial_active_type_2_predator", 0)
         self.n_initial_active_type_1_prey = config.get("n_initial_active_type_1_prey", 8)
         self.n_initial_active_type_2_prey = config.get("n_initial_active_type_2_prey", 0)
+        # If enabled, each configured species (n_possible > 0) gets at least this many
+        # active individuals at reset to avoid accidental permanent extinction.
+        self.enforce_min_initial_mass_per_species = config.get("enforce_min_initial_mass_per_species", True)
+        self.min_initial_mass_per_species = max(0, int(config.get("min_initial_mass_per_species", 1)))
 
         self.initial_energy_predator = config.get("initial_energy_predator", 5.0)
         self.initial_energy_prey = config.get("initial_energy_prey", 3.0)
@@ -116,6 +141,248 @@ class PredPreyGrass(MultiAgentEnv):
         # Action range and movement mapping
         self.type_1_act_range = config.get("type_1_action_range", 3)
         self.type_2_act_range = config.get("type_2_action_range", 5)
+        # Persistent across episodes (same env instance).
+        self.mu_by_species = {}
+        self.last_phi_by_species = {}
+        self.last_phi_components = {}
+        self.last_episode_summary = {}
+
+    def _get_effective_initial_active_count(self, agent_type: str, type_id: int) -> int:
+        """
+        Return effective initial active count for (agent_type, type_id), optionally
+        enforcing a minimum mass for species with non-zero configured capacity.
+        """
+        key = f"n_initial_active_type_{type_id}_{agent_type}"
+        configured_count = max(0, int(self.config.get(key, 0)))
+
+        if agent_type == "predator":
+            n_possible = self.n_possible_type_1_predators if type_id == 1 else self.n_possible_type_2_predators
+        else:
+            n_possible = self.n_possible_type_1_prey if type_id == 1 else self.n_possible_type_2_prey
+
+        effective = configured_count
+        if self.enforce_min_initial_mass_per_species and n_possible > 0:
+            effective = max(effective, self.min_initial_mass_per_species)
+
+        return min(effective, max(0, int(n_possible)))
+
+    def _tracked_species(self):
+        species = []
+        if self.n_possible_type_1_predators > 0:
+            species.append("type_1_predator")
+        if self.n_possible_type_2_predators > 0:
+            species.append("type_2_predator")
+        if self.n_possible_type_1_prey > 0:
+            species.append("type_1_prey")
+        if self.n_possible_type_2_prey > 0:
+            species.append("type_2_prey")
+        return species
+
+    def _normalize_mu_vector(self, vec):
+        arr = np.asarray(vec, dtype=np.float64)
+        arr = np.maximum(arr, 0.0)
+        total = float(arr.sum())
+        if total <= 0.0:
+            arr = np.ones_like(arr, dtype=np.float64)
+            total = float(arr.sum())
+        arr /= total
+
+        n = arr.size
+        if n == 0:
+            return arr
+        floor = max(0.0, min(self.malthusian_mu_floor, 1.0 / n))
+        if floor > 0.0:
+            arr = np.maximum(arr, floor)
+            arr /= float(arr.sum())
+        return arr
+
+    def _initialize_or_align_malthusian_state(self):
+        island_ids = sorted(self.island_id_to_cells.keys())
+        self.island_ids = island_ids
+        if not island_ids:
+            self.mu_by_species = {}
+            self.last_phi_by_species = {}
+            self.last_phi_components = {}
+            return
+
+        uniform = 1.0 / len(island_ids)
+        for species in self._tracked_species():
+            cur = self.mu_by_species.get(species, {})
+            if set(cur.keys()) != set(island_ids):
+                self.mu_by_species[species] = {iid: uniform for iid in island_ids}
+            else:
+                arr = self._normalize_mu_vector([float(cur[iid]) for iid in island_ids])
+                self.mu_by_species[species] = {iid: float(arr[k]) for k, iid in enumerate(island_ids)}
+
+    @staticmethod
+    def _species_from_agent_id(agent_id: str) -> str:
+        return "_".join(agent_id.split("_")[:3])
+
+    def _initial_energy_for_species(self, species: str) -> float:
+        return float(self.initial_energy_predator) if "predator" in species else float(self.initial_energy_prey)
+
+    def _record_lifetime_steps(self, record: dict) -> int:
+        birth_step = int(record.get("birth_step", 0))
+        death_step = record.get("death_step")
+        end_step = int(death_step) if death_step is not None else int(self.current_step)
+        return max(0, end_step - birth_step + 1)
+
+    def _sample_species_counts_over_islands(self, species: str, n_agents: int, available_cells_by_island):
+        """
+        Sample how many agents of a species start on each island using mu, while
+        respecting per-island remaining capacity.
+        """
+        island_ids = self.island_ids
+        if n_agents <= 0 or not island_ids:
+            return {iid: 0 for iid in island_ids}
+
+        mu_sp = self.mu_by_species.get(species, {iid: 1.0 / len(island_ids) for iid in island_ids})
+        probs = self._normalize_mu_vector([float(mu_sp.get(iid, 0.0)) for iid in island_ids])
+        sampled = self.rng.multinomial(n_agents, probs)
+        capacities = np.asarray([len(available_cells_by_island[iid]) for iid in island_ids], dtype=np.int64)
+        assigned = np.minimum(sampled, capacities)
+
+        deficit = int(n_agents - assigned.sum())
+        while deficit > 0:
+            remaining = capacities - assigned
+            candidates = np.where(remaining > 0)[0]
+            if candidates.size == 0:
+                raise ValueError(
+                    f"Not enough free cells to place species '{species}' "
+                    f"({n_agents} agents requested)."
+                )
+            cand_probs = probs[candidates]
+            total = float(cand_probs.sum())
+            if total <= 0.0:
+                cand_probs = np.ones_like(cand_probs, dtype=np.float64) / float(candidates.size)
+            else:
+                cand_probs = cand_probs / total
+            chosen_idx = int(self.rng.choice(candidates, p=cand_probs))
+            assigned[chosen_idx] += 1
+            deficit -= 1
+
+        return {iid: int(assigned[k]) for k, iid in enumerate(island_ids)}
+
+    def _compute_phi_from_episode(self):
+        island_ids = sorted(self.island_id_to_cells.keys())
+        species_list = self._tracked_species()
+        phi = {sp: {iid: 0.0 for iid in island_ids} for sp in species_list}
+        counts = {sp: {iid: 0 for iid in island_ids} for sp in species_list}
+        component_keys = ("offspring", "survival", "foraging", "energy", "death", "reward")
+        component_sums = {
+            sp: {iid: {k: 0.0 for k in component_keys} for iid in island_ids}
+            for sp in species_list
+        }
+
+        # Completed agents + currently alive agents (avoid double counting dead records).
+        records = [(None, rec) for rec in self.death_agents_stats.values()]
+        for agent_id in self.agents:
+            uid = self.unique_agents.get(agent_id)
+            if uid is None:
+                continue
+            rec = self.unique_agent_stats.get(uid)
+            if rec is not None:
+                records.append((agent_id, rec))
+
+        for agent_id, rec in records:
+            sp = rec.get("policy_group")
+            iid = rec.get("spawn_island")
+            if sp not in phi or iid not in phi[sp]:
+                continue
+
+            lifetime_steps = self._record_lifetime_steps(rec)
+            survival = min(1.0, float(lifetime_steps) / max(1, int(self.max_steps)))
+            death = 1.0 if rec.get("death_step") is not None else 0.0
+            offspring = float(rec.get("offspring_count", 0.0))
+            foraging = float(rec.get("times_ate", 0.0))
+            reward = float(rec.get("cumulative_reward", 0.0))
+
+            initial_energy = self._initial_energy_for_species(sp)
+            final_energy = rec.get("final_energy")
+            if final_energy is None and agent_id is not None and agent_id in self.agent_energies:
+                final_energy = float(self.agent_energies[agent_id])
+            elif final_energy is None:
+                final_energy = (
+                    initial_energy
+                    + float(rec.get("energy_gained", 0.0))
+                    - float(rec.get("energy_spent", 0.0))
+                )
+            energy = (float(final_energy) - initial_energy) / max(1e-8, abs(initial_energy))
+
+            components = {
+                "offspring": offspring,
+                "survival": survival,
+                "foraging": foraging,
+                "energy": energy,
+                "death": death,
+                "reward": reward,
+            }
+
+            score = 0.0
+            for key in component_keys:
+                score += self.malthusian_phi_weights.get(key, 0.0) * components[key]
+                component_sums[sp][iid][key] += components[key]
+
+            if self.malthusian_phi_clip is not None:
+                score = float(np.clip(score, -self.malthusian_phi_clip, self.malthusian_phi_clip))
+
+            phi[sp][iid] += score
+            counts[sp][iid] += 1
+
+        component_means = {
+            sp: {iid: {k: 0.0 for k in component_keys} for iid in island_ids}
+            for sp in species_list
+        }
+        for sp in species_list:
+            for iid in island_ids:
+                c = counts[sp][iid]
+                phi[sp][iid] = float(phi[sp][iid] / c) if c > 0 else 0.0
+                if c > 0:
+                    for key in component_keys:
+                        component_means[sp][iid][key] = float(component_sums[sp][iid][key] / c)
+
+        return phi, counts, component_means
+
+    def _update_mu_from_phi(self, phi_by_species):
+        island_ids = sorted(self.island_id_to_cells.keys())
+        if not island_ids:
+            return
+
+        for sp in self._tracked_species():
+            phi_vec = np.asarray([float(phi_by_species.get(sp, {}).get(iid, 0.0)) for iid in island_ids], dtype=np.float64)
+            mean = float(phi_vec.mean()) if phi_vec.size else 0.0
+            std = float(phi_vec.std()) if phi_vec.size else 0.0
+            z = (phi_vec - mean) / (std + 1e-8)
+
+            prev_mu = self.mu_by_species.get(sp, {iid: 1.0 / len(island_ids) for iid in island_ids})
+            prev_vec = np.asarray([float(prev_mu.get(iid, 0.0)) for iid in island_ids], dtype=np.float64)
+            prev_vec = self._normalize_mu_vector(prev_vec)
+
+            logit = np.log(np.maximum(prev_vec, 1e-12)) + self.malthusian_eta * z
+            logit -= float(logit.max()) if logit.size else 0.0
+            updated = np.exp(logit)
+            updated = self._normalize_mu_vector(updated)
+            self.mu_by_species[sp] = {iid: float(updated[k]) for k, iid in enumerate(island_ids)}
+
+    def _finalize_malthusian_episode(self):
+        if not self.enable_malthusian_update:
+            return
+        if self._malthusian_finalized_at_step == self.current_step:
+            return
+        self._malthusian_finalized_at_step = self.current_step
+
+        phi, counts, component_means = self._compute_phi_from_episode()
+        self.last_phi_by_species = phi
+        self.last_phi_components = component_means
+        self._update_mu_from_phi(phi)
+        self.last_episode_summary = {
+            "episode_step": int(self.current_step),
+            "phi_by_species": phi,
+            "phi_components_by_species": component_means,
+            "phi_weights": dict(self.malthusian_phi_weights),
+            "mu_by_species": {sp: dict(self.mu_by_species.get(sp, {})) for sp in self._tracked_species()},
+            "counts_by_species": counts,
+        }
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -152,6 +419,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = {}
 
         self.agent_last_reproduction = {}
+        self._malthusian_finalized_at_step = None
 
         # aggregates per step
         self.active_num_predators = 0
@@ -161,8 +429,7 @@ class PredPreyGrass(MultiAgentEnv):
         # create active agents list based on config
         for agent_type in ["predator", "prey"]:
             for type in [1, 2]:
-                key = f"n_initial_active_type_{type}_{agent_type}"
-                count = self.config.get(key, 0)
+                count = self._get_effective_initial_active_count(agent_type, type)
                 for i in range(count):
                     agent_id = f"type_{type}_{agent_type}_{i}"
                     self.agents.append(agent_id)
@@ -183,6 +450,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_to_move_tuple_type_1_agents = _generate_action_map(self.type_1_act_range)
         self.action_to_move_tuple_type_2_agents = _generate_action_map(self.type_2_act_range)
+        # Island/component caches over non-wall cells (recomputed every reset).
+        self.cell_to_island_id = {}
+        self.island_id_to_cells = {}
 
     def reset(self, *, seed=None, options=None):
         """
@@ -233,42 +503,83 @@ class PredPreyGrass(MultiAgentEnv):
                     gy = idx % self.grid_size
                     self.wall_positions.add((gx, gy))
 
+        # Precompute connected non-wall components ("islands") for strict local spawning.
+        self._compute_island_components()
+        self._initialize_or_align_malthusian_state()
+
         total_entities = len(self.agents) + len(self.grass_agents)
-        # PATCH: allow any config where number of free cells >= number of agents (even if zero grass)
-        free_cells = max_cells - self.num_walls
+        # Allow any config where number of free non-wall cells >= agents + grass.
+        free_cells = max_cells - len(self.wall_positions)
         if total_entities > free_cells:
             raise ValueError(f"Too many agents+grass ({total_entities}) for free cells ({free_cells}) given {self.num_walls} walls on {self.grid_size}x{self.grid_size} grid")
-        free_indices = [i for i in range(max_cells) if (i // self.grid_size, i % self.grid_size) not in self.wall_positions]
-        if total_entities > 0:
-            chosen = self.rng.choice(free_indices, size=total_entities, replace=False)
-            all_positions = [(i // self.grid_size, i % self.grid_size) for i in chosen]
-        else:
-            all_positions = []
-
-        predator_list = [a for a in self.agents if "predator" in a]
-        prey_list = [a for a in self.agents if "prey" in a]
-
-        predator_positions = all_positions[: len(predator_list)]
-        prey_positions = all_positions[len(predator_list) : len(predator_list) + len(prey_list)]
-        grass_positions = all_positions[len(predator_list) + len(prey_list) :]
 
         # Paint walls into channel 0
         for (wx, wy) in self.wall_positions:
             self.grid_world_state[0, wx, wy] = 1.0
 
-        for i, agent in enumerate(predator_list):
-            pos = predator_positions[i]
-            self.agent_positions[agent] = self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator
-            self.grid_world_state[1, *pos] = self.initial_energy_predator
-            self.cumulative_rewards[agent] = 0
+        # Allocate agents over islands according to mu (per species), with no overlap.
+        available_cells_by_island = {
+            iid: set(cells) for iid, cells in self.island_id_to_cells.items()
+        }
+        agents_by_species = {
+            species: [a for a in self.agents if self._species_from_agent_id(a) == species]
+            for species in self._tracked_species()
+        }
 
-        for i, agent in enumerate(prey_list):
-            pos = prey_positions[i]
-            self.agent_positions[agent] = self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey
-            self.grid_world_state[2, *pos] = self.initial_energy_prey
-            self.cumulative_rewards[agent] = 0
+        for species in self._tracked_species():
+            species_agents = agents_by_species.get(species, [])
+            counts_by_island = self._sample_species_counts_over_islands(
+                species=species,
+                n_agents=len(species_agents),
+                available_cells_by_island=available_cells_by_island,
+            )
+
+            allocated_positions = []
+            for iid in self.island_ids:
+                n_take = counts_by_island.get(iid, 0)
+                if n_take <= 0:
+                    continue
+                island_cells = sorted(available_cells_by_island[iid])
+                chosen_idx = self.rng.choice(len(island_cells), size=n_take, replace=False)
+                chosen_positions = [island_cells[int(k)] for k in np.atleast_1d(chosen_idx)]
+                for pos in chosen_positions:
+                    available_cells_by_island[iid].remove(pos)
+                allocated_positions.extend(chosen_positions)
+
+            if len(allocated_positions) != len(species_agents):
+                raise ValueError(
+                    f"Internal allocation mismatch for {species}: "
+                    f"{len(allocated_positions)} positions for {len(species_agents)} agents."
+                )
+
+            for i, agent in enumerate(species_agents):
+                pos = allocated_positions[i]
+                self.agent_positions[agent] = pos
+                self.cumulative_rewards[agent] = 0
+                self.unique_agent_stats[self.unique_agents[agent]]["spawn_island"] = self.cell_to_island_id.get(pos)
+                if "predator" in agent:
+                    self.predator_positions[agent] = pos
+                    self.agent_energies[agent] = self.initial_energy_predator
+                    self.grid_world_state[1, *pos] = self.initial_energy_predator
+                else:
+                    self.prey_positions[agent] = pos
+                    self.agent_energies[agent] = self.initial_energy_prey
+                    self.grid_world_state[2, *pos] = self.initial_energy_prey
+
+        # Grass: fill uniformly from remaining free cells.
+        remaining_cells = []
+        for iid in self.island_ids:
+            remaining_cells.extend(sorted(available_cells_by_island[iid]))
+        if len(self.grass_agents) > len(remaining_cells):
+            raise ValueError(
+                f"Not enough remaining free cells for grass: need {len(self.grass_agents)}, "
+                f"have {len(remaining_cells)}."
+            )
+        if self.grass_agents:
+            chosen_idx = self.rng.choice(len(remaining_cells), size=len(self.grass_agents), replace=False)
+            grass_positions = [remaining_cells[int(k)] for k in np.atleast_1d(chosen_idx)]
+        else:
+            grass_positions = []
 
         for i, grass in enumerate(self.grass_agents):
             pos = grass_positions[i]
@@ -371,9 +682,9 @@ class PredPreyGrass(MultiAgentEnv):
         terminations = {a: terminations.get(a, False) for a in output_agents}
         truncations = {a: truncations.get(a, False) for a in output_agents}
 
-        # Global termination and truncation
-        truncations["__all__"] = False  # already handled at the beginning of the step
-        terminations["__all__"] = self.active_num_prey <= 0 or self.active_num_predators <= 0
+        # Global termination and truncation: fixed-horizon episodes only.
+        truncations["__all__"] = False  # max_steps handled at the beginning of step
+        terminations["__all__"] = False
 
         # Provide infos accumulated during the step for output agents
         infos = {a: self._pending_infos.get(a, {}) for a in output_agents if a in self._pending_infos}
@@ -611,20 +922,67 @@ class PredPreyGrass(MultiAgentEnv):
             if 0 <= x + dx < self.grid_size and 0 <= y + dy < self.grid_size  # Stay in bounds
         ]
 
-        # Filter for unoccupied positions
-        valid_positions = [pos for pos in potential_positions if pos not in occupied_positions]
+        # Filter for unoccupied, non-wall positions
+        wall_positions = self.wall_positions
+        valid_positions = [
+            pos for pos in potential_positions
+            if pos not in occupied_positions and pos not in wall_positions
+        ]
 
         if valid_positions:
             return valid_positions[0]  # Prefer adjacent position if available
 
-        # Fallback: Find any random unoccupied position
-        all_positions = {(i, j) for i in range(self.grid_size) for j in range(self.grid_size)}
-        free_positions = list(all_positions - occupied_positions)
+        # Fallback: sample only inside the parent's connected non-wall component.
+        parent_island_id = self.cell_to_island_id.get(reference_position)
+        if parent_island_id is None:
+            return None
+        island_cells = self.island_id_to_cells.get(parent_island_id, set())
+        free_positions = list(island_cells - occupied_positions)
 
         if free_positions:
             return free_positions[self.rng.integers(len(free_positions))]
 
         return None  # No available position found
+
+    def _compute_island_components(self):
+        """
+        Build connected components of non-wall cells using 4-neighborhood adjacency.
+        These components define hard islands for fallback offspring placement.
+        """
+        wall_positions = self.wall_positions
+        grid_size = self.grid_size
+        unvisited = {
+            (x, y)
+            for x in range(grid_size)
+            for y in range(grid_size)
+            if (x, y) not in wall_positions
+        }
+
+        self.cell_to_island_id = {}
+        self.island_id_to_cells = {}
+        island_id = 0
+
+        while unvisited:
+            start = unvisited.pop()
+            stack = [start]
+            component = {start}
+            self.cell_to_island_id[start] = island_id
+
+            while stack:
+                cx, cy = stack.pop()
+                for nx, ny in ((cx - 1, cy), (cx + 1, cy), (cx, cy - 1), (cx, cy + 1)):
+                    if not (0 <= nx < grid_size and 0 <= ny < grid_size):
+                        continue
+                    npos = (nx, ny)
+                    if npos in wall_positions or npos not in unvisited:
+                        continue
+                    unvisited.remove(npos)
+                    component.add(npos)
+                    self.cell_to_island_id[npos] = island_id
+                    stack.append(npos)
+
+            self.island_id_to_cells[island_id] = component
+            island_id += 1
 
     def _log(self, verbose: bool, message: str, color: str = None):
         """
@@ -671,6 +1029,7 @@ class PredPreyGrass(MultiAgentEnv):
             Otherwise, returns None.
         """
         if self.current_step >= self.max_steps:
+            self._finalize_malthusian_episode()
             for agent in self.possible_agents:
                 if agent in self.agents:  # Active agents get observation
                     observations[agent] = self._get_observation(agent)
@@ -685,6 +1044,7 @@ class PredPreyGrass(MultiAgentEnv):
 
             truncations["__all__"] = True
             terminations["__all__"] = False
+            infos["__all__"] = dict(self.last_episode_summary)
             return observations, rewards, terminations, truncations, infos
 
         return None
@@ -869,7 +1229,7 @@ class PredPreyGrass(MultiAgentEnv):
             stat = self.unique_agent_stats[uid]
             stat["death_step"] = self.current_step
             stat["death_cause"] = "eaten"
-            stat["final_energy"] = self.agent_energies[agent]
+            stat["final_energy"] = self.agent_energies[caught_prey]
             steps = max(stat["avg_energy_steps"], 1)
             stat["avg_energy"] = stat["avg_energy_sum"] / steps
             stat["cumulative_reward"] = self.cumulative_rewards.get(caught_prey, 0.0)
@@ -972,6 +1332,17 @@ class PredPreyGrass(MultiAgentEnv):
                 return
 
             new_agent = potential_new_ids[0]
+            # Spawn position must exist in the same island; otherwise cancel reproduction.
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            if new_position is None:
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available local predator spawn cell for {agent}; reproduction canceled",
+                    "red",
+                )
+                return
+
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -990,12 +1361,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
-            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
-
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
+            self.unique_agent_stats[self.unique_agents[new_agent]]["spawn_island"] = self.cell_to_island_id.get(new_position)
 
             repro_eff = self.config.get("reproduction_energy_efficiency", 1.0)
             energy_given = self.initial_energy_predator * repro_eff
@@ -1062,6 +1430,17 @@ class PredPreyGrass(MultiAgentEnv):
                 return
 
             new_agent = potential_new_ids[0]
+            # Spawn position must exist in the same island; otherwise cancel reproduction.
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            if new_position is None:
+                self._log(
+                    self.verbose_reproduction,
+                    f"[REPRODUCTION] No available local prey spawn cell for {agent}; reproduction canceled",
+                    "red",
+                )
+                return
+
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -1081,12 +1460,9 @@ class PredPreyGrass(MultiAgentEnv):
             self.unique_agent_stats[self.unique_agents[new_agent]]["mutated"] = mutated
             self.unique_agent_stats[self.unique_agents[agent]]["offspring_count"] += 1
 
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
-            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
-
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
+            self.unique_agent_stats[self.unique_agents[new_agent]]["spawn_island"] = self.cell_to_island_id.get(new_position)
 
             repro_eff = self.config.get("reproduction_energy_efficiency", 1.0)
             energy_given = self.initial_energy_prey * repro_eff
@@ -1162,6 +1538,16 @@ class PredPreyGrass(MultiAgentEnv):
             "death_cause_prey": self.death_cause_prey.copy(),
             "agent_last_reproduction": self.agent_last_reproduction.copy(),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
+            "cell_to_island_id": self.cell_to_island_id.copy(),
+            "island_id_to_cells": {iid: set(cells) for iid, cells in self.island_id_to_cells.items()},
+            "mu_by_species": {sp: dict(mu) for sp, mu in self.mu_by_species.items()},
+            "last_phi_by_species": {sp: dict(phi) for sp, phi in self.last_phi_by_species.items()},
+            "last_phi_components": {
+                sp: {iid: dict(vals) for iid, vals in comp.items()}
+                for sp, comp in self.last_phi_components.items()
+            },
+            "last_episode_summary": dict(self.last_episode_summary),
+            "_malthusian_finalized_at_step": self._malthusian_finalized_at_step,
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1184,6 +1570,24 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
         self.per_step_agent_data = snapshot["per_step_agent_data"].copy()
+        self.cell_to_island_id = snapshot.get("cell_to_island_id", {}).copy()
+        self.island_id_to_cells = {
+            iid: set(cells) for iid, cells in snapshot.get("island_id_to_cells", {}).items()
+        }
+        self.mu_by_species = {
+            sp: dict(mu) for sp, mu in snapshot.get("mu_by_species", self.mu_by_species).items()
+        }
+        self.last_phi_by_species = {
+            sp: dict(phi) for sp, phi in snapshot.get("last_phi_by_species", self.last_phi_by_species).items()
+        }
+        self.last_phi_components = {
+            sp: {iid: dict(vals) for iid, vals in comp.items()}
+            for sp, comp in snapshot.get("last_phi_components", self.last_phi_components).items()
+        }
+        self.last_episode_summary = dict(snapshot.get("last_episode_summary", self.last_episode_summary))
+        self._malthusian_finalized_at_step = snapshot.get(
+            "_malthusian_finalized_at_step", self._malthusian_finalized_at_step
+        )
 
     def _build_possible_agent_ids(self):
         """
@@ -1263,6 +1667,7 @@ class PredPreyGrass(MultiAgentEnv):
             "death_cause": None,
             "final_energy": None,
             "avg_energy": None,
+            "spawn_island": None,
         }
 
     def get_total_energy_by_type(self):

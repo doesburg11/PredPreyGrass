@@ -11,12 +11,13 @@ config_ppo = {
     "vf_loss_coeff": 1.0,
     "clip_param": 0.3,
     # Resources
+    # Keep one environment instance so mu-update semantics remain global.
     "num_learners": 1,
-    "num_env_runners": 8,
-    "num_envs_per_env_runner": 3,
+    "num_env_runners": 1,
+    "num_envs_per_env_runner": 1,
     "num_gpus_per_learner": 1,
     "num_cpus_for_main_process": 4,
-    "num_cpus_per_env_runner": 3,
+    "num_cpus_per_env_runner": 1,
     "sample_timeout_s": 600,
     "rollout_fragment_length": "auto",
     # KL / exploration
