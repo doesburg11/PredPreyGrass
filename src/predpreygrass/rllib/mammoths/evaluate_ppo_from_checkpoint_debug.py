@@ -31,10 +31,11 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = True
+SAVE_EVAL_RESULTS = False
+SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
+DISPLAY_SCALE = 0.6  # 0.7 shrinks the grid/legend by 30%
 
 
 def env_creator(config):
@@ -114,10 +115,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-    # MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/pred_decay_0_20/"
-    checkpoint_root = "MAMMOTHS_FAILED_ATTACK_PREY_0_00_DECAY_PRED_0_05/PPO_PredPreyGrass_618a3_00000_0_2025-12-25_00-36-33/"
-    checkpoint_nr = "checkpoint_000099"
+    # BENCHMARK_MAMMOTHS_COPY_2026-01-19_16-04-24/PPO_PredPreyGrass_24548_00000_0_2026-01-19_16-04-24
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/mammoths/ray_results/"
+    checkpoint_root = "MAMMOTHS_BENCHMARK_PREY_SIZE_X_1_2_2026-01-21_19-46-53/PPO_PredPreyGrass_8df32_00000_0_2026-01-21_19-46-53/"
+    checkpoint_nr = "checkpoint_000040"
     checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_nr)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_nr}_{now}")
 
@@ -145,6 +146,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
@@ -161,6 +163,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
@@ -525,7 +528,7 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 1
+    seed = 2
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))

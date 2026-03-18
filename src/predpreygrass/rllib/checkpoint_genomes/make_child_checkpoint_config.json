@@ -1,0 +1,10 @@
+{
+  "parent_a": "src/predpreygrass/rllib/sexual_reproduction/ray_results/SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/checkpoint_000009",
+  "parent_b": "src/predpreygrass/rllib/sexual_reproduction/ray_results/SEXUAL_REPRODUCTION_2026-02-10_12-55-20/PPO_PredPreyGrass_601fe_00000_0_2026-02-10_12-55-20/checkpoint_000009",
+  "out_dir": "src/predpreygrass/rllib/checkpoint_genomes/child_checkpoint_000000",
+  "alpha": 0.5,
+  "sigma": 0.01,
+  "seed": null,
+  "policies": null,
+  "overwrite": true
+}

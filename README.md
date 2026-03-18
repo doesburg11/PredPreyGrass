@@ -1,11 +1,11 @@
 [![Python 3.11.13](https://img.shields.io/badge/python-3.11.13-blue.svg)](https://www.python.org/downloads/release/python-31111/)
-[![RLlib](https://img.shields.io/badge/RLlib-v2.53.0-blue)](https://docs.ray.io/en/latest/rllib/)
+[![RLlib](https://img.shields.io/badge/RLlib-v2.54.0-blue)](https://docs.ray.io/en/latest/rllib/)
 
 
 # Predator-Prey-Grass
 ## Emerging coevolution, cooperation, defection and free-riding through multi-agent deep reinforcement learning 
 
-This project studies how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment. This gives rise to coevolution, cooperation, defection and free-riding.
+This project explores how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment. This gives rise to coevolution, cooperation, defection and free-riding.
 
 <p align="center">
     <b>Emerging coevolution, cooperation, defection and free-riding</b></p>
@@ -15,7 +15,7 @@ This project studies how cooperative behavior emerges and stabilizes in a spatia
 
 ### Environment:
 
-* **[Stag hunt with defection](src/predpreygrass/rllib/stag_hunt_defection)** : Humans can hunt solo for rabbits and cooperatively for mammoths. At each step humans decide either to cooperate at an energy cost, or to defect at zero energy cost, giving opportunities to free-riding if sufficent cooperation already was assembled in an attack. ([implementation](src/predpreygrass/rllib/stag_hunt_defection))
+* **[Stag hunt with defection](src/predpreygrass/rllib/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](src/predpreygrass/rllib/stag_hunt_defection))
 
 ### Other environments:
 
