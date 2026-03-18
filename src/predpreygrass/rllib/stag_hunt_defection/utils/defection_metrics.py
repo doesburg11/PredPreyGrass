@@ -116,6 +116,89 @@ def aggregate_capture_outcomes_from_event_log(event_log: dict) -> dict:
     }
 
 
+def compute_opportunity_preference_metrics(per_step_agent_data: list[dict]) -> dict:
+    def _pos_tuple(pos):
+        if hasattr(pos, "tolist"):
+            pos = pos.tolist()
+        return tuple(int(x) for x in pos)
+
+    def _has_neighbor(center, positions):
+        cx, cy = center
+        for px, py in positions:
+            if max(abs(px - cx), abs(py - cy)) <= 1:
+                return True
+        return False
+
+    buckets = {
+        "any_prey": {"predator_steps": 0, "join_steps": 0},
+        "mammoth_available": {"predator_steps": 0, "join_steps": 0},
+        "rabbit_available": {"predator_steps": 0, "join_steps": 0},
+        "mammoth_only": {"predator_steps": 0, "join_steps": 0},
+        "rabbit_only": {"predator_steps": 0, "join_steps": 0},
+        "both_available": {"predator_steps": 0, "join_steps": 0},
+    }
+
+    for step in per_step_agent_data:
+        mammoths = []
+        rabbits = []
+        for agent_id, data in step.items():
+            if "prey" not in agent_id:
+                continue
+            pos = data.get("position")
+            if pos is None:
+                continue
+            if "type_1_prey" in agent_id:
+                mammoths.append(_pos_tuple(pos))
+            elif "type_2_prey" in agent_id:
+                rabbits.append(_pos_tuple(pos))
+
+        if not mammoths and not rabbits:
+            continue
+
+        for agent_id, data in step.items():
+            if "predator" not in agent_id:
+                continue
+            pos = data.get("position")
+            if pos is None:
+                continue
+            center = _pos_tuple(pos)
+            has_mammoth = _has_neighbor(center, mammoths) if mammoths else False
+            has_rabbit = _has_neighbor(center, rabbits) if rabbits else False
+            if not (has_mammoth or has_rabbit):
+                continue
+            joined = bool(data.get("join_hunt", True))
+
+            buckets["any_prey"]["predator_steps"] += 1
+            if joined:
+                buckets["any_prey"]["join_steps"] += 1
+
+            if has_mammoth:
+                buckets["mammoth_available"]["predator_steps"] += 1
+                if joined:
+                    buckets["mammoth_available"]["join_steps"] += 1
+            if has_rabbit:
+                buckets["rabbit_available"]["predator_steps"] += 1
+                if joined:
+                    buckets["rabbit_available"]["join_steps"] += 1
+            if has_mammoth and has_rabbit:
+                buckets["both_available"]["predator_steps"] += 1
+                if joined:
+                    buckets["both_available"]["join_steps"] += 1
+            elif has_mammoth:
+                buckets["mammoth_only"]["predator_steps"] += 1
+                if joined:
+                    buckets["mammoth_only"]["join_steps"] += 1
+            elif has_rabbit:
+                buckets["rabbit_only"]["predator_steps"] += 1
+                if joined:
+                    buckets["rabbit_only"]["join_steps"] += 1
+
+    for stats in buckets.values():
+        stats["join_rate"] = _safe_div(stats["join_steps"], stats["predator_steps"])
+
+    return buckets
+
+
 def run_rollout(steps: int, seed: int | None) -> tuple[PredPreyGrass, list[dict]]:
     cfg = dict(config_env)
     cfg["max_steps"] = max(int(cfg.get("max_steps", steps)), steps)

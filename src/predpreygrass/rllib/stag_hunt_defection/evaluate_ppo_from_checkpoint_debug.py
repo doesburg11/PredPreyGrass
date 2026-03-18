@@ -17,6 +17,7 @@ from predpreygrass.rllib.stag_hunt_defection.utils.pygame_grid_renderer_rllib im
 from predpreygrass.rllib.stag_hunt_defection.utils.defection_metrics import (
     aggregate_capture_outcomes_from_event_log,
     aggregate_join_choices,
+    compute_opportunity_preference_metrics,
 )
 
 # external libraries
@@ -35,10 +36,11 @@ from copy import deepcopy
 from collections import defaultdict
 
 
-SAVE_EVAL_RESULTS = True
-SAVE_MOVIE = True
+SAVE_EVAL_RESULTS = False
+SAVE_MOVIE = False
 MOVIE_FILENAME = "cooperative_hunting.mp4"
 MOVIE_FPS = 10
+DISPLAY_SCALE = 0.6
 
 
 def env_creator(config):
@@ -133,7 +135,7 @@ def policy_pi(observation, policy_module, deterministic=True):
     return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
-    # STAG_HUNT_V1_2025-12-28_00-45-45/PPO_PredPreyGrass_29a63_00000_0_2025-12-28_00-45-45/
+    # MAMMOTHS_DEFECT_JOIN_PROB_1_0_2026-01-14_23-59-59/PPO_PredPreyGrass_c0be0_00000_0_2026-01-14_23-59-59
     ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/src/predpreygrass/rllib/stag_hunt_defection/ray_results/"
     checkpoint_root = "STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/"
     checkpoint_nr = "checkpoint_000049"
@@ -164,6 +166,7 @@ def setup_environment_and_visualizer(now):
         visualizer = PyGameRenderer(
             grid_size,
             cell_size=32,
+            scale=DISPLAY_SCALE,
             enable_speed_slider=True,
             enable_tooltips=True,
             max_steps=cfg.get("max_steps", 1000),
@@ -376,10 +379,12 @@ def print_ranked_reward_summary(env, total_reward):
 def compute_defection_metrics(env):
     join_stats = aggregate_join_choices(env.per_step_agent_data)
     capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
+    opportunity_stats = compute_opportunity_preference_metrics(env.per_step_agent_data)
     return {
         "steps": env.current_step,
         "join_defect": join_stats,
         "capture_outcomes": capture_stats,
+        "opportunity_preferences": opportunity_stats,
     }
 
 def save_reward_summary_to_file(env, total_reward, output_dir):

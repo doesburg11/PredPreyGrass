@@ -4,7 +4,7 @@
 
 - The environment is a gridworld with Predators, Prey, and Grass.
 - Predators come in one type:
-  - Humans <img src="../../../../assets/images/icons/human_1.png" alt="predator icon" height="
+  - Humans <img src="../../../../assets/images/icons/male.png" alt="predator icon" height="
   36" style="vertical-align: middle;"> (type_1_predator)
 - Prey come in two types:
   - Large prey; Mammoths <img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
