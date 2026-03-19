@@ -3,6 +3,11 @@ from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
 
+from predpreygrass.rllib.direct_reciprocity.utils.reciprocity_metrics import (
+    aggregate_direct_reciprocity_metrics,
+    aggregate_share_decisions_from_event_log,
+)
+
 
 class EpisodeReturn(RLlibCallback):
     def __init__(self):
@@ -12,6 +17,75 @@ class EpisodeReturn(RLlibCallback):
         self._pending_episode_metrics = []
         self.start_time = time.time()
         self.last_iteration_time = self.start_time
+
+    @staticmethod
+    def _resolve_env(episode, **kwargs):
+        def _looks_like_target_env(obj) -> bool:
+            if obj is None:
+                return False
+            return any(
+                hasattr(obj, attr)
+                for attr in ("agent_event_log", "per_step_agent_data", "share_events_total", "share_opportunities_total")
+            )
+
+        def _unwrap(obj, max_depth=10):
+            seen = set()
+            current = obj
+            depth = 0
+            while current is not None and depth < max_depth:
+                depth += 1
+                obj_id = id(current)
+                if obj_id in seen:
+                    break
+                seen.add(obj_id)
+
+                if _looks_like_target_env(current):
+                    return current
+
+                unwrapped = getattr(current, "unwrapped", None)
+                if unwrapped is not None and unwrapped is not current:
+                    current = unwrapped
+                    continue
+
+                if hasattr(current, "get_sub_environments"):
+                    try:
+                        subs = current.get_sub_environments() or []
+                    except Exception:
+                        subs = []
+                    if subs:
+                        current = subs[0]
+                        continue
+
+                for attr in ("envs", "_envs"):
+                    subs = getattr(current, attr, None)
+                    if isinstance(subs, (list, tuple)) and subs:
+                        current = subs[0]
+                        break
+                else:
+                    subs = None
+                if subs is not None:
+                    continue
+
+                for attr in ("env", "_env", "vector_env", "_vector_env"):
+                    inner = getattr(current, attr, None)
+                    if inner is not None and inner is not current:
+                        current = inner
+                        break
+                else:
+                    break
+
+            return current if _looks_like_target_env(current) else None
+
+        for candidate in (
+            kwargs.get("env"),
+            getattr(kwargs.get("env_runner"), "env", None),
+            getattr(kwargs.get("worker"), "base_env", None),
+            kwargs.get("base_env"),
+        ):
+            resolved = _unwrap(candidate)
+            if resolved is not None:
+                return resolved
+        return None
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
         """
@@ -37,11 +111,48 @@ class EpisodeReturn(RLlibCallback):
         coop_fail = info_all.get("team_capture_coop_failures", 0)
         total_success = info_all.get("team_capture_successes", 0)
         total_fail = info_all.get("team_capture_failures", 0)
+        share_events_total = info_all.get("share_events_total", 0)
+        share_opportunities_total = info_all.get("share_opportunities_total", 0)
+        share_refusals_total = info_all.get("share_refusals_total", 0)
+        env = self._resolve_env(episode, **kwargs)
+
+        share_metrics = {}
+        reciprocity_metrics = {}
+        if env is not None:
+            event_log = getattr(env, "agent_event_log", {})
+            share_metrics = aggregate_share_decisions_from_event_log(event_log)
+            reciprocity_metrics = aggregate_direct_reciprocity_metrics(event_log)
+            if not share_events_total:
+                share_events_total = share_metrics.get("share_events", 0)
+            if not share_opportunities_total:
+                share_opportunities_total = share_metrics.get("share_opportunities", 0)
+            if not share_refusals_total:
+                share_refusals_total = share_metrics.get("share_refusals", 0)
+        share_decision_rate_pct = 100.0 * (
+            share_metrics.get("share_decision_rate", 0.0)
+            if share_metrics
+            else (share_events_total / share_opportunities_total if share_opportunities_total else 0.0)
+        )
+        reciprocal_share_rate_pct = 100.0 * reciprocity_metrics.get("reciprocal_share_rate", 0.0)
+        prior_helper_share_rate_pct = 100.0 * reciprocity_metrics.get("share_rate_when_prior_helper_available", 0.0)
+        no_helper_share_rate_pct = 100.0 * reciprocity_metrics.get("share_rate_when_no_prior_helper_available", 0.0)
         if metrics_logger is not None:
             metrics_logger.log_value("custom_metrics/team_capture_successes", coop_success)
             metrics_logger.log_value("custom_metrics/team_capture_failures", coop_fail)
             metrics_logger.log_value("custom_metrics/team_capture_total_successes", total_success)
             metrics_logger.log_value("custom_metrics/team_capture_total_failures", total_fail)
+            metrics_logger.log_value("custom_metrics/share_events_total", share_events_total)
+            metrics_logger.log_value("custom_metrics/share_opportunities_total", share_opportunities_total)
+            metrics_logger.log_value("custom_metrics/share_refusals_total", share_refusals_total)
+            metrics_logger.log_value("custom_metrics/share_decision_rate", share_decision_rate_pct)
+            metrics_logger.log_value("custom_metrics/share_rate_when_prior_helper_available", prior_helper_share_rate_pct)
+            metrics_logger.log_value("custom_metrics/share_rate_when_no_prior_helper_available", no_helper_share_rate_pct)
+            metrics_logger.log_value("custom_metrics/reciprocal_share_rate", reciprocal_share_rate_pct)
+            metrics_logger.log_value("custom_metrics/reciprocal_dyads", reciprocity_metrics.get("reciprocal_dyads", 0))
+            metrics_logger.log_value(
+                "custom_metrics/share_to_prior_helper_rate",
+                100.0 * reciprocity_metrics.get("share_to_prior_helper_rate", 0.0),
+            )
 
         # Accumulate rewards by group
         group_rewards = defaultdict(list)
@@ -68,6 +179,20 @@ class EpisodeReturn(RLlibCallback):
         print(f"Episode {self.num_episodes}: R={episode_return:.2f} | Global SUM={self.overall_sum_of_rewards:.2f}")
         print(f"  - Coop: successes={coop_success} failures={coop_fail}")
         print(f"  - Total capture: successes={total_success} failures={total_fail}")
+        print(
+            "  - Sharing:"
+            f" opportunities={share_opportunities_total}"
+            f" shares={share_events_total}"
+            f" refusals={share_refusals_total}"
+            f" share_rate={share_decision_rate_pct:.2f}%"
+        )
+        print(
+            "  - Reciprocity:"
+            f" prior_helper_share_rate={prior_helper_share_rate_pct:.2f}%"
+            f" no_helper_share_rate={no_helper_share_rate_pct:.2f}%"
+            f" reciprocal_share_rate={reciprocal_share_rate_pct:.2f}%"
+            f" reciprocal_dyads={reciprocity_metrics.get('reciprocal_dyads', 0)}"
+        )
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 

@@ -25,6 +25,7 @@ config_env = {
     "energy_loss_per_step_prey": 0.05,  # 0.05 
     "energy_percentage_loss_per_failed_attacked_prey": 0.0,
     "predator_creation_energy_threshold": 12.0,
+    "predator_reproduction_cooldown_steps": 10,
     "prey_creation_energy_threshold": 6.5,  # was 6.5
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.5,  # was 3.5
