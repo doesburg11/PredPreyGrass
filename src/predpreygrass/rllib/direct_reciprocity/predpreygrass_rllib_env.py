@@ -69,6 +69,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.direct_reciprocity_enabled = bool(config.get("direct_reciprocity_enabled", True))
         self.share_fraction = float(config.get("share_fraction", 0.25))
         self.share_fraction = min(max(self.share_fraction, 0.0), 1.0)
+        self.predator_reproduction_cooldown_steps = max(
+            0, int(config.get("predator_reproduction_cooldown_steps", 0))
+        )
         self.trust_enabled = bool(config.get("trust_enabled", True))
         self.include_trust_channel = bool(config.get("include_trust_channel", True))
         self.include_trust_summary = bool(config.get("include_trust_summary", False))
@@ -380,7 +383,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Rebuild active agent list without repeated O(n) list.remove calls
             self.agents = [a for a in self.agents if a not in to_remove_set]
 
-        # Step 7: Spawning of new agents (cooldown and chance removed; energy-only)
+        # Step 7: Spawning of new agents (energy-gated; predator cooldown optional)
         # Use snapshots of active predators/prey to avoid iterating over newly spawned agents in this step
         predator_snapshot = tuple(self.predator_positions.keys())
         prey_snapshot = tuple(self.prey_positions.keys())
@@ -389,7 +392,7 @@ class PredPreyGrass(MultiAgentEnv):
         prey_thr = self.prey_creation_energy_threshold
 
         for agent in predator_snapshot:
-            if energies[agent] >= pred_thr:
+            if energies[agent] >= pred_thr and self._predator_reproduction_cooldown_remaining(agent) == 0:
                 self._handle_predator_reproduction(agent)
 
         for agent in prey_snapshot:
@@ -416,6 +419,7 @@ class PredPreyGrass(MultiAgentEnv):
                 info["share_opportunities_total"] = self.share_opportunities_total
                 info["share_refusals_total"] = self.share_refusals_total
                 info["trust_mean_in_range"] = self._compute_trust_summary(agent)
+                info["predator_reproduction_cooldown_remaining"] = self._predator_reproduction_cooldown_remaining(agent)
 
         # Step 8: Assemble return dicts.
         # Generate observations only for still-active agents AFTER engagements and reproduction.
@@ -515,6 +519,9 @@ class PredPreyGrass(MultiAgentEnv):
             if "predator" in agent:
                 step_data[agent]["share_food"] = bool(self.predator_share_intent.get(agent, False))
                 step_data[agent]["trust_mean_in_range"] = self._compute_trust_summary(agent)
+                step_data[agent]["predator_reproduction_cooldown_remaining"] = (
+                    self._predator_reproduction_cooldown_remaining(agent)
+                )
 
         self.per_step_agent_data.append(step_data)
         self._per_agent_step_deltas.clear()
@@ -966,6 +973,15 @@ class PredPreyGrass(MultiAgentEnv):
             return self.trust_neutral
         return float(sum(values) / len(values))
 
+    def _predator_reproduction_cooldown_remaining(self, agent_id: str) -> int:
+        if "predator" not in agent_id or self.predator_reproduction_cooldown_steps <= 0:
+            return 0
+        last_reproduction = self.agent_last_reproduction.get(agent_id)
+        if last_reproduction is None:
+            return 0
+        steps_since_reproduction = self.current_step - last_reproduction
+        return max(0, self.predator_reproduction_cooldown_steps - steps_since_reproduction)
+
     def _handle_team_capture(self, prey_id):
         if self.terminations.get(prey_id):
             return False
@@ -996,13 +1012,13 @@ class PredPreyGrass(MultiAgentEnv):
         recipient = None
         if share_opportunity:
             self.share_opportunities_total += 1
+            recipient = self._select_share_recipient(captor, potential_recipients)
             if self.predator_share_intent.get(captor, False):
-                recipient = self._select_share_recipient(captor, potential_recipients)
                 share_amount = prey_energy * self.share_fraction if recipient is not None else 0.0
             else:
                 self.share_refusals_total += 1
-                for observer_id in potential_recipients:
-                    self._adjust_trust(observer_id, captor, -self.trust_negative_delta)
+                if recipient is not None:
+                    self._adjust_trust(recipient, captor, -self.trust_negative_delta)
 
         captor_gain = prey_energy - share_amount
         self.agent_energies[captor] += captor_gain
@@ -1021,6 +1037,8 @@ class PredPreyGrass(MultiAgentEnv):
         captor_info["share_food"] = bool(self.predator_share_intent.get(captor, False))
         captor_info["shared_energy"] = float(share_amount)
         captor_info["share_recipient"] = recipient
+        captor_info["share_opportunity"] = bool(share_opportunity)
+        captor_info["share_candidate_count"] = int(len(potential_recipients))
 
         captor_evt = self.agent_event_log.get(captor)
         if captor_evt is not None:
@@ -1035,6 +1053,9 @@ class PredPreyGrass(MultiAgentEnv):
                     "energy_after": float(self.agent_energies[captor]),
                     "team_capture": False,
                     "predator_list": [captor],
+                    "share_opportunity": bool(share_opportunity),
+                    "share_food_intended": bool(self.predator_share_intent.get(captor, False)),
+                    "share_candidates": list(potential_recipients),
                     "shared_energy": float(share_amount),
                     "share_recipient": recipient,
                 }
@@ -1146,8 +1167,8 @@ class PredPreyGrass(MultiAgentEnv):
             return
 
     def _handle_predator_reproduction(self, agent):
-        # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
-        # Chance removed as well: reproduction attempts occur whenever energy threshold is met.
+        if self._predator_reproduction_cooldown_remaining(agent) > 0:
+            return False
 
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             parent_type = int(agent.split("_")[1])  # from "type_1_predator_3"
@@ -1197,6 +1218,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
 
+            self._per_agent_step_deltas.setdefault(agent, {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0})
             self.agent_energies[new_agent] = self.initial_energy_predator
             self.agent_energies[agent] -= self.initial_energy_predator
             self._per_agent_step_deltas[agent]["repro"] = -self.initial_energy_predator
@@ -1227,10 +1249,11 @@ class PredPreyGrass(MultiAgentEnv):
                             "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
                         }
                     )
-
             self.observations[new_agent] = self._get_observation(new_agent)
             self.terminations[new_agent] = False
             self.truncations[new_agent] = False
+            return True
+        return False
 
     def _handle_prey_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
