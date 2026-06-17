@@ -5,6 +5,8 @@
 # Predator-Prey-Grass
 ## Emerging coevolution, cooperation, defection and free-riding through multi-agent deep reinforcement learning 
 
+Legacy snapshot: the pre-cleanup research codebase is archived at [PredPreyGrassLegacy](https://github.com/doesburg11/PredPreyGrassLegacy).
+
 This project explores how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment. This gives rise to coevolution, cooperation, defection and free-riding.
 
 <p align="center">
@@ -73,17 +75,14 @@ This project explores how cooperative behavior emerges and stabilizes in a spati
         conda install -y -c conda-forge gcc=14.2.0
         ```
 ## Quick start
-Run the pre-trained policy in a Visual Studio Code terminal:
+Run a random policy in a Visual Studio Code terminal:
 
-```bash
-python ./src/predpreygrass/rllib/base_environment/evaluate_ppo_from_checkpoint_debug.py
-
-```
-Or a random policy:
 ```bash
 python ./src/predpreygrass/rllib/base_environment/random_policy.py
 
 ```
+
+Pretrained checkpoints and historical training outputs are preserved in the legacy archive rather than shipped in the active source tree.
 
 ## References
 

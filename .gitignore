@@ -135,6 +135,7 @@ celerybeat.pid
 # Environments
 .env
 .venv
+.conda/
 env/
 venv/
 ENV/
@@ -188,3 +189,22 @@ logs/
 logs/**
 **/logs/
 **/logs/**
+
+# RLlib training artifacts and generated experiment outputs
+ray_results/
+ray_results_failed/
+ray_results_archive/
+**/ray_results/
+**/ray_results_failed/
+**/ray_results_archive/
+**/trained_policy/
+**/trained_policies/
+**/checkpoint_[0-9]*/
+**/events.out.tfevents*
+**/result.json
+**/progress.csv
+**/params.json
+**/experiment_state-*.json
+**/basic-variant-state-*.json
+**/tuner.pkl
+**/.validate_storage_marker
