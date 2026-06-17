@@ -16,9 +16,9 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
+from ray.rllib.utils.typing import AgentID, EpisodeType, PolicyID
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
-import os
 
 
 class EpisodeReturn(RLlibCallback):
@@ -68,12 +68,13 @@ def env_creator(config):
     return PredPreyGrass(config or config_env)
 
 
-def policy_mapping_fn(agent_id, *args, **kwargs):
-    if "predator" in agent_id:
+def policy_mapping_fn(agent_id: AgentID, episode: EpisodeType) -> PolicyID:
+    agent_id_str = str(agent_id)
+    if "predator" in agent_id_str:
         return "predator_policy"
-    elif "prey" in agent_id:
+    elif "prey" in agent_id_str:
         return "prey_policy"
-    return None
+    raise ValueError(f"No policy mapping defined for agent id: {agent_id!r}")
 
 
 if __name__ == "__main__":
@@ -85,10 +86,17 @@ if __name__ == "__main__":
     )
     sample_env = env_creator({})  # Create a single instance
     # Observation/action spaces for the sample policies
-    obs_space_pred = sample_env.observation_spaces["predator_0"]
-    act_space_pred = sample_env.action_spaces["predator_0"]
-    obs_space_prey = sample_env.observation_spaces["prey_0"]
-    act_space_prey = sample_env.action_spaces["prey_0"]
+    if sample_env is None:
+        raise RuntimeError("Failed to create sample environment")
+    observation_spaces = sample_env.observation_spaces
+    action_spaces = sample_env.action_spaces
+    if observation_spaces is None or action_spaces is None:
+        raise RuntimeError("Sample environment did not initialize observation/action spaces")
+
+    obs_space_pred = observation_spaces["predator_0"]
+    act_space_pred = action_spaces["predator_0"]
+    obs_space_prey = observation_spaces["prey_0"]
+    act_space_prey = action_spaces["prey_0"]
 
     multi_module_spec = MultiRLModuleSpec(
         rl_module_specs={
@@ -138,11 +146,11 @@ if __name__ == "__main__":
             policies={
                 "predator_policy": (
                     None,
-                    sample_env.observation_spaces["predator_0"],
-                    sample_env.action_spaces["predator_0"],
+                    obs_space_pred,
+                    act_space_pred,
                     {},
                 ),
-                "prey_policy": (None, sample_env.observation_spaces["prey_0"], sample_env.action_spaces["prey_0"], {}),
+                "prey_policy": (None, obs_space_prey, act_space_prey, {}),
             },
             policy_mapping_fn=policy_mapping_fn,
         )
@@ -176,7 +184,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         ppo.algo_class,
-        param_space=ppo,
+        param_space=ppo.to_dict(),
         run_config=RunConfig(
             stop={"training_iteration": 1000},
             checkpoint_config=CheckpointConfig(
