@@ -10,19 +10,32 @@ Additions:
               still pays movement energy cost as computed for attempted move).
 """
 # external libraries (Ray optional for lightweight diagnostics)
+from typing import TYPE_CHECKING, Tuple as TypingTuple
+
 import gymnasium
-try:
+import math
+import numpy as np
+
+
+class _FallbackMultiAgentEnv:
+    """Minimal stub for wall/placement local tests."""
+
+    def __init__(self) -> None:
+        pass
+
+
+if TYPE_CHECKING:
     from ray.rllib.env.multi_agent_env import MultiAgentEnv
     from ray.rllib.utils.typing import AgentID, Tuple
-except Exception:  # pragma: no cover
-    from typing import Tuple as TypingTuple
-    class MultiAgentEnv:  # minimal stub for wall/placement local tests
-        def __init__(self):
-            pass
-    AgentID = str
-    Tuple = TypingTuple
-import numpy as np
-import math
+else:
+    try:
+        from ray.rllib.env.multi_agent_env import MultiAgentEnv
+        from ray.rllib.utils.typing import AgentID, Tuple
+    except Exception:  # pragma: no cover
+
+        AgentID = str
+        Tuple = TypingTuple
+        MultiAgentEnv = _FallbackMultiAgentEnv
 
 
 class PredPreyGrass(MultiAgentEnv):

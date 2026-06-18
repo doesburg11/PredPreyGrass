@@ -43,7 +43,10 @@ MOVIE_FPS = 10
 # --- NumPy checkpoint compatibility shim ------------------------------------
 # Some older checkpoints reference 'numpy._core.numeric' during pickle load.
 # Provide an alias to 'numpy.core.numeric' if missing to avoid ModuleNotFoundError.
-import sys, types, importlib
+import importlib
+import sys
+import types
+
 try:
     if 'numpy._core.numeric' not in sys.modules:
         core_numeric = importlib.import_module('numpy.core.numeric')

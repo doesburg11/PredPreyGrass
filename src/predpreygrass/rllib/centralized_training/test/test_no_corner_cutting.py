@@ -2,7 +2,7 @@
 Test: No corner cutting (diagonal movement blocked by orthogonal walls)
 """
 from predpreygrass.rllib.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-import numpy as np
+
 
 def test_no_corner_cutting():
     config = {

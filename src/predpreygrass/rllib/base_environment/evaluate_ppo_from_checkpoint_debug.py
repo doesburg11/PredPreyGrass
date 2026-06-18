@@ -28,7 +28,8 @@ import matplotlib.pyplot as plt
 import pygame
 import cv2
 import numpy as np
-import types, sys
+import sys
+import types
 
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
@@ -48,7 +49,7 @@ try:  # Only patch if attribute truly missing
         if 'numpy._core' not in sys.modules:
             sys.modules['numpy._core'] = shim_pkg
         sys.modules['numpy._core.numeric'] = core_numeric
-except Exception as _shim_err:  # Fail silently; only affects legacy checkpoints
+except Exception:  # Fail silently; only affects legacy checkpoints
     pass
 
 def env_creator(config):

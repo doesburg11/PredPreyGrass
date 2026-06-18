@@ -10,19 +10,40 @@ Additions:
               still pays movement energy cost as computed for attempted move).
 """
 # external libraries (Ray optional for lightweight diagnostics)
+from typing import TYPE_CHECKING
+
 import gymnasium
-try:
-    from ray.rllib.env.multi_agent_env import MultiAgentEnv
-    from ray.rllib.utils.typing import AgentID, Tuple
-except Exception:  # pragma: no cover
-    from typing import Tuple as TypingTuple
-    class MultiAgentEnv:  # minimal stub for wall/placement local tests
-        def __init__(self):
-            pass
-    AgentID = str
-    Tuple = TypingTuple
-import numpy as np
 import math
+import numpy as np
+
+
+class _FallbackMultiAgentEnv:
+    """Minimal stub for wall/placement local tests."""
+
+    def __init__(self) -> None:
+        pass
+
+
+if TYPE_CHECKING:
+
+    class MultiAgentEnv:
+        """Static-analysis stub; runtime uses Ray's MultiAgentEnv when available."""
+
+        possible_agents: list[str]
+        agents: list[str]
+
+        def __init__(self) -> None:
+            pass
+
+        def reset(self, *, seed=None, options=None) -> object:
+            pass
+
+else:
+    try:
+        from ray.rllib.env.multi_agent_env import MultiAgentEnv
+    except Exception:  # pragma: no cover
+
+        MultiAgentEnv = _FallbackMultiAgentEnv
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -33,7 +54,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.config = config
         self._initialize_from_config()  # import config variables
 
-        self.possible_agents = self._build_possible_agent_ids()
+        self.possible_agents: list[str] = self._build_possible_agent_ids()
 
         self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
@@ -41,6 +62,7 @@ class PredPreyGrass(MultiAgentEnv):
 
     def close(self) -> None:
         """Release environment-owned resources."""
+        pass
 
     def _initialize_from_config(self):
         config = self.config
@@ -278,7 +300,7 @@ class PredPreyGrass(MultiAgentEnv):
         }
 
         # Completed agents + currently alive agents (avoid double counting dead records).
-        records = [(None, rec) for rec in self.death_agents_stats.values()]
+        records: list[tuple[str | None, dict]] = [(None, rec) for rec in self.death_agents_stats.values()]
         for agent_id in self.agents:
             uid = self.unique_agents.get(agent_id)
             if uid is None:
@@ -290,7 +312,7 @@ class PredPreyGrass(MultiAgentEnv):
         for agent_id, rec in records:
             sp = rec.get("policy_group")
             iid = rec.get("spawn_island")
-            if sp not in phi or iid not in phi[sp]:
+            if not isinstance(sp, str) or sp not in phi or iid not in phi[sp]:
                 continue
 
             lifetime_steps = self._record_lifetime_steps(rec)
@@ -431,7 +453,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = 0
         self.active_num_prey = 0
 
-        self.agents = []
+        self.agents: list[str] = []
         # create active agents list based on config
         for agent_type in ["predator", "prey"]:
             for type in [1, 2]:
@@ -993,7 +1015,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.island_id_to_cells[island_id] = component
             island_id += 1
 
-    def _log(self, verbose: bool, message: str, color: str = None):
+    def _log(self, verbose: bool, message: str, color: str | None = None):
         """
         Log with sharp 90° box-drawing borders (Unicode), optional color.
 
@@ -1017,7 +1039,7 @@ class PredPreyGrass(MultiAgentEnv):
             "reset": "\033[0m",
         }
 
-        prefix = colors.get(color, "")
+        prefix = colors.get(color, "") if color else ""
         suffix = colors["reset"] if color else ""
 
         lines = message.strip().split("\n")
@@ -1596,7 +1618,7 @@ class PredPreyGrass(MultiAgentEnv):
             "_malthusian_finalized_at_step", self._malthusian_finalized_at_step
         )
 
-    def _build_possible_agent_ids(self):
+    def _build_possible_agent_ids(self) -> list[str]:
         """
         Build the list of possible agents based on the configuration.
         This is called during reset to ensure the agent list is up-to-date.
@@ -1612,7 +1634,7 @@ class PredPreyGrass(MultiAgentEnv):
             agent_ids.append(f"type_2_prey_{i}")
         return agent_ids  # ✅ ← this was missing
 
-    def _build_observation_space(self, agent_id):
+    def _build_observation_space(self, agent_id: str):
         """
         Build the observation space for a specific agent.
         """
@@ -1630,7 +1652,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return obs_space
 
-    def _build_action_space(self, agent_id):
+    def _build_action_space(self, agent_id: str):
         """
         Build the action space for a specific agent.
         """
@@ -1643,7 +1665,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return action_space
 
-    def _register_new_agent(self, agent_id: str, parent_unique_id: str = None):
+    def _register_new_agent(self, agent_id: str, parent_unique_id: str | None = None):
         self._used_agent_ids_this_episode.add(agent_id)
         reuse_index = self.agent_activation_counts[agent_id]
         unique_id = f"{agent_id}_{reuse_index}"
