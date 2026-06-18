@@ -39,6 +39,9 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
 
+    def close(self) -> None:
+        """Release environment-owned resources."""
+
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config.get("debug_mode", False)
