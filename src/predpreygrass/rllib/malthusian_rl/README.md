@@ -58,18 +58,18 @@ The table below is the practical mapping from paper concepts to this repository.
 | Archipelago structure | Multiple islands/environments | Hard islands from wall-defined connected components on one grid | Strong |
 | Species as policy groups | One policy per species | `type_1_predator`, `type_2_predator`, `type_1_prey`, `type_2_prey` each map to separate policies | Strong |
 | Inter-episode allocation | `mu` controls species allocation over islands | Reset placement samples per-species counts per island from `mu` | Strong |
-| Fitness signal `phi` | Per-species, per-island performance signal | Per-agent ecology-weighted score aggregated by species+spawn island | Strong generalization |
-| Allocation update | Multiplicative/softmax-like update from `phi` | Exponentiated/logit update with normalization and optional floor | Strong |
+| Fitness signal `phi` | Per-species, per-island performance signal | Strict mode: return-only fitness; generalized mode: ecology-weighted score | Strong |
+| Allocation update | Multiplicative/softmax-like update from `phi` | Strict mode: multiplicative update; generalized mode: z-score/logit update | Strong |
 | Episode horizon | Often fixed horizons | Fixed horizon via `max_steps`; no extinction-based `__all__` termination | Strong |
 | Globality of `mu` during training | Single ecological process | Enforced with `num_env_runners=1`, `num_envs_per_env_runner=1` | Strong |
-| Within-episode demography | Not the central mechanism | Explicit birth/death/reproduction dynamics are active | Divergence (intentional generalization) |
+| Within-episode demography | Not the central mechanism | Strict mode disables within-episode reproduction; generalized mode can enable it | Strong in strict mode |
 | Migration | Task-dependent | Hard islands by default (no migration gates) | Compatible |
 
 What this means in practice:
 
 - This module now captures the core Malthusian control loop (measure `phi`, update `mu`, reallocate next episode).
-- It is a Leibo-inspired generalization rather than a strict reproduction, mainly because explicit within-episode reproduction/death dynamics are included and `phi` is ecology-weighted by default.
-- If strict paper-style ablation is desired, configure a "replication mode" by minimizing/turning off within-episode reproduction effects and simplifying `phi` to return-based fitness.
+- Default config now targets strict paper-style replication (`malthusian_replication_mode="strict"`).
+- The previous ecology-heavy setup remains available via `malthusian_replication_mode="generalized"`.
 
 ## Current Status of This Module
 
@@ -80,19 +80,24 @@ This module currently includes:
 - default heterogeneous species setup enabled (4 policy species: `type_1_predator`, `type_2_predator`, `type_1_prey`, `type_2_prey`),
 - LOS-aware observations and movement constraints,
 - local movement and local spawn near parent,
-- multi-policy RLlib training/evaluation scripts,
+   - multi-policy RLlib training/evaluation scripts,
+   - APPO/V-trace training path with LSTM-capable module specs,
 - fixed-horizon episode handling (`max_steps`),
 - episode-end Malthusian scaffold:
-  - `phi[species,island]` computed from explicit ecology metrics per agent (offspring, survival, foraging/captures, relative energy change, death indicator),
-  - `mu[species,island]` updated with an exponentiated update rule,
+   - strict default: `phi[species,island]` computed from per-agent episode return,
+   - strict default: `mu[species,island]` updated with multiplicative update,
+   - optional generalized mode: ecology-weighted `phi` and z-score/logit update,
   - reset-time initial agent placement sampled per-island from `mu`,
   - strict single-env training default (`num_env_runners=1`, `num_envs_per_env_runner=1`) so `mu` is not split across worker-local env copies,
   - callback logging of Malthusian diagnostics (`mu`, `phi`, and `phi` components) into RLlib metrics,
   - RLlib-safe dynamic-agent handling: agent IDs are not reused within the same episode after termination,
-  - reproduction reward is granted only on successful spawn (no reward for failed attempts due to slot/local-cell limits),
-  - calmer default reproduction settings in `config_env.py` (`reproduction_reward=10.0`, `chance=0.25`, `cooldown=8`) to avoid reward inflation.
+   - strict default disables within-episode reproduction (`enable_within_episode_reproduction=False`).
 
-Current default `phi` scoring (from `config_env.py`) is:
+Current strict default (from `config_env.py`) is:
+
+`phi_agent = cumulative_reward`
+
+Generalized optional mode keeps ecology-weighted scoring:
 
 `phi_agent = 2.0*offspring + 1.0*survival + 0.5*foraging + 0.25*energy_delta_rel - 1.0*death + 0.0*reward`
 

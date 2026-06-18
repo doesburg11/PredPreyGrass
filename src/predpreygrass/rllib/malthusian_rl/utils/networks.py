@@ -4,7 +4,15 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 
 
-def build_module_spec(obs_space, act_space, policy_name: str = None):
+def build_module_spec(
+    obs_space,
+    act_space,
+    policy_name: str = None,
+    module_class=DefaultPPOTorchRLModule,
+    use_lstm: bool = False,
+    max_seq_len: int = 20,
+    lstm_cell_size: int = 256,
+):
     """
     Build an RLModuleSpec whose conv depth L matches the observation window size H
     so that the receptive field RF = 1 + 2L equals H.
@@ -64,7 +72,7 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
 
 
     return RLModuleSpec(
-        module_class=DefaultPPOTorchRLModule,
+        module_class=module_class,
         observation_space=obs_space,
         action_space=act_space,
         inference_only=False,
@@ -72,12 +80,21 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
             "conv_filters": conv_filters,
             "fcnet_hiddens": fcnet_hiddens,
             "fcnet_activation": "relu",
+            "use_lstm": use_lstm,
+            "max_seq_len": max_seq_len,
+            "lstm_cell_size": lstm_cell_size,
+            "lstm_use_prev_action": False,
+            "lstm_use_prev_reward": False,
         },
     )
 
 def build_multi_module_spec(
     obs_spaces_by_policy: dict,
     act_spaces_by_policy: dict,
+    module_class=DefaultPPOTorchRLModule,
+    use_lstm: bool = False,
+    max_seq_len: int = 20,
+    lstm_cell_size: int = 256,
 ) -> MultiRLModuleSpec:
     """
     Build a MultiRLModuleSpec for multiple policies.
@@ -111,6 +128,10 @@ def build_multi_module_spec(
             obs_spaces_by_policy[policy_id],
             act_spaces_by_policy[policy_id],
             policy_name=policy_id,  
+            module_class=module_class,
+            use_lstm=use_lstm,
+            max_seq_len=max_seq_len,
+            lstm_cell_size=lstm_cell_size,
         )
 
     return MultiRLModuleSpec(rl_module_specs=rl_module_specs)

@@ -1,15 +1,17 @@
-config_ppo = {
+config_appo = {
     "max_iters": 1000,
     # Core learning
     "lr": 0.0003,
     "gamma": 0.99,
-    "lambda_": 1.0,
-    "train_batch_size_per_learner": 1024,
-    "minibatch_size": 128,
-    "num_epochs": 30,
+    "train_batch_size_per_learner": 2048,
     "entropy_coeff": 0.0,
-    "vf_loss_coeff": 1.0,
+    "vf_loss_coeff": 0.5,
     "clip_param": 0.3,
+    "kl_coeff": 0.2,
+    "kl_target": 0.01,
+    "use_kl_loss": True,
+    "vtrace": True,
+    "grad_clip": 40.0,
     # Resources
     # Keep one environment instance so mu-update semantics remain global.
     "num_learners": 1,
@@ -20,7 +22,6 @@ config_ppo = {
     "num_cpus_per_env_runner": 1,
     "sample_timeout_s": 600,
     "rollout_fragment_length": "auto",
-    # KL / exploration
-    "kl_coeff": 0.2,
-    "kl_target": 0.01,
 }
+
+config_ppo = config_appo

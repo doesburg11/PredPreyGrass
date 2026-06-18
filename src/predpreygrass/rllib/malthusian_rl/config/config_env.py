@@ -30,12 +30,12 @@ config_env = {
         "type_2_prey": 0.0,
     },
     "reproduction_reward_predator": {
-        "type_1_predator": 10.0,
-        "type_2_predator": 10.0,
+        "type_1_predator": 0.0,
+        "type_2_predator": 0.0,
     },
     "reproduction_reward_prey": {
-        "type_1_prey": 10.0,
-        "type_2_prey": 10.0,
+        "type_1_prey": 0.0,
+        "type_2_prey": 0.0,
     },
     # Energy settings
     "energy_loss_per_step_predator": 0.15,
@@ -60,8 +60,17 @@ config_env = {
     "min_initial_mass_per_species": 1,
     # Malthusian scaffold (episode-end phi -> mu update across islands).
     "enable_malthusian_update": True,
+    # Modes:
+    # - strict: paper-style phi from return and softmax-logit mu update.
+    # - generalized: ecology-weighted phi and z-score/logit mu update.
+    "malthusian_replication_mode": "strict",
+    "malthusian_mu_update": "multiplicative",
     "malthusian_eta": 0.2,
+    "malthusian_mu_learning_rate": 0.2,
+    "malthusian_mu_entropy_coeff": 0.0,
     "malthusian_mu_floor": 0.0,
+    # Disable within-episode birth/death demography for stricter paper alignment.
+    "enable_within_episode_reproduction": False,
     # Ecology-driven phi score components:
     # phi = w_offspring*offspring + w_survival*survival + w_foraging*times_ate
     #     + w_energy*relative_energy_delta + w_death*death_indicator + w_reward*cumulative_reward

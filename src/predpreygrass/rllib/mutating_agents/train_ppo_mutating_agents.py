@@ -22,19 +22,8 @@ import os
 from datetime import datetime
 from pathlib import Path
 import json
+import math
 import time
-
-
-# Custom logger_creator to redirect RLlib logs to our experiment_path
-def custom_logger_creator(config):
-    def logger_creator_func(config_):
-        from ray.tune.logger import UnifiedLogger
-
-        logdir = str(experiment_path)
-        print(f"Redirecting RLlib logging to {logdir}")
-        return UnifiedLogger(config_, logdir, loggers=None)
-
-    return logger_creator_func
 
 
 def get_config_ppo():
@@ -99,6 +88,27 @@ def build_module_spec(obs_space, act_space):
     )
 
 
+def get_result_metric(result, flat_key, *nested_keys, default=float("nan")):
+    if flat_key in result:
+        return result[flat_key]
+
+    value = result
+    for key in nested_keys:
+        if not isinstance(value, dict) or key not in value:
+            return default
+        value = value[key]
+    return value
+
+
+def format_metric_with_last(value, last_value):
+    if isinstance(value, (int, float)) and math.isfinite(float(value)):
+        value = float(value)
+        return f"{value:.2f}", value
+    if last_value is not None:
+        return f"no completed episodes (last={last_value:.2f})", last_value
+    return "no completed episodes yet", last_value
+
+
 # --- Main training loop ---
 
 if __name__ == "__main__":
@@ -107,7 +117,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
     # adjust the path to your personal results directory
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     experiment_name = f"PPO_{timestamp}"
@@ -126,14 +136,20 @@ if __name__ == "__main__":
 
     # Build MultiRLModuleSpec
     sample_env = env_creator(config=config_env)
+    observation_spaces = sample_env.observation_spaces
+    action_spaces = sample_env.action_spaces
+    if observation_spaces is None or action_spaces is None:
+        raise RuntimeError("PredPreyGrass must define observation_spaces and action_spaces before training.")
+
     sample_agents = ["speed_1_predator_0", "speed_2_predator_0", "speed_1_prey_0", "speed_2_prey_0"]
     module_specs = {}
+    policy_specs = {}
     for sample_agent in sample_agents:
         policy = policy_mapping_fn(sample_agent)
-        module_specs[policy] = build_module_spec(
-            sample_env.observation_spaces[sample_agent],
-            sample_env.action_spaces[sample_agent],
-        )
+        obs_space = observation_spaces[sample_agent]
+        act_space = action_spaces[sample_agent]
+        module_specs[policy] = build_module_spec(obs_space, act_space)
+        policy_specs[policy] = (None, obs_space, act_space, {})
     multi_module_spec = MultiRLModuleSpec(rl_module_specs=module_specs)
 
     # Build PPO algorithm
@@ -142,7 +158,7 @@ if __name__ == "__main__":
         .environment(env="PredPreyGrass")
         .framework("torch")
         .multi_agent(
-            policies={pid: (None, module_specs[pid].observation_space, module_specs[pid].action_space, {}) for pid in module_specs},
+            policies=policy_specs,
             policy_mapping_fn=policy_mapping_fn,
         )
         .training(
@@ -166,25 +182,29 @@ if __name__ == "__main__":
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
         .callbacks(EpisodeReturn)
-        .build_algo(logger_creator=custom_logger_creator({}))
+        .build_algo()
     )
 
     # Manual training loop
-    max_iters = 1000
-    checkpoint_every = 10
+    max_iters = int(os.environ.get("PPO_MAX_ITERS", "1000"))
+    checkpoint_every = int(os.environ.get("PPO_CHECKPOINT_EVERY", "10"))
+    last_mean_return = None
+    last_mean_len = None
 
     for iter in range(max_iters):
         print(f"\n=== Training iteration {iter + 1}/{max_iters} ===")
         result = ppo_algo.train()
 
-        mean_return = result.get("env_runners/episode_return_mean", float("nan"))
-        mean_len = result.get("env_runners/episode_len_mean", float("nan"))
+        mean_return = get_result_metric(result, "env_runners/episode_return_mean", "env_runners", "episode_return_mean")
+        mean_len = get_result_metric(result, "env_runners/episode_len_mean", "env_runners", "episode_len_mean")
+        mean_return_text, last_mean_return = format_metric_with_last(mean_return, last_mean_return)
+        mean_len_text, last_mean_len = format_metric_with_last(mean_len, last_mean_len)
 
         print(
             f"Iteration {iter + 1}: "
             f"Env steps sampled={result['num_env_steps_sampled_lifetime']}, "
-            f"Mean episode return={mean_return:.2f}, "
-            f"Mean episode length={mean_len:.2f}"
+            f"Mean episode return={mean_return_text}, "
+            f"Mean episode length={mean_len_text}"
         )
         # Save checkpoint manually every N iterations
         if (iter + 1) % checkpoint_every == 0 or (iter + 1) == max_iters:
@@ -196,5 +216,6 @@ if __name__ == "__main__":
             print(f"Saved Algorithm checkpoint to {checkpoint_path}")
 
     # Delay shutdown to give Ray time to clean up, to avoid crashing
+    ppo_algo.stop()
     time.sleep(2)
     ray.shutdown()
