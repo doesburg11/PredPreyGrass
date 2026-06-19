@@ -5,7 +5,7 @@
       "name": "Run train_rllib_ppo_multiagentenv_debug",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/src/predpreygrass/rllib/v2_7/train_rllib_ppo_multiagentenv_debug.py",
+      "program": "${workspaceFolder}/predpreygrass/v2_7/train_rllib_ppo_multiagentenv_debug.py",
       "console": "integratedTerminal",
       "env": {
         "PYTHONWARNINGS": "ignore::DeprecationWarning",

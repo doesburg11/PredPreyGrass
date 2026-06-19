@@ -5,7 +5,7 @@ genomes/
 ray_results_failed
 ray_results_archive/
 # Rllib archive files
-src/predpreygrass/rllib/archive/
+predpreygrass/archive/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
