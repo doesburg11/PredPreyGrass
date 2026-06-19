@@ -18,7 +18,7 @@ class EpisodeReturn(RLlibCallback):
         eid = episode.id_
         self.episode_lengths[eid] = self.episode_lengths.get(eid, 0) + 1
 
-    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
+    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger | None = None, **kwargs):
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -33,16 +33,17 @@ class EpisodeReturn(RLlibCallback):
         group_rewards = defaultdict(list)
         predator_total = prey_total = 0.0
 
-        for agent_id, rewards in episode.get_rewards().items():
-            total = sum(rewards)
-            if "predator" in agent_id:
+        for agent_id, agent_episode in episode.agent_episodes.items():
+            agent_name = str(agent_id)
+            total = agent_episode.get_return()
+            if "predator" in agent_name:
                 predator_total += total
-            elif "prey" in agent_id:
+            elif "prey" in agent_name:
                 prey_total += total
 
             # Match subgroup
             for group in ["speed_1_predator", "speed_2_predator", "speed_1_prey", "speed_2_prey"]:
-                if group in agent_id:
+                if group in agent_name:
                     group_rewards[group].append(total)
                     break
 
@@ -57,7 +58,8 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
         # Log episode length using MetricsLogger, https://docs.ray.io/en/latest/rllib/metrics-logger.html
-        metrics_logger.log_value("episode_length", episode_length, reduce="mean")
+        if metrics_logger is not None:
+            metrics_logger.log_value("episode_length", episode_length, reduce="mean")
 
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics

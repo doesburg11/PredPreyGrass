@@ -4,7 +4,16 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 
 
-def build_module_spec(obs_space, act_space, policy_name: str = None):
+def build_module_spec(
+    obs_space,
+    act_space,
+    policy_name: str = None,
+    module_class=DefaultPPOTorchRLModule,
+    use_lstm: bool = False,
+    max_seq_len: int = 20,
+    lstm_cell_size: int = 256,
+    paper_network_architecture: bool = False,
+):
     """
     Build an RLModuleSpec whose conv depth L matches the observation window size H
     so that the receptive field RF = 1 + 2L equals H.
@@ -20,36 +29,46 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
     # Odd size is important because the agent is always centered in its window.
     assert H == W and H % 2 == 1, "Expected odd square obs windows (e.g., 7x7, 9x9)."
 
-    # Receptive field math:
-    # Each 3x3 stride-1 conv layer expands the receptive field by +2.
-    # General formula: RF = 1 + 2 * L
-    # To cover the full observation window (size H), we solve:
-    #   H = 1 + 2L  →  L = (H - 1) // 2
-    # Example: H=7 → L=3 conv layers (RF=7), H=9 → L=4 conv layers (RF=9).
-    L = (H - 1) // 2
-
-    # Channel schedule:
-    # We start small (16 filters), then increase (32, 64).
-    # If more layers are needed (e.g., prey with 9x9), we keep adding 64-channel layers.
-    base_channels = [16, 32, 64]
-    if L <= len(base_channels):
-        channels = base_channels[:L]
+    if paper_network_architecture:
+        # Leibo et al. report a 16-channel 3x3 stride-1 convnet, then a
+        # one-layer MLP of size 32, then an LSTM of size 64.
+        L = 1
+        channels = [16]
+        conv_filters = [[16, [3, 3], 1]]
+        fcnet_hiddens = [32]
+        head_note = "paper"
     else:
-        channels = base_channels + [64] * (L - len(base_channels))
+        # Receptive field math:
+        # Each 3x3 stride-1 conv layer expands the receptive field by +2.
+        # General formula: RF = 1 + 2 * L
+        # To cover the full observation window (size H), we solve:
+        #   H = 1 + 2L  ->  L = (H - 1) // 2
+        # Example: H=7 -> L=3 conv layers (RF=7), H=9 -> L=4 conv layers (RF=9).
+        L = (H - 1) // 2
 
-    # Assemble conv_filters list for RLlib (format: [num_filters, [kernel, kernel], stride])
-    conv_filters = [[c, [3, 3], 1] for c in channels]
+        # Channel schedule:
+        # We start small (16 filters), then increase (32, 64).
+        # If more layers are needed (e.g., prey with 9x9), we keep adding 64-channel layers.
+        base_channels = [16, 32, 64]
+        if L <= len(base_channels):
+            channels = base_channels[:L]
+        else:
+            channels = base_channels + [64] * (L - len(base_channels))
 
-    # Adjust the fully-connected (FC) hidden sizes based on the action space.
-    # If the agent has many actions (e.g., prey with 25 moves), we give it a wider first FC layer
-    # so it has more capacity to rank actions effectively.
+        # Assemble conv_filters list for RLlib (format: [num_filters, [kernel, kernel], stride])
+        conv_filters = [[c, [3, 3], 1] for c in channels]
+
+        # Adjust the fully-connected (FC) hidden sizes based on the action space.
+        # If the agent has many actions (e.g., prey with 25 moves), we give it a wider first FC layer
+        # so it has more capacity to rank actions effectively.
+        num_actions = act_space.n if hasattr(act_space, "n") else None
+        if num_actions is not None and num_actions > 20:
+            fcnet_hiddens = [384, 256]
+            head_note = "wide"
+        else:
+            fcnet_hiddens = [256, 256]
+            head_note = "standard"
     num_actions = act_space.n if hasattr(act_space, "n") else None
-    if num_actions is not None and num_actions > 20:
-        fcnet_hiddens = [384, 256]
-        head_note = "wide"
-    else:
-        fcnet_hiddens = [256, 256]
-        head_note = "standard"
 
     # ---- Debug/trace log (once per policy) ----
     # Example: [MODEL] type_1_prey → obs CxHxW=4x9x9, L=4 (RF=9), conv=[16,32,64,64], actions=25, head=wide
@@ -64,7 +83,7 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
 
 
     return RLModuleSpec(
-        module_class=DefaultPPOTorchRLModule,
+        module_class=module_class,
         observation_space=obs_space,
         action_space=act_space,
         inference_only=False,
@@ -72,12 +91,22 @@ def build_module_spec(obs_space, act_space, policy_name: str = None):
             "conv_filters": conv_filters,
             "fcnet_hiddens": fcnet_hiddens,
             "fcnet_activation": "relu",
+            "use_lstm": use_lstm,
+            "max_seq_len": max_seq_len,
+            "lstm_cell_size": lstm_cell_size,
+            "lstm_use_prev_action": False,
+            "lstm_use_prev_reward": False,
         },
     )
 
 def build_multi_module_spec(
     obs_spaces_by_policy: dict,
     act_spaces_by_policy: dict,
+    module_class=DefaultPPOTorchRLModule,
+    use_lstm: bool = False,
+    max_seq_len: int = 20,
+    lstm_cell_size: int = 256,
+    paper_network_architecture: bool = False,
 ) -> MultiRLModuleSpec:
     """
     Build a MultiRLModuleSpec for multiple policies.
@@ -111,6 +140,11 @@ def build_multi_module_spec(
             obs_spaces_by_policy[policy_id],
             act_spaces_by_policy[policy_id],
             policy_name=policy_id,  
+            module_class=module_class,
+            use_lstm=use_lstm,
+            max_seq_len=max_seq_len,
+            lstm_cell_size=lstm_cell_size,
+            paper_network_architecture=paper_network_architecture,
         )
 
     return MultiRLModuleSpec(rl_module_specs=rl_module_specs)

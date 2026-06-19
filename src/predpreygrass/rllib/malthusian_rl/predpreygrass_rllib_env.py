@@ -10,19 +10,40 @@ Additions:
               still pays movement energy cost as computed for attempted move).
 """
 # external libraries (Ray optional for lightweight diagnostics)
+from typing import TYPE_CHECKING
+
 import gymnasium
-try:
-    from ray.rllib.env.multi_agent_env import MultiAgentEnv
-    from ray.rllib.utils.typing import AgentID, Tuple
-except Exception:  # pragma: no cover
-    from typing import Tuple as TypingTuple
-    class MultiAgentEnv:  # minimal stub for wall/placement local tests
-        def __init__(self):
-            pass
-    AgentID = str
-    Tuple = TypingTuple
-import numpy as np
 import math
+import numpy as np
+
+
+class _FallbackMultiAgentEnv:
+    """Minimal stub for wall/placement local tests."""
+
+    def __init__(self) -> None:
+        pass
+
+
+if TYPE_CHECKING:
+
+    class MultiAgentEnv:
+        """Static-analysis stub; runtime uses Ray's MultiAgentEnv when available."""
+
+        possible_agents: list[str]
+        agents: list[str]
+
+        def __init__(self) -> None:
+            pass
+
+        def reset(self, *, seed=None, options=None) -> object:
+            pass
+
+else:
+    try:
+        from ray.rllib.env.multi_agent_env import MultiAgentEnv
+    except Exception:  # pragma: no cover
+
+        MultiAgentEnv = _FallbackMultiAgentEnv
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -33,11 +54,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.config = config
         self._initialize_from_config()  # import config variables
 
-        self.possible_agents = self._build_possible_agent_ids()
+        self.possible_agents: list[str] = self._build_possible_agent_ids()
 
         self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
+
+    def close(self) -> None:
+        """Release environment-owned resources."""
+        pass
 
     def _initialize_from_config(self):
         config = self.config
@@ -48,11 +73,37 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
 
         self.max_steps = config.get("max_steps", 10000)
-        self.rng = np.random.default_rng(config.get("seed", 42))
+        self.base_seed = config.get("seed", 42)
+        self.deterministic_reset_sequence = bool(config.get("deterministic_reset_sequence", False))
+        self._reset_counter = 0
+        self.rng = np.random.default_rng(self.base_seed)
         # Malthusian scaffold: episode-end fitness (phi) and allocation (mu) update.
         self.enable_malthusian_update = bool(config.get("enable_malthusian_update", True))
         self.malthusian_eta = float(config.get("malthusian_eta", 0.2))
+        self.malthusian_mu_learning_rate = float(config.get("malthusian_mu_learning_rate", self.malthusian_eta))
+        self.malthusian_mu_entropy_coeff = float(config.get("malthusian_mu_entropy_coeff", 0.0))
         self.malthusian_mu_floor = float(config.get("malthusian_mu_floor", 0.0))
+        self.malthusian_replication_mode = str(
+            config.get("malthusian_replication_mode", "generalized")
+        ).lower()
+        if self.malthusian_replication_mode not in ("generalized", "strict"):
+            raise ValueError(
+                "malthusian_replication_mode must be 'generalized' or 'strict'"
+            )
+
+        default_mu_update = "multiplicative" if self.malthusian_replication_mode == "strict" else "zscore_logit"
+        self.malthusian_mu_update = str(
+            config.get("malthusian_mu_update", default_mu_update)
+        ).lower()
+        if self.malthusian_mu_update not in ("zscore_logit", "multiplicative"):
+            raise ValueError(
+                "malthusian_mu_update must be 'zscore_logit' or 'multiplicative'"
+            )
+
+        default_reproduction = self.malthusian_replication_mode != "strict"
+        self.enable_within_episode_reproduction = bool(
+            config.get("enable_within_episode_reproduction", default_reproduction)
+        )
         default_phi_weights = {
             "offspring": 2.0,
             "survival": 1.0,
@@ -196,6 +247,18 @@ class PredPreyGrass(MultiAgentEnv):
             arr /= float(arr.sum())
         return arr
 
+    @staticmethod
+    def _softmax(vec):
+        arr = np.asarray(vec, dtype=np.float64)
+        if arr.size == 0:
+            return arr
+        arr = arr - float(arr.max())
+        exp = np.exp(arr)
+        total = float(exp.sum())
+        if total <= 0.0:
+            return np.ones_like(exp, dtype=np.float64) / float(exp.size)
+        return exp / total
+
     def _initialize_or_align_malthusian_state(self):
         island_ids = sorted(self.island_id_to_cells.keys())
         self.island_ids = island_ids
@@ -208,11 +271,16 @@ class PredPreyGrass(MultiAgentEnv):
         uniform = 1.0 / len(island_ids)
         for species in self._tracked_species():
             cur = self.mu_by_species.get(species, {})
-            if set(cur.keys()) != set(island_ids):
+            cur_logits = self.mu_logits_by_species.get(species, {})
+            if set(cur.keys()) != set(island_ids) or set(cur_logits.keys()) != set(island_ids):
+                self.mu_logits_by_species[species] = {iid: 0.0 for iid in island_ids}
                 self.mu_by_species[species] = {iid: uniform for iid in island_ids}
             else:
-                arr = self._normalize_mu_vector([float(cur[iid]) for iid in island_ids])
-                self.mu_by_species[species] = {iid: float(arr[k]) for k, iid in enumerate(island_ids)}
+                logits = np.asarray([float(cur_logits[iid]) for iid in island_ids], dtype=np.float64)
+                mu = self._softmax(logits)
+                mu = self._normalize_mu_vector(mu)
+                self.mu_logits_by_species[species] = {iid: float(logits[k]) for k, iid in enumerate(island_ids)}
+                self.mu_by_species[species] = {iid: float(mu[k]) for k, iid in enumerate(island_ids)}
 
     @staticmethod
     def _species_from_agent_id(agent_id: str) -> str:
@@ -275,7 +343,7 @@ class PredPreyGrass(MultiAgentEnv):
         }
 
         # Completed agents + currently alive agents (avoid double counting dead records).
-        records = [(None, rec) for rec in self.death_agents_stats.values()]
+        records: list[tuple[str | None, dict]] = [(None, rec) for rec in self.death_agents_stats.values()]
         for agent_id in self.agents:
             uid = self.unique_agents.get(agent_id)
             if uid is None:
@@ -287,7 +355,14 @@ class PredPreyGrass(MultiAgentEnv):
         for agent_id, rec in records:
             sp = rec.get("policy_group")
             iid = rec.get("spawn_island")
-            if sp not in phi or iid not in phi[sp]:
+            if not isinstance(sp, str) or sp not in phi or iid not in phi[sp]:
+                continue
+
+            if self.malthusian_replication_mode == "strict":
+                reward = float(rec.get("cumulative_reward", 0.0))
+                phi[sp][iid] += reward
+                counts[sp][iid] += 1
+                component_sums[sp][iid]["reward"] += reward
                 continue
 
             lifetime_steps = self._record_lifetime_steps(rec)
@@ -350,19 +425,25 @@ class PredPreyGrass(MultiAgentEnv):
 
         for sp in self._tracked_species():
             phi_vec = np.asarray([float(phi_by_species.get(sp, {}).get(iid, 0.0)) for iid in island_ids], dtype=np.float64)
-            mean = float(phi_vec.mean()) if phi_vec.size else 0.0
-            std = float(phi_vec.std()) if phi_vec.size else 0.0
-            z = (phi_vec - mean) / (std + 1e-8)
+            prev_logits = self.mu_logits_by_species.get(sp, {iid: 0.0 for iid in island_ids})
+            prev_logit_vec = np.asarray([float(prev_logits.get(iid, 0.0)) for iid in island_ids], dtype=np.float64)
+            prev_mu_vec = self._softmax(prev_logit_vec)
 
-            prev_mu = self.mu_by_species.get(sp, {iid: 1.0 / len(island_ids) for iid in island_ids})
-            prev_vec = np.asarray([float(prev_mu.get(iid, 0.0)) for iid in island_ids], dtype=np.float64)
-            prev_vec = self._normalize_mu_vector(prev_vec)
+            if self.malthusian_mu_update == "multiplicative":
+                updated_logits = prev_logit_vec + self.malthusian_mu_learning_rate * phi_vec
+            else:
+                mean = float(phi_vec.mean()) if phi_vec.size else 0.0
+                std = float(phi_vec.std()) if phi_vec.size else 0.0
+                z = (phi_vec - mean) / (std + 1e-8)
+                updated_logits = prev_logit_vec + self.malthusian_mu_learning_rate * z
 
-            logit = np.log(np.maximum(prev_vec, 1e-12)) + self.malthusian_eta * z
-            logit -= float(logit.max()) if logit.size else 0.0
-            updated = np.exp(logit)
-            updated = self._normalize_mu_vector(updated)
-            self.mu_by_species[sp] = {iid: float(updated[k]) for k, iid in enumerate(island_ids)}
+            if self.malthusian_mu_entropy_coeff != 0.0:
+                updated_logits -= self.malthusian_mu_entropy_coeff * np.log(np.maximum(prev_mu_vec, 1e-12))
+
+            updated_mu = self._softmax(updated_logits)
+            updated_mu = self._normalize_mu_vector(updated_mu)
+            self.mu_logits_by_species[sp] = {iid: float(updated_logits[k]) for k, iid in enumerate(island_ids)}
+            self.mu_by_species[sp] = {iid: float(updated_mu[k]) for k, iid in enumerate(island_ids)}
 
     def _finalize_malthusian_episode(self):
         if not self.enable_malthusian_update:
@@ -377,16 +458,24 @@ class PredPreyGrass(MultiAgentEnv):
         self._update_mu_from_phi(phi)
         self.last_episode_summary = {
             "episode_step": int(self.current_step),
+            "malthusian_replication_mode": self.malthusian_replication_mode,
+            "malthusian_mu_update": self.malthusian_mu_update,
+            "malthusian_mu_learning_rate": self.malthusian_mu_learning_rate,
+            "malthusian_mu_entropy_coeff": self.malthusian_mu_entropy_coeff,
             "phi_by_species": phi,
             "phi_components_by_species": component_means,
             "phi_weights": dict(self.malthusian_phi_weights),
             "mu_by_species": {sp: dict(self.mu_by_species.get(sp, {})) for sp in self._tracked_species()},
+            "mu_logits_by_species": {sp: dict(self.mu_logits_by_species.get(sp, {})) for sp in self._tracked_species()},
             "counts_by_species": counts,
         }
 
     def _init_reset_variables(self, seed):
         # Agent tracking
         self.current_step = 0
+        if seed is None and self.deterministic_reset_sequence:
+            seed = int(self.base_seed) + self._reset_counter
+        self._reset_counter += 1
         self.rng = np.random.default_rng(seed)
 
         self.agent_positions = {}
@@ -420,6 +509,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_last_reproduction = {}
         self._malthusian_finalized_at_step = None
+        self.mu_logits_by_species = {}
         # RLlib new API stack requirement: a given agent_id may not reappear
         # after it has terminated within the same episode.
         self._used_agent_ids_this_episode = set()
@@ -428,7 +518,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_predators = 0
         self.active_num_prey = 0
 
-        self.agents = []
+        self.agents: list[str] = []
         # create active agents list based on config
         for agent_type in ["predator", "prey"]:
             for type in [1, 2]:
@@ -648,11 +738,12 @@ class PredPreyGrass(MultiAgentEnv):
                 del self.unique_agents[agent]
 
         # Step 7: Spawning of new agents
-        for agent in self.agents[:]:
-            if "predator" in agent:
-                self._handle_predator_reproduction(agent, rewards, observations, terminations, truncations)
-            elif "prey" in agent:
-                self._handle_prey_reproduction(agent, rewards, observations, terminations, truncations)
+        if self.enable_within_episode_reproduction:
+            for agent in self.agents[:]:
+                if "predator" in agent:
+                    self._handle_predator_reproduction(agent, rewards, observations, terminations, truncations)
+                elif "prey" in agent:
+                    self._handle_prey_reproduction(agent, rewards, observations, terminations, truncations)
 
         # Step 8: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
@@ -990,7 +1081,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.island_id_to_cells[island_id] = component
             island_id += 1
 
-    def _log(self, verbose: bool, message: str, color: str = None):
+    def _log(self, verbose: bool, message: str, color: str | None = None):
         """
         Log with sharp 90° box-drawing borders (Unicode), optional color.
 
@@ -1014,7 +1105,7 @@ class PredPreyGrass(MultiAgentEnv):
             "reset": "\033[0m",
         }
 
-        prefix = colors.get(color, "")
+        prefix = colors.get(color, "") if color else ""
         suffix = colors["reset"] if color else ""
 
         lines = message.strip().split("\n")
@@ -1549,6 +1640,7 @@ class PredPreyGrass(MultiAgentEnv):
             },
             "last_episode_summary": dict(self.last_episode_summary),
             "_malthusian_finalized_at_step": self._malthusian_finalized_at_step,
+            "mu_logits_by_species": {sp: dict(mu) for sp, mu in self.mu_logits_by_species.items()},
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1592,8 +1684,11 @@ class PredPreyGrass(MultiAgentEnv):
         self._malthusian_finalized_at_step = snapshot.get(
             "_malthusian_finalized_at_step", self._malthusian_finalized_at_step
         )
+        self.mu_logits_by_species = {
+            sp: dict(mu) for sp, mu in snapshot.get("mu_logits_by_species", self.mu_logits_by_species).items()
+        }
 
-    def _build_possible_agent_ids(self):
+    def _build_possible_agent_ids(self) -> list[str]:
         """
         Build the list of possible agents based on the configuration.
         This is called during reset to ensure the agent list is up-to-date.
@@ -1609,7 +1704,7 @@ class PredPreyGrass(MultiAgentEnv):
             agent_ids.append(f"type_2_prey_{i}")
         return agent_ids  # ✅ ← this was missing
 
-    def _build_observation_space(self, agent_id):
+    def _build_observation_space(self, agent_id: str):
         """
         Build the observation space for a specific agent.
         """
@@ -1627,7 +1722,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return obs_space
 
-    def _build_action_space(self, agent_id):
+    def _build_action_space(self, agent_id: str):
         """
         Build the action space for a specific agent.
         """
@@ -1640,7 +1735,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         return action_space
 
-    def _register_new_agent(self, agent_id: str, parent_unique_id: str = None):
+    def _register_new_agent(self, agent_id: str, parent_unique_id: str | None = None):
         self._used_agent_ids_this_episode.add(agent_id)
         reuse_index = self.agent_activation_counts[agent_id]
         unique_id = f"{agent_id}_{reuse_index}"

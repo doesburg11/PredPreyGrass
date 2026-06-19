@@ -2,6 +2,7 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
+from collections.abc import Iterable
 
 
 class EpisodeReturn(RLlibCallback):
@@ -25,7 +26,9 @@ class EpisodeReturn(RLlibCallback):
             if hasattr(episode, attr):
                 obj = getattr(episode, attr)
                 try:
-                    return list(obj() if callable(obj) else obj)
+                    values = obj() if callable(obj) else obj
+                    if isinstance(values, Iterable):
+                        return list(values)
                 except Exception:
                     pass
         # Last resort: peek into known internal mapping used by last_info_for
@@ -48,7 +51,7 @@ class EpisodeReturn(RLlibCallback):
                     los_count += int(info.get("los_rejected", 0))
         self._episode_los_rejected[eid] = self._episode_los_rejected.get(eid, 0) + los_count
 
-    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, env=None, env_index=None, **kwargs):
+    def on_episode_end(self, *, episode, metrics_logger: MetricsLogger | None = None, env=None, env_index=None, **kwargs):
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -63,16 +66,17 @@ class EpisodeReturn(RLlibCallback):
         group_rewards = defaultdict(list)
         predator_total = prey_total = 0.0
 
-        for agent_id, rewards in episode.get_rewards().items():
-            total = sum(rewards)
-            if "predator" in agent_id:
+        for agent_id, agent_episode in episode.agent_episodes.items():
+            agent_name = str(agent_id)
+            total = agent_episode.get_return()
+            if "predator" in agent_name:
                 predator_total += total
-            elif "prey" in agent_id:
+            elif "prey" in agent_name:
                 prey_total += total
 
             # Match subgroup
             for group in ["type_1_predator", "type_2_predator", "type_1_prey", "type_2_prey"]:
-                if group in agent_id:
+                if group in agent_name:
                     group_rewards[group].append(total)
                     break
 
@@ -87,6 +91,9 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
         # Log episode length and LOS-rejected count using MetricsLogger
+        if metrics_logger is None:
+            return
+
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
         los_rejected = self._episode_los_rejected.pop(episode_id, 0)
         metrics_logger.log_value("los_rejected_moves", los_rejected, reduce="mean")
@@ -216,6 +223,9 @@ class EpisodeReturn(RLlibCallback):
         phi = global_info.get("phi_by_species", {})
         components = global_info.get("phi_components_by_species", {})
         counts = global_info.get("counts_by_species", {})
+        switching_costs = global_info.get("switching_cost_by_island", {})
+        solitary_returns = global_info.get("solitary_return_by_species", {})
+        solitary_counts = global_info.get("solitary_count_by_species", {})
 
         if isinstance(mu, dict):
             for species, island_map in mu.items():
@@ -303,3 +313,39 @@ class EpisodeReturn(RLlibCallback):
                 prey_total,
                 reduce="mean",
             )
+
+        if isinstance(switching_costs, dict):
+            for island_id, value in switching_costs.items():
+                try:
+                    v = float(value)
+                except Exception:
+                    continue
+                metrics_logger.log_value(
+                    f"malthusian/switching_cost/island_{island_id}",
+                        v,
+                        reduce="mean",
+                    )
+
+        if isinstance(solitary_returns, dict):
+            for species, value in solitary_returns.items():
+                try:
+                    v = float(value)
+                except Exception:
+                    continue
+                metrics_logger.log_value(
+                    f"malthusian/solitary_return/{species}",
+                    v,
+                    reduce="mean",
+                )
+
+        if isinstance(solitary_counts, dict):
+            for species, value in solitary_counts.items():
+                try:
+                    v = float(value)
+                except Exception:
+                    continue
+                metrics_logger.log_value(
+                    f"malthusian/solitary_count/{species}",
+                    v,
+                    reduce="mean",
+                )

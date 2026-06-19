@@ -1,7 +1,7 @@
 config_ppo = {
     "max_iters": 1000,
     # Core learning
-    "lr": 0.0003, # 0.0003,
+    "lr": 0.0003,  # 0.0003,
     "gamma": 0.99,
     "lambda_": 1.0,
     "train_batch_size_per_learner": 1024,
@@ -11,6 +11,7 @@ config_ppo = {
     "vf_loss_coeff": 1.0,
     "clip_param": 0.3,
     # Resources
+    # Keep one environment instance so mu-update semantics remain global.
     "num_learners": 1,
     "num_env_runners": 7,
     "num_envs_per_env_runner": 3,

@@ -19,16 +19,18 @@ from predpreygrass.rllib.base_environment.utils.pygame_grid_renderer_rllib impor
 )
 
 # --- External libs ---
-import ray
-from ray.tune.registry import register_env
-from ray.rllib.core.rl_module.rl_module import RLModule  # ← load modules directly
-import torch
 import os
-import matplotlib.pyplot as plt
-import pygame
+import sys
+import types
+
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
-import types, sys
+import pygame
+import ray
+import torch
+from ray.rllib.core.rl_module.rl_module import RLModule  # load modules directly
+from ray.tune.registry import register_env
 
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
@@ -48,7 +50,7 @@ try:  # Only patch if attribute truly missing
         if 'numpy._core' not in sys.modules:
             sys.modules['numpy._core'] = shim_pkg
         sys.modules['numpy._core.numeric'] = core_numeric
-except Exception as _shim_err:  # Fail silently; only affects legacy checkpoints
+except Exception:  # Fail silently; only affects legacy checkpoints
     pass
 
 def env_creator(config):
@@ -56,12 +58,12 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    # base_environment naming: "predator_x" / "prey_y" → two policies
+    # base_environment naming: "predator_x" / "prey_y" -> two policies
     if "predator" in agent_id:
         return "predator_policy"
-    elif "prey" in agent_id:
+    if "prey" in agent_id:
         return "prey_policy"
-    return None
+    raise KeyError(f"Unknown agent id '{agent_id}'; expected a predator or prey id.")
 
 
 def policy_pi(observation, policy_module, deterministic=True):
@@ -99,13 +101,12 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    script_dir = os.path.dirname(__file__)
     checkpoint_path = os.path.join(
-        script_dir,
-        "trained_policy",
-        "PPO_2025-06-06_21-34-53",
-        "PPO_PredPreyGrass_52139_00000_0_2025-06-06_21-34-53",
-        "checkpoint_000030",
+        os.path.expanduser("~"),
+        "ray_results",
+        "PPO_2026-06-17_22-06-02",
+        "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
+        "checkpoint_000099",
     )
 
     # Minimal sanity checks
@@ -139,10 +140,12 @@ if __name__ == "__main__":
     visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
 
     # --- Optional movie writer ---
+    video_writer = None
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        video_writer_fourcc = getattr(cv2, "VideoWriter_fourcc")
+        fourcc = video_writer_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
 
     # --- Viewer + loop helpers ---
@@ -221,7 +224,7 @@ if __name__ == "__main__":
                 agents_just_ate=env.agents_just_ate,
                 step=env.current_step,
             )
-            if SAVE_MOVIE:
+            if video_writer is not None:
                 frame = pygame.surfarray.array3d(visualizer.screen)
                 frame = np.transpose(frame, (1, 0, 2))  # Convert (width, height, channels) → (height, width, channels)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)  # Pygame uses RGB, OpenCV uses BGR
@@ -235,8 +238,8 @@ if __name__ == "__main__":
             clock.tick(target_fps)
 
             # Track stats
-            num_predators = sum(1 for agent in env.agents if "predator" in agent)
-            num_prey = sum(1 for agent in env.agents if "prey" in agent)
+            num_predators = sum(1 for agent in env.agents if "predator" in str(agent))
+            num_prey = sum(1 for agent in env.agents if "prey" in str(agent))
             time_steps.append(env.current_step)
             predator_counts.append(num_predators)
             prey_counts.append(num_prey)
@@ -261,10 +264,11 @@ if __name__ == "__main__":
     predator_rewards, prey_rewards = [], []
     print("\n--- Reward Breakdown per Agent ---")
     for agent_id, reward in env.cumulative_rewards.items():
-        print(f"{agent_id:15}: {reward:.2f}")
-        if "predator" in agent_id:
+        agent_name = str(agent_id)
+        print(f"{agent_name:15}: {reward:.2f}")
+        if "predator" in agent_name:
             predator_rewards.append(reward)
-        elif "prey" in agent_id:
+        elif "prey" in agent_name:
             prey_rewards.append(reward)
 
     total_predator_reward = sum(predator_rewards)
@@ -289,7 +293,7 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.show()
 
-    if SAVE_MOVIE:
+    if video_writer is not None:
         video_writer.release()
         print(f"[VideoWriter] Saved movie to {MOVIE_FILENAME}")
 

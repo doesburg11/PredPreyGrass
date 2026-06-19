@@ -85,6 +85,16 @@ if __name__ == "__main__":
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
+    if config_env.get("enable_malthusian_update", False):
+        runners = int(config_ppo.get("num_env_runners", 1))
+        envs_per_runner = int(config_ppo.get("num_envs_per_env_runner", 1))
+        if runners != 1 or envs_per_runner != 1:
+            raise ValueError(
+                "Malthusian runs require a single environment instance "
+                "(num_env_runners=1 and num_envs_per_env_runner=1) "
+                "to keep mu updates globally coherent."
+            )
+
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,

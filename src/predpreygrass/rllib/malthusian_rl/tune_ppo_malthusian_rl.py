@@ -1,5 +1,5 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+This script trains a multi-agent environment with APPO using Ray RLlib new API stack.
 It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
@@ -9,9 +9,12 @@ from predpreygrass.rllib.malthusian_rl.predpreygrass_rllib_env import PredPreyGr
 from predpreygrass.rllib.malthusian_rl.config.config_env import config_env
 from predpreygrass.rllib.malthusian_rl.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.rllib.malthusian_rl.utils.networks import build_multi_module_spec
+from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import (
+    DefaultAPPOTorchRLModule,
+)
 
 import ray
-from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.algorithms.appo import APPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -24,13 +27,13 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.rllib.malthusian_rl.config.config_ppo_gpu_default import config_ppo
+        from predpreygrass.rllib.malthusian_rl.config.config_ppo_gpu_default import config_appo
     elif num_cpus == 8:
-        from predpreygrass.rllib.malthusian_rl.config.config_ppo_cpu import config_ppo
+        from predpreygrass.rllib.malthusian_rl.config.config_ppo_cpu import config_appo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.rllib.malthusian_rl.config.config_ppo_cpu import config_ppo
-    return config_ppo
+        from predpreygrass.rllib.malthusian_rl.config.config_ppo_cpu import config_appo
+    return config_appo
 
 
 def env_creator(config):
@@ -97,7 +100,14 @@ if __name__ == "__main__":
             act_by_policy[pid] = sample_env.action_spaces[agent_id]
 
     # Build one MultiRLModuleSpec in one go
-    multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
+    multi_module_spec = build_multi_module_spec(
+        obs_by_policy,
+        act_by_policy,
+        module_class=DefaultAPPOTorchRLModule,
+        use_lstm=True,
+        max_seq_len=20,
+        lstm_cell_size=256,
+    )
 
     # Policies dict for RLlib
     policies = {
@@ -106,8 +116,8 @@ if __name__ == "__main__":
     }
 
     # Build config dictionary for Tune
-    ppo_config = (
-        PPOConfig()
+    appo_config = (
+        APPOConfig()
         .environment(env="PredPreyGrass", env_config=config_env)
         .framework("torch")
         .multi_agent(
@@ -116,16 +126,16 @@ if __name__ == "__main__":
         )
         .training(
             train_batch_size_per_learner=config_ppo["train_batch_size_per_learner"],
-            minibatch_size=config_ppo["minibatch_size"],
-            num_epochs=config_ppo["num_epochs"],
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
-            lambda_=config_ppo["lambda_"],
             entropy_coeff=config_ppo["entropy_coeff"],
             vf_loss_coeff=config_ppo["vf_loss_coeff"],
             clip_param=config_ppo["clip_param"],
             kl_coeff=config_ppo["kl_coeff"],
             kl_target=config_ppo["kl_target"],
+            use_kl_loss=config_ppo["use_kl_loss"],
+            vtrace=config_ppo["vtrace"],
+            grad_clip=config_ppo["grad_clip"],
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .learners(
@@ -150,8 +160,8 @@ if __name__ == "__main__":
     del sample_env  # to avoid any stray references
 
     tuner = Tuner(
-        ppo_config.algo_class,
-        param_space=ppo_config,
+        appo_config.algo_class,
+        param_space=appo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
