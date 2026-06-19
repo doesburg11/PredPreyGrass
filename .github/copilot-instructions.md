@@ -3,7 +3,7 @@
 Purpose: Multi-agent evolutionary RL (predators, prey, grass) using Ray RLlib PPO across versioned experiment directories (`v1_0`, `v2_0`, `v3_0`, `v3_1`). Focus: reproducible experiment scripts, configurable environment energy/reproduction dynamics, and hyperparameter search.
 
 ### Architecture & Key Paths
-- Core env: `src/predpreygrass/rllib/v3_1/predpreygrass_rllib_env.py` (gridworld + energy + reproduction logic). Earlier versions kept for experiment lineage.
+- Core env: `predpreygrass/v3_1/predpreygrass_rllib_env.py` (gridworld + energy + reproduction logic). Earlier versions kept for experiment lineage.
 - Config layers: `config_env_*.py` (environment physics & evolutionary parameters), `config_ppo_*.py` (PPO training defaults for cpu/gpu/search/pbt variants). Selection sometimes conditional on CPU count.
 - Networks / multi-agent module spec: `utils/networks.py` (`build_multi_module_spec`) builds RLlib `MultiAgentRLModuleSpec` from per-policy spaces auto-derived from a sample env.
 - Training scripts:
@@ -50,7 +50,7 @@ Typical build sequence (see `tune_ppo_multiagentenv_search_3.py`):
 2. Adjust or add `config_ppo_*.py` with new hyperparams.
 3. Create `tune_ppo_multiagentenv_search_<tag>.py` cloning pattern from `*_search_3.py`.
 4. If adding metrics: subclass `DefaultCallbacks`, emit scalar on `on_train_result`, reference via `.callbacks(...)`.
-5. Run with: `python -u src/predpreygrass/rllib/v3_2/tune_ppo_multiagentenv_search_<tag>.py 2>&1 | tee logs/last_run_tune.log`.
+5. Run with: `python -u predpreygrass/v3_2/tune_ppo_multiagentenv_search_<tag>.py 2>&1 | tee logs/last_run_tune.log`.
 
 ### External Dependencies
 - Ray RLlib/Tune (>=2.49.0 per badge), PyTorch backend, Optuna for search, Pygame (visualization), Conda environment pinned in `predpreygrass_env.yml` / `pyproject.toml` / `requirements.txt`.
@@ -61,8 +61,8 @@ AVOID: Refactoring old version directories; introducing breaking agent_id format
 
 ### Quick Reference Commands
 Create env & install (editable): `pip install -e .`
-Run evaluation (example): `python src/predpreygrass/rllib/v1_0/evaluate_ppo_from_checkpoint_debug.py`
-Launch search (latest): `python -u src/predpreygrass/rllib/v3_1/tune_ppo_multiagentenv_search_3.py`.
+Run evaluation (example): `python predpreygrass/v1_0/evaluate_ppo_from_checkpoint_debug.py`
+Launch search (latest): `python -u predpreygrass/v3_1/tune_ppo_multiagentenv_search_3.py`.
 
 ---
 Feedback: Indicate any missing workflow (tests? data export? checkpoint replay) and this guide will be updated.
