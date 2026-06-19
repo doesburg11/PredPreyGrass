@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         appo_config.algo_class,
-        param_space=appo_config,
+        param_space=appo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

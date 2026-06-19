@@ -73,7 +73,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.verbose_engagement = config.get("verbose_engagement", self.debug_mode)
 
         self.max_steps = config.get("max_steps", 10000)
-        self.rng = np.random.default_rng(config.get("seed", 42))
+        self.base_seed = config.get("seed", 42)
+        self.deterministic_reset_sequence = bool(config.get("deterministic_reset_sequence", False))
+        self._reset_counter = 0
+        self.rng = np.random.default_rng(self.base_seed)
         # Malthusian scaffold: episode-end fitness (phi) and allocation (mu) update.
         self.enable_malthusian_update = bool(config.get("enable_malthusian_update", True))
         self.malthusian_eta = float(config.get("malthusian_eta", 0.2))
@@ -470,6 +473,9 @@ class PredPreyGrass(MultiAgentEnv):
     def _init_reset_variables(self, seed):
         # Agent tracking
         self.current_step = 0
+        if seed is None and self.deterministic_reset_sequence:
+            seed = int(self.base_seed) + self._reset_counter
+        self._reset_counter += 1
         self.rng = np.random.default_rng(seed)
 
         self.agent_positions = {}

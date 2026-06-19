@@ -6,6 +6,12 @@ This module is a dedicated copy of `rllib/walls_occlusion` under:
 
 Its purpose is to provide a clean base for **Malthusian Reinforcement Learning (MRL)** experiments in Predator-Prey-Grass (PPG), where walls can be used to create spatially isolated "islands" (demes) inside a single gridworld.
 
+For strict paper-parity work tracking, see:
+
+- `EXACT_REPRODUCTION_CHECKLIST.md`
+- `EXACT_DEVIATIONS.md`
+- `EXACT_CITATION_MAP.md`
+
 ## What Malthusian RL Means Here
 
 In Malthusian RL, selection pressure is shaped by **population pressure across environments** rather than only by single-episode rewards. A practical mapping for this codebase is:
@@ -182,6 +188,42 @@ Train:
 PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/tune_ppo_malthusian_rl.py
 ```
 
+Strict exact APPO run:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/tune_appo_malthusian_exact.py
+```
+
+Strict exact APPO multi-seed run:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/scripts/run_exact_reproduction_seeds.py --seeds 0 1 2
+```
+
+Article-task Allelopathy reconstruction:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/scripts/run_article_reproduction_seeds.py --task allelopathy --variant biased --condition allelopathy_biased_heterogeneous_dynamic --seeds 0 1 2
+```
+
+Article-task Clamity reconstruction:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/scripts/run_article_reproduction_seeds.py --task clamity --condition clamity_dynamic_population --seeds 0 1 2
+```
+
+Full article-condition matrix reconstruction:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/scripts/run_article_condition_matrix.py --seeds 0 1 2
+```
+
+Paper-like evaluation for exact runs:
+
+```bash
+PYTHONPATH=src python src/predpreygrass/rllib/malthusian_rl/evaluate_exact_reproduction.py
+```
+
 Random rollout viewer:
 
 ```bash
@@ -214,10 +256,44 @@ Typical config knobs to control:
 
 ## Suggested Next Additions
 
-1. Add trainer-side logging/plots for `phi` and `mu` trajectories per species and island.
-2. If scaling back to parallel env runners, add explicit global `mu` synchronization across workers at episode boundaries.
-3. Add optional migration controls (rare gates or transfer budget) to move from hard-island to soft-island experiments.
-4. Tune `malthusian_phi_weights` against your exact research target (for example reducing direct reward term to zero or adjusting death penalty).
+1. Implement the paper's Clamity and Allelopathy games directly if the goal is exact article-figure reproduction.
+2. Scale the exact protocol from the current PPG four-island mapped analogue to the article's K=960, NI=60 Allelopathy setting once the paper game exists.
+3. If scaling back to parallel env runners, add explicit global `mu` synchronization across workers at episode boundaries.
+4. Add optional migration controls (rare gates or transfer budget) to move from hard-island to soft-island experiments.
+
+## Exact Reproduction Boundary
+
+Implemented now:
+
+- frozen mapped paper protocol: `config/config_paper_protocol.py`,
+- text-grounded article-task reconstructions: `article_tasks.py`,
+- article-task protocol configs: `config/config_article_protocol.py`,
+- cited APPO/V-trace learner config: `config/config_appo_exact.py`,
+- exact trainer: `tune_appo_malthusian_exact.py`,
+- article-task trainer: `tune_appo_article_exact.py`,
+- named article-condition presets for dynamic, fixed-population, single-agent, and solitary-evaluation protocol conditions,
+- multi-seed harness: `scripts/run_exact_reproduction_seeds.py`,
+- article-task multi-seed harness: `scripts/run_article_reproduction_seeds.py`,
+- full article-condition matrix harness: `scripts/run_article_condition_matrix.py`,
+- paper-like evaluator and plots: `evaluate_exact_reproduction.py`,
+- condition summaries plus Figure 2/Figure 3 family CSV and PNG summaries,
+- article-condition coverage checks in acceptance reports,
+- metadata-integrity checks for git status, package versions, and config checksum validation,
+- mapped-protocol acceptance bands in `config/config_paper_protocol.py`.
+
+Still not claimable:
+
+- exact Clamity reproduction,
+- exact Allelopathy reproduction,
+- matching article Figure 2 or Figure 3 outcomes.
+
+Reason:
+
+- Allelopathy and Clamity now exist as runnable text-grounded reconstructions.
+- Exact article reproduction is still blocked because the paper does not publish enough environment constants for literal Figure 2/Figure 3 reproduction.
+- DeepMind Melting Pot contains a related official `allelopathic_harvest` substrate, but it is a later non-identical task, not the 2019 two-shrub Malthusian Allelopathy task.
+- DeepMind Lab2D contains the simulator platform, but no public Clamity or 2019 two-shrub Allelopathy task implementation was found there.
+- The missing constants are tracked in `config/config_article_protocol.py` under `ARTICLE_EXACT_BLOCKERS`.
 
 ## References
 
