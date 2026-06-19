@@ -35,6 +35,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["predpreygrass*"]
 
 [tool.ruff]
 line-length = 132
