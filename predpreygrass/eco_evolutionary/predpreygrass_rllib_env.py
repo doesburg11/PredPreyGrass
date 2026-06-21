@@ -378,7 +378,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 6.5: Apply lineage survival rewards based on live descendant changes
         self._apply_lineage_survival_rewards()
 
-        # Step 8: Assemble return dicts. Observations contain only agents that
+        # Step 7: Assemble return dicts. Observations contain only agents that
         # should act next. Rewards/done flags may include agents that ended on
         # this step.
         live_ids: set[str] = {str(a) for a in self.agents}
