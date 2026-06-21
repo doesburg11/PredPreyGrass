@@ -5,24 +5,23 @@ This module is the biological-realism branch of PredPreyGrass. It starts from
 scaffold: never-reused IDs, parent-child tracking, lineage logs, fertility caps,
 age limits, and juvenile constraints.
 
-The new layer is an explicit heritable genome. The genome controls biological
-traits and life-history parameters, not learned PPO policy weights. This keeps
-the default model Darwinian/Baldwinian rather than Lamarckian.
+The new layer is an explicit heritable genome. In the base experiment, the
+genome controls movement speed, not learned PPO policy weights. This keeps the
+default model Darwinian/Baldwinian rather than Lamarckian.
 
 ## Current Scope
 
-Active heritable traits:
+Active heritable trait:
 
 - `speed`: selects the movement band. Slow agents are clipped to distance-1
   moves; fast agents can use distance-2 moves from the shared 5x5 action space.
-- `movement_cost_multiplier`: scales per-step metabolic cost.
-- `reproduction_threshold_multiplier`: scales the energy threshold required for
-  reproduction.
-- `offspring_energy_fraction`: controls how much of the parent's current energy
-  is invested in the child.
+  Speed also increases locomotion cost.
 
 At reproduction, offspring inherit the parent's genome with bounded mutation.
 Founders receive genomes sampled from role-specific founder distributions.
+Reproduction thresholds and offspring starting energy are fixed environment
+parameters in the base experiment, so the first treatment isolates the speed
+tradeoff.
 
 ## Open Grid Observations
 
@@ -59,16 +58,19 @@ speed >= speed_distance_threshold -> max distance 2
 If a slow agent chooses a distance-2 action, the vector is clipped to distance 1
 in the same direction. For example, `(2, 0)` becomes `(1, 0)`.
 
-Fast movement is not free. Per-step energy decay is:
+Fast movement is not free. Energy loss is split into basal metabolism plus
+locomotion cost:
 
 ```text
-base_decay * movement_cost_multiplier * speed_cost_multiplier
+basal_loss_per_step
++ movement_cost_per_cell * actual_distance * speed^movement_speed_cost_exponent
 ```
 
-By default, slow agents use `speed_cost_multiplier = 1.0`, while fast agents use
-`speed_cost_multiplier = 1.8`. This makes speed useful for chasing, escaping,
-and reaching resources, but costly enough that efficient slow agents can remain
-competitive in some ecological conditions.
+By default, `movement_speed_cost_exponent = 2.0`, so high speed is
+superlinearly expensive when the agent actually moves. Staying still still costs
+basal metabolism, but it does not incur locomotion cost. This makes speed useful
+for chasing, escaping, and reaching resources, while allowing slow or efficient
+agents to remain competitive in some ecological conditions.
 
 ## What This Is Not
 
@@ -98,7 +100,7 @@ PYTHONPATH=src pytest -q predpreygrass/eco_evolutionary/tests/test_eco_evolution
 The intended model is:
 
 ```text
-genome -> body/life-history traits -> lifetime behavior through shared PPO policy
+genome -> speed trait -> lifetime behavior through shared PPO policy
        -> survival/reproduction -> inherited genome with mutation
 ```
 
