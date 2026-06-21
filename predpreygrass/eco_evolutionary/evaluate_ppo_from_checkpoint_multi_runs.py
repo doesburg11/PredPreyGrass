@@ -101,7 +101,8 @@ if __name__ == "__main__":
                 json.dump(config_env, f, indent=4)
             with open(os.path.join(summary_data_dir, "reward_summary_" + str(run + 1) + ".txt"), "w") as f:
                 f.write(f"Total Reward: {total_reward:.2f}\n")
-                for aid, r in env.cumulative_rewards.items():
+                for aid, stats in env.get_all_agent_stats().items():
+                    r = stats.get("cumulative_reward", 0.0)
                     f.write(f"{aid:20}: {r:.2f}\n")
 
     ray.shutdown()
