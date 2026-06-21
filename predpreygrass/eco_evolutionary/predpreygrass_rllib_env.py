@@ -30,6 +30,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.observation_spaces = {agent_id: self._build_observation_space(agent_id) for agent_id in self.possible_agents}
 
         self.action_spaces = {agent_id: self._build_action_space(agent_id) for agent_id in self.possible_agents}
+        self.observation_space = gymnasium.spaces.Dict({str(aid): space for aid, space in self.observation_spaces.items()})
+        self.action_space = gymnasium.spaces.Dict({str(aid): space for aid, space in self.action_spaces.items()})
+        self.observation_space_struct = self.observation_spaces
+        self.action_space_struct = self.action_spaces
 
     def _initialize_from_config(self):
         config = self.config
@@ -83,6 +87,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Energy settings
         self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
         self.energy_loss_per_step_prey = config["energy_loss_per_step_prey"]
+        self.movement_energy_cost_per_cell_predator = config.get("movement_energy_cost_per_cell_predator", 0.0)
+        self.movement_energy_cost_per_cell_prey = config.get("movement_energy_cost_per_cell_prey", 0.0)
+        self.movement_speed_cost_exponent = config.get("movement_speed_cost_exponent", 2.0)
         self.predator_creation_energy_threshold = config["predator_creation_energy_threshold"]
         self.prey_creation_energy_threshold = config["prey_creation_energy_threshold"]
         self.max_energy_grass = self.config["max_energy_grass"]
@@ -120,8 +127,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.speed_distance_threshold = config.get("speed_distance_threshold", 1.5)
         self.slow_max_move_distance = config.get("slow_max_move_distance", 1)
         self.fast_max_move_distance = config.get("fast_max_move_distance", 2)
-        self.slow_speed_cost_multiplier = config.get("slow_speed_cost_multiplier", 1.0)
-        self.fast_speed_cost_multiplier = config.get("fast_speed_cost_multiplier", 1.8)
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -291,10 +296,13 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step = 0
 
         self.potential_new_ids = list(set(self.possible_agents) - set(self.agents))        
+        self.observation_space_struct = self.observation_spaces
+        self.action_space_struct = self.action_spaces
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
     def step(self, action_dict):
+        acted_ids = {str(agent) for agent in action_dict}
         self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         self.agents_just_ate.clear()  # For stepwise display eating in grid
         self._pending_infos = {}  # Reset per-step self.infos
@@ -379,6 +387,17 @@ class PredPreyGrass(MultiAgentEnv):
         trunc_full = dict(self.truncations)
         ended_ids = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag}
 
+        missing_acted_ids = (acted_ids - live_ids - ended_ids) & set(self.possible_agents)
+        for agent in missing_acted_ids:
+            # RLlib requires every agent that acted and disappeared to receive a
+            # final done flag plus final observation. This catches carcass/cleanup
+            # edge cases where lower-level bookkeeping removed an acted agent
+            # before the final return dict was assembled.
+            reward_full.setdefault(agent, self.rewards.get(agent, 0.0))
+            term_full[agent] = True
+            trunc_full[agent] = False
+        ended_ids |= missing_acted_ids
+
         episode_done = self.active_num_prey <= 0 or self.active_num_predators <= 0
         if episode_done:
             # Extinction is a natural terminal condition, not a time-limit truncation.
@@ -387,6 +406,7 @@ class PredPreyGrass(MultiAgentEnv):
                 trunc_full[agent] = False
             ended_ids |= live_ids
             self._attach_final_cumulative_rewards_for_live_agents()
+            self._attach_episode_training_metrics()
 
         output_ids = live_ids | ended_ids
         self.rewards = {aid: reward_full.get(aid, 0.0) for aid in output_ids}
@@ -401,7 +421,16 @@ class PredPreyGrass(MultiAgentEnv):
 
         next_actor_ids = live_ids - ended_ids if not episode_done else set()
         get_obs = self._get_observation
-        self.observations = {agent: get_obs(agent) for agent in next_actor_ids}
+        final_observations = {}
+        for agent in ended_ids:
+            if agent in self.observations:
+                final_observations[agent] = self.observations[agent]
+            elif agent in self.agent_positions:
+                final_observations[agent] = get_obs(agent)
+            elif agent in acted_ids:
+                final_observations[agent] = self._empty_observation(agent)
+        self.observations = final_observations
+        self.observations.update({agent: get_obs(agent) for agent in next_actor_ids})
 
         step_data = {}
         for agent in self.agents:
@@ -431,15 +460,17 @@ class PredPreyGrass(MultiAgentEnv):
 
         if self.current_step >= self.max_steps and not episode_done:
             # Final time-limit step: active agents are truncated. Agents that
-            # died earlier in this step remain terminated. No observations are
-            # returned because no agent should act after the time limit.
+            # died earlier in this step remain terminated. RLlib requires a
+            # final observation for truncated agents for value bootstrapping.
             active_now = set(self.agents)
             final_ids = (set(self.rewards) | set(self.terminations) | set(self.truncations) | active_now) - {"__all__"}
+            final_ids |= (acted_ids - active_now) & set(self.possible_agents)
 
-            rews, terms, truncs, infos = {}, {}, {}, {}
+            obs, rews, terms, truncs, infos = {}, {}, {}, {}, {}
             for agent in active_now:
                 truncs[agent] = True
                 terms[agent] = False
+                obs[agent] = self._get_observation(agent)
 
             for agent in final_ids:
                 rews[agent] = self.rewards.get(agent, 0.0)
@@ -448,23 +479,38 @@ class PredPreyGrass(MultiAgentEnv):
                 if agent in active_now:
                     terms[agent] = False
                     truncs[agent] = True
+                elif agent in acted_ids and not terms[agent] and not truncs[agent]:
+                    terms[agent] = True
                 info = self._pending_infos.get(agent, {}).copy()
                 record = self.agent_stats_live.get(agent) or self.agent_stats_completed.get(agent)
                 if record is not None:
                     info["final_cumulative_reward"] = record.get("cumulative_reward", 0.0)
                 infos[agent] = info
+                if (terms[agent] or truncs[agent]) and agent not in obs:
+                    if agent in self.observations:
+                        obs[agent] = self.observations[agent]
+                    elif agent in self.agent_positions:
+                        obs[agent] = self._get_observation(agent)
+                    elif agent in acted_ids:
+                        obs[agent] = self._empty_observation(agent)
 
             truncs["__all__"] = True
             terms["__all__"] = False
 
             # Overwrite step-assembled dicts to only contain final-step relevant agents.
-            self.observations, self.rewards = {}, rews
+            self.observations, self.rewards = obs, rews
             self.terminations, self.truncations, self.infos = terms, truncs, infos
 
             for agent_id in list(self.agent_stats_live.keys()):
                 self._finalize_agent_record(agent_id, cause="time_limit")
 
+            infos["__all__"] = {"training_metrics": self._build_episode_training_metrics()}
+            self.agents = []
+
             return self.observations, self.rewards, self.terminations, self.truncations, self.infos
+
+        if episode_done:
+            self.agents = []
 
         return self.observations, self.rewards, self.terminations, self.truncations, self.infos
 
@@ -478,12 +524,6 @@ class PredPreyGrass(MultiAgentEnv):
     def _get_agent_genome(self, agent_id: str) -> Optional[Genome]:
         return self.agent_genomes.get(agent_id)
 
-    def _get_movement_cost_multiplier(self, agent_id: str) -> float:
-        genome = self._get_agent_genome(agent_id)
-        if genome is None:
-            return 1.0
-        return float(genome.movement_cost_multiplier) * self._get_speed_cost_multiplier(agent_id)
-
     def _get_max_move_distance(self, agent_id: str) -> int:
         genome = self._get_agent_genome(agent_id)
         if genome is None:
@@ -492,25 +532,21 @@ class PredPreyGrass(MultiAgentEnv):
             return int(self.fast_max_move_distance)
         return int(self.slow_max_move_distance)
 
-    def _get_speed_cost_multiplier(self, agent_id: str) -> float:
+    def _get_speed_cost_factor(self, agent_id: str) -> float:
         genome = self._get_agent_genome(agent_id)
         if genome is None:
-            return float(self.slow_speed_cost_multiplier)
-        if float(genome.speed) >= float(self.speed_distance_threshold):
-            return float(self.fast_speed_cost_multiplier)
-        return float(self.slow_speed_cost_multiplier)
+            return 1.0
+        return float(genome.speed) ** float(self.movement_speed_cost_exponent)
 
-    def _get_reproduction_threshold(self, agent_id: str, base_threshold: float) -> float:
-        genome = self._get_agent_genome(agent_id)
-        if genome is None:
-            return float(base_threshold)
-        return float(base_threshold) * float(genome.reproduction_threshold_multiplier)
-
-    def _get_offspring_energy(self, agent_id: str, default_initial_energy: float) -> float:
-        genome = self._get_agent_genome(agent_id)
-        if genome is None:
-            return float(default_initial_energy)
-        return max(0.0, float(self.agent_energies[agent_id]) * float(genome.offspring_energy_fraction))
+    def _get_movement_energy_cost(self, agent_id: str, old_position, new_position) -> float:
+        distance = float(np.linalg.norm(np.array(new_position) - np.array(old_position)))
+        if distance <= 0:
+            return 0.0
+        if "predator" in agent_id:
+            cost_per_cell = float(self.movement_energy_cost_per_cell_predator)
+        else:
+            cost_per_cell = float(self.movement_energy_cost_per_cell_prey)
+        return cost_per_cell * distance * self._get_speed_cost_factor(agent_id)
 
     def _inherit_genome(self, agent_id: str, parent_agent_id: Optional[str], *, is_founder: bool) -> Optional[Genome]:
         if not self.genome_enabled:
@@ -529,12 +565,12 @@ class PredPreyGrass(MultiAgentEnv):
             is_predator = "predator" in agent
             layer = 0 if is_predator else 1
 
-            # Energy decay always applies while the agent/carcass exists
+            # Basal metabolism always applies while the agent/carcass exists.
+            # Locomotion cost is charged later from actual distance moved.
             if is_predator:
                 energy_decay = self.energy_loss_per_step_predator
             else:
                 energy_decay = self.energy_loss_per_step_prey
-            energy_decay *= self._get_movement_cost_multiplier(agent)
 
             self.agent_energies[agent] -= energy_decay
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -579,6 +615,13 @@ class PredPreyGrass(MultiAgentEnv):
             old_position = self.agent_positions[agent]
             action = action_dict[agent]
             new_position = self._get_move(agent, action)
+            movement_cost = self._get_movement_energy_cost(agent, old_position, new_position)
+            self.agent_energies[agent] -= movement_cost
+            self._per_agent_step_deltas.setdefault(
+                agent,
+                {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0},
+            )
+            self._per_agent_step_deltas[agent]["move"] -= movement_cost
             if "predator" in agent:
                 self.predator_positions[agent] = tuple(new_position)
                 self.grid_world_state[0, old_position[0], old_position[1]] = 0
@@ -592,6 +635,7 @@ class PredPreyGrass(MultiAgentEnv):
                 record["avg_energy_sum"] += self.agent_energies[agent]
                 record["avg_energy_steps"] += 1
                 record["distance_traveled"] += float(np.linalg.norm(np.array(new_position) - np.array(old_position)))
+                record["movement_energy_spent"] += movement_cost
             self.agent_positions[agent] = tuple(new_position)
 
     def _get_move(self, agent, action: int):
@@ -639,6 +683,10 @@ class PredPreyGrass(MultiAgentEnv):
         # clipping the copied window and leaving out-of-grid observation cells at zero.
         obs[:, xolo:xohi, yolo:yohi] = gws[:, xlo:xhi, ylo:yhi]
         return obs
+
+    def _empty_observation(self, agent):
+        obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+        return np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float32)
 
     def _obs_clip(self, x, y, observation_range):
         """
@@ -1099,7 +1147,7 @@ class PredPreyGrass(MultiAgentEnv):
             self._record_fertility_block_event(agent)
             return
 
-        if self.agent_energies[agent] >= self._get_reproduction_threshold(agent, self.predator_creation_energy_threshold):
+        if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("predator")
             if not new_agent:
@@ -1146,7 +1194,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
 
-            offspring_energy = self._get_offspring_energy(agent, self.initial_energy_predator)
+            offspring_energy = float(self.initial_energy_predator)
             self.agent_energies[new_agent] = offspring_energy
             self.agent_energies[agent] -= offspring_energy
             self._per_agent_step_deltas[agent]["repro"] = -offspring_energy
@@ -1205,7 +1253,7 @@ class PredPreyGrass(MultiAgentEnv):
             self._record_fertility_block_event(agent)
             return
 
-        if self.agent_energies[agent] >= self._get_reproduction_threshold(agent, self.prey_creation_energy_threshold):
+        if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("prey")
             if not new_agent:
@@ -1253,7 +1301,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
 
-            offspring_energy = self._get_offspring_energy(agent, self.initial_energy_prey)
+            offspring_energy = float(self.initial_energy_prey)
             self.agent_energies[new_agent] = offspring_energy
             self.agent_energies[agent] -= offspring_energy
             self._per_agent_step_deltas[agent]["repro"] = -offspring_energy
@@ -1369,8 +1417,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
         self.agent_parents = snapshot.get("agent_parents", {}).copy()
+        active_genome_traits = set(Genome.__dataclass_fields__)
         self.agent_genomes = {
-            aid: Genome(**genome_data)
+            aid: Genome(**{trait: genome_data.get(trait, 1.0) for trait in active_genome_traits})
             for aid, genome_data in snapshot.get("agent_genomes", {}).items()
             if genome_data is not None
         }
@@ -1513,6 +1562,7 @@ class PredPreyGrass(MultiAgentEnv):
             "offspring_count": 0,
             "offspring_ids": self.agent_live_offspring_ids[agent_id],
             "distance_traveled": 0.0,
+            "movement_energy_spent": 0.0,
             "times_ate": 0,
             "energy_gained": 0.0,
             "avg_energy_sum": 0.0,
@@ -1618,6 +1668,56 @@ class PredPreyGrass(MultiAgentEnv):
                 info.setdefault("species", "predator")
             elif "prey" in agent_id:
                 info.setdefault("species", "prey")
+
+    def _build_episode_training_metrics(self) -> dict[str, float]:
+        """Build lightweight scalar genome/behavior summaries for RLlib callbacks."""
+        metrics = {}
+        threshold = float(self.speed_distance_threshold)
+        grouped_records = {"predator": [], "prey": []}
+        for agent_id, record in self._iter_all_agent_records():
+            if agent_id.startswith("predator"):
+                grouped_records["predator"].append(record)
+            elif agent_id.startswith("prey"):
+                grouped_records["prey"].append(record)
+
+        for species, records in grouped_records.items():
+            speeds = [
+                float(record["genome"]["speed"])
+                for record in records
+                if isinstance(record.get("genome"), dict) and "speed" in record["genome"]
+            ]
+            if speeds:
+                p25, p50, p75 = np.percentile(speeds, [25, 50, 75])
+                metrics[f"{species}_speed_mean"] = float(np.mean(speeds))
+                metrics[f"{species}_speed_p25"] = float(p25)
+                metrics[f"{species}_speed_p50"] = float(p50)
+                metrics[f"{species}_speed_p75"] = float(p75)
+                metrics[f"{species}_fraction_fast"] = float(np.mean(np.array(speeds) >= threshold))
+            else:
+                metrics[f"{species}_fraction_fast"] = 0.0
+
+            if records:
+                metrics[f"{species}_distance_traveled_mean"] = float(
+                    np.mean([float(record.get("distance_traveled", 0.0)) for record in records])
+                )
+                metrics[f"{species}_movement_energy_spent_mean"] = float(
+                    np.mean([float(record.get("movement_energy_spent", 0.0)) for record in records])
+                )
+                metrics[f"{species}_offspring_count_mean"] = float(
+                    np.mean([float(record.get("offspring_count", 0.0)) for record in records])
+                )
+                metrics[f"{species}_agent_count"] = float(len(records))
+            else:
+                metrics[f"{species}_distance_traveled_mean"] = 0.0
+                metrics[f"{species}_movement_energy_spent_mean"] = 0.0
+                metrics[f"{species}_offspring_count_mean"] = 0.0
+                metrics[f"{species}_agent_count"] = 0.0
+
+        return metrics
+
+    def _attach_episode_training_metrics(self):
+        info = self._pending_infos.setdefault("__all__", {})
+        info["training_metrics"] = self._build_episode_training_metrics()
 
     def _iter_all_agent_records(self):
         for agent_id, record in self.agent_stats_live.items():

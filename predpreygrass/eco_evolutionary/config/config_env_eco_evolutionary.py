@@ -37,34 +37,24 @@ config_env = {
         "predator": None,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.20, # 0.15
-    "energy_loss_per_step_prey": 0.05,
+    "energy_loss_per_step_predator": 0.20, # basal metabolism
+    "energy_loss_per_step_prey": 0.05, # basal metabolism
+    "movement_energy_cost_per_cell_predator": 0.05,
+    "movement_energy_cost_per_cell_prey": 0.02,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
-    # Heritable biological traits. These affect bodies/life-history, not policy weights.
+    # Heritable biological trait. Speed affects movement reach and locomotion cost, not policy weights.
     "genome_enabled": True,
     "founder_genome": {
         "predator": {
             "speed_mean": 1.0,
             "speed_std": 0.0,
-            "movement_cost_multiplier_mean": 1.0,
-            "movement_cost_multiplier_std": 0.05,
-            "reproduction_threshold_multiplier_mean": 1.0,
-            "reproduction_threshold_multiplier_std": 0.05,
-            "offspring_energy_fraction_mean": 0.5,
-            "offspring_energy_fraction_std": 0.05,
         },
         "prey": {
             "speed_mean": 1.0,
             "speed_std": 0.0,
-            "movement_cost_multiplier_mean": 1.0,
-            "movement_cost_multiplier_std": 0.05,
-            "reproduction_threshold_multiplier_mean": 1.0,
-            "reproduction_threshold_multiplier_std": 0.05,
-            "offspring_energy_fraction_mean": 0.5,
-            "offspring_energy_fraction_std": 0.05,
         },
     },
     "genome_mutation": {
@@ -73,15 +63,11 @@ config_env = {
     },
     "trait_bounds": {
         "speed": (0.5, 2.0),
-        "movement_cost_multiplier": (0.5, 2.0),
-        "reproduction_threshold_multiplier": (0.5, 2.0),
-        "offspring_energy_fraction": (0.25, 0.9),
     },
     "speed_distance_threshold": 1.5,
     "slow_max_move_distance": 1,
     "fast_max_move_distance": 2,
-    "slow_speed_cost_multiplier": 1.0,
-    "fast_speed_cost_multiplier": 1.8,
+    "movement_speed_cost_exponent": 2.0,
     # Energy intake caps
     "max_energy_gain_per_grass": float('inf'), # 1.5
     "max_energy_gain_per_prey": float('inf'),  # 2.5

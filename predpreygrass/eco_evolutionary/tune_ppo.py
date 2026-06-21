@@ -19,6 +19,7 @@ from datetime import datetime
 from pathlib import Path
 import json
 import shutil
+from typing import Any
 
 
 def get_config_ppo():
@@ -53,10 +54,11 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    # ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_GRASS_REGROWTH_0_0_8"
+    version = "ECO_EVOLUTION"
     experiment_name = f"PPO_REPRODUCTION_REWARD_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -77,9 +79,12 @@ if __name__ == "__main__":
     # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
+    if sample_env.observation_spaces is None or sample_env.action_spaces is None:
+        raise RuntimeError("PredPreyGrass must define observation_spaces and action_spaces for all policies.")
 
     # Group spaces per policy id (first agent of each policy defines the space)
-    obs_by_policy, act_by_policy = {}, {}
+    obs_by_policy: dict[str, Any] = {}
+    act_by_policy: dict[str, Any] = {}
     for agent_id, obs_space in sample_env.observation_spaces.items():
         pid = policy_mapping_fn(agent_id)
         if pid not in obs_by_policy:
@@ -98,7 +103,7 @@ if __name__ == "__main__":
     # Build config dictionary for Tune
     ppo_config = (
         PPOConfig()
-        .environment(env="PredPreyGrass", env_config=config_env)
+        .environment(env="PredPreyGrass", env_config=config_env, disable_env_checking=True)
         .framework("torch")
         .multi_agent(
             policies=policies,
@@ -142,7 +147,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         ppo_config.algo_class,
-        param_space=ppo_config,
+        param_space=ppo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

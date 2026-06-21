@@ -8,7 +8,7 @@ import numpy as np
 
 @dataclass(frozen=True)
 class Genome:
-    """Heritable biological traits for one agent.
+    """Heritable movement-speed trait for one agent.
 
     The first active traits are deliberately small and interpretable. Policy
     weights are not part of the genome; learned behavior remains within-lifetime
@@ -16,9 +16,6 @@ class Genome:
     """
 
     speed: float
-    movement_cost_multiplier: float
-    reproduction_threshold_multiplier: float
-    offspring_energy_fraction: float
 
     def to_dict(self) -> dict[str, float]:
         return asdict(self)
@@ -26,9 +23,6 @@ class Genome:
 
 DEFAULT_TRAIT_BOUNDS = {
     "speed": (0.5, 2.0),
-    "movement_cost_multiplier": (0.5, 2.0),
-    "reproduction_threshold_multiplier": (0.5, 2.0),
-    "offspring_energy_fraction": (0.25, 0.9),
 }
 
 
@@ -49,24 +43,6 @@ def founder_genome(policy_group: str, config: Mapping, rng: np.random.Generator)
     founder_cfg = config.get("founder_genome", {}).get(policy_group, {})
     return Genome(
         speed=_normal_sample(rng, founder_cfg.get("speed_mean", 1.0), founder_cfg.get("speed_std", 0.0), _bounds(config, "speed")),
-        movement_cost_multiplier=_normal_sample(
-            rng,
-            founder_cfg.get("movement_cost_multiplier_mean", 1.0),
-            founder_cfg.get("movement_cost_multiplier_std", 0.0),
-            _bounds(config, "movement_cost_multiplier"),
-        ),
-        reproduction_threshold_multiplier=_normal_sample(
-            rng,
-            founder_cfg.get("reproduction_threshold_multiplier_mean", 1.0),
-            founder_cfg.get("reproduction_threshold_multiplier_std", 0.0),
-            _bounds(config, "reproduction_threshold_multiplier"),
-        ),
-        offspring_energy_fraction=_normal_sample(
-            rng,
-            founder_cfg.get("offspring_energy_fraction_mean", 0.5),
-            founder_cfg.get("offspring_energy_fraction_std", 0.0),
-            _bounds(config, "offspring_energy_fraction"),
-        ),
     )
 
 
