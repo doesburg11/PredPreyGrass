@@ -359,7 +359,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Rebuild active agent list without repeated O(n) list.remove calls
             self.agents = [a for a in self.agents if a not in to_remove_set]
 
-        # Step 7: Spawning of new agents (cooldown and chance removed; energy-only)
+        # Step 6: Spawning of new agents (cooldown and chance removed; energy-only)
         # Use snapshots of active predators/prey to avoid iterating over newly spawned agents in this step
         predator_snapshot = tuple(self.predator_positions.keys())
         prey_snapshot = tuple(self.prey_positions.keys())
@@ -375,17 +375,17 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
 
-        # Step 7.5: Apply lineage survival rewards based on live descendant changes
+        # Step 6.5: Apply lineage survival rewards based on live descendant changes
         self._apply_lineage_survival_rewards()
 
         # Step 8: Assemble return dicts. Observations contain only agents that
         # should act next. Rewards/done flags may include agents that ended on
         # this step.
-        live_ids = set(self.agents)
+        live_ids: set[str] = {str(a) for a in self.agents}
         reward_full = dict(self.rewards)
         term_full = dict(self.terminations)
         trunc_full = dict(self.truncations)
-        ended_ids = {aid for aid, flag in term_full.items() if flag} | {aid for aid, flag in trunc_full.items() if flag}
+        ended_ids: set[str] = {str(aid) for aid, flag in term_full.items() if flag} | {str(aid) for aid, flag in trunc_full.items() if flag}
 
         missing_acted_ids = (acted_ids - live_ids - ended_ids) & set(self.possible_agents)
         for agent in missing_acted_ids:
@@ -462,7 +462,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Final time-limit step: active agents are truncated. Agents that
             # died earlier in this step remain terminated. RLlib requires a
             # final observation for truncated agents for value bootstrapping.
-            active_now = set(self.agents)
+            active_now: set[str] = {str(a) for a in self.agents}
             final_ids = (set(self.rewards) | set(self.terminations) | set(self.truncations) | active_now) - {"__all__"}
             final_ids |= (acted_ids - active_now) & set(self.possible_agents)
 
@@ -1603,29 +1603,6 @@ class PredPreyGrass(MultiAgentEnv):
         if cause is not None:
             record["death_cause"] = cause
 
-        def export_agent_event_log(self, path: str) -> None:
-            """Export the per-agent event log to a JSON file.
-
-            Designed for evaluation scripts. Writes a dict keyed by agent_id,
-            where each value is that agent's event-log record.
-            """
-            import json
-
-            def _convert(obj):
-                if isinstance(obj, (int, float, str)) or obj is None:
-                    return obj
-                if isinstance(obj, dict):
-                    return {k: _convert(v) for k, v in obj.items()}
-                if isinstance(obj, (list, tuple)):
-                    return [_convert(v) for v in obj]
-                try:
-                    return obj.item()
-                except Exception:
-                    return str(obj)
-
-            payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2)
         if record.get("death_step") is None:
             record["death_step"] = self.current_step
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
@@ -1654,6 +1631,30 @@ class PredPreyGrass(MultiAgentEnv):
             info.setdefault("species", "prey")
         self.agent_stats_completed[agent_id] = record
         self.agent_live_offspring_ids.pop(agent_id, None)
+
+    def export_agent_event_log(self, path: str) -> None:
+        """Export the per-agent event log to a JSON file.
+
+        Designed for evaluation scripts. Writes a dict keyed by agent_id,
+        where each value is that agent's event-log record.
+        """
+        import json
+
+        def _convert(obj):
+            if isinstance(obj, (int, float, str)) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            try:
+                return obj.item()
+            except Exception:
+                return str(obj)
+
+        payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
 
     def _attach_final_cumulative_rewards_for_live_agents(self):
         """Ensure all agents that remain alive at episode end expose their cumulative rewards via infos."""
