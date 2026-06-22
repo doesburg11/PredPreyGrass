@@ -196,6 +196,26 @@ Early observations at iter 11:
 - Both policies near-random (entropy ~3.2); expected at this stage
 - **Watch**: whether prey count stabilises below ~50 agents instead of exploding to 100+
 
+## References
+
+**Eco-evolutionary dynamics:**
+- Lotka, A. J. (1925). *Elements of Physical Biology.* Williams & Wilkins. / Volterra, V. (1926). *Fluctuations in the Abundance of a Species Considered Mathematically.* Nature — predator-prey population oscillations; the theoretical foundation
+- Van Valen, L. (1973). *A New Evolutionary Law.* Evolutionary Theory, 1, 1–30 — Red Queen hypothesis: predator-prey arms race drives continuous evolution
+- Dawkins, R. & Krebs, J. R. (1979). *Arms Races Between and Within Species.* Proceedings of the Royal Society B, 205(1161), 489–511 — co-evolutionary speed/ability tradeoffs
+
+**Baldwin Effect:**
+- Hinton, G. E. & Nowlan, S. J. (1987). *How Learning Can Guide Evolution.* Complex Systems, 1(3), 495–502 — the canonical paper showing learned behaviour can steer heritable evolution without Lamarckian inheritance; directly relevant to the genome→PPO-policy architecture used here
+
+**Digital / agent-based evolution:**
+- Ofria, C. & Wilke, C. O. (2004). *Avida: A Software Platform for Research in Computational Evolutionary Biology.* Artificial Life, 10(2), 191–229 — closest precedent: digital organisms with heritable traits under selection
+- Stanley, K. O. & Miikkulainen, R. (2002). *Evolving Neural Networks Through Augmenting Topologies (NEAT).* Evolutionary Computation, 10(2), 99–127 — genome-based evolution of agent behaviour
+
+**Life history tradeoffs:**
+- Stearns, S. C. (1992). *The Evolution of Life Histories.* Oxford University Press — speed-reproduction-survival tradeoffs; theoretical backing for the energy cost model
+
+**Open-ended co-evolution:**
+- Wang, R., Lehman, J., Clune, J. & Stanley, K. O. (2019). *Paired Open-Ended Trailblazer (POET).* arXiv:1901.01753 — endlessly co-evolving agents and environments; most similar in spirit to the long-run goal of this project
+
 ## Interpretation
 
 The intended model is:
