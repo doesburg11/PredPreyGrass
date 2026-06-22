@@ -187,15 +187,16 @@ Key observations:
 
 Config: `energy_gain_per_step_grass: 0.04`, `max_agent_age: prey=400`, `speed_std: 0.2`, `mutation_std: 0.1`
 
-Observations at iter 18:
-- Episode lengths growing steadily: mean 55 (iter 1) → 225 (iter 18), max 540 — populations stabilising and learning to survive
-- Iteration time settling at 3–5 min; iter 12 spiked to 9.8 min (checkpoint save at iter 10 coinciding with episode length jump)
-- `prey_speed_p50` starts at 0.947 then drifts slightly down to 0.943 — under food scarcity, slow prey save energy on locomotion (speed² cost); slight downward pressure expected until predator policies converge and hunting becomes the dominant selection force
-- `predator_speed_p50`: flat at 0.882–0.883; no directional selection yet
-- `prey_fraction_fast`: 0.0 → 0.000184 — 2.5× increase from iter 10 to 18, selection signal building
-- `predator_fraction_fast`: 0.0 throughout
-- Predator entropy: 3.21 → 2.46; prey entropy: 3.21 → 2.79 — both converging faster than run 1 at the same stage (shorter episodes = more resets = more diverse experience)
-- **Watch**: prey_speed_p50 direction reversal once predator entropy drops below ~1.5 and hunting pressure intensifies; whether prey count stabilises below ~50 agents
+Observations at iter 34:
+- Episode lengths: mean 55 (iter 1) → 327 (iter 34), max hitting 1000 from iter 28 onward — run 1 first hit max episode length at iter 56, so this milestone was reached 28 iterations sooner
+- Iteration time stable at 2–3 min
+- `predator_speed_p50`: 0.882 → 0.886 — slight but consistent upward drift (+0.004); not seen in run 1 at this stage; first sign of directional speed selection in predators
+- `prey_speed_p50`: 0.947 → 0.944 — essentially flat with very slight downward drift; food scarcity still the dominant selection force (slow prey conserve energy)
+- `prey_fraction_fast`: 0.0 → 0.000707 — 6.7× increase over the run; growing faster than run 1 at the same stage
+- `predator_fraction_fast`: 0.0 throughout — no fast predators born yet
+- Predator entropy: 3.21 → 1.83 at iter 34 — converging significantly faster than run 1 (~2.5 at the same stage); at current rate hits 1.5 around iter 45–50
+- Prey entropy: 3.21 → 2.50 — converging steadily
+- **Watch**: prey_speed_p50 direction reversal expected around iter 45–50 once predator entropy falls below ~1.5 and hunting pressure becomes the dominant selection force
 
 ## References
 
