@@ -187,14 +187,15 @@ Key observations:
 
 Config: `energy_gain_per_step_grass: 0.04`, `max_agent_age: prey=400`, `speed_std: 0.2`, `mutation_std: 0.1`
 
-Early observations at iter 11:
-- Episode lengths: mean 55 → 87 steps — much shorter than run 1; food scarcity working as intended
-- Iteration time: 0.8–2.5 min (faster than run 1 due to shorter episodes = more generations per hour)
-- `prey_speed_p50` starts at 0.947 — higher than run 1 start (founder diversity seeding faster initial population)
-- `prey_fraction_fast`: 0.0 → 0.000105 — fast prey appearing at iter 10–11, earlier than run 1
+Observations at iter 18:
+- Episode lengths growing steadily: mean 55 (iter 1) → 225 (iter 18), max 540 — populations stabilising and learning to survive
+- Iteration time settling at 3–5 min; iter 12 spiked to 9.8 min (checkpoint save at iter 10 coinciding with episode length jump)
+- `prey_speed_p50` starts at 0.947 then drifts slightly down to 0.943 — under food scarcity, slow prey save energy on locomotion (speed² cost); slight downward pressure expected until predator policies converge and hunting becomes the dominant selection force
+- `predator_speed_p50`: flat at 0.882–0.883; no directional selection yet
+- `prey_fraction_fast`: 0.0 → 0.000184 — 2.5× increase from iter 10 to 18, selection signal building
 - `predator_fraction_fast`: 0.0 throughout
-- Both policies near-random (entropy ~3.2); expected at this stage
-- **Watch**: whether prey count stabilises below ~50 agents instead of exploding to 100+
+- Predator entropy: 3.21 → 2.46; prey entropy: 3.21 → 2.79 — both converging faster than run 1 at the same stage (shorter episodes = more resets = more diverse experience)
+- **Watch**: prey_speed_p50 direction reversal once predator entropy drops below ~1.5 and hunting pressure intensifies; whether prey count stabilises below ~50 agents
 
 ## References
 
