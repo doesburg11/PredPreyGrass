@@ -114,6 +114,25 @@ class EpisodeReturn(RLlibCallback):
 
         # RLlib already emits episode_len_* metrics for TensorBoard; no extra episode-length metrics_logger entry needed here
 
+    def on_episode_step(
+        self,
+        *,
+        episode,
+        metrics_logger: Optional[MetricsLogger] = None,
+        env=None,
+        env_index: int = 0,
+        **kwargs,
+    ):
+        if metrics_logger is None:
+            return
+        resolved_env = self._resolve_env(env=env, env_index=env_index, **kwargs)
+        live_metrics = getattr(resolved_env, "_last_live_speed_metrics", None)
+        if not isinstance(live_metrics, dict):
+            return
+        for metric_name, metric_value in live_metrics.items():
+            if isinstance(metric_value, (int, float, np.integer, np.floating)):
+                metrics_logger.log_value(f"live_speed/{metric_name}", float(metric_value))
+
     def on_train_result(self, *, result, **kwargs):
         # Add training time metrics
         now = time.time()

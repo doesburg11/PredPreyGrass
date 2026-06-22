@@ -191,6 +191,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.spawned_prey = 0
 
 
+        self._last_live_speed_metrics: dict = {}
         self.agents_just_ate = set()
         # Prey that have been bitten at least once and are now "dead meat":
         # cannot move, cannot eat grass, cannot reproduce, and should not
@@ -512,7 +513,40 @@ class PredPreyGrass(MultiAgentEnv):
         if episode_done:
             self.agents = []
 
+        self._last_live_speed_metrics = self._build_live_speed_metrics()
         return self.observations, self.rewards, self.terminations, self.truncations, self.infos
+
+    def _build_live_speed_metrics(self) -> dict[str, float]:
+        """Speed distribution of the currently alive population, sampled every step."""
+        threshold = float(self.speed_distance_threshold)
+        grouped: dict[str, list[float]] = {"predator": [], "prey": []}
+        for agent_id in self.agents:
+            agent_str = str(agent_id)
+            genome = self.agent_genomes.get(agent_str)
+            if genome is not None:
+                key = "predator" if "predator" in agent_str else "prey"
+                grouped[key].append(float(genome.speed))
+        metrics: dict[str, float] = {}
+        for species, speeds in grouped.items():
+            if speeds:
+                arr = np.array(speeds)
+                p25, p50, p75 = np.percentile(arr, [25, 50, 75])
+                metrics[f"{species}_speed_mean"] = float(np.mean(arr))
+                metrics[f"{species}_speed_std"] = float(np.std(arr))
+                metrics[f"{species}_speed_p25"] = float(p25)
+                metrics[f"{species}_speed_p50"] = float(p50)
+                metrics[f"{species}_speed_p75"] = float(p75)
+                metrics[f"{species}_fraction_fast"] = float(np.mean(arr >= threshold))
+                metrics[f"{species}_count"] = float(len(speeds))
+            else:
+                metrics[f"{species}_speed_mean"] = 0.0
+                metrics[f"{species}_speed_std"] = 0.0
+                metrics[f"{species}_speed_p25"] = 0.0
+                metrics[f"{species}_speed_p50"] = 0.0
+                metrics[f"{species}_speed_p75"] = 0.0
+                metrics[f"{species}_fraction_fast"] = 0.0
+                metrics[f"{species}_count"] = 0.0
+        return metrics
 
     def _policy_group(self, agent_id: str) -> str:
         if "predator" in agent_id:
