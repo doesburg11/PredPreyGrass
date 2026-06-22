@@ -50,16 +50,16 @@ config_env = {
     "founder_genome": {
         "predator": {
             "speed_mean": 1.0,
-            "speed_std": 0.0,
+            "speed_std": 0.2,
         },
         "prey": {
             "speed_mean": 1.0,
-            "speed_std": 0.0,
+            "speed_std": 0.2,
         },
     },
     "genome_mutation": {
         "rate": 0.05,
-        "std": 0.03,
+        "std": 0.1,
     },
     "trait_bounds": {
         "speed": (0.5, 2.0),
