@@ -1688,13 +1688,20 @@ class PredPreyGrass(MultiAgentEnv):
                 if isinstance(record.get("genome"), dict) and "speed" in record["genome"]
             ]
             if speeds:
-                p25, p50, p75 = np.percentile(speeds, [25, 50, 75])
-                metrics[f"{species}_speed_mean"] = float(np.mean(speeds))
+                arr = np.array(speeds)
+                p25, p50, p75 = np.percentile(arr, [25, 50, 75])
+                metrics[f"{species}_speed_mean"] = float(np.mean(arr))
+                metrics[f"{species}_speed_std"] = float(np.std(arr))
                 metrics[f"{species}_speed_p25"] = float(p25)
                 metrics[f"{species}_speed_p50"] = float(p50)
                 metrics[f"{species}_speed_p75"] = float(p75)
-                metrics[f"{species}_fraction_fast"] = float(np.mean(np.array(speeds) >= threshold))
+                metrics[f"{species}_fraction_fast"] = float(np.mean(arr >= threshold))
             else:
+                metrics[f"{species}_speed_mean"] = 0.0
+                metrics[f"{species}_speed_std"] = 0.0
+                metrics[f"{species}_speed_p25"] = 0.0
+                metrics[f"{species}_speed_p50"] = 0.0
+                metrics[f"{species}_speed_p75"] = 0.0
                 metrics[f"{species}_fraction_fast"] = 0.0
 
             if records:

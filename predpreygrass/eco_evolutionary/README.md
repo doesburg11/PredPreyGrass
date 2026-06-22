@@ -23,6 +23,57 @@ Reproduction thresholds and offspring starting energy are fixed environment
 parameters in the base experiment, so the first treatment isolates the speed
 tradeoff.
 
+## Genome Configuration
+
+Key parameters in `config/config_env_eco_evolutionary.py`:
+
+```python
+"founder_genome": {
+    "predator": {"speed_mean": 1.0, "speed_std": 0.2},
+    "prey":     {"speed_mean": 1.0, "speed_std": 0.2},
+},
+"genome_mutation": {"rate": 0.05, "std": 0.1},
+"trait_bounds":    {"speed": (0.5, 2.0)},
+"speed_distance_threshold": 1.5,
+```
+
+**Founder distribution** (`speed_std: 0.2`): each founder's speed is sampled from
+N(1.0, 0.2) clipped to [0.5, 2.0], so the initial population spans roughly 0.6–1.4.
+Setting `speed_std` to 0.0 removes all initial genetic diversity; evolution would then
+depend entirely on mutation accumulation, which takes many hundreds of iterations to
+produce a measurable signal.
+
+**Mutation** (`rate: 0.05, std: 0.1`): at each reproduction event there is a 5% chance
+the offspring's speed is perturbed by a draw from N(0, 0.1). With `std: 0.1`, reaching
+the fast threshold (1.5) from the population mean (1.0) requires roughly 5 consecutive
+favourable mutations in an unbroken lineage. With the previous value of `std: 0.03`
+that required ~17, making the threshold signal essentially invisible during training.
+
+**Threshold** (`speed_distance_threshold: 1.5`): agents above this value gain access to
+distance-2 moves. `fraction_fast` in TensorBoard tracks the share of all agents born in
+the episode that exceed this threshold.
+
+## Monitoring Speed Evolution
+
+The callback logs per-episode genome summaries under the `eco_evolution/` prefix.
+Speed metrics are computed over **all agents that lived in the episode** (both
+completed and still-active at episode end), so they reflect the full generational
+sample rather than just the survivors.
+
+| TensorBoard metric | What it shows |
+|---|---|
+| `eco_evolution/{species}_speed_mean` | Population mean speed |
+| `eco_evolution/{species}_speed_std` | Spread — rising std means diversification; falling std means convergence |
+| `eco_evolution/{species}_speed_p25/p50/p75` | Quartiles — shift in p50 indicates directional selection |
+| `eco_evolution/{species}_fraction_fast` | Share of agents with speed ≥ threshold; non-zero once fast agents reproduce |
+| `eco_evolution/{species}_agent_count` | Mean number of agents born per episode (averaged across workers) |
+| `eco_evolution/{species}_offspring_count_mean` | Average reproductive success per agent |
+| `eco_evolution/{species}_distance_traveled_mean` | Realised locomotion — distinguishes fast-genome from fast-moving agents |
+
+A healthy eco-evolutionary run shows `speed_p50` drifting over hundreds of iterations
+and `fraction_fast` eventually rising if fast agents reproduce more successfully than
+slow ones.
+
 ## Open Grid Observations
 
 The eco-evolutionary environment is an open grid without internal walls or
