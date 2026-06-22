@@ -168,6 +168,34 @@ For policy-weight evolution, use `checkpoint_genomes` as a comparison treatment.
 PYTHONPATH=src pytest -q predpreygrass/eco_evolutionary/tests/test_eco_evolutionary_validation.py
 ```
 
+## Training Run History
+
+### Run 1 — `PPO_REPRODUCTION_REWARD_ECO_EVOLUTION_2026-06-22_10-09-49` (87 iterations)
+
+Config: `energy_gain_per_step_grass: 0.08`, `max_agent_age: prey=None`, `speed_std: 0.2`, `mutation_std: 0.1`
+
+Key observations:
+- Prey count grew to ~115 by iter 56, causing ~40% grid occupancy — movement restricted, speed advantage eroded
+- Episode length hit 1000 (max) from iter 56 onward; all episodes maxing out
+- `prey_speed_p50`: 0.929 → 0.942 (+0.013) — consistent upward evolutionary drift confirmed
+- `predator_speed_p50`: flat at 0.863 throughout — no predator speed selection
+- `prey_fraction_fast`: 0.0001 → 0.0004 — slow but upward
+- Predator entropy: 3.21 → 0.89 (nearly converged); prey entropy: 3.21 → 1.54 (still converging)
+- **Diagnosis**: overcrowding undermines speed selection pressure → halved grass regrowth and added prey age cap
+
+### Run 2 — `PPO_ECO_EVOLUTION_2026-06-22_14-59-05` (in progress)
+
+Config: `energy_gain_per_step_grass: 0.04`, `max_agent_age: prey=400`, `speed_std: 0.2`, `mutation_std: 0.1`
+
+Early observations at iter 11:
+- Episode lengths: mean 55 → 87 steps — much shorter than run 1; food scarcity working as intended
+- Iteration time: 0.8–2.5 min (faster than run 1 due to shorter episodes = more generations per hour)
+- `prey_speed_p50` starts at 0.947 — higher than run 1 start (founder diversity seeding faster initial population)
+- `prey_fraction_fast`: 0.0 → 0.000105 — fast prey appearing at iter 10–11, earlier than run 1
+- `predator_fraction_fast`: 0.0 throughout
+- Both policies near-random (entropy ~3.2); expected at this stage
+- **Watch**: whether prey count stabilises below ~50 agents instead of exploding to 100+
+
 ## Interpretation
 
 The intended model is:
