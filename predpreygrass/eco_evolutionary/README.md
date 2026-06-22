@@ -23,6 +23,28 @@ Reproduction thresholds and offspring starting energy are fixed environment
 parameters in the base experiment, so the first treatment isolates the speed
 tradeoff.
 
+## Population Carrying Capacity
+
+Two parameters control grid crowding and generational turnover:
+
+```python
+"energy_gain_per_step_grass": 0.04,   # halved from 0.08
+"max_agent_age": {"predator": None, "prey": 400},
+```
+
+**Grass regrowth** (`0.04`): halving the food supply limits how many prey the
+grid can sustain. Without this, prey populations grew to 100+ agents on a 25×25
+grid (~18% occupancy by prey alone), leaving little space for movement and
+eroding the fitness advantage of high speed.
+
+**Maximum prey age** (`400` steps): prey that reach this age are auto-terminated
+regardless of energy. This forces generational turnover — old agents vacate
+slots, offspring with mutated genomes replace them, and the genome pool refreshes
+at a faster rate. Without a lifespan cap, long-lived individuals hold slots
+without contributing additional reproduction, slowing the evolutionary signal.
+The two changes together keep grid occupancy low enough for speed to confer a
+meaningful movement advantage.
+
 ## Genome Configuration
 
 Key parameters in `config/config_env_eco_evolutionary.py`:

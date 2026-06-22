@@ -29,7 +29,7 @@ config_env = {
     "max_agent_age": {
         # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
         "predator": None,
-        "prey": None,
+        "prey": 400,
     },
     "carcass_only_predator_age": {
         # Juvenile predators younger than this many steps may only bite carcasses (already-dead prey)
@@ -81,7 +81,7 @@ config_env = {
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
-    "energy_gain_per_step_grass": 0.08, # 0.04
+    "energy_gain_per_step_grass": 0.04,
     "verbose_engagement": False,
     "verbose_movement": False,
     "verbose_decay": False,
