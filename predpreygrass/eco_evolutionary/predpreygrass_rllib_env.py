@@ -127,6 +127,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.speed_distance_threshold = config.get("speed_distance_threshold", 1.5)
         self.slow_max_move_distance = config.get("slow_max_move_distance", 1)
         self.fast_max_move_distance = config.get("fast_max_move_distance", 2)
+        self.include_speed_in_obs = config.get("include_speed_in_obs", False)
+        speed_bounds = config.get("trait_bounds", {}).get("speed", (0.5, 2.0))
+        self.speed_obs_min = float(speed_bounds[0])
+        self.speed_obs_max = float(speed_bounds[1])
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -706,21 +710,23 @@ class PredPreyGrass(MultiAgentEnv):
         return new_position
 
     def _get_observation(self, agent):
-        # Generate an observation for the agent.
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, obs_range)
-        # Allocate observation tensor
-        obs = np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float32)
-        gws = self.grid_world_state  # local reference
-        # Channels: predators, prey, grass. The grid edge is represented by
-        # clipping the copied window and leaving out-of-grid observation cells at zero.
-        obs[:, xolo:xohi, yolo:yohi] = gws[:, xlo:xhi, ylo:yhi]
+        n_ch = self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
+        obs = np.zeros((n_ch, obs_range, obs_range), dtype=np.float32)
+        obs[:self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[:, xlo:xhi, ylo:yhi]
+        if self.include_speed_in_obs:
+            genome = self.agent_genomes.get(str(agent))
+            if genome is not None:
+                speed_norm = (float(genome.speed) - self.speed_obs_min) / (self.speed_obs_max - self.speed_obs_min)
+                obs[self.num_obs_channels, :, :] = speed_norm
         return obs
 
     def _empty_observation(self, agent):
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-        return np.zeros((self.num_obs_channels, obs_range, obs_range), dtype=np.float32)
+        n_ch = self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
+        return np.zeros((n_ch, obs_range, obs_range), dtype=np.float32)
 
     def _obs_clip(self, x, y, observation_range):
         """
@@ -1485,17 +1491,21 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Build the observation space for a specific agent.
         """
+        n_ch = self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
         if "predator" in agent_id:
-            predator_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=predator_shape, dtype=np.float32)
-
+            obs_space = gymnasium.spaces.Box(
+                low=0, high=100.0,
+                shape=(n_ch, self.predator_obs_range, self.predator_obs_range),
+                dtype=np.float32,
+            )
         elif "prey" in agent_id:
-            prey_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
-            obs_space = gymnasium.spaces.Box(low=0, high=100.0, shape=prey_shape, dtype=np.float32)
-
+            obs_space = gymnasium.spaces.Box(
+                low=0, high=100.0,
+                shape=(n_ch, self.prey_obs_range, self.prey_obs_range),
+                dtype=np.float32,
+            )
         else:
             raise ValueError(f"Unknown agent type in ID: {agent_id}")
-
         return obs_space
 
     def _build_action_space(self, agent_id):

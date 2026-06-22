@@ -145,6 +145,44 @@ basal metabolism, but it does not incur locomotion cost. This makes speed useful
 for chasing, escaping, and reaching resources, while allowing slow or efficient
 agents to remain competitive in some ecological conditions.
 
+## Baldwinian Enhancement: Speed in Observation
+
+To strengthen the Baldwinian loop, the agent's own speed is exposed as a fourth
+observation channel:
+
+```python
+"include_speed_in_obs": True,
+```
+
+Without this flag, the policy is blind to the genome — a prey with speed 0.6 and
+one with speed 1.8 receive identical policy outputs for the same grid observation.
+The genome only constrains which actions are physically effective, but the policy
+cannot adapt its strategy to exploit or compensate for its own speed value.
+
+With `include_speed_in_obs: True`, the observation tensor gains a fourth channel
+filled with the agent's normalised speed:
+
+```
+speed_norm = (genome.speed - speed_min) / (speed_max - speed_min)
+obs[channel_3, :, :] = speed_norm   # broadcast scalar across all spatial positions
+```
+
+This lets the policy learn distinct strategies per genome value — e.g. a fast prey
+learns to flee aggressively using distance-2 moves, while a slow prey learns to
+hide near grass patches. That behavioural differentiation increases the fitness
+differential between fast and slow genomes, which in turn accelerates selection and
+closes the Baldwinian loop:
+
+```
+genome → speed trait → policy learns speed-specific behaviour
+       → stronger fitness differential → faster heritable selection
+```
+
+The network architecture is unchanged: the existing CNN simply receives four input
+channels instead of three. The speed channel is spatially constant (same value
+everywhere), so the network learns to use it as a global conditioning signal rather
+than a spatial feature.
+
 ## What This Is Not
 
 This module does not copy parent PPO weights into offspring. Learned policy

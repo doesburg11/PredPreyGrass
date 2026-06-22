@@ -47,6 +47,9 @@ config_env = {
     "initial_energy_prey": 3.0,
     # Heritable biological trait. Speed affects movement reach and locomotion cost, not policy weights.
     "genome_enabled": True,
+    # Expose the agent's own normalised speed as a 4th observation channel.
+    # Enables the policy to learn distinct strategies per genome value (Baldwinian loop).
+    "include_speed_in_obs": True,
     "founder_genome": {
         "predator": {
             "speed_mean": 1.0,
