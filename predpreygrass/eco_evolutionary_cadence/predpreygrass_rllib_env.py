@@ -8,7 +8,6 @@ channel in the observation lets the policy condition on whether this step counts
 
 Additional features:
 - lineage rewards for predators and prey
-- limited fertility age per agent type
 - limited age per agent type
 """
 # external libraries (Ray required)
@@ -56,15 +55,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
         # Lineage survival reward coefficient (can be scalar or per-policy dict)
         self.lineage_reward_coeff_config = config["lineage_reward_coeff"]
-        default_fertility_caps = {
-            "predator": 80,
-            "prey": 60,
-        }
-        configured_caps = config.get("max_fertility_age")
-        if isinstance(configured_caps, dict):
-            self.max_fertility_age_config = {**default_fertility_caps, **configured_caps}
-        else:
-            self.max_fertility_age_config = default_fertility_caps
         default_age_caps = {
             "predator": 120,
             "prey": 100,
@@ -173,7 +163,6 @@ class PredPreyGrass(MultiAgentEnv):
         #       {"t": int, "reproduction_reward": float,
         #        "lineage_reward": float,
         #        "cumulative_reward": float}, ...],
-        #   "fertility_events": [],
         #   "lifecycle_events": [],
         # }
         self.agent_event_log = {}
@@ -193,8 +182,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Capacity block counters (episode-level)
         self.reproduction_blocked_due_to_capacity_predator = 0
         self.reproduction_blocked_due_to_capacity_prey = 0
-        self.reproduction_blocked_due_to_fertility_predator = 0
-        self.reproduction_blocked_due_to_fertility_prey = 0
         self.carcass_only_live_prey_blocks_predator = 0
         # Episode-level spawn counters
         self.spawned_predators = 0
@@ -635,7 +622,6 @@ class PredPreyGrass(MultiAgentEnv):
             # Freeze age for dead prey (carcasses): they no longer accrue lifetime.
             if not ("prey" in agent and agent in self.dead_prey):
                 self.agent_ages[agent] += 1
-                self._maybe_mark_fertility_expired(agent)
                 if self._agent_age_exceeded(agent):
                     aged_out_agents.append(agent)
 
@@ -1029,72 +1015,6 @@ class PredPreyGrass(MultiAgentEnv):
                 )
             record["prev_live_descendants"] = current
 
-    def _get_fertility_limit(self, agent_id: str):
-        caps = getattr(self, "max_fertility_age_config", None)
-        if caps is None:
-            return None
-        if isinstance(caps, dict):
-            for prefix, limit in caps.items():
-                if agent_id.startswith(prefix):
-                    return limit
-            return None
-        return caps
-
-    def _maybe_mark_fertility_expired(self, agent_id: str, limit=None):
-        if limit is None:
-            limit = self._get_fertility_limit(agent_id)
-        if limit is None:
-            return
-        if isinstance(limit, (int, float)) and limit < 0:
-            return
-        age = self.agent_ages.get(agent_id, 0)
-        if isinstance(limit, (int, float)):
-            if age < limit:
-                return
-        else:
-            return
-
-        record = self.agent_stats_live.get(agent_id)
-        if record is not None and record.get("fertility_expired_step") is not None:
-            return
-        if record is not None:
-            record["fertility_expired_step"] = self.current_step
-        evt = self.agent_event_log.get(agent_id)
-        if evt is not None:
-            evt.setdefault("fertility_events", []).append(
-                {
-                    "t": int(self.current_step),
-                    "event": "fertility_expired",
-                    "age": int(age),
-                }
-            )
-
-    def _agent_is_fertile(self, agent_id: str) -> bool:
-        limit = self._get_fertility_limit(agent_id)
-        if limit is None:
-            return True
-        if isinstance(limit, (int, float)) and limit < 0:
-            return True
-        age = self.agent_ages.get(agent_id, 0)
-        if not isinstance(limit, (int, float)):
-            return True
-        if age < limit:
-            return True
-        self._maybe_mark_fertility_expired(agent_id, limit)
-        return False
-
-    def _record_fertility_block_event(self, agent_id: str):
-        evt = self.agent_event_log.get(agent_id)
-        if evt is None:
-            return
-        evt.setdefault("fertility_events", []).append(
-            {
-                "t": int(self.current_step),
-                "event": "reproduction_blocked",
-                "reason": "fertility_cap",
-            }
-        )
-
     def _get_max_age_limit(self, agent_id: str):
         caps = getattr(self, "max_agent_age_config", None)
         if caps is None:
@@ -1210,17 +1130,6 @@ class PredPreyGrass(MultiAgentEnv):
             {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0},
         )
 
-        if not self._agent_is_fertile(agent):
-            self.reproduction_blocked_due_to_fertility_predator += 1
-            info = self._pending_infos.setdefault(agent, {})
-            info["reproduction_blocked_due_to_fertility"] = True
-            info["reproduction_blocked_due_to_fertility_count_predator"] = self.reproduction_blocked_due_to_fertility_predator
-            record = self.agent_stats_live.get(agent)
-            if record is not None:
-                record["fertility_blocked_attempts"] = record.get("fertility_blocked_attempts", 0) + 1
-            self._record_fertility_block_event(agent)
-            return
-
         if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("predator")
@@ -1314,17 +1223,6 @@ class PredPreyGrass(MultiAgentEnv):
             {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0},
         )
         if agent in self.dead_prey:
-            return
-
-        if not self._agent_is_fertile(agent):
-            self.reproduction_blocked_due_to_fertility_prey += 1
-            info = self._pending_infos.setdefault(agent, {})
-            info["reproduction_blocked_due_to_fertility"] = True
-            info["reproduction_blocked_due_to_fertility_count_prey"] = self.reproduction_blocked_due_to_fertility_prey
-            record = self.agent_stats_live.get(agent)
-            if record is not None:
-                record["fertility_blocked_attempts"] = record.get("fertility_blocked_attempts", 0) + 1
-            self._record_fertility_block_event(agent)
             return
 
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
@@ -1632,7 +1530,6 @@ class PredPreyGrass(MultiAgentEnv):
             "eating_events": [],
             "reproduction_events": [],
             "reward_events": [],
-            "fertility_events": [],
             "diet_events": [],
             "lifecycle_events": [],
             "genome": genome_dict,
@@ -1656,9 +1553,6 @@ class PredPreyGrass(MultiAgentEnv):
             "death_step": None,
             "death_cause": None,
             "avg_energy": 0.0,
-            "max_fertility_age": self._get_fertility_limit(agent_id),
-            "fertility_expired_step": None,
-            "fertility_blocked_attempts": 0,
             "max_age": self._get_max_age_limit(agent_id),
             "age_expired_step": None,
             "carcass_only_blocks": 0,
