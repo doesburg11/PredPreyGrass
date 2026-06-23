@@ -36,6 +36,7 @@ import cv2
 import numpy as np
 import re
 from collections import defaultdict
+from typing import Callable, cast
 
 
 SAVE_EVAL_RESULTS = True
@@ -43,9 +44,31 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
+RAY_RESULTS_DIR = os.path.expanduser("~/ray_results")
+CHECKPOINT_ROOT = (
+    "PPO_ECO_EVOLUTION_2026-06-23_10-30-31/"
+    "PPO_PredPreyGrass_cc36a_00000_0_2026-06-23_10-30-31"
+)
+
 
 def env_creator(config):
     return PredPreyGrass(config)
+
+
+def cv2_video_writer_fourcc(*codec: str) -> int:
+    video_writer_fourcc = cast(Callable[..., int], getattr(cv2, "VideoWriter_fourcc"))
+    return video_writer_fourcc(*codec)
+
+
+def _latest_checkpoint_path(run_path):
+    checkpoints = []
+    for name in os.listdir(run_path):
+        path = os.path.join(run_path, name)
+        if os.path.isdir(path) and re.fullmatch(r"checkpoint_\d+", name):
+            checkpoints.append((int(name.rsplit("_", 1)[1]), path))
+    if not checkpoints:
+        raise FileNotFoundError(f"No checkpoint directories found in: {run_path}")
+    return max(checkpoints, key=lambda item: item[0])[1]
 
 
 def _load_training_env_config_from_run(checkpoint_path, base_cfg):
@@ -68,6 +91,8 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
                 if isinstance(rc, dict):
                     if isinstance(rc.get("env_config"), dict):
                         training_env_cfg = rc["env_config"]
+                    elif isinstance(rc.get("config_env"), dict):
+                        training_env_cfg = rc["config_env"]
                     else:
                         # Heuristic: intersect with known keys in base_cfg
                         training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
@@ -86,6 +111,8 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
         "prey_obs_range",
         # Action ranges can affect obs encoding in some setups; include for safety
         "action_range",
+        "include_speed_in_obs",
+        "include_move_available_in_obs",
     }
     merged = dict(base_cfg)
     for k in obs_keys:
@@ -117,11 +144,10 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_GRASS_REGROWTH_0_0_8_2025-12-08_22-37-27/PPO_PredPreyGrass_17bf4_00000_0_2025-12-08_22-37-27/"
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
+    run_path = os.path.join(RAY_RESULTS_DIR, CHECKPOINT_ROOT)
+    checkpoint_path = _latest_checkpoint_path(run_path)
+    checkpoint_dir = os.path.basename(checkpoint_path)
+    print(f"Loading checkpoint: {checkpoint_path}")
     # training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
 
@@ -170,7 +196,7 @@ def setup_environment_and_visualizer(now):
     if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
         with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
+            json.dump(cfg, f, indent=4)
         ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
         pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
     else:
@@ -224,6 +250,7 @@ def step_forward(
     predator_counts,
     prey_counts,
     time_steps,
+    energy_by_type_series,
     total_reward,
     clock,
     SAVE_MOVIE,
@@ -511,7 +538,7 @@ if __name__ == "__main__":
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2_video_writer_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None
@@ -551,6 +578,7 @@ if __name__ == "__main__":
                 predator_counts,
                 prey_counts,
                 time_steps,
+                energy_by_type_series,
                 total_reward,
                 clock,
                 SAVE_MOVIE,

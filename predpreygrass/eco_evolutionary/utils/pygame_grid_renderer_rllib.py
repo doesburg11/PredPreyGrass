@@ -1,5 +1,6 @@
 import pygame
 from dataclasses import dataclass
+from typing import Any, Callable
 
 
 @dataclass
@@ -83,7 +84,7 @@ class PyGameRenderer:
         self.population_history_max_length = 1000
 
         self.target_fps = 10  # Default FPS
-        self.slider_rect = None  # Will be defined in _draw_legend()
+        self.slider_rect: pygame.Rect | None = None  # Will be defined in _draw_legend()
         self.slider_max_fps = 60
         self.population_history_max_length = max_steps if max_steps else 1000
 
@@ -556,8 +557,9 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
-        self.fps_slider_rect = None
-        self.fps_slider_update_fn = None
+        self.fps_slider_rect: pygame.Rect | None = None
+        self.fps_slider_update_fn: Callable[[int], None] | None = None
+        self.visualizer: Any | None = None
         self.is_dragging_slider = False
 
     def handle_events(self):
@@ -565,13 +567,13 @@ class ViewerControlHelper:
             if event.type == pygame.QUIT:
                 print("[ViewerControl] Quit detected — exiting.")
                 pygame.quit()
-                exit(0)
+                raise SystemExit(0)
 
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     print("[ViewerControl] ESC pressed — exiting.")
                     pygame.quit()
-                    exit(0)
+                    raise SystemExit(0)
 
                 elif event.key == pygame.K_SPACE:
                     self.paused = not self.paused
@@ -601,6 +603,8 @@ class ViewerControlHelper:
                     self.is_dragging_slider = False
 
     def _update_fps_slider(self, slider_x):
+        if self.fps_slider_rect is None or self.fps_slider_update_fn is None or self.visualizer is None:
+            return
         slider_max_fps = self.visualizer.slider_max_fps
         slider_start_x = self.fps_slider_rect.left
         slider_width = self.fps_slider_rect.width
