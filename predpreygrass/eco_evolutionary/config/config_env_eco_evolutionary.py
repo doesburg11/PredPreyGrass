@@ -21,11 +21,6 @@ config_env = {
         "predator": 0.0,
         "prey": 0.0,
     },
-    "max_fertility_age": {
-        # None ⇒ unlimited fertility window; set to an int to cap fertile age in steps
-        "predator": None,
-        "prey": None,
-    },
     "max_agent_age": {
         # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
         "predator": None,

@@ -2,8 +2,8 @@
 
 This module is the biological-realism branch of PredPreyGrass. It starts from
 `lineage_rewards` because that module already has the required lifecycle
-scaffold: never-reused IDs, parent-child tracking, lineage logs, fertility caps,
-age limits, and juvenile constraints.
+scaffold: never-reused IDs, parent-child tracking, lineage logs, age limits,
+and juvenile constraints.
 
 The new layer is an explicit heritable genome. In the base experiment, the
 genome controls movement speed, not learned PPO policy weights. This keeps the
