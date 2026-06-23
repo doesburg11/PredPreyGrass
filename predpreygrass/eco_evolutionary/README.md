@@ -178,6 +178,26 @@ genome → speed trait → policy learns speed-specific behaviour
        → stronger fitness differential → faster heritable selection
 ```
 
+**Why knowing its own speed matters:**
+
+Without speed in the observation, the policy learns one strategy averaged over the
+entire genome distribution. A fast prey and a slow prey see the same grid and
+receive the same action probabilities. Speed helps, but only passively — the fast
+agent accidentally benefits because its distance-2 moves happen to execute; the slow
+agent's distance-2 attempts get silently clipped. The genome influences outcomes
+without the policy ever exploiting it deliberately.
+
+With speed in the observation, the policy can pair each genome value with the
+strategy that actually suits it. A fast prey actively pursues an aggressive flee
+strategy; a slow prey learns not to bother fleeing and conserves energy near grass
+instead. Each genome now carries its own matched behaviour, so the fitness gap
+between fast and slow agents grows larger than it would from clipping effects alone.
+
+Selection speed depends directly on the size of this fitness differential — a larger
+gap produces a faster, cleaner evolutionary signal. The policy becomes an *amplifier*
+of genome fitness rather than a neutral scaffold sitting on top of it. That
+amplification is what closes the Baldwinian loop properly.
+
 The network architecture is unchanged: the existing CNN simply receives four input
 channels instead of three. The speed channel is spatially constant (same value
 everywhere), so the network learns to use it as a global conditioning signal rather
@@ -225,16 +245,18 @@ Key observations:
 
 Config: `energy_gain_per_step_grass: 0.04`, `max_agent_age: prey=400`, `speed_std: 0.2`, `mutation_std: 0.1`
 
-Observations at iter 34:
-- Episode lengths: mean 55 (iter 1) → 327 (iter 34), max hitting 1000 from iter 28 onward — run 1 first hit max episode length at iter 56, so this milestone was reached 28 iterations sooner
-- Iteration time stable at 2–3 min
-- `predator_speed_p50`: 0.882 → 0.886 — slight but consistent upward drift (+0.004); not seen in run 1 at this stage; first sign of directional speed selection in predators
-- `prey_speed_p50`: 0.947 → 0.944 — essentially flat with very slight downward drift; food scarcity still the dominant selection force (slow prey conserve energy)
-- `prey_fraction_fast`: 0.0 → 0.000707 — 6.7× increase over the run; growing faster than run 1 at the same stage
-- `predator_fraction_fast`: 0.0 throughout — no fast predators born yet
-- Predator entropy: 3.21 → 1.83 at iter 34 — converging significantly faster than run 1 (~2.5 at the same stage); at current rate hits 1.5 around iter 45–50
-- Prey entropy: 3.21 → 2.50 — converging steadily
-- **Watch**: prey_speed_p50 direction reversal expected around iter 45–50 once predator entropy falls below ~1.5 and hunting pressure becomes the dominant selection force
+Observations at iter 63:
+- Episode max lengths no longer consistently hitting 1000: peaked at 1000 in iters 28–34 then settled to 400–850 range — populations are cycling naturally rather than exploding; food scarcity working as intended
+- Iteration time stable at 2–3 min throughout
+- `predator_speed_p50`: 0.882 → 0.888 — slow but consistent upward drift (+0.006 total); directional predator speed selection visible and not seen in run 1 at this stage
+- `prey_speed_p50`: oscillating narrowly in [0.944, 0.946] — flat; the slight downward drift from early iters has stopped but no upward reversal yet; expected once predator policy fully converges
+- `predator_speed_mean`: 0.910 → 0.911 — very slight upward trend mirroring p50
+- `prey_speed_mean`: stable at ~1.024–1.027 throughout
+- `prey_fraction_fast`: 0.000466 (iter 29) → 0.000903 (iter 63) — nearly doubled in 34 iterations; consistent growth rate confirms faster prey are reproducing at a higher rate
+- `predator_fraction_fast`: 0.0 throughout — predator p50 at 0.888, threshold at 1.5; no fast predators expected for many iterations
+- Predator entropy: 3.21 → 1.08 at iter 63 — nearly converged; prey should begin feeling stronger hunting pressure imminently
+- Prey entropy: 3.21 → 2.09 — still learning, more room to improve than predators
+- **Watch**: prey_speed_p50 upward reversal expected as predator entropy approaches 1.0 (iter 70–80); `prey_fraction_fast` growth rate as a leading indicator of selection strength
 
 ## References
 
