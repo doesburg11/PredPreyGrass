@@ -241,7 +241,7 @@ Key observations:
 - Predator entropy: 3.21 → 0.89 (nearly converged); prey entropy: 3.21 → 1.54 (still converging)
 - **Diagnosis**: overcrowding undermines speed selection pressure → halved grass regrowth and added prey age cap
 
-### Run 2 — `PPO_ECO_EVOLUTION_2026-06-22_14-59-05` (in progress)
+### Run 2 — `PPO_ECO_EVOLUTION_2026-06-22_14-59-05` (stopped at iter 65)
 
 Config: `energy_gain_per_step_grass: 0.04`, `max_agent_age: prey=400`, `speed_std: 0.2`, `mutation_std: 0.1`
 
@@ -257,6 +257,47 @@ Observations at iter 63:
 - Predator entropy: 3.21 → 1.08 at iter 63 — nearly converged; prey should begin feeling stronger hunting pressure imminently
 - Prey entropy: 3.21 → 2.09 — still learning, more room to improve than predators
 - **Watch**: prey_speed_p50 upward reversal expected as predator entropy approaches 1.0 (iter 70–80); `prey_fraction_fast` growth rate as a leading indicator of selection strength
+- **Stopped at iter 65** before the predicted reversal; succeeded in demonstrating natural population cycling and directional predator speed selection absent in run 1
+
+### Run 3 — `PPO_ECO_EVOLUTION_2026-06-23_10-30-31` (in progress)
+
+Config changes vs run 2:
+- `include_speed_in_obs: True` — in runs 1 and 2 the policy was genome-blind: a prey with speed 0.6 and one with speed 1.8 received identical policy outputs for the same grid observation. Speed only helped passively (fast agents happened to execute distance-2 moves). By adding the agent's own normalised speed as a 4th observation channel, the policy can learn distinct strategies per genome value — fast prey flee aggressively, slow prey hide near grass. This increases the fitness differential between fast and slow genomes, amplifying selection and closing the Baldwinian loop properly.
+- `utils/episode_return_callback.py`: `episode.length` does not exist on RLlib's new API stack `MultiAgentEpisode`; `getattr(episode, "length", 0)` silently returned 0 every episode, making console output misleading. Fixed to `episode.env_steps()`, the correct method confirmed by inspecting the `MultiAgentEpisode` class and verified with a unit test.
+
+Observations at iter 78:
+- `prey_speed_p50`: **unambiguous upward trend** — 0.925 (iter 1) → 0.929 (iter 34) → 0.937 (iter 78), +0.012 total; acceleration visible in the last 14 iterations (0.932 → 0.937); directional upward drift was absent in run 2 for the first 30+ iterations
+- `prey_fraction_fast`: **new high of 0.000842** at iter 78 — more than double run 2 at the same iteration count (~0.000391); after a dip to 0.000473 at iter 67 following the population crash, now climbing consistently: 0.000679 → 0.000768 → 0.000803 → 0.000829 → 0.000842 over the last 5 iterations
+- `predator_speed_p50`: 0.902 (iter 1) → 0.890 (iter 64) → 0.895 (iter 78) — oscillating, slight upward recovery; no strong directional signal yet
+- `predator_fraction_fast`: 0.0 throughout
+- Episode lengths stabilised at mean 210–270 after the iter 33–34 population crash — populations cycling naturally under predation pressure
+- **Key signal at iter 33–34**: when predator entropy crossed below 2.0 and hunting became effective, mean episode length halved and `prey_fraction_fast` jumped 72% in 3 iterations — fast prey survived the mortality event proportionally better; directional natural selection under predation pressure confirmed
+- Predator entropy: 3.21 → 1.18 at iter 78 — well converged, predators hunting effectively and sustaining selection pressure on prey speed
+- Prey entropy: 3.21 → 1.92 — still learning; Baldwinian loop active (policy still adapting to exploit speed differences)
+- **Caveat**: founder genome is sampled fresh each run (speed_std=0.2); run 3 started with prey_p50=0.925 vs 0.947 in run 2, so some differences reflect sampling variance rather than the Baldwinian enhancement alone
+- **Watch**: whether `prey_speed_p50` continues rising toward the 1.5 fast threshold as predator entropy approaches 1.0; whether `prey_fraction_fast` keeps accelerating
+
+Observations at iter 134:
+- `prey_speed_p50`: rose from 0.925 (iter 1) to a peak of 0.943 (iter 89), then softened to 0.933 at iter 134. The prey median remains above the starting value, but the clean upward drift seen at iter 78 did not continue monotonically.
+- `prey_fraction_fast`: 0.000842 (iter 78) → 0.001265 (iter 134), with a peak of 0.001532 at iter 103. Rare fast prey remain overrepresented relative to the early run, but the signal is no longer accelerating.
+- `predator_speed_p50`: 0.895 (iter 78) → 0.920 (iter 134), and `predator_speed_mean`: 0.908 → 0.923. Predator speed now has the clearest directional selection signal in the run.
+- `predator_fraction_fast`: 0.0 throughout — predator median speed is still far below the 1.5 fast threshold, so absence of fast predators remains expected.
+- Episode length: 247 mean steps at iter 78 → 198 at iter 134, indicating predation pressure remains strong after predators converge.
+- Predator entropy: 1.18 (iter 78) → 0.99 (iter 134); prey entropy: 1.92 → 1.58. Both policies are still adapting, but predator behaviour is now close to converged.
+- **Red Queen interpretation**: this is a plausible early Red Queen-like signature, not yet a strong result. Selection pressure appears to move between species over time: prey speed selection emerged after predators became effective, then predator speed selection strengthened later. That matches the expected pattern where one side's improvement changes the fitness landscape for the other.
+- **Caveat**: a convincing Red Queen result needs sustained reciprocal escalation or repeated cycling over longer time, ideally across multiple independent seeds. At iter 134, the latest signal is predator catch-up plus elevated rare-fast prey frequency, not a clean two-species arms race yet.
+- **Watch**: whether prey median speed or `prey_fraction_fast` rises again after predator entropy settles near or below 1.0; repeated predator-prey alternation would strengthen the Red Queen claim.
+
+Observations at iter 172:
+- `prey_speed_p50`: 0.933 (iter 134) → 0.923 (iter 172), now essentially back to the run-start median of 0.925. The earlier prey median-speed signal has not persisted.
+- `prey_speed_mean`: 1.008 (iter 134) → 0.993 (iter 172), also declining. This weakens any claim that prey speed is currently under clean upward selection in this threshold-based setup.
+- `prey_fraction_fast`: 0.001265 (0.126%) at iter 134 → 0.000982 (0.098%) at iter 172. The fast tail remains non-zero but is too small to be a headline result; it is best treated as a weak supporting metric.
+- `predator_speed_p50`: 0.920 (iter 134) → 0.929 (iter 172), and `predator_speed_mean`: 0.923 → 0.927. Predator speed remains the clearest directional selection signal.
+- `predator_fraction_fast`: 0.0 throughout. Predators are still far below the 1.5 threshold, so the meaningful change is in the sub-threshold distribution, not in the binary fast category.
+- Episode length: 198 mean steps at iter 134 → 283 at iter 172. The ecology remains dynamic rather than collapsed, but the prey-speed response has not reappeared yet.
+- Predator entropy: 0.99 (iter 134) → 1.14 (iter 172); prey entropy: 1.58 → 1.45. Policy learning and ecological feedback are still changing together, which complicates clean interpretation.
+- **Revised interpretation**: run 3 still demonstrates that inherited speed distributions can move under selection, especially for predators, but it is not a clean upward-speed result for prey. The hard 1.5 movement threshold makes the evidence less legible because most agents remain far below the point where speed changes movement distance.
+- **Follow-up implication**: `eco_evolutionary_cadence` is a stronger next experiment for proving Darwinian/Baldwinian dynamics. In cadence, speed has a graded effect on movement frequency, so small genome shifts immediately affect behaviour and can be tracked with `cooldown_mean`, `speed_p50`, and `fraction_mobile` instead of relying on a rare threshold-crossing tail event.
 
 ## References
 
