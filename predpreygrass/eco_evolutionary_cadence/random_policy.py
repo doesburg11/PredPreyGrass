@@ -78,7 +78,6 @@ if __name__ == "__main__":
             step=env.current_step,
             agents_just_ate=env.agents_just_ate,
             per_step_agent_data=env.per_step_agent_data,
-            dead_prey=getattr(env, "dead_prey", None),
         )
 
         terminated =  env.terminations["__all__"]
