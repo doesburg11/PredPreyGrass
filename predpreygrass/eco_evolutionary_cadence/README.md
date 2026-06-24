@@ -79,7 +79,14 @@ Only movement is suppressed.
 
 ## Observation Channels
 
-The observation tensor has up to 5 channels:
+The RLlib observation is a dictionary with a spatial tensor and an action mask:
+
+| key | content |
+|---|---|
+| `observations` | spatial tensor with environment channels plus optional speed channel |
+| `action_mask` | binary vector over the 9 actions; frozen agents can only choose stay |
+
+With the default `include_speed_in_obs: True`, the spatial tensor has 4 channels:
 
 | channel | content |
 |---------|---------|
@@ -87,16 +94,14 @@ The observation tensor has up to 5 channels:
 | 1 | prey energies in observation window |
 | 2 | grass energies in observation window |
 | 3 | agent's normalised speed (`include_speed_in_obs: True`) |
-| 4 | `move_available` flag: 1.0 if action executes this step, 0.0 otherwise |
 
-The `move_available` channel is the key addition over the parent module.
-Without it, the shared policy has no direct signal for whether this particular
-step is a move step or a frozen step.  With it, the policy can learn:
+There is no separate spatial `move_available` channel in the current
+implementation. Movement availability is represented by `action_mask` instead.
+When an agent's cooldown is non-zero, every action except stay is masked out.
+When its cooldown reaches zero, all 9 Moore-neighbourhood actions are available.
 
-- on `move_available=1` steps: choose a meaningful direction
-- on `move_available=0` steps: any action is equivalent (no movement)
-
-This eliminates gradient noise from frozen steps where the action had no effect.
+This prevents the policy from sampling actions that would be discarded on frozen
+steps and removes gradient noise from movement choices that cannot execute.
 
 ## Population Carrying Capacity
 
@@ -176,20 +181,22 @@ A healthy eco-evolutionary run shows `speed_p50` drifting upward and
 
 ## Baldwinian Enhancement
 
-With both `include_speed_in_obs: True` and `include_move_available_in_obs: True`,
-the policy has two scalar conditioning signals:
+With `include_speed_in_obs: True`, the policy sees the heritable speed genome as
+a scalar spatial channel. Separately, the action mask tells RLlib which actions
+are valid on the current step.
 
-1. **Speed** — what genome value does this agent carry?  Lets the policy learn
-   whether to invest in movement at all (slow agents may prefer to stay near grass).
-2. **Move available** — will this step's action execute?  Lets the policy
-   condition its directional choice on whether movement is possible.
+1. **Speed channel** — what genome value does this agent carry? Lets the policy
+   learn speed-specific strategies, such as fast agents ranging farther and slow
+   agents conserving energy near resources.
+2. **Action mask** — is movement available this step? Lets the policy avoid
+   learning from impossible movement actions on frozen steps.
 
 Together they close the Baldwinian loop:
 
 ```text
 genome → speed trait
        → cooldown period
-       → policy conditions on speed + move_available
+       → policy conditions on speed while action masking handles frozen steps
        → fast agents move purposefully, slow agents conserve energy
        → fitness differential amplified
        → stronger heritable selection on speed
@@ -197,27 +204,24 @@ genome → speed trait
 
 ## Experimental Treatments
 
-The two observation flags define three controlled treatments that can be compared
-directly to isolate the Baldwinian contribution:
+The current implementation exposes one experimental observation flag:
 
-| `include_speed_in_obs` | `include_move_available_in_obs` | Process |
-|---|---|---|
-| `False` | `False` | **Pure Darwinian** — speed affects fitness through movement frequency, but the policy is blind to the genome entirely |
-| `True` | `False` | **Genome-aware** — policy knows its genome value and can learn speed-specific strategies, but cannot condition on whether this step executes |
-| `True` | `True` | **Full Baldwinian loop** — policy conditions on both genome and movement availability (default) |
+| `include_speed_in_obs` | Process |
+|---|---|
+| `False` | **Pure Darwinian** — speed affects fitness through movement frequency, but the policy is blind to the genome |
+| `True` | **Genome-aware / Baldwinian** — policy knows its speed genome and can learn speed-specific strategies |
 
-The fourth combination (`speed=False, move_available=True`) is not a useful
-treatment: the policy learns when to move but identically for all agents
-regardless of their speed genome, so it cannot differentiate strategies by
-genome value.  The Baldwinian loop requires genome awareness as its foundation.
+The action mask is currently always part of the observation API for this module.
+It is an implementation device for valid actions rather than a biological genome
+signal. It should be held constant across treatments.
 
-The scientifically interesting comparisons are:
-- **Pure Darwinian vs. Genome-aware**: does knowing the genome accelerate selection?
-- **Genome-aware vs. Full Baldwinian**: does the `move_available` flag add further amplification on top of genome awareness?
+The scientifically interesting comparison is:
+- **Pure Darwinian vs. Genome-aware**: does knowing the genome accelerate or
+  redirect selection?
 
 If `speed_p50` drifts faster and `cooldown_mean` falls more steeply at each
-step up the ladder, the Baldwin effect is real and measurable in this
-environment.
+step in the genome-aware treatment, the Baldwin effect is real and measurable in
+this environment.
 
 ## Differences from `eco_evolutionary`
 
@@ -225,7 +229,8 @@ environment.
 |---|---|---|
 | Action space | 5×5 = 25 (distance 0–2) | 3×3 = 9 (Moore, distance 0–1) |
 | Speed effect | binary: dist-1 vs dist-2 | graded cooldown: 1–10 steps |
-| Obs channels | 3 + 1 speed = 4 | 3 + 1 speed + 1 move_available = 5 |
+| Observation API | spatial tensor | dict: spatial tensor + action mask |
+| Spatial channels | 3 + 1 speed = 4 | 3 + 1 speed = 4 |
 | Config keys | `speed_distance_threshold`, `slow/fast_max_move_distance` | `max_cooldown` |
 | TensorBoard | `fraction_fast` | `fraction_mobile`, `cooldown_mean` |
 
@@ -243,7 +248,9 @@ from predpreygrass.eco_evolutionary_cadence.config.config_env_eco_evolutionary i
 from predpreygrass.eco_evolutionary_cadence.predpreygrass_rllib_env import PredPreyGrass
 env = PredPreyGrass(config_env)
 obs, _ = env.reset()
-print('obs shape:', next(iter(obs.values())).shape)  # expect (5, 7, 7) for predator
+first_obs = next(iter(obs.values()))
+print('spatial shape:', first_obs['observations'].shape)  # predator: (4, 7, 7)
+print('action mask:', first_obs['action_mask'].shape)     # 9 actions
 "
 ```
 
@@ -268,6 +275,6 @@ print('obs shape:', next(iter(obs.values())).shape)  # expect (5, 7, 7) for pred
 
 ```text
 genome → speed trait → cooldown period → lifetime movement budget
-       → policy learns speed-specific + move_available-conditioned behaviour
+       → policy learns speed-specific behaviour with action-masked frozen steps
        → survival/reproduction → inherited genome with mutation
 ```

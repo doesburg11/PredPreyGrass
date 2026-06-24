@@ -18,19 +18,10 @@ config_env = {
     "reproduction_reward_prey": {
         "prey": 10.0,
     },
-    "lineage_reward_coeff": {
-        "predator": 0.0,
-        "prey": 0.0,
-    },
     "max_agent_age": {
         # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
         "predator": None,
         "prey": 400,
-    },
-    "carcass_only_predator_age": {
-        # Juvenile predators younger than this many steps may only bite carcasses (already-dead prey)
-        # Set to None/negative to disable the restriction for a policy group.
-        "predator": None,
     },
     # Energy settings
     "energy_loss_per_step_predator": 0.20, # basal metabolism
@@ -44,10 +35,8 @@ config_env = {
     # Heritable biological trait. Speed controls movement cadence (cooldown between moves).
     "genome_enabled": True,
     # Expose the agent's own normalised speed as a 4th observation channel.
+    # Set False for pure-Darwinian baseline (policy blind to genome).
     "include_speed_in_obs": True,
-    # Expose a move_available flag (0/1) as an extra observation channel so the
-    # policy knows whether its action this step will actually execute.
-    "include_move_available_in_obs": True,
     "founder_genome": {
         "predator": {
             "speed_mean": 0.5,   # mid-range: founders start at cooldown ~5
@@ -69,9 +58,13 @@ config_env = {
     # Fastest agent (speed_max) moves every step (cooldown=1).
     "max_cooldown": 10,
     "movement_speed_cost_exponent": 2.0,
+    # Resting metabolic multiplier: basal cost scales as base × (1 + coeff × speed).
+    # speed=0.0 → no extra cost; speed=1.0 → (1 + coeff) × base cost.
+    # Biologically: faster phenotype carries larger muscle mass and higher cardiac output,
+    # which costs energy even at rest. Set to 0.0 to disable.
+    "metabolic_speed_coeff": 1.0,
     # Energy intake caps
     "max_energy_gain_per_grass": float('inf'), # 1.5
-    "max_energy_gain_per_prey": float('inf'),  # 2.5
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
@@ -88,4 +81,7 @@ config_env = {
     "verbose_decay": False,
     "verbose_reproduction": False,
     "debug_mode": False,
+    # Set True only for evaluation/rendering — accumulates per-step agent data in memory.
+    # Keep False during training to avoid O(steps × agents) memory growth in Ray workers.
+    "record_step_data": False,
 }

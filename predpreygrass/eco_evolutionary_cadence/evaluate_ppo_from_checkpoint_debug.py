@@ -1,14 +1,6 @@
 """
-This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
-and runs them in the PredPreyGrass eco-evolutionary environment for interactive debugging.
-
-This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
-making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
-version of predator and prey are are faster and can cover more ground in one movement step.
-Both speed 1 and speed 2 predators and prey are mutually trained. Evaluation of only speed 1 
-predators and prey with only small change of mutation to speed 2 predators and prey generally 
-leads to dominance of speed 2 agents and extinction of speed 1 agents as the trained model shows 
-in the simulation.
+Load PPO RLModules from the latest local eco-evolutionary cadence checkpoint and
+run them in the cadence environment for interactive debugging.
 
 The simulation can be controlled in real-time using a graphical interface.
 - [Space] Pause/Unpause
@@ -18,10 +10,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.eco_evolutionary.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.eco_evolutionary.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.eco_evolutionary.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.eco_evolutionary_cadence.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.eco_evolutionary_cadence.config.config_env_eco_evolutionary import config_env
+from predpreygrass.eco_evolutionary_cadence.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.eco_evolutionary_cadence.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray
@@ -36,6 +28,8 @@ import cv2
 import numpy as np
 import re
 from collections import defaultdict
+from pathlib import Path
+from typing import Callable, cast
 
 
 SAVE_EVAL_RESULTS = True
@@ -43,9 +37,87 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
+RAY_RESULTS_DIR = Path(os.path.expanduser("~/ray_results"))
+# Optional relative path override, e.g.
+# PPO_ECO_EVOLUTION_.../PPO_PredPreyGrass_..._00000_...
+CHECKPOINT_ROOT = os.environ.get("CADENCE_CHECKPOINT_ROOT")
+
 
 def env_creator(config):
     return PredPreyGrass(config)
+
+
+def cv2_video_writer_fourcc(*codec: str) -> int:
+    video_writer_fourcc = cast(Callable[..., int], getattr(cv2, "VideoWriter_fourcc"))
+    return video_writer_fourcc(*codec)
+
+
+def _run_config_looks_like_cadence(run_config_path: Path) -> bool:
+    try:
+        with open(run_config_path, "r") as f:
+            rc = json.load(f)
+    except Exception:
+        return False
+
+    env_cfg = rc.get("config_env") if isinstance(rc, dict) else None
+    if not isinstance(env_cfg, dict):
+        env_cfg = rc.get("env_config") if isinstance(rc, dict) else None
+    if not isinstance(env_cfg, dict):
+        return False
+
+    return (
+        env_cfg.get("action_range") == 3
+        and "max_cooldown" in env_cfg
+        and "speed_distance_threshold" not in env_cfg
+    )
+
+
+def _source_code_looks_like_cadence(experiment_path: Path) -> bool:
+    source_dir = experiment_path / "SOURCE_CODE"
+    if not source_dir.is_dir():
+        return False
+    for source_file in source_dir.glob("predpreygrass_rllib_env_*.py"):
+        try:
+            text = source_file.read_text(errors="ignore")
+        except Exception:
+            continue
+        if "Cadence variant" in text or "movement *frequency*" in text or "max_cooldown" in text:
+            return True
+    return False
+
+
+def _find_latest_cadence_run_path(ray_results_dir: Path) -> Path:
+    candidates: list[Path] = []
+    for experiment_path in ray_results_dir.glob("PPO_ECO_EVOLUTION_*"):
+        if not experiment_path.is_dir():
+            continue
+        run_config_path = experiment_path / "run_config.json"
+        if not (_run_config_looks_like_cadence(run_config_path) or _source_code_looks_like_cadence(experiment_path)):
+            continue
+        trial_dirs = [
+            path for path in experiment_path.iterdir()
+            if path.is_dir() and path.name.startswith("PPO_PredPreyGrass_")
+        ]
+        candidates.extend(trial_dirs)
+
+    if not candidates:
+        raise FileNotFoundError(
+            f"No cadence PPO run found under {ray_results_dir}. "
+            "Train predpreygrass/eco_evolutionary_cadence/tune_ppo.py first, "
+            "or set CADENCE_CHECKPOINT_ROOT to a run directory relative to ~/ray_results."
+        )
+
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def _latest_checkpoint_path(run_path: Path) -> Path:
+    checkpoints = []
+    for path in run_path.iterdir():
+        if path.is_dir() and re.fullmatch(r"checkpoint_\d+", path.name):
+            checkpoints.append((int(path.name.rsplit("_", 1)[1]), path))
+    if not checkpoints:
+        raise FileNotFoundError(f"No checkpoint directories found in: {run_path}")
+    return max(checkpoints, key=lambda item: item[0])[1]
 
 
 def _load_training_env_config_from_run(checkpoint_path, base_cfg):
@@ -68,6 +140,8 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
                 if isinstance(rc, dict):
                     if isinstance(rc.get("env_config"), dict):
                         training_env_cfg = rc["env_config"]
+                    elif isinstance(rc.get("config_env"), dict):
+                        training_env_cfg = rc["config_env"]
                     else:
                         # Heuristic: intersect with known keys in base_cfg
                         training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
@@ -86,6 +160,10 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
         "prey_obs_range",
         # Action ranges can affect obs encoding in some setups; include for safety
         "action_range",
+        "include_speed_in_obs",
+        "max_cooldown",
+        "metabolic_speed_coeff",
+        "movement_speed_cost_exponent",
     }
     merged = dict(base_cfg)
     for k in obs_keys:
@@ -103,7 +181,13 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 def policy_pi(observation, policy_module, deterministic=True):
-    obs_tensor = torch.tensor(observation).float().unsqueeze(0)
+    if isinstance(observation, dict):
+        obs_tensor = {
+            key: torch.tensor(value).float().unsqueeze(0)
+            for key, value in observation.items()
+        }
+    else:
+        obs_tensor = torch.tensor(observation).float().unsqueeze(0)
     with torch.no_grad():
         action_output = policy_module._forward_inference({"obs": obs_tensor})
     logits = action_output.get("action_dist_inputs")
@@ -117,11 +201,14 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_environment_and_visualizer(now):
-
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_root = "PPO_REPRODUCTION_REWARD_NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_GRASS_REGROWTH_0_0_8_2025-12-08_22-37-27/PPO_PredPreyGrass_17bf4_00000_0_2025-12-08_22-37-27/"
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_path = os.path.join(ray_results_dir, checkpoint_root, checkpoint_dir)
+    if CHECKPOINT_ROOT:
+        run_path = RAY_RESULTS_DIR / CHECKPOINT_ROOT
+    else:
+        run_path = _find_latest_cadence_run_path(RAY_RESULTS_DIR)
+    checkpoint_path = _latest_checkpoint_path(run_path)
+    checkpoint_dir = checkpoint_path.name
+    checkpoint_path = str(checkpoint_path)
+    print(f"Loading cadence checkpoint: {checkpoint_path}")
     # training_dir = os.path.dirname(checkpoint_path)
     eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
 
@@ -141,6 +228,7 @@ def setup_environment_and_visualizer(now):
     # Build config based on config_env and align observation-related keys with training run config
     cfg = dict(config_env)
     cfg = _load_training_env_config_from_run(checkpoint_path, cfg)
+    cfg["record_step_data"] = True
 
     env = env_creator(config=cfg)
     grid_size = (env.grid_size, env.grid_size)
@@ -170,7 +258,7 @@ def setup_environment_and_visualizer(now):
     if SAVE_EVAL_RESULTS:
         os.makedirs(eval_output_dir, exist_ok=True)
         with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
-            json.dump(config_env, f, indent=4)
+            json.dump(cfg, f, indent=4)
         ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
         pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
     else:
@@ -468,7 +556,7 @@ if __name__ == "__main__":
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2_video_writer_fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None

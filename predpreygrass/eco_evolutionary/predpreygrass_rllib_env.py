@@ -57,10 +57,9 @@ class PredPreyGrass(MultiAgentEnv):
         configured_age_caps = config.get("max_agent_age")
         if isinstance(configured_age_caps, dict):
             merged_caps = default_age_caps.copy()
-            for key, limit in configured_age_caps.items():
-                # Treat None as "use default" to keep protective caps active unless explicitly overridden
-                if limit is not None:
-                    merged_caps[key] = limit
+            # Explicit None means unlimited lifespan for that role. Defaults are
+            # only used for roles omitted from the config.
+            merged_caps.update(configured_age_caps)
             self.max_agent_age_config = merged_caps
         else:
             self.max_agent_age_config = default_age_caps
@@ -695,11 +694,14 @@ class PredPreyGrass(MultiAgentEnv):
 
         return new_position
 
+    def _n_obs_channels(self) -> int:
+        return self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
+
     def _get_observation(self, agent):
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, obs_range)
-        n_ch = self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
+        n_ch = self._n_obs_channels()
         obs = np.zeros((n_ch, obs_range, obs_range), dtype=np.float32)
         obs[:self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[:, xlo:xhi, ylo:yhi]
         if self.include_speed_in_obs:
@@ -711,7 +713,7 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _empty_observation(self, agent):
         obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-        n_ch = self.num_obs_channels + (1 if self.include_speed_in_obs else 0)
+        n_ch = self._n_obs_channels()
         return np.zeros((n_ch, obs_range, obs_range), dtype=np.float32)
 
     def _obs_clip(self, x, y, observation_range):

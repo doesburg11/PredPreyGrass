@@ -3,10 +3,10 @@ import copy
 import numpy as np
 import pytest
 
-from predpreygrass.eco_evolutionary.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary.utils.genome import Genome
+from predpreygrass.eco_evolutionary_cadence.config.config_env_eco_evolutionary import config_env
+from predpreygrass.eco_evolutionary_cadence.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.eco_evolutionary_cadence.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.eco_evolutionary_cadence.utils.genome import Genome
 
 
 def _make_test_env(overrides=None):
@@ -174,36 +174,8 @@ def test_every_acted_agent_gets_next_or_final_observation():
             break
 
 
-def test_lineage_reward_triggers_on_descendant_gain():
-    env = _make_test_env()
-    env.reset(seed=321)
-    env.rewards = {}
-
-    parent = next(agent for agent in env.agents if agent.startswith("predator"))
-    child_id = env._alloc_new_id("predator")
-    assert child_id is not None
-
-    env.agents.append(child_id)
-    env._register_new_agent(child_id, parent_agent_id=parent)
-    env.agent_positions[child_id] = env.agent_positions[parent]
-    env.predator_positions[child_id] = env.agent_positions[parent]
-    env.agent_energies[child_id] = env.initial_energy_predator
-    env.agent_live_offspring_ids[parent].append(child_id)
-    env.agent_offspring_counts[parent] += 1
-    parent_record = env.agent_stats_live[parent]
-    parent_record["offspring_count"] += 1
-
-    env._apply_lineage_survival_rewards()
-
-    coeff = env._get_role_specific("lineage_reward_coeff", parent)
-    assert env.rewards[parent] == pytest.approx(coeff)
-    assert parent_record["lineage_reward_total"] == pytest.approx(coeff)
-    reward_events = env.agent_event_log[parent].get("reward_events", [])
-    assert reward_events and reward_events[-1]["lineage_reward"] == pytest.approx(coeff)
-
-
 def test_agent_emits_max_age_termination_and_logs_event():
-    env = _make_test_env()
+    env = _make_test_env(overrides={"max_agent_age": {"predator": 4, "prey": 400}})
     env.reset(seed=123)
 
     target = next(agent for agent in env.agents if agent.startswith("predator"))
@@ -220,6 +192,17 @@ def test_agent_emits_max_age_termination_and_logs_event():
     completed = env.agent_stats_completed[target]
     assert completed["death_cause"] == "max_age"
     assert completed["age_expired_step"] == completed["death_step"]
+
+
+def test_configured_none_max_agent_age_means_unlimited():
+    env = _make_test_env()
+    env.reset(seed=122)
+
+    predator = next(agent for agent in env.agents if agent.startswith("predator"))
+    prey = next(agent for agent in env.agents if agent.startswith("prey"))
+
+    assert env._get_max_age_limit(predator) is None
+    assert env._get_max_age_limit(prey) == 400
 
 
 def test_rllib_output_preserves_terminal_reward_without_terminal_observation():
@@ -300,9 +283,13 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     stay_action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (0, 0))
     observations, _, terminations, truncations, infos = env.step({agent: stay_action for agent in env.agents})
 
+    n_ch = env._n_obs_channels()
+    n_actions = env.action_range ** 2
     assert set(observations) == {predator, prey}
-    assert observations[predator].shape == (3, env.predator_obs_range, env.predator_obs_range)
-    assert observations[prey].shape == (3, env.prey_obs_range, env.prey_obs_range)
+    assert observations[predator]["observations"].shape == (n_ch, env.predator_obs_range, env.predator_obs_range)
+    assert observations[predator]["action_mask"].shape == (n_actions,)
+    assert observations[prey]["observations"].shape == (n_ch, env.prey_obs_range, env.prey_obs_range)
+    assert observations[prey]["action_mask"].shape == (n_actions,)
     assert terminations[predator] is False
     assert terminations[prey] is False
     assert truncations[predator] is True
@@ -314,81 +301,7 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     metrics = infos["__all__"]["training_metrics"]
     assert "predator_speed_mean" in metrics
     assert "prey_speed_mean" in metrics
-    assert "predator_fraction_fast" in metrics
-
-
-def test_juvenile_predator_blocked_from_live_prey():
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": 10},
-        }
-    )
-    env.reset(seed=999)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-    env.agent_ages[predator] = 0
-
-    env._handle_predator_engagement(predator)
-
-    step_reward = env._get_role_specific("reward_predator_step", predator)
-    assert env.rewards[predator] == pytest.approx(step_reward)
-    assert predator not in env.agents_just_ate
-    assert prey not in env.dead_prey
-    assert env.agent_stats_live[predator]["carcass_only_blocks"] == 1
-    assert env._pending_infos[predator]["carcass_only_live_prey_blocked"] is True
-
-
-def test_predator_can_eat_live_prey_after_window():
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": 2},
-        }
-    )
-    env.reset(seed=77)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-    env.agent_ages[predator] = 5
-
-    env._handle_predator_engagement(predator)
-
-    catch_reward = env._get_role_specific("reward_predator_catch_prey", predator)
-    assert env.rewards[predator] == pytest.approx(catch_reward)
-    assert predator in env.agents_just_ate
-    assert env.agent_stats_live[predator]["times_ate"] == 1
-    assert prey in env.dead_prey
-
-
-def test_founder_predator_starts_at_carcass_threshold():
-    window = 12
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": window},
-        }
-    )
-    env.reset(seed=222)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-
-    assert env.agent_ages[predator] == window
-
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-
-    env._handle_predator_engagement(predator)
-
-    assert predator in env.agents_just_ate
-    assert env.rewards[predator] == pytest.approx(env._get_role_specific("reward_predator_catch_prey", predator))
+    assert "predator_fraction_mobile" in metrics
 
 
 def test_founders_receive_genomes_in_event_logs():
@@ -460,11 +373,12 @@ def test_reproduction_threshold_uses_fixed_base_threshold():
     assert len(env.agent_live_offspring_ids[parent]) == 1
 
 
-def test_action_space_uses_extended_moore_neighborhood():
+def test_action_space_uses_moore_neighborhood():
     env = _make_test_env()
     env.reset(seed=727)
-    assert env.action_spaces["predator_0"].n == 25
-    assert (2, 0) in env.action_to_move_tuple_agents.values()
+    assert env.action_spaces["predator_0"].n == 9
+    assert (1, 0) in env.action_to_move_tuple_agents.values()
+    assert (2, 0) not in env.action_to_move_tuple_agents.values()
 
 
 def test_observation_edges_are_clipped_and_zero_padded():
@@ -477,46 +391,48 @@ def test_observation_edges_are_clipped_and_zero_padded():
 
     obs = env._get_observation(predator)
 
-    assert obs.shape == (3, env.predator_obs_range, env.predator_obs_range)
+    n_ch = env._n_obs_channels()
+    spatial = obs["observations"]
+    assert spatial.shape == (n_ch, env.predator_obs_range, env.predator_obs_range)
+    assert obs["action_mask"].shape == (env.action_range ** 2,)
     offset = (env.predator_obs_range - 1) // 2
-    assert np.all(obs[:, :offset, :] == 0.0)
-    assert np.all(obs[:, :, :offset] == 0.0)
+    assert np.all(spatial[:env.num_obs_channels, :offset, :] == 0.0)
+    assert np.all(spatial[:env.num_obs_channels, :, :offset] == 0.0)
 
 
-def test_slow_speed_clips_distance_two_move_to_distance_one():
-    env = _make_test_env(
-        overrides={
-            "speed_distance_threshold": 1.5,
-        }
-    )
+def test_slow_speed_is_frozen_when_cooldown_nonzero():
+    env = _make_test_env()
     env.reset(seed=818)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    env.agent_genomes[predator] = Genome(
-        speed=1.0,
-    )
-    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (2, 0))
+    # speed=0.0 → cooldown=max_cooldown (10); force counter to non-zero
+    env.agent_genomes[predator] = Genome(speed=0.0)
+    env.agent_move_cooldowns[predator] = 5
 
-    assert env._get_move(predator, action) == (11, 10)
+    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (1, 0))
+    env._process_agent_movements({predator: action})
+
+    # Agent is frozen — should not have moved
+    assert env.agent_positions[predator] == (10, 10)
+    assert env.agent_move_cooldowns[predator] == 4  # decremented
 
 
-def test_fast_speed_allows_distance_two_move():
-    env = _make_test_env(
-        overrides={
-            "speed_distance_threshold": 1.5,
-        }
-    )
+def test_fast_speed_moves_every_step():
+    env = _make_test_env()
     env.reset(seed=919)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    env.agent_genomes[predator] = Genome(
-        speed=1.6,
-    )
-    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (2, 0))
+    # speed=1.0 → cooldown=1; always 0 after phase init
+    env.agent_genomes[predator] = Genome(speed=1.0)
+    env.agent_move_cooldowns[predator] = 0
 
-    assert env._get_move(predator, action) == (12, 10)
+    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (1, 0))
+    env._process_agent_movements({predator: action})
+
+    assert env.agent_positions[predator] == (11, 10)
+    assert env.agent_move_cooldowns[predator] == 0  # cooldown-1 = 1-1 = 0
 
 
 def test_fast_speed_pays_only_basal_cost_when_stationary():
@@ -525,15 +441,15 @@ def test_fast_speed_pays_only_basal_cost_when_stationary():
             "energy_loss_per_step_predator": 0.2,
             "movement_energy_cost_per_cell_predator": 0.05,
             "movement_speed_cost_exponent": 2.0,
+            "metabolic_speed_coeff": 1.0,
         }
     )
     env.reset(seed=1020)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    env.agent_genomes[predator] = Genome(
-        speed=2.0,
-    )
+    env.agent_genomes[predator] = Genome(speed=1.0)  # fastest: cooldown=1
+    env.agent_move_cooldowns[predator] = 0
     start_energy = 10.0
     env.agent_energies[predator] = start_energy
     env.grid_world_state[0, *env.agent_positions[predator]] = start_energy
@@ -542,7 +458,9 @@ def test_fast_speed_pays_only_basal_cost_when_stationary():
     stay_action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (0, 0))
     env._process_agent_movements({predator: stay_action})
 
-    assert env.agent_energies[predator] == pytest.approx(start_energy - 0.2)
+    # speed=1.0, coeff=1.0 → basal = 0.2 × (1 + 1.0 × 1.0) = 0.4; no locomotion cost
+    expected_basal = 0.2 * (1.0 + 1.0 * 1.0)
+    assert env.agent_energies[predator] == pytest.approx(start_energy - expected_basal)
 
 
 def test_movement_cost_uses_actual_distance_and_superlinear_speed():
@@ -551,24 +469,27 @@ def test_movement_cost_uses_actual_distance_and_superlinear_speed():
             "energy_loss_per_step_predator": 0.2,
             "movement_energy_cost_per_cell_predator": 0.05,
             "movement_speed_cost_exponent": 2.0,
+            "metabolic_speed_coeff": 1.0,
         }
     )
     env.reset(seed=1030)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    env.agent_genomes[predator] = Genome(
-        speed=2.0,
-    )
+    env.agent_genomes[predator] = Genome(speed=0.5)  # mid-range genome
+    env.agent_move_cooldowns[predator] = 0  # ensure movement executes this step
     start_energy = 10.0
     env.agent_energies[predator] = start_energy
     env.grid_world_state[0, *env.agent_positions[predator]] = start_energy
 
     env._apply_time_step_update()
-    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (2, 0))
+    action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (1, 0))
     env._process_agent_movements({predator: action})
 
-    expected_movement_cost = 0.05 * 2.0 * (2.0**2)
-    assert env.agent_energies[predator] == pytest.approx(start_energy - 0.2 - expected_movement_cost)
+    # speed=0.5, coeff=1.0 → basal = 0.2 × (1 + 1.0 × 0.5) = 0.3
+    # distance=1, speed=0.5, exponent=2.0 → locomotion = 0.05 × 1.0 × 0.5² = 0.0125
+    expected_basal = 0.2 * (1.0 + 1.0 * 0.5)
+    expected_movement_cost = 0.05 * 1.0 * (0.5 ** 2)
+    assert env.agent_energies[predator] == pytest.approx(start_energy - expected_basal - expected_movement_cost)
     assert env._per_agent_step_deltas[predator]["move"] == pytest.approx(-expected_movement_cost)
     assert env.agent_stats_live[predator]["movement_energy_spent"] == pytest.approx(expected_movement_cost)

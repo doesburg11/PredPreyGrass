@@ -203,7 +203,7 @@ def test_lineage_reward_triggers_on_descendant_gain():
 
 
 def test_agent_emits_max_age_termination_and_logs_event():
-    env = _make_test_env()
+    env = _make_test_env(overrides={"max_agent_age": {"predator": 4, "prey": 400}})
     env.reset(seed=123)
 
     target = next(agent for agent in env.agents if agent.startswith("predator"))
@@ -220,6 +220,17 @@ def test_agent_emits_max_age_termination_and_logs_event():
     completed = env.agent_stats_completed[target]
     assert completed["death_cause"] == "max_age"
     assert completed["age_expired_step"] == completed["death_step"]
+
+
+def test_configured_none_max_agent_age_means_unlimited():
+    env = _make_test_env()
+    env.reset(seed=122)
+
+    predator = next(agent for agent in env.agents if agent.startswith("predator"))
+    prey = next(agent for agent in env.agents if agent.startswith("prey"))
+
+    assert env._get_max_age_limit(predator) is None
+    assert env._get_max_age_limit(prey) == 400
 
 
 def test_rllib_output_preserves_terminal_reward_without_terminal_observation():
@@ -300,9 +311,10 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     stay_action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (0, 0))
     observations, _, terminations, truncations, infos = env.step({agent: stay_action for agent in env.agents})
 
+    n_ch = env._n_obs_channels()
     assert set(observations) == {predator, prey}
-    assert observations[predator].shape == (3, env.predator_obs_range, env.predator_obs_range)
-    assert observations[prey].shape == (3, env.prey_obs_range, env.prey_obs_range)
+    assert observations[predator].shape == (n_ch, env.predator_obs_range, env.predator_obs_range)
+    assert observations[prey].shape == (n_ch, env.prey_obs_range, env.prey_obs_range)
     assert terminations[predator] is False
     assert terminations[prey] is False
     assert truncations[predator] is True
@@ -477,10 +489,10 @@ def test_observation_edges_are_clipped_and_zero_padded():
 
     obs = env._get_observation(predator)
 
-    assert obs.shape == (3, env.predator_obs_range, env.predator_obs_range)
+    assert obs.shape == (env._n_obs_channels(), env.predator_obs_range, env.predator_obs_range)
     offset = (env.predator_obs_range - 1) // 2
-    assert np.all(obs[:, :offset, :] == 0.0)
-    assert np.all(obs[:, :, :offset] == 0.0)
+    assert np.all(obs[:env.num_obs_channels, :offset, :] == 0.0)
+    assert np.all(obs[:env.num_obs_channels, :, :offset] == 0.0)
 
 
 def test_slow_speed_clips_distance_two_move_to_distance_one():
