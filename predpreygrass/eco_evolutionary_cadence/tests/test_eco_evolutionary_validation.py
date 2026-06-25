@@ -302,6 +302,7 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     assert "predator_speed_mean" in metrics
     assert "prey_speed_mean" in metrics
     assert "predator_fraction_mobile" in metrics
+    assert "predator_fraction_fast_cadence" in metrics
 
 
 def test_founders_receive_genomes_in_event_logs():
