@@ -10,7 +10,7 @@ authors = [
     { name = "Peter van Doesburg", email = "petervandoesburg11@gmail.com" }
 ]
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 dependencies = [
     "pettingzoo==1.24.3",
     "stable-baselines3[extra]==2.6.0",
@@ -36,6 +36,11 @@ dev = [
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["predpreygrass*"]
+
+[tool.pytest.ini_options]
+testpaths = ["predpreygrass/eco_evolutionary_investment/tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
 
 [tool.ruff]
 line-length = 132
