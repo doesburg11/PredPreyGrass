@@ -222,3 +222,51 @@ Those belong to `eco_evolutionary_cadence` and are intentionally excluded here.
 - `utils/episode_return_callback.py`: logging of evolutionary metrics.
 - `tests/test_eco_evolutionary_validation.py`: regression tests for lifecycle,
   genome inheritance, and metric logging.
+
+## How To Know If The Interaction Is Working
+
+The tests verify the mechanism is correctly implemented. Whether it is producing
+the intended evolutionary dynamics is a separate question answered by watching
+training metrics in TensorBoard.
+
+### Darwinian signal
+
+The investment fraction should drift away from its starting value (0.35) and
+stabilise somewhere. Watch:
+
+- `eco_evolution/predator_investment_fraction_mean` and
+  `eco_evolution/prey_investment_fraction_mean` — should move over training, not
+  stay flat at 0.35.
+- `eco_evolution/predator_investment_fraction_std` and
+  `eco_evolution/prey_investment_fraction_std` — should narrow as the population
+  converges on a fit strategy.
+- `p25`, `p50`, `p75` percentiles — spread indicates how strong selection
+  pressure is.
+
+### Baldwinian signal
+
+RL behavior improving should increase selection pressure on the genome. As agents
+learn to forage better they hit the reproduction threshold more often, which means
+more reproductive events and more genome selection. Watch:
+
+- Episode returns increasing — agents learning to forage.
+- `eco_evolution/predator_offspring_count_mean` and
+  `eco_evolution/prey_offspring_count_mean` — should rise as RL improves and
+  agents accumulate energy faster.
+
+### The interaction specifically
+
+If it is working, the investment fraction should evolve faster or more clearly as
+episode returns improve. Early in training agents barely reproduce (Baldwinian
+gate rarely opens), so selection on the genome is weak and the fraction stays
+near 0.35. As the policy improves, reproduction becomes frequent and the genome
+has something to select on.
+
+### Red flags
+
+- Investment fraction stays flat at 0.35 throughout training — mutation rate or
+  selection pressure too weak.
+- Episode returns never improve — agents cannot learn to forage, the Baldwinian
+  gate never opens, the genome is never selected.
+- `offspring_count_mean` stays near zero — reproduction never happens, the
+  Darwinian layer is effectively switched off.
