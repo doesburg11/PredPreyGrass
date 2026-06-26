@@ -155,7 +155,7 @@ if __name__ == "__main__":
             policy_mapping_fn=policy_mapping_fn,
         )
         .learners(
-            num_gpus_per_learner=1,
+            num_gpus_per_learner=0,
             num_learners=1,
         )
         .training(
@@ -172,13 +172,13 @@ if __name__ == "__main__":
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .env_runners(
-            num_env_runners=8,
-            num_envs_per_env_runner=3,
-            num_cpus_per_env_runner=3,
+            num_env_runners=6,
+            num_envs_per_env_runner=1,
+            num_cpus_per_env_runner=1,
             rollout_fragment_length="auto",
             sample_timeout_s=600,
         )
-        .resources(num_cpus_for_main_process=4)
+        .resources(num_cpus_for_main_process=1)
         .callbacks(EpisodeReturn)
     )
 
