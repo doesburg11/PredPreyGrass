@@ -371,7 +371,6 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
             lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
             offspring = stats.get("offspring_count", 0)
             off_per_step = offspring / lifetime if lifetime > 0 else 0.0
-            lineage_bonus = stats.get("lineage_reward_total", 0.0)
             group_stats[group].append({
                 "uid": uid,
                 "reward": reward,
@@ -380,7 +379,6 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 "off_per_step": off_per_step,
                 "index": index,
                 "reuse": reuse,
-                "lineage_bonus": lineage_bonus,
             })
         return group_stats
 
@@ -394,8 +392,7 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 group_stats[group], key=lambda x: (-x["reward"], x["index"], x["reuse"])
             )
             lines.append(
-                f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8} | "
-                f"{'Lineage':>8}\n"
+                f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8}\n"
             )
             for entry in sorted_group:
                 lines.append(
@@ -403,8 +400,7 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                     f"{entry['reward']:8.2f} | "
                     f"{entry['lifetime']:6} | "
                     f"{entry['offspring']:4} | "
-                    f"{100*entry['off_per_step']:8.2f} | "
-                    f"{entry['lineage_bonus']:8.2f}\n"
+                    f"{100*entry['off_per_step']:8.2f}\n"
                 )
             # Print averages for this group
             n = len(sorted_group)
@@ -413,10 +409,9 @@ def save_reward_summary_to_file(env, total_reward, output_dir):
                 avg_life = sum(e['lifetime'] for e in sorted_group) / n
                 avg_offspring = sum(e['offspring'] for e in sorted_group) / n
                 avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
-                avg_lineage = sum(e['lineage_bonus'] for e in sorted_group) / n
                 lines.append(
                     f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
-                    f"{100*avg_off_per_step:8.2f} | {avg_lineage:8.2f}\n"
+                    f"{100*avg_off_per_step:8.2f}\n"
                 )
         lines.append("\n--- Aggregated Totals ---\n")
         lines.append(f"Total number of steps: {env.current_step - 1}\n")
@@ -450,7 +445,6 @@ def print_ranked_fitness_summary(env):
                 "lifetime": lifetime,
                 "offspring": stats.get("offspring_count", 0),
                 "off_per_step": stats.get("offspring_count", 0) / lifetime if lifetime > 0 else 0.0,
-                "lineage_bonus": stats.get("lineage_reward_total", 0.0),
             }
         )
 
@@ -458,8 +452,7 @@ def print_ranked_fitness_summary(env):
         print(f"\n## {group.replace('_', ' ').title()} ##")
         sorted_group = sorted(group_stats[group], key=lambda x: (-x["offspring"], -x["reward"], -x["lifetime"]))
         print(
-            f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8} | "
-            f"{'Lineage':>8}"
+            f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8}"
         )
         for entry in sorted_group[:10]:  # top 10
             print(
@@ -467,8 +460,7 @@ def print_ranked_fitness_summary(env):
                 f"{entry['reward']:8.2f} | "
                 f"{entry['lifetime']:6} | "
                 f"{entry['offspring']:4} | "
-                f"{100*entry['off_per_step']:8.2f} | "
-                f"{entry.get('lineage_bonus', 0.0):8.2f}"
+                f"{100*entry['off_per_step']:8.2f}"
             )
         # Print averages for this group
         n = len(sorted_group)
@@ -477,10 +469,9 @@ def print_ranked_fitness_summary(env):
             avg_life = sum(e['lifetime'] for e in sorted_group) / n
             avg_offspring = sum(e['offspring'] for e in sorted_group) / n
             avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
-            avg_lineage = sum(e.get('lineage_bonus', 0.0) for e in sorted_group) / n
             print(
                 f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
-                f"{100*avg_off_per_step:8.2f} | {avg_lineage:8.2f}"
+                f"{100*avg_off_per_step:8.2f}"
             )
 
 if __name__ == "__main__":

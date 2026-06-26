@@ -17,25 +17,11 @@ config_env = {
     "reproduction_reward_prey": {
         "prey": 10.0,
     },
-    "lineage_reward_coeff": {
-        "predator": 0.0,
-        "prey": 0.0,
-    },
-    "max_agent_age": {
-        # None ⇒ unlimited lifespan; set to an int to auto-terminate after that many steps
-        "predator": None,
-        "prey": 400,
-    },
-    "carcass_only_predator_age": {
-        # Juvenile predators younger than this many steps may only bite carcasses (already-dead prey)
-        # Set to None/negative to disable the restriction for a policy group.
-        "predator": None,
-    },
     # Energy settings
-    "energy_loss_per_step_predator": 0.20, # basal metabolism
-    "energy_loss_per_step_prey": 0.05, # basal metabolism
-    "movement_energy_cost_per_cell_predator": 0.05,
-    "movement_energy_cost_per_cell_prey": 0.02,
+    "energy_loss_per_step_predator": 0.15,
+    "energy_loss_per_step_prey": 0.05,
+    "movement_energy_cost_per_cell_predator": 0.0,
+    "movement_energy_cost_per_cell_prey": 0.0,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     "initial_energy_predator": 5.0,
@@ -69,10 +55,10 @@ config_env = {
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
-    "n_possible_predators": 400,
-    "n_possible_prey": 1200,
-    "n_initial_active_predators": 10,
-    "n_initial_active_prey": 10,
+    "n_possible_predators": 50,
+    "n_possible_prey": 50,
+    "n_initial_active_predators": 6,
+    "n_initial_active_prey": 8,
     # Grass settings
     "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
