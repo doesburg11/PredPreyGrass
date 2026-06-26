@@ -1,9 +1,19 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
-It uses a custom environment that simulates a predator-prey-grass ecosystem.
-The environment is a grid world where predators and prey move around.
-Predators try to catch prey, and prey try to eat grass.
+Trains the eco_evolutionary_investment environment with PPO using the Ray RLlib
+new API stack.
+
+The environment is a predator-prey-grass grid world in which agents carry a
+heritable genome trait (offspring_investment_fraction). At reproduction, a
+fraction of the parent's energy is transferred to the offspring; the fraction
+is inherited and mutated across generations (Darwinian layer). Within-lifetime
+foraging and hunting behavior is learned by shared PPO policies and is not
+inherited (Baldwinian layer).
+
+Checkpoints and a copy of the environment source are saved under ~/ray_results/
+for provenance. Investment-fraction genome statistics are logged to TensorBoard
+via the EpisodeReturn callback.
 """
+
 from predpreygrass.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.eco_evolutionary_investment.config.config_env_eco_evolutionary import config_env
 from predpreygrass.eco_evolutionary_investment.utils.episode_return_callback import EpisodeReturn
@@ -58,7 +68,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "ECO_EVOLUTION"
+    version = "ECO_EVOLUTION_INVESTMENT"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 

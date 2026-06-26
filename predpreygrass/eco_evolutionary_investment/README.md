@@ -223,6 +223,68 @@ Those belong to `eco_evolutionary_cadence` and are intentionally excluded here.
 - `tests/test_eco_evolutionary_validation.py`: regression tests for lifecycle,
   genome inheritance, and metric logging.
 
+## Important Note On The Baldwinian Structure
+
+All predators share one neural network policy and all prey share another. A
+newly spawned agent immediately acts using the current shared policy weights —
+it does not learn from scratch. This might look Lamarckian: a parent acquires
+foraging skill during its lifetime and its offspring inherit that skill.
+
+The distinction is at the level at which inheritance operates. In Lamarckian
+inheritance this specific parent's acquired behavior is passed to this specific
+offspring. Here the child of a strong predator and the child of a weak predator
+receive exactly the same policy weights. What is shared is not the individual
+parent's experience but species-level collective knowledge built from all agents
+across all training iterations. No individual parent has more influence on the
+child's starting policy than any other.
+
+However, this reveals a real tension with the classical Baldwinian definition.
+In classical Baldwinian evolution the genome and learning interact directly:
+agents with certain genes find certain behaviors easier to learn, which is what
+creates selection pressure on those genes. In this model the
+`offspring_investment_fraction` genome does not influence the policy or learning
+at all — it only affects energy dynamics at reproduction. The Darwinian and
+Baldwinian layers are coupled purely through energy:
+
+```text
+RL behavior -> energy accumulation -> reproduction -> genome propagation
+```
+
+The coupling is real but asymmetric. The RL policy creates selection pressure on
+the genome — a policy that accumulates energy slowly rarely triggers
+reproduction, so the investment fraction is barely selected at all; a policy
+that accumulates energy fast triggers reproduction frequently, making the
+investment fraction matter a lot. But the genome never feeds back into the
+learning. The investment fraction does not influence what the agent observes,
+how fast it learns, or what behavior PPO reinforces. This one-way coupling is
+what makes the structure weaker than classical Baldwinian.
+
+A classical Baldwinian genome trait would close the loop in both directions:
+
+```text
+gene -> learning capacity -> fitness -> gene frequencies shift
+```
+
+In this model only the second arrow exists:
+
+```text
+RL behavior -> energy -> reproduction -> genome propagation   (exists)
+genome -> learning capacity                                    (does not exist)
+```
+
+This places the experiment between classical Baldwinian and pure Darwinian on a
+spectrum:
+
+- Lamarckian: learned weights inherited directly by offspring
+- Classical Baldwinian: genome influences learning, learning influences fitness
+- This experiment: RL learning influences fitness, fitness selects the genome,
+  genome does not influence learning
+- Pure Darwinian: no learning at all, only selection
+
+Whether the one-way coupling is strong enough to produce meaningful
+evolutionary dynamics in the investment fraction is an open empirical question
+that training will have to answer.
+
 ## How To Know If The Interaction Is Working
 
 The tests verify the mechanism is correctly implemented. Whether it is producing

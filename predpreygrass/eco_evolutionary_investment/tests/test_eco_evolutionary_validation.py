@@ -174,65 +174,6 @@ def test_every_acted_agent_gets_next_or_final_observation():
             break
 
 
-def test_lineage_reward_triggers_on_descendant_gain():
-    env = _make_test_env()
-    env.reset(seed=321)
-    env.rewards = {}
-
-    parent = next(agent for agent in env.agents if agent.startswith("predator"))
-    child_id = env._alloc_new_id("predator")
-    assert child_id is not None
-
-    env.agents.append(child_id)
-    env._register_new_agent(child_id, parent_agent_id=parent)
-    env.agent_positions[child_id] = env.agent_positions[parent]
-    env.predator_positions[child_id] = env.agent_positions[parent]
-    env.agent_energies[child_id] = env.initial_energy_predator
-    env.agent_live_offspring_ids[parent].append(child_id)
-    env.agent_offspring_counts[parent] += 1
-    parent_record = env.agent_stats_live[parent]
-    parent_record["offspring_count"] += 1
-
-    env._apply_lineage_survival_rewards()
-
-    coeff = env._get_role_specific("lineage_reward_coeff", parent)
-    assert env.rewards[parent] == pytest.approx(coeff)
-    assert parent_record["lineage_reward_total"] == pytest.approx(coeff)
-    reward_events = env.agent_event_log[parent].get("reward_events", [])
-    assert reward_events and reward_events[-1]["lineage_reward"] == pytest.approx(coeff)
-
-
-def test_agent_emits_max_age_termination_and_logs_event():
-    env = _make_test_env(overrides={"max_agent_age": {"predator": 4, "prey": 400}})
-    env.reset(seed=123)
-
-    target = next(agent for agent in env.agents if agent.startswith("predator"))
-    limit = env._get_max_age_limit(target)
-    assert limit is not None and limit > 1
-    env.agent_ages[target] = limit - 1
-
-    actions = {agent: 0 for agent in env.agents}
-    _, _, terminations, _, infos = env.step(actions)
-
-    assert terminations[target] is True
-    assert infos[target]["terminated_due_to_age"] is True
-    assert target not in env.agent_stats_live
-    completed = env.agent_stats_completed[target]
-    assert completed["death_cause"] == "max_age"
-    assert completed["age_expired_step"] == completed["death_step"]
-
-
-def test_configured_none_max_agent_age_means_unlimited():
-    env = _make_test_env()
-    env.reset(seed=122)
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-
-    assert env._get_max_age_limit(predator) is None
-    assert env._get_max_age_limit(prey) == 400
-
-
 def test_rllib_output_preserves_terminal_reward_without_terminal_observation():
     env = _make_test_env(
         overrides={
@@ -329,80 +270,6 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     assert "predator_investment_fraction_p25" in metrics
     assert "predator_investment_fraction_p50" in metrics
     assert "predator_investment_fraction_p75" in metrics
-
-
-def test_juvenile_predator_blocked_from_live_prey():
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": 10},
-        }
-    )
-    env.reset(seed=999)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-    env.agent_ages[predator] = 0
-
-    env._handle_predator_engagement(predator)
-
-    step_reward = env._get_role_specific("reward_predator_step", predator)
-    assert env.rewards[predator] == pytest.approx(step_reward)
-    assert predator not in env.agents_just_ate
-    assert prey not in env.dead_prey
-    assert env.agent_stats_live[predator]["carcass_only_blocks"] == 1
-    assert env._pending_infos[predator]["carcass_only_live_prey_blocked"] is True
-
-
-def test_predator_can_eat_live_prey_after_window():
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": 2},
-        }
-    )
-    env.reset(seed=77)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-    env.agent_ages[predator] = 5
-
-    env._handle_predator_engagement(predator)
-
-    catch_reward = env._get_role_specific("reward_predator_catch_prey", predator)
-    assert env.rewards[predator] == pytest.approx(catch_reward)
-    assert predator in env.agents_just_ate
-    assert env.agent_stats_live[predator]["times_ate"] == 1
-    assert prey in env.dead_prey
-
-
-def test_founder_predator_starts_at_carcass_threshold():
-    window = 12
-    env = _make_test_env(
-        overrides={
-            "carcass_only_predator_age": {"predator": window},
-        }
-    )
-    env.reset(seed=222)
-    env.rewards = {}
-
-    predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    prey = next(agent for agent in env.agents if agent.startswith("prey"))
-
-    assert env.agent_ages[predator] == window
-
-    env.agent_positions[predator] = tuple(env.agent_positions[prey])
-    env.predator_positions[predator] = tuple(env.agent_positions[prey])
-
-    env._handle_predator_engagement(predator)
-
-    assert predator in env.agents_just_ate
-    assert env.rewards[predator] == pytest.approx(env._get_role_specific("reward_predator_catch_prey", predator))
 
 
 def test_founders_receive_genomes_in_event_logs():
@@ -526,7 +393,7 @@ def test_genome_does_not_change_across_steps():
             assert env.agent_genomes[predator].offspring_investment_fraction == pytest.approx(fraction_at_birth)
 
 
-def test_multi_generation_lineage_chain():
+def test_multi_generation_ancestry_chain():
     env = _make_test_env(overrides={
         "predator_creation_energy_threshold": 10.0,
         "min_offspring_energy_predator": 1.0,

@@ -1,9 +1,5 @@
 """
 Predator-Prey Grass RLlib Environment
-
-Additional features:
-- lineage rewards for predators and prey
-- limited age per agent type
 """
 # external libraries (Ray required)
 import gymnasium
@@ -48,30 +44,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Rewards dictionaries
         self.reproduction_reward_predator_config = config["reproduction_reward_predator"]
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
-        # Lineage survival reward coefficient (can be scalar or per-policy dict)
-        self.lineage_reward_coeff_config = config["lineage_reward_coeff"]
-        default_age_caps = {
-            "predator": 120,
-            "prey": 100,
-        }
-        configured_age_caps = config.get("max_agent_age")
-        if isinstance(configured_age_caps, dict):
-            merged_caps = default_age_caps.copy()
-            # Explicit None means unlimited lifespan for that role. Defaults are
-            # only used for roles omitted from the config.
-            merged_caps.update(configured_age_caps)
-            self.max_agent_age_config = merged_caps
-        else:
-            self.max_agent_age_config = default_age_caps
-
-        default_carcass_only_caps = {
-            "predator": None,
-        }
-        configured_carcass_caps = config.get("carcass_only_predator_age")
-        if isinstance(configured_carcass_caps, dict):
-            self.carcass_only_predator_age_config = {**default_carcass_only_caps, **configured_carcass_caps}
-        else:
-            self.carcass_only_predator_age_config = default_carcass_only_caps
 
         # Energy settings
         self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
@@ -144,13 +116,11 @@ class PredPreyGrass(MultiAgentEnv):
         #   "parent_id": Optional[str],
         #   "death_cause": Optional[str],
         #   "eating_events": [
-        #       {"t": int, "id_eaten": str, "alive_before_bite": bool,
-        #        "bite_size": float, "energy_after": float}, ...],
+        #       {"t": int, "id_eaten": str, "bite_size": float, "energy_after": float}, ...],
         #   "reproduction_events": [
         #       {"t": int, "child_id": str}, ...],
         #   "reward_events": [
         #       {"t": int, "reproduction_reward": float,
-        #        "lineage_reward": float,
         #        "cumulative_reward": float}, ...],
         #   "lifecycle_events": [],
         # }
@@ -164,14 +134,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_genomes = {}
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
-        # Lineage tracking: stores parent-child relationships and live-descendant counts
-        self.lineage_tracker = {}
         # Track all agent IDs that have ever been active in this episode to prevent reuse
         self.used_agent_ids = set()
         # Capacity block counters (episode-level)
         self.reproduction_blocked_due_to_capacity_predator = 0
         self.reproduction_blocked_due_to_capacity_prey = 0
-        self.carcass_only_live_prey_blocks_predator = 0
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
@@ -179,10 +146,6 @@ class PredPreyGrass(MultiAgentEnv):
 
         self._last_live_investment_metrics: dict = {}
         self.agents_just_ate = set()
-        # Prey that have been bitten at least once and are now "dead meat":
-        # cannot move, cannot eat grass, cannot reproduce, and should not
-        # contribute lineage survival rewards as surviving parents.
-        self.dead_prey = set()
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
@@ -195,7 +158,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Episode-level debug counters for predator rewards
         self.debug_predator_total_reward = 0.0
         self.debug_predator_repro_events = 0
-        self.debug_predator_lineage_events = 0
 
         # aggregates per step
         self.active_num_predators = 0
@@ -362,9 +324,6 @@ class PredPreyGrass(MultiAgentEnv):
             if energies[agent] >= prey_thr:
                 self._handle_prey_reproduction(agent)
 
-        # Step 6.5: Apply lineage survival rewards based on live descendant changes
-        self._apply_lineage_survival_rewards()
-
         # Step 7: Assemble return dicts. Observations contain only agents that
         # should act next. Rewards/done flags may include agents that ended on
         # this step.
@@ -377,7 +336,7 @@ class PredPreyGrass(MultiAgentEnv):
         missing_acted_ids = (acted_ids - live_ids - ended_ids) & set(self.possible_agents)
         for agent in missing_acted_ids:
             # RLlib requires every agent that acted and disappeared to receive a
-            # final done flag plus final observation. This catches carcass/cleanup
+            # final done flag plus final observation
             # edge cases where lower-level bookkeeping removed an acted agent
             # before the final return dict was assembled.
             reward_full.setdefault(agent, self.rewards.get(agent, 0.0))
@@ -589,13 +548,12 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Apply all per-step updates (energy decay, age increment).
         """
-        aged_out_agents = []
         for raw_agent in list(self.agents):
             agent = str(raw_agent)
             is_predator = "predator" in agent
             layer = 0 if is_predator else 1
 
-            # Basal metabolism always applies while the agent/carcass exists.
+            # Basal metabolism always applies while the agent exists.
             # Locomotion cost is charged later from actual distance moved.
             if is_predator:
                 energy_decay = self.energy_loss_per_step_predator
@@ -605,11 +563,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.agent_energies[agent] -= energy_decay
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
 
-            # Freeze age for dead prey (carcasses): they no longer accrue lifetime.
-            if not ("prey" in agent and agent in self.dead_prey):
-                self.agent_ages[agent] += 1
-                if self._agent_age_exceeded(agent):
-                    aged_out_agents.append(agent)
+            self.agent_ages[agent] += 1
 
             self._per_agent_step_deltas[agent] = {
                 "decay": -energy_decay,
@@ -617,9 +571,6 @@ class PredPreyGrass(MultiAgentEnv):
                 "eat": 0.0,
                 "repro": 0.0,
             }
-
-        for aged_agent in aged_out_agents:
-            self._terminate_agent_due_to_age(aged_agent)
 
     def _regenerate_grass_energy(self):
         """
@@ -637,9 +588,6 @@ class PredPreyGrass(MultiAgentEnv):
         """
         for agent in action_dict.keys():
             if agent not in self.agent_positions or self.terminations.get(agent):
-                continue
-            # Dead prey (bitten at least once) do not move anymore.
-            if "prey" in agent and agent in self.dead_prey:
                 continue
             old_position = self.agent_positions[agent]
             action = action_dict[agent]
@@ -758,10 +706,6 @@ class PredPreyGrass(MultiAgentEnv):
         return None  # No available position found
 
     def _handle_energy_starvation(self, agent):
-        # Ensure dead-prey bookkeeping is cleaned up if a carcass-starved prey dies.
-        if "prey" in agent:
-            self.dead_prey.discard(agent)
-        self._handle_lineage_death(agent)
         self.observations[agent] = self._get_observation(agent)
         self.rewards[agent] = 0
         self.terminations[agent] = True
@@ -792,22 +736,14 @@ class PredPreyGrass(MultiAgentEnv):
             (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
         if caught_prey:
-            was_dead_before = caught_prey in self.dead_prey
-            if (not was_dead_before) and self._predator_requires_carcass_only(agent):
-                self._record_carcass_only_block(agent, caught_prey)
-                return
             # attribution predator
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_role_specific("reward_predator_catch_prey", agent)
-            # Debug: track predator reward contributions
             self.debug_predator_total_reward += float(self.rewards[agent])
-            # cumulative_reward is tracked directly in agent_stats_live
             prey_energy = float(self.agent_energies[caught_prey])
             intake_cap = float(self.config.get("max_energy_gain_per_prey", float("inf")))
-            bite = min(prey_energy, intake_cap)
-            energy_gain = bite
+            energy_gain = min(prey_energy, intake_cap)
 
-            # Predator energy update (no hard cap unless configured)
             self.agent_energies[agent] += energy_gain
             self.grid_world_state[0, *predator_position] = self.agent_energies[agent]
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
@@ -816,55 +752,28 @@ class PredPreyGrass(MultiAgentEnv):
                 predator_record["times_ate"] += 1
                 predator_record["energy_gained"] += energy_gain
                 predator_record["cumulative_reward"] += self.rewards[agent]
-            # attribution prey
-            remaining_prey_energy = prey_energy - bite
-            if remaining_prey_energy > 0.0:
-                # Prey survives with reduced energy but becomes dead meat:
-                # it will no longer move, eat grass or reproduce.
-                self.agent_energies[caught_prey] = remaining_prey_energy
-                prey_pos = self.agent_positions[caught_prey]
-                self.grid_world_state[1, *prey_pos] = remaining_prey_energy
-                self.dead_prey.add(caught_prey)
-                # Align death_step with age logic: the first fatal bite is
-                # considered the time of death, even though the carcass may
-                # persist as food. Freeze death_step here if not already set.
-                prey_record = self.agent_stats_live.get(caught_prey)
-                if prey_record is not None and prey_record.get("death_step") is None:
-                    prey_record["death_step"] = int(self.current_step)
-                if not was_dead_before:
-                    self._handle_lineage_death(caught_prey)
-                # Do not mark termination; prey continues into next step
-            else:
-                # Fully eaten prey: keep original termination path
-                # Capture a final observation for the caught prey at the moment of termination
-                # so RLlib registers the terminal step properly.
-                if not was_dead_before:
-                    self._handle_lineage_death(caught_prey)
-                self.observations[caught_prey] = self._get_observation(caught_prey)
-                self.terminations[caught_prey] = True
-                penalty = self._get_role_specific("penalty_prey_caught", caught_prey)
-                self.rewards[caught_prey] = penalty
-                self.truncations[caught_prey] = False
-                self.active_num_prey -= 1
-                self.grid_world_state[1, *self.agent_positions[caught_prey]] = 0
-                self.dead_prey.add(caught_prey)
-                prey_record = self.agent_stats_live.get(caught_prey)
-                if prey_record is not None:
-                    prey_record["death_cause"] = "eaten"
-                    # Add penalty to existing cumulative_reward (do not overwrite)
-                    prey_record["cumulative_reward"] += penalty
-                self._finalize_agent_record(caught_prey, cause="eaten")
-            # Log predator eating event (whether or not prey fully eaten)
-            # alive_before_bite=True for the first ever bite on this prey id,
-            # alive_before_bite=False for all subsequent (carcass) bites.
+
+            # Prey is immediately terminated
+            self.observations[caught_prey] = self._get_observation(caught_prey)
+            self.terminations[caught_prey] = True
+            penalty = self._get_role_specific("penalty_prey_caught", caught_prey)
+            self.rewards[caught_prey] = penalty
+            self.truncations[caught_prey] = False
+            self.active_num_prey -= 1
+            self.grid_world_state[1, *self.agent_positions[caught_prey]] = 0
+            prey_record = self.agent_stats_live.get(caught_prey)
+            if prey_record is not None:
+                prey_record["death_cause"] = "eaten"
+                prey_record["cumulative_reward"] += penalty
+            self._finalize_agent_record(caught_prey, cause="eaten")
+
             evt = self.agent_event_log.get(agent)
             if evt is not None:
                 evt.setdefault("eating_events", []).append(
                     {
                         "t": int(self.current_step),
                         "id_eaten": caught_prey,
-                        "alive_before_bite": (not was_dead_before),
-                        "bite_size": float(bite),
+                        "bite_size": float(energy_gain),
                         "energy_after": float(self.agent_energies[agent]),
                     }
                 )
@@ -878,13 +787,6 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _handle_prey_engagement(self, agent):
         if self.terminations.get(agent):
-            return
-        # Dead prey never eat grass; they are carcass-like resources only.
-        if agent in self.dead_prey:
-            self.rewards[agent] = self._get_role_specific("reward_prey_step", agent)
-            prey_record = self.agent_stats_live.get(agent)
-            if prey_record is not None:
-                prey_record["cumulative_reward"] += self.rewards[agent]
             return
         prey_position = tuple(self.agent_positions[agent])
         caught_grass = next(
@@ -923,7 +825,6 @@ class PredPreyGrass(MultiAgentEnv):
                     {
                         "t": int(self.current_step),
                         "id_eaten": caught_grass,
-                        "alive_before_bite": True,
                         "bite_size": float(bite),
                         "energy_after": float(self.agent_energies[agent]),
                     }
@@ -933,155 +834,6 @@ class PredPreyGrass(MultiAgentEnv):
             prey_record = self.agent_stats_live.get(agent)
             if prey_record is not None:
                 prey_record["cumulative_reward"] += self.rewards[agent]
-
-    def _apply_lineage_survival_rewards(self):
-        """Grant lineage survival rewards based on live-descendant deltas."""
-        if not self.lineage_tracker:
-            return
-        for agent_id, record in list(self.lineage_tracker.items()):
-            if agent_id not in self.agent_stats_live:
-                # Only living agents accrue lineage rewards
-                continue
-            # Ensure reward key exists even if no lineage delta occurs
-            self.rewards.setdefault(agent_id, 0.0)
-            coeff = self._get_role_specific("lineage_reward_coeff", agent_id)
-            current = record.get("live_descendants", 0)
-            previous = record.get("prev_live_descendants", 0)
-            delta = current - previous
-            if delta == 0:
-                record["prev_live_descendants"] = current
-                continue
-            reward = coeff * float(delta)
-            stats_record = self.agent_stats_live.get(agent_id)
-            # Always update lineage_reward_total for visibility, even if reward is zero
-            if stats_record is not None:
-                stats_record["lineage_reward_total"] = stats_record.get("lineage_reward_total", 0.0) + reward
-            if reward != 0:
-                self.rewards[agent_id] = self.rewards.get(agent_id, 0.0) + reward
-                if stats_record is not None:
-                    stats_record["cumulative_reward"] += reward
-                if "predator" in agent_id:
-                    self.debug_predator_total_reward += float(reward)
-                    self.debug_predator_lineage_events += 1
-            evt = self.agent_event_log.get(agent_id)
-            if evt is not None:
-                evt.setdefault("reward_events", []).append(
-                    {
-                        "t": int(self.current_step),
-                        "reproduction_reward": 0.0,
-                        "lineage_reward": float(reward),
-                        "cumulative_reward": float(stats_record.get("cumulative_reward", 0.0))
-                        if stats_record is not None
-                        else float(self.rewards[agent_id]),
-                    }
-                )
-            record["prev_live_descendants"] = current
-
-    def _get_max_age_limit(self, agent_id: str):
-        caps = getattr(self, "max_agent_age_config", None)
-        if caps is None:
-            return None
-        if isinstance(caps, dict):
-            for prefix, limit in caps.items():
-                if agent_id.startswith(prefix):
-                    return limit
-            return None
-        return caps
-
-    def _agent_age_exceeded(self, agent_id: str) -> bool:
-        limit = self._get_max_age_limit(agent_id)
-        if limit is None:
-            return False
-        if isinstance(limit, (int, float)) and limit >= 0:
-            return self.agent_ages.get(agent_id, 0) >= limit
-        return False
-
-    def _get_carcass_only_age_limit(self, agent_id: str):
-        caps = getattr(self, "carcass_only_predator_age_config", None)
-        if caps is None:
-            return None
-        if isinstance(caps, dict):
-            for prefix, limit in caps.items():
-                if agent_id.startswith(prefix):
-                    return limit
-            return None
-        return caps
-
-    def _get_initial_age(self, agent_id: str, *, is_founder: bool) -> int:
-        if not is_founder:
-            return 0
-        if "predator" in agent_id:
-            limit = self._get_carcass_only_age_limit(agent_id)
-            if isinstance(limit, (int, float)) and limit is not None and limit >= 0:
-                return int(limit)
-        return 0
-
-    def _predator_requires_carcass_only(self, agent_id: str) -> bool:
-        if "predator" not in agent_id:
-            return False
-        limit = self._get_carcass_only_age_limit(agent_id)
-        if limit is None:
-            return False
-        if isinstance(limit, (int, float)) and limit >= 0:
-            return self.agent_ages.get(agent_id, 0) < limit
-        return False
-
-    def _record_carcass_only_block(self, predator_id: str, prey_id: str):
-        self.rewards[predator_id] = self._get_role_specific("reward_predator_step", predator_id)
-        record = self.agent_stats_live.get(predator_id)
-        if record is not None:
-            record["cumulative_reward"] += self.rewards[predator_id]
-            record["carcass_only_blocks"] = record.get("carcass_only_blocks", 0) + 1
-            block_count = record["carcass_only_blocks"]
-        else:
-            block_count = None
-        info = self._pending_infos.setdefault(predator_id, {})
-        info["carcass_only_live_prey_blocked"] = True
-        if block_count is not None:
-            info["carcass_only_block_count"] = block_count
-        self.carcass_only_live_prey_blocks_predator += 1
-        evt = self.agent_event_log.get(predator_id)
-        if evt is not None:
-            evt.setdefault("diet_events", []).append(
-                {
-                    "t": int(self.current_step),
-                    "event": "carcass_only_block",
-                    "prey_id": prey_id,
-                    "age": int(self.agent_ages.get(predator_id, 0)),
-                }
-            )
-
-    def _terminate_agent_due_to_age(self, agent: str):
-        if self.terminations.get(agent) or agent not in self.agent_positions:
-            return
-        layer = 0 if "predator" in agent else 1
-        if "prey" in agent:
-            self.dead_prey.discard(agent)
-            self.active_num_prey = max(self.active_num_prey - 1, 0)
-        else:
-            self.active_num_predators = max(self.active_num_predators - 1, 0)
-        self._handle_lineage_death(agent)
-        self.observations[agent] = self._get_observation(agent)
-        self.rewards[agent] = self.rewards.get(agent, 0.0)
-        self.terminations[agent] = True
-        self.truncations[agent] = False
-        self.grid_world_state[layer, *self.agent_positions[agent]] = 0
-        record = self.agent_stats_live.get(agent)
-        if record is not None:
-            record["death_cause"] = "max_age"
-            record["age_expired_step"] = int(self.current_step)
-        info = self._pending_infos.setdefault(agent, {})
-        info["terminated_due_to_age"] = True
-        evt = self.agent_event_log.get(agent)
-        if evt is not None:
-            evt.setdefault("lifecycle_events", []).append(
-                {
-                    "t": int(self.current_step),
-                    "event": "max_age_reached",
-                    "age": int(self.agent_ages.get(agent, 0)),
-                }
-            )
-        self._finalize_agent_record(agent, cause="max_age")
 
     def _handle_predator_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
@@ -1175,7 +927,6 @@ class PredPreyGrass(MultiAgentEnv):
                         {
                             "t": int(self.current_step),
                             "reproduction_reward": float(self.rewards[agent]),
-                            "lineage_reward": 0.0,
                             "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
                         }
                     )
@@ -1187,13 +938,10 @@ class PredPreyGrass(MultiAgentEnv):
     def _handle_prey_reproduction(self, agent):
         # Cooldown removed: reproduction now only gated by energy + random chance handled before call.
         # Chance removed as well: reproduction attempts occur whenever energy threshold is met.
-        # Dead prey (carcass-like) cannot reproduce.
         self._per_agent_step_deltas.setdefault(
             agent,
             {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0},
         )
-        if agent in self.dead_prey:
-            return
 
         if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
             # Find available new agent ID using pool allocator
@@ -1275,7 +1023,6 @@ class PredPreyGrass(MultiAgentEnv):
                         {
                             "t": int(self.current_step),
                             "reproduction_reward": float(self.rewards[agent]),
-                            "lineage_reward": 0.0,
                             "cumulative_reward": float(parent_record.get("cumulative_reward", 0.0)),
                         }
                     )
@@ -1315,16 +1062,6 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_live_offspring_ids": {
                 aid: list(ids) for aid, ids in self.agent_live_offspring_ids.items()
             },
-            "lineage_tracker": {
-                aid: {
-                    "parent_id": entry.get("parent_id"),
-                    "children_ids": list(entry.get("children_ids", set())),
-                    "live_descendants": entry.get("live_descendants", 0),
-                    "prev_live_descendants": entry.get("prev_live_descendants", 0),
-                    "is_alive_descendant": entry.get("is_alive_descendant", False),
-                }
-                for aid, entry in self.lineage_tracker.items()
-            },
             "used_agent_ids": list(self.used_agent_ids),
             "per_step_agent_data": self.per_step_agent_data.copy(),  # ← aligned with rest
         }
@@ -1353,16 +1090,6 @@ class PredPreyGrass(MultiAgentEnv):
             offspring_list = list(record.get("offspring_ids", []))
             record["offspring_ids"] = offspring_list
             self.agent_live_offspring_ids[agent_id] = offspring_list
-        # Restore lineage tracker (children lists back to sets)
-        self.lineage_tracker = {}
-        for aid, entry in snapshot.get("lineage_tracker", {}).items():
-            self.lineage_tracker[aid] = {
-                "parent_id": entry.get("parent_id"),
-                "children_ids": set(entry.get("children_ids", [])),
-                "live_descendants": entry.get("live_descendants", 0),
-                "prev_live_descendants": entry.get("prev_live_descendants", 0),
-                "is_alive_descendant": entry.get("is_alive_descendant", False),
-            }
         self.agent_ages = snapshot["agent_ages"].copy()
         self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
@@ -1429,62 +1156,12 @@ class PredPreyGrass(MultiAgentEnv):
 
         return action_space
 
-    # -------- Lineage tracking helpers --------
-    def _ensure_lineage_entry(self, agent_id: str, parent_agent_id: Optional[str]):
-        if agent_id in self.lineage_tracker:
-            entry = self.lineage_tracker[agent_id]
-            # Parent might be None for founders; only update if provided
-            if parent_agent_id is not None:
-                entry["parent_id"] = parent_agent_id
-            return entry
-        entry = {
-            "parent_id": parent_agent_id,
-            "children_ids": set(),
-            "live_descendants": 0,
-            "prev_live_descendants": 0,
-            "is_alive_descendant": False,
-        }
-        self.lineage_tracker[agent_id] = entry
-        return entry
-
-    def _propagate_lineage_delta(self, ancestor_id: Optional[str], delta: int):
-        if delta == 0:
-            return
-        current = ancestor_id
-        while current is not None:
-            ancestor = self.lineage_tracker.get(current)
-            if ancestor is None:
-                break
-            ancestor["live_descendants"] = ancestor.get("live_descendants", 0) + delta
-            current = ancestor.get("parent_id")
-
-    def _set_lineage_alive_flag(self, agent_id: str, alive: bool):
-        entry = self.lineage_tracker.get(agent_id)
-        if entry is None:
-            return
-        if entry.get("is_alive_descendant", False) == alive:
-            return
-        entry["is_alive_descendant"] = alive
-        delta = 1 if alive else -1
-        self._propagate_lineage_delta(entry.get("parent_id"), delta)
-
-    def _handle_lineage_birth(self, agent_id: str, parent_agent_id: Optional[str]):
-        self._ensure_lineage_entry(agent_id, parent_agent_id)
-        if parent_agent_id is not None and parent_agent_id in self.lineage_tracker:
-            self.lineage_tracker[parent_agent_id]["children_ids"].add(agent_id)
-        self._set_lineage_alive_flag(agent_id, True)
-
-    def _handle_lineage_death(self, agent_id: str):
-        if agent_id not in self.lineage_tracker:
-            return
-        self._set_lineage_alive_flag(agent_id, False)
-
     def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None, *, is_founder: bool = False):
         if agent_id in self.agent_stats_live or agent_id in self.agent_stats_completed:
             raise ValueError(f"Agent id {agent_id} already registered in this episode.")
 
         self.used_agent_ids.add(agent_id)
-        self.agent_ages[agent_id] = self._get_initial_age(agent_id, is_founder=is_founder)
+        self.agent_ages[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
@@ -1526,19 +1203,12 @@ class PredPreyGrass(MultiAgentEnv):
             "parent_energy_after_reproduction_sum": 0.0,
             "parent_energy_after_reproduction_count": 0,
             "cumulative_reward": 0.0,
-            "lineage_reward_total": 0.0,
             "policy_group": self._policy_group(agent_id),
             "genome": genome_dict,
             "death_step": None,
             "death_cause": None,
             "avg_energy": 0.0,
-            "max_age": self._get_max_age_limit(agent_id),
-            "age_expired_step": None,
-            "carcass_only_blocks": 0,
         }
-
-        # Initialize lineage tracking after stats to ensure helper has context
-        self._handle_lineage_birth(agent_id, parent_agent_id)
 
         return self.agent_stats_live[agent_id]
 
@@ -1563,7 +1233,6 @@ class PredPreyGrass(MultiAgentEnv):
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
         steps = max(record.get("avg_energy_steps", 0), 1)
         record["avg_energy"] = record.get("avg_energy_sum", 0.0) / steps
-        record["lineage_reward_total"] = record.get("lineage_reward_total", 0.0)
         final_total = record.get("cumulative_reward", 0.0)
         # Ensure callbacks can access the exact per-agent totals via infos regardless of termination path.
         info = self._pending_infos.setdefault(agent_id, {})
