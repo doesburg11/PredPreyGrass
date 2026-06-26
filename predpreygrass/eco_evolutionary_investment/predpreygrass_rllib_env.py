@@ -5,7 +5,7 @@ Predator-Prey Grass RLlib Environment
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import numpy as np
-from collections import deque
+
 from typing import Optional
 
 from predpreygrass.eco_evolutionary_investment.utils.genome import Genome, founder_genome, mutate_genome
@@ -134,8 +134,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_genomes = {}
         self.agent_offspring_counts = {}
         self.agent_live_offspring_ids = {}
-        # Track all agent IDs used this episode; prevents cross-step ID reuse (RLlib requirement)
-        self.used_agent_ids = set()
+        # IDs ever registered this episode — blocks any reuse within an episode.
+        # RLlib hard constraint: once termination=True is returned for an ID, that ID
+        # cannot reappear in subsequent steps. n_possible (200/500) is large enough
+        # that fresh IDs never run out in a 1000-step episode.
+        self.used_agent_ids: set = set()
         # Capacity block counters (episode-level)
         self.reproduction_blocked_due_to_capacity_predator = 0
         self.reproduction_blocked_due_to_capacity_prey = 0
@@ -194,17 +197,17 @@ class PredPreyGrass(MultiAgentEnv):
         self._printed_termination_ids = set()
 
     def _alloc_new_id(self, species: str):
-        """Return the lowest-index possible agent ID not currently active, or None if at capacity.
+        """Return the lowest-index fresh agent ID, or None if pool is exhausted.
 
-        Exact same logic as base_environment: scans self.possible_agents in order and picks
-        the first ID not in self.agents. Dead agents are removed from self.agents in Step 5
-        before this is called in Step 6, so their IDs are immediately eligible — enabling
-        same-step death+rebirth where the new agent's terminations[id]=False overwrites
-        the death's True before Step 7 returns to RLlib.
+        Scans possible_agents in index order and returns the first ID that is both
+        not currently active and not yet used this episode. No reuse within an episode:
+        once an ID is registered, used_agent_ids blocks it permanently. n_possible
+        (200/500) is sized to ensure the pool never exhausts in a 1000-step episode.
         """
         prefix = species + "_"
+        used = self.used_agent_ids
         for aid in self.possible_agents:
-            if aid.startswith(prefix) and aid not in self.agents:
+            if aid.startswith(prefix) and aid not in self.agents and aid not in used:
                 return aid
         return None
 
@@ -827,15 +830,16 @@ class PredPreyGrass(MultiAgentEnv):
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("predator")
             if not new_agent:
-                # Population at capacity; block reproduction gracefully (no crash)
                 self.reproduction_blocked_due_to_capacity_predator += 1
+                self.truncations["__all__"] = True  # pool exhausted; end episode cleanly
+                print(
+                    f"[WARN] Predator ID pool exhausted at step {self.current_step} "
+                    f"(n_possible_predators={self.n_possible_predators}). "
+                    "Raise n_possible_predators in config."
+                )
                 return
 
             self.agents.append(new_agent)
-            # Mirror base_env: explicitly mark the new agent as not-terminated so that
-            # same-step death+rebirth overwrites any prior True in self.terminations.
-            self.terminations[new_agent] = False
-            self.rewards[new_agent] = 0.0
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
                 "move": 0.0,
@@ -926,15 +930,16 @@ class PredPreyGrass(MultiAgentEnv):
             # Find available new agent ID using pool allocator
             new_agent = self._alloc_new_id("prey")
             if not new_agent:
-                # Population at capacity; block reproduction gracefully (no crash)
                 self.reproduction_blocked_due_to_capacity_prey += 1
+                self.truncations["__all__"] = True  # pool exhausted; end episode cleanly
+                print(
+                    f"[WARN] Prey ID pool exhausted at step {self.current_step} "
+                    f"(n_possible_prey={self.n_possible_prey}). "
+                    "Raise n_possible_prey in config."
+                )
                 return
 
             self.agents.append(new_agent)
-            # Mirror base_env: explicitly mark the new agent as not-terminated so that
-            # same-step death+rebirth overwrites any prior True in self.terminations.
-            self.terminations[new_agent] = False
-            self.rewards[new_agent] = 0.0
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
                 "move": 0.0,
@@ -1136,12 +1141,8 @@ class PredPreyGrass(MultiAgentEnv):
         return action_space
 
     def _register_new_agent(self, agent_id: str, parent_agent_id: Optional[str] = None, *, is_founder: bool = False):
-        if agent_id in self.agent_stats_live:
-            raise ValueError(f"Agent id {agent_id} is currently alive — cannot register duplicate.")
-        # ID reuse (same-step death+rebirth, matching base_env): clear previous episode records.
-        self.agent_stats_completed.pop(agent_id, None)
-        self.agent_event_log.pop(agent_id, None)
-
+        if agent_id in self.agent_stats_live or agent_id in self.agent_stats_completed:
+            raise ValueError(f"Agent id {agent_id} already registered in this episode.")
         self.used_agent_ids.add(agent_id)
         self.agent_ages[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
@@ -1351,6 +1352,10 @@ class PredPreyGrass(MultiAgentEnv):
                 metrics[f"{species}_reproduction_energy_invested_mean"] = 0.0
                 metrics[f"{species}_parent_energy_after_reproduction_mean"] = 0.0
 
+        metrics["predator_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_predator)
+        metrics["prey_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_prey)
+        metrics["predator_spawned_total"] = float(self.spawned_predators)
+        metrics["prey_spawned_total"] = float(self.spawned_prey)
         return metrics
 
     def _attach_episode_training_metrics(self):

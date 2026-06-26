@@ -55,8 +55,8 @@ config_env = {
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
-    "n_possible_predators": 50,
-    "n_possible_prey": 50,
+    "n_possible_predators": 200,
+    "n_possible_prey": 500,
     "n_initial_active_predators": 6,
     "n_initial_active_prey": 8,
     # Grass settings
