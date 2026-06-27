@@ -8,7 +8,7 @@ import numpy as np
 
 from typing import Optional
 
-from predpreygrass.eco_evolutionary_investment.utils.genome import (
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.genome import (
     Genome,
     GENOME_FIELD_DEFAULTS,
     founder_genome,
@@ -38,10 +38,6 @@ class PredPreyGrass(MultiAgentEnv):
     def _initialize_from_config(self):
         config = self.config
         self.debug_mode = config["debug_mode"]
-        self.verbose_movement = config["verbose_movement"]
-        self.verbose_decay = config["verbose_decay"]
-        self.verbose_reproduction = config["verbose_reproduction"]
-        self.verbose_engagement = config["verbose_engagement"]
 
         self.max_steps = config["max_steps"]
         # RNG will be initialized during reset to ensure per-episode reproducibility
@@ -51,8 +47,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.reproduction_reward_prey_config = config["reproduction_reward_prey"]
 
         # Energy settings
-        self.energy_loss_per_step_predator = config["energy_loss_per_step_predator"]
-        self.energy_loss_per_step_prey = config["energy_loss_per_step_prey"]
+        self.basal_energy_cost_predator = config["basal_energy_cost_predator"]
+        self.basal_energy_cost_prey = config["basal_energy_cost_prey"]
         self.movement_energy_cost_per_cell_predator = config.get("movement_energy_cost_per_cell_predator", 0.0)
         self.movement_energy_cost_per_cell_prey = config.get("movement_energy_cost_per_cell_prey", 0.0)
         self.predator_creation_energy_threshold = config["predator_creation_energy_threshold"]
@@ -75,8 +71,8 @@ class PredPreyGrass(MultiAgentEnv):
             "n_initial_active_prey_min", max(1, self.n_initial_active_prey // 3)
         )
 
-        self.initial_energy_predator_at_reset = config["initial_energy_predator_at_reset"]
-        self.initial_energy_prey_at_reset = config["initial_energy_prey_at_reset"]
+        self.initial_energy_predator = config["initial_energy_predator"]
+        self.initial_energy_prey = config["initial_energy_prey"]
 
         # Grid and Observation Settings
         self.grid_size = config["grid_size"]
@@ -92,6 +88,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Action range and movement mapping
         self.action_range = config["action_range"]
         self.genome_enabled = config.get("genome_enabled", True)
+        # Exponent for sub-linear gain scaling: gain = food * metabolic_rate**alpha.
+        # alpha=0.7 gives digestive saturation; alpha=1.0 reverts to symmetric (no tradeoff).
+        self.metabolic_rate_alpha = float(config.get("metabolic_rate_alpha", 0.7))
         self.genome_config = {
             "founder_genome": config.get("founder_genome", {}),
             "genome_mutation": config.get("genome_mutation", {}),
@@ -158,14 +157,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.peak_active_prey = 0
 
 
-        self._last_live_investment_metrics: dict = {}
+        self._last_live_genome_metrics: dict = {}
         self.agents_just_ate = set()
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
         self._last_move_block_reason = {}
-
-        self.death_cause_prey = {}
 
         self.agent_last_reproduction = {}
 
@@ -452,10 +449,10 @@ class PredPreyGrass(MultiAgentEnv):
         if n_prey > self.peak_active_prey:
             self.peak_active_prey = n_prey
 
-        self._last_live_investment_metrics = self._build_live_investment_metrics()
+        self._last_live_genome_metrics = self._build_live_genome_metrics()
         return self.observations, self.rewards, self.terminations, self.truncations, self.infos
 
-    def _build_live_investment_metrics(self) -> dict[str, float]:
+    def _build_live_genome_metrics(self) -> dict[str, float]:
         """Genome-trait distributions of the currently alive population."""
         grouped: dict[str, list[float]] = {"predator": [], "prey": []}
         for agent_id in self.agents:
@@ -463,24 +460,24 @@ class PredPreyGrass(MultiAgentEnv):
             genome = self.agent_genomes.get(agent_str)
             if genome is not None:
                 key = "predator" if "predator" in agent_str else "prey"
-                grouped[key].append(float(genome.offspring_investment_fraction))
+                grouped[key].append(float(genome.metabolic_rate))
         metrics: dict[str, float] = {}
         for species, values in grouped.items():
             if values:
                 arr = np.array(values)
                 p25, p50, p75 = np.percentile(arr, [25, 50, 75])
-                metrics[f"{species}_offspring_investment_fraction_mean"] = float(np.mean(arr))
-                metrics[f"{species}_offspring_investment_fraction_std"] = float(np.std(arr))
-                metrics[f"{species}_offspring_investment_fraction_p25"] = float(p25)
-                metrics[f"{species}_offspring_investment_fraction_p50"] = float(p50)
-                metrics[f"{species}_offspring_investment_fraction_p75"] = float(p75)
+                metrics[f"{species}_metabolic_rate_mean"] = float(np.mean(arr))
+                metrics[f"{species}_metabolic_rate_std"] = float(np.std(arr))
+                metrics[f"{species}_metabolic_rate_p25"] = float(p25)
+                metrics[f"{species}_metabolic_rate_p50"] = float(p50)
+                metrics[f"{species}_metabolic_rate_p75"] = float(p75)
                 metrics[f"{species}_count"] = float(len(values))
             else:
-                metrics[f"{species}_offspring_investment_fraction_mean"] = 0.0
-                metrics[f"{species}_offspring_investment_fraction_std"] = 0.0
-                metrics[f"{species}_offspring_investment_fraction_p25"] = 0.0
-                metrics[f"{species}_offspring_investment_fraction_p50"] = 0.0
-                metrics[f"{species}_offspring_investment_fraction_p75"] = 0.0
+                metrics[f"{species}_metabolic_rate_mean"] = 0.0
+                metrics[f"{species}_metabolic_rate_std"] = 0.0
+                metrics[f"{species}_metabolic_rate_p25"] = 0.0
+                metrics[f"{species}_metabolic_rate_p50"] = 0.0
+                metrics[f"{species}_metabolic_rate_p75"] = 0.0
                 metrics[f"{species}_count"] = 0.0
         return metrics
 
@@ -511,18 +508,6 @@ class PredPreyGrass(MultiAgentEnv):
             return founder_genome(self._policy_group(agent_id), self.genome_config, self.rng)
         return mutate_genome(self.agent_genomes[parent_agent_id], self.genome_config, self.rng)
 
-    def _get_offspring_investment_energy(self, parent_agent_id: str) -> float:
-        genome = self._get_agent_genome(parent_agent_id)
-        if genome is not None:
-            fraction = float(genome.offspring_investment_fraction)
-        else:
-            policy_group = "predator" if "predator" in parent_agent_id else "prey"
-            fraction = float(
-                self.config.get("founder_genome", {})
-                .get(policy_group, {})
-                .get("offspring_investment_fraction_mean", 0.35)
-            )
-        return float(self.agent_energies[parent_agent_id]) * fraction
 
     def _apply_time_step_update(self):
         """
@@ -533,12 +518,13 @@ class PredPreyGrass(MultiAgentEnv):
             is_predator = "predator" in agent
             layer = 0 if is_predator else 1
 
-            # Basal metabolism always applies while the agent exists.
-            # Locomotion cost is charged later from actual distance moved.
+            # Basal cost scales linearly with metabolic_rate (no saturation on the cost side).
+            genome = self.agent_genomes.get(agent)
+            metabolic_rate = float(genome.metabolic_rate) if genome is not None else 1.0
             if is_predator:
-                energy_decay = self.energy_loss_per_step_predator
+                energy_decay = self.basal_energy_cost_predator * metabolic_rate
             else:
-                energy_decay = self.energy_loss_per_step_prey
+                energy_decay = self.basal_energy_cost_prey * metabolic_rate
 
             self.agent_energies[agent] -= energy_decay
             self.grid_world_state[layer, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -715,7 +701,10 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_role_specific("reward_predator_catch_prey", agent)
             prey_energy = float(self.agent_energies[caught_prey])
-            energy_gain = prey_energy
+            genome = self.agent_genomes.get(agent)
+            metabolic_rate = float(genome.metabolic_rate) if genome is not None else 1.0
+            # Sub-linear gain: digestive saturation model (gain = food * rate**alpha).
+            energy_gain = prey_energy * (metabolic_rate ** self.metabolic_rate_alpha)
 
             self.agent_energies[agent] += energy_gain
             self.grid_world_state[0, *predator_position] = self.agent_energies[agent]
@@ -766,7 +755,10 @@ class PredPreyGrass(MultiAgentEnv):
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_role_specific("reward_prey_eat_grass", agent)
             grass_energy = float(self.grass_energies[caught_grass])
-            energy_gain = grass_energy
+            genome = self.agent_genomes.get(agent)
+            metabolic_rate = float(genome.metabolic_rate) if genome is not None else 1.0
+            # Sub-linear gain: digestive saturation model (gain = food * rate**alpha).
+            energy_gain = grass_energy * (metabolic_rate ** self.metabolic_rate_alpha)
 
             self.agent_energies[agent] += energy_gain
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
@@ -844,7 +836,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_positions[new_agent] = new_position
         self.predator_positions[new_agent] = new_position
 
-        offspring_energy = self._get_offspring_investment_energy(agent)
+        offspring_energy = self.initial_energy_predator
         self.agent_energies[new_agent] = offspring_energy
         self.agent_energies[agent] -= offspring_energy
         self._per_agent_step_deltas[agent]["repro"] = -offspring_energy
@@ -931,7 +923,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_positions[new_agent] = new_position
         self.prey_positions[new_agent] = new_position
 
-        offspring_energy = self._get_offspring_investment_energy(agent)
+        offspring_energy = self.initial_energy_prey
         self.agent_energies[new_agent] = offspring_energy
         self.agent_energies[agent] -= offspring_energy
         self._per_agent_step_deltas[agent]["repro"] = -offspring_energy
@@ -986,7 +978,6 @@ class PredPreyGrass(MultiAgentEnv):
                 aid: self._copy_agent_record(stats) for aid, stats in self.agent_stats_completed.items()
             },
             "agent_ages": self.agent_ages.copy(),
-            "death_cause_prey": self.death_cause_prey.copy(),
             "agent_last_reproduction": self.agent_last_reproduction.copy(),
             "agent_parents": self.agent_parents.copy(),
             "agent_genomes": {
@@ -1025,7 +1016,6 @@ class PredPreyGrass(MultiAgentEnv):
             record["offspring_ids"] = offspring_list
             self.agent_live_offspring_ids[agent_id] = offspring_list
         self.agent_ages = snapshot["agent_ages"].copy()
-        self.death_cause_prey = snapshot["death_cause_prey"].copy()
         self.agent_last_reproduction = snapshot["agent_last_reproduction"].copy()
         self.agent_parents = snapshot.get("agent_parents", {}).copy()
         active_genome_traits = set(Genome.__dataclass_fields__)
@@ -1233,7 +1223,7 @@ class PredPreyGrass(MultiAgentEnv):
                 grouped_records["prey"].append(record)
 
         for species, records in grouped_records.items():
-            for trait in ("offspring_investment_fraction",):
+            for trait in ("metabolic_rate",):
                 values = [
                     float(record["genome"][trait])
                     for record in records
@@ -1353,15 +1343,6 @@ class PredPreyGrass(MultiAgentEnv):
                 counts[group] += stats.get("offspring_count", 0)
         return counts
 
-    def get_total_energy_spent_by_type(self):
-        """Returns a dict of total energy spent by role."""
-        energy_spent = {"predator": 0.0, "prey": 0.0}
-        for _, stats in self._iter_all_agent_records():
-            group = stats.get("policy_group")
-            if group in energy_spent:
-                energy_spent[group] += stats.get("energy_spent", 0.0)
-        return energy_spent
-
     def _get_role_specific(self, key: str, agent_id: str):
         raw_val = getattr(self, f"{key}_config", 0.0)
         if isinstance(raw_val, dict):
@@ -1410,8 +1391,8 @@ class PredPreyGrass(MultiAgentEnv):
             pos = predator_positions[i]
             self.agent_positions[agent] = pos
             self.predator_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_predator_at_reset
-            self.grid_world_state[0, *pos] = self.initial_energy_predator_at_reset
+            self.agent_energies[agent] = self.initial_energy_predator
+            self.grid_world_state[0, *pos] = self.initial_energy_predator
 
     #-------- Placement method for prey --------
     def _place_prey(self, prey_list, prey_positions):
@@ -1420,8 +1401,8 @@ class PredPreyGrass(MultiAgentEnv):
             pos = prey_positions[i]
             self.agent_positions[agent] = pos
             self.prey_positions[agent] = pos
-            self.agent_energies[agent] = self.initial_energy_prey_at_reset
-            self.grid_world_state[1, *pos] = self.initial_energy_prey_at_reset
+            self.agent_energies[agent] = self.initial_energy_prey
+            self.grid_world_state[1, *pos] = self.initial_energy_prey
 
     #-------- Placement method for grass --------
     def _place_grass(self, grass_positions):

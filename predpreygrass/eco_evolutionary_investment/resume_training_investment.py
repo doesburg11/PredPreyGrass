@@ -13,7 +13,7 @@ from predpreygrass.eco_evolutionary_investment.utils.networks import build_multi
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
-from ray.tune import Tuner, RunConfig, CheckpointConfig
+from ray.tune import Tuner
 
 import os
 from pathlib import Path
@@ -53,6 +53,12 @@ def find_latest_experiment(ray_results_path: Path, prefix: str) -> Path:
     return latest
 
 
+# Higher entropy after resume encourages exploration during the cold-start phase before the
+# ecosystem stabilizes. Drop back to config_ppo["entropy_coeff"] (0.01) once training
+# recovers (typically after ~10-20 iterations).
+RESUME_ENTROPY_COEFF = 0.05
+
+
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
@@ -65,6 +71,7 @@ if __name__ == "__main__":
     config_ppo = get_config_ppo()
 
     sample_env = env_creator(config=config_env)
+    assert sample_env.observation_spaces is not None and sample_env.action_spaces is not None
     obs_by_policy: dict[str, Any] = {}
     act_by_policy: dict[str, Any] = {}
     for agent_id, obs_space in sample_env.observation_spaces.items():
@@ -95,7 +102,7 @@ if __name__ == "__main__":
             gamma=config_ppo["gamma"],
             lr=config_ppo["lr"],
             lambda_=config_ppo["lambda_"],
-            entropy_coeff=config_ppo["entropy_coeff"],
+            entropy_coeff=RESUME_ENTROPY_COEFF,
             vf_loss_coeff=config_ppo["vf_loss_coeff"],
             clip_param=config_ppo["clip_param"],
             kl_coeff=config_ppo["kl_coeff"],
@@ -121,7 +128,7 @@ if __name__ == "__main__":
 
     tuner = Tuner.restore(
         path=str(experiment_path),
-        trainable=ppo_config.algo_class,
+        trainable=ppo_config.algo_class,  # type: ignore[arg-type]
         resume_unfinished=True,
         resume_errored=False,
         restart_errored=False,

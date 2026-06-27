@@ -3,8 +3,6 @@ config_env = {
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
-    # Observation channels: predators, prey, grass. Grid edges are handled by
-    # clipping the observation window and leaving out-of-grid cells at zero.
     "num_obs_channels": 3,
     "predator_obs_range": 7,
     "prey_obs_range": 9,
@@ -18,24 +16,26 @@ config_env = {
         "prey": 10.0,
     },
     # Energy settings
-    "energy_loss_per_step_predator": 0.15,
-    "energy_loss_per_step_prey": 0.05,
+    "basal_energy_cost_predator": 0.15,
+    "basal_energy_cost_prey": 0.05,
     "movement_energy_cost_per_cell_predator": 0.0,
     "movement_energy_cost_per_cell_prey": 0.0,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    "initial_energy_predator_at_reset": 5.0,
-    "initial_energy_prey_at_reset": 3.0,
-    # Heritable biological trait. Investment affects offspring starting energy, not policy weights.
+    "initial_energy_predator": 5.0,
+    "initial_energy_prey": 3.0,
+    # Metabolic rate genome. Gain scales as food * metabolic_rate**alpha (sub-linear,
+    # digestive saturation); cost scales as base_cost * metabolic_rate (linear).
+    # This creates a policy-dependent interior optimum — see README_METABOLIC_RATE.md.
     "genome_enabled": True,
     "founder_genome": {
         "predator": {
-            "offspring_investment_fraction_mean": 0.35,
-            "offspring_investment_fraction_std": 0.08,
+            "metabolic_rate_mean": 1.0,
+            "metabolic_rate_std": 0.10,
         },
         "prey": {
-            "offspring_investment_fraction_mean": 0.35,
-            "offspring_investment_fraction_std": 0.08,
+            "metabolic_rate_mean": 1.0,
+            "metabolic_rate_std": 0.10,
         },
     },
     "genome_mutation": {
@@ -43,8 +43,11 @@ config_env = {
         "std": 0.04,
     },
     "trait_bounds": {
-        "offspring_investment_fraction": (0.10, 0.80),
+        "metabolic_rate": (0.5, 2.0),
     },
+    # Exponent for sub-linear energy gain scaling. α=1.0 is symmetric (no tradeoff);
+    # α=0.7 gives moderate digestive saturation with a clear interior optimum.
+    "metabolic_rate_alpha": 0.7,
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents
@@ -56,9 +59,5 @@ config_env = {
     "initial_num_grass": 100,
     "initial_energy_grass": 2.0,
     "energy_gain_per_step_grass": 0.04,
-    "verbose_engagement": False,
-    "verbose_movement": False,
-    "verbose_decay": False,
-    "verbose_reproduction": False,
     "debug_mode": False,
 }

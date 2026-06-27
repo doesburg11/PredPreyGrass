@@ -11,24 +11,25 @@ class Genome:
     """Heritable traits for one agent.
 
     Policy weights are not part of the genome; learned behavior remains
-    within-lifetime adaptation unless a future experiment explicitly adds
-    policy inheritance.
+    within-lifetime adaptation.
 
-    offspring_investment_fraction: fraction of parent energy given to each offspring.
+    metabolic_rate: scales energy gain sub-linearly (digestive saturation model,
+        exponent alpha < 1) and energy cost linearly, creating a policy-dependent
+        interior optimum. See README_METABOLIC_RATE.md for the full argument.
     """
 
-    offspring_investment_fraction: float
+    metabolic_rate: float
 
     def to_dict(self) -> dict[str, float]:
         return asdict(self)
 
 
 DEFAULT_TRAIT_BOUNDS = {
-    "offspring_investment_fraction": (0.10, 0.80),
+    "metabolic_rate": (0.5, 2.0),
 }
 
 GENOME_FIELD_DEFAULTS: dict[str, float] = {
-    "offspring_investment_fraction": 0.35,
+    "metabolic_rate": 1.0,
 }
 
 
@@ -48,11 +49,11 @@ def _bounds(config: Mapping, trait: str) -> tuple[float, float]:
 def founder_genome(policy_group: str, config: Mapping, rng: np.random.Generator) -> Genome:
     founder_cfg = config.get("founder_genome", {}).get(policy_group, {})
     return Genome(
-        offspring_investment_fraction=_normal_sample(
+        metabolic_rate=_normal_sample(
             rng,
-            founder_cfg.get("offspring_investment_fraction_mean", 0.35),
-            founder_cfg.get("offspring_investment_fraction_std", 0.0),
-            _bounds(config, "offspring_investment_fraction"),
+            founder_cfg.get("metabolic_rate_mean", 1.0),
+            founder_cfg.get("metabolic_rate_std", 0.0),
+            _bounds(config, "metabolic_rate"),
         ),
     )
 
