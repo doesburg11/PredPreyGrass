@@ -3,10 +3,10 @@ import copy
 import numpy as np
 import pytest
 
-from predpreygrass.eco_evolutionary_investment.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_investment.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary_investment.utils.genome import Genome
+from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
+from predpreygrass.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.genome import Genome
 
 
 def _make_test_env(overrides=None):
@@ -67,10 +67,10 @@ class _FakeEpisode:
         return {
             "__all__": {
                 "training_metrics": {
-                    "predator_offspring_investment_fraction_mean": 0.36,
-                    "predator_offspring_investment_fraction_p50": 0.35,
-                    "prey_offspring_investment_fraction_mean": 0.42,
-                    "prey_offspring_investment_fraction_p50": 0.41,
+                    "predator_metabolic_rate_mean": 1.10,
+                    "predator_metabolic_rate_p50": 1.05,
+                    "prey_metabolic_rate_mean": 0.90,
+                    "prey_metabolic_rate_p50": 0.88,
                     "predator_movement_energy_spent_mean": 0.4,
                     "prey_offspring_count_mean": 2.0,
                 }
@@ -90,8 +90,8 @@ class _FakeEpisodeWithoutInfos(_FakeEpisode):
 class _FakeMetricsEnv:
     def _build_episode_training_metrics(self):
         return {
-            "predator_offspring_investment_fraction_mean": 0.37,
-            "prey_offspring_investment_fraction_p50": 0.45,
+            "predator_metabolic_rate_mean": 1.15,
+            "prey_metabolic_rate_p50": 0.85,
         }
 
 
@@ -106,10 +106,10 @@ def test_episode_return_callback_logs_eco_evolution_metrics():
 
     callback.on_episode_end(episode=_FakeEpisode(), metrics_logger=logger)
 
-    assert logger.values["eco_evolution/predator_offspring_investment_fraction_mean"] == pytest.approx(0.36)
-    assert logger.values["eco_evolution/predator_offspring_investment_fraction_p50"] == pytest.approx(0.35)
-    assert logger.values["eco_evolution/prey_offspring_investment_fraction_mean"] == pytest.approx(0.42)
-    assert logger.values["eco_evolution/prey_offspring_investment_fraction_p50"] == pytest.approx(0.41)
+    assert logger.values["eco_evolution/predator_metabolic_rate_mean"] == pytest.approx(1.10)
+    assert logger.values["eco_evolution/predator_metabolic_rate_p50"] == pytest.approx(1.05)
+    assert logger.values["eco_evolution/prey_metabolic_rate_mean"] == pytest.approx(0.90)
+    assert logger.values["eco_evolution/prey_metabolic_rate_p50"] == pytest.approx(0.88)
     assert logger.values["eco_evolution/predator_movement_energy_spent_mean"] == pytest.approx(0.4)
     assert logger.values["eco_evolution/prey_offspring_count_mean"] == pytest.approx(2.0)
     assert logger.values["predator_episode_return_p50"] == pytest.approx(3.0)
@@ -125,8 +125,8 @@ def test_episode_return_callback_logs_eco_metrics_from_env_fallback():
         env=_FakeMetricsEnv(),
     )
 
-    assert logger.values["eco_evolution/predator_offspring_investment_fraction_mean"] == pytest.approx(0.37)
-    assert logger.values["eco_evolution/prey_offspring_investment_fraction_p50"] == pytest.approx(0.45)
+    assert logger.values["eco_evolution/predator_metabolic_rate_mean"] == pytest.approx(1.15)
+    assert logger.values["eco_evolution/prey_metabolic_rate_p50"] == pytest.approx(0.85)
 
 
 def test_episode_return_callback_logs_eco_metrics_from_vector_env_fallback():
@@ -140,8 +140,8 @@ def test_episode_return_callback_logs_eco_metrics_from_vector_env_fallback():
         env_index=0,
     )
 
-    assert logger.values["eco_evolution/predator_offspring_investment_fraction_mean"] == pytest.approx(0.37)
-    assert logger.values["eco_evolution/prey_offspring_investment_fraction_p50"] == pytest.approx(0.45)
+    assert logger.values["eco_evolution/predator_metabolic_rate_mean"] == pytest.approx(1.15)
+    assert logger.values["eco_evolution/prey_metabolic_rate_p50"] == pytest.approx(0.85)
 
 
 def test_every_acted_agent_gets_next_or_final_observation():
@@ -268,11 +268,11 @@ def test_time_limit_truncates_with_final_bootstrap_observations():
     assert env.agents == []
     assert "training_metrics" in infos["__all__"]
     metrics = infos["__all__"]["training_metrics"]
-    assert "predator_offspring_investment_fraction_mean" in metrics
-    assert "prey_offspring_investment_fraction_mean" in metrics
-    assert "predator_offspring_investment_fraction_p25" in metrics
-    assert "predator_offspring_investment_fraction_p50" in metrics
-    assert "predator_offspring_investment_fraction_p75" in metrics
+    assert "predator_metabolic_rate_mean" in metrics
+    assert "prey_metabolic_rate_mean" in metrics
+    assert "predator_metabolic_rate_p25" in metrics
+    assert "predator_metabolic_rate_p50" in metrics
+    assert "predator_metabolic_rate_p75" in metrics
 
 
 def test_founders_receive_genomes_in_event_logs():
@@ -305,13 +305,13 @@ def test_zero_mutation_rate_produces_exact_genome_copy():
     env.rewards = {}
 
     parent = next(a for a in env.agents if a.startswith("predator"))
-    parent_fraction = env.agent_genomes[parent].offspring_investment_fraction
+    parent_fraction = env.agent_genomes[parent].metabolic_rate
     env.agent_energies[parent] = 20.0
 
     env._handle_predator_reproduction(parent)
 
     child = env.agent_live_offspring_ids[parent][0]
-    assert env.agent_genomes[child].offspring_investment_fraction == pytest.approx(parent_fraction)
+    assert env.agent_genomes[child].metabolic_rate == pytest.approx(parent_fraction)
 
 
 def test_zero_mutation_std_produces_exact_copy_even_at_full_rate():
@@ -323,59 +323,64 @@ def test_zero_mutation_std_produces_exact_copy_even_at_full_rate():
     env.rewards = {}
 
     parent = next(a for a in env.agents if a.startswith("predator"))
-    parent_fraction = env.agent_genomes[parent].offspring_investment_fraction
+    parent_fraction = env.agent_genomes[parent].metabolic_rate
     env.agent_energies[parent] = 20.0
 
     env._handle_predator_reproduction(parent)
 
     child = env.agent_live_offspring_ids[parent][0]
-    assert env.agent_genomes[child].offspring_investment_fraction == pytest.approx(parent_fraction)
+    assert env.agent_genomes[child].metabolic_rate == pytest.approx(parent_fraction)
 
 
 def test_mutation_never_violates_trait_bounds():
-    from predpreygrass.eco_evolutionary_investment.utils.genome import mutate_genome
+    from predpreygrass.eco_evolutionary_metabolic_rate.utils.genome import mutate_genome
 
     rng = np.random.default_rng(44)
     config = {"genome_mutation": {"rate": 1.0, "std": 0.5}, "trait_bounds": {}}
-    genome = Genome(offspring_investment_fraction=0.79)  # near upper bound
+    genome = Genome(metabolic_rate=1.9)  # near upper bound
 
     for _ in range(500):
         genome = mutate_genome(genome, config, rng)
-        assert 0.10 <= genome.offspring_investment_fraction <= 0.80
+        assert 0.5 <= genome.metabolic_rate <= 2.0
 
 
-def test_investment_fraction_determines_offspring_energy_and_parent_cost():
+def test_metabolic_rate_scales_cost_linearly_and_gain_sublinearly():
+    alpha = 0.7
     env = _make_test_env(overrides={
-        "predator_creation_energy_threshold": 10.0,
-        "min_offspring_energy_predator": 0.1,
-        "max_offspring_energy_predator": 100.0,
-        "genome_mutation": {"rate": 0.0, "std": 0.0},
+        "basal_energy_cost_prey": 0.10,
+        "metabolic_rate_alpha": alpha,
+        "predator_creation_energy_threshold": 999.0,
+        "prey_creation_energy_threshold": 999.0,
     })
     env.reset(seed=55)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    # High metabolic rate: cost is 2x base, gain is 2**alpha x base (sub-linear)
+    env.agent_genomes[prey] = Genome(metabolic_rate=2.0)
+    env.agent_energies[prey] = 5.0
+    env.grid_world_state[1, *env.agent_positions[prey]] = 5.0
+    env._apply_time_step_update()
+    assert env.agent_energies[prey] == pytest.approx(5.0 - 0.10 * 2.0)
+
+    # Low metabolic rate: cost is 0.5x base
+    env.agent_genomes[prey] = Genome(metabolic_rate=0.5)
+    env.agent_energies[prey] = 5.0
+    env.grid_world_state[1, *env.agent_positions[prey]] = 5.0
+    env._apply_time_step_update()
+    assert env.agent_energies[prey] == pytest.approx(5.0 - 0.10 * 0.5)
+
+    # Food gain scales as food * rate**alpha (sub-linear)
+    grass = next(g for g in env.grass_positions)
+    grass_pos = env.grass_positions[grass]
+    env.grass_energies[grass] = 2.0
+    env.grid_world_state[2, *grass_pos] = 2.0
+    _place_agent(env, prey, grass_pos)
+    env.agent_energies[prey] = 5.0
+    env.agent_genomes[prey] = Genome(metabolic_rate=1.5)
     env.rewards = {}
-
-    parent = next(a for a in env.agents if a.startswith("predator"))
-    parent_energy = 20.0
-
-    # High-fraction reproduction
-    env.agent_energies[parent] = parent_energy
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.60)
-    env._handle_predator_reproduction(parent)
-    child_high = env.agent_live_offspring_ids[parent][-1]
-    energy_high = env.agent_energies[child_high]
-    cost_high = parent_energy - env.agent_energies[parent]
-
-    # Low-fraction reproduction (reset parent energy to same starting point)
-    env.agent_energies[parent] = parent_energy
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.30)
-    env._handle_predator_reproduction(parent)
-    child_low = env.agent_live_offspring_ids[parent][-1]
-    energy_low = env.agent_energies[child_low]
-    cost_low = parent_energy - env.agent_energies[parent]
-
-    assert energy_high == pytest.approx(parent_energy * 0.60)
-    assert energy_low == pytest.approx(parent_energy * 0.30)
-    assert cost_high > cost_low
+    env.terminations = {}
+    env._handle_prey_engagement(prey)
+    assert env.agent_energies[prey] == pytest.approx(5.0 + 2.0 * (1.5 ** alpha))
 
 
 def test_genome_does_not_change_across_steps():
@@ -386,18 +391,20 @@ def test_genome_does_not_change_across_steps():
     env.reset(seed=66)
 
     predator = next(a for a in env.agents if a.startswith("predator"))
-    fraction_at_birth = env.agent_genomes[predator].offspring_investment_fraction
+    fraction_at_birth = env.agent_genomes[predator].metabolic_rate
 
     for _ in range(5):
         actions = {a: 0 for a in env.agents}
         env.step(actions)
         if predator in env.agent_genomes:
-            assert env.agent_genomes[predator].offspring_investment_fraction == pytest.approx(fraction_at_birth)
+            assert env.agent_genomes[predator].metabolic_rate == pytest.approx(fraction_at_birth)
 
 
 def test_multi_generation_ancestry_chain():
     env = _make_test_env(overrides={
         "predator_creation_energy_threshold": 10.0,
+        "min_offspring_energy_predator": 1.0,
+        "max_offspring_energy_predator": 100.0,
         "genome_mutation": {"rate": 0.0, "std": 0.0},
     })
     env.reset(seed=77)
@@ -430,7 +437,7 @@ def test_insufficient_energy_blocks_reproduction_regardless_of_genome():
     env.rewards = {}
 
     parent = next(a for a in env.agents if a.startswith("predator"))
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.35)
+    env.agent_genomes[parent] = Genome(metabolic_rate=1.0)
     env.agent_energies[parent] = 9.99  # just below threshold
 
     env._handle_predator_reproduction(parent)
@@ -443,6 +450,8 @@ def test_energy_exactly_at_threshold_triggers_one_offspring():
     threshold = 10.0
     env = _make_test_env(overrides={
         "predator_creation_energy_threshold": threshold,
+        "min_offspring_energy_predator": 1.0,
+        "max_offspring_energy_predator": 100.0,
     })
     env.reset(seed=99)
     env.rewards = {}
@@ -459,6 +468,8 @@ def test_parent_cannot_reproduce_again_until_energy_refills():
     threshold = 10.0
     env = _make_test_env(overrides={
         "predator_creation_energy_threshold": threshold,
+        "min_offspring_energy_predator": 1.0,
+        "max_offspring_energy_predator": 100.0,
         "genome_mutation": {"rate": 0.0, "std": 0.0},
     })
     env.reset(seed=101)
@@ -466,7 +477,7 @@ def test_parent_cannot_reproduce_again_until_energy_refills():
 
     parent = next(a for a in env.agents if a.startswith("predator"))
     env.agent_energies[parent] = threshold  # just enough for one reproduction
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.50)
+    env.agent_genomes[parent] = Genome(metabolic_rate=0.50)
 
     env._handle_predator_reproduction(parent)
     assert len(env.agent_live_offspring_ids[parent]) == 1
@@ -480,23 +491,25 @@ def test_live_investment_metrics_reflect_actual_genomes():
     env = _make_test_env()
     env.reset(seed=111)
 
-    known_fraction = 0.55
+    known_fraction = 1.2
     for agent in env.agents:
-        env.agent_genomes[agent] = Genome(offspring_investment_fraction=known_fraction)
+        env.agent_genomes[agent] = Genome(metabolic_rate=known_fraction)
 
-    metrics = env._build_live_investment_metrics()
+    metrics = env._build_live_genome_metrics()
 
-    assert metrics["predator_offspring_investment_fraction_mean"] == pytest.approx(known_fraction)
-    assert metrics["prey_offspring_investment_fraction_mean"] == pytest.approx(known_fraction)
-    assert metrics["predator_offspring_investment_fraction_p50"] == pytest.approx(known_fraction)
-    assert metrics["prey_offspring_investment_fraction_p50"] == pytest.approx(known_fraction)
-    assert metrics["predator_offspring_investment_fraction_std"] == pytest.approx(0.0)
-    assert metrics["prey_offspring_investment_fraction_std"] == pytest.approx(0.0)
+    assert metrics["predator_metabolic_rate_mean"] == pytest.approx(1.2)
+    assert metrics["prey_metabolic_rate_mean"] == pytest.approx(1.2)
+    assert metrics["predator_metabolic_rate_p50"] == pytest.approx(1.2)
+    assert metrics["prey_metabolic_rate_p50"] == pytest.approx(1.2)
+    assert metrics["predator_metabolic_rate_std"] == pytest.approx(0.0)
+    assert metrics["prey_metabolic_rate_std"] == pytest.approx(0.0)
 
 
 def test_child_genome_recorded_in_event_log_after_reproduction():
     env = _make_test_env(overrides={
         "predator_creation_energy_threshold": 10.0,
+        "min_offspring_energy_predator": 1.0,
+        "max_offspring_energy_predator": 100.0,
         "genome_mutation": {"rate": 1.0, "std": 0.01},
     })
     env.reset(seed=121)
@@ -517,14 +530,16 @@ def test_offspring_inherits_mutated_parent_genome_and_invested_initial_energy():
     env = _make_test_env(
         overrides={
             "predator_creation_energy_threshold": 10.0,
+            "min_offspring_energy_predator": 1.0,
+            "max_offspring_energy_predator": 5.0,
             "founder_genome": {
                 "predator": {
-                    "offspring_investment_fraction_mean": 0.25,
-                    "offspring_investment_fraction_std": 0.0,
+                    "metabolic_rate_mean": 1.0,
+                    "metabolic_rate_std": 0.0,
                 },
                 "prey": {
-                    "offspring_investment_fraction_mean": 0.25,
-                    "offspring_investment_fraction_std": 0.0,
+                    "metabolic_rate_mean": 1.0,
+                    "metabolic_rate_std": 0.0,
                 },
             },
             "genome_mutation": {"rate": 1.0, "std": 0.01},
@@ -536,7 +551,7 @@ def test_offspring_inherits_mutated_parent_genome_and_invested_initial_energy():
     parent = next(agent for agent in env.agents if agent.startswith("predator"))
     parent_energy = 20.0
     env.agent_energies[parent] = parent_energy
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.25)
+    env.agent_genomes[parent] = Genome(metabolic_rate=1.0)
 
     env._handle_predator_reproduction(parent)
 
@@ -553,16 +568,11 @@ def test_offspring_inherits_mutated_parent_genome_and_invested_initial_energy():
     assert env.agent_genomes[child].to_dict() != env.agent_genomes[parent].to_dict()
 
 
-def test_offspring_energy_uses_investment_fraction_without_clamping():
+def test_offspring_receives_fixed_initial_energy():
     env = _make_test_env(
         overrides={
             "predator_creation_energy_threshold": 10.0,
-            "founder_genome": {
-                "predator": {
-                    "offspring_investment_fraction_mean": 0.30,
-                    "offspring_investment_fraction_std": 0.0,
-                },
-            },
+            "initial_energy_predator": 5.0,
             "genome_mutation": {"rate": 0.0, "std": 0.0},
         }
     )
@@ -570,17 +580,16 @@ def test_offspring_energy_uses_investment_fraction_without_clamping():
     env.rewards = {}
 
     parent = next(agent for agent in env.agents if agent.startswith("predator"))
-    parent_energy = 20.0
-    env.agent_energies[parent] = parent_energy
-    env.agent_genomes[parent] = Genome(offspring_investment_fraction=0.30)
+    env.agent_energies[parent] = 20.0
+    env.agent_genomes[parent] = Genome(metabolic_rate=1.0)
 
     env._handle_predator_reproduction(parent)
 
     children = env.agent_live_offspring_ids[parent]
     assert len(children) == 1
     child = children[0]
-    assert env.agent_energies[child] == pytest.approx(6.0)
-    assert env.agent_energies[parent] == pytest.approx(14.0)
+    assert env.agent_energies[child] == pytest.approx(5.0)
+    assert env.agent_energies[parent] == pytest.approx(15.0)
 
 
 def test_reproduction_threshold_uses_fixed_base_threshold():
@@ -589,8 +598,8 @@ def test_reproduction_threshold_uses_fixed_base_threshold():
             "predator_creation_energy_threshold": 10.0,
             "founder_genome": {
                 "predator": {
-                    "offspring_investment_fraction_mean": 0.35,
-                    "offspring_investment_fraction_std": 0.0,
+                    "metabolic_rate_mean": 1.0,
+                    "metabolic_rate_std": 0.0,
                 },
             },
             "genome_mutation": {"rate": 0.0, "std": 0.0},
@@ -637,14 +646,14 @@ def test_observation_edges_are_clipped_and_zero_padded():
 def test_agent_pays_only_basal_cost_when_stationary():
     env = _make_test_env(
         overrides={
-            "energy_loss_per_step_predator": 0.2,
+            "basal_energy_cost_predator": 0.2,
             "movement_energy_cost_per_cell_predator": 0.05,
         }
     )
     env.reset(seed=1020)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    env.agent_genomes[predator] = Genome(offspring_investment_fraction=0.35)
+    env.agent_genomes[predator] = Genome(metabolic_rate=1.0)
     _place_agent(env, predator, (10, 10))
     start_energy = 10.0
     env.agent_energies[predator] = start_energy
@@ -660,14 +669,14 @@ def test_agent_pays_only_basal_cost_when_stationary():
 def test_movement_cost_uses_actual_distance_without_genome_multiplier():
     env = _make_test_env(
         overrides={
-            "energy_loss_per_step_predator": 0.2,
+            "basal_energy_cost_predator": 0.2,
             "movement_energy_cost_per_cell_predator": 0.05,
         }
     )
     env.reset(seed=1030)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
-    env.agent_genomes[predator] = Genome(offspring_investment_fraction=0.35)
+    env.agent_genomes[predator] = Genome(metabolic_rate=1.0)
     _place_agent(env, predator, (10, 10))
     start_energy = 10.0
     env.agent_energies[predator] = start_energy

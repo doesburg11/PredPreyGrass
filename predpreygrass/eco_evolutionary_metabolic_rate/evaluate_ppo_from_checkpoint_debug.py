@@ -1,0 +1,583 @@
+"""
+This script loads (pre) trained PPO policy modules (RLModules) directly from a checkpoint
+and runs them in the PredPreyGrass eco-evolutionary environment for interactive debugging.
+
+This version differs from ppg_2_policies in that it includes two types of predators and two types of prey, 
+making distinct behaviors and characteristics possible per species. In this version, the "speed 2"
+version of predator and prey are are faster and can cover more ground in one movement step.
+Both speed 1 and speed 2 predators and prey are mutually trained. Evaluation of only speed 1 
+predators and prey with only small change of mutation to speed 2 predators and prey generally 
+leads to dominance of speed 2 agents and extinction of speed 1 agents as the trained model shows 
+in the simulation.
+
+The simulation can be controlled in real-time using a graphical interface.
+- [Space] Pause/Unpause
+- [->] Step Forward
+- [<-] Step Backward
+- Tooltips are available to inspect agent IDs, positions, energies.
+
+The environment is rendered using PyGame, and the simulation can be recorded as a video. 
+"""
+from predpreygrass.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+
+# external libraries
+import ray
+from ray.rllib.core.rl_module.rl_module import RLModule
+from ray.tune.registry import register_env
+import torch
+from datetime import datetime
+import os
+import json
+import pygame
+import cv2
+import numpy as np
+import re
+from collections import defaultdict
+from typing import Callable, cast
+
+
+SAVE_EVAL_RESULTS = True
+SAVE_MOVIE = False
+MOVIE_FILENAME = "simulation.mp4"
+MOVIE_FPS = 10
+
+RAY_RESULTS_DIR = os.path.expanduser("~/ray_results")
+CHECKPOINT_ROOT = (
+    "PPO_ECO_EVOLUTION_2026-06-23_10-30-31/"
+    "PPO_PredPreyGrass_cc36a_00000_0_2026-06-23_10-30-31"
+)
+
+
+def env_creator(config):
+    return PredPreyGrass(config)
+
+
+def cv2_video_writer_fourcc(*codec: str) -> int:
+    video_writer_fourcc = cast(Callable[..., int], getattr(cv2, "VideoWriter_fourcc"))
+    return video_writer_fourcc(*codec)
+
+
+def _latest_checkpoint_path(run_path):
+    checkpoints = []
+    for name in os.listdir(run_path):
+        path = os.path.join(run_path, name)
+        if os.path.isdir(path) and re.fullmatch(r"checkpoint_\d+", name):
+            checkpoints.append((int(name.rsplit("_", 1)[1]), path))
+    if not checkpoints:
+        raise FileNotFoundError(f"No checkpoint directories found in: {run_path}")
+    return max(checkpoints, key=lambda item: item[0])[1]
+
+
+def _load_training_env_config_from_run(checkpoint_path, base_cfg):
+    """
+    Try to locate a run_config.json near the checkpoint and merge its env settings
+    into the provided base_cfg. This aligns evaluation observations with the
+    shapes the policy network was trained on (avoids matmul shape errors).
+    """
+    candidates = [
+        os.path.join(os.path.dirname(checkpoint_path), "run_config.json"),
+        os.path.join(os.path.dirname(os.path.dirname(checkpoint_path)), "run_config.json"),
+    ]
+    training_env_cfg = None
+    for cand in candidates:
+        if os.path.isfile(cand):
+            try:
+                with open(cand, "r") as f:
+                    rc = json.load(f)
+                # Prefer explicit env_config if present; else, fall back to top-level keys
+                if isinstance(rc, dict):
+                    if isinstance(rc.get("env_config"), dict):
+                        training_env_cfg = rc["env_config"]
+                    elif isinstance(rc.get("config_env"), dict):
+                        training_env_cfg = rc["config_env"]
+                    else:
+                        # Heuristic: intersect with known keys in base_cfg
+                        training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
+                break
+            except Exception:
+                pass
+
+    if not isinstance(training_env_cfg, dict):
+        return base_cfg  # nothing to merge
+
+    # Only override observation-critical keys.
+    obs_keys = {
+        "grid_size",
+        "num_obs_channels",
+        "predator_obs_range",
+        "prey_obs_range",
+        # Action ranges can affect obs encoding in some setups; include for safety
+        "action_range",
+        "include_speed_in_obs",
+        "include_move_available_in_obs",
+    }
+    merged = dict(base_cfg)
+    for k in obs_keys:
+        if k in training_env_cfg:
+            merged[k] = training_env_cfg[k]
+    return merged
+
+
+def policy_mapping_fn(agent_id, *args, **kwargs):
+    if "predator" in agent_id:
+        return "predator"
+    if "prey" in agent_id:
+        return "prey"
+    raise ValueError(f"Unrecognized agent_id format: {agent_id}")
+
+
+def policy_pi(observation, policy_module, deterministic=True):
+    obs_tensor = torch.tensor(observation).float().unsqueeze(0)
+    with torch.no_grad():
+        action_output = policy_module._forward_inference({"obs": obs_tensor})
+    logits = action_output.get("action_dist_inputs")
+    if logits is None:
+        raise KeyError("policy_pi: action_dist_inputs not found in action_output.")
+    if deterministic:
+        return torch.argmax(logits, dim=-1).item()
+    else:
+        dist = torch.distributions.Categorical(logits=logits)
+        return dist.sample().item()
+
+
+def setup_environment_and_visualizer(now):
+    run_path = os.path.join(RAY_RESULTS_DIR, CHECKPOINT_ROOT)
+    checkpoint_path = _latest_checkpoint_path(run_path)
+    checkpoint_dir = os.path.basename(checkpoint_path)
+    print(f"Loading checkpoint: {checkpoint_path}")
+    # training_dir = os.path.dirname(checkpoint_path)
+    eval_output_dir = os.path.join(checkpoint_path, f"eval_{checkpoint_dir}_{now}")
+
+    rl_module_dir = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
+    module_paths = {}
+
+    if os.path.isdir(rl_module_dir):
+        for pid in os.listdir(rl_module_dir):
+            path = os.path.join(rl_module_dir, pid)
+            if os.path.isdir(path):
+                module_paths[pid] = path
+    else:
+        raise FileNotFoundError(f"RLModule directory not found: {rl_module_dir}")
+
+    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
+
+    # Build config based on config_env and align observation-related keys with training run config
+    cfg = dict(config_env)
+    cfg = _load_training_env_config_from_run(checkpoint_path, cfg)
+
+    env = env_creator(config=cfg)
+    grid_size = (env.grid_size, env.grid_size)
+    # Try to configure FOV overlay similar to random policy, but tolerate legacy renderer
+    try:
+        visualizer = PyGameRenderer(
+            grid_size,
+            cell_size=32,
+            enable_speed_slider=True,
+            enable_tooltips=True,
+            max_steps=cfg.get("max_steps", 1000),
+            predator_obs_range=cfg.get("predator_obs_range"),
+            prey_obs_range=cfg.get("prey_obs_range"),
+            show_fov=True,
+            fov_alpha=40,
+            fov_agents=["predator_0", "prey_0"],
+        )
+    except TypeError:
+        visualizer = PyGameRenderer(
+            grid_size,
+            cell_size=32,
+            enable_speed_slider=True,
+            enable_tooltips=True,
+            max_steps=cfg.get("max_steps", 1000),
+        )
+
+    if SAVE_EVAL_RESULTS:
+        os.makedirs(eval_output_dir, exist_ok=True)
+        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+            json.dump(cfg, f, indent=4)
+        ceviz = CombinedEvolutionVisualizer(destination_path=eval_output_dir, timestamp=now)
+        pdviz = PreyDeathCauseVisualizer(destination_path=eval_output_dir, timestamp=now)
+    else:
+        ceviz = CombinedEvolutionVisualizer(destination_path=None, timestamp=now)
+        pdviz = PreyDeathCauseVisualizer(destination_path=None, timestamp=now)
+
+    return env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir
+
+
+def step_backwards_if_requested(
+    control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
+):
+    if control.step_backward:
+        if len(snapshots) > 1:
+            snapshots.pop()
+            env.restore_state_snapshot(snapshots[-1])
+            print(f"[ViewerControl] Step Backward → Step {env.current_step}")
+            observations = {agent: env._get_observation(agent) for agent in env.agents}
+            if time_steps:
+                time_steps.pop()
+                predator_counts.pop()
+                prey_counts.pop()
+                energy_by_type_series.pop()
+
+            ceviz.record(agent_ids=env.agents)
+            pdviz.record({})
+            visualizer.update(
+                grass_positions=env.grass_positions,
+                grass_energies=env.grass_energies,
+                step=env.current_step,
+                agents_just_ate=env.agents_just_ate,
+                per_step_agent_data=env.per_step_agent_data,
+            )
+
+            control.fps_slider_rect = visualizer.slider_rect
+            pygame.time.wait(100)
+            control.step_backward = False
+            return observations
+        control.step_backward = False
+    return None
+
+def step_forward(
+    env,
+    observations,
+    rl_modules,
+    control,
+    visualizer,
+    ceviz,
+    pdviz,
+    snapshots,
+    predator_counts,
+    prey_counts,
+    time_steps,
+    energy_by_type_series,
+    total_reward,
+    clock,
+    SAVE_MOVIE,
+    video_writer,
+):
+    action_dict = {}
+    for agent_id in env.agents:
+        group = policy_mapping_fn(agent_id)
+        if group in rl_modules:
+            action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
+
+    observations, rewards, terminations, truncations, _ = env.step(action_dict)
+    # print("----------------------------------------------")
+    # print(f"Step {env.current_step}")
+    # print(f"Rewards: {rewards}")
+    # print(f"Terminations: {terminations}")
+    # print("Terminated agents:", {k: v for k, v in terminations.items() if v is True})
+    # print("----------------------------------------------")
+
+    snapshots.append(env.get_state_snapshot())
+    if len(snapshots) > 100:
+        snapshots.pop(0)
+
+    ceviz.record(agent_ids=env.agents)
+    if hasattr(ceviz, "record_energy"):
+        ceviz.record_energy(env.get_total_energy_by_type())
+
+    visualizer.update(
+        grass_positions=env.grass_positions,
+        grass_energies=env.grass_energies,
+        step=env.current_step,
+        agents_just_ate=env.agents_just_ate,
+        per_step_agent_data=env.per_step_agent_data,
+        dead_prey=getattr(env, "dead_prey", None),
+    )
+    control.fps_slider_rect = visualizer.slider_rect
+
+    if SAVE_MOVIE:
+        frame = pygame.surfarray.array3d(visualizer.screen)
+        frame = np.transpose(frame, (1, 0, 2))
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+        video_writer.write(frame)
+
+    control.step_once = False
+    clock.tick(visualizer.target_fps)
+
+    predator_counts.append(sum(1 for a in env.agents if "predator" in a))
+    prey_counts.append(sum(1 for a in env.agents if "prey" in a))
+    time_steps.append(env.current_step)
+    energy_by_type_series.append(env.get_total_energy_by_type())
+    total_reward += sum(rewards.values())
+
+    return observations, total_reward, terminations, truncations
+
+def render_static_if_paused(env, visualizer):
+    visualizer.update(
+        grass_positions=env.grass_positions,
+        grass_energies=env.grass_energies,
+        step=env.current_step,
+        agents_just_ate=env.agents_just_ate,
+        per_step_agent_data=env.per_step_agent_data,
+        dead_prey=getattr(env, "dead_prey", None),
+    )
+
+def parse_uid(uid):
+    """
+    Parse agent id like 'predator_2#17' into sortable components:
+    -> ('predator', 2, 17)
+    """
+    match = re.match(r"((?:predator|prey))_(\d+)(?:#(\d+))?", uid)
+    if match:
+        group, idx, lifetime = match.groups()
+        return group, int(idx), int(lifetime) if lifetime is not None else 0
+    else:
+        return uid, float("inf"), float("inf")  # fallback for malformed ids
+
+def print_ranked_reward_summary(env, total_reward):
+    def _get_group_rewards(env):
+        group_rewards = defaultdict(list)
+        for uid, stats in env.get_all_agent_stats().items():
+            reward = stats.get("cumulative_reward", 0.0)
+            group, index, reuse = parse_uid(uid)
+            group_rewards[group].append((uid, reward, index, reuse))
+        return group_rewards
+
+    def _format_ranked_reward_summary(env, total_reward, group_rewards):
+        lines = []
+        lines.append(f"Total Reward: {total_reward:.2f}\n")
+        lines.append("--- Ranked Reward Breakdown per Unique Agent ---\n")
+        for group in sorted(group_rewards.keys()):
+            lines.append(f"\n## {group.replace('_', ' ').title()} ##\n")
+            sorted_group = sorted(
+                group_rewards[group], key=lambda x: (-x[1], x[2], x[3])
+            )
+            for uid, reward, _, _ in sorted_group:
+                lines.append(f"{uid:25}: {reward:.2f}\n")
+        lines.append("\n--- Aggregated Totals ---\n")
+        lines.append(f"Total number of steps: {env.current_step - 1}\n")
+        for group in sorted(group_rewards.keys()):
+            total = sum(r for _, r, _, _ in group_rewards[group])
+            lines.append(f"Total {group.replace('_', ' ').title():25}: {total:.2f}\n")
+        lines.append(f"Total All-Agent Reward:           {total_reward:.2f}\n")
+        return lines
+
+    group_rewards = _get_group_rewards(env)
+    lines = _format_ranked_reward_summary(env, total_reward, group_rewards)
+    print("\nEvaluation complete! Total Reward: {:.2f}".format(total_reward))
+    for line in lines[1:]:  # skip duplicate first line
+        print(line.rstrip())
+
+def save_reward_summary_to_file(env, total_reward, output_dir):
+    reward_log_path = os.path.join(output_dir, "reward_summary.txt")
+    def _get_group_stats(env):
+        group_stats = defaultdict(list)
+        for uid, stats in env.get_all_agent_stats().items():
+            group, index, reuse = parse_uid(uid)
+            reward = stats.get("cumulative_reward", 0.0)
+            lifetime = (stats.get("death_step") or env.current_step) - stats.get("birth_step", 0)
+            offspring = stats.get("offspring_count", 0)
+            off_per_step = offspring / lifetime if lifetime > 0 else 0.0
+            group_stats[group].append({
+                "uid": uid,
+                "reward": reward,
+                "lifetime": lifetime,
+                "offspring": offspring,
+                "off_per_step": off_per_step,
+                "index": index,
+                "reuse": reuse,
+            })
+        return group_stats
+
+    def _format_ranked_fitness_summary(env, total_reward, group_stats):
+        lines = []
+        lines.append(f"Total Reward: {total_reward:.2f}\n")
+        lines.append("--- Ranked Reward Breakdown per Unique Agent ---\n")
+        for group in sorted(group_stats.keys()):
+            lines.append(f"\n## {group.replace('_', ' ').title()} ##\n")
+            sorted_group = sorted(
+                group_stats[group], key=lambda x: (-x["reward"], x["index"], x["reuse"])
+            )
+            lines.append(
+                f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8}\n"
+            )
+            for entry in sorted_group:
+                lines.append(
+                    f"{entry['uid']:25} | "
+                    f"{entry['reward']:8.2f} | "
+                    f"{entry['lifetime']:6} | "
+                    f"{entry['offspring']:4} | "
+                    f"{100*entry['off_per_step']:8.2f}\n"
+                )
+            # Print averages for this group
+            n = len(sorted_group)
+            if n > 0:
+                avg_reward = sum(e['reward'] for e in sorted_group) / n
+                avg_life = sum(e['lifetime'] for e in sorted_group) / n
+                avg_offspring = sum(e['offspring'] for e in sorted_group) / n
+                avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
+                lines.append(
+                    f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
+                    f"{100*avg_off_per_step:8.2f}\n"
+                )
+        lines.append("\n--- Aggregated Totals ---\n")
+        lines.append(f"Total number of steps: {env.current_step - 1}\n")
+        for group in sorted(group_stats.keys()):
+            total = sum(e['reward'] for e in group_stats[group])
+            lines.append(f"Total {group.replace('_', ' ').title():25}: {total:.2f}\n")
+        lines.append(f"Total All-Agent Reward:           {total_reward:.2f}\n")
+        return lines
+
+    group_stats = _get_group_stats(env)
+    lines = _format_ranked_fitness_summary(env, total_reward, group_stats)
+    with open(reward_log_path, "w") as f:
+        for line in lines:
+            f.write(line)
+
+def run_post_evaluation_plots(ceviz, pdviz):
+    if SAVE_EVAL_RESULTS:
+        ceviz.plot()
+        pdviz.plot()
+
+def print_ranked_fitness_summary(env):
+    print("\n--- Ranked Fitness Summary by Group ---")
+    group_stats = defaultdict(list)
+    for uid, stats in env.get_all_agent_stats().items():
+        group, index, reuse = parse_uid(uid)
+        lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
+        group_stats[group].append(
+            {
+                "uid": uid,
+                "reward": stats.get("cumulative_reward", 0.0),
+                "lifetime": lifetime,
+                "offspring": stats.get("offspring_count", 0),
+                "off_per_step": stats.get("offspring_count", 0) / lifetime if lifetime > 0 else 0.0,
+            }
+        )
+
+    for group in sorted(group_stats.keys()):
+        print(f"\n## {group.replace('_', ' ').title()} ##")
+        sorted_group = sorted(group_stats[group], key=lambda x: (-x["offspring"], -x["reward"], -x["lifetime"]))
+        print(
+            f"{'Agent':25} | {'R':>8} | {'Life':>6} | {'Off':>4} | {'Off/100':>8}"
+        )
+        for entry in sorted_group[:10]:  # top 10
+            print(
+                f"{entry['uid']:25} | "
+                f"{entry['reward']:8.2f} | "
+                f"{entry['lifetime']:6} | "
+                f"{entry['offspring']:4} | "
+                f"{100*entry['off_per_step']:8.2f}"
+            )
+        # Print averages for this group
+        n = len(sorted_group)
+        if n > 0:
+            avg_reward = sum(e['reward'] for e in sorted_group) / n
+            avg_life = sum(e['lifetime'] for e in sorted_group) / n
+            avg_offspring = sum(e['offspring'] for e in sorted_group) / n
+            avg_off_per_step = sum(e['off_per_step'] for e in sorted_group) / n
+            print(
+                f"{'(Averages)':25} | {avg_reward:8.2f} | {avg_life:6.1f} | {avg_offspring:4.2f} | "
+                f"{100*avg_off_per_step:8.2f}"
+            )
+
+if __name__ == "__main__":
+    seed = 4
+    ray.init(ignore_reinit_error=True)
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    register_env("PredPreyGrass", lambda config: env_creator(config))
+
+    env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir = setup_environment_and_visualizer(now)
+    observations, _ = env.reset(seed=seed)
+
+    if SAVE_MOVIE:
+        screen_width = visualizer.screen.get_width()
+        screen_height = visualizer.screen.get_height()
+        fourcc = cv2_video_writer_fourcc(*"mp4v")
+        video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
+    else:
+        video_writer = None
+
+    control = ViewerControlHelper()
+    loop_helper = LoopControlHelper()
+    control.fps_slider_rect = visualizer.slider_rect
+    control.fps_slider_update_fn = lambda new_fps: setattr(visualizer, "target_fps", new_fps)
+    control.visualizer = visualizer
+
+    clock = pygame.time.Clock()
+    total_reward = 0
+    predator_counts, prey_counts, time_steps = [], [], []
+    snapshots = [env.get_state_snapshot()]
+    energy_by_type_series = [env.get_total_energy_by_type()]
+
+    while not loop_helper.simulation_terminated:
+        control.handle_events()
+
+        new_obs = step_backwards_if_requested(
+            control, env, snapshots, time_steps, predator_counts, prey_counts, energy_by_type_series, visualizer, ceviz, pdviz
+        )
+        if new_obs is not None:
+            observations = new_obs
+            continue
+
+        if loop_helper.should_step(control):
+            observations, total_reward, terminations, truncations = step_forward(
+                env,
+                observations,
+                rl_modules,
+                control,
+                visualizer,
+                ceviz,
+                pdviz,
+                snapshots,
+                predator_counts,
+                prey_counts,
+                time_steps,
+                energy_by_type_series,
+                total_reward,
+                clock,
+                SAVE_MOVIE,
+                video_writer,
+            )
+            loop_helper.update_simulation_terminated(terminations, truncations)
+        else:
+            render_static_if_paused(env, visualizer)
+            pygame.time.wait(50)
+
+    # === Print total offspring by type ===
+    offspring_counts = env.get_total_offspring_by_type()
+    print("\n--- Offspring Counts by Type ---")
+    for agent_type, count in offspring_counts.items():
+        print(f"{agent_type:20}: {count}")
+
+    # print_ranked_reward_summary(env, total_reward)
+
+    # print("Death statistics:", env.death_agents_stats)
+
+    if SAVE_EVAL_RESULTS:
+        save_reward_summary_to_file(env, total_reward, eval_output_dir)
+        energy_log_path = os.path.join(eval_output_dir, "energy_by_type.json")
+        with open(energy_log_path, "w") as f:
+            json.dump(energy_by_type_series, f, indent=2)
+        # Export per-agent event log for offline analysis
+        def _convert(obj):
+            if isinstance(obj, (int, float, str)) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            try:
+                return obj.item()
+            except Exception:
+                return str(obj)
+
+        event_log_path = os.path.join(eval_output_dir, f"agent_event_log_{now}.json")
+        with open(event_log_path, "w", encoding="utf-8") as f:
+            json.dump({aid: _convert(rec) for aid, rec in env.agent_event_log.items()}, f, indent=2)
+        print(f"Agent event log written to: {event_log_path}")
+    # Always show plots on screen
+    ceviz.plot()
+    if SAVE_EVAL_RESULTS:
+        # Export all unique agent fitness stats
+        agent_fitness_path = os.path.join(eval_output_dir, "agent_fitness_stats.json")
+        with open(agent_fitness_path, "w") as f:
+            json.dump(env.get_all_agent_stats(), f, indent=2)
+
+    print_ranked_fitness_summary(env)
+
+    pygame.quit()
+    ray.shutdown()

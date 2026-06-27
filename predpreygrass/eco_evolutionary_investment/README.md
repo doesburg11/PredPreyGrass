@@ -113,22 +113,8 @@ This makes the tradeoff explicit:
 - the parent has less energy after reproduction;
 - low-investment parents preserve energy but produce more fragile offspring.
 
-Recommended guardrails:
-
-```python
-"min_offspring_energy_predator": 1.0
-"min_offspring_energy_prey": 1.0
-"max_offspring_energy_predator": initial_energy_predator
-"max_offspring_energy_prey": initial_energy_prey
-```
-
-Alternative later variant:
-
-```text
-offspring_energy = fixed_base + fraction * surplus_above_reproduction_threshold
-```
-
-That may be safer if direct fraction-of-current-energy creates runaway collapse
+Offspring energy is unclamped: `offspring_energy = parent_energy × offspring_investment_fraction`.
+The reproduction threshold already ensures parents have sufficient energy before spawning.
 or excessive parent starvation.
 
 ## Metrics To Add
@@ -222,6 +208,82 @@ Those belong to `eco_evolutionary_cadence` and are intentionally excluded here.
 - `utils/episode_return_callback.py`: logging of evolutionary metrics.
 - `tests/test_eco_evolutionary_validation.py`: regression tests for lifecycle,
   genome inheritance, and metric logging.
+
+## Second Trait: Metabolic Rate
+
+The `metabolic_rate` genome trait closes the loop that `offspring_investment_fraction` alone
+cannot. It is added alongside the investment fraction as a second heritable trait.
+
+### The tradeoff
+
+```text
+high metabolic_rate -> extracts more energy per food item AND burns more per step
+low metabolic_rate  -> extracts less energy per food item AND burns less per step
+```
+
+Both sides of the tradeoff scale by the same factor:
+
+```python
+# basal energy loss per step
+energy_decay = base_decay_rate * metabolic_rate
+
+# energy gained from food (grass for prey, prey for predator)
+energy_gain = raw_food_energy * metabolic_rate
+```
+
+The food source loses the same amount regardless (digestive efficiency model). Whether a
+high or low metabolic rate is advantageous depends on how easily the agent can find food:
+
+- food-rich environment (policy has learned to forage well): high rate wins — the gain
+  bonus outweighs the cost
+- food-sparse environment (policy is still random, or prey have learned to evade well):
+  low rate wins — the cost dominates
+
+### Why this closes the Baldwinian loop
+
+`offspring_investment_fraction` only affects energy at reproduction — the genome never
+influences what the policy sees or how it learns. `metabolic_rate` is different: it is
+active every step of every agent's life. The fitness advantage of a given metabolic rate
+depends directly on how effective the current shared policy is at accumulating food.
+
+```text
+genome (metabolic_rate) -> food-accumulation efficiency -> reproduction frequency
+RL policy quality       -> determines which metabolic rate is advantageous
+```
+
+Both arrows now run in both directions:
+
+```text
+RL behavior -> energy accumulation -> reproduction -> genome propagation   (exists)
+genome      -> energy dynamics     -> what RL must learn to survive        (now exists)
+```
+
+A policy that hunts effectively makes high-metabolic-rate predators viable. As prey learn
+better evasion, food becomes scarcer and the optimal predator metabolic rate shifts
+downward — which in turn changes the energy dynamics that future policy updates must
+adapt to. The Darwinian and Baldwinian layers are now genuinely coupled in both
+directions.
+
+### Founder distribution and bounds
+
+```python
+"metabolic_rate_mean": 1.0,   # neutral: identical to base config at initialisation
+"metabolic_rate_std": 0.10,
+"trait_bounds": (0.5, 2.0),
+```
+
+Starting at mean 1.0 means the initial population behaves identically to the pre-trait
+baseline. Selection pressure determines which direction the trait drifts.
+
+### What to watch in training
+
+- `eco_evolution/{species}_metabolic_rate_mean` — should drift from 1.0 as the policy
+  develops; direction reveals the dominant ecological pressure
+- `eco_evolution/{species}_metabolic_rate_std` — narrowing indicates selection is acting;
+  flat std means the trait is neutral under current conditions
+- Compare drift direction with episode return trajectory: rising returns (better foraging)
+  should favour higher metabolic rates; declining returns or prey-dominated episodes
+  should favour lower rates
 
 ## Important Note On The Baldwinian Structure
 
