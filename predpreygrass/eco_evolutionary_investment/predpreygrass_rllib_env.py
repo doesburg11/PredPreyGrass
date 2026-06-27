@@ -145,6 +145,9 @@ class PredPreyGrass(MultiAgentEnv):
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
+        # Peak simultaneous active counts
+        self.peak_active_predators = 0
+        self.peak_active_prey = 0
 
 
         self._last_live_investment_metrics: dict = {}
@@ -439,6 +442,13 @@ class PredPreyGrass(MultiAgentEnv):
 
         if episode_done:
             self.agents = []
+
+        n_pred = sum(1 for a in self.agents if "predator" in a)
+        n_prey = sum(1 for a in self.agents if "prey" in a)
+        if n_pred > self.peak_active_predators:
+            self.peak_active_predators = n_pred
+        if n_prey > self.peak_active_prey:
+            self.peak_active_prey = n_prey
 
         self._last_live_investment_metrics = self._build_live_investment_metrics()
         return self.observations, self.rewards, self.terminations, self.truncations, self.infos
@@ -1356,6 +1366,10 @@ class PredPreyGrass(MultiAgentEnv):
         metrics["prey_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_prey)
         metrics["predator_spawned_total"] = float(self.spawned_predators)
         metrics["prey_spawned_total"] = float(self.spawned_prey)
+        metrics["peak_active_predators"] = float(self.peak_active_predators)
+        metrics["peak_active_prey"] = float(self.peak_active_prey)
+        metrics["prey_unique_ids_used"] = float(sum(1 for a in self.used_agent_ids if "prey" in a))
+        metrics["predator_unique_ids_used"] = float(sum(1 for a in self.used_agent_ids if "predator" in a))
         return metrics
 
     def _attach_episode_training_metrics(self):
