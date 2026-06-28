@@ -46,7 +46,7 @@ Prey live_genome MR: weak upward drift from ~0.960 to ~0.970 (+0.010). Predator 
 
 ## Run 2 — PPO_ECO_EVOLUTION_METABOLIC_RATE_2026-06-28_15-14-26
 
-**219 iterations, 225K steps, 10+ checkpoints. Still running at iter 217 at time of analysis.**
+**411 iterations, 422K steps. Analysis snapshots at iter 217 (225K steps) and iter 410 (422K steps).**
 
 This is the main run. All findings below refer to it.
 
@@ -65,29 +65,32 @@ Predators do reproduce. The p50 = 0 reflects population structure (deep reproduc
 
 ---
 
-### Ecology (225K steps)
+### Ecology
 
-At the stable phase (iter 40 onward):
+At the stable phase (iter 40 onward, sustained to iter 410):
 - Prey alive (live_genome): ~15–22 per step
 - Predators alive (live_genome): ~16–20 per step
 - Ratio ~1:1 — ecologically tight, consistent with a persistent predator-prey arms race
 
 Predator reproduction never hit the `n_possible_predators = 500` capacity ceiling (reproduction_blocked = 0 throughout). The ecosystem is under pressure but not collapsing.
 
-About 55% of iterations still report NaN on eco-evolution metrics (population too depleted mid-episode to compute stats). This is an inherent feature of the boom-bust ecology, not a bug.
+About 46% of iterations report valid eco-evolution metrics (223 of 411); the rest are NaN due to within-episode population crashes. This is an inherent feature of the boom-bust ecology, not a bug.
 
 ---
 
 ### RL learning trajectory
 
-| Quarter | Iters | Prey spawned | Prey ret p75 | Pred spawned |
-|---|---|---|---|---|
-| Q1 | 1–67 | 387 | 5.60 | 127 |
-| Q2 | 70–126 | 522 | 6.24 | 171 |
-| Q3 | 128–169 | 530 | 6.08 | 168 |
-| Q4 | 170–214 | 529 | 6.69 | 164 |
+Quintiles over the full 411-iteration run (valid rows only):
 
-Prey policy improved steadily through Q1–Q2, then plateaued at ~530 spawns/episode. Prey return p75 is slowly rising (5.6 → 6.7), suggesting continued slow improvement. Predator spawned_total plateaued around 165–180, consistent with the predator:prey ratio ceiling.
+| Quintile | Iters | Prey spawned | Prey ret p75 | Pred spawned |
+|---|---|---|---|---|
+| Q1 | 1–111 | 440 | 5.85 | 145 |
+| Q2 | 117–191 | 534 | 6.01 | 168 |
+| Q3 | 192–273 | 511 | 5.55 | 160 |
+| Q4 | 275–340 | 490 | 6.30 | 154 |
+| Q5 | 343–411 | 524 | 5.19 | 160 |
+
+Prey policy improved in Q1–Q2 (387 → 534 spawns), then plateaued with noise at 490–534. Prey return p75 is flat to slowly rising overall (5.2–6.3), with no clear further gains after iter 200. Predator spawned_total stable at 145–168, consistent with the predator:prey ceiling. Predator p50 return remains structurally 0 throughout (see clarification above).
 
 ---
 
@@ -95,25 +98,27 @@ Prey policy improved steadily through Q1–Q2, then plateaued at ~530 spawns/epi
 
 #### Prey live_genome MR trajectory
 
-| Quarter | Iters | Live_genome MR | Std |
+| Quintile | Iters | Live_genome MR | Std |
 |---|---|---|---|
-| Q1 | 1–67 | 0.974 | ±0.019 |
-| Q2 | 70–126 | 1.015 | ±0.009 |
-| Q3 | 128–169 | 1.032 | ±0.009 |
-| Q4 | 170–214 | 1.021 | ±0.016 |
+| Q1 | 1–111 | 0.990 | ±0.024 |
+| Q2 | 117–191 | **1.031** | ±0.011 |
+| Q3 | 192–273 | 1.013 | ±0.013 |
+| Q4 | 275–340 | 1.015 | ±0.020 |
+| Q5 | 343–411 | 1.003 | ±0.022 |
 
-**+0.058 peak shift from Q1 to Q3.** The population-wide MR converged sharply in Q2–Q3 (variance halved) before broadening slightly in Q4. This is not random drift: both the direction and the narrowing of variance indicate selection around a target value.
+The prey genome completed **one full cycle**: rising from 0.990 to a peak of 1.031 in Q2, then returning to ~1.003 in Q5. This is not random drift — the variance collapsed from ±0.024 to ±0.011 at the Q2 peak (the population converged on the new optimum) and widened again as the genome settled back. The Q5 endpoint (~1.003) is slightly above the Q1 start (0.990), suggesting the equilibrium has shifted a small but persistent amount upward from the founder mean of 1.0.
 
 #### Predator live_genome MR trajectory
 
-| Quarter | Iters | Live_genome MR | Std |
+| Quintile | Iters | Live_genome MR | Std |
 |---|---|---|---|
-| Q1 | 1–67 | 0.998 | ±0.022 |
-| Q2 | 70–126 | 0.995 | ±0.011 |
-| Q3 | 128–169 | 0.991 | ±0.017 |
-| Q4 | 170–214 | 1.000 | ±0.011 |
+| Q1 | 1–111 | 0.999 | ±0.017 |
+| Q2 | 117–191 | 0.994 | ±0.017 |
+| Q3 | 192–273 | 0.996 | ±0.010 |
+| Q4 | 275–340 | 1.000 | ±0.011 |
+| Q5 | 343–411 | 0.997 | ±0.008 |
 
-Predators converged to MR ≈ 1.0 with no directional drift. Variance shrinking (±0.022 → ±0.011). The genome stabilized at the founder mean.
+Predators show no directional genome drift across 411 iterations. Variance steadily decreased (±0.017 → ±0.008), meaning the predator population is converging tightly on MR ≈ 1.0. The genome stabilised at the founder mean.
 
 ---
 
@@ -128,57 +133,60 @@ A **negative gap** means lower-MR agents survive to episode end more — surviva
 
 #### Prey selection gap
 
-| Quarter | Gap | Interpretation |
-|---|---|---|
-| Q1 | −0.002 | Cost-side dominant: live longer by burning less |
-| Q2 | −0.002 | Same |
-| Q3 | **+0.012** | **Gain-side dominant: eat enough that higher MR pays off** |
-| Q4 | +0.003 | Still positive, weakening toward equilibrium |
+| Quintile | Iters | Gap | Interpretation |
+|---|---|---|---|
+| Q1 | 1–111 | −0.001 | Cost-side dominant: survive longer by burning less |
+| Q2 | 117–191 | **+0.006** | **Gain-side takes over: eat enough that higher MR pays off** |
+| Q3 | 192–273 | +0.008 | Gain-side still dominant |
+| Q4 | 275–340 | −0.004 | Oscillates back to cost-side |
+| Q5 | 343–411 | +0.006 | Gain-side again |
 
-**The sign flipped between Q2 and Q3.** This is the Baldwin mechanism: the prey policy improved enough (spawned_total 387 → 530) that agents eating grass frequently enough to tip the energy tradeoff. Higher MR now extracts more energy per grass eaten → reach reproduction threshold faster → more offspring before dying. The genome followed.
+**The sign flipped at Q2 and has oscillated since.** The initial reversal (Q1→Q2) is the Baldwin mechanism: the prey policy improved enough (spawned_total 440 → 534) for eating frequency to tip the energy tradeoff — higher MR now extracts more energy per grass eaten, reaching the reproduction threshold faster. The genome peak in Q2 is the direct consequence. The subsequent oscillation (Q3–Q5) reflects the genome settling near the tradeoff equilibrium where neither side dominates strongly; the selection gap fluctuates around zero rather than sustaining a directional push.
 
 #### Predator selection gap
 
-| Quarter | Gap | Interpretation |
-|---|---|---|
-| Q1 | −0.001 | Neutral / slight cost-side |
-| Q2 | +0.007 | Gain-side emerging |
-| Q3 | +0.017 | Gain-side dominant |
-| Q4 | +0.005 | Weakening |
+| Quintile | Iters | Gap | Interpretation |
+|---|---|---|---|
+| Q1 | 1–111 | +0.003 | Gain-side mildly dominant from the start |
+| Q2 | 117–191 | +0.009 | Strengthening |
+| Q3 | 192–273 | +0.004 | Still positive |
+| Q4 | 275–340 | +0.008 | Persistent |
+| Q5 | 343–411 | +0.009 | Sustained |
 
-Predators show the same pattern but the genome didn't move, because the predator policy improvement was smaller (p50 return structurally 0; spawned_total plateaued earlier). The selection pressure for higher MR is present in the data, but hasn't been strong or sustained enough to shift the genome away from 1.0.
+Predators show a **consistently positive** selection gap throughout all 411 iterations — higher-MR predators survive to episode end more often. The gain-side (more energy per prey caught) has been dominant from the start, likely because predators were never in the cost-dominant regime: hunting success is rarer and more valuable than the baseline metabolic cost. Yet the predator genome does not move. This suggests the predator population is **already at or very near its equilibrium** for the current policy quality; the positive gap may reflect the slight upward pull of gain-side selection being balanced by mutation pulling back toward the founder mean.
 
 ---
 
 ### Darwin/Baldwin loop verdict
 
-**Yes, the loop is working — most clearly for prey.**
+**Yes, the loop ran one complete cycle — clearly for prey, stably at equilibrium for predators.**
 
 The loop requires three things:
 
-1. **RL improvement changes which genome is adaptive.** ✓ The prey selection gap reversed sign as policy improved. This is direct evidence that RL learning altered the fitness landscape for the genome.
+1. **RL improvement changes which genome is adaptive.** ✓ The prey selection gap reversed sign (negative → positive) as the policy improved in Q1→Q2. This is direct evidence that RL learning altered the fitness landscape for the genome.
 
-2. **The genome responded to that new selection pressure.** ✓ Prey MR drifted from 0.974 to 1.032, converging with reduced variance.
+2. **The genome responded to that new selection pressure.** ✓ Prey MR rose from 0.990 to a peak of 1.031, converging with sharply reduced variance at the peak. The genome then returned toward ~1.003 as the system settled — consistent with an interior equilibrium, not runaway drift.
 
-3. **The genome shift feeds back into RL.** Plausible but not directly measurable from these logs. Higher MR changes the energy landscape the policy operates in (more gain per action). Prey return p75 rising slowly (5.6 → 6.7) is consistent with this, but cannot be cleanly separated from ordinary policy improvement.
+3. **The genome shift feeds back into RL.** Plausible but not directly measurable from these logs. Higher MR changes the energy landscape the policy operates in. The prey return p75 did not show a clear further rise after the genome peak, which may mean the genome-RL feedback is small relative to the policy noise at this scale.
 
-For predators, points 1 and 2 are partially present (selection gap turned positive, genome stable at 1.0 — possibly already at equilibrium for the current policy quality) but no clear genome shift.
+For predators: the selection gap is consistently positive (gain-side dominant throughout), but the genome shows no directional shift — it converged tightly to MR ≈ 1.0 with decreasing variance (±0.017 → ±0.008). The predator population appears to have been near its equilibrium from the start. The loop structure is present but there was no cycle to observe because there was no initial displacement from equilibrium.
 
 **Caveats:**
 
-- The genome shift is modest (~6% for prey peak). Whether it would continue to grow or has found its equilibrium is unclear. The Q4 pullback (1.032 → 1.021) may indicate the system is settling.
-- The loop is not amplifying — it found a fixed point near MR ≈ 1.0–1.03 rather than generating a runaway selection sweep. This is consistent with the design (interior optimum, bounded trait).
-- 55% NaN episode rate means that in the majority of episodes the population collapses enough that no eco-evolution stats can be reported. This limits the effective selection bandwidth: meaningful selection only operates in the surviving 45% of episodes.
-- The reverse leg (genome → RL) would require a controlled experiment (freeze genome, compare RL trajectories) to confirm directly.
+- The prey genome cycle amplitude is modest: +0.041 peak above Q1 baseline, returning to +0.013 above baseline at Q5. The loop is real but not large.
+- The oscillating prey selection gap in Q3–Q5 (alternating sign) indicates the genome is now near the neutral point of the tradeoff — selection pressure is weak in both directions, making further directed drift unlikely without a new policy improvement.
+- 46% of episode iterations report valid eco-evolution metrics. Meaningful selection only operates in episodes where the population does not crash mid-episode. This limits effective selection pressure.
+- The reverse leg (genome → RL) would require a controlled experiment (freeze genome, compare RL trajectories across fixed MR values) to confirm directly.
 
 ---
 
-### Current state (iter 217, 225K steps)
+### Current state (iter 410, 422K steps)
 
-Both genomes have stabilized:
-- Prey live_genome: oscillating around 1.00–1.05
-- Pred live_genome: oscillating around 0.98–1.01
-- Prey eco_evol: 0.92–1.10 (noisy — selection direction varies episode to episode)
-- Reproduction stable: prey ~530/episode, predators ~165/episode, no capacity blocking
+Both genomes have settled at equilibrium:
+- Prey live_genome: oscillating around 0.98–1.00 (returned to near-founder-mean after Q2 peak)
+- Pred live_genome: converging tightly at ~0.997 ± 0.008
+- Prey eco_evol: 0.89–1.08 (wide episode-to-episode variation — selection direction still noisy)
+- Pred eco_evol: 0.91–1.06 (same pattern)
+- Reproduction stable: prey ~520/episode, predators ~160/episode, no capacity blocking
 
-The loop has found an approximate equilibrium. Whether further training (> 500K steps) would reveal another phase of genome drift — driven by continued slow policy improvement — remains to be seen.
+The loop has completed one cycle and reached a fixed point. A second cycle would require either a substantial further improvement in policy quality (shifting the eating-frequency high enough to push the optimum MR further up) or a change in environment parameters (α, basal cost, grass density). Neither is currently present.
