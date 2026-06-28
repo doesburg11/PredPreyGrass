@@ -44,18 +44,15 @@ class EpisodeReturn(RLlibCallback):
         predator_totals = []
         prey_totals = []
 
-        for agent_id, rewards in episode.get_rewards().items():
-            total = sum(rewards)
+        for agent_id, agent_ep in episode.agent_episodes.items():
+            total = agent_ep.get_return()
             if "predator" in agent_id:
                 predator_total += total
                 predator_totals.append(total)
+                group_rewards["predator"].append(total)
             elif "prey" in agent_id:
                 prey_total += total
                 prey_totals.append(total)
-
-            if "predator" in agent_id:
-                group_rewards["predator"].append(total)
-            elif "prey" in agent_id:
                 group_rewards["prey"].append(total)
 
         # Episode summary log
