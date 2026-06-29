@@ -159,6 +159,44 @@ baseline. Any drift away from 1.0 is a direct signal that selection is acting:
   favour higher metabolic rates; falling or stagnant returns favour lower rates
 - Cross-species: predator and prey metabolic rates should drift in response to each other
   as the coevolutionary arms race develops
+- `eco_evolution/{species}_mr_repro_spearman` — Spearman correlation between individual
+  MR and whether that agent reproduced (binary). Positive = gain-side dominant (higher MR
+  agents reproduce more). Negative = cost-side dominant. **A sign flip as policy quality
+  improves is direct evidence that RL learning altered the genome fitness landscape** —
+  i.e., the reverse leg of the Darwin/Baldwin loop.
+- `eco_evolution/{species}_mr_repro_rate_q1` through `_q4` — reproduction fraction per
+  MR quartile (lowest to highest MR). Shows the shape of the MR→reproduction relationship,
+  not just the direction. A monotone Q1→Q4 gradient confirms which side dominates; a
+  U-shape would indicate a stabilising interior optimum.
+
+## Confirming the reverse leg (genome → RL)
+
+The Darwin/Baldwin loop requires three things:
+
+1. RL improvement changes which genome is adaptive (Darwin selection pressure)
+2. The genome responds to that new selection pressure (observable drift)
+3. The genome shift feeds back into RL outcomes (the reverse leg)
+
+Direction 3 is the hardest to measure and was initially unconfirmed from training logs
+alone. An obvious approach is a two-stage controlled experiment: freeze the genome at
+several fixed MR values (e.g., 0.90, 1.00, 1.03, 1.10) and run separate RL training
+runs to completion, then compare policy outcomes across runs. This works but is
+inelegant — it manufactures variation artificially when natural variation already exists.
+
+**The better approach exploits natural within-population MR variation.** Mutation ensures
+agents within every episode differ in MR. If MR predicts individual reproductive success
+*within* an episode — and the sign of that prediction flips as the policy improves — the
+reverse leg is confirmed endogenously within a single continuous run.
+
+This is what `{species}_mr_repro_spearman` measures. It does not require freezing the
+genome or running additional experiments. The natural variation from mutation provides
+sufficient signal; nothing needs to be manufactured.
+
+**What to look for:** plot `prey_mr_repro_spearman` against `prey_spawned_total` across
+iterations. If the correlation starts negative (early training, cost-side dominant) and
+becomes positive as `spawned_total` rises (gain-side dominant), the reverse leg is
+confirmed: RL improvement directly changed which genome was adaptive, within the same
+training run.
 
 ## Relationship to the Darwin/Baldwin process
 

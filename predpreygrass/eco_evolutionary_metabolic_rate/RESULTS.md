@@ -1,6 +1,6 @@
 # Eco-Evolutionary Metabolic Rate — Training Results
 
-Results from two PPO training runs on the `eco_evolutionary_metabolic_rate` environment.
+Results from a PPO training run on the `eco_evolutionary_metabolic_rate` environment.
 Analysis focuses on whether the Darwin/Baldwin loop is operating.
 
 ---
@@ -22,29 +22,7 @@ Rewards: only **reproduction** yields signal (`+10`). Catching prey (predators) 
 
 ---
 
-## Run 1 — PPO_ECO_EVOLUTION_METABOLIC_RATE_2026-06-28_14-48-16
-
-**80 iterations, 82K steps, 8 checkpoints.**
-
-### Ecology
-
-Predator:prey ratio (live_genome counts) climbed from ~1:9 at iter 1 to nearly 1:1 by iter 79. This is ecologically unsustainable and caused frequent within-episode population crashes: 52 of 80 iterations report NaN on all eco-evolution metrics. The environment did not reach a stable attractor in this run.
-
-### RL learning (Baldwin)
-
-Prey spawned_total grew from 6 → ~530 per episode; predator spawned_total grew from 0 → ~185. Both policies learned. Predator `episode_return_p50 = 0.000` throughout — not a failure signal but a structural artifact of the reproduction chain (see below).
-
-### Genome evolution (Darwin)
-
-Prey live_genome MR: weak upward drift from ~0.960 to ~0.970 (+0.010). Predator live_genome MR: slight downward drift (~1.015 → ~0.996, −0.020). Both small relative to noise. No directional gene-selection signal detectable.
-
-### Darwin/Baldwin loop verdict
-
-**Not yet cycling.** The run is too short and the ecosystem too unstable for the policy-genome feedback to register. Darwinian selection for lower MR (survival-dominant) is present but weak. No selection gap reversal observed.
-
----
-
-## Run 2 — PPO_ECO_EVOLUTION_METABOLIC_RATE_2026-06-28_15-14-26
+## Run — PPO_ECO_EVOLUTION_METABOLIC_RATE_2026-06-28_15-14-26
 
 **411 iterations, 422K steps. Analysis snapshots at iter 217 (225K steps) and iter 410 (422K steps).**
 
@@ -190,3 +168,69 @@ Both genomes have settled at equilibrium:
 - Reproduction stable: prey ~520/episode, predators ~160/episode, no capacity blocking
 
 The loop has completed one cycle and reached a fixed point. A second cycle would require either a substantial further improvement in policy quality (shifting the eating-frequency high enough to push the optimum MR further up) or a change in environment parameters (α, basal cost, grass density). Neither is currently present.
+
+---
+
+## Next steps to solidly establish the Darwin/Baldwin loop
+
+### 1. Confirm the reverse leg (genome → RL) — the missing proof
+
+The reverse direction (genome shift feeds back into RL outcomes) is unconfirmed from these logs. Without it, the evidence is correlation, not a closed loop.
+
+**Approach:** Exploit the natural MR variation already present within the population — mutation ensures agents differ in MR within every episode. Track per-MR-quartile reproduction rate each iteration and log how that relationship changes as policy quality improves (using `prey_spawned_total` as the proxy for policy quality).
+
+Within each episode, bin agents by MR quartile (low / mid-low / mid-high / high) and record reproduction probability per bin. The signal to look for:
+
+- Early training (poor policy, low eating frequency): low-MR bins reproduce more — cost-side dominant, negative relationship between MR and reproductive success.
+- Later training (better policy, high eating frequency): high-MR bins reproduce more — gain-side dominant, positive relationship.
+
+If the sign of the MR→reproduction relationship flips as `prey_spawned_total` rises, the reverse leg is confirmed endogenously within a single continuous run. No frozen genomes, no separate experiments needed. The natural within-population MR variation (from mutation) provides the variation required; it does not need to be manufactured artificially.
+
+**Implementation:** A callback metric `prey_mr_repro_corr` (Spearman correlation between agent MR and binary reproduction outcome, per episode, averaged per iteration) captures this in a single number. Positive = gain-side dominant; negative = cost-side dominant. Track alongside `prey_spawned_total` to see the relationship flip.
+
+This is the single most important gap in the current evidence.
+
+**Expected run:** This requires a fresh run of ~250 iterations — continuing from the existing checkpoint will not work. The sign flip occurs during the policy transition from poor to competent foraging (roughly iter 1–150 in the previous run), and that window has already passed for the checkpoint: both genomes and the policy are at equilibrium. The transition data from the previous run was not logged and cannot be recovered.
+
+In the fresh run, the expected pattern is:
+
+- **Early iterations (approx. 1–100):** `prey_mr_repro_spearman` negative — cost-side dominant, lower-MR prey reproduce more because eating frequency is too low for the gain-side to compensate the higher basal cost. `prey_spawned_total` will be low (~400–450).
+- **Transition (approx. iter 100–150):** `prey_mr_repro_spearman` crosses zero as the prey policy crosses the eating-frequency threshold where higher MR starts to pay off. `prey_spawned_total` rises toward ~530.
+- **Post-transition (approx. iter 150–250):** `prey_mr_repro_spearman` positive and oscillating — gain-side dominant, matching the Q2–Q5 selection gap pattern from the previous run.
+
+The key diagnostic plot is `prey_mr_repro_spearman` against iteration, overlaid with `prey_spawned_total`. A sign flip that tracks the rise in spawned_total confirms the reverse leg: RL improvement directly changed which genome was adaptive.
+
+### 2. Trigger a second prey genome cycle
+
+The system settled at a fixed point. The faster path to a second cycle is environment parameters rather than waiting for further policy improvement:
+
+- **Increase α** (currently 0.70): pushing toward 0.80–0.85 shifts the MR optimum upward and should pull prey genomes higher again, restarting the cycle from the new equilibrium.
+- **Increase grass density**: more eating opportunities → higher eating frequency → gain-side wins more → upward selection pressure on MR.
+
+A second full cycle with a predictable direction (given the parameter change) would be much stronger evidence of the mechanism than one cycle from a cold start.
+
+### 3. Displace the predator genome from equilibrium
+
+The predator genome started near its equilibrium (MR ≈ 1.0) so no cycle was observable despite a consistently positive selection gap. Mutation was balancing gain-side selection back to the founder mean throughout.
+
+**Fix:** Initialize predator founder mean at MR = 0.80 (well below the apparent equilibrium). The persistent positive selection gap should drive measurable upward drift toward ~1.0, giving an observable predator cycle analogous to the prey Q1→Q2 rise.
+
+### 4. Reduce the 46% NaN rate to strengthen selection
+
+Selection only operates in episodes that do not crash mid-episode. The 46% valid rate halves the effective selection signal per training step.
+
+Options:
+- Soft-cap predator reproduction rate to prevent predator overshoot (the primary crash trigger)
+- Reduce `n_possible_predators` relative to prey capacity to keep the predator:prey ratio from hitting 1:1 too quickly
+- Add a small energy floor so agents do not crash to zero instantly
+
+Reaching 70%+ valid episodes would meaningfully amplify both Darwin and Baldwin signals without changing the core mechanism.
+
+### Priority summary
+
+| Priority | Action | What it establishes |
+|---|---|---|
+| 1 | Freeze-genome controlled experiment | Genome → RL direction (missing leg) |
+| 2 | Raise α or grass density, run longer | Second cycle; loop is repeatable |
+| 3 | Start predator genome at MR 0.80 | Observable predator Darwin cycle |
+| 4 | Reduce ecosystem crash rate | Stronger selection signal per step |
