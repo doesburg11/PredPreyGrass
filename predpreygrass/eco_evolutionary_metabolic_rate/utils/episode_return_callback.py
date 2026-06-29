@@ -62,9 +62,6 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total = {predator_total:.2f}")
         print(f"  - Prey:      Total = {prey_total:.2f}")
 
-        for group, totals in group_rewards.items():
-            print(f"  - {group}: Total = {sum(totals):.2f}")
-
         # Percentile scalars for TensorBoard (appears under Scalars tab)
         if predator_totals:
             p25, p50, p75 = np.percentile(predator_totals, [25, 50, 75])
