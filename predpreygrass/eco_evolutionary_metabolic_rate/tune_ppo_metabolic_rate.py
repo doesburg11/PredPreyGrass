@@ -24,7 +24,6 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
-import os
 from datetime import datetime
 from pathlib import Path
 import json
@@ -33,13 +32,10 @@ from typing import Any
 
 
 def get_config_ppo():
-    num_cpus = os.cpu_count()
-    if num_cpus == 32:
+    import torch
+    if torch.cuda.is_available():
         from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_gpu_eco_evolutionary import config_ppo
-    elif num_cpus == 8:
-        from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_cpu_eco_evolutionary import config_ppo
     else:
-        # Default to CPU config for other CPU counts to keep training usable across machines.
         from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_cpu_eco_evolutionary import config_ppo
     return config_ppo
 
