@@ -1293,6 +1293,43 @@ class PredPreyGrass(MultiAgentEnv):
         metrics["peak_active_prey"] = float(self.peak_active_prey)
         metrics["prey_unique_ids_used"] = float(sum(1 for a in self.used_agent_ids if "prey" in a))
         metrics["predator_unique_ids_used"] = float(sum(1 for a in self.used_agent_ids if "predator" in a))
+
+        # Reverse-leg metric: does MR predict individual reproductive success?
+        # Spearman(MR, reproduced) > 0 → gain-side dominant (higher MR agents reproduce more)
+        # Spearman(MR, reproduced) < 0 → cost-side dominant (lower MR agents reproduce more)
+        # Sign flip as policy improves is direct evidence that RL learning altered the genome fitness landscape.
+        def _spearman_corr(x: np.ndarray, y: np.ndarray) -> float:
+            rx = np.argsort(np.argsort(x)).astype(float)
+            ry = np.argsort(np.argsort(y)).astype(float)
+            rx -= rx.mean()
+            ry -= ry.mean()
+            denom = np.sqrt((rx ** 2).sum() * (ry ** 2).sum())
+            return float(np.dot(rx, ry) / denom) if denom > 0.0 else 0.0
+
+        for species in ("prey", "predator"):
+            pairs = [
+                (float(rec["genome"]["metabolic_rate"]), float(rec.get("offspring_count", 0) > 0))
+                for aid, rec in self._iter_all_agent_records()
+                if aid.startswith(species)
+                and isinstance(rec.get("genome"), dict)
+                and "metabolic_rate" in rec["genome"]
+            ]
+            if len(pairs) < 4:
+                continue
+            mr_arr = np.array([p[0] for p in pairs])
+            repro_arr = np.array([p[1] for p in pairs])
+            metrics[f"{species}_mr_repro_spearman"] = _spearman_corr(mr_arr, repro_arr)
+            q25, q50, q75 = np.percentile(mr_arr, [25, 50, 75])
+            bins = [
+                mr_arr <= q25,
+                (mr_arr > q25) & (mr_arr <= q50),
+                (mr_arr > q50) & (mr_arr <= q75),
+                mr_arr > q75,
+            ]
+            for i, mask in enumerate(bins, 1):
+                if mask.sum() > 0:
+                    metrics[f"{species}_mr_repro_rate_q{i}"] = float(repro_arr[mask].mean())
+
         return metrics
 
     def _attach_episode_training_metrics(self):
