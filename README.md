@@ -21,7 +21,7 @@ This project explores how cooperative behavior emerges and stabilizes in a spati
 
 ### Darwinian/Baldwinian evolutionary environments
 
-These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. A scalar trait is passed from parent to offspring with mutation at each reproduction event; PPO policy weights are never inherited, only shared per species. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations.
+These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. A scalar trait is passed from parent to offspring with mutation at each reproduction event; PPO policy weights are never inherited, only shared per species. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations — see [Darwinian vs. Baldwinian evolution](#darwinian-vs-baldwinian-evolution) below for the underlying theory.
 
 * **[Eco-evolutionary](predpreygrass/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
 
@@ -119,6 +119,17 @@ python ./predpreygrass/base_environment/random_policy.py
 Pretrained checkpoints and historical training outputs are preserved in the legacy archive rather than shipped in the active source tree.
 
 ## References
+
+### Darwinian vs. Baldwinian evolution
+
+The `eco_evolutionary_*` environments are built around the interaction loop between genetic evolution (Darwinian) and within-lifetime learning (Baldwinian):
+
+- Baldwin, J. M. (1896). [A New Factor in Evolution](https://www.jstor.org/stable/2453130). *The American Naturalist*, 30(354), 441–451. — the original statement of the effect: learned behavior can steer which genotypes are favored by selection, without the learned behavior itself being inherited.
+- Simpson, G. G. (1953). [The Baldwin Effect](https://www.jstor.org/stable/2405746). *Evolution*, 7(2), 110–117. — clarifies the effect against Lamarckian misreadings and gives it its modern name.
+- Hinton, G. E., & Nowlan, S. J. (1987). [How Learning Can Guide Evolution](https://doi.org/10.1007/BF01148891). *Complex Systems*, 1, 495–502. — the canonical computational demonstration: individual learning smooths a rugged fitness landscape, making an otherwise unlikely genotype reachable by evolutionary search.
+- Ackley, D., & Littman, M. (1991). [Interactions Between Learning and Evolution](https://www.researchgate.net/publication/2461712_Interactions_Between_Learning_and_Evolution). In *Artificial Life II*, 487–509. — evolving agents that also learn during their lifetime, closest in spirit to this repo's genome-plus-PPO setup.
+
+### General
 
 - [RLlib: Industry-Grade, Scalable Reinforcement Learning](https://docs.ray.io/en/master/rllib/index.html)
 - [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
