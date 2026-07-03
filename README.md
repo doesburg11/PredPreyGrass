@@ -19,25 +19,59 @@ This project explores how cooperative behavior emerges and stabilizes in a spati
 
 * **[Stag hunt with defection](predpreygrass/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/stag_hunt_defection))
 
-### Other environments:
+### Darwinian/Baldwinian evolutionary environments
 
-* **[Base environment](predpreygrass/base_environment)**: The two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. A scalar trait is passed from parent to offspring with mutation at each reproduction event; PPO policy weights are never inherited, only shared per species. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations.
 
-* **[Mutating agents](predpreygrass/mutating_agents)**: A four-policy extension of the base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/marl-ppg/experiments/mutating-agents/))
+* **[Eco-evolutionary](predpreygrass/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
 
-* **[Centralized training](predpreygrass/centralized_training)**: A single-policy variant of the base environment. Only reproduction rewards.
+* **[Eco-evolutionary cadence](predpreygrass/eco_evolutionary_cadence)**: evolves the same `speed` trait, expressed as a graded movement cooldown instead of a discrete distance threshold.
 
-* **[Walls occlusion](predpreygrass/walls_occlusion)**: An extension with walls and occluded vision. Only reproduction rewards.
+* **[Eco-evolutionary cooperation](predpreygrass/eco_evolutionary_cooperation)**: evolves a `cooperation_rate` trait — the fraction of an agent's net energy gain donated to nearby same-species agents, relying on spatial viscosity (offspring spawn near parents) for implicit kin selection.
 
-* **[Reproduction kick back rewards](predpreygrass/kick_back_rewards)**: On top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
+* **[Eco-evolutionary investment](predpreygrass/eco_evolutionary_investment)**: evolves an `offspring_investment_fraction` trait — how much energy a parent hands each offspring at birth.
 
-* **[Lineage rewards](predpreygrass/lineage_rewards)**: On top of direct reproduction rewards, agents receive rewards when their offspring survives over time.
+* **[Eco-evolutionary metabolic rate](predpreygrass/eco_evolutionary_metabolic_rate)**: evolves a `metabolic_rate` trait that symmetrically scales both energy gain and basal energy cost.
 
-* **[Shared prey](predpreygrass/shared_prey)**: This environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+* **["Stag hunt" nature + nurture](predpreygrass/stag_hunt_forward_view_nature_nurture)**: a hybrid case — predators carry a heritable cooperation trait (nature) alongside the learned voluntary `join_hunt` action (nurture); team-capture success depends on both.
 
-* **[Mammoth hunting](predpreygrass/mammoths)**: Mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy ( `energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](predpreygrass/mammoths))
+### Fixed-trait behavioral & game-theoretic environments
 
-* **["Stag hunt"](predpreygrass/stag_hunt)**: Cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
+These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
+
+* **[Base environment](predpreygrass/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+
+* **[Centralized training](predpreygrass/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
+
+* **[Walls occlusion](predpreygrass/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
+
+* **[Drive-conditioned environment](predpreygrass/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
+
+* **[Reproduction kick back rewards](predpreygrass/kick_back_rewards)**: on top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
+
+* **[Lineage rewards](predpreygrass/lineage_rewards)**: successor to kick-back rewards; agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
+
+* **[Direct reciprocity](predpreygrass/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
+
+* **[Network reciprocity](predpreygrass/network_reciprocity)**: reciprocity/sharing decisions are structured over an explicit social-network graph rather than spatial proximity.
+
+* **[Shared prey](predpreygrass/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+
+* **[Mammoth hunting](predpreygrass/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](predpreygrass/mammoths))
+
+* **[Mammoths defection](predpreygrass/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
+
+* **["Stag hunt"](predpreygrass/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
+
+* **[Stag hunt forward view](predpreygrass/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
+
+* **[Stag hunt reputation](predpreygrass/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
+
+* **[Stag hunt vectorized](predpreygrass/stag_hunt_vectorized)**: a performance refactor of stag hunt (vectorized hot paths); not a new behavioral variant.
+
+* **[Red Queen](predpreygrass/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
+
+* **[Malthusian RL](predpreygrass/malthusian_rl)**: two-timescale Leibo-style Malthusian RL — within-episode PPO learning, plus a between-episode reallocation of each species' population share across spatially isolated islands based on measured fitness.
 
 
 
