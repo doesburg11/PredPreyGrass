@@ -39,7 +39,9 @@ config_env = {
     "include_speed_in_obs": True,
     "founder_genome": {
         "predator": {
-            "speed_mean": 0.5,   # mid-range: founders start at cooldown ~5
+            # Burst-speed edge over prey: pursuit needs a higher real-move rate
+            # than passive foraging does to convert proximity into a catch.
+            "speed_mean": 0.75,  # cooldown ~3 vs prey's ~5
             "speed_std": 0.1,
         },
         "prey": {
@@ -62,7 +64,7 @@ config_env = {
     # speed=0.0 → no extra cost; speed=1.0 → (1 + coeff) × base cost.
     # Biologically: faster phenotype carries larger muscle mass and higher cardiac output,
     # which costs energy even at rest. Set to 0.0 to disable.
-    "metabolic_speed_coeff": 1.0,
+    "metabolic_speed_coeff": 0.3,
     # Energy intake caps
     "max_energy_gain_per_grass": float('inf'), # 1.5
     # Absolute energy caps

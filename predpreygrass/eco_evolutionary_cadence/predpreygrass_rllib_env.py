@@ -809,9 +809,18 @@ class PredPreyGrass(MultiAgentEnv):
             },
         )
         predator_position = tuple(self.agent_positions[agent])
-        caught_prey = next(
-            (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
-        )
+        # Catch radius is Chebyshev distance <=1 (same cell or adjacent), not exact
+        # cell overlap: with cooldown-gated movement, agents only reposition on a
+        # fraction of steps, so requiring exact overlap made catches vanishingly rare.
+        caught_prey = None
+        best_dist = None
+        for prey, pos in self.agent_positions.items():
+            if "prey" not in prey:
+                continue
+            dist = max(abs(predator_position[0] - pos[0]), abs(predator_position[1] - pos[1]))
+            if dist <= 1 and (best_dist is None or dist < best_dist):
+                caught_prey = prey
+                best_dist = dist
         if caught_prey:
             # attribution predator
             self.agents_just_ate.add(agent)

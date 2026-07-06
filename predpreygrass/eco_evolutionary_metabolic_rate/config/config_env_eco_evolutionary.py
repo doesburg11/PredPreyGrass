@@ -22,6 +22,23 @@ config_env = {
     "movement_energy_cost_per_cell_prey": 0.0,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
+    # Soft carrying-capacity cap: predators skip reproduction once their count
+    # reaches this multiple of the current prey count (energy-eligible parents
+    # just wait rather than reproducing unconditionally). Effective at preventing
+    # boom-bust crashes, but blocks indiscriminately (any eligible predator, not
+    # just low-fitness ones), which dilutes genome-based selection pressure.
+    # Disabled by default (None) in favor of the individual-level throttles below;
+    # kept available for A/B comparison.
+    "predator_reproduction_max_ratio": None,
+    # Individual-level, biologically-motivated throttles on predator hunting,
+    # in place of the population-level ratio cap above. These regulate predator
+    # population growth through each predator's own energy/hunting history
+    # (real starvation-driven scarcity) rather than an omniscient census rule.
+    # Steps after a catch before the same predator can catch again ("digesting").
+    "predator_satiation_cooldown": 8,
+    # Per-catch energy cap ("satiation ceiling") — a predator can't extract more
+    # than this from a single kill regardless of the prey's own energy level.
+    "max_energy_gain_per_prey": 8.0,
     "initial_energy_predator": 5.0,
     "initial_energy_prey": 3.0,
     # Metabolic rate genome. Gain scales as food * metabolic_rate**alpha (sub-linear,

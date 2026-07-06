@@ -53,6 +53,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.movement_energy_cost_per_cell_prey = config.get("movement_energy_cost_per_cell_prey", 0.0)
         self.predator_creation_energy_threshold = config["predator_creation_energy_threshold"]
         self.prey_creation_energy_threshold = config["prey_creation_energy_threshold"]
+        # Density-dependent soft cap: predators above this multiple of the current
+        # prey count skip reproduction (energy-eligible parents just wait), rather
+        # than reproducing unconditionally. Curbs the predator overshoot that
+        # crashes prey to zero mid-episode. None disables the cap.
+        self.predator_reproduction_max_ratio = config.get("predator_reproduction_max_ratio", None)
+        # Individual-level throttles on predator hunting (satiation), in place of
+        # the population-level ratio cap. 0 disables the satiation cooldown.
+        self.predator_satiation_cooldown = int(config.get("predator_satiation_cooldown", 0))
+        self.max_energy_gain_per_prey = float(config.get("max_energy_gain_per_prey", float("inf")))
         self.max_energy_grass = self.config["max_energy_grass"]
 
 
@@ -115,6 +124,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         # Ages (in steps) for all currently active agents
         self.agent_ages = {}
+        # Step at which each predator's satiation cooldown from its last catch
+        # ends; a predator on cooldown does not hunt (mirrors digestion/rest).
+        self.agent_satiation_until = {}
+        self.satiation_blocked_catches_predator = 0
         # Per-agent event log for detailed post-hoc analysis
         # Structure per agent_id:
         # {
@@ -149,6 +162,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Capacity block counters (episode-level)
         self.reproduction_blocked_due_to_capacity_predator = 0
         self.reproduction_blocked_due_to_capacity_prey = 0
+        self.reproduction_blocked_due_to_density_predator = 0
         # Episode-level spawn counters
         self.spawned_predators = 0
         self.spawned_prey = 0
@@ -697,18 +711,30 @@ class PredPreyGrass(MultiAgentEnv):
         caught_prey = next(
             (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
+        if caught_prey and self.current_step < self.agent_satiation_until.get(agent, 0):
+            # Still digesting/resting from a recent catch: does not hunt this
+            # step, so the prey survives. Regulates predator population growth
+            # through each predator's own recent hunting success rather than a
+            # population-level rule.
+            self.satiation_blocked_catches_predator += 1
+            caught_prey = None
         if caught_prey:
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_role_specific("reward_predator_catch_prey", agent)
             prey_energy = float(self.agent_energies[caught_prey])
+            # Satiation ceiling: a single kill can't provide more than this,
+            # regardless of how much energy the prey itself had accumulated.
+            bite = min(prey_energy, self.max_energy_gain_per_prey)
             genome = self.agent_genomes.get(agent)
             metabolic_rate = float(genome.metabolic_rate) if genome is not None else 1.0
             # Sub-linear gain: digestive saturation model (gain = food * rate**alpha).
-            energy_gain = prey_energy * (metabolic_rate ** self.metabolic_rate_alpha)
+            energy_gain = bite * (metabolic_rate ** self.metabolic_rate_alpha)
 
             self.agent_energies[agent] += energy_gain
             self.grid_world_state[0, *predator_position] = self.agent_energies[agent]
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
+            if self.predator_satiation_cooldown > 0:
+                self.agent_satiation_until[agent] = self.current_step + self.predator_satiation_cooldown
             predator_record = self.agent_stats_live.get(agent)
             if predator_record is not None:
                 predator_record["times_ate"] += 1
@@ -792,6 +818,18 @@ class PredPreyGrass(MultiAgentEnv):
             {"decay": 0.0, "move": 0.0, "eat": 0.0, "repro": 0.0},
         )
         if self.agent_energies[agent] < self.predator_creation_energy_threshold:
+            return
+
+        if (
+            self.predator_reproduction_max_ratio is not None
+            and self.active_num_predators >= self.predator_reproduction_max_ratio * self.active_num_prey
+        ):
+            # Density-dependent soft cap: predator population is already large
+            # relative to available prey. Skip reproduction this step rather than
+            # blocking on hard ID-pool capacity only after the overshoot already
+            # happened. The parent keeps its energy and may reproduce once the
+            # ratio eases (prey recover or predator count drops).
+            self.reproduction_blocked_due_to_density_predator += 1
             return
 
         new_agent = self._alloc_new_id("predator")
@@ -1080,6 +1118,7 @@ class PredPreyGrass(MultiAgentEnv):
             raise ValueError(f"Agent id {agent_id} already registered in this episode.")
         self.used_agent_ids.add(agent_id)
         self.agent_ages[agent_id] = 0
+        self.agent_satiation_until[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
@@ -1287,6 +1326,8 @@ class PredPreyGrass(MultiAgentEnv):
 
         metrics["predator_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_predator)
         metrics["prey_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_prey)
+        metrics["predator_reproduction_blocked_density"] = float(self.reproduction_blocked_due_to_density_predator)
+        metrics["predator_satiation_blocked_catches"] = float(self.satiation_blocked_catches_predator)
         metrics["predator_spawned_total"] = float(self.spawned_predators)
         metrics["prey_spawned_total"] = float(self.spawned_prey)
         metrics["peak_active_predators"] = float(self.peak_active_predators)

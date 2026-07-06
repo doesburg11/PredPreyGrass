@@ -345,7 +345,6 @@ def step_forward(
         step=env.current_step,
         agents_just_ate=env.agents_just_ate,
         per_step_agent_data=env.per_step_agent_data,
-        dead_prey=getattr(env, "dead_prey", None),
     )
     control.fps_slider_rect = visualizer.slider_rect
 
@@ -373,8 +372,46 @@ def render_static_if_paused(env, visualizer):
         step=env.current_step,
         agents_just_ate=env.agents_just_ate,
         per_step_agent_data=env.per_step_agent_data,
-        dead_prey=getattr(env, "dead_prey", None),
     )
+
+def _find_seed_with_predator_reproduction(env, rl_modules, candidate_seeds=range(40), min_length=60):
+    """
+    Headless pre-scan over candidate seeds using the same deterministic policy the
+    interactive viewer uses. Picks the first seed where a predator actually
+    reproduces and the episode runs at least `min_length` steps, so the debugger
+    opens on a scenario worth watching instead of an early, uneventful extinction.
+    Falls back to the seed with the longest episode if none reproduce.
+    """
+    original_record_step_data = env.record_step_data
+    env.record_step_data = False
+    best_seed = candidate_seeds[0] if hasattr(candidate_seeds, "__getitem__") else None
+    best_score = (False, -1)
+    try:
+        for seed in candidate_seeds:
+            obs, _ = env.reset(seed=seed)
+            repro_events = 0
+            length = 0
+            for step in range(env.max_steps):
+                action_dict = {
+                    aid: policy_pi(o, rl_modules[policy_mapping_fn(aid)], deterministic=True)
+                    for aid, o in obs.items()
+                }
+                obs, rewards, terminations, truncations, _ = env.step(action_dict)
+                repro_events += sum(1 for a, r in rewards.items() if "predator" in a and r and r > 0)
+                length = step + 1
+                if terminations.get("__all__") or truncations.get("__all__"):
+                    break
+            score = (repro_events > 0, length)
+            if score > best_score:
+                best_score = score
+                best_seed = seed
+            if repro_events > 0 and length >= min_length:
+                break
+    finally:
+        env.record_step_data = original_record_step_data
+    print(f"[SeedSearch] Selected seed={best_seed} (predator_reproduced={best_score[0]}, episode_length={best_score[1]})")
+    return best_seed
+
 
 def parse_uid(uid):
     """
@@ -545,12 +582,12 @@ def print_ranked_fitness_summary(env):
             )
 
 if __name__ == "__main__":
-    seed = 4
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir = setup_environment_and_visualizer(now)
+    seed = _find_seed_with_predator_reproduction(env, rl_modules)
     observations, _ = env.reset(seed=seed)
 
     if SAVE_MOVIE:

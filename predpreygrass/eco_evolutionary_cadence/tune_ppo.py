@@ -57,7 +57,7 @@ if __name__ == "__main__":
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "ECO_EVOLUTION"
+    version = "ECO_EVOLUTION_CADENCE"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
