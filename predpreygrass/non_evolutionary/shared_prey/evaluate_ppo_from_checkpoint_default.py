@@ -9,9 +9,9 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.shared_prey.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.shared_prey.config.config_env_shared_prey import config_env
-from predpreygrass.shared_prey.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.shared_prey.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.shared_prey.config.config_env_shared_prey import config_env
+from predpreygrass.non_evolutionary.shared_prey.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
 RAY_RESULTS_DIR = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/rllib_termination/experiments/"

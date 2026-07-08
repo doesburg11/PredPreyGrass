@@ -3,7 +3,7 @@ from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
 
-from predpreygrass.direct_reciprocity.utils.reciprocity_metrics import (
+from predpreygrass.non_evolutionary.direct_reciprocity.utils.reciprocity_metrics import (
     aggregate_direct_reciprocity_metrics,
     aggregate_share_decisions_from_event_log,
 )

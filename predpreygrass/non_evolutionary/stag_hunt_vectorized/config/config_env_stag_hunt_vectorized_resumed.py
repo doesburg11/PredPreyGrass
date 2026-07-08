@@ -1,6 +1,6 @@
 import copy
 
-from predpreygrass.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import config_env as base_config_env
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import config_env as base_config_env
 
 # Resume-specific environment config. Start from the base config and override as needed.
 config_env = copy.deepcopy(base_config_env)

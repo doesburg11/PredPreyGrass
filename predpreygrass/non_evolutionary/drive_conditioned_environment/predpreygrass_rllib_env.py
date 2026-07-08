@@ -2,7 +2,7 @@
 Drive-conditioned environment for the PredPreyGrass simulation.
 Two types of agents: predators and prey. Independently learning policies for each type.
 """
-from predpreygrass.drive_conditioned_environment.config_env import config_env
+from predpreygrass.non_evolutionary.drive_conditioned_environment.config_env import config_env
 
 # external libraries
 import numpy as np

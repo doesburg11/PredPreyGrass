@@ -4,8 +4,8 @@ This module validates the environment-level strict replication path without
 spawning Ray workers, which makes it useful for CI and local smoke checks.
 """
 
-from predpreygrass.malthusian_rl.config.config_env import config_env
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
 
 
 def run_smoke_validation() -> dict:

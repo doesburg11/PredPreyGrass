@@ -15,9 +15,9 @@ The PyGame window colour-codes prey:
   red    = predator
   yellow = grass
 """
-from predpreygrass.network_reciprocity.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.network_reciprocity.config.config_env import config_env
-from predpreygrass.base_environment.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.network_reciprocity.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.network_reciprocity.config.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 import pygame
 

@@ -20,10 +20,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.shared_prey.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.shared_prey.config.config_env_shared_prey import config_env
-from predpreygrass.shared_prey.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.shared_prey.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.non_evolutionary.shared_prey.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.non_evolutionary.shared_prey.config.config_env_shared_prey import config_env
+from predpreygrass.non_evolutionary.shared_prey.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.non_evolutionary.shared_prey.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray

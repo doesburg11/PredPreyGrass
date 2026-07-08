@@ -15,7 +15,7 @@
 Scenario Inspector for stag_hunt team-capture logic.
 
 Usage:
-    python -m predpreygrass.stag_hunt_defection.utils.scenario_inspector --scenario path/to/scenario.json
+    python -m predpreygrass.non_evolutionary.stag_hunt_defection.utils.scenario_inspector --scenario path/to/scenario.json
 
 Scenario JSON schema (example):
 {
@@ -56,7 +56,7 @@ from typing import Dict, List, Tuple
 import pygame
 import textwrap
 
-from predpreygrass.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
 
 Coord = Tuple[int, int]
 

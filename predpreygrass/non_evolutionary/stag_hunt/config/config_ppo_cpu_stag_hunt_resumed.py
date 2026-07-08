@@ -1,6 +1,6 @@
 import copy
 
-from predpreygrass.stag_hunt.config.config_ppo_cpu_stag_hunt import (
+from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt import (
     config_ppo as base_config_ppo,
 )
 

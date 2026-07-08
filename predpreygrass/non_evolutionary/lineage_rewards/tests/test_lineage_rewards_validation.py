@@ -2,8 +2,8 @@ import copy
 
 import pytest
 
-from predpreygrass.lineage_rewards.config.config_env_lineage_rewards import config_env
-from predpreygrass.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.lineage_rewards.config.config_env_lineage_rewards import config_env
+from predpreygrass.non_evolutionary.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
 
 
 def _make_test_env(overrides=None):

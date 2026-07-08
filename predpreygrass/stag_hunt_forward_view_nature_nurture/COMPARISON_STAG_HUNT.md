@@ -6,15 +6,15 @@ plot-based analysis (not a full statistical study).
 
 ## Inputs used
 
-- Defection env: `predpreygrass/stag_hunt_defection/predpreygrass_rllib_env.py`
-- Defection config: `predpreygrass/stag_hunt_defection/config/config_env_stag_hunt_defection.py`
+- Defection env: `predpreygrass/non_evolutionary/stag_hunt_defection/predpreygrass_rllib_env.py`
+- Defection config: `predpreygrass/non_evolutionary/stag_hunt_defection/config/config_env_stag_hunt_defection.py`
 - Defection eval plots (1000 steps):
-  - `predpreygrass/stag_hunt_defection/ray_results/.../summary_plots/iters=1000`
+  - `predpreygrass/non_evolutionary/stag_hunt_defection/ray_results/.../summary_plots/iters=1000`
 
-- Forward-view env: `predpreygrass/stag_hunt_forward_view/predpreygrass_rllib_env.py`
-- Forward-view config: `predpreygrass/stag_hunt_forward_view/config/config_env_stag_hunt_forward_view.py`
+- Forward-view env: `predpreygrass/non_evolutionary/stag_hunt_forward_view/predpreygrass_rllib_env.py`
+- Forward-view config: `predpreygrass/non_evolutionary/stag_hunt_forward_view/config/config_env_stag_hunt_forward_view.py`
 - Forward-view eval plots (1000 steps, join_cost_0.02, rabbits removed):
-  - `predpreygrass/stag_hunt_forward_view/ray_results/join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_3_2026-01-29_15-52-24/PPO_PredPreyGrass_1fe3e_00000_0_2026-01-29_15-52-25/checkpoint_000099/eval_10_runs_STAG_HUNT_FORWARD_VIEW_2026-02-04_23-06-13/visuals/evolution_summary_*.png`
+  - `predpreygrass/non_evolutionary/stag_hunt_forward_view/ray_results/join_cost_0.02/STAG_HUNT_FORWARD_VIEW_JOIN_COST_0_02_SCAVENGER_0_3_2026-01-29_15-52-24/PPO_PredPreyGrass_1fe3e_00000_0_2026-01-29_15-52-25/checkpoint_000099/eval_10_runs_STAG_HUNT_FORWARD_VIEW_2026-02-04_23-06-13/visuals/evolution_summary_*.png`
 
 Legend reference (per `stag_hunt/README.md`):
 - `type_1_prey` = mammoths

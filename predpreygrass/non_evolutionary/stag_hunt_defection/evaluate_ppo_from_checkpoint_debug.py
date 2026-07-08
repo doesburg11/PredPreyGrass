@@ -10,11 +10,11 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
-from predpreygrass.stag_hunt_defection.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.stag_hunt_defection.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
-from predpreygrass.stag_hunt_defection.utils.defection_metrics import (
+from predpreygrass.non_evolutionary.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.non_evolutionary.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
+from predpreygrass.non_evolutionary.stag_hunt_defection.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.non_evolutionary.stag_hunt_defection.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.non_evolutionary.stag_hunt_defection.utils.defection_metrics import (
     aggregate_capture_outcomes_from_event_log,
     aggregate_join_choices,
     compute_opportunity_preference_metrics,

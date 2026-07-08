@@ -17,7 +17,7 @@ This project explores how cooperative behavior emerges and stabilizes in a spati
 
 ### Environment:
 
-* **[Stag hunt with defection](predpreygrass/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/stag_hunt_defection))
+* **[Stag hunt with defection](predpreygrass/non_evolutionary/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/non_evolutionary/stag_hunt_defection))
 
 ### Darwinian/Baldwinian evolutionary environments
 
@@ -39,45 +39,45 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
 
-* **[Base environment](predpreygrass/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* **[Centralized training](predpreygrass/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
+* **[Centralized training](predpreygrass/non_evolutionary/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
 
-* **[Walls occlusion](predpreygrass/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
+* **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
 
-* **[Drive-conditioned environment](predpreygrass/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
+* **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
 
-* **[Reproduction kick back rewards](predpreygrass/kick_back_rewards)**: on top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
+* **[Reproduction kick back rewards](predpreygrass/non_evolutionary/kick_back_rewards)**: on top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
 
-* **[Lineage rewards](predpreygrass/lineage_rewards)**: successor to kick-back rewards; agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
+* **[Lineage rewards](predpreygrass/non_evolutionary/lineage_rewards)**: successor to kick-back rewards; agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
 
-* **[Direct reciprocity](predpreygrass/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
+* **[Direct reciprocity](predpreygrass/non_evolutionary/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
 
-* **[Network reciprocity](predpreygrass/network_reciprocity)**: reciprocity/sharing decisions are structured over an explicit social-network graph rather than spatial proximity.
+* **[Network reciprocity](predpreygrass/non_evolutionary/network_reciprocity)**: reciprocity/sharing decisions are structured over an explicit social-network graph rather than spatial proximity.
 
-* **[Shared prey](predpreygrass/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+* **[Shared prey](predpreygrass/non_evolutionary/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
 
-* **[Mammoth hunting](predpreygrass/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](predpreygrass/mammoths))
+* **[Mammoth hunting](predpreygrass/non_evolutionary/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](predpreygrass/non_evolutionary/mammoths))
 
-* **[Mammoths defection](predpreygrass/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
+* **[Mammoths defection](predpreygrass/non_evolutionary/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
 
-* **["Stag hunt"](predpreygrass/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
+* **["Stag hunt"](predpreygrass/non_evolutionary/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
 
-* **[Stag hunt forward view](predpreygrass/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
+* **[Stag hunt forward view](predpreygrass/non_evolutionary/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
 
-* **[Stag hunt reputation](predpreygrass/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
+* **[Stag hunt reputation](predpreygrass/non_evolutionary/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
 
-* **[Stag hunt vectorized](predpreygrass/stag_hunt_vectorized)**: a performance refactor of stag hunt (vectorized hot paths); not a new behavioral variant.
+* **[Stag hunt vectorized](predpreygrass/non_evolutionary/stag_hunt_vectorized)**: a performance refactor of stag hunt (vectorized hot paths); not a new behavioral variant.
 
-* **[Red Queen](predpreygrass/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
+* **[Red Queen](predpreygrass/non_evolutionary/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
 
-* **[Malthusian RL](predpreygrass/malthusian_rl)**: two-timescale Leibo-style Malthusian RL — within-episode PPO learning, plus a between-episode reallocation of each species' population share across spatially isolated islands based on measured fitness.
+* **[Malthusian RL](predpreygrass/non_evolutionary/malthusian_rl)**: two-timescale Leibo-style Malthusian RL — within-episode PPO learning, plus a between-episode reallocation of each species' population share across spatially isolated islands based on measured fitness.
 
 
 
 ### Experiments:
 
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/non_evolutionary/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey. ([implementation](predpreygrass/mutating_agents), [results](predpreygrass/mutating_agents#co-evolution-and-the-red-queen-effect))
 
@@ -112,7 +112,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 Run a random policy in a Visual Studio Code terminal:
 
 ```bash
-python ./predpreygrass/base_environment/random_policy.py
+python ./predpreygrass/non_evolutionary/base_environment/random_policy.py
 
 ```
 

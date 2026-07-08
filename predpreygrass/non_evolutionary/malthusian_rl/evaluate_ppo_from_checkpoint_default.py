@@ -9,9 +9,9 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.malthusian_rl.config.config_env import config_env
-from predpreygrass.malthusian_rl.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env
+from predpreygrass.non_evolutionary.malthusian_rl.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
 RAY_RESULTS_DIR = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"

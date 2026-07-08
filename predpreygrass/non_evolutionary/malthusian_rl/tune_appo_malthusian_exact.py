@@ -18,21 +18,21 @@ from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import (
 from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.registry import register_env
 
-from predpreygrass.malthusian_rl.config.config_appo_exact import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_appo_exact import (
     config_appo_exact,
     paper_learner_citation_map,
 )
-from predpreygrass.malthusian_rl.config.config_paper_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_paper_protocol import (
     DEFAULT_PAPER_PROTOCOL_VARIANT,
     PAPER_PROTOCOL_VARIANTS,
     make_paper_protocol_env_config,
 )
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.malthusian_rl.utils.episode_return_callback import (
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.utils.episode_return_callback import (
     EpisodeReturn,
 )
-from predpreygrass.malthusian_rl.utils.networks import build_multi_module_spec
-from predpreygrass.malthusian_rl.utils.reproduction_metadata import (
+from predpreygrass.non_evolutionary.malthusian_rl.utils.networks import build_multi_module_spec
+from predpreygrass.non_evolutionary.malthusian_rl.utils.reproduction_metadata import (
     build_run_metadata,
 )
 

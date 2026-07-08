@@ -17,7 +17,7 @@ Whether clusters persist depends on the cost/multiplier ratio — tune via confi
 Step 3 will add a clustering metric; Step 4 will replace fixed strategies with
 learned policies.
 """
-from predpreygrass.network_reciprocity.config.config_env import config_env
+from predpreygrass.non_evolutionary.network_reciprocity.config.config_env import config_env
 
 import numpy as np
 from numpy.typing import NDArray

@@ -9,8 +9,8 @@ Runs a short rollout (random policy) and summarizes:
 
 from __future__ import annotations
 
-from predpreygrass.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
-from predpreygrass.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
+from predpreygrass.non_evolutionary.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
 
 
 DEFAULT_STEPS = int(config_env.get("max_steps", 200))

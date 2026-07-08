@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `malthusian_rl` when using walls.
 """
 
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.malthusian_rl.config.config_env import config_env as base_config_env
-from predpreygrass.malthusian_rl.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env as base_config_env
+from predpreygrass.non_evolutionary.malthusian_rl.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

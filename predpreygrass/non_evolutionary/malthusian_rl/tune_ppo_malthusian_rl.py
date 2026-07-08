@@ -5,10 +5,10 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.malthusian_rl.config.config_env import config_env
-from predpreygrass.malthusian_rl.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.malthusian_rl.utils.networks import build_multi_module_spec
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env
+from predpreygrass.non_evolutionary.malthusian_rl.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.non_evolutionary.malthusian_rl.utils.networks import build_multi_module_spec
 from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import (
     DefaultAPPOTorchRLModule,
 )
@@ -27,12 +27,12 @@ import json
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.malthusian_rl.config.config_ppo_gpu_default import config_appo
+        from predpreygrass.non_evolutionary.malthusian_rl.config.config_ppo_gpu_default import config_appo
     elif num_cpus == 8:
-        from predpreygrass.malthusian_rl.config.config_ppo_cpu import config_appo
+        from predpreygrass.non_evolutionary.malthusian_rl.config.config_ppo_cpu import config_appo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.malthusian_rl.config.config_ppo_cpu import config_appo
+        from predpreygrass.non_evolutionary.malthusian_rl.config.config_ppo_cpu import config_appo
     return config_appo
 
 

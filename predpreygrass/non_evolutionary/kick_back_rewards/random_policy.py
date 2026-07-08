@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.kick_back_rewards.config.config_env_kick_back_rewards import config_env
-from predpreygrass.kick_back_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.kick_back_rewards.config.config_env_kick_back_rewards import config_env
+from predpreygrass.non_evolutionary.kick_back_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

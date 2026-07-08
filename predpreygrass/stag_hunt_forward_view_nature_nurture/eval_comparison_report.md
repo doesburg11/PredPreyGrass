@@ -3,8 +3,8 @@
 Generated: 2026-02-05 16:16:22
 
 Source files:
-- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_forward_view/ray_results/join_cost_0.02/eval_comparison.csv`
-- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_forward_view/ray_results/join_cost_0.02/eval_comparison_summary.csv`
+- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/stag_hunt_forward_view/ray_results/join_cost_0.02/eval_comparison.csv`
+- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/stag_hunt_forward_view/ray_results/join_cost_0.02/eval_comparison_summary.csv`
 
 **Summary Takeaway (Short)**
 - Cooperative (group) hunters achieve the **highest reproductive success** (raw reproduction reward).

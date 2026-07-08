@@ -45,6 +45,12 @@ config_env = {
     # digestive saturation); cost scales as base_cost * metabolic_rate (linear).
     # This creates a policy-dependent interior optimum — see README_METABOLIC_RATE.md.
     "genome_enabled": True,
+    # Neutral-drift null model: when True, an offspring's genome template is a
+    # uniformly random currently-alive same-species agent instead of whoever
+    # actually reproduced -- severs genome from reproductive success while
+    # leaving population/energy dynamics unchanged. Used only by the dedicated
+    # neutral-control config/tune script; keep False for real experiment runs.
+    "genome_neutral_drift_control": False,
     "founder_genome": {
         "predator": {
             "metabolic_rate_mean": 1.0,

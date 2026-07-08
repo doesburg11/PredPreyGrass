@@ -6,8 +6,8 @@ Predators try to catch prey, and prey try to eat grass.
 This implements MultiRLModuleSpec explicitly to define the policies for predators
 and prey separately.
 """
-from predpreygrass.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.base_environment.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment.config_env import config_env
 
 #  external libraries
 import ray

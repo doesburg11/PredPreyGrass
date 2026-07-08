@@ -2,14 +2,14 @@
 Vectorized stag_hunt environment with the old PPO config (pre-change).
 Use this to isolate env-vectorization effects without PPO-config changes.
 """
-from predpreygrass.stag_hunt_vectorized.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import (
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import (
     config_env,
 )
-from predpreygrass.stag_hunt_vectorized.utils.episode_return_callback import (
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.episode_return_callback import (
     EpisodeReturn,
 )
-from predpreygrass.stag_hunt_vectorized.utils.networks import (
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.networks import (
     build_multi_module_spec,
 )
 
@@ -28,16 +28,16 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.stag_hunt.config.config_ppo_gpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_gpu_stag_hunt import (
             config_ppo,
         )
     elif num_cpus == 8:
-        from predpreygrass.stag_hunt.config.config_ppo_cpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt import (
             config_ppo,
         )
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.stag_hunt.config.config_ppo_cpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt import (
             config_ppo,
         )
     return config_ppo

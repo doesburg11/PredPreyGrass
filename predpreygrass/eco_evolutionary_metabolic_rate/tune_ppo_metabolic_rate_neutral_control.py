@@ -1,35 +1,43 @@
 """
-This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
-It uses a custom environment that simulates a predator-prey-grass ecosystem.
-The environment is a grid world where predators and prey move around.
-Predators try to catch prey, and prey try to eat grass.
-Predators and prey both either can be of type_1 or type_2.
+Neutral-drift control for the eco_evolutionary_metabolic_rate environment.
+
+Identical to tune_ppo_metabolic_rate.py in every respect except the environment
+config: genome_neutral_drift_control=True severs genome inheritance from
+reproductive success (offspring genome templates come from a random currently-alive
+same-species agent, not the actual parent) while leaving population/energy
+dynamics unchanged. Any metabolic_rate drift observed in this run is attributable
+purely to mutation + finite-population sampling noise, not selection.
+
+Compare this run's live_genome_metabolic_rate_mean trajectory directly against the
+real satiation-throttle runs documented in RESULTS.md. If the
+real runs' drift substantially exceeds what this control produces, that is genuine
+evidence of selection. If they're comparable, the observed "cycles" in the real
+runs are likely coincidental drift.
 """
-from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.walls_occlusion.config.config_env_perimeter_four_gaps_walls import config_env
-from predpreygrass.non_evolutionary.walls_occlusion.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.non_evolutionary.walls_occlusion.utils.networks import build_multi_module_spec
+
+from predpreygrass.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary_neutral_control import config_env
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.eco_evolutionary_metabolic_rate.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
-import os
 from datetime import datetime
 from pathlib import Path
 import json
+import shutil
+from typing import Any
 
 
 def get_config_ppo():
-    num_cpus = os.cpu_count()
-    if num_cpus == 32:
-        from predpreygrass.non_evolutionary.walls_occlusion.config.config_ppo_gpu_default import config_ppo
-    elif num_cpus == 8:
-        from predpreygrass.non_evolutionary.walls_occlusion.config.config_ppo_cpu import config_ppo
+    import torch
+    if torch.cuda.is_available():
+        from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_gpu_eco_evolutionary import config_ppo
     else:
-        # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.non_evolutionary.walls_occlusion.config.config_ppo_cpu import config_ppo
+        from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_cpu_eco_evolutionary import config_ppo
     return config_ppo
 
 
@@ -38,18 +46,11 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    """
-    Maps agent IDs to policies based on their type and role.
-    This function is used to determine which policy to apply for each agent.
-    Args:
-        agent_id (str): The ID of the agent, expected to be in the format "type_X_role_Y".
-    Returns:
-        str: The policy name for the agent, formatted as "type_X_role_Y".
-    """
-    parts = agent_id.split("_")
-    type = parts[1]
-    role = parts[2]
-    return f"type_{type}_{role}"
+    if "predator" in agent_id:
+        return "predator"
+    if "prey" in agent_id:
+        return "prey"
+    raise ValueError(f"Unrecognized agent_id format: {agent_id}")
 
 
 # --- Main training setup ---
@@ -60,12 +61,19 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    experiment_name = f"PPO_PERIMETER_FOUR_GAPS_{timestamp}"
+    version = "ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL"
+    experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
+
     experiment_path.mkdir(parents=True, exist_ok=True)
+    # --- Save environment source file for provenance ---
+    source_dir = experiment_path / "SOURCE_CODE"
+    source_dir.mkdir(exist_ok=True)
+    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
+    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
     config_metadata = {
@@ -74,12 +82,14 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
+    if sample_env.observation_spaces is None or sample_env.action_spaces is None:
+        raise RuntimeError("PredPreyGrass must define observation_spaces and action_spaces for all policies.")
 
     # Group spaces per policy id (first agent of each policy defines the space)
-    obs_by_policy, act_by_policy = {}, {}
+    obs_by_policy: dict[str, Any] = {}
+    act_by_policy: dict[str, Any] = {}
     for agent_id, obs_space in sample_env.observation_spaces.items():
         pid = policy_mapping_fn(agent_id)
         if pid not in obs_by_policy:
@@ -98,7 +108,7 @@ if __name__ == "__main__":
     # Build config dictionary for Tune
     ppo_config = (
         PPOConfig()
-        .environment(env="PredPreyGrass", env_config=config_env)
+        .environment(env="PredPreyGrass", env_config=config_env, disable_env_checking=True)
         .framework("torch")
         .multi_agent(
             policies=policies,
@@ -141,7 +151,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         ppo_config.algo_class,
-        param_space=ppo_config,
+        param_space=ppo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

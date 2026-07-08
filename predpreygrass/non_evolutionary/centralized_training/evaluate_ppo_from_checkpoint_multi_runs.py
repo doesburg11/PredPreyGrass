@@ -1,6 +1,6 @@
-from predpreygrass.centralized_training.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.centralized_training.config.config_env_eval import config_env
-from predpreygrass.centralized_training.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.centralized_training.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.centralized_training.config.config_env_eval import config_env
+from predpreygrass.non_evolutionary.centralized_training.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

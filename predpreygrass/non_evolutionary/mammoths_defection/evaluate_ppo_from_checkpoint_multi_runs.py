@@ -1,6 +1,6 @@
-from predpreygrass.mammoths_defection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.mammoths_defection.config.config_env_mammoths import config_env
-from predpreygrass.mammoths_defection.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.mammoths_defection.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.mammoths_defection.config.config_env_mammoths import config_env
+from predpreygrass.non_evolutionary.mammoths_defection.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

@@ -18,12 +18,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     ARTICLE_EXACT_BLOCKERS,
     ARTICLE_EXPERIMENT_CONDITIONS,
 )
-from predpreygrass.malthusian_rl.config.config_paper_protocol import acceptance_bands
-from predpreygrass.malthusian_rl.utils.reproduction_metadata import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_paper_protocol import acceptance_bands
+from predpreygrass.non_evolutionary.malthusian_rl.utils.reproduction_metadata import (
     verify_run_config_metadata,
 )
 

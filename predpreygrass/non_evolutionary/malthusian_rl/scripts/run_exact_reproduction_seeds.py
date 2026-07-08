@@ -16,7 +16,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from predpreygrass.malthusian_rl.config.config_paper_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_paper_protocol import (
     DEFAULT_PAPER_PROTOCOL_VARIANT,
 )
 

@@ -1,7 +1,7 @@
-from predpreygrass.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
-from predpreygrass.stag_hunt_defection.utils.matplot_renderer import CombinedEvolutionVisualizer
-from predpreygrass.stag_hunt_defection.utils.defection_metrics import (
+from predpreygrass.non_evolutionary.stag_hunt_defection.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_defection.config.config_env_stag_hunt_defection import config_env
+from predpreygrass.non_evolutionary.stag_hunt_defection.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.stag_hunt_defection.utils.defection_metrics import (
     aggregate_capture_outcomes_from_event_log,
     aggregate_join_choices,
 )

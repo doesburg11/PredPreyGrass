@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.walls_occlusion.config.config_env_zigzag_walls import config_env
-from predpreygrass.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.non_evolutionary.walls_occlusion.config.config_env_zigzag_walls import config_env
+from predpreygrass.non_evolutionary.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.non_evolutionary.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray

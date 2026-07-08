@@ -19,7 +19,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     ARTICLE_EXPERIMENT_CONDITIONS,
 )
 

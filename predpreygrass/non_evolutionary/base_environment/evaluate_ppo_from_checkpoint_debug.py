@@ -11,8 +11,8 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 # --- Project imports (base_environment env + PyGame renderer) ---
-from predpreygrass.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.base_environment.utils.pygame_grid_renderer_rllib import (
+from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
     ViewerControlHelper,
     LoopControlHelper,

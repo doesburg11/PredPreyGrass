@@ -1,6 +1,6 @@
-from predpreygrass.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.kick_back_rewards.config.config_env_kick_back_rewards import config_env
-from predpreygrass.kick_back_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.kick_back_rewards.config.config_env_kick_back_rewards import config_env
+from predpreygrass.non_evolutionary.kick_back_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

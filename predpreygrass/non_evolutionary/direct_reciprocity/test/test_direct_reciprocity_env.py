@@ -2,9 +2,9 @@ import copy
 
 import pytest
 
-from predpreygrass.direct_reciprocity.config.config_env_direct_reciprocity import config_env
-from predpreygrass.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.direct_reciprocity.utils.reciprocity_metrics import (
+from predpreygrass.non_evolutionary.direct_reciprocity.config.config_env_direct_reciprocity import config_env
+from predpreygrass.non_evolutionary.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.direct_reciprocity.utils.reciprocity_metrics import (
     aggregate_direct_reciprocity_metrics,
     aggregate_share_decisions_from_event_log,
 )

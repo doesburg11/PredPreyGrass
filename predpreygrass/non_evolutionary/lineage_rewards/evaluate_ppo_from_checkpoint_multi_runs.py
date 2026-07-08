@@ -1,6 +1,6 @@
-from predpreygrass.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.lineage_rewards.config.config_env_lineage_rewards import config_env
-from predpreygrass.lineage_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.lineage_rewards.config.config_env_lineage_rewards import config_env
+from predpreygrass.non_evolutionary.lineage_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

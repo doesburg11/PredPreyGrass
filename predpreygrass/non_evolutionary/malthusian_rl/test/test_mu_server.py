@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import numpy as np
-from predpreygrass.malthusian_rl.utils.mu_server import _MuServerCore
+from predpreygrass.non_evolutionary.malthusian_rl.utils.mu_server import _MuServerCore
 
 
 # ---------------------------------------------------------------------------
@@ -110,7 +110,7 @@ def test_mu_server_mu_sums_to_one_after_update():
 
 
 def test_distributed_env_claims_island_slot_from_server():
-    from predpreygrass.malthusian_rl.article_tasks import ArticleAllelopathyEnv
+    from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import ArticleAllelopathyEnv
 
     srv = _MuServerCore(num_species=1, num_islands=3, alpha=0.0, eta=0.0)
     srv.register_worker = srv.register_worker  # ensure it's callable
@@ -202,7 +202,7 @@ def test_distributed_env_claims_island_slot_from_server():
 
 def test_distributed_env_reports_phi_to_server_at_episode_end():
     """After one episode, the env must call report_phi on the server."""
-    from predpreygrass.malthusian_rl.article_tasks import ArticleAllelopathyEnv
+    from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import ArticleAllelopathyEnv
 
     srv = _MuServerCore(num_species=1, num_islands=1, alpha=0.0, eta=0.0)
 

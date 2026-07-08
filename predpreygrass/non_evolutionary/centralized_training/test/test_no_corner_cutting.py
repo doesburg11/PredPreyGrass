@@ -1,7 +1,7 @@
 """
 Test: No corner cutting (diagonal movement blocked by orthogonal walls)
 """
-from predpreygrass.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
 
 
 def test_no_corner_cutting():

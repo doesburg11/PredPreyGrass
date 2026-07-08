@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.direct_reciprocity.config.config_env_direct_reciprocity import config_env
-from predpreygrass.direct_reciprocity.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.direct_reciprocity.config.config_env_direct_reciprocity import config_env
+from predpreygrass.non_evolutionary.direct_reciprocity.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

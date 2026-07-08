@@ -69,12 +69,12 @@ def load_predpreygrass_modules() -> None:
     global PredPreyGrass, config_env, CombinedEvolutionVisualizer
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices
 
-    from predpreygrass.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env as _config_env
-    from predpreygrass.stag_hunt_forward_view.utils.matplot_renderer import (
+    from predpreygrass.non_evolutionary.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.non_evolutionary.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env as _config_env
+    from predpreygrass.non_evolutionary.stag_hunt_forward_view.utils.matplot_renderer import (
         CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
     )
-    from predpreygrass.stag_hunt_forward_view.utils.defection_metrics import (
+    from predpreygrass.non_evolutionary.stag_hunt_forward_view.utils.defection_metrics import (
         aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
         aggregate_join_choices as _aggregate_join_choices,
     )
@@ -934,7 +934,7 @@ if __name__ == "__main__":
             with open(summary_dir / "defection_metrics_aggregate.json", "w") as f:
                 json.dump(aggregate_metrics, f, indent=2)
             try:
-                from predpreygrass.stag_hunt_forward_view.utils.summarize_capture_failures import (
+                from predpreygrass.non_evolutionary.stag_hunt_forward_view.utils.summarize_capture_failures import (
                     build_capture_failure_summary,
                 )
 

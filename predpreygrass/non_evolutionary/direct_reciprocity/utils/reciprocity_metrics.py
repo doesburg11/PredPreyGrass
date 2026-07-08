@@ -9,8 +9,8 @@ Summarizes:
 
 from __future__ import annotations
 
-from predpreygrass.direct_reciprocity.config.config_env_direct_reciprocity import config_env
-from predpreygrass.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.direct_reciprocity.config.config_env_direct_reciprocity import config_env
+from predpreygrass.non_evolutionary.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
 
 
 DEFAULT_STEPS = int(config_env.get("max_steps", 200))

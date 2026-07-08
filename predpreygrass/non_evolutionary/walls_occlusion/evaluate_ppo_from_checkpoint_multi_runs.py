@@ -1,6 +1,6 @@
-from predpreygrass.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.walls_occlusion.config.config_env_eval import config_env
-from predpreygrass.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.walls_occlusion.config.config_env_eval import config_env
+from predpreygrass.non_evolutionary.walls_occlusion.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

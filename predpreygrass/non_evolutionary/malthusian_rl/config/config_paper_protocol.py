@@ -15,7 +15,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from predpreygrass.malthusian_rl.config.config_env import config_env
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env
 
 PAPER_SOURCE = {
     "title": "Malthusian Reinforcement Learning",

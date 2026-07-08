@@ -20,24 +20,24 @@ from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import (
 from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.registry import register_env
 
-from predpreygrass.malthusian_rl.article_tasks import (
+from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import (
     ArticleAllelopathyEnv,
     ArticleClamityEnv,
 )
-from predpreygrass.malthusian_rl.config.config_appo_exact import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_appo_exact import (
     config_appo_exact,
     paper_learner_citation_map,
 )
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     ARTICLE_EXACT_BLOCKERS,
     make_article_task_config,
 )
-from predpreygrass.malthusian_rl.utils.episode_return_callback import (
+from predpreygrass.non_evolutionary.malthusian_rl.utils.episode_return_callback import (
     EpisodeReturn,
 )
-from predpreygrass.malthusian_rl.utils.mu_server import make_mu_server
-from predpreygrass.malthusian_rl.utils.networks import build_multi_module_spec
-from predpreygrass.malthusian_rl.utils.reproduction_metadata import (
+from predpreygrass.non_evolutionary.malthusian_rl.utils.mu_server import make_mu_server
+from predpreygrass.non_evolutionary.malthusian_rl.utils.networks import build_multi_module_spec
+from predpreygrass.non_evolutionary.malthusian_rl.utils.reproduction_metadata import (
     build_run_metadata,
 )
 

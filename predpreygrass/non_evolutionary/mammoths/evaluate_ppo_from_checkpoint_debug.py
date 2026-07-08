@@ -10,10 +10,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.mammoths.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.mammoths.config.config_env_mammoths import config_env
-from predpreygrass.mammoths.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.mammoths.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.non_evolutionary.mammoths.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.non_evolutionary.mammoths.config.config_env_mammoths import config_env
+from predpreygrass.non_evolutionary.mammoths.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.non_evolutionary.mammoths.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray

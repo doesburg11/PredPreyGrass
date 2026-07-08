@@ -12,11 +12,11 @@ from typing import Any
 
 import pygame
 
-from predpreygrass.malthusian_rl.article_tasks import (
+from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import (
     ArticleAllelopathyEnv,
     ArticleClamityEnv,
 )
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     make_article_task_config,
 )
 

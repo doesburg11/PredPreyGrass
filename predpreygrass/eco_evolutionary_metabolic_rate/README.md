@@ -1,5 +1,33 @@
 # Metabolic Rate as a Second Genome Trait
 
+## Experimental goal
+
+The objective of this module is a **sustainable Darwin/Baldwin evolutionary loop** in a
+predator-prey coevolution setting — genetic evolution and within-lifetime RL learning
+genuinely feeding back into each other, demonstrated convincingly rather than merely claimed.
+Success requires all three of the following together, not any one in isolation:
+
+1. **Sustainability** — populations coexist without frequent mid-episode collapse/extinction;
+   episodes should reach full length most of the time rather than crashing early.
+2. **Coevolution** — stable predator-prey coexistence, with neither species chronically
+   crashing or eliminating the other.
+3. **A real Darwin/Baldwin loop** — the genome trait (`metabolic_rate`) must show genuine,
+   *selection-driven* drift, not just neutral genetic drift. A directional-looking trend in
+   training logs is not sufficient evidence on its own — it should be checked against a
+   neutral-reproduction control (mutation active, reproduction decoupled from genome) before
+   being trusted as real selection. Ideally this is paired with direct evidence of the reverse
+   leg too (genome shift measurably changing the RL fitness landscape — see
+   `{species}_mr_repro_spearman` below).
+
+**Constraint on population regulation**: any mechanism used to keep predator/prey populations
+stable must be biologically realistic and emergent (individual energy/starvation dynamics,
+Lotka-Volterra-style), never an artificial top-down population-census rule. A predator
+reproduction cap keyed on the live predator:prey ratio was tried and discarded for exactly this
+reason — no individual predator could ever sense a population ratio — in favor of a
+per-individual satiation cooldown plus a per-catch energy cap (a Holling-type handling-time
+mechanism), even though the ratio cap alone produced better raw sustainability numbers. Realism
+takes priority over the easiest fix. See `RESULTS.md` for the full comparison and iteration log.
+
 ## Why offspring_investment_fraction alone is incomplete
 
 `offspring_investment_fraction` creates a one-way link between learning and evolution:

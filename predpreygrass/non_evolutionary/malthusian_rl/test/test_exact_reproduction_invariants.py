@@ -3,31 +3,31 @@ import json
 
 import pytest
 
-from predpreygrass.malthusian_rl.config.config_appo_exact import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_appo_exact import (
     config_appo_exact,
 )
-from predpreygrass.malthusian_rl.config.config_env import config_env
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_env import config_env
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     ARTICLE_EXPERIMENT_CONDITIONS,
 )
-from predpreygrass.malthusian_rl.config.config_paper_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_paper_protocol import (
     acceptance_bands,
     config_env_paper_protocol,
     make_paper_protocol_env_config,
 )
-from predpreygrass.malthusian_rl.evaluate_exact_reproduction import (
+from predpreygrass.non_evolutionary.malthusian_rl.evaluate_exact_reproduction import (
     derive_paper_like_rows,
     evaluate_article_condition_coverage,
     evaluate_acceptance,
     evaluate_metadata_integrity,
     run_evaluation,
 )
-from predpreygrass.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.malthusian_rl.tune_appo_malthusian_exact import (
+from predpreygrass.non_evolutionary.malthusian_rl.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.malthusian_rl.tune_appo_malthusian_exact import (
     build_exact_appo_config,
     validate_exact_configs,
 )
-from predpreygrass.malthusian_rl.utils.reproduction_metadata import (
+from predpreygrass.non_evolutionary.malthusian_rl.utils.reproduction_metadata import (
     build_run_metadata,
 )
 
@@ -387,7 +387,7 @@ def test_evaluator_writes_condition_and_figure_summaries(tmp_path):
 
 def test_ppg_policy_mapping_assigns_species_level_policies():
     """policy_mapping_fn must map every live PredPreyGrass agent to its species policy."""
-    from predpreygrass.malthusian_rl.tune_appo_malthusian_exact import policy_mapping_fn
+    from predpreygrass.non_evolutionary.malthusian_rl.tune_appo_malthusian_exact import policy_mapping_fn
 
     env = PredPreyGrass(dict(config_env))
     env.reset(seed=0)
@@ -403,7 +403,7 @@ def test_ppg_policy_mapping_assigns_species_level_policies():
 
 
 def test_ppg_policy_mapping_raises_on_malformed_id():
-    from predpreygrass.malthusian_rl.tune_appo_malthusian_exact import policy_mapping_fn
+    from predpreygrass.non_evolutionary.malthusian_rl.tune_appo_malthusian_exact import policy_mapping_fn
 
     with pytest.raises(ValueError, match="Expected agent id"):
         policy_mapping_fn("badid")
@@ -414,7 +414,7 @@ def test_ppg_policy_mapping_raises_on_malformed_id():
 
 def test_article_task_policy_mapping_assigns_species_level_policies():
     """article_policy_mapping_fn maps species_X_* → species_X (one policy per species)."""
-    from predpreygrass.malthusian_rl.tune_appo_article_exact import article_policy_mapping_fn
+    from predpreygrass.non_evolutionary.malthusian_rl.tune_appo_article_exact import article_policy_mapping_fn
 
     assert article_policy_mapping_fn("species_0_agent_3") == "species_0"
     assert article_policy_mapping_fn("species_1_agent_99") == "species_1"
@@ -422,7 +422,7 @@ def test_article_task_policy_mapping_assigns_species_level_policies():
 
 
 def test_article_task_policy_mapping_raises_on_malformed_id():
-    from predpreygrass.malthusian_rl.tune_appo_article_exact import article_policy_mapping_fn
+    from predpreygrass.non_evolutionary.malthusian_rl.tune_appo_article_exact import article_policy_mapping_fn
 
     with pytest.raises(ValueError, match="Expected agent id"):
         article_policy_mapping_fn("badid")
@@ -437,8 +437,8 @@ def test_article_task_policy_mapping_raises_on_malformed_id():
 
 def test_article_allelopathy_same_seed_produces_identical_episode_summary():
     """ArticleAllelopathyEnv must be fully deterministic across identical seeds."""
-    from predpreygrass.malthusian_rl.article_tasks import ArticleAllelopathyEnv
-    from predpreygrass.malthusian_rl.config.config_article_protocol import make_article_task_config
+    from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import ArticleAllelopathyEnv
+    from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import make_article_task_config
 
     config = make_article_task_config(
         "allelopathy",

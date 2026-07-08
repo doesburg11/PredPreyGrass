@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `centralized_training` when using walls.
 """
 
-from predpreygrass.centralized_training.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.centralized_training.config.config_env_zigzag_walls import config_env as base_config_env
-from predpreygrass.centralized_training.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.centralized_training.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.centralized_training.config.config_env_zigzag_walls import config_env as base_config_env
+from predpreygrass.non_evolutionary.centralized_training.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

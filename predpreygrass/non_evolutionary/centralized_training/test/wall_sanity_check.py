@@ -1,14 +1,14 @@
 """Standalone wall placement sanity check without requiring full Ray tune stack.
 
 Run:
-    python -m predpreygrass.walls_occlusion.wall_sanity_check --grid 10 --walls 20 \
+    python -m predpreygrass.non_evolutionary.walls_occlusion.wall_sanity_check --grid 10 --walls 20 \
         --pred 2 --prey 3 --grass 5 --seed 123
 
 Outputs wall count, sample coordinates, and verifies no overlap with agents or grass.
 """
 from __future__ import annotations
 import argparse
-from predpreygrass.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
 
 
 def main():

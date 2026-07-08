@@ -2,8 +2,8 @@ import copy
 
 import pytest
 
-from predpreygrass.shared_prey.config.config_env_shared_prey import config_env
-from predpreygrass.shared_prey.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.shared_prey.config.config_env_shared_prey import config_env
+from predpreygrass.non_evolutionary.shared_prey.predpreygrass_rllib_env import PredPreyGrass
 
 
 def _make_env(overrides=None):

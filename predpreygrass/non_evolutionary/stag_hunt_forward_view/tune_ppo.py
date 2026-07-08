@@ -30,10 +30,10 @@ def _prepend_snapshot_source() -> None:
 _prepend_snapshot_source()
 
 
-from predpreygrass.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env
-from predpreygrass.stag_hunt_forward_view.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.stag_hunt_forward_view.utils.networks import build_multi_module_spec
+from predpreygrass.non_evolutionary.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env
+from predpreygrass.non_evolutionary.stag_hunt_forward_view.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.non_evolutionary.stag_hunt_forward_view.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -119,12 +119,12 @@ def write_pip_freeze(output_path: Path) -> None:
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.stag_hunt_forward_view.config.config_ppo_gpu_stag_hunt_forward_view import config_ppo
+        from predpreygrass.non_evolutionary.stag_hunt_forward_view.config.config_ppo_gpu_stag_hunt_forward_view import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.stag_hunt_forward_view.config.config_ppo_cpu_stag_hunt_forward_view import config_ppo
+        from predpreygrass.non_evolutionary.stag_hunt_forward_view.config.config_ppo_cpu_stag_hunt_forward_view import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.stag_hunt_forward_view.config.config_ppo_cpu_stag_hunt_forward_view import config_ppo
+        from predpreygrass.non_evolutionary.stag_hunt_forward_view.config.config_ppo_cpu_stag_hunt_forward_view import config_ppo
     return config_ppo
 
 

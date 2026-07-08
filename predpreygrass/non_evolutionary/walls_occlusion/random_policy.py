@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion` when using walls.
 """
 
-from predpreygrass.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.walls_occlusion.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
-from predpreygrass.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.walls_occlusion.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.walls_occlusion.config.config_env_perimeter_four_gaps_walls import config_env as base_config_env
+from predpreygrass.non_evolutionary.walls_occlusion.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

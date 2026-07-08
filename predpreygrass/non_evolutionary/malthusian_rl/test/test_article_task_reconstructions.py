@@ -1,16 +1,16 @@
 import pytest
 
-from predpreygrass.malthusian_rl.article_tasks import (
+from predpreygrass.non_evolutionary.malthusian_rl.article_tasks import (
     ArticleAllelopathyEnv,
     ArticleClamityEnv,
 )
-from predpreygrass.malthusian_rl.config.config_article_protocol import (
+from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
     ARTICLE_EXACT_BLOCKERS,
     ARTICLE_EXPERIMENT_CONDITIONS,
     RELATED_OFFICIAL_SOURCES,
     make_article_task_config,
 )
-from predpreygrass.malthusian_rl.scripts.run_article_condition_matrix import (
+from predpreygrass.non_evolutionary.malthusian_rl.scripts.run_article_condition_matrix import (
     _parse_conditions,
 )
 
@@ -534,7 +534,7 @@ def test_clamity_base_filter_reward_rate_matches_figure2e_local_optimum():
 
 def test_clamity_dynamic_population_ni_is_derived():
     """NI=30 for clamity_dynamic_population is derived (M=960 / 32 = 30)."""
-    from predpreygrass.malthusian_rl.config.config_article_protocol import (
+    from predpreygrass.non_evolutionary.malthusian_rl.config.config_article_protocol import (
         ARTICLE_EXPERIMENT_CONDITIONS,
     )
     dyn = ARTICLE_EXPERIMENT_CONDITIONS["clamity_dynamic_population"]

@@ -1,12 +1,12 @@
 """
 Resume PPO training for Stag Hunt from a fixed checkpoint using resume configs.
 """
-from predpreygrass.stag_hunt.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt.config.config_env_stag_hunt_resumed import (
+from predpreygrass.non_evolutionary.stag_hunt.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt.config.config_env_stag_hunt_resumed import (
     config_env as resume_env_config,
 )
-from predpreygrass.stag_hunt.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.stag_hunt.utils.networks import build_multi_module_spec
+from predpreygrass.non_evolutionary.stag_hunt.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.non_evolutionary.stag_hunt.utils.networks import build_multi_module_spec
 
 import ray
 from ray.tune import Trainable, Tuner, RunConfig, CheckpointConfig
@@ -27,16 +27,16 @@ from pathlib import Path
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.stag_hunt.config.config_ppo_gpu_stag_hunt_resumed import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_gpu_stag_hunt_resumed import (
             config_ppo,
         )
     elif num_cpus == 8:
-        from predpreygrass.stag_hunt.config.config_ppo_cpu_stag_hunt_resumed import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt_resumed import (
             config_ppo,
         )
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.stag_hunt.config.config_ppo_cpu_stag_hunt_resumed import (
+        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt_resumed import (
             config_ppo,
         )
     return config_ppo

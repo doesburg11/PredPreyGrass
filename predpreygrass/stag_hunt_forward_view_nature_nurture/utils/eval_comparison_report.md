@@ -3,8 +3,8 @@
 Generated: 2026-02-03 20:22:04
 
 Source files:
-- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_forward_view/ray_results/eval_comparison.csv`
-- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_forward_view/ray_results/eval_comparison_summary.csv`
+- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/stag_hunt_forward_view/ray_results/eval_comparison.csv`
+- `/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/stag_hunt_forward_view/ray_results/eval_comparison_summary.csv`
 
 Summary (aggregated across eval dirs)
 

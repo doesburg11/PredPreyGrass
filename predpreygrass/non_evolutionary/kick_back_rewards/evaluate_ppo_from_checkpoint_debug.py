@@ -18,10 +18,10 @@ The simulation can be controlled in real-time using a graphical interface.
 
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
-from predpreygrass.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
-from predpreygrass.kick_back_rewards.config.config_env_kick_back_rewards import config_env
-from predpreygrass.kick_back_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
-from predpreygrass.kick_back_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
+from predpreygrass.non_evolutionary.kick_back_rewards.predpreygrass_rllib_env import PredPreyGrass  # Import the custom environment
+from predpreygrass.non_evolutionary.kick_back_rewards.config.config_env_kick_back_rewards import config_env
+from predpreygrass.non_evolutionary.kick_back_rewards.utils.matplot_renderer import CombinedEvolutionVisualizer, PreyDeathCauseVisualizer
+from predpreygrass.non_evolutionary.kick_back_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer, ViewerControlHelper, LoopControlHelper
 
 # external libraries
 import ray

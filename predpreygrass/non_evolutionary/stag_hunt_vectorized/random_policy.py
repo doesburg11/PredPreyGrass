@@ -13,9 +13,9 @@ will raise a TypeError (unexpected keyword). Ensure the imports below stay
 pointing at `walls_occlusion_proper_termination` when using walls.
 """
 
-from predpreygrass.stag_hunt_vectorized.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import config_env
-from predpreygrass.stag_hunt_vectorized.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import config_env
+from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # external libraries
 import pygame

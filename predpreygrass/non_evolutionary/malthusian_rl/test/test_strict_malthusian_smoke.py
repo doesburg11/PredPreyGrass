@@ -1,4 +1,4 @@
-from predpreygrass.malthusian_rl.test.strict_malthusian_smoke import run_smoke_validation
+from predpreygrass.non_evolutionary.malthusian_rl.test.strict_malthusian_smoke import run_smoke_validation
 
 
 def test_strict_malthusian_smoke():

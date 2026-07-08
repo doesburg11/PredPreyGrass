@@ -9,9 +9,9 @@ import numpy as np
 from ray.rllib.core.rl_module.rl_module import RLModule
 from ray.tune.registry import register_env
 
-from predpreygrass.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.lineage_rewards.config.config_env_lineage_rewards import config_env
-from predpreygrass.lineage_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.lineage_rewards.config.config_env_lineage_rewards import config_env
+from predpreygrass.non_evolutionary.lineage_rewards.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
 RAY_RESULTS_DIR = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/rllib_termination/experiments/"

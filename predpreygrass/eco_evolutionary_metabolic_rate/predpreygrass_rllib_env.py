@@ -105,6 +105,13 @@ class PredPreyGrass(MultiAgentEnv):
             "genome_mutation": config.get("genome_mutation", {}),
             "trait_bounds": config.get("trait_bounds", {}),
         }
+        # Neutral-drift null model: when True, an offspring's genome template is a
+        # uniformly random currently-alive same-species agent instead of the agent
+        # that actually reproduced. Reproduction eligibility, timing, and all energy
+        # dynamics are unchanged -- only which genome propagates is decoupled from
+        # reproductive success. Isolates mutation + finite-population sampling noise
+        # from genuine selection. See RESULTS.md.
+        self.genome_neutral_drift_control = bool(config.get("genome_neutral_drift_control", False))
 
     def _init_reset_variables(self, seed):
         # Agent tracking
@@ -520,7 +527,20 @@ class PredPreyGrass(MultiAgentEnv):
             return None
         if is_founder or parent_agent_id is None or parent_agent_id not in self.agent_genomes:
             return founder_genome(self._policy_group(agent_id), self.genome_config, self.rng)
-        return mutate_genome(self.agent_genomes[parent_agent_id], self.genome_config, self.rng)
+        template_id = parent_agent_id
+        if self.genome_neutral_drift_control:
+            # Sever genome from reproductive success: the actual parent still pays
+            # the energy cost and determines spawn timing/position (population
+            # dynamics unchanged), but the mutation template is a uniformly random
+            # currently-alive same-species agent instead of the true parent.
+            species = self._policy_group(agent_id)
+            candidates = [
+                str(aid) for aid in self.agents
+                if str(aid) in self.agent_genomes and self._policy_group(str(aid)) == species
+            ]
+            if candidates:
+                template_id = candidates[int(self.rng.integers(len(candidates)))]
+        return mutate_genome(self.agent_genomes[template_id], self.genome_config, self.rng)
 
 
     def _apply_time_step_update(self):
