@@ -208,3 +208,20 @@ ray_results_archive/
 **/basic-variant-state-*.json
 **/tuner.pkl
 **/.validate_storage_marker
+
+# Unity auto-generated caches/build output — never source, historically the
+# largest single contributor to repo bloat (native binaries in PackageCache).
+# Precautionary: no Unity project is currently tracked, but this prevents
+# accidental re-addition if one is added again.
+**/Library/
+**/Temp/
+**/Obj/
+**/Logs/
+**/UserSettings/
+**/Builds/
+**/*.unitypackage
+
+# Orphaned demo videos removed 2026-07-08 (unreferenced from any doc/code,
+# backed up outside the repo). Prevents accidental re-adding of large videos
+# here without a deliberate decision (e.g. Git LFS) for ones that are used.
+assets/images/video/*.mp4
