@@ -4,10 +4,10 @@ It uses a custom environment that simulates a predator-prey-grass ecosystem.
 The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 """
-from predpreygrass.eco_evolutionary.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary.utils.networks import build_multi_module_spec
+from predpreygrass.evolutionary.eco_evolutionary.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -25,12 +25,12 @@ from typing import Any
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.eco_evolutionary.config.config_ppo_gpu_eco_evolutionary import config_ppo
+        from predpreygrass.evolutionary.eco_evolutionary.config.config_ppo_gpu_eco_evolutionary import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.eco_evolutionary.config.config_ppo_cpu_eco_evolutionary import config_ppo
+        from predpreygrass.evolutionary.eco_evolutionary.config.config_ppo_cpu_eco_evolutionary import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.eco_evolutionary.config.config_ppo_cpu_eco_evolutionary import config_ppo
+        from predpreygrass.evolutionary.eco_evolutionary.config.config_ppo_cpu_eco_evolutionary import config_ppo
     return config_ppo
 
 

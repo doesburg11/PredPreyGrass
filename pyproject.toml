@@ -38,7 +38,7 @@ where = ["."]
 include = ["predpreygrass*"]
 
 [tool.pytest.ini_options]
-testpaths = ["predpreygrass/eco_evolutionary_investment/tests"]
+testpaths = ["predpreygrass/evolutionary/eco_evolutionary_investment/tests"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 

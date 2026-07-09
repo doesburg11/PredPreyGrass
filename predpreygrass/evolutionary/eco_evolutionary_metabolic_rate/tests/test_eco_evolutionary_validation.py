@@ -3,10 +3,10 @@ import copy
 import numpy as np
 import pytest
 
-from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary_metabolic_rate.utils.genome import Genome
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.utils.genome import Genome
 
 
 def _make_test_env(overrides=None):
@@ -333,7 +333,7 @@ def test_zero_mutation_std_produces_exact_copy_even_at_full_rate():
 
 
 def test_mutation_never_violates_trait_bounds():
-    from predpreygrass.eco_evolutionary_metabolic_rate.utils.genome import mutate_genome
+    from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.utils.genome import mutate_genome
 
     rng = np.random.default_rng(44)
     config = {"genome_mutation": {"rate": 1.0, "std": 0.5}, "trait_bounds": {}}

@@ -3,10 +3,10 @@ import copy
 import numpy as np
 import pytest
 
-from predpreygrass.eco_evolutionary_cooperation.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_cooperation.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_cooperation.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary_cooperation.utils.genome import Genome, mutate_genome
+from predpreygrass.evolutionary.eco_evolutionary_cooperation.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_cooperation.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_cooperation.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary_cooperation.utils.genome import Genome, mutate_genome
 
 
 def _make_test_env(overrides=None):

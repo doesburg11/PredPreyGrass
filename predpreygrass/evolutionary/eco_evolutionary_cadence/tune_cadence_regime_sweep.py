@@ -5,9 +5,9 @@ The goal is to find a middle regime where speed is selectable but not trivial:
 speed should drift above the founder distribution without saturating near 1.0.
 
 Examples:
-    python -m predpreygrass.eco_evolutionary_cadence.tune_cadence_regime_sweep
-    CADENCE_SWEEP_ITERS=40 python -m predpreygrass.eco_evolutionary_cadence.tune_cadence_regime_sweep
-    python -m predpreygrass.eco_evolutionary_cadence.tune_cadence_regime_sweep --summarize ~/ray_results/PPO_CADENCE_REGIME_SWEEP_...
+    python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep
+    CADENCE_SWEEP_ITERS=40 python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep
+    python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep --summarize ~/ray_results/PPO_CADENCE_REGIME_SWEEP_...
 """
 
 from __future__ import annotations
@@ -28,11 +28,11 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune import CheckpointConfig, RunConfig, TuneConfig, Tuner
 from ray.tune.registry import register_env
 
-from predpreygrass.eco_evolutionary_cadence.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_cadence.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_cadence.tune_ppo import get_config_ppo, policy_mapping_fn
-from predpreygrass.eco_evolutionary_cadence.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary_cadence.utils.networks import build_multi_module_spec
+from predpreygrass.evolutionary.eco_evolutionary_cadence.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_cadence.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_cadence.tune_ppo import get_config_ppo, policy_mapping_fn
+from predpreygrass.evolutionary.eco_evolutionary_cadence.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary_cadence.utils.networks import build_multi_module_spec
 
 
 SOFT_REGIMES: list[dict[str, float | str]] = [

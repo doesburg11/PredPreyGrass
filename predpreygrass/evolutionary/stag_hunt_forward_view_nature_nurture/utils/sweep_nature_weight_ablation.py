@@ -24,11 +24,11 @@ import statistics
 
 import numpy as np
 
-from predpreygrass.stag_hunt_forward_view_nature_nurture.config.config_env_stag_hunt_forward_view import (
+from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.config.config_env_stag_hunt_forward_view import (
     config_env,
 )
-from predpreygrass.stag_hunt_forward_view_nature_nurture.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.stag_hunt_forward_view_nature_nurture.utils.defection_metrics import (
+from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.utils.defection_metrics import (
     aggregate_capture_outcomes_from_event_log,
     aggregate_join_choices,
 )

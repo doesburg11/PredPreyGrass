@@ -91,18 +91,18 @@ def load_predpreygrass_modules() -> None:
     global PyGameRenderer, ViewerControlHelper, LoopControlHelper
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices, compute_opportunity_preference_metrics
 
-    from predpreygrass.stag_hunt_forward_view_nature_nurture.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.stag_hunt_forward_view_nature_nurture.config.config_env_stag_hunt_forward_view import config_env as _config_env
-    from predpreygrass.stag_hunt_forward_view_nature_nurture.utils.matplot_renderer import (
+    from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
+    from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.config.config_env_stag_hunt_forward_view import config_env as _config_env
+    from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.utils.matplot_renderer import (
         CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
         PreyDeathCauseVisualizer as _PreyDeathCauseVisualizer,
     )
-    from predpreygrass.stag_hunt_forward_view_nature_nurture.utils.pygame_grid_renderer_rllib import (
+    from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.utils.pygame_grid_renderer_rllib import (
         PyGameRenderer as _PyGameRenderer,
         ViewerControlHelper as _ViewerControlHelper,
         LoopControlHelper as _LoopControlHelper,
     )
-    from predpreygrass.stag_hunt_forward_view_nature_nurture.utils.defection_metrics import (
+    from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.utils.defection_metrics import (
         aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
         aggregate_join_choices as _aggregate_join_choices,
         compute_opportunity_preference_metrics as _compute_opportunity_preference_metrics,

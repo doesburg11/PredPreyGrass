@@ -1,6 +1,6 @@
-from predpreygrass.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_investment.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_investment.utils.matplot_renderer import CombinedEvolutionVisualizer
+from predpreygrass.evolutionary.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_investment.utils.matplot_renderer import CombinedEvolutionVisualizer
 
 # external libraries
 import os

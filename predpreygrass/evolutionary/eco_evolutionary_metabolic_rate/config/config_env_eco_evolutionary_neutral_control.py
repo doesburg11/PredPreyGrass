@@ -1,4 +1,4 @@
-from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env as _base_config_env
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env as _base_config_env
 
 # Neutral-drift control: identical to the real experiment config in every respect
 # except genome_neutral_drift_control, so any difference in genome-trait drift

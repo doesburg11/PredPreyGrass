@@ -14,10 +14,10 @@ for provenance. Metabolic-rate genome statistics are logged to TensorBoard
 via the EpisodeReturn callback.
 """
 
-from predpreygrass.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
-from predpreygrass.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.eco_evolutionary_metabolic_rate.utils.networks import build_multi_module_spec
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -26,17 +26,32 @@ from ray.tune import Tuner, RunConfig, CheckpointConfig
 
 from datetime import datetime
 from pathlib import Path
+import argparse
 import json
 import shutil
 from typing import Any
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Override config_env['seed'] for this run (for multi-seed replication). "
+             "Tags the experiment name so runs don't collide.",
+    )
+    parser.add_argument(
+        "--max-iters", type=int, default=None,
+        help="Override config_ppo['max_iters'] for this run.",
+    )
+    return parser.parse_args()
+
+
 def get_config_ppo():
     import torch
     if torch.cuda.is_available():
-        from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_gpu_eco_evolutionary import config_ppo
+        from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.config.config_ppo_gpu_eco_evolutionary import config_ppo
     else:
-        from predpreygrass.eco_evolutionary_metabolic_rate.config.config_ppo_cpu_eco_evolutionary import config_ppo
+        from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate.config.config_ppo_cpu_eco_evolutionary import config_ppo
     return config_ppo
 
 
@@ -55,6 +70,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 # --- Main training setup ---
 
 if __name__ == "__main__":
+    args = parse_args()
+    if args.seed is not None:
+        config_env = dict(config_env, seed=args.seed)
+
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
@@ -64,7 +83,8 @@ if __name__ == "__main__":
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "ECO_EVOLUTION_METABOLIC_RATE"
+    seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
+    version = f"ECO_EVOLUTION_METABOLIC_RATE{seed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -76,6 +96,8 @@ if __name__ == "__main__":
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
+    if args.max_iters is not None:
+        config_ppo = dict(config_ppo, max_iters=args.max_iters)
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,

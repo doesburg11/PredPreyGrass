@@ -119,33 +119,72 @@ was considered as an alternative next step but set aside: it would have tested f
 attractor, but wouldn't have addressed whether the *magnitude* of any observed movement is
 distinguishable from noise, which is the more fundamental open question at this point.
 
-### Iteration 4 — Neutral-drift control (2000 iterations) — in progress
+### Iteration 4 — Neutral-drift control (2000 iterations)
 
 **Config:** identical to Iteration 3, plus `genome_neutral_drift_control: True` — offspring
 genome template is a uniformly random currently-alive same-species agent instead of the actual
 parent; reproduction eligibility, timing, and all energy dynamics are otherwise unchanged.
-Started 2026-07-08 (`PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_2026-07-08_03-41-51`).
+Run: `PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_2026-07-08_03-41-51`.
 
-**Result so far (iteration 637/2000, not final):** population dynamics track the real runs
-closely (episode length, peak predator/prey counts all in the same range as run 2 at a
-comparable stage) — confirms the control preserves ecology while only severing genome
-inheritance. Predator MR is already declining under zero selection pressure: 0.989 → 0.985 →
-0.970 (~1.9% over the first third of the run).
+**Result:** population dynamics tracked the real runs closely throughout (44.0% overall valid
+full-length fraction, climbing to 58.9% by Q5 — consistent with runs 2/3's trajectories),
+confirming the control preserves ecology while only severing genome inheritance. Genome
+outcome split by species:
 
-**Possible cause (preliminary, not conclusive):** if this continues at a similar pace, the
-neutral control could plausibly reach a decline in the same 2.6-4.6% range as the real runs by
-iteration 2000 — which would mean the observed predator genome cycle is largely indistinguishable
-from noise rather than real selection. Too early to conclude; the real runs' trajectories
-weren't monotonic either.
+- **Predator: inconclusive.** Net change over the run (0.988 → 0.975, ≈1.3%) was actually
+  *smaller* than either real run's net change (run 1: ≈4.0%, run 2: ≈2.6%) — which would look
+  like a point in favor of real selection. But the control's trajectory wasn't monotonic (it
+  dipped to 0.967 mid-run before partially recovering), and that trough-to-peak range (≈2.1%)
+  is comparable in magnitude to real run 2's overall decline (2.6%). The numbers are close
+  enough that this single control run cannot confidently separate signal from noise either way.
+- **Prey: more encouraging.** The control's prey MR stayed flat and tight all the way through
+  (peak deviation only +1.6% from its start), clearly smaller than the amplitude of both the
+  original baseline's cycle (+4.1%) and run 1's cycle (+4.3%). This is real (if not airtight)
+  evidence that those two prey cycles are larger than pure drift produces at this population
+  scale — the project's original best evidence held up under the same skepticism just applied
+  to predators.
 
-**Adjustment → Iteration 5 (pending):** to be determined once this run completes and the final
-comparison is in. If the neutral control's drift is comparable to the real runs', the next step
-is likely to either (a) look for a selection mechanism strong enough to exceed the drift
-baseline (e.g. coupling satiation cooldown to metabolic rate, adding a second genome-linked
-fitness channel), or (b) accept that MR isn't under meaningful selection pressure at these
-settings and treat the sustainability work as the deliverable rather than the Darwin/Baldwin
-signal. If the real runs' drift is substantially larger than the control's, that's the
-confirmation needed to call the loop established.
+**Possible cause:** a single control run vs. single real runs is fundamentally underpowered for
+the predator question — one comparison can't distinguish "no selection" from "weak selection
+overlapping with a wide noise band" no matter how many iterations that one run has. The prey
+result is more legible only because the effect size there (+4%) is larger relative to the noise
+band this control revealed (~±2%).
+
+**Adjustment → Iteration 5:** stop drawing conclusions from single-trajectory comparisons.
+Move to properly powered multi-seed replication (several seeds each of real vs. control,
+compared via an actual statistical test on drift magnitude) rather than running another single
+variant and eyeballing the result again.
+
+### Iteration 5 — multi-seed replication (planned, not yet run)
+
+**Config:** several seeds (e.g. 4-5) each of the real satiation-throttle config (Iteration 3)
+and the neutral-drift control (Iteration 4), shortened to ~1000 iterations per run rather than
+2000 to make the total compute budget tractable (each full run takes ~7-8 hours; halving length
+roughly halves total time to a statistically meaningful answer, and most of the interesting
+drift dynamics were already visible well before iteration 2000 in prior runs).
+
+**Rationale:** a single real run vs. a single control run can never confidently answer "is this
+selection or drift" — only the *distribution* of outcomes across replicates can. Compare
+per-seed drift magnitude (e.g. final MR − founder MR, or peak deviation) between the real and
+control groups with an actual test (e.g. Mann-Whitney U, given likely small-N non-normal
+samples) rather than eyeballing single curves as done in Iterations 2-4.
+
+**Secondary, cheaper levers to hold in reserve** if replication comes back ambiguous rather than
+decisive:
+- **Lower `metabolic_rate_alpha`** (currently 0.7, e.g. toward 0.5) to sharpen the individual-
+  level fitness gradient — a single-parameter change testing whether the signal is real but too
+  weak to detect, rather than absent.
+- **Scale up population size** (larger grid, higher `n_initial_active_predators/prey`) to shrink
+  the neutral-drift noise floor directly — population-genetics theory predicts drift variance
+  scales down as population size scales up, while a real selection differential doesn't dilute
+  the same way.
+- **Reconsider whether `metabolic_rate`'s mechanism gives selection enough leverage at all** —
+  its effect on any individual's realized fitness is quite indirect (energy accounting several
+  steps removed from the reproduction outcome, itself already a long chain of noisy events). If
+  the above two levers both come back inconclusive, a trait with more direct fitness leverage
+  may be needed rather than continuing to tune this one.
+
+**Status:** not started.
 
 ---
 
@@ -543,61 +582,96 @@ Implementation: `predpreygrass_rllib_env.py`'s `_inherit_genome`, config key add
 `tune_ppo_metabolic_rate_neutral_control.py`) so the comparison run only differs from the real
 Fix-2 run in this one flag.
 
-**Status:** running. `PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_2026-07-08_03-41-51`,
-started 2026-07-08, same duration (2000 iterations) and PPO/env config as Fix-2 run 2, only
-`genome_neutral_drift_control: True` differs.
+**Status:** complete. `PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_2026-07-08_03-41-51`,
+2000/2000 iterations, 1997/2000 valid (99.85%).
 
-### Interim data (iteration 637 of 2000 — not final, do not conclude from this alone)
+### Final data
 
-| Group | Ep. len | % full-length | Peak pred | Peak prey | Predator live MR | Prey live MR |
+| Quintile | Ep. len (of 2000) | % full-length | Peak pred | Peak prey | Predator live MR | Prey live MR |
 |---|---|---|---|---|---|---|
-| G1 (4-214) | 646 | 14.2% | 22.4 | 49.4 | 0.989 | 0.950 |
-| G2 (215-425) | 585 | 9.0% | 26.3 | 42.3 | 0.985 | 0.952 |
-| G3 (426-637) | 810 | 34.0% | 25.9 | 43.8 | **0.970** | 0.961 |
+| Q1 (4-402) | 605 | 11.0% | 24.8 | 45.0 | 0.988 | 0.950 |
+| Q2 (403-801) | 835 | 38.3% | 25.9 | 44.4 | 0.967 | 0.966 |
+| Q3 (802-1200) | 946 | 55.4% | 25.4 | 46.9 | 0.972 | 0.959 |
+| Q4 (1201-1599) | 958 | 56.1% | 25.0 | 49.2 | 0.967 | 0.953 |
+| Q5 (1600-2000) | 989 | 58.9% | 24.5 | 48.2 | **0.975** | **0.956** |
 
-**Population dynamics track the real runs closely** (episode length, peak predator/prey counts
-all in the same range as Fix-2 run 2 at a comparable early stage) — confirms the control is
-doing what it's designed to do: leave population/energy dynamics untouched while only severing
-genome inheritance from reproductive success.
+Overall: 44.0% valid full-length fraction, climbing to 58.9% by Q5 — closely tracking Fix-2 run
+2's sustainability trajectory (62.1% by its Q5), confirming the control preserves population/
+energy dynamics correctly while only severing genome inheritance from reproductive success.
 
-**The concerning early signal**: predator MR is already declining here too — 0.989 → 0.985 →
-0.970, a ~1.9% drop over the first 637 iterations, under a mechanism with **zero** selection
-pressure on genome by construction. This is not yet conclusive (only ~32% of the way through,
-and the real runs' trajectories weren't monotonic either), but it is not an encouraging sign for
-the "real selection" hypothesis. If the neutral control keeps producing declines of comparable
-magnitude to the real runs' 2.6-4.6% by the time it also reaches 2000 iterations, that would mean
-the observed predator genome cycle is largely indistinguishable from noise. This section will be
-updated with the completed run and the final side-by-side comparison against runs 2 and 3.
+**Predator MR final comparison (net change over the run, and trough-to-peak range):**
+
+| | Q1 → Q5 net change | Trough-to-peak range |
+|---|---|---|
+| Real run 1 (1000 iter) | 1.003 → 0.963 (−4.0%) | 4.9% (1.003 → 0.954 trough) |
+| Real run 2 (2000 iter) | 1.018 → 0.992 (−2.6%) | 2.6% (monotonic decline) |
+| **Neutral control** | 0.988 → 0.975 (**−1.3%**) | **2.1%** (0.988 → 0.967 trough → 0.975) |
+
+**Predator verdict: inconclusive, not debunked.** The control's net change is smaller than
+either real run — which superficially favors real selection — but it got there non-monotonically
+(dipping to 0.967 before partially recovering), and that trough-to-peak range (2.1%) is
+comparable to real run 2's entire decline (2.6%). The magnitudes are too close for a single
+control run to confidently separate signal from noise in either direction.
+
+**Prey MR final comparison (peak deviation from Q1 start):**
+
+| | Peak deviation | Shape |
+|---|---|---|
+| Original baseline | +4.1% (0.990 → 1.031 peak) | cycle: rise then partial return |
+| Real run 1 | +4.3% (0.952 → 0.995 peak) | cycle: rise then partial return |
+| Real run 2 | −3.3% (0.991 → 0.958 final) | steady decline, not a cycle |
+| **Neutral control** | **+1.6%** (0.950 → 0.966 peak) | flat, noisy wobble, no sustained trend |
+
+**Prey verdict: more encouraging.** The control's prey MR amplitude (+1.6%) is meaningfully
+smaller than the cycles seen in the original baseline (+4.1%) and run 1 (+4.3%) — real evidence
+those two cycles exceed what pure drift produces at this population scale. Run 2's steady
+decline is a different shape (harder to compare the same way) but a consistent 5-quintile
+monotonic trend is itself more consistent with a real directional pressure than the undirected
+wobble the control shows.
+
+**Net takeaway**: the project's original best evidence (the prey cycle) held up reasonably well
+under this same scrutiny; the predator-side chase across Iterations 1-3 remains unresolved
+rather than confirmed. See Iteration 5 above for the next step (multi-seed replication).
 
 ---
 
 ## Comparison at a glance
 
-| | Baseline (no throttle) | Ratio cap | Satiation throttle (run 1, 1000 iters) | Satiation throttle (run 2, 2000 iters) |
-|---|---|---|---|---|
-| Valid iterations | 46% | 99.7% | 99.7% | 99.85% |
-| Episodes reaching full length | — (not tracked this way) | ~98%+ by Q5 | 45.3% by Q5, still climbing | 62.1% by Q5, decelerating |
-| Peak predators / prey | ~16-20 / ~15-22 | ~25-29 / ~40-45 | ~21-27 / ~46-55 | ~24-25 / ~42-48 |
-| Predator genome trend | none (flat at equilibrium) | none (muted, 0.97-0.99 band) | real: 1.00 → 0.95 → 0.96 | real but smaller: 1.02 → 0.99 |
-| Prey genome trend | clear: 0.99 → 1.03 → 1.00 | muted: 0.98 → 1.00 → 0.99 | similar: 0.95 → 1.00 → 0.98 | similar: 0.99 → 0.96 |
-| Mechanism realism | n/a (uncapped, unstable) | population census (not diegetic) | individual hunting/energy history | individual hunting/energy history |
+| | Baseline (no throttle) | Ratio cap | Satiation throttle (run 1) | Satiation throttle (run 2) | Neutral control |
+|---|---|---|---|---|---|
+| Valid iterations | 46% | 99.7% | 99.7% | 99.85% | 99.85% |
+| Episodes reaching full length | — (not tracked this way) | ~98%+ by Q5 | 45.3% by Q5, still climbing | 62.1% by Q5, decelerating | 58.9% by Q5 (tracks run 2) |
+| Peak predators / prey | ~16-20 / ~15-22 | ~25-29 / ~40-45 | ~21-27 / ~46-55 | ~24-25 / ~42-48 | ~24-26 / ~44-49 |
+| Predator genome trend | none (flat at equilibrium) | none (muted, 0.97-0.99 band) | real: 1.00 → 0.95 → 0.96 | real but smaller: 1.02 → 0.99 | comparable magnitude: 0.99 → 0.97 (non-monotonic) |
+| Prey genome trend | clear: 0.99 → 1.03 → 1.00 | muted: 0.98 → 1.00 → 0.99 | similar: 0.95 → 1.00 → 0.98 | similar: 0.99 → 0.96 | much flatter: 0.95 → 0.97, no cycle |
+| Mechanism realism | n/a (uncapped, unstable) | population census (not diegetic) | individual hunting/energy history | individual hunting/energy history | n/a (diagnostic only) |
+
+**Reading this table**: the neutral control's predator trend is comparable in magnitude to the
+real runs' — meaning the predator "cycles" above are not yet distinguishable from noise. The
+neutral control's prey trend is clearly flatter than the real cycles — meaning those prey
+results likely are real signal. See Iteration 4/5 above for the full reasoning.
 
 ---
 
 ## Next steps
 
-1. **Run the neutral-drift control** (running, see Iteration 4) and compare its drift
-   magnitude directly against the two real satiation-throttle runs above. This is the priority
-   — it determines whether anything above constitutes real evidence of selection.
-2. **Track per-capita reproduction rate directly**, binned by MR quartile, separate from the
+1. **Multi-seed replication (Iteration 5, priority).** The neutral control is complete but a
+   single-run comparison is underpowered for the predator question specifically — run several
+   seeds each of the real satiation-throttle config and the control (shortened to ~1000 iters
+   each to keep total compute tractable), and compare drift-magnitude distributions with an
+   actual statistical test rather than eyeballing single curves.
+2. **If replication is still ambiguous, attack signal-to-noise directly**: lower
+   `metabolic_rate_alpha` (sharper fitness gradient, tests whether the signal is real but weak)
+   and/or scale up population size (shrinks the neutral-drift noise floor without diluting a
+   real selection differential the same way).
+3. **Confirm the prey result more rigorously too** — it looks better than the predator result
+   under this same control, but "looks better" from one control run is still not a formal
+   significance test. Worth including prey in the same multi-seed replication rather than
+   treating it as settled.
+4. **Track per-capita reproduction rate directly**, binned by MR quartile, separate from the
    existing (binary-outcome) spearman correlation, as a cleaner selection-differential metric
    than the mismatched eco_evolution/live_genome comparison this document originally relied on.
-3. **Try coupling satiation cooldown to metabolic rate** (e.g. `cooldown = base / metabolic_rate`,
-   faster metabolism → faster digestion) — deliberately deferred across both satiation runs to
-   keep each a single-variable change relative to the last. Worth revisiting once the
-   neutral-control result is in, since it would add a second genome-linked fitness channel and
-   may also help the episode-completion ceiling.
-4. **Investigate the episode-completion ceiling directly** (both satiation runs decelerate
+5. **Investigate the episode-completion ceiling directly** (both satiation runs decelerate
    rather than approach Fix 1's ~98%). Options: tune `predator_satiation_cooldown` /
    `max_energy_gain_per_prey`, or accept the lower completion rate as the price of a more
    realistic mechanism.
