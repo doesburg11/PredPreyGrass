@@ -3,22 +3,38 @@
 This module is a variant of `eco_evolutionary` in which **speed controls movement
 frequency** rather than movement distance.  Every agent stays in the loop every
 step — it always receives an observation and submits an action — but the action
-is only executed when the agent's per-genome cooldown counter reaches zero.
+is only executed once the agent's continuous move accumulator reaches 1.0.
 
 The motivation: in the original `eco_evolutionary` module, the continuous genome
 trait maps onto a binary outcome (slow = max distance 1, fast = max distance 2).
 The cadence mechanic preserves the discrete grid and simple Moore action space
-while giving the speed genome a genuinely graded effect on fitness: each speed
-value maps to a distinct movement frequency across 10 cooldown levels.
+while giving the speed genome a genuinely graded effect on fitness.
+
+**Revision note:** the first version of this module mapped speed to one of 10
+integer cooldown levels via `round()`. In practice this still produced flat
+plateaus — any two genome values rounding to the same cooldown were
+phenotypically identical, so most mutations had zero effect on fitness. Real
+training runs showed weak or absent selection on speed as a result (see
+`predpreygrass/eco_evolutionary_investment/README.md`, which deliberately
+built on `eco_evolutionary` rather than this module for exactly that reason).
+The mechanic below replaces the rounded lookup table with a continuous
+accumulator so every genome value produces a distinct, measurable movement
+frequency.
 
 ## Current Scope
 
 Active heritable trait:
 
-- `speed`: determines how often the agent may move.  The genome value maps to a
-  cooldown period in `[1, max_cooldown]`.  An agent with cooldown 1 moves every
-  step; an agent with cooldown 10 moves once every 10 steps.  Speed also
-  increases locomotion cost when movement executes.
+- `speed`: determines how often the agent may move. The genome value maps
+  *linearly, with no rounding*, to a per-step move rate in
+  `[1/max_cooldown, 1.0]`. Each agent carries a move accumulator that
+  increases by its rate every step; movement executes once the accumulator
+  reaches 1.0 (which is then decremented by 1.0). An agent at the fastest
+  possible rate (1.0) moves every step; an agent at the slowest possible rate
+  (`1/max_cooldown`) moves on average once every `max_cooldown` steps — but
+  unlike a rounded cooldown, every value in between yields a distinct,
+  continuously-varying long-run movement frequency. Speed also increases
+  locomotion cost when movement executes.
 
 At reproduction, offspring inherit the parent's genome with bounded mutation.
 Founders receive genomes sampled from role-specific founder distributions.
@@ -36,40 +52,53 @@ movement vectors dx, dy in {-1, 0, 1}   (Moore neighbourhood, distance ≤ 1)
 Distance-2 moves are removed.  Speed no longer unlocks extra reach; it controls
 *when* the agent can move.
 
-### Cooldown Mapping
+### Move-Rate Mapping and Accumulator
 
-Each agent's genome speed maps deterministically to a cooldown period:
+Each agent's genome speed maps deterministically to a per-step move rate — a
+direct linear map, no rounding:
 
 ```text
 normalized = (speed - speed_min) / (speed_max - speed_min)
-cooldown   = max_cooldown - round(normalized * (max_cooldown - 1))
+min_rate   = 1 / max_cooldown
+move_rate  = min_rate + normalized * (1.0 - min_rate)
 ```
 
-With the default `trait_bounds: speed=(0.0, 1.0)` and `max_cooldown=10`:
+Each agent carries a continuous `move_accumulator`. Every step:
 
-| speed | cooldown | moves every … steps |
-|-------|----------|---------------------|
-| 0.0   | 10       | 10                  |
-| 0.1   | 9        | 9                   |
-| 0.2   | 8        | 8                   |
-| 0.3   | 7        | 7                   |
-| 0.4   | 6        | 6                   |
-| 0.6   | 5        | 5                   |
-| 0.7   | 4        | 4                   |
-| 0.8   | 3        | 3                   |
-| 0.9   | 2        | 2                   |
-| 1.0   | 1        | 1 (every step)      |
+```text
+accumulator += move_rate
+if accumulator >= 1.0:
+    execute movement; accumulator -= 1.0
+else:
+    stay frozen this step
+```
+
+With the default `trait_bounds: speed=(0.0, 1.0)` and `max_cooldown=10`, this
+gives a continuous range of realised long-run move frequencies rather than 10
+discrete levels — a handful of illustrative points:
+
+| speed | move_rate | moves every … steps (on average) |
+|-------|-----------|-----------------------------------|
+| 0.0   | 0.10      | 10                                |
+| 0.25  | 0.325     | ≈3.08                             |
+| 0.5   | 0.55      | ≈1.82                             |
+| 0.75  | 0.775     | ≈1.29                             |
+| 1.0   | 1.00      | 1 (every step)                    |
+
+Unlike the earlier rounded-cooldown version, values *between* these points
+(e.g. speed=0.51 vs. 0.52) each produce their own distinct move rate — there
+is no plateau where a mutation has zero phenotypic effect.
 
 ### Phase Offset
 
-At birth each agent is assigned a random phase offset drawn uniformly from
-`[0, cooldown)`.  This prevents all agents with the same cooldown from moving
-in synchronised bursts.
+At birth each agent's `move_accumulator` is initialised to a random value
+drawn uniformly from `[0.0, 1.0)`.  This prevents all agents with the same
+move rate from moving in synchronised bursts.
 
 ### Frozen Steps
 
-On steps where an agent's cooldown counter is > 0, its submitted action is
-discarded and the agent stays in place.  The agent still:
+On steps where an agent's accumulator has not yet reached 1.0, its submitted
+action is discarded and the agent stays in place.  The agent still:
 - receives a full observation
 - loses basal metabolism energy
 - can be eaten (predator can still move onto it)
@@ -97,8 +126,9 @@ With the default `include_speed_in_obs: True`, the spatial tensor has 4 channels
 
 There is no separate spatial `move_available` channel in the current
 implementation. Movement availability is represented by `action_mask` instead.
-When an agent's cooldown is non-zero, every action except stay is masked out.
-When its cooldown reaches zero, all 9 Moore-neighbourhood actions are available.
+When an agent's accumulator has not yet reached 1.0, every action except stay
+is masked out. Once it will reach 1.0 this step, all 9 Moore-neighbourhood
+actions are available.
 
 This prevents the policy from sampling actions that would be discarded on frozen
 steps and removes gradient noise from movement choices that cannot execute.
@@ -129,24 +159,27 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 ```
 
 **Trait bounds** (`speed: (0.0, 1.0)`): the genome value is a normalised float.
-`0.0` is the slowest possible agent (cooldown = `max_cooldown`); `1.0` is the
-fastest (cooldown = 1, moves every step).  Because the trait is already
-normalised, the speed observation channel broadcasts the raw genome value
-unchanged — no rescaling needed.
+`0.0` is the slowest possible agent (move rate = `1/max_cooldown`); `1.0` is
+the fastest (move rate = 1.0, moves every step).  Because the trait is
+already normalised, the speed observation channel broadcasts the raw genome
+value unchanged — no rescaling needed.
 
 **Founder distribution** (`speed_mean: 0.5, speed_std: 0.1`): founders start at
-mid-range, spanning roughly 0.3–0.7, which covers cooldowns 4–7.  This gives
-equal room for speed to evolve upward or downward from the starting population.
+mid-range, spanning roughly 0.3–0.7, which covers move rates of roughly
+0.37–0.73 (expected cooldowns of ~1.4–2.7 steps). This gives equal room for
+speed to evolve upward or downward from the starting population.
 
 **Mutation** (`rate: 0.05, std: 0.05`): at each reproduction event there is a 5%
-chance the offspring's speed is perturbed by N(0, 0.05).  With `max_cooldown=10`
-a shift of ~0.11 in genome value moves the cooldown by one step, so `std=0.05`
-means roughly one favourable mutation is needed per cooldown step — a moderate
-selection gradient.
+chance the offspring's speed is perturbed by N(0, 0.05). Because the move rate
+is a direct linear function of the genome value with no rounding, every such
+mutation produces a nonzero, measurable change in realised movement frequency
+— there is no minimum mutation size needed to "cross a step" as there was
+under the earlier rounded-cooldown mechanic.
 
-**Max cooldown** (`max_cooldown: 10`): sets the maximum number of steps between
-moves for the slowest possible genome.  Increase for a wider behavioural range;
-decrease if 10-step freezes cause slow agents to die before acting.
+**Max cooldown** (`max_cooldown: 10`): sets the slowest possible genome's move
+rate (`1/max_cooldown`), i.e. the average number of steps between moves for
+`speed=0.0`. Increase for a wider behavioural range; decrease if long freezes
+cause slow agents to die before acting.
 
 ## Energy Cost
 
@@ -170,8 +203,8 @@ The callback logs per-episode genome summaries under the `eco_evolution/` prefix
 | `eco_evolution/{species}_speed_mean` | Population mean speed |
 | `eco_evolution/{species}_speed_std` | Spread — rising std means diversification; falling std means convergence |
 | `eco_evolution/{species}_speed_p25/p50/p75` | Quartiles — shift in p50 indicates directional selection |
-| `eco_evolution/{species}_fraction_mobile` | Share of agents with cooldown=1 (move every step) |
-| `eco_evolution/{species}_cooldown_mean` | Mean cooldown across population — falling value = speed selection |
+| `eco_evolution/{species}_fraction_mobile` | Share of agents at the literal fastest rate (speed=1.0, move every step) — a narrow edge case now that rates aren't rounded into a wide top bucket |
+| `eco_evolution/{species}_cooldown_mean` | Mean *expected* cooldown (1/move_rate, continuous, unrounded) across population — falling value = speed selection |
 | `eco_evolution/{species}_agent_count` | Mean number of agents born per episode |
 | `eco_evolution/{species}_offspring_count_mean` | Average reproductive success per agent |
 | `eco_evolution/{species}_distance_traveled_mean` | Realised locomotion — confirms fast-genome agents are actually moving more |
@@ -195,7 +228,7 @@ Together they close the Baldwinian loop:
 
 ```text
 genome → speed trait
-       → cooldown period
+       → continuous move rate → accumulator
        → policy conditions on speed while action masking handles frozen steps
        → fast agents move purposefully, slow agents conserve energy
        → fitness differential amplified
@@ -228,7 +261,7 @@ this environment.
 | | `eco_evolutionary` | `eco_evolutionary_cadence` |
 |---|---|---|
 | Action space | 5×5 = 25 (distance 0–2) | 3×3 = 9 (Moore, distance 0–1) |
-| Speed effect | binary: dist-1 vs dist-2 | graded cooldown: 1–10 steps |
+| Speed effect | binary: dist-1 vs dist-2 | continuous move rate via accumulator (no rounding) |
 | Observation API | spatial tensor | dict: spatial tensor + action mask |
 | Spatial channels | 3 + 1 speed = 4 | 3 + 1 speed = 4 |
 | Config keys | `speed_distance_threshold`, `slow/fast_max_move_distance` | `max_cooldown` |
@@ -274,7 +307,7 @@ print('action mask:', first_obs['action_mask'].shape)     # 9 actions
 ## Interpretation
 
 ```text
-genome → speed trait → cooldown period → lifetime movement budget
+genome → speed trait → continuous move rate → accumulator-gated lifetime movement budget
        → policy learns speed-specific behaviour with action-masked frozen steps
        → survival/reproduction → inherited genome with mutation
 ```

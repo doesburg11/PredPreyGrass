@@ -54,7 +54,7 @@ class _FakeEpisode:
     def get_return(self):
         return 2.0
 
-    def get_rewards(self):
+    def get_rewards(self, env_steps=True):
         return {
             "predator_0": [1.0, 2.0],
             "prey_0": [-1.0],
@@ -322,7 +322,7 @@ def test_offspring_inherits_mutated_parent_genome_and_fixed_initial_energy():
             "predator_creation_energy_threshold": 10.0,
             "founder_genome": {
                 "predator": {
-                    "speed_mean": 1.0,
+                    "speed_mean": 0.5,
                     "speed_std": 0.0,
                 },
             },
@@ -401,22 +401,23 @@ def test_observation_edges_are_clipped_and_zero_padded():
     assert np.all(spatial[:env.num_obs_channels, :, :offset] == 0.0)
 
 
-def test_slow_speed_is_frozen_when_cooldown_nonzero():
+def test_slow_speed_is_frozen_when_accumulator_below_threshold():
     env = _make_test_env()
     env.reset(seed=818)
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    # speed=0.0 → cooldown=max_cooldown (10); force counter to non-zero
+    # speed=0.0 → move rate=1/max_cooldown=0.1; starting from an empty
+    # accumulator, one step is nowhere near the 1.0 threshold.
     env.agent_genomes[predator] = Genome(speed=0.0)
-    env.agent_move_cooldowns[predator] = 5
+    env.agent_move_accumulator[predator] = 0.0
 
     action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (1, 0))
     env._process_agent_movements({predator: action})
 
     # Agent is frozen — should not have moved
     assert env.agent_positions[predator] == (10, 10)
-    assert env.agent_move_cooldowns[predator] == 4  # decremented
+    assert env.agent_move_accumulator[predator] == pytest.approx(0.1)  # accumulator advanced by the rate
 
 
 def test_fast_speed_moves_every_step():
@@ -425,15 +426,16 @@ def test_fast_speed_moves_every_step():
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    # speed=1.0 → cooldown=1; always 0 after phase init
+    # speed=1.0 → move rate=1.0; from an empty accumulator this always
+    # crosses the 1.0 threshold in a single step.
     env.agent_genomes[predator] = Genome(speed=1.0)
-    env.agent_move_cooldowns[predator] = 0
+    env.agent_move_accumulator[predator] = 0.0
 
     action = next(i for i, move in env.action_to_move_tuple_agents.items() if move == (1, 0))
     env._process_agent_movements({predator: action})
 
     assert env.agent_positions[predator] == (11, 10)
-    assert env.agent_move_cooldowns[predator] == 0  # cooldown-1 = 1-1 = 0
+    assert env.agent_move_accumulator[predator] == pytest.approx(0.0)  # 0.0 + 1.0 - 1.0 = 0.0
 
 
 def test_fast_speed_pays_only_basal_cost_when_stationary():
@@ -449,8 +451,10 @@ def test_fast_speed_pays_only_basal_cost_when_stationary():
 
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
-    env.agent_genomes[predator] = Genome(speed=1.0)  # fastest: cooldown=1
-    env.agent_move_cooldowns[predator] = 0
+    env.agent_genomes[predator] = Genome(speed=1.0)  # fastest: rate=1.0
+    # Pre-load the accumulator to the threshold so movement executes this step
+    # regardless of the genome-derived rate.
+    env.agent_move_accumulator[predator] = 1.0
     start_energy = 10.0
     env.agent_energies[predator] = start_energy
     env.grid_world_state[0, *env.agent_positions[predator]] = start_energy
@@ -478,7 +482,7 @@ def test_movement_cost_uses_actual_distance_and_superlinear_speed():
     predator = next(agent for agent in env.agents if agent.startswith("predator"))
     _place_agent(env, predator, (10, 10))
     env.agent_genomes[predator] = Genome(speed=0.5)  # mid-range genome
-    env.agent_move_cooldowns[predator] = 0  # ensure movement executes this step
+    env.agent_move_accumulator[predator] = 1.0  # ensure movement executes this step
     start_energy = 10.0
     env.agent_energies[predator] = start_energy
     env.grid_world_state[0, *env.agent_positions[predator]] = start_energy

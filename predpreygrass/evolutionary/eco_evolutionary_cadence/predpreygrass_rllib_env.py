@@ -1,10 +1,14 @@
 """
 Predator-Prey Grass RLlib Environment — Cadence variant
 
-Speed controls movement *frequency* (cooldown) rather than movement *distance*.
-Every agent stays in the loop every step (receives obs, submits action), but the
-action is only executed when the agent's cooldown reaches zero.  An action mask
-in the observation forces "stay" on frozen steps so the policy gradient is clean.
+Speed controls movement *frequency* rather than movement *distance*. Every
+agent carries a continuous move accumulator that increases by its genome's
+move rate every step; movement executes only once the accumulator reaches
+1.0, after which it is decremented back down. The move rate is a direct,
+unrounded function of the genome value, so every genome value produces a
+distinct long-run movement frequency — there is no intermediate lookup table
+that would flatten the fitness landscape into plateaus. An action mask in the
+observation forces "stay" on frozen steps so the policy gradient is clean.
 
 Additional features:
 - limited age per agent type
@@ -176,8 +180,10 @@ class PredPreyGrass(MultiAgentEnv):
 
         self._last_live_speed_metrics: dict = {}
         self.agents_just_ate = set()
-        # Cadence: per-agent countdown to next allowed move (0 = can move this step)
-        self.agent_move_cooldowns: dict[str, int] = {}
+        # Cadence: per-agent continuous move accumulator. Increases by the
+        # agent's genome-derived move rate every step; movement executes once
+        # it reaches 1.0 (then decremented by 1.0). No rounding anywhere.
+        self.agent_move_accumulator: dict[str, float] = {}
 
         # Per-step infos accumulator and last-move diagnostics
         self._pending_infos = {}
@@ -515,12 +521,15 @@ class PredPreyGrass(MultiAgentEnv):
                 metrics[f"{species}_speed_p25"] = float(p25)
                 metrics[f"{species}_speed_p50"] = float(p50)
                 metrics[f"{species}_speed_p75"] = float(p75)
-                # fraction_mobile: share of agents with cooldown=1 (move every step)
-                cooldowns = np.array([self._genome_speed_to_cooldown(s) for s in arr])
-                metrics[f"{species}_fraction_mobile"] = float(np.mean(cooldowns == 1))
-                fast_cadence_threshold = max(1, self.max_cooldown // 2)
-                metrics[f"{species}_fraction_fast_cadence"] = float(np.mean(cooldowns <= fast_cadence_threshold))
-                metrics[f"{species}_cooldown_mean"] = float(np.mean(cooldowns))
+                # fraction_mobile: share of agents at the literal fastest rate (moves every step).
+                # This is now a genuine edge case (speed == speed_max exactly) rather than a wide
+                # rounded bucket, since the move rate itself is never rounded.
+                rates = np.array([self._genome_speed_to_move_rate(s) for s in arr])
+                metrics[f"{species}_fraction_mobile"] = float(np.mean(rates >= 1.0 - 1e-9))
+                expected_cooldowns = 1.0 / rates
+                fast_cadence_threshold = max(1.0, self.max_cooldown / 2.0)
+                metrics[f"{species}_fraction_fast_cadence"] = float(np.mean(expected_cooldowns <= fast_cadence_threshold))
+                metrics[f"{species}_cooldown_mean"] = float(np.mean(expected_cooldowns))
                 metrics[f"{species}_count"] = float(len(speeds))
             else:
                 metrics[f"{species}_speed_mean"] = 0.0
@@ -544,21 +553,36 @@ class PredPreyGrass(MultiAgentEnv):
     def _get_agent_genome(self, agent_id: str) -> Optional[Genome]:
         return self.agent_genomes.get(agent_id)
 
-    def _genome_speed_to_cooldown(self, speed: float) -> int:
-        """Map a normalised speed in [0.0, 1.0] to a cooldown in [1, max_cooldown].
+    def _genome_speed_to_move_rate(self, speed: float) -> float:
+        """Map a normalised speed in [0.0, 1.0] to a continuous per-step move rate.
 
-        speed=0.0 -> cooldown=max_cooldown (slowest).
-        speed=1.0 -> cooldown=1 (moves every step).
+        speed=0.0 -> rate=1/max_cooldown (slowest: moves on average once every
+        max_cooldown steps). speed=1.0 -> rate=1.0 (moves every step). This is
+        a direct linear map with no rounding, so every genome value produces a
+        distinct realised movement frequency via the accumulator in
+        `_process_agent_movements` — unlike the previous integer-cooldown
+        lookup, there are no plateaus where a mutation has zero phenotypic
+        effect.
         """
         normalized = max(0.0, min(1.0, float(speed)))
-        cooldown = self.max_cooldown - round(normalized * (self.max_cooldown - 1))
-        return max(1, cooldown)
+        min_rate = 1.0 / float(self.max_cooldown)
+        return min_rate + normalized * (1.0 - min_rate)
 
-    def _get_agent_cooldown(self, agent_id: str) -> int:
+    def _get_agent_move_rate(self, agent_id: str) -> float:
         genome = self._get_agent_genome(agent_id)
         if genome is None:
-            return 1
-        return self._genome_speed_to_cooldown(genome.speed)
+            return 1.0
+        return self._genome_speed_to_move_rate(genome.speed)
+
+    def _agent_will_move_this_step(self, agent_id: str) -> bool:
+        """Predict whether the agent's accumulator will cross 1.0 this step.
+
+        Used to build the action mask: the accumulator hasn't yet had this
+        step's rate added to it, so we look ahead by one increment rather than
+        reading the stored value directly.
+        """
+        rate = self._get_agent_move_rate(agent_id)
+        return self.agent_move_accumulator.get(agent_id, 0.0) + rate >= 1.0
 
     def _get_speed_cost_factor(self, agent_id: str) -> float:
         genome = self._get_agent_genome(agent_id)
@@ -639,20 +663,21 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Process movement and grid updates for all agents (non-vectorized, simple loop).
 
-        Cadence mechanic: movement only executes when the agent's cooldown counter
-        reaches zero.  On frozen steps the agent stays in place; the cooldown is
-        decremented each step regardless.
+        Cadence mechanic: each agent's move accumulator increases by its
+        genome-derived move rate every step. Movement executes only once the
+        accumulator reaches 1.0, which is then decremented by 1.0. On frozen
+        steps the agent stays in place but the accumulator still advances.
         """
         for agent in action_dict.keys():
             if agent not in self.agent_positions or self.terminations.get(agent):
                 continue
             # --- cadence gate ---
-            current_cooldown = self.agent_move_cooldowns.get(agent, 0)
-            if current_cooldown > 0:
-                self.agent_move_cooldowns[agent] = current_cooldown - 1
+            rate = self._get_agent_move_rate(agent)
+            accumulator = self.agent_move_accumulator.get(agent, 0.0) + rate
+            if accumulator < 1.0:
+                self.agent_move_accumulator[agent] = accumulator
                 continue  # frozen this step — skip movement entirely
-            # Can move: reset cooldown for next cycle
-            self.agent_move_cooldowns[agent] = self._get_agent_cooldown(agent) - 1
+            self.agent_move_accumulator[agent] = accumulator - 1.0
 
             old_position = self.agent_positions[agent]
             action = action_dict[agent]
@@ -720,7 +745,7 @@ class PredPreyGrass(MultiAgentEnv):
             if genome is not None:
                 spatial[self.num_obs_channels, :, :] = float(genome.speed)
         n_actions = self.action_range ** 2
-        can_move = self.agent_move_cooldowns.get(str(agent), 0) == 0
+        can_move = self._agent_will_move_this_step(str(agent))
         action_mask = np.ones(n_actions, dtype=np.float32)
         if not can_move:
             action_mask[:] = 0.0
@@ -1182,7 +1207,7 @@ class PredPreyGrass(MultiAgentEnv):
             },
             "used_agent_ids": list(self.used_agent_ids),
             "per_step_agent_data": self.per_step_agent_data.copy() if self.record_step_data else [],
-            "agent_move_cooldowns": self.agent_move_cooldowns.copy(),
+            "agent_move_accumulator": self.agent_move_accumulator.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -1229,7 +1254,7 @@ class PredPreyGrass(MultiAgentEnv):
                     self.agent_live_offspring_ids[agent_id] = copied
         self.used_agent_ids = set(snapshot.get("used_agent_ids", []))
         self.per_step_agent_data = snapshot["per_step_agent_data"].copy()
-        self.agent_move_cooldowns = snapshot.get("agent_move_cooldowns", {}).copy()
+        self.agent_move_accumulator = snapshot.get("agent_move_accumulator", {}).copy()
         # No longer need to restore cumulative_rewards separately
 
     def _build_possible_agent_ids(self):
@@ -1296,10 +1321,10 @@ class PredPreyGrass(MultiAgentEnv):
             genome_dict = genome.to_dict()
         else:
             genome_dict = None
-        # Assign a random phase offset to prevent all slow agents from moving in sync.
-        # Must come after genome is set so cooldown is derived from the actual speed trait.
-        _cooldown = self._get_agent_cooldown(agent_id)
-        self.agent_move_cooldowns[agent_id] = int(self.rng.integers(0, _cooldown))
+        # Assign a random phase offset so agents with the same move rate don't
+        # all move in sync. Uniform over [0, 1) — no genome lookup needed since
+        # the accumulator scale is the same regardless of rate.
+        self.agent_move_accumulator[agent_id] = float(self.rng.uniform(0.0, 1.0))
         # Initialize event-log entry
         self.agent_event_log[agent_id] = {
             "agent_id": agent_id,
@@ -1443,11 +1468,12 @@ class PredPreyGrass(MultiAgentEnv):
                 metrics[f"{species}_speed_p25"] = float(p25)
                 metrics[f"{species}_speed_p50"] = float(p50)
                 metrics[f"{species}_speed_p75"] = float(p75)
-                cooldowns = np.array([self._genome_speed_to_cooldown(s) for s in arr])
-                metrics[f"{species}_fraction_mobile"] = float(np.mean(cooldowns == 1))
-                fast_cadence_threshold = max(1, self.max_cooldown // 2)
-                metrics[f"{species}_fraction_fast_cadence"] = float(np.mean(cooldowns <= fast_cadence_threshold))
-                metrics[f"{species}_cooldown_mean"] = float(np.mean(cooldowns))
+                rates = np.array([self._genome_speed_to_move_rate(s) for s in arr])
+                metrics[f"{species}_fraction_mobile"] = float(np.mean(rates >= 1.0 - 1e-9))
+                expected_cooldowns = 1.0 / rates
+                fast_cadence_threshold = max(1.0, self.max_cooldown / 2.0)
+                metrics[f"{species}_fraction_fast_cadence"] = float(np.mean(expected_cooldowns <= fast_cadence_threshold))
+                metrics[f"{species}_cooldown_mean"] = float(np.mean(expected_cooldowns))
             else:
                 metrics[f"{species}_speed_mean"] = 0.0
                 metrics[f"{species}_speed_std"] = 0.0
