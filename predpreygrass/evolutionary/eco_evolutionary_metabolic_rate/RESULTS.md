@@ -155,36 +155,134 @@ Move to properly powered multi-seed replication (several seeds each of real vs. 
 compared via an actual statistical test on drift magnitude) rather than running another single
 variant and eyeballing the result again.
 
-### Iteration 5 — multi-seed replication (planned, not yet run)
+### Iteration 5 — multi-seed replication (complete)
 
-**Config:** several seeds (e.g. 4-5) each of the real satiation-throttle config (Iteration 3)
-and the neutral-drift control (Iteration 4), shortened to ~1000 iterations per run rather than
-2000 to make the total compute budget tractable (each full run takes ~7-8 hours; halving length
-roughly halves total time to a statistically meaningful answer, and most of the interesting
-drift dynamics were already visible well before iteration 2000 in prior runs).
+**Config:** 3 seeds (42, 43, 44) each of the real satiation-throttle config (Iteration 3) and
+the neutral-drift control (Iteration 4), shortened to ~1000 iterations per run rather than 2000
+to make the total compute budget tractable. Runs:
+`PPO_ECO_EVOLUTION_METABOLIC_RATE_SEED{42,43,44}_*` (real) and
+`PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_SEED{42,43,44}_*` (control), all
+1000/1000 iterations complete. Compared via Mann-Whitney U on per-seed drift magnitude
+(`analyze_replication_seeds.py`).
 
-**Rationale:** a single real run vs. a single control run can never confidently answer "is this
-selection or drift" — only the *distribution* of outcomes across replicates can. Compare
-per-seed drift magnitude (e.g. final MR − founder MR, or peak deviation) between the real and
-control groups with an actual test (e.g. Mann-Whitney U, given likely small-N non-normal
-samples) rather than eyeballing single curves as done in Iterations 2-4.
+**Result: null.** Real and control are statistically indistinguishable for both species on both
+drift metrics (final |deviation from founder| and max |deviation from founder|), and the
+direction doesn't even consistently favor real > control:
 
-**Secondary, cheaper levers to hold in reserve** if replication comes back ambiguous rather than
-decisive:
-- **Lower `metabolic_rate_alpha`** (currently 0.7, e.g. toward 0.5) to sharpen the individual-
-  level fitness gradient — a single-parameter change testing whether the signal is real but too
-  weak to detect, rather than absent.
-- **Scale up population size** (larger grid, higher `n_initial_active_predators/prey`) to shrink
-  the neutral-drift noise floor directly — population-genetics theory predicts drift variance
-  scales down as population size scales up, while a real selection differential doesn't dilute
-  the same way.
-- **Reconsider whether `metabolic_rate`'s mechanism gives selection enough leverage at all** —
-  its effect on any individual's realized fitness is quite indirect (energy accounting several
-  steps removed from the reproduction outcome, itself already a long chain of noisy events). If
-  the above two levers both come back inconclusive, a trait with more direct fitness leverage
-  may be needed rather than continuing to tune this one.
+| species | metric | real (n=3) | control (n=3) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0553 | 0.0690 | 4.0 | 0.650 |
+| predator | max \|dev\| | 0.1049 | 0.1117 | 4.0 | 0.650 |
+| prey | final \|dev\| | 0.0507 | 0.0422 | 4.0 | 0.650 |
+| prey | max \|dev\| | 0.0848 | 0.0816 | 3.0 | 0.800 |
 
-**Status:** not started.
+Predator drift is actually *smaller* in the real runs than the control on both metrics — the
+opposite of what a real selection effect would predict. Prey drift is slightly larger in the
+real runs, but the gap (0.051 vs 0.042 final; 0.085 vs 0.082 max) is far smaller than the
+±0.02-0.03 spread already visible seed-to-seed within each group (see per-run table in the
+detail section below), so it reads as noise rather than signal. n=3 vs n=3 has very limited
+power and cannot reach conventional significance regardless of true effect size, but the
+complete absence of a consistent direction — not just a failure to reach significance — is
+itself informative.
+
+**This reverses Iteration 4's "prey: more encouraging" read.** That read was based on a single
+control run happening to show flatter prey drift (+1.6%) than the real runs (+4.1%, +4.3%). With
+three real and three control seeds, prey's own real-run range (final |dev| 0.043-0.064) turns out
+to overlap the control's range (0.016-0.065) almost entirely — the earlier "encouraging" gap
+was itself a small-N artifact, exactly the failure mode the neutral control was introduced to
+guard against.
+
+**Possible cause:** consistent with the third secondary lever flagged after Iteration 4 —
+`metabolic_rate`'s fitness leverage may simply be too indirect (energy accounting several steps
+removed from the reproduction outcome) to produce a selection differential that outruns
+neutral drift at this population scale, within this run length.
+
+**Adjustment → Iteration 6:** do not declare the Darwin/Baldwin loop established for
+`metabolic_rate` on this evidence. See "Next steps" below for the choice between shrinking the
+noise floor (population scale, or lowering `metabolic_rate_alpha`) versus reconsidering the
+trait's fitness leverage altogether.
+
+**Scope of this null result — read carefully before drawing a broader conclusion:**
+- This is a null specifically for criterion 3 of the project's Darwin/Baldwin goal (genuine,
+  selection-driven genome drift). Criteria 1 (sustainability) and 2 (coexistence) are unaffected
+  — all six replicate runs completed normally and are not being questioned by this result.
+- This is a null for **this trait's implementation** (`metabolic_rate` at `alpha=0.7`, at the
+  current population scale), not evidence that no genome trait could show a real Darwin/Baldwin
+  loop in this environment. The leading hypothesis is that this trait's fitness leverage is too
+  indirect to clear the drift noise floor — testable cheaply (Iteration 6, lower `alpha`) before
+  concluding the concept itself doesn't work here.
+
+**Status:** complete. Full per-seed data and comparison to Iterations 2-4 in the detail section
+below.
+
+### Iteration 6 — sharper fitness gradient (`metabolic_rate_alpha` 0.7 → 0.4, complete)
+
+**Config:** identical to Iteration 5 in every other respect (satiation throttle unchanged,
+3 seeds × 2 conditions, 1000 iters each), with `metabolic_rate_alpha` lowered from 0.7 to 0.4 in
+`config_env_eco_evolutionary.py` — a bigger step than the originally-floated 0.5 midpoint,
+chosen to maximize the chance of revealing a signal if one exists before concluding the trait
+lacks fitness leverage. Sub-linear energy gain (`food_energy × MR^alpha`) is now more sharply
+saturating, which should widen the fitness gap between low- and high-MR individuals relative to
+Iteration 5.
+
+**Rationale:** Iteration 5 came back null at α=0.7 for both species. This doesn't distinguish
+"no selection" from "selection present but too weak to clear the drift noise floor at this
+gradient." Sharpening α is the cheapest test of that distinction — same population size, same
+run length, same analysis pipeline (`analyze_replication_seeds.py`), so the two iterations are
+directly comparable via the same Mann-Whitney U approach.
+
+**Launched:** 2026-07-12 21:15, via `run_replication_seeds.sh` (real seeds 42/43/44 then control
+seeds 42/43/44, sequential on one GPU). All 6 runs completed 1000/1000 iterations cleanly, no
+errors, finishing 2026-07-14 23:09 (~50h total, ~8h/run).
+
+**Result: still null, same pattern as Iteration 5.**
+
+| species | metric | real (n=3) | control (n=3) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0687 | 0.0702 | 5.0 | 0.500 |
+| predator | max \|dev\| | 0.1018 | 0.1012 | 5.0 | 0.500 |
+| prey | final \|dev\| | 0.0484 | 0.0560 | 3.0 | 0.800 |
+| prey | max \|dev\| | 0.0869 | 0.0956 | 3.0 | 0.800 |
+
+Real and control are statistically indistinguishable for both species on both metrics, at a
+fitness gradient 4x sharper than Iteration 5's. Predator is essentially tied (0.069 vs 0.070);
+prey control is nominally *larger* than real on both metrics — the opposite of what a real
+selection effect would predict.
+
+**Individual-level confirmation.** Pulled the `mr_repro_spearman` metric (genome-vs-reproduction
+correlation per episode, logged but never previously analyzed — a much more direct test than the
+population-mean drift metric, since it doesn't need selection to move the aggregate before it's
+detectable) across all 6 runs:
+
+| run | predator mean spearman | prey mean spearman |
+|---|---|---|
+| real 42 / 43 / 44 | +0.036 / −0.026 / −0.034 | −0.001 / −0.006 / −0.006 |
+| control 42 / 43 / 44 | +0.041 / +0.010 / −0.049 | +0.002 / −0.000 / −0.005 |
+
+Every value is tiny (≤0.05, essentially noise for a correlation bounded [−1, 1]), sign-flips
+across seeds within *both* groups, and real vs. control ranges overlap completely. This was
+supposed to catch a real-but-weak individual-level selection differential that the population
+mean might dilute — it doesn't find one either.
+
+**Verdict: sharpening the gradient did not reveal a hidden signal.** Two independent lines of
+evidence (population-mean drift, individual-level reproduction correlation) are null at both
+α=0.7 and α=0.4. This weighs against "selection is real but too weak to detect" and toward
+"`metabolic_rate`'s fitness leverage is too indirect regardless of tuning" — the trait itself,
+not the gradient steepness, looks like the limiting factor.
+
+**Adjustment → close this line.** No further tuning of `metabolic_rate` (population scaling,
+further alpha sweeps) — both would just re-confirm the same null more expensively. Effort shifts
+to `eco_evolutionary_investment`, a trait with a larger uncontrolled early signal that was never
+tested with this methodology (paused for an unrelated bug, not disproven) and a more direct
+fitness link. See `predpreygrass/evolutionary/RESULTS.md` for the cross-module trial log and
+`eco_evolutionary_investment/RESULTS.md` for the resumed plan (R4+).
+
+**Scope of this null result, again:** specific to criterion 3 (selection-driven drift) for this
+trait's implementation. Criteria 1 (sustainability) and 2 (coexistence) remain solved via the
+satiation throttle and are unaffected — all six replicate runs across two alpha values completed
+normally.
+
+**Status:** complete. `metabolic_rate` work concludes here.
 
 ---
 
@@ -635,6 +733,66 @@ rather than confirmed. See Iteration 5 above for the next step (multi-seed repli
 
 ---
 
+## Multi-seed replication — real vs. neutral control across 3 seeds each (Iteration 5 detail)
+
+**Runs:** real satiation-throttle config, seeds 42/43/44
+(`PPO_ECO_EVOLUTION_METABOLIC_RATE_SEED{42,43,44}_*`); neutral-drift control, seeds 42/43/44
+(`PPO_ECO_EVOLUTION_METABOLIC_RATE_NEUTRAL_CONTROL_SEED{42,43,44}_*`). All 1000/1000 iterations
+complete. Analysis: `analyze_replication_seeds.py`, drift measured as Q1 → Q5 quintile-mean
+`live_genome_*_metabolic_rate_mean` (`net_chg`), final-quintile deviation from founder mean 1.0
+(`|dev_final|`), and largest deviation from founder mean at any quintile (`max|dev|`).
+
+### Per-seed data
+
+| group | seed | species | Q1 | Q5 | net_chg | \|dev_final\| | max\|dev\| |
+|---|---|---|---|---|---|---|---|
+| real | 42 | predator | 0.9694 | 0.9462 | −0.0233 | 0.0538 | 0.0951 |
+| real | 42 | prey | 0.9421 | 0.9552 | +0.0130 | 0.0448 | 0.0917 |
+| real | 43 | predator | 0.8959 | 0.9255 | +0.0296 | 0.0745 | 0.1598 |
+| real | 43 | prey | 1.0409 | 1.0640 | +0.0231 | 0.0640 | 0.0731 |
+| real | 44 | predator | 1.0468 | 1.0375 | −0.0093 | 0.0375 | 0.0598 |
+| real | 44 | prey | 0.9491 | 0.9568 | +0.0077 | 0.0432 | 0.0897 |
+| control | 42 | predator | 0.9437 | 0.9538 | +0.0100 | 0.0462 | 0.0970 |
+| control | 42 | prey | 0.9493 | 0.9352 | −0.0142 | 0.0648 | 0.1035 |
+| control | 43 | predator | 0.8646 | 0.8870 | +0.0224 | 0.1130 | 0.1787 |
+| control | 43 | prey | 1.0244 | 1.0156 | −0.0088 | 0.0156 | 0.0492 |
+| control | 44 | predator | 1.0459 | 1.0479 | +0.0020 | 0.0479 | 0.0594 |
+| control | 44 | prey | 0.9384 | 0.9537 | +0.0152 | 0.0463 | 0.0921 |
+
+Every one of the six runs individually shows *some* net drift (magnitudes 0.001-0.030 in Q1→Q5
+mean, 0.038-0.179 in max deviation) — consistent with all prior iterations. The question this
+replication answers is whether the real group's drift is *larger* than the control group's.
+
+### Mann-Whitney U: drift magnitude, real vs. control
+
+| species | metric | real (n=3) | control (n=3) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0553 | 0.0690 | 4.0 | 0.650 |
+| predator | max \|dev\| | 0.1049 | 0.1117 | 4.0 | 0.650 |
+| prey | final \|dev\| | 0.0507 | 0.0422 | 4.0 | 0.650 |
+| prey | max \|dev\| | 0.0848 | 0.0816 | 3.0 | 0.800 |
+
+**Predator:** control drift is larger than real on both metrics — the opposite of what selection
+would predict. Consistent with Iteration 4's single-seed control, which also showed comparable
+magnitude to the real runs; the added replicates make this a firmer null rather than resolving it
+in favor of selection.
+
+**Prey:** real drift is nominally larger than control on both metrics, but only by 0.005-0.03,
+which is smaller than the seed-to-seed spread within either group alone (e.g. real `|dev_final|`
+ranges from 0.0432 to 0.0745 across its own three seeds). This is the opposite conclusion from
+Iteration 4, where the single control run's flat prey trajectory (+1.6%) looked meaningfully
+smaller than both real runs available at the time (+4.1%, +4.3%) — that comparison didn't survive
+adding two more seeds to each group.
+
+**Verdict: null result for both species.** Across 3 seeds each, the satiation-throttle
+mechanism's `metabolic_rate` drift is not statistically distinguishable from the neutral-drift
+control's drift, and the direction of the (non-significant) gap doesn't consistently favor real
+selection either. This does not prove selection is absent — n=3 vs n=3 has very limited power —
+but it removes the basis for treating the Iteration 0-3 drift trajectories as evidence of a
+working Darwin/Baldwin loop for this trait. See "Next steps" below.
+
+---
+
 ## Comparison at a glance
 
 | | Baseline (no throttle) | Ratio cap | Satiation throttle (run 1) | Satiation throttle (run 2) | Neutral control |
@@ -646,32 +804,60 @@ rather than confirmed. See Iteration 5 above for the next step (multi-seed repli
 | Prey genome trend | clear: 0.99 → 1.03 → 1.00 | muted: 0.98 → 1.00 → 0.99 | similar: 0.95 → 1.00 → 0.98 | similar: 0.99 → 0.96 | much flatter: 0.95 → 0.97, no cycle |
 | Mechanism realism | n/a (uncapped, unstable) | population census (not diegetic) | individual hunting/energy history | individual hunting/energy history | n/a (diagnostic only) |
 
-**Reading this table**: the neutral control's predator trend is comparable in magnitude to the
-real runs' — meaning the predator "cycles" above are not yet distinguishable from noise. The
-neutral control's prey trend is clearly flatter than the real cycles — meaning those prey
-results likely are real signal. See Iteration 4/5 above for the full reasoning.
+**Reading this table**: the single-run comparison (Iteration 4) suggested the neutral control's
+predator trend was comparable in magnitude to the real runs', while its prey trend looked
+clearly flatter than the real cycles. **The Iteration 5 multi-seed replication (3 seeds each,
+Mann-Whitney U) overturned the prey read**: across 3 real and 3 control seeds, prey drift
+magnitude is statistically indistinguishable between groups (p=0.65-0.80), and predator remains
+indistinguishable as well — with control drift nominally *larger* than real on both predator
+metrics. Neither species' drift is currently distinguishable from neutral genetic drift. See
+Iteration 5 above and its detail section for the full data.
 
 ---
 
 ## Next steps
 
-1. **Multi-seed replication (Iteration 5, priority).** The neutral control is complete but a
-   single-run comparison is underpowered for the predator question specifically — run several
-   seeds each of the real satiation-throttle config and the control (shortened to ~1000 iters
-   each to keep total compute tractable), and compare drift-magnitude distributions with an
-   actual statistical test rather than eyeballing single curves.
-2. **If replication is still ambiguous, attack signal-to-noise directly**: lower
-   `metabolic_rate_alpha` (sharper fitness gradient, tests whether the signal is real but weak)
-   and/or scale up population size (shrinks the neutral-drift noise floor without diluting a
-   real selection differential the same way).
-3. **Confirm the prey result more rigorously too** — it looks better than the predator result
-   under this same control, but "looks better" from one control run is still not a formal
-   significance test. Worth including prey in the same multi-seed replication rather than
-   treating it as settled.
-4. **Track per-capita reproduction rate directly**, binned by MR quartile, separate from the
+1. **Multi-seed replication — done (Iteration 5).** Result: null for both species; see above.
+   `metabolic_rate` drift is not currently distinguishable from neutral genetic drift at this
+   population scale and run length.
+
+2. **Lower `metabolic_rate_alpha` first (recommended next move, Iteration 6).** Currently 0.7;
+   try something sharper, e.g. 0.4-0.5. This is the cheapest available test of *why* Iteration 5
+   came back null: it changes one config value, keeps the exact same population size, run
+   length, and analysis pipeline, so a 3-seed-each replication can reuse
+   `analyze_replication_seeds.py` unmodified. Two clean outcomes:
+   - **Drift differential appears** (real > control becomes distinguishable) → the mechanism
+     works, Iteration 2-4's signal was real but too weak at α=0.7 to clear the noise floor —
+     `metabolic_rate` is salvageable, just needed recalibration.
+   - **Still null even at a much sharper gradient** → strong evidence the trait itself lacks
+     fitness leverage regardless of tuning, which justifies moving to item 4 (a different trait)
+     rather than continuing to tune this one.
+
+3. **Scale up population size — deprioritized relative to (2).** Larger population shrinks the
+   neutral-drift noise floor (drift variance scales down with population size, a real selection
+   differential doesn't dilute the same way), but it's a more expensive and less clean
+   experiment than the alpha lever: bigger populations mean slower wall-clock iterations, and
+   `predator_satiation_cooldown` / `max_energy_gain_per_prey` were tuned for the current scale —
+   changing population size risks needing to re-tune sustainability (Iterations 1-2's work)
+   rather than isolating the one variable of interest. Worth doing only if the alpha lever alone
+   doesn't resolve the question, and even then, tune alpha and scale together only if both
+   independently looked promising.
+
+4. **Reconsider whether `metabolic_rate` is the right trait at all — last resort, not first.**
+   Its fitness effect is indirect (linear energy cost, sub-linear `MR^0.7` energy gain, several
+   noisy steps removed from the reproduction outcome). If (2) and (3) both come back null, a
+   trait with more direct fitness leverage (e.g. `offspring_investment_fraction`, see README.md)
+   is likely needed. Held for last because it discards the most infrastructure (genome
+   mechanics, all five iterations' worth of tuned throttle constants) and because it's currently
+   unfalsified by data — (2) is a much cheaper way to test the "not enough leverage" hypothesis
+   before committing to a full trait redesign.
+
+5. **Track per-capita reproduction rate directly**, binned by MR quartile, separate from the
    existing (binary-outcome) spearman correlation, as a cleaner selection-differential metric
    than the mismatched eco_evolution/live_genome comparison this document originally relied on.
-5. **Investigate the episode-completion ceiling directly** (both satiation runs decelerate
+   Would help distinguish "no selection" from "selection present but this metric can't see it"
+   in whichever of (2)/(3)/(4) comes next.
+6. **Investigate the episode-completion ceiling directly** (both satiation runs decelerate
    rather than approach Fix 1's ~98%). Options: tune `predator_satiation_cooldown` /
    `max_energy_gain_per_prey`, or accept the lower completion rate as the price of a more
    realistic mechanism.

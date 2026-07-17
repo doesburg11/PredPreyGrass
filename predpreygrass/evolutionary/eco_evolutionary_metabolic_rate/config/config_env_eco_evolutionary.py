@@ -69,8 +69,12 @@ config_env = {
         "metabolic_rate": (0.5, 2.0),
     },
     # Exponent for sub-linear energy gain scaling. α=1.0 is symmetric (no tradeoff);
-    # α=0.7 gives moderate digestive saturation with a clear interior optimum.
-    "metabolic_rate_alpha": 0.7,
+    # lower α sharpens the individual-level fitness gradient (more digestive
+    # saturation). Lowered from 0.7 to 0.4 for Iteration 6 after the Iteration 5
+    # multi-seed replication came back null at 0.7 -- testing whether the loop is
+    # detectable with a stronger gradient before concluding the trait lacks enough
+    # fitness leverage. See RESULTS.md.
+    "metabolic_rate_alpha": 0.4,
     # Absolute energy caps
     "max_energy_grass": 2.0,
     # Learning agents

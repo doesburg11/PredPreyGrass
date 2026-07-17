@@ -57,6 +57,13 @@ class PredPreyGrass(MultiAgentEnv):
         self.movement_energy_cost_per_cell_prey = config.get("movement_energy_cost_per_cell_prey", 0.0)
         self.predator_creation_energy_threshold = config["predator_creation_energy_threshold"]
         self.prey_creation_energy_threshold = config["prey_creation_energy_threshold"]
+        # Individual-level throttle on predator hunting (satiation), ported from
+        # eco_evolutionary_metabolic_rate: regulates predator population growth
+        # through each predator's own recent hunting success (a Holling-type
+        # handling-time mechanism) rather than a population-level rule. 0
+        # disables the cooldown.
+        self.predator_satiation_cooldown = int(config.get("predator_satiation_cooldown", 0))
+        self.max_energy_gain_per_prey = float(config.get("max_energy_gain_per_prey", float("inf")))
         self.max_energy_grass = self.config["max_energy_grass"]
 
 
@@ -92,6 +99,14 @@ class PredPreyGrass(MultiAgentEnv):
         # Action range and movement mapping
         self.action_range = config["action_range"]
         self.genome_enabled = config.get("genome_enabled", True)
+        # Neutral-drift null model: when True, an offspring's genome template is a
+        # uniformly random currently-alive same-species agent instead of the agent
+        # that actually reproduced. Reproduction eligibility, timing, and all energy
+        # dynamics are unchanged -- only which genome propagates is decoupled from
+        # reproductive success. Isolates mutation + finite-population sampling noise
+        # from genuine selection. Ported from eco_evolutionary_metabolic_rate. See
+        # RESULTS.md.
+        self.genome_neutral_drift_control = bool(config.get("genome_neutral_drift_control", False))
         self.genome_config = {
             "founder_genome": config.get("founder_genome", {}),
             "genome_mutation": config.get("genome_mutation", {}),
@@ -116,6 +131,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         # Ages (in steps) for all currently active agents
         self.agent_ages = {}
+        # Step at which each predator's satiation cooldown from its last catch
+        # ends; a predator on cooldown does not hunt (mirrors digestion/rest).
+        self.agent_satiation_until = {}
+        self.satiation_blocked_catches_predator = 0
         # Per-agent event log for detailed post-hoc analysis
         # Structure per agent_id:
         # {
@@ -509,7 +528,20 @@ class PredPreyGrass(MultiAgentEnv):
             return None
         if is_founder or parent_agent_id is None or parent_agent_id not in self.agent_genomes:
             return founder_genome(self._policy_group(agent_id), self.genome_config, self.rng)
-        return mutate_genome(self.agent_genomes[parent_agent_id], self.genome_config, self.rng)
+        template_id = parent_agent_id
+        if self.genome_neutral_drift_control:
+            # Sever genome from reproductive success: the actual parent still pays
+            # the energy cost and determines spawn timing/position (population
+            # dynamics unchanged), but the mutation template is a uniformly random
+            # currently-alive same-species agent instead of the true parent.
+            species = self._policy_group(agent_id)
+            candidates = [
+                str(aid) for aid in self.agents
+                if str(aid) in self.agent_genomes and self._policy_group(str(aid)) == species
+            ]
+            if candidates:
+                template_id = candidates[int(self.rng.integers(len(candidates)))]
+        return mutate_genome(self.agent_genomes[template_id], self.genome_config, self.rng)
 
     def _get_offspring_investment_energy(self, parent_agent_id: str) -> float:
         genome = self._get_agent_genome(parent_agent_id)
@@ -711,15 +743,26 @@ class PredPreyGrass(MultiAgentEnv):
         caught_prey = next(
             (prey for prey, pos in self.agent_positions.items() if "prey" in prey and np.array_equal(predator_position, pos)), None
         )
+        if caught_prey and self.current_step < self.agent_satiation_until.get(agent, 0):
+            # Still digesting/resting from a recent catch: does not hunt this
+            # step, so the prey survives. Regulates predator population growth
+            # through each predator's own recent hunting success rather than a
+            # population-level rule.
+            self.satiation_blocked_catches_predator += 1
+            caught_prey = None
         if caught_prey:
             self.agents_just_ate.add(agent)
             self.rewards[agent] = self._get_role_specific("reward_predator_catch_prey", agent)
             prey_energy = float(self.agent_energies[caught_prey])
-            energy_gain = prey_energy
+            # Satiation ceiling: a single kill can't provide more than this,
+            # regardless of how much energy the prey itself had accumulated.
+            energy_gain = min(prey_energy, self.max_energy_gain_per_prey)
 
             self.agent_energies[agent] += energy_gain
             self.grid_world_state[0, *predator_position] = self.agent_energies[agent]
             self._per_agent_step_deltas[agent]["eat"] = energy_gain
+            if self.predator_satiation_cooldown > 0:
+                self.agent_satiation_until[agent] = self.current_step + self.predator_satiation_cooldown
             predator_record = self.agent_stats_live.get(agent)
             if predator_record is not None:
                 predator_record["times_ate"] += 1
@@ -1090,6 +1133,7 @@ class PredPreyGrass(MultiAgentEnv):
             raise ValueError(f"Agent id {agent_id} already registered in this episode.")
         self.used_agent_ids.add(agent_id)
         self.agent_ages[agent_id] = 0
+        self.agent_satiation_until[agent_id] = 0
         self.agent_offspring_counts[agent_id] = 0
         self.agent_live_offspring_ids[agent_id] = []
         self.agent_parents[agent_id] = parent_agent_id
@@ -1297,6 +1341,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         metrics["predator_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_predator)
         metrics["prey_reproduction_blocked"] = float(self.reproduction_blocked_due_to_capacity_prey)
+        metrics["predator_satiation_blocked_catches"] = float(self.satiation_blocked_catches_predator)
         metrics["predator_spawned_total"] = float(self.spawned_predators)
         metrics["prey_spawned_total"] = float(self.spawned_prey)
         metrics["peak_active_predators"] = float(self.peak_active_predators)

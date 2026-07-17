@@ -26,6 +26,20 @@ config_env = {
     "prey_creation_energy_threshold": 8.0,
     "initial_energy_predator_at_reset": 5.0,
     "initial_energy_prey_at_reset": 3.0,
+    # Individual-level throttles on predator hunting (satiation), ported from
+    # eco_evolutionary_metabolic_rate Iteration 2 -- same starting values since
+    # the base energy economy here (thresholds/initial energies above) matches
+    # that module almost exactly. Regulates predator population growth through
+    # each predator's own recent hunting success (a Holling-type handling-time
+    # mechanism) rather than an artificial population-level rule. Needs a pilot
+    # run to confirm these transfer cleanly before trusting them -- investment
+    # changes the parent's post-reproduction energy balance in a way metabolic
+    # rate doesn't, so the sustainability effect may differ. Steps after a
+    # catch before the same predator can catch again ("digesting").
+    "predator_satiation_cooldown": 8,
+    # Per-catch energy cap ("satiation ceiling") -- a predator can't extract
+    # more than this from a single kill regardless of the prey's own energy.
+    "max_energy_gain_per_prey": 8.0,
     # Heritable biological trait. Investment affects offspring starting energy, not policy weights.
     "genome_enabled": True,
     "founder_genome": {

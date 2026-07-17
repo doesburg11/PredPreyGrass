@@ -1,21 +1,20 @@
 """
-Trains the eco_evolutionary_investment environment with PPO using the Ray RLlib
-new API stack.
+Neutral-drift control for the eco_evolutionary_investment environment.
 
-The environment is a predator-prey-grass grid world in which agents carry a
-heritable genome trait (offspring_investment_fraction). At reproduction, a
-fraction of the parent's energy is transferred to the offspring; the fraction
-is inherited and mutated across generations (Darwinian layer). Within-lifetime
-foraging and hunting behavior is learned by shared PPO policies and is not
-inherited (Baldwinian layer).
+Identical to tune_ppo_investment.py in every respect except the environment
+config: genome_neutral_drift_control=True severs genome inheritance from
+reproductive success (offspring genome templates come from a random currently-alive
+same-species agent, not the actual parent) while leaving population/energy
+dynamics unchanged. Any offspring_investment_fraction drift observed in this run
+is attributable purely to mutation + finite-population sampling noise, not
+selection.
 
-Checkpoints and a copy of the environment source are saved under ~/ray_results/
-for provenance. Investment-fraction genome statistics are logged to TensorBoard
-via the EpisodeReturn callback.
+Compare this run's live_investment/*_offspring_investment_fraction_mean trajectory
+directly against the real R4/R5 satiation-throttle runs (R7 -- see RESULTS.md).
 """
 
 from predpreygrass.evolutionary.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_env_eco_evolutionary_neutral_control import config_env
 from predpreygrass.evolutionary.eco_evolutionary_investment.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.evolutionary.eco_evolutionary_investment.utils.networks import build_multi_module_spec
 
@@ -43,14 +42,6 @@ def parse_args():
     parser.add_argument(
         "--max-iters", type=int, default=None,
         help="Override config_ppo['max_iters'] for this run.",
-    )
-    parser.add_argument(
-        "--fixed-investment-fraction", type=float, default=None,
-        help="R4 reverse-leg fitness sweep: freeze offspring_investment_fraction at this exact "
-             "value for every agent (sets genome_enabled=False, which makes "
-             "_get_offspring_investment_energy fall back to founder_genome's mean -- see "
-             "predpreygrass_rllib_env.py). No inheritance, no mutation, no per-agent variation. "
-             "Tags the experiment name so sweep runs don't collide.",
     )
     return parser.parse_args()
 
@@ -85,36 +76,17 @@ if __name__ == "__main__":
     args = parse_args()
     if args.seed is not None:
         config_env = dict(config_env, seed=args.seed)
-    fixed_tag = ""
-    if args.fixed_investment_fraction is not None:
-        fixed_value = args.fixed_investment_fraction
-        config_env = dict(
-            config_env,
-            genome_enabled=False,
-            founder_genome={
-                "predator": {
-                    **config_env["founder_genome"]["predator"],
-                    "offspring_investment_fraction_mean": fixed_value,
-                },
-                "prey": {
-                    **config_env["founder_genome"]["prey"],
-                    "offspring_investment_fraction_mean": fixed_value,
-                },
-            },
-        )
-        fixed_tag = f"_FIXED{fixed_value:.2f}".replace(".", "")
 
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
     register_env("PredPreyGrass", env_creator)
 
-    # ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
-    version = f"ECO_EVOLUTION_INVESTMENT{seed_tag}{fixed_tag}"
+    version = f"ECO_EVOLUTION_INVESTMENT_NEUTRAL_CONTROL{seed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -134,7 +106,6 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
     if sample_env.observation_spaces is None or sample_env.action_spaces is None:
@@ -192,7 +163,6 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
-        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )

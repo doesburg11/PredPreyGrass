@@ -349,6 +349,236 @@ At ~194K environment steps (178 total iterations across three runs), the experim
 
 The target for the next run (R4) is to re-enter the R1-equivalent long-episode regime (ep_len > 500, ep_ret > 2000) under the new randomised initialisation. If achieved, the R4 data will provide investment-fraction genome trajectory data from a more exploration-robust policy, enabling a more rigorous test of the Baldwinian-Darwinian coupling hypothesis.
 
+**Correction (added after the `eco_evolutionary_metabolic_rate` line concluded):** the "confirmed directional Darwinian genome drift" claim above was based on a single 59-iteration run with no neutral-drift control. The same kind of single-run drift read looked equally "confirmed" for `metabolic_rate` early on and turned out, after a proper 3-seed-each real-vs-control replication (Mann-Whitney U), to be statistically indistinguishable from pure mutation + finite-population noise. Treat R1's drift claim as an unverified early signal, not an established result, until R4+ actually tests it against a control. See `predpreygrass/evolutionary/RESULTS.md` for the full cross-module trial log.
+
+---
+
+## Resuming with the validated methodology — R4 onward
+
+**Why now, and why here.** `eco_evolutionary_metabolic_rate` (Iterations 0-6) is the module where
+the actual rigorous methodology got built: a biologically-grounded satiation throttle for
+sustainability, a `genome_neutral_drift_control` flag to isolate real selection from neutral
+drift, and a 3-seed-each replication compared via Mann-Whitney U. Applied to `metabolic_rate`,
+that methodology returned a null result — no drift-magnitude gap between real and control, for
+either species, at two different fitness-gradient steepnesses, and no individual-level
+MR-vs-reproduction correlation either. `offspring_investment_fraction` was never given that same
+test — R1's drift signal was larger, in far fewer iterations, than anything `metabolic_rate` ever
+produced, and work stopped for an unrelated engineering bug (checkpoint-resume collapse, see
+above), not because the trait looked bad. It's the more promising untested candidate, not a
+fallback.
+
+**Numbering note:** from here on this log uses the same flat convention as
+`metabolic_rate`'s "Iteration N" — one R-number per distinct trial/run/config, no sub-numbering.
+(An earlier draft of this section nested three trials inside a single "R4" as "Pilot 1/2" and
+"Step 2"; renumbered below so R4, R5, R6... each mean exactly one trial, consistent with the rest
+of this project's documentation. See `predpreygrass/evolutionary/RESULTS.md` for how "Trial"
+at the cross-module level relates to "R"/"Iteration" at the per-module level.)
+
+**Plan, in order (R-numbers assigned as each trial actually runs):**
+
+1. **Port the satiation throttle from `metabolic_rate`.** (→ R4, R5 below.) Done —
+   `predator_satiation_cooldown` and `max_energy_gain_per_prey` added to
+   `config_env_eco_evolutionary.py`, and the cooldown + per-catch cap logic ported into
+   `_handle_predator_engagement` in `predpreygrass_rllib_env.py` (same starting values as
+   `metabolic_rate` Iteration 2, since the base energy economy here matches that module closely).
+
+2. **A reverse-leg test, done early and cheap, before any replication.** (→ R6 below.) Freeze
+   the genome at several fixed values (`genome_enabled: False`, sweep `founder_genome` mean
+   across the trait bounds) and check whether fitness outcomes (episode length, reproduction
+   events, survival) vary across values at all. Pure config sweep plus evaluation —
+   `genome_enabled` and `founder_genome` are already config-level knobs (config lines 30-38), no
+   new code needed. This is the check `metabolic_rate` skipped from Iteration 0 onward (its own
+   original next-steps list called it "Priority 1" and it was never actually done, only
+   approximated later by the `mr_repro_spearman` proxy metric — which turned out to carry no
+   signal anyway). If outcomes are flat here too, stop before spending compute on a full
+   replication.
+
+3. **If R6 shows a real fitness gradient (→ R7, planned):** port the neutral-drift control (a
+   `genome_neutral_drift_control` flag plus a dedicated `tune_ppo_investment_neutral_control.py`,
+   mirroring `metabolic_rate`'s), then run the same 3-real + 3-control-seed, 1000-iteration
+   replication, compared via Mann-Whitney U.
+
+4. **If that looks promising (→ R8, planned):** the expensive step — train under different
+   frozen genome regimes and compare *learned policy behavior*, not just fitness outcome, for the
+   strongest version of the reverse-leg claim (does evolution measurably reshape what RL learns,
+   not just which outcomes result).
+
+### R4 — satiation-throttle pilot, 100 iterations (complete, inconclusive)
+
+**Config:** the throttle port (`predator_satiation_cooldown: 8`, `max_energy_gain_per_prey:
+8.0`), `--max-iters 100`. Run: `PPO_ECO_EVOLUTION_INVESTMENT_2026-07-14_23-17-11`.
+
+**Result:** 100/100 iterations, no errors. Episode length grew substantially early on (36 → 48 →
+80 → 95 → 120 steps across iterations 1-8) — a good early sign the throttle is preventing rapid
+predator-driven episode termination, same direction as `metabolic_rate` Iteration 2. But the
+predator:prey ratio (from the always-populated step-level `live_investment` counts, since
+episode-level metrics go NaN past iteration ~8 — same Ray `Stats`-reducer cadence artifact
+documented in `metabolic_rate`'s Iteration 6, more pronounced here because this module has only 7
+parallel env runners vs. `metabolic_rate`'s 29) climbed steadily the whole run with no sign of
+leveling off:
+
+| iter | predators | prey | ratio |
+|---|---|---|---|
+| 10 | 7.8 | 56.0 | 0.14 |
+| 30 | 13.8 | 39.7 | 0.35 |
+| 60 | 17.2 | 28.5 | 0.60 |
+| 100 | 18.6 | 18.8 | **0.99** |
+
+**Verdict: inconclusive.** Promising on episode length, but the ratio trending toward 1:1 with no
+plateau is worse than `metabolic_rate`'s eventual stabilized ratio (~0.5-0.6). Can't yet tell
+whether this is a genuine overshoot (throttle constants need retuning for this trait's different
+post-reproduction energy balance, as flagged when porting) or just needs more runway —
+`metabolic_rate` itself took several hundred iterations to visibly stabilize under the same
+throttle constants, and this pilot is only 1/10th that length.
+
+**Adjustment → R5:** extend rather than conclude — a longer pilot to see whether the ratio
+plateaus or keeps climbing toward a crash.
+
+### R5 — satiation-throttle pilot, 400 iterations (complete)
+
+**Config:** identical to R4, `--max-iters 400`, fresh run (not resumed — same seed-fresh
+approach as `metabolic_rate` throughout). Run:
+`PPO_ECO_EVOLUTION_INVESTMENT_2026-07-15_08-32-43`.
+
+**Launched:** 2026-07-15 08:32. **Finished:** 2026-07-15 12:59, 400/400 iterations, no errors,
+~4h26m.
+
+**Result: the R4 concern doesn't hold up — the ratio plateaus into an oscillating band
+rather than climbing toward a crash.**
+
+| checkpoint | predators | prey | ratio |
+|---|---|---|---|
+| iter 100 | 19.1 | 21.8 | 0.87 |
+| iter 150 | 19.5 | 20.7 | 0.94 |
+| iter 200 | 20.6 | 17.8 | 1.16 (peak) |
+| iter 250 | 19.0 | 19.2 | 0.99 |
+| iter 300 | 15.7 | 21.5 | 0.73 |
+| iter 350 | 18.9 | 20.4 | 0.93 |
+| iter 400 | 16.5 | 24.8 | 0.66 |
+
+Quintile-averaged ratio: Q1 0.38 → Q2 0.75 → Q3 0.80 → Q4 0.91 → **Q5 0.77**. It climbed through
+Q1-Q4, matching the trajectory R4 alone suggested — but Q5 turned back down rather than
+continuing to climb. Fine-grained checkpoints from iter 200 onward show noisy oscillation roughly
+in the 0.6-1.2 range, not a monotonic trend in either direction. Absolute population sizes stay
+healthy throughout (predators ~14-21, prey ~16-40) — no near-zero excursions at any point, i.e.
+no close call with collapse even during the iter-200/260 peaks.
+
+**Verdict: cautiously validated.** This reads as noisy predator-prey oscillation (Lotka-Volterra
+character — real ecological systems cycle, they don't sit flat) rather than unbounded predator
+overshoot. Less cleanly stable than `metabolic_rate`'s eventual near-flat plateau, but not the
+slow-motion crash R4's endpoint alone suggested — that endpoint (ratio 0.99 at iter 100)
+turned out to be mid-cycle, not the start of a runaway trend. The throttle constants
+(`predator_satiation_cooldown: 8`, `max_energy_gain_per_prey: 8.0`, ported unchanged from
+`metabolic_rate`) are good enough to proceed without retuning; revisit only if R7's full
+replication shows episode-completion rates that don't clear a reasonable bar.
+
+**Adjustment → proceed to R6** (fixed-genome fitness sweep) without further sustainability
+tuning.
+
+---
+
+**Status:** R4 + R5 (satiation throttle) validated.
+
+### R6 — fixed-genome fitness sweep (complete)
+
+**Config:** `offspring_investment_fraction` frozen at 5 values spanning the trait bounds (0.10,
+0.80) — 0.15, 0.25, 0.35 (founder default), 0.55, 0.70 — via a new `--fixed-investment-fraction`
+CLI arg on `tune_ppo_investment.py` (sets `genome_enabled=False`, which makes
+`_get_offspring_investment_energy` fall back to `founder_genome`'s mean for every agent, every
+reproduction — no inheritance, no mutation, no per-agent variation). 100 iterations each,
+sequential, via the new `run_fixed_genome_sweep.sh`. Everything else identical to the validated
+Phase-A config (satiation throttle included).
+
+**Rationale:** tests whether the trait affects fitness at all, independent of any
+selection/drift question — this is the check `metabolic_rate` skipped from Iteration 0 onward
+(see `predpreygrass/evolutionary/RESULTS.md`). If outcomes are flat across all 5 values, that's a
+cheap, early signal to reconsider before spending compute on the full replication (R7). If
+outcomes vary meaningfully, there's a real landscape for selection to act on.
+
+**Launched:** 2026-07-15 18:45, via `run_fixed_genome_sweep.sh` (5 runs × 100 iterations
+sequential on one GPU).
+
+**Bug found and fixed mid-run (2026-07-15 19:47).** The first sweep run (0.15) hit 146 env-runner
+crashes in 37 iterations (`Worker exits with an exit code 1`, `IndexError: list index out of
+range` inside RLlib's `episode.get_rewards()`/`inf_lookback_buffer.get()`) — Ray auto-recovered
+each time so the trial kept running, but at heavy cost: constant worker respawns explain most of
+the pace slowdown seen since this sweep started (~90-190s/iter vs. ~40-50s/iter in R4/R5).
+Root cause: `utils/episode_return_callback.py`'s `on_episode_end` called
+`episode.get_rewards()`, which indexes a global-step-aligned lookback buffer that goes out of
+range for agents whose local step count diverges from the episode's — exactly what short-lived
+offspring under a low fixed investment fraction produce. `metabolic_rate`'s callback uses a
+different RLlib API (`episode.agent_episodes.items()` + per-agent `get_return()`) that sidesteps
+this global indexing entirely, and has never shown this crash across thousands of iterations —
+ported that pattern into `episode_return_callback.py` here. Smoke-tested (0 crashes in 3
+iterations, vs. dozens under the old code), then the aborted 0.15 run was killed and the full
+5-run sweep relaunched clean.
+
+**This bug predates R6** — grepping R4's and R5's raw logs shows the identical crash (138
+occurrences in R4's 100 iterations, 488 in R5's 400), never noticed before because monitoring
+only checked `ps`/`progress.csv`/`error.txt`, not log content for mid-run errors. Their
+conclusions are not affected: both relied on `live_investment/*` metrics, which are logged via
+the separate, unaffected `on_episode_step` path, not the buggy `on_episode_end` path. But it
+does mean R4/R5 ran slower and with more episode-data loss than necessary — worth knowing if
+their exact wall-clock timings are ever compared against a clean run.
+
+**All 5 runs completed 2026-07-15 23:43, 100/100 iterations each, zero crashes after the fix
+(vs. 146 in the first, aborted 0.15 attempt).**
+
+**Result: fitness outcomes are not flat — there's a real shift, concentrated between the lowest
+value and everything above it.** Late-run (second-half) averages, using
+`peak_active_predators`/`peak_active_prey` as the fitness/survival proxy (population-level
+outcome, not genome-tracking metrics — `live_investment/*` reports 0 throughout this sweep since
+those are built by iterating `agent_genomes`, which stays empty under `genome_enabled: False`;
+not a bug, just the wrong metric family for this config):
+
+| fixed value | ep_len | peak predators | peak prey | predator spawned | prey spawned |
+|---|---|---|---|---|---|
+| 0.15 | 912.8 | **14.4** | **73.7** | 90.6 | 555.4 |
+| 0.25 | 1000.0 | 24.6 | 57.2 | 155.0 | 550.3 |
+| 0.35 | 1000.0 | 19.2 | 51.7 | 96.0 | 427.8 |
+| 0.55 | 991.1 | 27.0 | 47.9 | 138.2 | 502.5 |
+| 0.70 | 1000.0 | 26.6 | 53.0 | 176.7 | 534.7 |
+
+Sustainability holds at every value (episode length 913-1000, no crashes at any fixed point).
+But the predator:prey balance shifts clearly: at the lowest investment (0.15), predators peak
+much lower (14.4) and prey much higher (73.7) than at any of the other four values (predators
+19-27, prey 48-57). From 0.25 upward the picture is noisier and doesn't show a clean further
+monotonic gradient — most of the visible effect is concentrated in the low-investment regime,
+more like a threshold/step than a smooth dose-response across the full range. Sample sizes are
+modest (n=15-28 non-NaN iterations per value in the later half, due to the same
+episode-completion-cadence NaN pattern documented elsewhere in this file) — real, but noisy.
+
+**Verdict: not flat.** There is a real landscape here — `offspring_investment_fraction` does
+change fitness/ecological outcomes when frozen at different values, independent of any selection
+question. This is the opposite of a stop signal: R6 existed specifically to catch a flat result
+before spending R7's much larger compute budget, and it didn't find one.
+
+**Adjustment → proceed to R7.** Port the neutral-drift control (`genome_neutral_drift_control`
+flag + dedicated neutral-control tune script, mirroring `metabolic_rate`'s) and run the 3-real +
+3-control-seed, 1000-iteration replication compared via Mann-Whitney U — the test that actually
+answers whether selection drives genome drift beyond neutral noise, now on a trait confirmed to
+have real fitness leverage to select on.
+
+**Status:** R6 complete. R7 in progress (see below).
+
+### R7 — neutral-control replication (in progress)
+
+**Config:** ported the neutral-drift control mechanism from `metabolic_rate` —
+`genome_neutral_drift_control` flag (config + `__init__`) and the corresponding branch in
+`_inherit_genome` (offspring genome template becomes a uniformly random currently-alive
+same-species agent instead of the true parent, when the flag is set; reproduction eligibility,
+timing, and energy dynamics unchanged). New files: `config/config_env_eco_evolutionary_neutral_control.py`,
+`tune_ppo_investment_neutral_control.py`, `analyze_replication_seeds.py` (Mann-Whitney U on
+drift magnitude, same design as `metabolic_rate`'s), `run_replication_seeds.sh` (3 real + 3
+control seeds, 1000 iterations each, console-log auto-archiving built in from the start this
+time). Smoke-tested (3 iterations, confirmed `genome_neutral_drift_control: True` engages
+correctly, no crashes) before launching the full run.
+
+**Launched:** 2026-07-16 10:14, via `run_replication_seeds.sh` (real seeds 42/43/44 then control
+seeds 42/43/44, sequential on one GPU, 1000 iterations each).
+
+**Status:** in progress (real seed 42 running as of launch). R8 not started.
+
 ---
 
 *Analysis date: 2026-06-27. Data source: `~/ray_results/PPO_ECO_EVOLUTION_INVESTMENT_2026-06-26_21-25-01/`*

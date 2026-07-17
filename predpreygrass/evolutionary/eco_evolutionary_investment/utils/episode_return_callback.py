@@ -44,18 +44,20 @@ class EpisodeReturn(RLlibCallback):
         predator_totals = []
         prey_totals = []
 
-        for agent_id, rewards in episode.get_rewards().items():
-            total = sum(rewards)
+        # episode.get_rewards() indexes a global-step-aligned lookback buffer that
+        # can go out of range for agents whose local step count diverges from the
+        # episode's (e.g. short-lived offspring under a low fixed investment
+        # fraction) -- causes recurring env-runner crashes (see RESULTS.md).
+        # agent_episodes + per-agent get_return() avoids that global indexing.
+        for agent_id, agent_ep in episode.agent_episodes.items():
+            total = agent_ep.get_return()
             if "predator" in agent_id:
                 predator_total += total
                 predator_totals.append(total)
+                group_rewards["predator"].append(total)
             elif "prey" in agent_id:
                 prey_total += total
                 prey_totals.append(total)
-
-            if "predator" in agent_id:
-                group_rewards["predator"].append(total)
-            elif "prey" in agent_id:
                 group_rewards["prey"].append(total)
 
         # Episode summary log
