@@ -88,6 +88,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Action range and movement mapping
         self.action_range = config["action_range"]
         self.genome_enabled = config.get("genome_enabled", True)
+        self.genome_neutral_drift_control = bool(config.get("genome_neutral_drift_control", False))
         # Chebyshev-distance radius for cooperative energy donation eligibility.
         self.cooperation_range = int(config.get("cooperation_range", 2))
         self.genome_config = {
@@ -509,7 +510,21 @@ class PredPreyGrass(MultiAgentEnv):
             return None
         if is_founder or parent_agent_id is None or parent_agent_id not in self.agent_genomes:
             return founder_genome(self._policy_group(agent_id), self.genome_config, self.rng)
-        return mutate_genome(self.agent_genomes[parent_agent_id], self.genome_config, self.rng)
+        template_id = parent_agent_id
+        if self.genome_neutral_drift_control:
+            # Sever genome from reproductive success: the actual parent still pays
+            # the energy cost and determines spawn timing/position (population
+            # dynamics, and thus local relatedness, unchanged), but the mutation
+            # template is a uniformly random currently-alive same-species agent
+            # instead of the true parent.
+            species = self._policy_group(agent_id)
+            candidates = [
+                str(aid) for aid in self.agents
+                if str(aid) in self.agent_genomes and self._policy_group(str(aid)) == species
+            ]
+            if candidates:
+                template_id = candidates[int(self.rng.integers(len(candidates)))]
+        return mutate_genome(self.agent_genomes[template_id], self.genome_config, self.rng)
 
     def _is_kin(self, agent_a: str, agent_b: str) -> bool:
         """True if b is a's parent, offspring, or full sibling (shares the same parent)."""

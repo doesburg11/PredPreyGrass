@@ -1,16 +1,10 @@
 # Darwin/Baldwin Search — Cross-Module Trial Log
 
-Top-level index for the search for a **sustainable Darwin/Baldwin evolutionary loop** in
-predator-prey coevolution. Each module below (`eco_evolutionary_*`) has its own detailed
-RESULTS.md with full data; this file exists because that detail is scattered across modules and
-there was no single place showing the overall trial sequence and why each pivot happened. Read
-top to bottom.
-
-**The goal, unchanged throughout:** genetic evolution (Darwin) and within-lifetime RL learning
-(Baldwin) feeding back into each other, demonstrated via three criteria — sustainability,
-predator-prey coexistence, and genuine *selection-driven* genome drift (checked against a
-neutral-drift control, not just eyeballed) — ideally with the reverse leg too: genome drift
-measurably changing the RL fitness landscape, not just RL learning driving genome drift.
+Cross-module trial log for the search described in **[README.md](README.md)** — see
+that file for the goal, the three success criteria, and the module catalog. This file
+tracks the sequence of attempts against that goal: what was tried, why each pivot
+happened, and the current state of the search. Each module below (`eco_evolutionary_*`)
+also has its own detailed RESULTS.md with full data. Read top to bottom.
 
 ---
 
@@ -112,11 +106,85 @@ trial/run/config — same flat convention as `metabolic_rate`'s "Iteration N". S
    compare *learned behavior*, not just outcomes, for the strongest version of the reverse-leg
    claim.
 
-**Status:** R4 and R5 complete (throttle validated). R6 (fixed-genome fitness sweep) complete —
-fitness outcomes are not flat across fixed `offspring_investment_fraction` values (clearest
-effect between the lowest value and everything above it). R7 (neutral-control replication, 3
-real + 3 control seeds, 1000 iterations each) launched 2026-07-16, in progress. R8 planned. See
-`eco_evolutionary_investment/RESULTS.md` for live detail.
+**Status:** R4-R7 complete. R4/R5: throttle validated. R6: fitness outcomes are not flat across
+fixed `offspring_investment_fraction` values — a real landscape exists. **R7 (the actual
+selection test): null** — real vs. neutral-control drift magnitude statistically
+indistinguishable for both species (Mann-Whitney U ≈ chance midpoint, p=0.5-0.65), same pattern
+as `metabolic_rate`. R8 (contingent on a real R7 signal) does not apply. See
+`eco_evolutionary_investment/RESULTS.md` for full data.
+
+## Where this leaves the search
+
+Two independent traits (`metabolic_rate`, `offspring_investment_fraction`), two independent
+properly-powered multi-seed replications (Mann-Whitney U, real vs. neutral-drift control), both
+null on criterion 3 (selection-driven genome drift beyond neutral noise). Criteria 1
+(sustainability) and 2 (coexistence) are solved for both traits and unaffected by this — the
+loop's forward-and-back mechanics work, the population dynamics are stable and realistic, but
+neither trait shows detectable selection acting on it.
+
+Notably, `offspring_investment_fraction` was the more promising candidate going in — a bigger
+raw drift signal in far fewer iterations than `metabolic_rate` (R1, pre-rigor), a more direct
+fitness mechanism (one-step energy transfer vs. `metabolic_rate`'s multi-step accounting chain),
+and R6 confirmed real fitness leverage exists. It still came back null on the actual selection
+test. That two differently-mechanised traits both show a real-fitness-landscape-but-no-detectable-
+selection pattern is more informative than either result alone — it points at something more
+structural than "wrong trait," which is exactly what the Hinton & Nowlan theoretical note above
+anticipated: a single continuous scalar trait with a smooth fitness landscape may not be the
+right shape of problem for the Baldwin effect to produce a detectable signal, almost regardless
+of which scalar is chosen — and PPO's population-level policy optimization is a looser fit to
+the classical individual-lifetime-learning mechanism than assumed going in.
+
+**Next step is a design decision, not another replication of the same shape:** either (a) scale
+population size to shrink the neutral-drift noise floor (previously deprioritized for
+`metabolic_rate`, now worth reconsidering given two traits agree), or (b) attempt the
+combinatorial/multi-gene trait design sketched in the theoretical note — a bigger pivot, but one
+now supported by two converging null results rather than one. Not scoped or started; needs its
+own discussion before committing more compute.
+
+---
+
+## Trial 5 — `eco_evolutionary_cooperation` — launched, in progress
+
+**Trait:** `cooperation_rate` — fraction of *this step's* catch/graze energy donated to
+same-species neighbors within `cooperation_range` (meal-sharing, not a tax on standing
+energy). Founder mean is 0.0 (identical to no-genome baseline), so any positive drift is a
+direct selection signal.
+
+**Why here:** unlike `metabolic_rate` and `offspring_investment_fraction` (both single
+scalars with a smooth interior optimum reachable by ordinary selection alone — see the
+Hinton & Nowlan note below), `cooperation_rate`'s payoff structure depends on an emergent,
+policy-dependent quantity: local relatedness, set by RL-learned dispersal behavior
+(offspring spawn adjacent to parent → population viscosity → kin-biased donation without
+explicit kin recognition). This is also a direct empirical test of the literature link
+between the Baldwin effect and cooperation (Suzuki & Arita; Taylor 1992's kin-competition
+cancellation result), which motivated this module in the first place. It's a cleaner,
+single-mechanism instrument for the same question an earlier, richer environment
+(`stag_hunt_forward_view_nature_nurture`) left unresolved — that module got a solid
+*behavioral* (nurture-side) cooperation result, but its heritable `coop_trait` (nature side)
+was wired in and never actually evaluated (the nature-weight ablation script was written but
+never run).
+
+**Design note (documented in `eco_evolutionary_cooperation/README.md`):** `cooperation_rate`
+is currently invisible to the policy's observation space (own or neighbors') — donation is
+a mechanical multiplier, not a learned action. This means the current design tests only
+**unconditional, viscosity-based kin selection**, not a plasticity/reputation-based
+conditional-cooperation mechanism. A follow-up making a neighbor's trait observable would
+open a second pathway — trait-based assortment / the **green-beard effect** (Dawkins;
+Riolo, Cohen & Axelrod 2001) — but that's scoped as a separate variant, not a change to this
+run, to keep this one a clean single-mechanism test.
+
+**Status:** Pilot 1 complete — a real run and a `genome_neutral_drift_control` run (250
+iterations each, single seed, GPU config), the latter added 2026-07-17 using the same
+neutral-control mechanism ported from `investment`. **Preliminary result: likely null.**
+The control drifted as much as or more than the real run in both species (predator: real
+↓ to 0.010 vs. control ↑ to 0.023; prey: real ↑ to 0.023 vs. control ↑ to 0.035, an even
+bigger move) — the same red-flag pattern that turned out to be noise for `metabolic_rate`
+and `investment` before proper replication. Not yet confirmed: this is a single-seed
+pilot, not the 3-seed Mann-Whitney replication those traits were held to, and the
+`local_relatedness_proxy`/`coop_repro_spearman` metrics needed to distinguish "no
+selection pressure" from "Taylor's-cancellation-cancelled selection pressure" are not yet
+implemented. See `eco_evolutionary_cooperation/RESULTS.md` for full detail and next
+steps (instrument the missing metrics before committing to a full replication).
 
 ---
 

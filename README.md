@@ -15,13 +15,20 @@ This project explores how cooperative behavior emerges and stabilizes in a spati
     <img align="center" src="./assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
-### Environment:
+## Environments
 
-* **[Stag hunt with defection](predpreygrass/non_evolutionary/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/non_evolutionary/stag_hunt_defection))
+This repo splits into two structurally different families of experiment, matching the
+`predpreygrass/evolutionary/` vs `predpreygrass/non_evolutionary/` directory split:
+
+- **Evolutionary**: agents carry a heritable genome trait, passed parent → offspring
+  with mutation. What gets selected is discovered, not designed.
+- **Non-evolutionary**: every agent trait is fixed; only the RL policy adapts. What
+  emerges is a behavioral equilibrium under a given incentive design, not a change in
+  the population's genetics.
 
 ### Darwinian/Baldwinian evolutionary environments
 
-These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. A scalar trait is passed from parent to offspring with mutation at each reproduction event; PPO policy weights are never inherited, only shared per species. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations — see [Darwinian vs. Baldwinian evolution](#darwinian-vs-baldwinian-evolution) below for the underlying theory.
+These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations. See **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary)** for the shared goal, success criteria, and cross-module trial log — start there before any individual module below.
 
 * **[Eco-evolutionary](predpreygrass/evolutionary/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
 
@@ -38,6 +45,8 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 ### Fixed-trait behavioral & game-theoretic environments
 
 These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
+
+* **[Stag hunt with defection](predpreygrass/non_evolutionary/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/non_evolutionary/stag_hunt_defection))
 
 * **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
@@ -122,12 +131,7 @@ Pretrained checkpoints and historical training outputs are preserved in the lega
 
 ### Darwinian vs. Baldwinian evolution
 
-The `eco_evolutionary_*` environments are built around the interaction loop between genetic evolution (Darwinian) and within-lifetime learning (Baldwinian):
-
-- Baldwin, J. M. (1896). [A New Factor in Evolution](https://www.jstor.org/stable/2453130). *The American Naturalist*, 30(354), 441–451. — the original statement of the effect: learned behavior can steer which genotypes are favored by selection, without the learned behavior itself being inherited.
-- Simpson, G. G. (1953). [The Baldwin Effect](https://www.jstor.org/stable/2405746). *Evolution*, 7(2), 110–117. — clarifies the effect against Lamarckian misreadings and gives it its modern name.
-- Hinton, G. E., & Nowlan, S. J. (1987). [How Learning Can Guide Evolution](https://doi.org/10.1007/BF01148891). *Complex Systems*, 1, 495–502. — the canonical computational demonstration: individual learning smooths a rugged fitness landscape, making an otherwise unlikely genotype reachable by evolutionary search.
-- Ackley, D., & Littman, M. (1991). [Interactions Between Learning and Evolution](https://www.researchgate.net/publication/2461712_Interactions_Between_Learning_and_Evolution). In *Artificial Life II*, 487–509. — evolving agents that also learn during their lifetime, closest in spirit to this repo's genome-plus-PPO setup.
+Moved to **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary#theory-darwinian-vs-baldwinian-evolution)** — the goal statement, success criteria, and theory references for the `eco_evolutionary_*` environments all live there together now.
 
 ### General
 

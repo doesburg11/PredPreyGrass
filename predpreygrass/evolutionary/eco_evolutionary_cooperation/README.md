@@ -157,3 +157,77 @@ just a variation on the same theme: it tests whether an *indirect*, context-sett
 Baldwinian channel (dispersal → relatedness → genome fitness) can close a Darwin/Baldwin
 loop, versus `metabolic_rate`'s *direct* channel (genome value competes with policy quality
 for the same energy budget every step).
+
+## Observation visibility: `cooperation_rate` is currently policy-blind
+
+The observation space is a fixed 3-channel grid (`num_obs_channels: 3`: predator-energy,
+prey-energy, grass-energy — see `_build_observation_space` / `_get_observation`). Neither
+an agent's own `cooperation_rate` nor a neighbor's is exposed anywhere in the observation.
+Donation is computed mechanically in `_apply_cooperative_donation`
+(`donation = cooperation_rate * shareable`) every qualifying step, with no possibility for
+the policy to condition behavior on the trait — its own or anyone else's.
+
+Practically, this means the only thing the policy can learn is **dispersal** (whether to
+stay near kin or roam), not a *conditional* cooperation strategy (e.g., "be generous near
+high-cooperation neighbors, withhold near strangers"). The current design therefore tests
+only **unconditional, viscosity-based kin selection** (Hamilton's original mechanism:
+blind donation + spatial relatedness from spawn-near-parent), not the plasticity/reputation
+-based Baldwin-effect-for-cooperation mechanism described in the Suzuki & Arita line of
+work, which requires the agent to sense something about its partner and adapt in real
+time. A null or negative drift result here would rule out unconditional kin selection in
+this ecology, but would *not* rule out that broader class of mechanism.
+
+## Possible follow-up: trait-based assortment ("green-beard" effect)
+
+Making a neighbor's `cooperation_rate` visible in the observation (e.g., an extra grid
+channel populated at neighbor positions) would open a second, distinct pathway to
+cooperation: **trait-based assortment**, also known as the **green-beard effect** (Dawkins
+1976) or tag-based cooperation (Riolo, Cohen & Axelrod 2001). Instead of cooperation being
+favored because neighbors are *genetically related* (kin selection), it would be favored
+because the policy learns to preferentially move toward/stay near *visibly
+high-cooperation* neighbors regardless of relatedness — the trait itself acts as its own
+recognition tag.
+
+**What "green-beard" means here, explicitly.** Dawkins' original thought experiment posited
+a single gene that does two things at once: it gives its carrier a visible marker (a green
+beard) *and* makes the carrier behave cooperatively toward anyone else displaying that same
+marker. Cooperation can then spread between total strangers, because the tag lets
+cooperators find and favor each other — no genetic relatedness required, just recognizable
+similarity in the one trait that matters.
+
+Mapped onto this environment: if `cooperation_rate` were visible to neighbors, a
+high-`cooperation_rate` agent could learn (via the RL policy) to preferentially move toward
+and stay near other high-`cooperation_rate` agents. That clustering is **positive
+assortment** — cooperators end up disproportionately surrounded by other cooperators, so
+donations mostly return to individuals who reciprocate the pattern, while low-cooperation
+agents end up isolated among each other, denied access to the group's shared catch bonus.
+That can make cooperation self-reinforcing *without any kinship at all* — a pathway
+entirely separate from the kin-selection mechanism this module currently tests (which
+relies on spawn-adjacent-to-parent viscosity, not trait recognition).
+
+One structural point in favor of testing this here specifically: the standard real-world
+objection to green-beard genes is the "false-beard" problem — a mutant could evolve the
+visible tag without the costly cooperative behavior, exploiting the recognition system as a
+free rider. That failure mode is structurally harder to get in this environment, because
+`cooperation_rate` isn't a separate tag-plus-behavior pair — the same scalar *is* both the
+signal and the donation amount. An agent can't display "I'm a 0.8 cooperator" while only
+actually donating at 0.1; the number that would be visible is the exact number that
+determines the donation. That sidesteps one of the standard theoretical weaknesses of
+green-beard mechanisms, which is worth keeping in mind if this follow-up is ever built.
+
+This is a legitimate and interesting mechanism, but it is a **different experiment**, not a
+tweak to this one:
+
+- Own-trait visibility is of limited value on its own — `cooperation_rate` is fixed for an
+  agent's entire lifetime (set at birth, only varying across generations via mutation), so
+  the policy could at most learn a static bias from it, not an adaptive in-lifetime response.
+- Neighbor-trait visibility is the interesting case, but it introduces a second candidate
+  explanation for any observed drift. If `cooperation_rate` evolves positive after adding
+  this, it would no longer be possible to tell whether the driver is spatial kin viscosity
+  (this module's current hypothesis) or learned assortment, without running both variants
+  side by side.
+
+Recommendation: keep this module's observation space as is to preserve it as a clean,
+single-mechanism test of kin selection. If assortment is worth testing, build it as a
+separate variant (own module or a config flag) and compare its genome-drift trajectory
+against this one, rather than conflating both mechanisms in a single run.

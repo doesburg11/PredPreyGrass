@@ -351,6 +351,8 @@ The target for the next run (R4) is to re-enter the R1-equivalent long-episode r
 
 **Correction (added after the `eco_evolutionary_metabolic_rate` line concluded):** the "confirmed directional Darwinian genome drift" claim above was based on a single 59-iteration run with no neutral-drift control. The same kind of single-run drift read looked equally "confirmed" for `metabolic_rate` early on and turned out, after a proper 3-seed-each real-vs-control replication (Mann-Whitney U), to be statistically indistinguishable from pure mutation + finite-population noise. Treat R1's drift claim as an unverified early signal, not an established result, until R4+ actually tests it against a control. See `predpreygrass/evolutionary/RESULTS.md` for the full cross-module trial log.
 
+*Analysis date: 2026-06-27. Data source: `~/ray_results/PPO_ECO_EVOLUTION_INVESTMENT_2026-06-26_21-25-01/`* (covers sections 1-8, R1-R3, above only — see the R4+ addendum below for the later, conclusive replication.)
+
 ---
 
 ## Resuming with the validated methodology — R4 onward
@@ -561,7 +563,7 @@ have real fitness leverage to select on.
 
 **Status:** R6 complete. R7 in progress (see below).
 
-### R7 — neutral-control replication (in progress)
+### R7 — neutral-control replication (complete)
 
 **Config:** ported the neutral-drift control mechanism from `metabolic_rate` —
 `genome_neutral_drift_control` flag (config + `__init__`) and the corresponding branch in
@@ -574,11 +576,75 @@ control seeds, 1000 iterations each, console-log auto-archiving built in from th
 time). Smoke-tested (3 iterations, confirmed `genome_neutral_drift_control: True` engages
 correctly, no crashes) before launching the full run.
 
-**Launched:** 2026-07-16 10:14, via `run_replication_seeds.sh` (real seeds 42/43/44 then control
-seeds 42/43/44, sequential on one GPU, 1000 iterations each).
+A callback bug was found and fixed mid-run during R6 (see above) and held stable through all of
+R7 — **zero crashes across all 6 runs, ~6,000 combined training iterations.**
 
-**Status:** in progress (real seed 42 running as of launch). R8 not started.
+**Launched:** 2026-07-16 10:14. **All 6 runs finished cleanly** 2026-07-18 01:41 (real seeds
+42/43/44, then control seeds 42/43/44, sequential on one GPU, 1000/1000 iterations each, no
+errors, console logs auto-archived): real seed 42 ~5h41m, seed 43 ~5h31m, seed 44 ~6h05m;
+control seed 42 ~6h30m, seed 43 ~7h08m, seed 44 ~8h20m — total ~39h wall-clock.
+
+**Result: null — same pattern as `metabolic_rate`.**
+
+| species | metric | real (n=3) | control (n=3) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0442 | 0.0436 | 4.0 | 0.650 |
+| predator | max \|dev\| | 0.0786 | 0.0771 | 5.0 | 0.500 |
+| prey | final \|dev\| | 0.0397 | 0.0351 | 5.0 | 0.500 |
+| prey | max \|dev\| | 0.0714 | 0.0643 | 5.0 | 0.500 |
+
+Per-seed data (Q1/Q5 quintile means, net change, deviation from founder 0.35):
+
+| group | seed | species | Q1 | Q5 | net_chg | \|dev_final\| | max\|dev\| |
+|---|---|---|---|---|---|---|---|
+| real | 42 | predator | 0.3265 | 0.3218 | −0.0047 | 0.0282 | 0.0565 |
+| real | 42 | prey | 0.3022 | 0.3176 | +0.0154 | 0.0324 | 0.0878 |
+| real | 43 | predator | 0.2888 | 0.2866 | −0.0022 | 0.0634 | 0.1142 |
+| real | 43 | prey | 0.3781 | 0.3845 | +0.0064 | 0.0345 | 0.0645 |
+| real | 44 | predator | 0.3970 | 0.3911 | −0.0059 | 0.0411 | 0.0650 |
+| real | 44 | prey | 0.2998 | 0.2977 | −0.0021 | 0.0523 | 0.0620 |
+| control | 42 | predator | 0.3364 | 0.3191 | −0.0173 | 0.0309 | 0.0677 |
+| control | 42 | prey | 0.3174 | 0.3319 | +0.0145 | 0.0181 | 0.0655 |
+| control | 43 | predator | 0.2896 | 0.2923 | +0.0027 | 0.0577 | 0.1104 |
+| control | 43 | prey | 0.3791 | 0.3926 | +0.0135 | 0.0426 | 0.0683 |
+| control | 44 | predator | 0.3898 | 0.3922 | +0.0024 | 0.0422 | 0.0532 |
+| control | 44 | prey | 0.3061 | 0.3055 | −0.0006 | 0.0445 | 0.0593 |
+
+Real and control are essentially tied on every metric for both species — U values sit almost
+exactly at the chance midpoint for n=3-vs-n=3, p-values 0.5-0.65. No consistent direction favoring
+real over control anywhere.
+
+**The important nuance: R6 and R7 together tell a more specific story than a flat "no effect."**
+R6 showed `offspring_investment_fraction` genuinely affects fitness/ecological outcomes when
+frozen at different values — a real landscape exists. R7 shows that despite that landscape,
+actual selection (differential reproduction under the real, non-frozen dynamics) isn't producing
+genome drift detectably different from pure neutral drift. The landscape existing is necessary
+but evidently not sufficient for detectable selection at this population scale and run length —
+exactly the same disconnect `metabolic_rate` showed with its own individual-level
+`mr_repro_spearman` correlation.
+
+**Verdict: null for criterion 3, specifically for this trait's implementation** — same scope
+caveat as `metabolic_rate`'s conclusion: this doesn't prove no trait could show the loop here, it
+means `offspring_investment_fraction` as currently implemented doesn't, despite being a more
+promising untested candidate than `metabolic_rate` ever was (bigger raw R1 signal, more direct
+fitness mechanism, and R6 confirmed the fitness gradient is real). Two independent traits, two
+independent properly-powered replications, both null on the core Darwin signal.
+
+**Adjustment:** R8 (frozen-genome behavior comparison) was contingent on R7 showing a real
+signal to explain — it doesn't apply now. Don't launch it. Given both attempted traits (a smooth
+scalar with a linear-cost/sub-linear-gain tradeoff, and a smooth scalar with a direct
+energy-transfer tradeoff) show the same real-landscape-but-no-detectable-selection pattern, this
+is the point to weigh the Hinton & Nowlan theoretical note in
+`predpreygrass/evolutionary/RESULTS.md` more seriously: a single continuous scalar trait with a
+smooth fitness landscape may be the wrong shape of problem for a detectable Baldwin effect,
+regardless of which scalar is chosen. See that file's Trial-level conclusion for the sequencing
+decision.
+
+**Status:** R7 complete (null). R8 not applicable given the null result.
 
 ---
 
-*Analysis date: 2026-06-27. Data source: `~/ray_results/PPO_ECO_EVOLUTION_INVESTMENT_2026-06-26_21-25-01/`*
+*R4-R7 addendum analysis date: 2026-07-18. R7 data source: 6 seeded runs (real seeds
+42/43/44, control seeds 42/43/44) launched 2026-07-16 10:14, all finished cleanly
+2026-07-18 01:41 — see `PPO_ECO_EVOLUTION_INVESTMENT_SEED{42,43,44}_*` and
+`PPO_ECO_EVOLUTION_INVESTMENT_NEUTRAL_CONTROL_SEED{42,43,44}_*` under `~/ray_results/`.*
