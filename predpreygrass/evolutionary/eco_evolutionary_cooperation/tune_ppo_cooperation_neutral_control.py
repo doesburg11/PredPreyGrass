@@ -78,7 +78,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
+    ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""

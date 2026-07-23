@@ -143,7 +143,7 @@ own discussion before committing more compute.
 
 ---
 
-## Trial 5 — `eco_evolutionary_cooperation` — launched, in progress
+## Trial 5 — `eco_evolutionary_cooperation` — paused after Pilot 1 (likely null)
 
 **Trait:** `cooperation_rate` — fraction of *this step's* catch/graze energy donated to
 same-species neighbors within `cooperation_range` (meal-sharing, not a tax on standing
@@ -183,31 +183,80 @@ and `investment` before proper replication. Not yet confirmed: this is a single-
 pilot, not the 3-seed Mann-Whitney replication those traits were held to, and the
 `local_relatedness_proxy`/`coop_repro_spearman` metrics needed to distinguish "no
 selection pressure" from "Taylor's-cancellation-cancelled selection pressure" are not yet
-implemented. See `eco_evolutionary_cooperation/RESULTS.md` for full detail and next
-steps (instrument the missing metrics before committing to a full replication).
+implemented. See `eco_evolutionary_cooperation/RESULTS.md` for full detail.
+
+**Decision (2026-07-18): paused, not replicated further.** With `metabolic_rate` and
+`investment` both already confirmed null via proper 3-seed replication, a full
+replication of `cooperation`'s pilot would most likely just be a third data point
+confirming a pattern already reasonably well established, not new information — see
+"Where this leaves the search" below. Compute is better spent on the structural
+decision that pattern points to (Trial 6) than on replicating a third single-scalar
+trait. The missing-metrics instrumentation work is still worth doing at some point
+(cheap, and needed for interpretability if this module is revisited), but is not
+currently prioritized.
+
+---
+
+## Where this leaves the search, updated after Trial 5
+
+Three single-continuous-scalar traits (`metabolic_rate`, `offspring_investment_fraction`,
+now `cooperation_rate`) have each shown sustainability/coexistence solved but no
+detectable selection-driven drift — two confirmed by proper replication, the third
+(`cooperation_rate`) only at pilot/preliminary strength but pointing the same way. Three
+different fitness mechanisms (energy-accounting asymmetry, one-step offspring transfer,
+emergent-relatedness-mediated donation) converging on the same pattern is a stronger
+signal than any one result alone that the shared property — *smooth, continuous, single-
+scalar fitness landscape* — is the structural issue, not the specific trait chosen. See
+the Hinton & Nowlan note below.
+
+**Decision: pursue (a) before (b).** Two directions were on the table — (a) scale
+population size to shrink the neutral-drift noise floor, or (b) the combinatorial/
+multi-gene trait design the Hinton & Nowlan paper actually demonstrates. Going with (a)
+first: it's a config-level change to an already-validated trait/pipeline, not a new
+mechanism design, so it's cheap to falsify or confirm before committing to (b)'s much
+larger scoping effort. If (a) still comes back null at larger scale, that rules out
+"just noise" more convincingly and makes the case for (b) much stronger.
+
+## Trial 6 — population scaling on `offspring_investment_fraction` — planned, not started
+
+**Why `investment`, not `metabolic_rate` or `cooperation`:** R6 already confirmed a real
+fitness landscape exists for `offspring_investment_fraction` (fitness outcomes are not
+flat across fixed values) — of the three traits tried, it's the one where "a real signal
+exists but selection can't detect it at this population scale" is the most plausible
+reading of the null R7 result, rather than "there is no signal to detect." Re-testing at
+larger population scale validates directly against a trait already known to have real
+fitness leverage.
+
+**Plan (not yet scoped in detail):** increase population size (raise
+`n_possible_predators`/`n_possible_prey` and/or `n_initial_active_*`, and/or grid size to
+match) for `offspring_investment_fraction`, and re-run the same real-vs-neutral-control
+replication methodology used for R7. If a real signal emerges that R7 missed, this
+validates the "noise floor" hypothesis and the population-scaling direction generally.
+If still null, that's a strong case for the combinatorial trait-design pivot (b) below.
 
 ---
 
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
-Not yet acted on; recorded here so it isn't lost before R6-R8 wrap up.
+Not yet acted on; recorded here so it isn't lost before Trial 6 (or a Trial 7 combinatorial-design pivot) wrap up.
 
 Hinton & Nowlan, "How Learning Can Guide Evolution" (1987) — the paper that formalized the
 Baldwin effect computationally — offers a plausible theoretical account for why both traits
-tried so far (`metabolic_rate`, `offspring_investment_fraction`) have shown weak-to-null
-Darwin/Baldwin coupling, and a concrete direction for a trait design that might not.
+tried so far (`metabolic_rate`, `offspring_investment_fraction`, `cooperation_rate`) have shown
+weak-to-null Darwin/Baldwin coupling, and a concrete direction for a trait design that might not.
 
-**1. The Baldwin effect needs a "needle in a haystack," and neither trait tried so far is one.**
+**1. The Baldwin effect needs a "needle in a haystack," and none of the traits tried so far is one.**
 The paper is explicit about its own limitation: *"The main limitation of the Baldwin effect is
 that it is only effective in spaces that would be hard to search without an adaptive process to
 restructure the space."* Their demonstration uses a combinatorial genome (20 genes × 3 alleles,
 2²⁰ combinations) with a single narrow fitness spike that pure evolution can't find unassisted —
 learning's role is to carve out a detectable "zone of increased fitness" around near-miss
-genotypes. `metabolic_rate` and `offspring_investment_fraction` are both single continuous
-scalars with a smooth interior optimum (sub-linear gain vs. linear cost; an investment tradeoff
-curve). Ordinary selection can climb a smooth 1-D gradient without any help from learning — there
-is no haystack for learning to rescue you from. By the paper's own logic, a strong, clearly
-measurable Baldwin effect isn't expected in either trait as designed.
+genotypes. `metabolic_rate`, `offspring_investment_fraction`, and `cooperation_rate` are all
+single continuous scalars with a smooth interior optimum (sub-linear gain vs. linear cost; an
+investment tradeoff curve; a donation-rate tradeoff mediated by relatedness). Ordinary selection
+can climb a smooth 1-D gradient without any help from learning — there is no haystack for
+learning to rescue you from. By the paper's own logic, a strong, clearly measurable Baldwin
+effect isn't expected in any of the three traits as designed.
 
 **2. The paper's "learning" is individual-lifetime search; PPO here is population-level policy
 optimization.** In the simulation, each of 1000 organisms performs its own random-search learning
@@ -219,10 +268,11 @@ structural gap from the classical Baldwin effect, and plausibly part of why the 
 specifically (genome shaping what gets learned) has been hard to detect — there isn't genuine
 individual-lifetime search for the genome to interact with.
 
-**Candidate future direction (not scoped, not started):** a trait design closer to what the paper
-actually demonstrates — multiple interacting genetic parameters with a narrow joint fitness
-optimum (a small combinatorial co-adaptation problem) rather than a single smooth scalar. Would
-need its own scoping (what parameters, what joint-optimum structure, how "learning" maps onto
-per-individual behavior within an episode) before it's a real R-number in any module. Revisit
-after R6-R8 (`eco_evolutionary_investment`) conclude, and only if that line also comes back null
-— not a replacement for it.
+**Candidate future direction, i.e. option (b) above (not scoped, not started):** a trait design
+closer to what the paper actually demonstrates — multiple interacting genetic parameters with a
+narrow joint fitness optimum (a small combinatorial co-adaptation problem) rather than a single
+smooth scalar. Would need its own scoping (what parameters, what joint-optimum structure, how
+"learning" maps onto per-individual behavior within an episode) before it's a real R-number in
+any module. Per the Trial 6 decision above, option (a) — population scaling on `investment` — is
+being tried first since it's cheaper to falsify; revisit this pivot if Trial 6 also comes back
+null.

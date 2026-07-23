@@ -1,34 +1,31 @@
 """
-Trains the eco_evolutionary_cooperation environment with PPO using the Ray RLlib
-new API stack.
+Trial 6 (population scaling): trains eco_evolutionary_investment at ~4x the
+grid/population scale of R4-R7, to test whether R7's null selection-drift result
+was masked by a small-population neutral-drift noise floor rather than reflecting
+a genuinely absent selection signal.
 
-The environment is a predator-prey-grass grid world in which agents carry a
-heritable cooperation_rate genome trait. Each step, an agent that successfully
-hunts or grazes donates cooperation_rate * (that step's energy gain) to same-
-species neighbors within cooperation_range (meal-sharing, not a continuous tax
-on stock energy). Because offspring spawn adjacent to their parent, spatial
-neighbors are more likely to be kin than a random draw from the population
-(population viscosity) — so donations are kin-biased without any explicit
-kin-recognition mechanism, the standard substrate for kin selection. Within-
-lifetime foraging/hunting/dispersal behavior is learned by shared PPO policies
-and is not inherited (Baldwinian layer); the RL-learned dispersal pattern in
-turn determines local relatedness, closing the two-way Darwin/Baldwin loop.
+Identical to tune_ppo_investment.py except the environment config
+(config_env_eco_evolutionary_scaled: grid_size 25->50, initial population and
+grass 4x) and the absence of the R4 fixed-investment-fraction sweep flag, which
+doesn't apply here. See predpreygrass/evolutionary/RESULTS.md, Trial 6.
 
-Checkpoints and a copy of the environment source are saved under ~/ray_results/
-for provenance. Cooperation-rate genome statistics are logged to TensorBoard
-via the EpisodeReturn callback.
+First run should be a short single-seed pilot (--max-iters 100, matching the R4
+pilot pattern) to confirm sustainability holds at the larger scale before
+committing to a full multi-seed real-vs-neutral-control replication.
 """
 
-from predpreygrass.evolutionary.eco_evolutionary_cooperation.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.evolutionary.eco_evolutionary_cooperation.config.config_env_eco_evolutionary import config_env
-from predpreygrass.evolutionary.eco_evolutionary_cooperation.utils.episode_return_callback import EpisodeReturn
-from predpreygrass.evolutionary.eco_evolutionary_cooperation.utils.networks import build_multi_module_spec
+from predpreygrass.evolutionary.eco_evolutionary_investment.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_env_eco_evolutionary_scaled import config_env
+from predpreygrass.evolutionary.eco_evolutionary_investment.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.evolutionary.eco_evolutionary_investment.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
+import argparse
+import os
 from datetime import datetime
 from pathlib import Path
 import json
@@ -36,12 +33,29 @@ import shutil
 from typing import Any
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Override config_env['seed'] for this run (for multi-seed replication). "
+             "Tags the experiment name so runs don't collide.",
+    )
+    parser.add_argument(
+        "--max-iters", type=int, default=None,
+        help="Override config_ppo['max_iters'] for this run.",
+    )
+    return parser.parse_args()
+
+
 def get_config_ppo():
-    import torch
-    if torch.cuda.is_available():
-        from predpreygrass.evolutionary.eco_evolutionary_cooperation.config.config_ppo_gpu_eco_evolutionary import config_ppo
+    num_cpus = os.cpu_count()
+    if num_cpus == 32:
+        from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_ppo_gpu_eco_evolutionary_scaled import config_ppo
+    elif num_cpus == 8:
+        from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_ppo_cpu_eco_evolutionary import config_ppo
     else:
-        from predpreygrass.evolutionary.eco_evolutionary_cooperation.config.config_ppo_cpu_eco_evolutionary import config_ppo
+        # Default to CPU config for other CPU counts to keep training usable across machines.
+        from predpreygrass.evolutionary.eco_evolutionary_investment.config.config_ppo_cpu_eco_evolutionary import config_ppo
     return config_ppo
 
 
@@ -60,6 +74,10 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 # --- Main training setup ---
 
 if __name__ == "__main__":
+    args = parse_args()
+    if args.seed is not None:
+        config_env = dict(config_env, seed=args.seed)
+
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
@@ -68,7 +86,8 @@ if __name__ == "__main__":
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "ECO_EVOLUTION_COOPERATION"
+    seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
+    version = f"ECO_EVOLUTION_INVESTMENT_SCALED{seed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -80,13 +99,14 @@ if __name__ == "__main__":
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
+    if args.max_iters is not None:
+        config_ppo = dict(config_ppo, max_iters=args.max_iters)
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
-    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=config_env)
     if sample_env.observation_spaces is None or sample_env.action_spaces is None:
@@ -144,7 +164,6 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
-        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )

@@ -1,6 +1,6 @@
 # Eco-Evolutionary Cooperation — Training Results
 
-## Status: Pilot 1 — preliminary, likely null (not yet a final verdict)
+## Status: Pilot 1 complete (likely null), replication paused — see decision below
 
 Two 250-iteration, single-seed runs (GPU config, seed 41) completed 2026-07-17/18:
 a real run and a `genome_neutral_drift_control` run (genome inheritance severed from
@@ -8,8 +8,19 @@ reproductive success; population/spatial dynamics unchanged — see
 `config/config_env_eco_evolutionary_neutral_control.py`). This is a pilot comparison,
 **not** the properly-powered 3-seed-real-vs-3-seed-control replication (Mann-Whitney U)
 that `metabolic_rate` and `offspring_investment_fraction` were held to before either was
-called null — see `predpreygrass/evolutionary/RESULTS.md`. Treat this as a first look
-only.
+called null — see `predpreygrass/evolutionary/RESULTS.md`. Treat the result below as a
+first look only.
+
+**Decision (2026-07-18): this module is paused, not being replicated further for now.**
+With `metabolic_rate` and `investment` already confirmed null via proper replication,
+and this pilot pointing the same direction, a full 3-seed replication here would most
+likely add a third confirmation of an already-plausible pattern rather than new
+information. Compute is being redirected to `predpreygrass/evolutionary/RESULTS.md`
+Trial 6 (population scaling on `offspring_investment_fraction`, the trait with the
+strongest confirmed fitness landscape) instead. See that file's "Where this leaves the
+search" section for the full reasoning. This module can be revisited — starting with
+implementing the missing metrics flagged below — if Trial 6 (or a later combinatorial
+trait-design pivot) reopens the question.
 
 ## Environment recap
 
@@ -79,6 +90,10 @@ as the explanation, rather than "no selection pressure at all."
 
 ## Next steps
 
+**Paused as of 2026-07-18** — see the status/decision note at the top of this file.
+Not being actively worked; the ordered list below is preserved for when/if this module
+is revisited, not a current plan.
+
 1. Implement the missing metrics (`local_relatedness_proxy`,
    `energy_donated_total`/`_received_total`, `coop_repro_spearman`,
    `coop_repro_rate_q1`-`q4`) in `episode_return_callback.py` before spending compute on
@@ -88,6 +103,6 @@ as the explanation, rather than "no selection pressure at all."
    same 3-seed-real-vs-3-seed-control Mann-Whitney U replication used for `investment`
    R7.
 3. If this also comes back null, `cooperation_rate` joins `metabolic_rate` and
-   `offspring_investment_fraction` as a third null result — worth folding into the
-   top-level design-decision discussion (population scaling vs. combinatorial/multi-gene
-   trait design) already flagged in `predpreygrass/evolutionary/RESULTS.md`.
+   `offspring_investment_fraction` as a third null result — consistent with what
+   `predpreygrass/evolutionary/RESULTS.md` Trial 6 is already investigating (population
+   scaling as the shared explanation, tested first on `investment`).

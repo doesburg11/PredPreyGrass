@@ -52,8 +52,8 @@ sustainability numbers.
 * **[eco_evolutionary_cooperation](eco_evolutionary_cooperation)** — evolves a
   `cooperation_rate` trait — the fraction of an agent's net energy gain donated to
   nearby same-species agents, relying on spatial viscosity (offspring spawn near
-  parents) for implicit kin selection. Pilot result: likely null, not yet confirmed
-  (see its `RESULTS.md`).
+  parents) for implicit kin selection. Pilot result: likely null; *paused* rather than
+  replicated further — see `RESULTS.md`.
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
