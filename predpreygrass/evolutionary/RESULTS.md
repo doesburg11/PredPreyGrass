@@ -258,6 +258,24 @@ can climb a smooth 1-D gradient without any help from learning — there is no h
 learning to rescue you from. By the paper's own logic, a strong, clearly measurable Baldwin
 effect isn't expected in any of the three traits as designed.
 
+**Plain-language version:** a smooth hill vs. a combination lock. On a smooth hill, wherever
+you stand you can feel which direction is slightly better — a mutant that's a little closer to
+the optimum is a little fitter, every generation, so blind mutation-and-selection climbs it
+fine on its own. Add learning on top and you learn nothing new: evolution would have gotten
+there anyway, so you can't tell learning's contribution apart from plain selection's. A
+combination lock is different: with 10 dials, 9-out-of-10 correct pays off exactly as badly as
+0-out-of-10 — there's no "getting warmer," so blind mutation-and-selection can wander forever
+without a signal to climb. Individual lifetime learning changes that: an organism born with
+9 correct dials can search nearby combinations within its own lifetime and often find the 10th,
+while one born with only 3 correct can't search far enough to compensate. That converts "close
+genotype" into "usually successful phenotype" — manufacturing a slope where genetically none
+existed — and now evolution has something to climb: individuals close to the answer
+out-reproduce individuals far away, generation after generation fixing a few more correct
+dials, needing less learning each time (genetic assimilation). The Baldwin effect is this
+learning-manufactures-a-gradient phenomenon specifically — it's only visible on a
+needle-in-a-haystack landscape, not a smooth one, which is exactly what all three traits tried
+so far lack.
+
 **2. The paper's "learning" is individual-lifetime search; PPO here is population-level policy
 optimization.** In the simulation, each of 1000 organisms performs its own random-search learning
 trials within its own lifetime, and that individual's discovery determines that same

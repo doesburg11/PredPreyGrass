@@ -3,14 +3,14 @@
 
 
 # Predator-Prey-Grass
-## Emerging coevolution, cooperation, defection and free-riding through multi-agent deep reinforcement learning 
+## Multi-Agent Deep Reinforcement Learning meets Darwinian and Baldwinian evolution
 
 Legacy snapshot: the pre-cleanup research codebase is archived at [PredPreyGrassLegacy](https://github.com/doesburg11/PredPreyGrassLegacy).
 
-This project explores how cooperative behavior emerges and stabilizes in a spatial, resource-limited ecosystem by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It explores the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) in ecological systems. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** to explore emergent behaviors in a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment. This gives rise to coevolution, cooperation, defection and free-riding.
+This project explores whether cooperative behavior, coevolution, defection, and free-riding can emerge and stabilize in a spatial, resource-limited ecosystem, by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It probes the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) — including a direct test of the **Baldwin effect**: whether genetic selection and learned behavior actually shape each other, not just coexist. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** across a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 <p align="center">
-    <b>Emerging coevolution, cooperation, defection and free-riding</b></p>
+    <b>Fixed-trait game-theoretic hunting (non-evolutionary branch): coevolution, cooperation, defection and free-riding</b></p>
 <p align="center">
     <img align="center" src="./assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
