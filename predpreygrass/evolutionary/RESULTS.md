@@ -217,7 +217,7 @@ mechanism design, so it's cheap to falsify or confirm before committing to (b)'s
 larger scoping effort. If (a) still comes back null at larger scale, that rules out
 "just noise" more convincingly and makes the case for (b) much stronger.
 
-## Trial 6 — population scaling on `offspring_investment_fraction` — planned, not started
+## Trial 6 — population scaling on `offspring_investment_fraction` — complete, mixed/inconclusive
 
 **Why `investment`, not `metabolic_rate` or `cooperation`:** R6 already confirmed a real
 fitness landscape exists for `offspring_investment_fraction` (fitness outcomes are not
@@ -227,18 +227,39 @@ reading of the null R7 result, rather than "there is no signal to detect." Re-te
 larger population scale validates directly against a trait already known to have real
 fitness leverage.
 
-**Plan (not yet scoped in detail):** increase population size (raise
-`n_possible_predators`/`n_possible_prey` and/or `n_initial_active_*`, and/or grid size to
-match) for `offspring_investment_fraction`, and re-run the same real-vs-neutral-control
-replication methodology used for R7. If a real signal emerges that R7 missed, this
-validates the "noise floor" hypothesis and the population-scaling direction generally.
-If still null, that's a strong case for the combinatorial trait-design pivot (b) below.
+**Plan:** increase population size (~2x grid/agent scale — an initial 4x attempt was
+abandoned as too expensive, ~2.75 days/seed and GPU memory at the edge) and re-run the
+same 3-seed real-vs-neutral-control replication methodology used for R7. Executed as R9
+in `eco_evolutionary_investment` — see that module's RESULTS.md for full config, timing,
+and per-seed data.
+
+**Result:** species-asymmetric. **Predator: still null**, direction if anything reversed
+from R7 (real final |dev| 0.0187 vs. control 0.0290, p=0.900). **Prey: directionally
+positive, at the maximum separation a 3-vs-3 Mann-Whitney U can show** — all three real
+seeds' final deviation from founder exceed all three control seeds' (U=9, p=0.050,
+mean real=0.0233 vs. control=0.0084) — a materially different outcome than R7's flat
+unscaled prey result (real=0.0397 vs. control=0.0351, p=0.500). p=0.050 at n=3 is exactly
+the statistical floor of this design, not a result that clears conventional significance
+with room to spare.
+
+**Verdict:** first data point in the whole search pointing toward "a real selection
+signal exists but was below the unscaled noise floor" — but only for one species, at the
+edge of what n=3 can demonstrate, and not the clean both-species confirmation that would
+validate the noise-floor hypothesis outright. Neither a clean win (predator gives no
+support, and prey hasn't cleared the n=3 ceiling) nor a third flat null (prey's separation
+is the strongest directional result seen across three traits and two scales so far).
+**Genuinely inconclusive — the honest next step is more prey-focused seeds (e.g. 45/46/47)
+to see if the separation holds past n=3, not a verdict either way on criterion 3.** Full
+data, per-seed table, and timing in `eco_evolutionary_investment/RESULTS.md` R9.
+
+**Status:** R9 complete (2026-07-24). Decision on next step (extend prey replication vs.
+proceed to the combinatorial-trait pivot below) not yet made.
 
 ---
 
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
-Not yet acted on; recorded here so it isn't lost before Trial 6 (or a Trial 7 combinatorial-design pivot) wrap up.
+Not yet acted on; recorded here so it isn't lost before a Trial 7 combinatorial-design pivot (option (b) below) is decided.
 
 Hinton & Nowlan, "How Learning Can Guide Evolution" (1987) — the paper that formalized the
 Baldwin effect computationally — offers a plausible theoretical account for why both traits
@@ -291,6 +312,10 @@ closer to what the paper actually demonstrates — multiple interacting genetic 
 narrow joint fitness optimum (a small combinatorial co-adaptation problem) rather than a single
 smooth scalar. Would need its own scoping (what parameters, what joint-optimum structure, how
 "learning" maps onto per-individual behavior within an episode) before it's a real R-number in
-any module. Per the Trial 6 decision above, option (a) — population scaling on `investment` — is
-being tried first since it's cheaper to falsify; revisit this pivot if Trial 6 also comes back
-null.
+any module. Option (a) — population scaling on `investment` (Trial 6 / R9) — came back
+inconclusive rather than cleanly null or cleanly confirmed: predator showed no signal at 2x
+scale, but prey showed the strongest possible directional real-vs-control separation for n=3.
+That's not decisive evidence either for "population scale was the whole problem" (predator
+disagrees) or against it (prey's result would need more seeds to fail to replicate before ruling
+it out) — the immediate next step is extending the prey replication a few more seeds before
+deciding whether this pivot (b) is warranted.

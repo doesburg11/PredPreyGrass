@@ -644,7 +644,99 @@ decision.
 
 ---
 
+### R9 — Trial 6: population-scaled replication (complete)
+
+**Config:** identical real/control replication methodology as R7, at ~2x grid/population
+scale — `config_env_eco_evolutionary_scaled.py`, `tune_ppo_investment_scaled.py` /
+`tune_ppo_investment_neutral_control_scaled.py`, `run_replication_seeds_scaled.sh`,
+`analyze_replication_seeds_scaled.py`. Grid 25×25 → 35×35 (~1.96x area, closest clean
+grid size to 2x), initial population 6 predators + 8 prey → 12 + 16, agent-ID pool
+ceiling 200/1000 → 400/2000 — all scaled to keep agent density unchanged from R7, so any
+change in detectable drift is attributable to population scale (shrinking the
+neutral-drift noise floor) and not a denser/sparser ecology. An initial 4x-scale attempt
+was tried first and abandoned — ~2.75 days/seed and GPU memory pushed to the edge — before
+settling on 2x as the affordable step. Same 3 real + 3 control seeds (42/43/44), 1000
+iterations each, sequential on one GPU.
+
+**Launched:** real seed 42 2026-07-18 18:24 (finished 07-19 13:45, ~19.3h); real 43
+07-20 16:04 (→ 07-21 08:44, ~16.6h); real 44 07-21 08:45 (→ 07-22 01:06, ~16.3h); control
+42 07-22 01:06 (→ 07-22 18:00, ~16.8h); control 43 07-22 18:01 (→ 07-23 22:38, ~28.6h,
+longer than the others — no crash, just slower wall-clock progress); control 44
+07-23 22:38 (→ 07-24 15:38, ~17.0h). All 6 runs finished cleanly at 1000/1000 iterations,
+no crashes. Total wall-clock ~115h (~4.8 days) spanning 2026-07-18 to 2026-07-24.
+
+**Result: species-asymmetric — null for predator, directionally positive for prey at the
+maximum separation n=3-vs-3 can show.**
+
+| species | metric | real (n=3) | control (n=3) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0187 | 0.0290 | 2.0 | 0.900 |
+| predator | max \|dev\| | 0.0462 | 0.0587 | 4.0 | 0.650 |
+| prey | final \|dev\| | 0.0233 | 0.0084 | 9.0 | 0.050 |
+| prey | max \|dev\| | 0.0669 | 0.0480 | 8.0 | 0.100 |
+
+Per-seed data (Q1/Q5 quintile means, net change, deviation from founder 0.35):
+
+| group | seed | species | Q1 | Q5 | net_chg | \|dev_final\| | max\|dev\| |
+|---|---|---|---|---|---|---|---|
+| real | 42 | predator | 0.3170 | 0.3180 | +0.0010 | 0.0320 | 0.0734 |
+| real | 42 | prey | 0.3213 | 0.3195 | −0.0018 | 0.0305 | 0.0786 |
+| real | 43 | predator | 0.3492 | 0.3413 | −0.0079 | 0.0087 | 0.0297 |
+| real | 43 | prey | 0.3442 | 0.3685 | +0.0243 | 0.0185 | 0.0690 |
+| real | 44 | predator | 0.3536 | 0.3655 | +0.0119 | 0.0155 | 0.0354 |
+| real | 44 | prey | 0.3399 | 0.3290 | −0.0109 | 0.0210 | 0.0530 |
+| control | 42 | predator | 0.3048 | 0.3137 | +0.0089 | 0.0363 | 0.0871 |
+| control | 42 | prey | 0.3435 | 0.3574 | +0.0138 | 0.0074 | 0.0513 |
+| control | 43 | predator | 0.3271 | 0.3126 | −0.0144 | 0.0374 | 0.0633 |
+| control | 43 | prey | 0.3576 | 0.3643 | +0.0067 | 0.0143 | 0.0555 |
+| control | 44 | predator | 0.3607 | 0.3635 | +0.0027 | 0.0135 | 0.0257 |
+| control | 44 | prey | 0.3507 | 0.3463 | −0.0043 | 0.0037 | 0.0372 |
+
+**Predator:** no improvement over R7 — if anything the direction reverses (control
+deviates *more* than real), p=0.900 for "real>control". Population scaling gave predator
+no detectable selection signal.
+
+**Prey:** all three real seeds' final |deviation| (0.0305, 0.0185, 0.0210) exceed all
+three control seeds' (0.0074, 0.0143, 0.0037) — perfect rank separation, U=9, which is the
+maximum value (and minimum attainable p, 0.050) a 3-vs-3 Mann-Whitney U can produce. This
+is a materially different outcome than R7's unscaled prey result, which was flat (real
+0.0397 vs. control 0.0351, p=0.500). Something changed specifically for prey between the
+unscaled and scaled runs. The max-|dev| metric points the same direction but doesn't reach
+full separation (U=8, p=0.100).
+
+**Interpretation:** this is the first result across three traits (`metabolic_rate`,
+`offspring_investment_fraction` at two population scales) and two scales that shows a
+real-vs-control separation reaching the ceiling of what n=3 can demonstrate — consistent
+with, though not proof of, the neutral-drift-noise-floor hypothesis specifically for prey.
+It is not the clean, both-species confirmation Trial 6 was hoping for: predator shows no
+such effect, arguing against a simple "just needed more agents" story and for something
+prey-specific (larger absolute prey population, per Holling-throttle asymmetry, or prey's
+generally higher reproduction/turnover rate giving more opportunities for selection to
+act per unit wall-clock time). p=0.050 at n=3 is exactly the statistical floor of this
+design — it is suggestive, not confirmatory; the honest next step to move past that floor
+is more prey seeds (e.g. 45/46/47), not treating this as settled.
+
+**Verdict: inconclusive/mixed for criterion 3.** Not a clean confirmation (predator null,
+small n, sitting at the p=0.050 floor rather than clearing it) but also not a repeat of the
+flat null every earlier replication produced — the first data point in this whole search
+that points toward "a real signal exists but was below the unscaled noise floor," and only
+for one species. Warrants a decision (more prey seeds vs. proceed to the combinatorial-trait
+pivot) rather than being treated as either a confirmed win or a third null. See
+`predpreygrass/evolutionary/RESULTS.md` Trial 6 entry for the cross-module framing and
+next-step decision.
+
+**Status:** R9 complete. Predator: null. Prey: directionally positive, at the n=3
+significance ceiling — not yet confirmed at adequate power.
+
+---
+
 *R4-R7 addendum analysis date: 2026-07-18. R7 data source: 6 seeded runs (real seeds
 42/43/44, control seeds 42/43/44) launched 2026-07-16 10:14, all finished cleanly
 2026-07-18 01:41 — see `PPO_ECO_EVOLUTION_INVESTMENT_SEED{42,43,44}_*` and
 `PPO_ECO_EVOLUTION_INVESTMENT_NEUTRAL_CONTROL_SEED{42,43,44}_*` under `~/ray_results/`.*
+
+*R9 addendum analysis date: 2026-07-24. Data source: 6 seeded scaled runs (real seeds
+42/43/44, control seeds 42/43/44) launched 2026-07-18 18:24, all finished cleanly
+2026-07-24 15:38 — see `PPO_ECO_EVOLUTION_INVESTMENT_SCALED_SEED{42,43,44}_*` and
+`PPO_ECO_EVOLUTION_INVESTMENT_SCALED_NEUTRAL_CONTROL_SEED{42,43,44}_*` under
+`~/ray_results/`.*
