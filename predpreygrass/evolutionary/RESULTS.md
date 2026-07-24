@@ -257,9 +257,54 @@ proceed to the combinatorial-trait pivot below) not yet made.
 
 ---
 
+## Trial 7 — `eco_evolutionary_metabolic_code` — implemented, not yet launched
+
+**Trait:** `loci` — a length-10 combinatorial genome, each locus CORRECT/WRONG/
+PLASTIC relative to an implicit fixed target (Hinton & Nowlan, 1987
+needle-in-haystack design), rather than another smooth continuous scalar. An
+agent can only achieve a full match if it carries zero WRONG loci (permanently
+unfixable within a lifetime); PLASTIC loci are searched fresh every step
+within that agent's own lifetime via a joint guess across all of them at once.
+A solved genome multiplies energy gain from that step onward.
+
+**Why this trait, why now:** Trial 6 was the last data point on the
+single-continuous-scalar line of attack — inconclusive rather than a clean
+confirmation (see above), and not worth pursuing further before trying the
+structurally different design this file's theoretical note (below) already
+pointed at. Per that note, the Baldwin effect specifically needs a landscape
+"hard to search without an adaptive process to restructure the space" — a
+smooth 1-D scalar, which is what all three traits tried so far (`metabolic_rate`,
+`offspring_investment_fraction`, `cooperation_rate`) are, doesn't qualify.
+This trait is shaped like the one the source paper actually demonstrates the
+effect with.
+
+**What's new here relative to every prior module:** a genuine **per-individual
+lifetime search**, decoupled from the shared PPO policy. PPO continues to
+learn movement/hunting/foraging behavior exactly as before; a separate, cheap,
+per-agent stochastic process (one joint guess per step over that agent's
+unresolved loci) resolves this trait within that same individual's lifetime.
+This directly addresses structural gap #2 in the theoretical note below (PPO
+being population-level optimization, not individual-lifetime search) — for
+this one trait, not as a change to how PPO itself works elsewhere.
+
+**Status:** implemented in its own directory
+(`eco_evolutionary_metabolic_code/`), smoke-tested (3-iteration CPU runs of
+both the real and neutral-control training scripts, no crashes,
+`live_haystack/*_mean_wrong_loci` starts near the founder expectation), and
+covered by a unit test suite (32 tests, genome sampling/mutation, the
+per-step solving mechanism, the fixed-genome-independent offspring investment,
+the neutral-drift-control template selection, and the live/episode metrics
+builders). **No pilot or replication run has been launched** — that is a
+separate compute-spend decision, deliberately not bundled into the
+implementation step. See `eco_evolutionary_metabolic_code/README.md` for the
+full design and `eco_evolutionary_metabolic_code/RESULTS.md` for the (not yet
+populated) results log.
+
+---
+
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
-Not yet acted on; recorded here so it isn't lost before a Trial 7 combinatorial-design pivot (option (b) below) is decided.
+This motivated the Trial 7 pivot above (`eco_evolutionary_metabolic_code`) — recorded here in full since it's the theoretical basis for that module's design, not just a historical note anymore.
 
 Hinton & Nowlan, "How Learning Can Guide Evolution" (1987) — the paper that formalized the
 Baldwin effect computationally — offers a plausible theoretical account for why both traits
@@ -307,15 +352,13 @@ structural gap from the classical Baldwin effect, and plausibly part of why the 
 specifically (genome shaping what gets learned) has been hard to detect — there isn't genuine
 individual-lifetime search for the genome to interact with.
 
-**Candidate future direction, i.e. option (b) above (not scoped, not started):** a trait design
-closer to what the paper actually demonstrates — multiple interacting genetic parameters with a
-narrow joint fitness optimum (a small combinatorial co-adaptation problem) rather than a single
-smooth scalar. Would need its own scoping (what parameters, what joint-optimum structure, how
-"learning" maps onto per-individual behavior within an episode) before it's a real R-number in
-any module. Option (a) — population scaling on `investment` (Trial 6 / R9) — came back
-inconclusive rather than cleanly null or cleanly confirmed: predator showed no signal at 2x
-scale, but prey showed the strongest possible directional real-vs-control separation for n=3.
-That's not decisive evidence either for "population scale was the whole problem" (predator
-disagrees) or against it (prey's result would need more seeds to fail to replicate before ruling
-it out) — the immediate next step is extending the prey replication a few more seeds before
-deciding whether this pivot (b) is warranted.
+**Option (b), now executed as Trial 7 (`eco_evolutionary_metabolic_code`):** a trait design
+closer to what the paper actually demonstrates — a combinatorial locus code with a narrow
+joint fitness optimum (zero-WRONG-loci requirement) rather than a single smooth scalar, plus
+a genuine per-individual lifetime search decoupled from PPO (addressing gap #2 above directly
+for this one trait). Option (a) — population scaling on `investment` (Trial 6 / R9) — came back
+inconclusive rather than cleanly null or cleanly confirmed (predator showed no signal at 2x
+scale, prey showed the strongest possible directional real-vs-control separation for n=3, but
+not enough to settle the question either way). Rather than spend more compute extending that
+single-scalar line further, the decision was to move to option (b) — see the Trial 7 entry
+above for its design and current status.

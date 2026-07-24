@@ -54,6 +54,11 @@ sustainability numbers.
   nearby same-species agents, relying on spatial viscosity (offspring spawn near
   parents) for implicit kin selection. Pilot result: likely null; *paused* rather than
   replicated further — see `RESULTS.md`.
+* **[eco_evolutionary_metabolic_code](eco_evolutionary_metabolic_code)** — evolves a
+  combinatorial `loci` genome (CORRECT/WRONG/PLASTIC per locus, Hinton & Nowlan 1987
+  needle-in-haystack design) instead of a smooth scalar, resolved each lifetime by a
+  genuine per-individual search decoupled from the shared PPO policy. Implemented and
+  smoke-tested; no pilot run launched yet.
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
