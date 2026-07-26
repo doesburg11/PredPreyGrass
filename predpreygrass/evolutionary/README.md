@@ -57,8 +57,9 @@ sustainability numbers.
 * **[eco_evolutionary_metabolic_code](eco_evolutionary_metabolic_code)** — evolves a
   combinatorial `loci` genome (CORRECT/WRONG/PLASTIC per locus, Hinton & Nowlan 1987
   needle-in-haystack design) instead of a smooth scalar, resolved each lifetime by a
-  genuine per-individual search decoupled from the shared PPO policy. Implemented and
-  smoke-tested; no pilot run launched yet.
+  genuine per-individual search decoupled from the shared PPO policy.
+  Sustainability/coexistence solved; selection-driven drift **null (reversed on the
+  headline metric)** after replication — see `RESULTS.md`.
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.

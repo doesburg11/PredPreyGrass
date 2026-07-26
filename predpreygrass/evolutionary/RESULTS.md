@@ -257,7 +257,7 @@ proceed to the combinatorial-trait pivot below) not yet made.
 
 ---
 
-## Trial 7 — `eco_evolutionary_metabolic_code` — implemented, not yet launched
+## Trial 7 — `eco_evolutionary_metabolic_code` — complete, null (reversed on headline metric)
 
 **Trait:** `loci` — a length-10 combinatorial genome, each locus CORRECT/WRONG/
 PLASTIC relative to an implicit fixed target (Hinton & Nowlan, 1987
@@ -287,18 +287,54 @@ This directly addresses structural gap #2 in the theoretical note below (PPO
 being population-level optimization, not individual-lifetime search) — for
 this one trait, not as a change to how PPO itself works elsewhere.
 
-**Status:** implemented in its own directory
-(`eco_evolutionary_metabolic_code/`), smoke-tested (3-iteration CPU runs of
-both the real and neutral-control training scripts, no crashes,
-`live_haystack/*_mean_wrong_loci` starts near the founder expectation), and
-covered by a unit test suite (32 tests, genome sampling/mutation, the
-per-step solving mechanism, the fixed-genome-independent offspring investment,
-the neutral-drift-control template selection, and the live/episode metrics
-builders). **No pilot or replication run has been launched** — that is a
-separate compute-spend decision, deliberately not bundled into the
-implementation step. See `eco_evolutionary_metabolic_code/README.md` for the
-full design and `eco_evolutionary_metabolic_code/RESULTS.md` for the (not yet
-populated) results log.
+**Implementation:** its own directory (`eco_evolutionary_metabolic_code/`),
+smoke-tested and covered by a 32-test unit suite (genome sampling/mutation,
+the per-step solving mechanism, fixed-genome-independent offspring investment,
+neutral-drift-control template selection, live/episode metrics builders)
+before any real run. No separate throwaway pilot was run — a real seed
+(42, real+control) was launched directly and monitored through its early
+iterations instead, on the reasoning that a dedicated pilot brings nothing a
+real run's early iterations don't also show, while staying usable data if
+healthy rather than being discarded.
+
+**Result: 3-seed real-vs-control replication (42/43/44), same Mann-Whitney
+methodology as `investment`'s R7 — null, and reversed on the headline metric,
+in both species.**
+
+| species | metric | real (n=3) | control (n=3) | p |
+|---|---|---|---|---|
+| predator | mean_wrong_loci | 3.12 | 2.92 | p(real<control)=0.900 |
+| predator | fraction_solved | 0.0080 | 0.0070 | p(real>control)=0.350 |
+| prey | mean_wrong_loci | 3.92 | 3.27 | p(real<control)=0.800 |
+| prey | fraction_solved | 0.0087 | 0.0059 | p(real>control)=0.500 |
+
+Both species show real *higher* than control on the headline metric
+(mean WRONG-loci count) — the opposite of the hypothesized direction, since
+selection should push this down, not up. The secondary metric
+(fraction_solved) trends the predicted direction in both species but far too
+weakly to matter at n=3. One data-quality caveat: seed 44's prey values are a
+clear outlier in both groups simultaneously (real and control both ~4-5.6 vs.
+~2.7-4.0 for every other seed/species), and that same seed also showed
+meaningfully more predator-reproduction capacity-blocking than seeds 42/43 —
+both point at seed 44 having produced atypical population dynamics that add
+noise to the n=3 aggregate, not at a mechanism bug. Full data, per-seed table,
+and timing in `eco_evolutionary_metabolic_code/RESULTS.md`.
+
+**Verdict:** the fourth trait design in this project to fail this test, and
+the cleanest null yet in one sense — unlike Trial 6's species-split result,
+both predator and prey agree here. Purpose-built to fix both gaps the
+theoretical note below identifies (a true needle-in-a-haystack landscape, and
+a genuine per-individual lifetime search independent of PPO), and it still
+didn't produce a detectable selection signal beyond neutral drift at this
+scale. Not proof the combinatorial-genome category can't work — the founder/
+mutation/bonus parameters were calculated starting guesses never tuned
+against real data, and the seed-44 outlier suggests more noise than ideal in
+this particular pass — but it's a real, disappointing data point, not
+grounds to declare victory prematurely.
+
+**Status:** replication complete (2026-07-26). Decision on next step (more
+seeds, parameter retuning, or stepping back to reconsider the search
+direction) not yet made.
 
 ---
 
