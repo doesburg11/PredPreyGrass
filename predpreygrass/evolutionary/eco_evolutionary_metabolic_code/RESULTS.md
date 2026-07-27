@@ -1,11 +1,10 @@
 # Training Analysis — eco_evolutionary_metabolic_code
 
-No training run has been launched yet. This file will be filled in after a
-real run exists, following the same structure as `eco_evolutionary_investment/RESULTS.md`
-(experiment setup, per-run summary, Darwinian/Baldwinian interaction analysis,
-neutral-control comparison). See `README.md` for the trait design and
-`predpreygrass/evolutionary/RESULTS.md`'s Trial 7 entry for the current status
-of the decision to launch a pilot.
+Smoke-tested, then a full 3-seed real-vs-neutral-control replication (seeds
+42/43/44) — see Sections 2-4 below. Result: null, and reversed on the
+headline metric, in both species. See `README.md` for the trait design and
+`predpreygrass/evolutionary/RESULTS.md`'s Trial 7 entry for the cross-module
+framing and the current status of the follow-up decision.
 
 ---
 
