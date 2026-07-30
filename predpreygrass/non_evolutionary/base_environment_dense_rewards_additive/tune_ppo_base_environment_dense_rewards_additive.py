@@ -5,11 +5,23 @@ The environment is a grid world where predators and prey move around.
 Predators try to catch prey, and prey try to eat grass.
 This implements MultiRLModuleSpec explicitly to define the policies for predators
 and prey separately.
+
+Uses the dense per-step energy-delta reward PLUS a flat +10 reproduction
+bonus for the parent (see predpreygrass_rllib_env.py) -- isolates whether
+base_environment_dense_rewards' lower reproduction rate and less balanced
+populations (vs. base_environment_sparse_rewards) is caused by reward
+density itself, or specifically by that module's "pure replacement" design
+removing the reproduction incentive. Compare training dynamics against both
+base_environment_sparse_rewards/tune_ppo_base_environment_sparse_rewards.py
+and
+base_environment_dense_rewards/tune_ppo_base_environment_dense_rewards.py,
+with everything else (RLlib-compliance fixes, resource config) held equal.
 """
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_dense_rewards_additive.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_dense_rewards_additive.config_env import config_env
 
 #  external libraries
+from datetime import datetime
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
@@ -31,37 +43,52 @@ class EpisodeReturn(RLlibCallback):
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
+
+        This is diagnostic console logging only -- it must never crash the
+        sampling worker. `episode.get_rewards()` has been observed to raise
+        an IndexError on some episodes under this env's dynamic agent
+        population (agents born/dying mid-episode), apparently an edge case
+        in RLlib's env-step<->agent-step index translation for episodes that
+        get chunked across sample() calls; not reproducible by feeding a
+        single, uninterrupted episode's data directly into a MultiAgentEpisode.
+        Since this callback has no effect on training itself (RLlib's own
+        env_runners/episode_return_mean etc. metrics come from a separate,
+        internal path), any failure here is caught and skipped rather than
+        allowed to take down a worker.
         """
         self.num_episodes += 1
-        self.overall_sum_of_rewards += episode.get_return()
+        try:
+            self.overall_sum_of_rewards += episode.get_return()
 
-        # Initialize reward tracking
-        predator_total_reward = 0.0
-        prey_total_reward = 0.0
-        predator_count = 0
-        prey_count = 0
+            # Initialize reward tracking
+            predator_total_reward = 0.0
+            prey_total_reward = 0.0
+            predator_count = 0
+            prey_count = 0
 
-        # Retrieve rewards
-        rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
+            # Retrieve rewards
+            rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
 
-        for agent_id, reward_list in rewards.items():
-            total_reward = sum(reward_list)  # Sum all rewards for the episode
+            for agent_id, reward_list in rewards.items():
+                total_reward = sum(reward_list)  # Sum all rewards for the episode
 
-            if "predator" in agent_id:
-                predator_total_reward += total_reward
-                predator_count += 1
-            elif "prey" in agent_id:
-                prey_total_reward += total_reward
-                prey_count += 1
+                if "predator" in agent_id:
+                    predator_total_reward += total_reward
+                    predator_count += 1
+                elif "prey" in agent_id:
+                    prey_total_reward += total_reward
+                    prey_count += 1
 
-        # Compute average rewards (avoid division by zero)
-        predator_avg_reward = predator_total_reward / predator_count if predator_count > 0 else 0
-        prey_avg_reward = prey_total_reward / prey_count if prey_count > 0 else 0
+            # Compute average rewards (avoid division by zero)
+            predator_avg_reward = predator_total_reward / predator_count if predator_count > 0 else 0
+            prey_avg_reward = prey_total_reward / prey_count if prey_count > 0 else 0
 
-        # Print episode logs
-        print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
-        print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
-        print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
+            # Print episode logs
+            print(f"Episode {self.num_episodes}: R={episode.get_return()} Global SUM={self.overall_sum_of_rewards}")
+            print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
+            print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
+        except Exception as e:
+            print(f"Episode {self.num_episodes}: [EpisodeReturn callback failed, skipping stats: {type(e).__name__}: {e}]")
 
 
 def env_creator(config):
@@ -172,7 +199,7 @@ if __name__ == "__main__":
         )
         .rl_module(rl_module_spec=multi_module_spec)
         .env_runners(
-            num_env_runners=10,
+            num_env_runners=20,
             num_envs_per_env_runner=1,
             num_cpus_per_env_runner=1,
             rollout_fragment_length="auto",
@@ -182,10 +209,13 @@ if __name__ == "__main__":
         .callbacks(EpisodeReturn)
     )
 
+    experiment_name = f"PPO_BASE_ENVIRONMENT_DENSE_REWARDS_ADDITIVE_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
     tuner = Tuner(
         ppo.algo_class,
         param_space=ppo.to_dict(),
         run_config=RunConfig(
+            name=experiment_name,
             stop={"training_iteration": 1000},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
