@@ -56,6 +56,8 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Base environment (dense rewards, additive)](predpreygrass/non_evolutionary/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
 
+* **[Base environment (sparse rewards + eating bonus)](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric — see [findings below](#sparse-rewards-versus-dense-rewards)).
+
 * **[Centralized training](predpreygrass/non_evolutionary/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
 
 * **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
@@ -145,6 +147,21 @@ the first bug is fixed — either crashes training outright or (if left unfixed)
 conflates two unrelated individuals' trajectories into one fabricated continuous episode. Both
 fixes are applied in all three variants above; `base_environment` itself was left untouched as
 the historical original.
+
+**Follow-up, in progress**: the dense-additive result raised a sharper question — was reward
+*density* itself the problem, or specifically the continuous per-step signal's noise sitting in
+the same channel as the reproduction event? [`base_environment_sparse_rewards_plus_eating`](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_eating)
+tests this directly: same clean, event-based sparse reward style (no energy-delta signal at
+all), with one more discrete event type rewarded — eating — alongside reproduction. The eating
+reward is deliberately asymmetric (`+1` predator / `+0.1` prey), not a flat `+1`/`+1`: measured
+directly from the trained sparse policy, predators catch prey ~4.4 times per reproduction, but
+prey eat grass ~60.5 times per reproduction (grass regrows slowly and gives little per visit, so
+prey need many more, smaller meals to reach their threshold). A flat `+1` for both would make
+prey's total eating reward per reproduction cycle (`60.5 × 1 = 60.5`) six times larger than the
+reproduction reward itself (`10.0`), swamping the primary incentive the same way the dense
+signal's noise did. `+1`/`+0.1` keeps each species' total eating reward per cycle clearly
+secondary to reproduction for both (predator: `4.4 × 1 = 4.4`; prey: `60.5 × 0.1 ≈ 6.05`).
+Training in progress as of 2026-07-31; results to follow.
 
 ### Hyperparameter tuning
 
