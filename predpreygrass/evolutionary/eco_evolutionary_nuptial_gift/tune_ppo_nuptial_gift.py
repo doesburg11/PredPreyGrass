@@ -69,6 +69,12 @@ def parse_args():
              "training run (e.g. via a shared Ray cluster) -- requesting a GPU "
              "PPOConfig in that situation queues forever instead of erroring.",
     )
+    parser.add_argument(
+        "--num-env-runners", type=int, default=None,
+        help="Override config_ppo['num_env_runners'] for this run. Use this to "
+             "scale parallelism up when the machine is otherwise idle, or down "
+             "when sharing the machine with another training run.",
+    )
     return parser.parse_args()
 
 
@@ -132,6 +138,8 @@ if __name__ == "__main__":
     config_ppo = get_config_ppo(force_cpu=args.cpu)
     if args.max_iters is not None:
         config_ppo = dict(config_ppo, max_iters=args.max_iters)
+    if args.num_env_runners is not None:
+        config_ppo = dict(config_ppo, num_env_runners=args.num_env_runners)
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,
