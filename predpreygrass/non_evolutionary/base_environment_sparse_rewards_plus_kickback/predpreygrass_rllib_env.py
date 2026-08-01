@@ -1,16 +1,25 @@
 """
-Dense-energy-reward variant of the PredPreyGrass base environment.
-Two types of agents: predators and prey. Independently learning policies for each type.
-Reward is the dense, per-step net energy delta (decay + move + eat + reproduction
-cost) rather than a sparse reproduction-only reward. Also includes the
-RLlib-compliance fixes (termination-reporting timing, never-reused agent IDs)
-described in the module README. See
-predpreygrass/non_evolutionary/base_environment_sparse_rewards for the fair,
-bug-fixed sparse-reward baseline this is meant to be compared against
-(plain base_environment is the untouched historical original, not this
-module's comparison partner).
+Sparse reward variant of the PredPreyGrass base environment: same
+reproduction-only reward as base_environment_sparse_rewards, PLUS a "kick
+back" bonus -- a second +10 reward to a grandparent, every time its own
+child successfully reproduces (i.e. every time a grandchild is born). Fires
+once per grandchild (repeatable, not capped at one), and only if the
+grandparent is still alive at that moment -- RLlib cannot deliver a new
+reward to an already-terminated agent, so a grandparent that dies first
+simply forfeits that credit. This mirrors the existing kick_back_rewards
+module's "_reward_parent_for_child_reproduction" mechanism (already
+verified RLlib-compliant and bug-free), reimplemented here in this module's
+single-predator/single-prey-type family for a directly comparable result
+against base_environment_sparse_rewards, base_environment_dense_rewards,
+base_environment_dense_rewards_additive, and
+base_environment_sparse_rewards_plus_eating. Also includes the same
+RLlib-compliance fixes as the other base_environment_* modules (see
+README): deferred self.agents removal timing so terminal transitions
+actually reach RLlib, and never-reused monotonic agent IDs so a recycled ID
+doesn't collide with RLlib's per-episode agent identity model. Two types of
+agents: predators and prey, independently learning policies for each type.
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.config_env import config_env
 
 # external libraries
 import numpy as np
@@ -33,9 +42,19 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.max_steps = config.get("max_steps", 10000)
 
-        # Reward: dense, per-step net energy delta (decay + move + eat + repro cost).
-        # No hand-designed reward shaping constants — reward IS the agent's own
-        # physiological energy balance for the step. See Step 5b in step().
+        # Rewards
+        self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
+        self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
+        self.reward_predator_step = config.get("reward_predator_step", 0.0)
+        self.reward_prey_step = config.get("reward_prey_step", 0.0)
+        self.penalty_prey_caught = config.get("penalty_prey_caught", 0.0)
+        self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
+        self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
+        # Kick-back bonus: a second reward to a grandparent, paid every time
+        # its own child reproduces (see step()'s reproduction blocks). Only
+        # paid if the grandparent is still alive at that moment.
+        self.kickback_reward_predator = config.get("kickback_reward_predator", 10.0)
+        self.kickback_reward_prey = config.get("kickback_reward_prey", 10.0)
 
         # Energy settings
         self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.15)
@@ -74,6 +93,12 @@ class PredPreyGrass(MultiAgentEnv):
         # the entire episode and errors if a "done" ID produces more data.
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
+
+        # Parentage tracking for the kickback bonus: child agent-ID -> parent
+        # agent-ID, recorded at birth, removed when the agent dies. Initial
+        # (non-reproduced) agents are never added here, so they have no
+        # parent to kick back to.
+        self.agent_parent: Dict[AgentID, AgentID] = {}
 
         # self.num_agents: int = self.current_num_predators + self.current_num_prey  # inherited from MultiAgentEnv
         self.possible_agents: List[AgentID] = [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
@@ -162,6 +187,7 @@ class PredPreyGrass(MultiAgentEnv):
         self._pending_removal = []
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
+        self.agent_parent = {}
 
         def generate_random_positions(grid_size: int, num_positions: int):
             """
@@ -254,10 +280,6 @@ class PredPreyGrass(MultiAgentEnv):
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
 
-        # Snapshot energy at the start of the step for every agent that is
-        # currently alive; dense reward = (energy at end of step) - (this).
-        energy_before = dict(self.agent_energies)
-
         # Step 1: Process energy depletion due to time steps
         for agent, action in action_dict.items():
             if "predator" in agent:
@@ -301,10 +323,9 @@ class PredPreyGrass(MultiAgentEnv):
             # Agent has no energy left
             if self.agent_energies[agent] <= 0:
                 if self.verbose_movement:
-                    print(f"[STARVED] step={self.current_step} {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
+                    print(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
                 observations[agent] = self._get_observation(agent)  # Ensure last observation
-                rewards[agent] = self.agent_energies[agent] - energy_before[agent]
-                self.cumulative_rewards[agent] += rewards[agent]
+                rewards[agent] = 0  # TODO remove hardcoded
                 terminations[agent] = True
                 truncations[agent] = False
                 if "predator" in agent:
@@ -317,6 +338,7 @@ class PredPreyGrass(MultiAgentEnv):
                     del self.prey_positions[agent]
                 del self.agent_positions[agent]
                 del self.agent_energies[agent]
+                self.agent_parent.pop(agent, None)
                 continue
             elif "predator" in agent:
                 predator_position = self.agent_positions[agent]
@@ -331,17 +353,20 @@ class PredPreyGrass(MultiAgentEnv):
                 )
                 if caught_prey:
                     if self.verbose_engagement:
-                        print(f"[EATEN] step={self.current_step} {caught_prey} eaten by {agent} at {predator_position}")
+                        print(
+                            f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}! "
+                            f"Predator Reward: {self.reward_predator_catch_prey}"
+                        )
                     self.agents_just_ate.add(agent)  # Show green ring for next 1 step
 
-                    # Prey's energy transfers to the predator; predator's own
-                    # reward is finalized below (Step 5b) from its net energy delta.
+                    # Assign rewards predator and penalty prey
+                    rewards[agent] = self.reward_predator_catch_prey
+                    self.cumulative_rewards[agent] += rewards[agent]
                     self.agent_energies[agent] += self.agent_energies[caught_prey]
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
                     observations[caught_prey] = self._get_observation(caught_prey)
-                    # Caught prey's own energy account goes to zero on death.
-                    rewards[caught_prey] = 0.0 - energy_before[caught_prey]
+                    rewards[caught_prey] = self.penalty_prey_caught
                     self.cumulative_rewards[caught_prey] += rewards[caught_prey]
 
                     # Remove prey
@@ -352,8 +377,13 @@ class PredPreyGrass(MultiAgentEnv):
                     del self.agent_positions[caught_prey]
                     del self.prey_positions[caught_prey]
                     del self.agent_energies[caught_prey]
+                    self.agent_parent.pop(caught_prey, None)
+                else:
+                    # Predator did not catch prey
+                    rewards[agent] = self.reward_predator_step
 
                 observations[agent] = self._get_observation(agent)
+                self.cumulative_rewards[agent] += rewards[agent]
                 terminations[agent] = False
                 truncations[agent] = False
             elif "prey" in agent:
@@ -370,10 +400,12 @@ class PredPreyGrass(MultiAgentEnv):
                     )
                     if caught_grass:
                         if self.verbose_engagement:
-                            print(f"[ENGAGE] {agent} caught grass at {prey_position}!")
+                            print(f"[ENGAGE] {agent} caught grass at {prey_position}! Prey Reward: {self.reward_prey_eat_grass}")
                         self.agents_just_ate.add(agent)  # Show green ring for next 1 step
 
-                        # Prey's reward is finalized below (Step 5b) from its net energy delta.
+                        # Reward prey for eating grass
+                        rewards[agent] = self.reward_prey_eat_grass
+                        self.cumulative_rewards[agent] += rewards[agent]
                         self.agent_energies[agent] += self.grass_energies[caught_grass]
                         self.grid_world_state[2, *prey_position] = self.agent_energies[agent]
 
@@ -381,7 +413,11 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[3, *self.grass_positions[caught_grass]] = 0
                         self.grass_energies[caught_grass] = 0
 
+                    else:
+                        rewards[agent] = self.reward_prey_step
+
                     observations[agent] = self._get_observation(agent)
+                    self.cumulative_rewards[agent] += rewards[agent]
                     terminations[agent] = False
                     truncations[agent] = False
 
@@ -412,15 +448,27 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[1, *self.agent_positions[new_agent]] = self.initial_energy_predator
                         self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_predators += 1
-                        # Parent's reproduction cost is captured in Step 5b via its net
-                        # energy delta; the newborn had no energy_before this step.
+                        self.agent_parent[new_agent] = agent
                         rewards[new_agent] = 0
+                        rewards[agent] = self.reproduction_reward_predator
                         self.cumulative_rewards[new_agent] = 0
+                        self.cumulative_rewards[agent] += rewards[agent]
+                        # Kick-back bonus: agent just reproduced, so if agent
+                        # itself has a parent (grandparent of new_agent) still
+                        # alive, that grandparent gets a bonus too. Additive
+                        # with whatever reward it already has this step.
+                        grandparent = self.agent_parent.get(agent)
+                        if grandparent is not None and grandparent in self.agent_positions:
+                            kickback = self.kickback_reward_predator if "predator" in grandparent else self.kickback_reward_prey
+                            rewards[grandparent] = rewards.get(grandparent, 0.0) + kickback
+                            self.cumulative_rewards[grandparent] = self.cumulative_rewards.get(grandparent, 0.0) + kickback
+                            if self.verbose_engagement:
+                                print(f"[KICKBACK] step={self.current_step} {grandparent} rewarded {kickback} because {agent} (its child) reproduced")
                         observations[new_agent] = self._get_observation(new_agent)
                         terminations[new_agent] = False
                         truncations[new_agent] = False
                         if self.verbose_spawning:
-                            print(f"[BORN] step={self.current_step} {new_agent} born to {agent} at {self.agent_positions[new_agent]}")
+                            print(f"New predator {new_agent} spawned at {self.agent_positions[new_agent]}")
                     else:
                         if self.verbose_spawning:
                             print("No new predator agent IDs left in the pool this episode")
@@ -441,28 +489,30 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[2, *self.agent_positions[new_agent]] = self.initial_energy_prey
                         self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_prey += 1
-                        # Parent's reproduction cost is captured in Step 5b via its net
-                        # energy delta; the newborn had no energy_before this step.
+                        self.agent_parent[new_agent] = agent
                         rewards[new_agent] = 0
+                        rewards[agent] = self.reproduction_reward_prey
+                        self.cumulative_rewards[agent] += rewards[agent]
                         self.cumulative_rewards[new_agent] = 0
+                        # Kick-back bonus: agent just reproduced, so if agent
+                        # itself has a parent (grandparent of new_agent) still
+                        # alive, that grandparent gets a bonus too. Additive
+                        # with whatever reward it already has this step.
+                        grandparent = self.agent_parent.get(agent)
+                        if grandparent is not None and grandparent in self.agent_positions:
+                            kickback = self.kickback_reward_predator if "predator" in grandparent else self.kickback_reward_prey
+                            rewards[grandparent] = rewards.get(grandparent, 0.0) + kickback
+                            self.cumulative_rewards[grandparent] = self.cumulative_rewards.get(grandparent, 0.0) + kickback
+                            if self.verbose_engagement:
+                                print(f"[KICKBACK] step={self.current_step} {grandparent} rewarded {kickback} because {agent} (its child) reproduced")
                         observations[new_agent] = self._get_observation(new_agent)
                         terminations[new_agent] = False
                         truncations[new_agent] = False
                         if self.verbose_spawning:
-                            print(f"[BORN] step={self.current_step} {new_agent} born to {agent} at {self.agent_positions[new_agent]}")
+                            print(f"New prey {new_agent} spawned at {self.agent_positions[new_agent]}")
                     else:
                         if self.verbose_spawning:
                             print("No new prey agent IDs left in the pool this episode")
-
-        # Step 5b: Assign dense reward = net per-step energy delta (decay + move +
-        # eat + reproduction cost) for every agent that was alive at the start of
-        # this step and is still alive now. Agents that died this step (starvation
-        # or being caught) already had their reward set at the point of removal;
-        # newborns already had their reward set to 0 at spawn time.
-        for agent, before_energy in energy_before.items():
-            if agent in self.agent_energies:
-                rewards[agent] = self.agent_energies[agent] - before_energy
-                self.cumulative_rewards[agent] += rewards[agent]
 
         # 6: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
@@ -472,10 +522,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Global termination and truncation
         terminations["__all__"] = self.current_num_prey <= 0 or self.current_num_predators <= 0
 
-        # output only observations, rewards for active agents. self.agents still
-        # includes this step's just-terminated agents (removal is deferred to the
-        # start of the next step, see top of step()) plus this step's newborns
-        # (appended in Step 5), so it's already the correct reporting set.
+        # output only observations, rewards for active agents
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
         rewards = {agent: rewards[agent] for agent in self.agents if agent in rewards}
         terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
@@ -803,6 +850,7 @@ class PredPreyGrass(MultiAgentEnv):
             "pending_removal": self._pending_removal.copy(),
             "next_predator_idx": self._next_predator_idx,
             "next_prey_idx": self._next_prey_idx,
+            "agent_parent": self.agent_parent.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -822,3 +870,4 @@ class PredPreyGrass(MultiAgentEnv):
         self._pending_removal = snapshot["pending_removal"].copy()
         self._next_predator_idx = snapshot["next_predator_idx"]
         self._next_prey_idx = snapshot["next_prey_idx"]
+        self.agent_parent = snapshot["agent_parent"].copy()

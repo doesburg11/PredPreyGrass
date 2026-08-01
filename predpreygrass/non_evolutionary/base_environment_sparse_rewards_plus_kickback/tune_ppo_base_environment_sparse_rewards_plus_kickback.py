@@ -6,19 +6,17 @@ Predators try to catch prey, and prey try to eat grass.
 This implements MultiRLModuleSpec explicitly to define the policies for predators
 and prey separately.
 
-Uses the dense per-step energy-delta reward PLUS a flat +10 reproduction
-bonus for the parent (see predpreygrass_rllib_env.py) -- isolates whether
-base_environment_dense_rewards' lower reproduction rate and less balanced
-populations (vs. base_environment_sparse_rewards) is caused by reward
-density itself, or specifically by that module's "pure replacement" design
-removing the reproduction incentive. Compare training dynamics against both
+Sparse, event-based reward: reproduction bonus (+10, same as
+base_environment) PLUS a "kick back" bonus -- a second +10 to a grandparent
+every time its own child reproduces (see predpreygrass_rllib_env.py /
+config_env.py / README). Same RLlib-compliance fixes as the other
+base_environment_* modules. Compare training dynamics against
 base_environment_sparse_rewards/tune_ppo_base_environment_sparse_rewards.py
-and
-base_environment_dense_rewards/tune_ppo_base_environment_dense_rewards.py,
-with everything else (RLlib-compliance fixes, resource config) held equal.
+(no kickback) and the existing kick_back_rewards module (same mechanism,
+weaker magnitude), with everything else held equal.
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards_additive.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.config_env import config_env
 
 #  external libraries
 from datetime import datetime
@@ -49,12 +47,10 @@ class EpisodeReturn(RLlibCallback):
         an IndexError on some episodes under this env's dynamic agent
         population (agents born/dying mid-episode), apparently an edge case
         in RLlib's env-step<->agent-step index translation for episodes that
-        get chunked across sample() calls; not reproducible by feeding a
-        single, uninterrupted episode's data directly into a MultiAgentEpisode.
-        Since this callback has no effect on training itself (RLlib's own
-        env_runners/episode_return_mean etc. metrics come from a separate,
-        internal path), any failure here is caught and skipped rather than
-        allowed to take down a worker.
+        get chunked across sample() calls. Since this callback has no effect
+        on training itself (RLlib's own env_runners/episode_return_mean etc.
+        metrics come from a separate, internal path), any failure here is
+        caught and skipped rather than allowed to take down a worker.
         """
         self.num_episodes += 1
         try:
@@ -209,7 +205,7 @@ if __name__ == "__main__":
         .callbacks(EpisodeReturn)
     )
 
-    experiment_name = f"PPO_BASE_ENVIRONMENT_DENSE_REWARDS_ADDITIVE_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+    experiment_name = f"PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_PLUS_KICKBACK_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
 
     tuner = Tuner(
         ppo.algo_class,

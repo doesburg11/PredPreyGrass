@@ -50,13 +50,17 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* **[Base environment (sparse rewards, RLlib-fixed)](predpreygrass/non_evolutionary/base_environment_sparse_rewards)**: bug-fixed copy of the base environment — same sparse, reproduction-only reward, plus two RLlib-compliance fixes (see [findings below](#sparse-rewards-versus-dense-rewards)). The fair baseline for the two dense-reward variants below.
+* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design, plus two RLlib-compliance bug fixes along the way. See **[predpreygrass/non_evolutionary/reward_shaping/README.md](predpreygrass/non_evolutionary/reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
 
-* **[Base environment (dense rewards)](predpreygrass/non_evolutionary/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
+  * **[Sparse rewards, RLlib-fixed](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards)**: bug-fixed copy of the base environment — same sparse, reproduction-only reward, plus two RLlib-compliance fixes. The fair baseline for every other variant below.
 
-* **[Base environment (dense rewards, additive)](predpreygrass/non_evolutionary/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
+  * **[Dense rewards](predpreygrass/non_evolutionary/reward_shaping/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
 
-* **[Base environment (sparse rewards + eating bonus)](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric — see [findings below](#sparse-rewards-versus-dense-rewards)).
+  * **[Dense rewards, additive](predpreygrass/non_evolutionary/reward_shaping/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
+
+  * **[Sparse rewards + eating bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric).
+
+  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training in progress as of 2026-08-01; not yet moved into `reward_shaping/` (see that folder's README for why).
 
 * **[Centralized training](predpreygrass/non_evolutionary/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
 
@@ -101,67 +105,21 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 ### Sparse rewards versus Dense rewards
 
-**Hypothesis going in**: the base environment's only nonzero reward anywhere is a flat `+10`
-bonus at the instant of successful reproduction — every other reward hook is `0.0`. That means
-every agent gets zero training signal for the ~50-200+ steps between reproduction events. The
-expectation was that this sparsity was hurting training — slow, chaotic early learning — and
-that replacing it with a **dense, biologically literal reward** (each agent's reward equal to
-its own net energy delta every single step — decay, movement, eating, reproduction cost, no
-hand-designed shaping constants) would improve outcomes.
+Started from a simple question: the base environment's only nonzero reward anywhere is a flat
+`+10` bonus on successful reproduction — every other hook is `0.0`. Does that sparsity hurt
+training, and would a dense, per-step energy-delta reward fix it? Five trained environment
+variants and a full investigation later, the answer reversed the question: **sparse reward wins
+on every axis tested, and adding density hurts** — not because of the sparsity itself, but
+because a continuous signal layered into the same reward channel as reproduction adds noise that
+outweighs the benefit it was meant to provide. Along the way this also surfaced and fixed two
+real RLlib-compliance bugs present in `base_environment` (dying agents' terminal transitions
+silently dropped, and agent IDs recycled within an episode in a way that conflates unrelated
+individuals' trajectories) — fixed only in the modules below, not in `base_environment` itself
+or elsewhere in the repo.
 
-**What was actually tested**: three environment variants, each trained a full 1000 PPO
-iterations under identical hyperparameters and resource configuration (so any difference is
-attributable to reward design, not infrastructure):
-
-| variant | reward | predator births (avg, 3 seeds) | prey births (avg) | wall time |
-|---|---|---|---|---|
-| [`base_environment_sparse_rewards`](predpreygrass/non_evolutionary/base_environment_sparse_rewards) | sparse, `+10` on reproduction only | **135.3** | **588.7** | **12.45h** |
-| [`base_environment_dense_rewards_additive`](predpreygrass/non_evolutionary/base_environment_dense_rewards_additive) | dense per-step energy delta **+** `+10` reproduction bonus | 85.0 | 445.0 | 16.22h |
-| [`base_environment_dense_rewards`](predpreygrass/non_evolutionary/base_environment_dense_rewards) | dense per-step energy delta only (no reproduction bonus) | 56.7 | 311.0 | 18.68h |
-
-**Result: sparse won, on every axis measured.** Highest reproduction rate for both species, the
-most balanced final predator:prey population ratio, zero extinction events across all tested
-seeds (the pure dense-reward variant had one predator population go fully extinct even at its
-final, fully-trained checkpoint), and the fastest wall-clock time despite supporting the largest
-population. Episode-length ramp-up — how quickly agents learn to survive a full 1000-step episode
-at all — was a dead heat: all three variants first reached that point at the *identical*
-training iteration. Reward density had no measurable effect on that axis whatsoever.
-
-**Why**, best current explanation: classic "sparse reward is hard" problems in RL are usually
-about *delayed* credit assignment — reward arriving long after the actions that caused it. The
-reproduction reward here isn't delayed, it fires immediately on the step reproduction happens; it's
-just infrequent. PPO's value function is specifically built to bootstrap across gaps like that
-(with `gamma=0.99`, the effective horizon is ~100 steps — in range of the ~50-200 step gap this
-was worried about). What the original hypothesis didn't anticipate: layering a continuous
-per-step signal into the *same reward channel* as the reproduction event makes that one
-important signal noisier and harder for PPO to cleanly attribute — even when the reproduction
-bonus is explicitly restored on top (the additive variant recovers 60-75% of the gap to sparse,
-but doesn't fully close it). In short: the sparsity itself wasn't the problem; adding density
-introduced a different cost that outweighed the benefit it was meant to provide.
-
-Along the way, this comparison also surfaced and fixed two real RLlib-compliance bugs present in
-`base_environment` (and, by code lineage, likely present across most other environments in this
-repo): dying agents' terminal reward/observation/termination were being silently dropped before
-reaching RLlib, and agent IDs were being recycled within a single episode in a way that — once
-the first bug is fixed — either crashes training outright or (if left unfixed) silently
-conflates two unrelated individuals' trajectories into one fabricated continuous episode. Both
-fixes are applied in all three variants above; `base_environment` itself was left untouched as
-the historical original.
-
-**Follow-up, in progress**: the dense-additive result raised a sharper question — was reward
-*density* itself the problem, or specifically the continuous per-step signal's noise sitting in
-the same channel as the reproduction event? [`base_environment_sparse_rewards_plus_eating`](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_eating)
-tests this directly: same clean, event-based sparse reward style (no energy-delta signal at
-all), with one more discrete event type rewarded — eating — alongside reproduction. The eating
-reward is deliberately asymmetric (`+1` predator / `+0.1` prey), not a flat `+1`/`+1`: measured
-directly from the trained sparse policy, predators catch prey ~4.4 times per reproduction, but
-prey eat grass ~60.5 times per reproduction (grass regrows slowly and gives little per visit, so
-prey need many more, smaller meals to reach their threshold). A flat `+1` for both would make
-prey's total eating reward per reproduction cycle (`60.5 × 1 = 60.5`) six times larger than the
-reproduction reward itself (`10.0`), swamping the primary incentive the same way the dense
-signal's noise did. `+1`/`+0.1` keeps each species' total eating reward per cycle clearly
-secondary to reproduction for both (predator: `4.4 × 1 = 4.4`; prey: `60.5 × 0.1 ≈ 6.05`).
-Training in progress as of 2026-07-31; results to follow.
+**Full writeup — motivation, methodology, the bug discovery, every module's results, and open
+questions — lives in
+[`predpreygrass/non_evolutionary/reward_shaping/README.md`](predpreygrass/non_evolutionary/reward_shaping).**
 
 ### Hyperparameter tuning
 

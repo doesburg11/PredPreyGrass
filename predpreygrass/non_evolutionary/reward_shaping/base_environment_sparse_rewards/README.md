@@ -1,6 +1,6 @@
 # Predator-Prey-Grass: sparse reward (RLlib-compliance-fixed)
 
-This module is a copy of [`base_environment`](../base_environment) with its
+This module is a copy of [`base_environment`](../../base_environment) with its
 reward logic **completely untouched** (sparse, reproduction-only: the only
 nonzero reward anywhere is a flat `+10` bonus at the instant of successful
 reproduction) plus two RLlib-compliance bug fixes applied. It exists purely

@@ -11,17 +11,21 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 # --- Project imports (base_environment env + PyGame renderer) ---
-from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_eating.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_eating.utils.pygame_grid_renderer_rllib import (
+from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_eating.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_eating.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
     ViewerControlHelper,
     LoopControlHelper,
 )
 
+from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_eating.config_env import config_env
+
 # --- External libs ---
+import json
 import os
 import sys
 import types
+from datetime import datetime
 
 import cv2
 import matplotlib.pyplot as plt
@@ -32,6 +36,7 @@ import torch
 from ray.rllib.core.rl_module.rl_module import RLModule  # load modules directly
 from ray.tune.registry import register_env
 
+SAVE_EVAL_RESULTS = True
 SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
@@ -104,8 +109,8 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join(
         os.path.expanduser("~"),
         "ray_results",
-        "PPO_2026-06-17_22-06-02",
-        "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
+        "PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_PLUS_EATING_2026-07-31_17-26-12",
+        "PPO_PredPreyGrass_29f27_00000_0_2026-07-31_17-26-12",
         "checkpoint_000099",
     )
 
@@ -120,6 +125,14 @@ if __name__ == "__main__":
             "Make sure 'checkpoint_XXXX/learner_group/learner/rl_module/<policy_id>' exists.\n"
             "If your policy IDs differ, update policy_mapping_fn and the module_paths below."
         )
+
+    # --- Where to save eval results (a timestamped folder inside the checkpoint dir) ---
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    eval_output_dir = os.path.join(checkpoint_path, f"eval_{os.path.basename(checkpoint_path)}_{now}")
+    if SAVE_EVAL_RESULTS:
+        os.makedirs(eval_output_dir, exist_ok=True)
+        with open(os.path.join(eval_output_dir, "config_env.json"), "w") as f:
+            json.dump(config_env, f, indent=4)
 
     # --- Load RLModules directly ---
     module_paths = {
@@ -262,10 +275,12 @@ if __name__ == "__main__":
 
     # --- Reward summary (per-agent + aggregated) ---
     predator_rewards, prey_rewards = [], []
+    summary_lines = ["--- Reward Breakdown per Agent ---\n"]
     print("\n--- Reward Breakdown per Agent ---")
     for agent_id, reward in env.cumulative_rewards.items():
         agent_name = str(agent_id)
         print(f"{agent_name:15}: {reward:.2f}")
+        summary_lines.append(f"{agent_name:15}: {reward:.2f}\n")
         if "predator" in agent_name:
             predator_rewards.append(reward)
         elif "prey" in agent_name:
@@ -281,6 +296,19 @@ if __name__ == "__main__":
     print(f"Total Prey Reward:     {total_prey_reward:.2f}")
     print(f"Total All-Agent Reward:{total_reward_all:.2f}")
 
+    summary_lines += [
+        "\n--- Aggregated Rewards ---\n",
+        f"Total number of steps: {env.current_step-1}\n",
+        f"Total Predator Reward: {total_predator_reward:.2f}\n",
+        f"Total Prey Reward:     {total_prey_reward:.2f}\n",
+        f"Total All-Agent Reward:{total_reward_all:.2f}\n",
+    ]
+
+    if SAVE_EVAL_RESULTS:
+        with open(os.path.join(eval_output_dir, "reward_summary.txt"), "w") as f:
+            f.writelines(summary_lines)
+        print(f"\nSaved reward summary to: {eval_output_dir}")
+
     # --- Plot populations ---
     plt.figure(figsize=(10, 5))
     plt.plot(time_steps, predator_counts, label="Predators", color="red")
@@ -291,6 +319,9 @@ if __name__ == "__main__":
     plt.legend()
     plt.grid(True)
     plt.tight_layout()
+    if SAVE_EVAL_RESULTS:
+        plt.savefig(os.path.join(eval_output_dir, "population_plot.png"))
+        print(f"Saved population plot to: {eval_output_dir}")
     plt.show()
 
     if video_writer is not None:

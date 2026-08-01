@@ -1,6 +1,6 @@
 # Predator-Prey-Grass: dense energy-delta reward
 
-This module is a variant of [`base_environment`](../base_environment) that
+This module is a variant of [`base_environment`](../../base_environment) that
 replaces the sparse, reproduction-only reward with a **dense, biologically
 literal reward**: on every step, each agent's reward is exactly its own net
 energy delta for that step (`energy_after - energy_before`), which folds in

@@ -11,14 +11,14 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 # --- Project imports (base_environment env + PyGame renderer) ---
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards.utils.pygame_grid_renderer_rllib import (
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
     ViewerControlHelper,
     LoopControlHelper,
 )
 
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.config_env import config_env
 
 # --- External libs ---
 import json
@@ -109,9 +109,9 @@ if __name__ == "__main__":
     checkpoint_path = os.path.join(
         os.path.expanduser("~"),
         "ray_results",
-        "PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_2026-07-29_11-17-28",
-        "PPO_PredPreyGrass_52099_00000_0_2026-07-29_11-17-28",
-        "checkpoint_000099",
+        "PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_PLUS_KICKBACK_2026-08-01_04-49-02",
+        "PPO_PredPreyGrass_8ddf3_00000_0_2026-08-01_04-49-02",
+        "checkpoint_000051",
     )
 
     # Minimal sanity checks
