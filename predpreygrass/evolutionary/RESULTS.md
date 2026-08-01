@@ -338,6 +338,60 @@ direction) not yet made.
 
 ---
 
+## Trial 8 — `eco_evolutionary_cultural_plasticity` — implemented, not yet run
+
+**Mechanism, not just another trait.** Trials 1-7 all share one structural
+property regardless of trait shape: a single heritable channel feeding a
+shared per-species PPO policy. This trial adds a **second, independent
+inheritance channel** instead — gene-culture coevolution / dual inheritance
+(Boyd & Richerson, 1985; Cavalli-Sforza & Feldman, 1981), not a variant of
+the same single-channel design tried seven times so far.
+
+**The two channels:** `dialect` (categorical, one of 4 arbitrary same-species
+coordination codes) is a *live, mutable* per-agent state — seeded from a
+heritable founder value at birth, but free to change many times within one
+agent's own lifetime via social learning from neighbors within
+`culture_range`. `plasticity` (continuous, `[0,1]`, standard Gaussian-mutation
+genome trait) is the actual gene under test: it sets how readily an agent's
+live dialect updates toward the local same-species majority. The gene does
+not encode behavior directly — it encodes capacity to adopt culture, which is
+the literal Baldwin/dual-inheritance mechanism.
+
+**Why this targets the diagnosis in the theoretical note below more directly
+than Trial 7 did.** A catch/graze event grants an energy bonus when an
+agent's live dialect matches its local majority at that moment — a
+coordination game, not a gradient. Unlike Trial 7's combinatorial
+needle-in-a-haystack (still null, both species, reversed on the headline
+metric), which fixes gap #1 (a rugged landscape) but only partially addresses
+gap #2 (genuine individual-lifetime search), this design's social-learning
+update is frequency-dependent and history-dependent by construction, and the
+gene being tested (`plasticity`) has direct, continuously-measurable leverage
+over how fast that individual-level process runs — a tighter version of gap
+#2 than Trial 7's per-step joint-guess mechanism, which the genome could not
+influence at all (only zero-vs-nonzero WRONG-loci viability gated it).
+
+**Reverse leg, addressed directly instead of left unconfirmed.** Every prior
+module kept the genome invisible to the policy's observation space. This
+module deliberately breaks that convention (`include_culture_in_obs`): the
+policy observes its own live dialect and local-majority-match status, so PPO
+can learn to condition movement/hunting on cultural state — a plausible route
+to the "genome/culture shift feeds back into learned behavior" leg no prior
+trial confirmed.
+
+**What's ported unchanged:** satiation-throttle sustainability mechanism,
+reproduction/energy dynamics, and the `genome_neutral_drift_control` /
+Mann-Whitney multi-seed replication methodology — all directly from
+`eco_evolutionary_metabolic_code`. `plasticity` uses the |deviation from
+founder| test (à la `metabolic_rate`/`investment`), not Trial 7's directional
+one, since plasticity has no a-priori predicted drift direction.
+
+**Status:** implemented, 27 unit tests passing, 300-step random-policy smoke
+run clean. No PPO training pilot or replication run launched yet — see
+`eco_evolutionary_cultural_plasticity/RESULTS.md` for what remains before a
+real Darwin-signal test can be read from this module.
+
+---
+
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
 This motivated the Trial 7 pivot above (`eco_evolutionary_metabolic_code`) — recorded here in full since it's the theoretical basis for that module's design, not just a historical note anymore.

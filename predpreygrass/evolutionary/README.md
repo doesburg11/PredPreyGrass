@@ -60,6 +60,13 @@ sustainability numbers.
   genuine per-individual search decoupled from the shared PPO policy.
   Sustainability/coexistence solved; selection-driven drift **null (reversed on the
   headline metric)** after replication — see `RESULTS.md`.
+* **[eco_evolutionary_cultural_plasticity](eco_evolutionary_cultural_plasticity)** —
+  a structurally different mechanism, not another single-scalar trait: gene-culture
+  coevolution (dual inheritance). A heritable `plasticity` gene sets how readily an
+  agent's live, socially-transmitted `dialect` tracks the local same-species
+  majority; dialect-matching at a catch/graze event earns a coordination-game energy
+  bonus. Implemented and unit-tested; no training pilot or replication run launched
+  yet — see `RESULTS.md`.
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
