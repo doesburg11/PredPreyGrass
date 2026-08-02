@@ -109,11 +109,11 @@ training, and would a dense, per-step energy-delta reward fix it? Five trained e
 variants and a full investigation later, the answer reversed the question: **sparse reward wins
 on every axis tested, and adding density hurts** — not because of the sparsity itself, but
 because a continuous signal layered into the same reward channel as reproduction adds noise that
-outweighs the benefit it was meant to provide. Along the way this also surfaced and fixed two
+outweighs the benefit it was meant to provide. Along the way this also surfaced two
 real RLlib-compliance bugs present in `base_environment` (dying agents' terminal transitions
 silently dropped, and agent IDs recycled within an episode in a way that conflates unrelated
-individuals' trajectories) — fixed only in the modules below, not in `base_environment` itself
-or elsewhere in the repo.
+individuals' trajectories) — fixed first in the reward-shaping modules below, and since then also
+in `base_environment` itself. Not yet verified or fixed elsewhere in the repo.
 
 **Full writeup — motivation, methodology, the bug discovery, every module's results, and open
 questions — lives in

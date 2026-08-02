@@ -74,16 +74,20 @@ design:
    population — bumped `50 → 2000` in every module below (cheap: RLlib only
    uses this list to build a per-episode space dict once per reset).
 
-**Scope caveat, important**: both fixes are applied only in the five
-modules in this folder. `base_environment` itself was left **untouched**,
-kept as the historical original — not a comparison partner, not
-retroactively fixed. Every `eco_evolutionary_*` module and everything else
-in `predpreygrass/non_evolutionary/` (besides [`lineage_rewards`](../lineage_rewards),
-which was checked and already had an independent, correct fix for the same
-bug class — see
+**Scope caveat, important**: both fixes were originally applied only in the
+five modules in this folder — `base_environment` itself was deliberately
+left untouched at the time, kept as the historical original. It has since
+been retroactively fixed too (same two fixes, ported verbatim, plus the same
+`n_possible_predators`/`n_possible_prey` bump to `2000`), since it doubles as
+the repo's featured getting-started module. Everything else in
+`predpreygrass/non_evolutionary/` and every `eco_evolutionary_*` module
+besides [`lineage_rewards`](../lineage_rewards) (which was checked and
+already had an independent, correct fix for the same bug class — see
 [`lineage_rewards/PROPER_RLLIB_TERMINATION.md`](../lineage_rewards/PROPER_RLLIB_TERMINATION.md))
-**still has both bugs, unverified and unfixed**. This is a real, not-yet-
-acted-on implication for the Darwin/Baldwin evolutionary trial history — see
+and `eco_evolutionary_nuptial_gift` (also checked, also already has its own
+independent, correct-looking fix for both bugs) **is unverified** — don't
+assume fixed or unfixed without checking. This is a real, not-yet-fully-
+resolved implication for the Darwin/Baldwin evolutionary trial history — see
 section 7.
 
 A third, minor bug was also found and fixed in every module's training

@@ -37,6 +37,10 @@
 
 - Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
+### RLlib-compliance fix
+
+This environment previously had two RLlib-compliance bugs: a dying agent's terminal transition (`terminated=True`, final reward, final observation) was silently dropped before reaching RLlib, and newborn agent IDs were recycled within an episode in a way that could conflate two unrelated individuals' trajectories into one. Both are now fixed — terminating agents stay listed through the step they die in, and newborn IDs are assigned from a monotonically increasing, never-reused counter (`n_possible_predators`/`n_possible_prey` raised to `2000` accordingly). See [`reward_shaping/README.md`](../reward_shaping/README.md) section 2 for the full discovery writeup and rationale.
+
 
 ## Training and evaluation results
 

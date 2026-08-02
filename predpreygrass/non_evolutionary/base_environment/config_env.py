@@ -18,9 +18,12 @@ config_env = {
     "energy_loss_per_step_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
-    # Learning agents
-    "n_possible_predators": 50,
-    "n_possible_prey": 50,
+    # Learning agents. IDs are never reused within an episode (RLlib requires
+    # each agent-ID string to map to exactly one trajectory per episode), so
+    # these must comfortably cover cumulative births over a whole episode, not
+    # just concurrent population size.
+    "n_possible_predators": 2000,
+    "n_possible_prey": 2000,
     "n_initial_active_predator": 6,
     "n_initial_active_prey": 8,
     "initial_energy_predator": 5.0,
