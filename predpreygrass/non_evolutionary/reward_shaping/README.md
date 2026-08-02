@@ -78,9 +78,9 @@ design:
 modules in this folder. `base_environment` itself was left **untouched**,
 kept as the historical original — not a comparison partner, not
 retroactively fixed. Every `eco_evolutionary_*` module and everything else
-in `predpreygrass/non_evolutionary/` (besides [`kick_back_rewards`](../kick_back_rewards)
-and [`lineage_rewards`](../lineage_rewards), which were checked and already
-had independent, correct fixes for the same bug class — see
+in `predpreygrass/non_evolutionary/` (besides [`lineage_rewards`](../lineage_rewards),
+which was checked and already had an independent, correct fix for the same
+bug class — see
 [`lineage_rewards/PROPER_RLLIB_TERMINATION.md`](../lineage_rewards/PROPER_RLLIB_TERMINATION.md))
 **still has both bugs, unverified and unfixed**. This is a real, not-yet-
 acted-on implication for the Darwin/Baldwin evolutionary trial history — see
@@ -228,17 +228,19 @@ born). Fires repeatably — once per grandchild, not capped at one per
 lineage — and only if the grandparent is still alive to collect it (RLlib
 cannot deliver a new reward to an agent already marked `terminated=True`).
 
-This mechanism already exists elsewhere in this repo, in
-[`kick_back_rewards`](../kick_back_rewards)
-(`_reward_parent_for_child_reproduction`) — verified independently RLlib-
-compliant, not affected by the two bugs in section 2. That module was
-already tested at `kin_kick_back_reward = 4.0` (~0.4× the `10.0`
-reproduction reward) and found no benefit. This module reimplements the
-same mechanism in the single-predator/single-prey-type
-`base_environment_*` family (directly comparable to the other four runs
-here, rather than `kick_back_rewards`' more complex two-type structure) and
-tests it at a full **1:1 weight** (`kickback_reward = 10.0`) instead — a
-genuinely different, untested magnitude.
+This mechanism (`_reward_parent_for_child_reproduction`) had already been
+tried elsewhere in this repo's history, in a more complex two-predator-
+type/two-prey-type environment with walls and occlusion, verified
+independently RLlib-compliant, not affected by the two bugs in section 2.
+That prior attempt was tested at `kin_kick_back_reward = 4.0` (~0.4× the
+`10.0` reproduction reward) and found no benefit. This module reimplements
+the same mechanism in the single-predator/single-prey-type
+`base_environment_*` family instead (directly comparable to the other four
+runs here) and tests it at a full **1:1 weight** (`kickback_reward = 10.0`)
+— a genuinely different, untested magnitude. Whether the earlier null
+result was due to the weaker magnitude or the richer environment is an
+open question this module's result doesn't resolve on its own, since both
+changed at once.
 
 **Result**: trained the full 1000 iterations (14.44h, completed
 2026-08-01), then evaluated the final checkpoint the same way as every

@@ -121,8 +121,8 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 "predator_female_creation_energy_threshold": 12.0,
 "initial_energy_predator_female": 8.0,       # bumped from 5.0, see "Retuning" below
 "founder_genome": {
-    "predator_male":   {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.05},
-    "predator_female": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.05},
+    "predator_male":   {"male_donation_rate_mean": 0.5, "male_donation_rate_std": 0.1},
+    "predator_female": {"male_donation_rate_mean": 0.5, "male_donation_rate_std": 0.1},
     "prey":            {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.0},
 },
 "genome_mutation": {"rate": 0.05, "std": 0.04},
@@ -130,7 +130,7 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 "cooperation_range": 4,                      # widened from 2, see "Retuning" below
 ```
 
-### Retuning (2026-08-01/02): initial energy and cooperation range
+### Retuning (2026-08-01/02): initial energy, cooperation range, and founder mean
 
 The first fixed-genome pilot (40 iterations, original config: `initial_energy_predator_female:
 5.0`, `cooperation_range: 2`) showed episode length capped at ~37-44 steps across *every*
@@ -151,6 +151,21 @@ Validated directly: at `male_donation_rate=1.0` with the retuned config, 60 iter
 growing from ~34 to 80-130 steps and the female population visibly growing past its 3-agent
 founding cohort. At `male_donation_rate=0.0`, the same 60 iterations produced **zero**
 reproduction events and **zero** gifts, throughout. See "Fixed-genome sweep results" below.
+
+**A second, later retune was needed on the founder mean itself.** The neutral-control
+replication (real evolutionary mode, `genome_enabled: True`) originally kept the founder mean at
+`0.0` (matching the "neutral start" convention used by every other trait in this project, so any
+drift is attributable to selection). That put the *entire starting population* deep in the
+confirmed-null regime from the sweep — and mutation only fires *at* a reproduction event, so a
+population that never reproduces once can never mutate toward a higher, viable rate either. This
+is a structural deadlock, not a slow start: confirmed directly when real seed 42 showed zero
+`female_reproduction_events_total` through 530/1000 iterations, genome completely static the
+whole way. Founder mean bumped `0.0 -> 0.5`, std `0.05 -> 0.1`, and the run restarted. This
+sacrifices the "founder mean=0 is a clean neutral baseline" framing, but that framing is moot for
+an experiment that can't leave the starting gate — the real-vs-control comparison logic is
+unaffected by where the shared founder mean sits, since both conditions use the same one. A
+15-iteration smoke test with the new mean confirmed gift energy flowing immediately (up to
+~2.1/iteration by iteration 10, vs. exactly `0.0` throughout under the old mean=0.0 config).
 
 ## Metrics to watch in training
 

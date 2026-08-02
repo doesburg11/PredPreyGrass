@@ -10,19 +10,19 @@ same as every other module in this `base_environment_*` family.
 ## Why this specific idea, and why now
 
 This module exists because the mechanism it tests — reward a parent when its
-child reproduces — already exists elsewhere in this repo, in
-[`kick_back_rewards`](../kick_back_rewards)
-(`_reward_parent_for_child_reproduction`), verified RLlib-compliant and bug
-free. That module was already tested at `kin_kick_back_reward = 4.0`
-(roughly 0.4x the `10.0` reproduction reward) and found no benefit. This
-module tests the same mechanism at full `1:1` weight (`kickback_reward = 10.0`,
-equal to the reproduction reward itself), reimplemented in this repo's
-single-predator/single-prey-type `base_environment_*` family so it's
-directly comparable to the other four runs already completed here
-(`base_environment_sparse_rewards`, `base_environment_dense_rewards`,
-`base_environment_dense_rewards_additive`,
-`base_environment_sparse_rewards_plus_eating`) rather than
-`kick_back_rewards`' more complex two-type structure.
+child reproduces (`_reward_parent_for_child_reproduction`) — had already
+been tried elsewhere in this repo's history, in a more complex two-
+predator-type/two-prey-type environment with walls and occlusion, verified
+RLlib-compliant and bug free. That earlier attempt was tested at
+`kin_kick_back_reward = 4.0` (roughly 0.4x the `10.0` reproduction reward)
+and found no benefit. This module tests the same mechanism at full `1:1`
+weight (`kickback_reward = 10.0`, equal to the reproduction reward itself),
+reimplemented in this repo's single-predator/single-prey-type
+`base_environment_*` family so it's directly comparable to the other four
+runs already completed here (`base_environment_sparse_rewards`,
+`base_environment_dense_rewards`, `base_environment_dense_rewards_additive`,
+`base_environment_sparse_rewards_plus_eating`) instead of that earlier,
+more complex environment.
 
 ## Reward mechanics
 
@@ -35,8 +35,7 @@ directly comparable to the other four runs already completed here
   Only paid if the grandparent is still alive at that moment: RLlib cannot
   deliver a new reward to an agent that has already been marked
   `terminated=True`, so a grandparent that dies before its child reproduces
-  simply forfeits that credit. This is the same constraint that applies to
-  `kick_back_rewards`' equivalent mechanism.
+  simply forfeits that credit.
 - Initial (non-reproduced) agents have no recorded parent, so they can never
   trigger a kickback for anyone.
 - Everything else (`reward_predator_step`, `reward_prey_step`,
@@ -48,9 +47,7 @@ directly comparable to the other four runs already completed here
 Run [`tune_ppo_base_environment_sparse_rewards_plus_kickback.py`](./tune_ppo_base_environment_sparse_rewards_plus_kickback.py)
 and compare against
 [`base_environment_sparse_rewards`](../base_environment_sparse_rewards) (no
-kickback) with matching resource configuration. Worth also revisiting
-[`kick_back_rewards`](../kick_back_rewards)'s own historical results at
-magnitude `4.0` if this run shows a different outcome at `10.0`.
+kickback) with matching resource configuration.
 
 ## Result
 

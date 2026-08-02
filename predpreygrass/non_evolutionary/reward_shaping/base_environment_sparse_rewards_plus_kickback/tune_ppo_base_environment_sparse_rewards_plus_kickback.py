@@ -12,8 +12,7 @@ every time its own child reproduces (see predpreygrass_rllib_env.py /
 config_env.py / README). Same RLlib-compliance fixes as the other
 base_environment_* modules. Compare training dynamics against
 base_environment_sparse_rewards/tune_ppo_base_environment_sparse_rewards.py
-(no kickback) and the existing kick_back_rewards module (same mechanism,
-weaker magnitude), with everything else held equal.
+(no kickback), with everything else held equal.
 """
 from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.config_env import config_env

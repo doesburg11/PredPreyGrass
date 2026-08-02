@@ -17,10 +17,10 @@ config_env = {
     # child reproduces (i.e. every time a grandchild is born). Fires once per
     # grandchild (repeatable, not capped), only if the grandparent is still
     # alive to collect it. Equal weight to the primary reproduction reward,
-    # by design -- this repo's kick_back_rewards module already tested a
-    # weaker version of this same mechanism (magnitude 4.0, ~0.4x the
-    # reproduction reward) and found it made no difference; this tests
-    # whether a full 1:1 weighting changes that.
+    # by design -- a weaker version of this same mechanism (magnitude 4.0,
+    # ~0.4x the reproduction reward) was tested earlier in this repo's
+    # history and found it made no difference; this tests whether a full
+    # 1:1 weighting changes that.
     "kickback_reward_predator": 10.0,
     "kickback_reward_prey": 10.0,
     # Energy settings

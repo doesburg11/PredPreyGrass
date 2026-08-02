@@ -11,7 +11,7 @@ This note explains why `lineage_rewards` replaces the legacy **kin kick-back** r
 
 ## 1. Motivation: from Kin Kick-Backs → Lineage Survival Rewards
 
-| Aspect | `kick_back_rewards` (legacy) | `lineage_rewards` lineage logic |
+| Aspect | Legacy kin kick-back rewards (historical design, module removed) | `lineage_rewards` lineage logic |
 | --- | --- | --- |
 | Reward trigger | Immediate reproduction event; parent (and in some setups grandparent) gets a one-time kick-back proportional to offspring type. | Every step where the **number of living descendants increases** produces a reward for every ancestor still alive. |
 | Information needed | Parent ID only. | Parent chain (parent, grandparent, ...), live descendant counts. |
@@ -193,6 +193,5 @@ These interactions seed altruistic behaviors (e.g., vacating grass for kin, inte
 ## 7. References
 - `predpreygrass_rllib_env.py`: `_handle_lineage_birth`, `_apply_lineage_survival_rewards`, `_agent_is_fertile`.
 - `evaluate_ppo_from_checkpoint_debug.py`: new lineage + fertility columns in reward summaries.
-- Historical behavior snapshot: `predpreygrass/kick_back_rewards/README.md` (original kick-back design).
 
 Feel free to extend this document with empirical findings (plots, lineage depth distributions, etc.) as new experiments roll in.

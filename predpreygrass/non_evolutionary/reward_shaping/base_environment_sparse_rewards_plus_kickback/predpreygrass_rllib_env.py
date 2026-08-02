@@ -6,9 +6,9 @@ child successfully reproduces (i.e. every time a grandchild is born). Fires
 once per grandchild (repeatable, not capped at one), and only if the
 grandparent is still alive at that moment -- RLlib cannot deliver a new
 reward to an already-terminated agent, so a grandparent that dies first
-simply forfeits that credit. This mirrors the existing kick_back_rewards
-module's "_reward_parent_for_child_reproduction" mechanism (already
-verified RLlib-compliant and bug-free), reimplemented here in this module's
+simply forfeits that credit. This mirrors a "_reward_parent_for_child_reproduction"
+mechanism tried earlier in this repo's history (already verified
+RLlib-compliant and bug-free there), reimplemented here in this module's
 single-predator/single-prey-type family for a directly comparable result
 against base_environment_sparse_rewards, base_environment_dense_rewards,
 base_environment_dense_rewards_additive, and

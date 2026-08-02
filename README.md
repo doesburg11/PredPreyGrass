@@ -68,9 +68,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
 
-* **[Reproduction kick back rewards](predpreygrass/non_evolutionary/kick_back_rewards)**: on top of direct reproduction rewards, agents receive indirect rewards when their children reproduce.
-
-* **[Lineage rewards](predpreygrass/non_evolutionary/lineage_rewards)**: successor to kick-back rewards; agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
+* **[Lineage rewards](predpreygrass/non_evolutionary/lineage_rewards)**: agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
 
 * **[Direct reciprocity](predpreygrass/non_evolutionary/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
 
