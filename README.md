@@ -62,8 +62,6 @@ These environments hold every agent trait fixed and instead vary the interaction
 
   * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
 
-* **[Centralized training](predpreygrass/non_evolutionary/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
-
 * **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
 
 * **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
