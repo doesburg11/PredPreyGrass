@@ -43,12 +43,21 @@ def parse_args():
         "--max-iters", type=int, default=None,
         help="Override config_ppo['max_iters'] for this run.",
     )
+    parser.add_argument(
+        "--cpu", action="store_true",
+        help="Force the CPU PPO config regardless of GPU availability (e.g. when "
+             "the GPU is already reserved by another training run).",
+    )
+    parser.add_argument(
+        "--num-env-runners", type=int, default=None,
+        help="Override config_ppo['num_env_runners'] for this run.",
+    )
     return parser.parse_args()
 
 
-def get_config_ppo():
+def get_config_ppo(force_cpu: bool = False):
     import torch
-    if torch.cuda.is_available():
+    if not force_cpu and torch.cuda.is_available():
         from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_ppo_gpu_eco_evolutionary import config_ppo
     else:
         from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_ppo_cpu_eco_evolutionary import config_ppo
@@ -96,9 +105,11 @@ if __name__ == "__main__":
     env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
-    config_ppo = get_config_ppo()
+    config_ppo = get_config_ppo(force_cpu=args.cpu)
     if args.max_iters is not None:
         config_ppo = dict(config_ppo, max_iters=args.max_iters)
+    if args.num_env_runners is not None:
+        config_ppo = dict(config_ppo, num_env_runners=args.num_env_runners)
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,

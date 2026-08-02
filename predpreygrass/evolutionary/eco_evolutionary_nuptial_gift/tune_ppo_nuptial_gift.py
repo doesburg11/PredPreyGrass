@@ -22,7 +22,7 @@ callback. See README.md for the full argument.
 """
 
 from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_env_eco_evolutionary import config_env
+from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_env_eco_evolutionary import config_env as _base_config_env
 from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.utils.networks import build_multi_module_spec
 
@@ -31,6 +31,8 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
+import argparse
+import copy
 from datetime import datetime
 from pathlib import Path
 import json
@@ -38,9 +40,31 @@ import shutil
 from typing import Any
 
 
-def get_config_ppo():
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Override config_env['seed'] for this run (for multi-seed replication). "
+             "Tags the experiment name so runs don't collide.",
+    )
+    parser.add_argument(
+        "--max-iters", type=int, default=None,
+        help="Override config_ppo['max_iters'] for this run.",
+    )
+    parser.add_argument(
+        "--cpu", action="store_true",
+        help="Force the CPU PPO config regardless of GPU availability.",
+    )
+    parser.add_argument(
+        "--num-env-runners", type=int, default=None,
+        help="Override config_ppo['num_env_runners'] for this run.",
+    )
+    return parser.parse_args()
+
+
+def get_config_ppo(force_cpu: bool = False):
     import torch
-    if torch.cuda.is_available():
+    if not force_cpu and torch.cuda.is_available():
         from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_ppo_gpu_eco_evolutionary import config_ppo
     else:
         from predpreygrass.evolutionary.eco_evolutionary_nuptial_gift.config.config_ppo_cpu_eco_evolutionary import config_ppo
@@ -64,6 +88,12 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 # --- Main training setup ---
 
 if __name__ == "__main__":
+    args = parse_args()
+
+    config_env = copy.deepcopy(_base_config_env)
+    if args.seed is not None:
+        config_env["seed"] = args.seed
+
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
@@ -72,7 +102,8 @@ if __name__ == "__main__":
     ray_results_dir = "~/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "ECO_EVOLUTION_NUPTIAL_GIFT"
+    seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
+    version = f"ECO_EVOLUTION_NUPTIAL_GIFT{seed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -83,7 +114,11 @@ if __name__ == "__main__":
     env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
-    config_ppo = get_config_ppo()
+    config_ppo = get_config_ppo(force_cpu=args.cpu)
+    if args.max_iters is not None:
+        config_ppo = dict(config_ppo, max_iters=args.max_iters)
+    if args.num_env_runners is not None:
+        config_ppo = dict(config_ppo, num_env_runners=args.num_env_runners)
     config_metadata = {
         "config_env": config_env,
         "config_ppo": config_ppo,

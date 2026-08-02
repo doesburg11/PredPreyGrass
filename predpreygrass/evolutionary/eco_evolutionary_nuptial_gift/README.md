@@ -119,6 +119,7 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 "basal_energy_cost_predator_female": 0.15,
 "female_grass_energy_gain_cap": 0.10,        # < basal decay: obligate-gate guarantee
 "predator_female_creation_energy_threshold": 12.0,
+"initial_energy_predator_female": 8.0,       # bumped from 5.0, see "Retuning" below
 "founder_genome": {
     "predator_male":   {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.05},
     "predator_female": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.05},
@@ -126,8 +127,30 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 },
 "genome_mutation": {"rate": 0.05, "std": 0.04},
 "trait_bounds": {"male_donation_rate": (0.0, 1.0)},
-"cooperation_range": 2,
+"cooperation_range": 4,                      # widened from 2, see "Retuning" below
 ```
+
+### Retuning (2026-08-01/02): initial energy and cooperation range
+
+The first fixed-genome pilot (40 iterations, original config: `initial_energy_predator_female:
+5.0`, `cooperation_range: 2`) showed episode length capped at ~37-44 steps across *every*
+donation rate tested, including `1.0` — suspiciously close to a female's own pure-starvation
+survival time (`5.0 / 0.15 ≈ 33` steps). Two parameters were bumped in response:
+
+- `initial_energy_predator_female`: `5.0 -> 8.0` — buys more real time for a gift to arrive
+  before starvation. Does **not** weaken the obligate-gate guarantee: that guarantee is about
+  net grazing income (`female_grass_energy_gain_cap < basal_energy_cost_predator_female`),
+  which is independent of initial energy — she still trends toward zero without gifts, just
+  more slowly.
+- `cooperation_range`: `2 -> 4` — under an early, high-entropy, largely-random movement policy,
+  "a male's catch happens to be near a female" is a rare joint event at range 2; widening it
+  raises that probability independent of dispersal skill.
+
+Validated directly: at `male_donation_rate=1.0` with the retuned config, 60 iterations produced
+**34.5 total reproduction events and 508 total gift energy donated**, with episode length
+growing from ~34 to 80-130 steps and the female population visibly growing past its 3-agent
+founding cohort. At `male_donation_rate=0.0`, the same 60 iterations produced **zero**
+reproduction events and **zero** gifts, throughout. See "Fixed-genome sweep results" below.
 
 ## Metrics to watch in training
 
@@ -144,28 +167,68 @@ Key parameters in `config/config_env_eco_evolutionary.py`:
 - `eco_evolution/predator_male_count`, `predator_female_count`, `prey_count`,
   `peak_active_predator_male/female/prey` — sustainability/coexistence checks (criteria 1, 2).
 
+## Fixed-genome sweep results (partial: 2 of 5 values valid)
+
+Staged-rollout step 2: freeze `male_donation_rate` at fixed values (`genome_enabled: False`,
+mechanically executed, no inheritance/mutation — see `_apply_nuptial_gift`) and check whether
+the obligate gate actually creates a real fitness landscape before spending compute on a full
+replication.
+
+**Intended design**: 5 values (`0.0, 0.25, 0.5, 0.75, 1.0`), 60 iterations each, retuned config.
+
+**What actually has valid data**: only the two extremes.
+
+| `male_donation_rate` | reproduction events (total over 60 iters) | gift energy donated | episode length trend |
+|---|---|---|---|
+| `0.0` | **0** | **0** | flat, never grows |
+| `1.0` | **34.5** | **508** | grows 34 -> 80-130 steps; female count grows past founders |
+
+A dramatic, clean contrast — exactly the obligate, non-smooth fitness landscape this module was
+designed to produce (contrast with `cooperation_rate`/`metabolic_rate`/`offspring_investment_fraction`,
+all of which had smooth landscapes and came back null on selection).
+
+**`0.25`, `0.5`, `0.75` are missing/invalid**, not because of anything about the mechanism —
+an operational mistake during this session: the underlying training script was edited (to add
+`--seed` support for the replication, below) *while the sweep's shell loop was still calling it*
+for these three values. `0.25`'s invocation silently ignored all its CLI flags (an even-earlier
+edit had briefly removed argument parsing entirely) and ran an unplanned, unrelated 250-iteration
+real-mode run instead; `0.5` and `0.75` hit the next edit (which restored argument parsing but
+had dropped the `--fixed-donation-rate` flag) and errored out instantly, producing no data at
+all. The two extremes were run earlier and are unaffected and valid. Not re-run as of this
+writing — the two-point contrast was judged sufficient to justify moving to the replication
+before spending more compute on the full dose-response shape. Re-running the missing three
+values (`run_fixed_genome_sweep.sh`-style, once it exists again) is a reasonable follow-up if
+the dose-response *shape* (not just "does it matter at all") becomes interesting later.
+
+**Operational gotcha found along the way, relevant to any future high-parallelism run of this
+module**: `progress.csv`'s column schema locks in from an early iteration's reported keys and
+silently drops any metric (including RLlib's own built-in `episode_len_mean`) that doesn't exist
+yet at that point. With enough env-runner parallelism relative to episode length, iteration 1 can
+have zero completed episodes, permanently losing those columns from the CSV for the whole run
+even though later iterations have valid values. `result.json` (JSONL, one full result per line,
+no fixed schema) is unaffected and is what `analyze_replication_seeds.py` reads — use it, not
+`progress.csv`, for any programmatic analysis of this module's training runs.
+
 ## Staged rollout plan
 
 Following the same discipline used for `offspring_investment_fraction` (R4-R7) and
 `metabolic_rate` in `predpreygrass/evolutionary/RESULTS.md`:
 
-1. **Smoke test** (done as part of building this module): a handful of training iterations,
-   confirming no crashes and sane metric output.
-2. **Fixed-genome fitness sweep** (not yet run): freeze `male_donation_rate` at several values
-   including `0.0` via `genome_enabled: False`-style founder override, and confirm `rate=0`
-   causes female/predator collapse while higher values sustain the population — this is the
-   check that the obligate gate actually behaves as designed, before spending compute on a full
-   replication. `metabolic_rate` and `offspring_investment_fraction` both confirmed a real
-   fitness landscape at this stage before their (ultimately null) selection tests; this module's
-   landscape is expected to be far starker (near-lethal at `rate=0`, not merely worse).
-3. **Neutral-control replication** (not yet run): only after step 2 confirms a real landscape,
-   port the `genome_neutral_drift_control` flag (already scaffolded — see
-   `config/config_env_eco_evolutionary_neutral_control.py` and
-   `tune_ppo_nuptial_gift_neutral_control.py`) into a proper 3-real + 3-control-seed replication,
-   compared via Mann-Whitney U, mirroring `offspring_investment_fraction`'s R7.
-
-Steps 2 and 3 are expensive, separate follow-on runs — deliberately out of scope for the initial
-build of this module.
+1. **Smoke test** — done.
+2. **Fixed-genome fitness sweep** — partially done, see above. Two-point contrast (`0.0` vs
+   `1.0`) confirms a real, dramatic fitness landscape exists; the middle three values are an
+   open gap, not a null result.
+3. **Neutral-control replication** — **in progress as of 2026-08-02**. 3 real seeds (42, 43, 44)
+   + 3 neutral-control seeds (42, 43, 44), 1000 iterations each, sequential (GPU + 28 env
+   runners), via `run_replication_seeds.sh`. Compared via Mann-Whitney U on
+   `live_genome/{predator_male,predator_female}_male_donation_rate_mean` drift magnitude, using
+   `analyze_replication_seeds.py` (mirrors `offspring_investment_fraction`'s R7 methodology).
+   Auto-launched by a chain watcher once the fixed-genome sweep's process exited. Estimated
+   ~13-14h per run, ~82h (~3.4 days) total for all 6, sequential (not concurrent — two
+   GPU-using Ray clusters sharing one physical GPU is a documented OOM risk, see
+   `predpreygrass/non_evolutionary/reward_shaping/README.md`'s "Concurrent vs. sequential
+   training"). Results not yet available — do not treat any number as final until this section
+   is updated.
 
 ## What This Is Not
 
