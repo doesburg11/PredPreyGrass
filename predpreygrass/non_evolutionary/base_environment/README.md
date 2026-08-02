@@ -4,7 +4,7 @@
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
+    <img align="center" src="../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
 ### Features base environment
@@ -59,7 +59,7 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 - The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
 
 <p align="center">
-    <img src="../../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+    <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
 
@@ -76,7 +76,7 @@ Obviously, using only one network has its limitations as Predators and Prey lack
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
 <p align="center">
-    <img src="./../../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
+    <img src="../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
 A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.
