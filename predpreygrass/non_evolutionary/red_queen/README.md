@@ -88,14 +88,12 @@ accordingly across all 6 config presets that set them. Verified: RLlib
 pre-check passes on `config_env_eval.py` and `config_env_train.py`, zero ID
 reuse across 3 seeds with 110 real deaths tracked correctly.
 
-**Known, unrelated bug found while reading this code, left as-is**:
-`_handle_prey_reproduction`'s mutation check reads
-`self.rng.random() < self.mutation_rate_predator` — it should read
-`self.mutation_rate_prey`. Prey type-switching is currently governed by the
-predator mutation-rate config value, not the prey one. Flagging this since
-it affects the "competing prey types" experiment's mutation dynamics
-specifically, but it's a pre-existing logic bug unrelated to RLlib
-compliance, so it wasn't fixed here without being asked.
+**Unrelated bug also fixed**: `_handle_prey_reproduction`'s mutation check
+read `self.rng.random() < self.mutation_rate_predator` — prey type-switching
+was governed by the predator mutation-rate config value, not the prey one.
+Corrected to `self.mutation_rate_prey`. Not an RLlib-compliance issue, but
+found while reading this code for the fix above, and it directly affects the
+"competing prey types" experiment's mutation dynamics.
 
 ## Training script
 

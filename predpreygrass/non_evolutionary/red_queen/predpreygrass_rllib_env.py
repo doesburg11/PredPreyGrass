@@ -720,7 +720,7 @@ class PredPreyGrass(MultiAgentEnv):
             parent_type = int(agent.split("_")[1])  # from "type_1_predator_3"
 
             # Mutation: chance (self.mutation_rate_predator) to switch type
-            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            mutated = self.rng.random() < self.mutation_rate_predator
             if mutated:
                 new_type = 2 if parent_type == 1 else 1
             else:
@@ -805,7 +805,7 @@ class PredPreyGrass(MultiAgentEnv):
             parent_type = int(agent.split("_")[1])  # from "type_1_prey_6"
 
             # Mutation: 10% chance to switch type
-            mutated = self.rng.random() < self.mutation_rate_predator  # or _prey
+            mutated = self.rng.random() < self.mutation_rate_prey
             if mutated:
                 new_type = 2 if parent_type == 1 else 1
             else:
