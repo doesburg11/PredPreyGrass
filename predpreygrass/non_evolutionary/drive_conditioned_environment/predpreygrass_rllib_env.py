@@ -97,6 +97,16 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.cumulative_rewards = {}  # Track total rewards per agent
 
+        # Agents scheduled for removal from self.agents at the start of the next
+        # step() call (see reset()/step() for why removal is deferred by one step).
+        self._pending_removal: List[AgentID] = []
+        # Monotonically increasing per-species counters for assigning newborn IDs.
+        # Never reused within an episode (see reset()) -- required by RLlib's
+        # MultiAgentEpisode, which tracks one trajectory per agent-ID string for
+        # the entire episode and errors if a "done" ID produces more data.
+        self._next_predator_idx = self.n_initial_active_predator
+        self._next_prey_idx = self.n_initial_active_prey
+
         # self.num_agents: int = self.current_num_predators + self.current_num_prey  # inherited from MultiAgentEnv
         self.possible_agents: List[AgentID] = [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
             f"predator_{i}" for i in range(self.n_possible_predators)
@@ -180,6 +190,11 @@ class PredPreyGrass(MultiAgentEnv):
         # Reset cumulative rewards to zero
         self.cumulative_rewards: Dict[AgentID, float] = {agent_id: 0 for agent_id in self.agents}
 
+        # Reset deferred-removal queue and newborn-ID counters for the new episode.
+        self._pending_removal = []
+        self._next_predator_idx = self.n_initial_active_predator
+        self._next_prey_idx = self.n_initial_active_prey
+
         def generate_random_positions(grid_size: int, num_positions: int):
             """
             Generate unique random positions on a grid.
@@ -245,18 +260,20 @@ class PredPreyGrass(MultiAgentEnv):
 
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+
+        # Remove agents that terminated *last* step from self.agents now. Removal is
+        # deferred by one step because RLlib's env-checker requires a terminating
+        # agent to still be listed in self.agents for the step in which it dies
+        # (its ID is excised starting the following step instead).
+        for agent in self._pending_removal:
+            if agent in self.agents:
+                self.agents.remove(agent)
+        self._pending_removal = []
+
         # step 0: check for truncation
         if self.current_step >= self.max_steps:
-            for agent in self.possible_agents:
-                if agent in self.agents:  # Active agents get a real observation
-                    observations[agent] = self._get_observation(agent)
-                else:  # Previously removed agents get a zero-filled observation
-                    observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    observation_channels = self._get_observation_channel_count(agent)
-                    observations[agent] = np.zeros(
-                        (observation_channels, observation_range, observation_range),
-                        dtype=np.float64,
-                    )
+            for agent in self.agents:  # self.agents is already clean of past deaths (see above)
+                observations[agent] = self._get_observation(agent)
                 rewards[agent] = 0.0
                 truncations[agent] = True
                 terminations[agent] = False  # Truncation is NOT a natural termination
@@ -408,24 +425,23 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[agent] = False
                     truncations[agent] = False
 
-        # Step 4: Handle agent removals
-        for agent in self.agents[:]:
-            if terminations[agent]:
-                if self.verbose_engagement:
-                    print(f"[ENGAGE] Agent {agent} terminated!")
-                self.agents.remove(agent)
+        # Step 4: Schedule agent removals for the *next* step (see the deferred-
+        # removal block at the top of step() for why this isn't immediate).
+        self._pending_removal = [agent for agent in self.agents if terminations.get(agent)]
+        if self.verbose_engagement:
+            for agent in self._pending_removal:
+                print(f"[ENGAGE] Agent {agent} terminated!")
 
         # Step 5: Spawning of new agents
         for agent in self.agents[:]:
+            if agent in self._pending_removal:
+                continue  # already dead this step; agent_energies no longer exists for it
             if "predator" in agent:
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
                     # print(agent, "has sufficient energy for reproduction:", self.agent_energies[agent])
-                    potential_new_predator_list = [
-                        agent for agent in self.possible_agents if agent not in self.agents and agent.startswith("predator_")
-                    ]
-                    # print("Potential new predators: ", potential_new_predator_list)
-                    if len(potential_new_predator_list) > 0:
-                        new_agent = potential_new_predator_list[0]
+                    if self._next_predator_idx < self.n_possible_predators:
+                        new_agent = f"predator_{self._next_predator_idx}"
+                        self._next_predator_idx += 1
                         self.agents.append(new_agent)
                         occupied_positions = set(self.agent_positions.values())
                         new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
@@ -447,17 +463,14 @@ class PredPreyGrass(MultiAgentEnv):
                             print(f"New predator {new_agent} spawned at {self.agent_positions[new_agent]}")
                     else:
                         if self.verbose_spawning:
-                            print("No new predator agents available for spawning")
+                            print("No new predator agent IDs left in the pool this episode")
 
             elif "prey" in agent:
                 if self.agent_energies[agent] >= self.prey_creation_energy_threshold:
                     # print(agent, "has sufficient energy for reproduction:", self.agent_energies[agent])
-                    potential_new_prey_list = [
-                        agent for agent in self.possible_agents if agent not in self.agents and agent.startswith("prey_")
-                    ]
-                    # print("Potential new prey: ", potential_new_prey_list)
-                    if len(potential_new_prey_list) > 0:
-                        new_agent = potential_new_prey_list[0]
+                    if self._next_prey_idx < self.n_possible_prey:
+                        new_agent = f"prey_{self._next_prey_idx}"
+                        self._next_prey_idx += 1
                         self.agents.append(new_agent)
                         occupied_positions = set(self.agent_positions.values())
                         new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
@@ -479,7 +492,7 @@ class PredPreyGrass(MultiAgentEnv):
                             print(f"New prey {new_agent} spawned at {self.agent_positions[new_agent]}")
                     else:
                         if self.verbose_spawning:
-                            print("No new prey agents available for spawning")
+                            print("No new prey agent IDs left in the pool this episode")
 
         # 6: Generate observations for all agents AFTER all engagements in the step
         for agent in self.agents:
@@ -869,6 +882,9 @@ class PredPreyGrass(MultiAgentEnv):
             "current_num_predators": self.current_num_predators,
             "current_num_prey": self.current_num_prey,
             "agents_just_ate": self.agents_just_ate.copy(),
+            "pending_removal": self._pending_removal.copy(),
+            "next_predator_idx": self._next_predator_idx,
+            "next_prey_idx": self._next_prey_idx,
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -885,3 +901,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_num_predators = snapshot["current_num_predators"]
         self.current_num_prey = snapshot["current_num_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()
+        self._pending_removal = snapshot["pending_removal"].copy()
+        self._next_predator_idx = snapshot["next_predator_idx"]
+        self._next_prey_idx = snapshot["next_prey_idx"]

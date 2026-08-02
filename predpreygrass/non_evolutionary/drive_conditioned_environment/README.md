@@ -2,6 +2,10 @@
 
 This environment starts as a copy of [`base_environment`](../base_environment). The current implementation is intentionally still close to that baseline so drive-conditioned behavior can be added and reviewed incrementally.
 
+### RLlib-compliance fix
+
+This environment previously had the same two RLlib-compliance bugs found and fixed in `base_environment` (unsurprising, since this module is a direct copy of it): a dying agent's terminal transition (`terminated=True`, final reward, final observation) was silently dropped before reaching RLlib, and newborn agent IDs were recycled within an episode in a way that could conflate two unrelated individuals' trajectories into one. Both are now fixed the same way — terminating agents stay listed through the step they die in, and newborn IDs are assigned from a monotonically increasing, never-reused counter (`n_possible_predators`/`n_possible_prey` raised to `2000` accordingly). Verified: RLlib pre-check passes, zero ID reuse across 3 seeds with 70 real deaths tracked correctly, observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), all 5 drive-feature formulas verified numerically at both boundary and mid-range values, and a 2-iteration PPO smoke-run completes with no RLlib hard-errors.
+
 ## Current baseline
 
 - Predators, prey, and grass are randomly placed in a gridworld at reset.
@@ -17,9 +21,9 @@ This environment starts as a copy of [`base_environment`](../base_environment). 
 - Training uses [`tune_ppo_drive_conditioned_environment.py`](./tune_ppo_drive_conditioned_environment.py).
 - Interactive evaluation uses [`evaluate_ppo_from_checkpoint_debug.py`](./evaluate_ppo_from_checkpoint_debug.py).
 
-## Next step
+## Status
 
-Add drive-conditioned logic on top of this copied baseline while keeping the original `base_environment` unchanged.
+Drive-conditioned logic is now implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct (see "RLlib-compliance fix" above for the verification method). Not yet done: the three-way baseline-vs-drive-conditioned-vs-stronger-affordances comparison this module exists to run — no results doc exists yet.
 
 ## Rationale
 
