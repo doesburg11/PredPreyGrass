@@ -46,10 +46,10 @@ config_env_base = {
     "initial_energy_predator": 6.0,
     "initial_energy_prey": 3.0,
     # Learning agents
-    "n_possible_type_1_predators": 50,  # lowered from 50
+    "n_possible_type_1_predators": 2000,  # lowered from 50
     "n_possible_type_2_predators": 0,
-    "n_possible_type_1_prey": 40,  # lowerd from 60
-    "n_possible_type_2_prey": 40,
+    "n_possible_type_1_prey": 1600,  # lowerd from 60
+    "n_possible_type_2_prey": 1600,
     "n_initial_active_type_1_predator": 12,  # 5
     "n_initial_active_type_2_predator": 0,  # 5
     "n_initial_active_type_1_prey": 10,  # 7

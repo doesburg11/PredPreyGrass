@@ -10,8 +10,8 @@ config_env = {
     "move_energy_cost_factor": 0.0025,
     "initial_energy_predator": 5.0,
     # Learning agents
-    "n_possible_type_1_predators": 30,
-    "n_possible_type_2_predators": 30,
+    "n_possible_type_1_predators": 1200,
+    "n_possible_type_2_predators": 1200,
     "n_initial_active_type_1_predator": 10,
     "n_initial_active_type_2_predator": 10,
     # mutation settings

@@ -63,23 +63,78 @@ any adaptation is pure RL policy learning, not trait inheritance.
   ```
 
   Checkpoint directory naming defaults to `checkpoint_iter_{N}` (matching the
-  original script's example run); pass
-  `--checkpoint-dir-template "checkpoint_{iter:06d}"` if your run uses
-  RLlib Tune's standard zero-padded naming instead.
+  original script's example run); `tune_ppo_red_queen.py` (below) produces
+  RLlib Tune's standard zero-padded naming instead, so pass
+  `--checkpoint-dir-template "checkpoint_{iter:06d}"` when pointing this
+  script at a run it produced.
 
   Verified end-to-end against a throwaway 3-iteration CPU-only training run
   (not committed) — loads checkpoints correctly, aggregates across seeds,
-  and produces the expected JSON structure. Not verified against a real,
-  fully-trained run, since no red_queen training run currently exists on
-  disk (see below).
+  and produces the expected JSON structure.
 
-## What's still missing
+## RLlib-compliance fix
 
-There is currently **no training script** (`tune_ppo.py`) for this module,
-and no existing red_queen checkpoints anywhere on disk — the run the original
-evaluation script pointed at is gone. To actually produce a real result with
-either evaluation script, a training run needs to exist first (checkpointed
-at several iterations spanning the training curve, e.g. every 100-300
-iterations). That's a real, multi-hour GPU commitment and wasn't done as
-part of this fix, since another training job (`eco_evolutionary_nuptial_gift`
-replication) was already using the GPU at the time.
+This environment previously had the same two RLlib-compliance bugs found and
+fixed elsewhere in this repo: a dying agent's terminal transition
+(`terminated=True`, final reward, final observation) was silently dropped
+before reaching RLlib, and newborn agent IDs were recycled within an episode
+in a way that could conflate two unrelated individuals' trajectories into
+one. Both are now fixed the same way as in `base_environment` and
+`walls_occlusion` — terminating agents stay listed through the step they die
+in, and newborn IDs (per predator/prey type, including mutation-driven type
+switches) are assigned from monotonically increasing, never-reused counters.
+`n_possible_type_1_predators`/`_2_predators`/`_1_prey`/`_2_prey` raised
+accordingly across all 6 config presets that set them. Verified: RLlib
+pre-check passes on `config_env_eval.py` and `config_env_train.py`, zero ID
+reuse across 3 seeds with 110 real deaths tracked correctly.
+
+**Known, unrelated bug found while reading this code, left as-is**:
+`_handle_prey_reproduction`'s mutation check reads
+`self.rng.random() < self.mutation_rate_predator` — it should read
+`self.mutation_rate_prey`. Prey type-switching is currently governed by the
+predator mutation-rate config value, not the prey one. Flagging this since
+it affects the "competing prey types" experiment's mutation dynamics
+specifically, but it's a pre-existing logic bug unrelated to RLlib
+compliance, so it wasn't fixed here without being asked.
+
+## Training script
+
+**`tune_ppo_red_queen.py`** (added — this module previously had none). Trains
+with `config_env_eval.py` specifically (not `config_env_train.py`): that
+config disables `type_2` entirely, so exactly two policies get created —
+`type_1_predator` and `type_1_prey` — matching what both evaluation scripts
+above expect. Follows the same structure as `walls_occlusion`'s and
+`base_environment`'s training scripts (own `utils/networks.py` for
+auto-sized conv nets per obs-window size, own `utils/episode_return_callback.py`
+for per-group reward/timing logging), auto-selects
+`config/config_ppo_gpu_default.py` (0.5 GPU request) or `config/config_ppo_cpu.py`
+based on CPU count, and checkpoints every 10 iterations (100 kept) under
+`~/ray_results/PPO_RED_QUEEN_<timestamp>/`.
+
+```bash
+python -m predpreygrass.non_evolutionary.red_queen.tune_ppo_red_queen
+```
+
+Verified end-to-end (not just written): ran a throwaway CPU-only,
+1-iteration version of this exact training logic (single env runner, forced
+`config_ppo_cpu.py`) and confirmed it produces exactly the two expected
+policies and a valid checkpoint. Deliberately did not run the real
+`config_ppo_gpu_default.py` path or a multi-iteration run, since
+`eco_evolutionary_nuptial_gift`'s replication run was already using the GPU
+at the time — confirmed unaffected throughout (same PID, same GPU memory
+footprint, before and after). A first real attempt at concurrent env runners
+(2 runners) hit a transient Ray worker crash unrelated to resource
+contention (system had ample free RAM/CPU); a single-runner retry completed
+cleanly, so this is flagged as a possible flake to watch for on a real run,
+not a confirmed bug.
+
+## What's still needed for a real result
+
+No red_queen checkpoints exist on disk yet — the run the original evaluation
+script pointed at is gone, and the new training script hasn't been run for
+real. To actually produce a Red Queen result: run `tune_ppo_red_queen.py` to
+completion (real GPU time, currently blocked by the concurrent
+`eco_evolutionary_nuptial_gift` job), then run
+`evaluate_red_queen_freeze_multi_seed.py` against several checkpoint
+iterations spanning the training curve (e.g. every 100-300 iterations) with
+`--checkpoint-dir-template "checkpoint_{iter:06d}"`.
