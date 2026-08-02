@@ -37,6 +37,24 @@ This environment previously had the same two RLlib-compliance bugs found and fix
 
 Drive-conditioned logic is now implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct (see "RLlib-compliance fix" above for the verification method). Not yet done: the three-way baseline-vs-drive-conditioned-vs-stronger-affordances comparison this module exists to run — no results doc exists yet.
 
+## Expected advantages (predictions for future work, not yet validated)
+
+Two separate questions worth keeping apart when the baseline-vs-drive-conditioned comparison finally runs: does it train faster, and is it worth having regardless of speed?
+
+**Will it speed up training? Plausibly, but unevenly across the 5 features** — they split into two groups with different expected effect sizes:
+
+1. **`hunger_pressure` and `reproductive_readiness`** (own-energy-based) are the more likely source of a real speedup. They encode information the raw observation *cannot actually contain at all*: the env-side constants `predator_hunger_safe_energy`/`prey_hunger_safe_energy` and the reproduction-energy thresholds. The raw observation only has the agent's own energy sitting at the center pixel of its own density channel — the network has to (a) learn to specifically attend to that one pixel amid an otherwise-irrelevant density map, and (b) learn the correct nonlinear rescaling against a threshold it can never directly observe, purely by correlating outcomes with reward over many samples. Handing over the pre-normalized `[0,1]` value skips both learning problems.
+2. **`prey_opportunity`, `predator_danger_pressure`, `grass_opportunity`** (local density sums) are a weaker case for a speed benefit. Each is literally `np.sum(observation[channel])` over a channel that's already fully present in the raw input — close to the easiest operation a CNN can learn (a 1x1 all-ones conv plus pooling), so a randomly-initialized network is likely to pick this up reasonably fast on its own. The gain from pre-computing it is probably real (removes some early-training variance) but smaller than for the energy-based drives.
+
+**Advantages independent of raw training speed** — worth weighting as importantly as the speed question when evaluating results:
+
+- **Interpretability**: lets you read off what the agent "believes" its hunger/danger/opportunity level is at any timestep and correlate it with behavior, instead of probing a black-box CNN's internal activations.
+- **Ablation-friendly by design**: `enable_drive_channels` and the per-species drive-channel lists are already config-toggleable, enabling controlled "which specific drive matters" experiments that are much harder to run against an implicit, emergent representation.
+- **Possible generalization benefit** (speculative): a policy conditioned on a normalized `[0,1]` drive signal may transfer better across different hyperparameter settings (grid size, initial energy, thresholds) than one that learned to read raw, un-normalized pixel values tied to the specific numbers seen during training.
+- **Value-function variance reduction**: PPO's value estimates may stabilize faster with an explicit "urgency" signal available immediately, rather than the critic having to slowly discover the correlation between raw pixel patterns and eventual returns — a plausible, if hard-to-isolate, contributor to sample efficiency in sparse-reward settings.
+
+**Caveat**: none of the above is measured yet. The normalizer constants (`prey_opportunity_normalizer`, `predator_danger_normalizer`, `grass_opportunity_normalizer`) are unvalidated design choices — if poorly calibrated for actual local densities, the derived features could end up near-constant or noisy rather than informative. The three-way comparison below is what would actually confirm or refute any of these predictions, including whether the two feature groups really do split in effect size the way predicted here.
+
 ## Rationale
 
 Yes, this can probably be implemented more efficiently with derived drive features without steering the agents too directly toward a hand-coded goal.
