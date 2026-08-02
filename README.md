@@ -84,7 +84,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
 
-* **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
+* **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment, adding biologically-motivated internal-state signals (hunger, reproductive readiness, local threat/opportunity) as extra observation channels — reward and action space stay unchanged, only what the agent can see is enriched. See that folder's README for the full rationale and predicted effects.
 
 * **[Red Queen](predpreygrass/non_evolutionary/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
 
@@ -92,7 +92,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 ### Experiments:
 
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/non_evolutionary/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/))
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([original implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/non_evolutionary/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)). A stronger multi-seed, multi-checkpoint-pair evaluation harness plus a training script (previously missing) were added later — see [`red_queen/README.md`](predpreygrass/non_evolutionary/red_queen) for the current methodology and what's still needed to produce a new result.
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey. ([implementation](predpreygrass/mutating_agents), [results](predpreygrass/mutating_agents#co-evolution-and-the-red-queen-effect))
 
@@ -108,8 +108,12 @@ because a continuous signal layered into the same reward channel as reproduction
 outweighs the benefit it was meant to provide. Along the way this also surfaced two
 real RLlib-compliance bugs present in `base_environment` (dying agents' terminal transitions
 silently dropped, and agent IDs recycled within an episode in a way that conflates unrelated
-individuals' trajectories) — fixed first in the reward-shaping modules below, and since then also
-in `base_environment` itself. Not yet verified or fixed elsewhere in the repo.
+individuals' trajectories) — fixed first in the reward-shaping modules below, and since then
+audited and fixed (or confirmed already independently fixed) across every module under
+`predpreygrass/non_evolutionary/`: `base_environment`, `walls_occlusion`, `red_queen`,
+`drive_conditioned_environment`, and all ten `project_cooperation` modules. Not yet checked in
+`predpreygrass/evolutionary/` outside `eco_evolutionary_nuptial_gift`, which already had an
+independent, correct fix.
 
 **Full writeup — motivation, methodology, the bug discovery, every module's results, and open
 questions — lives in
