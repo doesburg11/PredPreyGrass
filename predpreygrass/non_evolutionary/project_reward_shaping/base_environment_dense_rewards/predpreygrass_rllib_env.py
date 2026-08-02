@@ -10,7 +10,7 @@ bug-fixed sparse-reward baseline this is meant to be compared against
 (plain base_environment is the untouched historical original, not this
 module's comparison partner).
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards.config_env import config_env
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards.config_env import config_env
 
 # external libraries
 import numpy as np

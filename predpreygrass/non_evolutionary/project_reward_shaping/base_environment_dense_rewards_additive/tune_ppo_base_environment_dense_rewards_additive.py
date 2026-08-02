@@ -17,8 +17,8 @@ and
 base_environment_dense_rewards/tune_ppo_base_environment_dense_rewards.py,
 with everything else (RLlib-compliance fixes, resource config) held equal.
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards_additive.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
 
 #  external libraries
 from datetime import datetime

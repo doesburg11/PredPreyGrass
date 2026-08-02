@@ -8,7 +8,7 @@ IDs so a recycled ID doesn't collide with RLlib's per-episode agent identity
 model. Two types of agents: predators and prey, independently learning
 policies for each type.
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards.config_env import config_env
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards.config_env import config_env
 
 # external libraries
 import numpy as np

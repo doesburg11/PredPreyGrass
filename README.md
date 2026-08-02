@@ -50,17 +50,17 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design, plus two RLlib-compliance bug fixes along the way. See **[predpreygrass/non_evolutionary/reward_shaping/README.md](predpreygrass/non_evolutionary/reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
+* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design, plus two RLlib-compliance bug fixes along the way. See **[predpreygrass/non_evolutionary/project_reward_shaping/README.md](predpreygrass/non_evolutionary/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
 
-  * **[Sparse rewards, RLlib-fixed](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards)**: bug-fixed copy of the base environment — same sparse, reproduction-only reward, plus two RLlib-compliance fixes. The fair baseline for every other variant below.
+  * **[Sparse rewards, RLlib-fixed](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards)**: bug-fixed copy of the base environment — same sparse, reproduction-only reward, plus two RLlib-compliance fixes. The fair baseline for every other variant below.
 
-  * **[Dense rewards](predpreygrass/non_evolutionary/reward_shaping/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
+  * **[Dense rewards](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
 
-  * **[Dense rewards, additive](predpreygrass/non_evolutionary/reward_shaping/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
+  * **[Dense rewards, additive](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
 
-  * **[Sparse rewards + eating bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric).
+  * **[Sparse rewards + eating bonus](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric).
 
-  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
+  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
 
 * **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
 
@@ -115,7 +115,7 @@ in `base_environment` itself. Not yet verified or fixed elsewhere in the repo.
 
 **Full writeup — motivation, methodology, the bug discovery, every module's results, and open
 questions — lives in
-[`predpreygrass/non_evolutionary/reward_shaping/README.md`](predpreygrass/non_evolutionary/reward_shaping).**
+[`predpreygrass/non_evolutionary/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/project_reward_shaping).**
 
 ### Hyperparameter tuning
 

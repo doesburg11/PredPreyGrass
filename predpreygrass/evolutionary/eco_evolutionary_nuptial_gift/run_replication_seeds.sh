@@ -2,7 +2,7 @@
 # Neutral-control replication (staged rollout step 3, see README.md): 3 real +
 # 3 neutral-control seeds, 1000 iterations each, sequential (not concurrent --
 # two independent GPU-using Ray clusters sharing one physical GPU is a real
-# OOM risk, see predpreygrass/non_evolutionary/reward_shaping/README.md's
+# OOM risk, see predpreygrass/non_evolutionary/project_reward_shaping/README.md's
 # "Concurrent vs. sequential training" precedent). Uses the retuned config
 # (initial_energy_predator_female=8.0, cooperation_range=4) validated by the
 # fixed-genome sweep: rate=1.0 produced 34.5 total reproduction events over

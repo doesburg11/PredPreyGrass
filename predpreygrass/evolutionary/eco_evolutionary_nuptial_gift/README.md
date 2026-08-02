@@ -241,7 +241,7 @@ Following the same discipline used for `offspring_investment_fraction` (R4-R7) a
    Auto-launched by a chain watcher once the fixed-genome sweep's process exited. Estimated
    ~13-14h per run, ~82h (~3.4 days) total for all 6, sequential (not concurrent — two
    GPU-using Ray clusters sharing one physical GPU is a documented OOM risk, see
-   `predpreygrass/non_evolutionary/reward_shaping/README.md`'s "Concurrent vs. sequential
+   `predpreygrass/non_evolutionary/project_reward_shaping/README.md`'s "Concurrent vs. sequential
    training"). Results not yet available — do not treat any number as final until this section
    is updated.
 

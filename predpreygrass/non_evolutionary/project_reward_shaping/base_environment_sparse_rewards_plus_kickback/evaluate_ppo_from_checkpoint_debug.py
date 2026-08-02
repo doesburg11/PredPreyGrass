@@ -11,14 +11,14 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video. 
 """
 # --- Project imports (base_environment env + PyGame renderer) ---
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.utils.pygame_grid_renderer_rllib import (
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards_plus_kickback.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
     ViewerControlHelper,
     LoopControlHelper,
 )
 
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.config_env import config_env
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards_plus_kickback.config_env import config_env
 
 # --- External libs ---
 import json

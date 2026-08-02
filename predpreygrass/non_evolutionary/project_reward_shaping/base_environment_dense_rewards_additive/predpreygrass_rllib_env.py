@@ -16,7 +16,7 @@ by removing the reproduction incentive under "pure replacement" dense
 reward. Also includes the same RLlib-compliance fixes (termination-reporting
 timing, never-reused agent IDs) as the other two modules.
 """
-from predpreygrass.non_evolutionary.reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
 
 # external libraries
 import numpy as np
