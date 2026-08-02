@@ -3,10 +3,14 @@
 <p align="center">
     <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
 <p align="center">
-    <img align="center" src="../../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
+    <img align="center" src="../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
 </p>
 
 This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
+
+### RLlib-compliance fix
+
+This environment previously had the same two RLlib-compliance bugs found and fixed elsewhere in this repo: a dying agent's terminal transition (`terminated=True`, final reward, final observation) was silently dropped before reaching RLlib, and newborn agent IDs were recycled within an episode in a way that could conflate two unrelated individuals' trajectories into one. Both are now fixed — terminating agents stay listed through the step they die in, and newborn IDs (per predator/prey type, including mutation-driven type switches) are assigned from monotonically increasing, never-reused counters (`n_possible_type_1_predators`/`_2_predators`/`_1_prey`/`_2_prey` raised accordingly across all config presets). See [`project_reward_shaping/README.md`](../project_reward_shaping/README.md) section 2 for the full discovery writeup and rationale.
 
 ## Overview
 
