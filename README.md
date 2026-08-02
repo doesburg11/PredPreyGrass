@@ -60,7 +60,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 
   * **[Sparse rewards + eating bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric).
 
-  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training in progress as of 2026-08-01; not yet moved into `reward_shaping/` (see that folder's README for why).
+  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
 
 * **[Centralized training](predpreygrass/non_evolutionary/centralized_training)**: a single shared policy across predators and prey, otherwise the base environment.
 

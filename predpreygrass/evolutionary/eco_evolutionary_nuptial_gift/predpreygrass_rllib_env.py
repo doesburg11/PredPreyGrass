@@ -591,13 +591,25 @@ class PredPreyGrass(MultiAgentEnv):
         male that doesn't hunt this step donates nothing. Directional and
         asymmetric: only predator_male ever donates, only predator_female ever
         receives -- unlike the symmetric same-species donation this was adapted
-        from (eco_evolutionary_nuptial_gift's cooperative donation). Returns the
+        from (eco_evolutionary_cooperation's cooperative donation). Returns the
         net gain retained by the donor after any donation.
+
+        When genome_enabled is False, every predator_male uses the same fixed
+        rate (founder_genome.predator_male.male_donation_rate_mean) with no
+        per-agent variation, inheritance, or mutation -- this is the fixed-
+        genome fitness-sweep mode (mirrors eco_evolutionary_investment's
+        genome_enabled=False fallback), used to test whether the trait creates
+        a real fitness landscape before spending compute on a full selection
+        replication. See README.md.
         """
-        if not self.genome_enabled or energy_gain <= 0.0:
+        if energy_gain <= 0.0:
             return energy_gain
-        genome = self.agent_genomes.get(agent)
-        donation_rate = float(genome.male_donation_rate) if genome is not None else 0.0
+        if self.genome_enabled:
+            genome = self.agent_genomes.get(agent)
+            donation_rate = float(genome.male_donation_rate) if genome is not None else 0.0
+        else:
+            fixed_cfg = self.genome_config["founder_genome"].get("predator_male", {})
+            donation_rate = float(fixed_cfg.get("male_donation_rate_mean", 0.0))
         if donation_rate <= 0.0:
             return energy_gain
 

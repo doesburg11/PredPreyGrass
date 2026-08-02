@@ -635,6 +635,77 @@ def test_zero_donation_rate_never_donates():
     assert env.agent_energies[female] == pytest.approx(female_energy_before)
 
 
+def test_fixed_donation_rate_mode_applies_uniformly_without_genomes():
+    """genome_enabled=False should use a fixed, non-inherited donation rate for
+    every predator_male, driven by founder_genome's mean -- the fixed-genome
+    fitness-sweep mode used by run_fixed_genome_sweep.sh."""
+    env = _make_test_env(overrides={
+        "genome_enabled": False,
+        "founder_genome": {
+            "predator_male": {"male_donation_rate_mean": 0.5, "male_donation_rate_std": 0.0},
+            "predator_female": {"male_donation_rate_mean": 0.5, "male_donation_rate_std": 0.0},
+            "prey": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.0},
+        },
+        "n_initial_active_predator_male": 1,
+        "n_initial_active_predator_female": 1,
+        "cooperation_range": 2,
+    })
+    env.reset(seed=5001)
+    env.rewards = {}
+    env.terminations = {}
+
+    male = next(a for a in env.agents if a.startswith("predator_male"))
+    female = next(a for a in env.agents if a.startswith("predator_female"))
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    _place_agent(env, male, (5, 5))
+    _place_agent(env, female, (5, 6))
+    _place_agent(env, prey, (5, 5))
+
+    assert env.agent_genomes == {}  # no genome objects at all in fixed mode
+    env.agent_energies[male] = 3.0
+    env.agent_energies[female] = 3.0
+    env.agent_energies[prey] = 4.0
+    female_energy_before = env.agent_energies[female]
+
+    env._handle_male_hunting(male)
+
+    donation_total = 0.5 * 4.0  # fixed founder mean * prey_energy
+    assert env.agent_energies[female] == pytest.approx(female_energy_before + donation_total)
+
+
+def test_fixed_donation_rate_zero_never_donates():
+    env = _make_test_env(overrides={
+        "genome_enabled": False,
+        "founder_genome": {
+            "predator_male": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.0},
+            "predator_female": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.0},
+            "prey": {"male_donation_rate_mean": 0.0, "male_donation_rate_std": 0.0},
+        },
+        "n_initial_active_predator_male": 1,
+        "n_initial_active_predator_female": 1,
+        "cooperation_range": 2,
+    })
+    env.reset(seed=5002)
+    env.rewards = {}
+    env.terminations = {}
+
+    male = next(a for a in env.agents if a.startswith("predator_male"))
+    female = next(a for a in env.agents if a.startswith("predator_female"))
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    _place_agent(env, male, (5, 5))
+    _place_agent(env, female, (5, 6))
+    _place_agent(env, prey, (5, 5))
+
+    env.agent_energies[male] = 3.0
+    env.agent_energies[female] = 3.0
+    env.agent_energies[prey] = 4.0
+    female_energy_before = env.agent_energies[female]
+
+    env._handle_male_hunting(male)
+
+    assert env.agent_energies[female] == pytest.approx(female_energy_before)
+
+
 def test_is_kin_detects_mother_and_siblings():
     env = _make_test_env(overrides={"predator_female_creation_energy_threshold": 10.0})
     env.reset(seed=2006)

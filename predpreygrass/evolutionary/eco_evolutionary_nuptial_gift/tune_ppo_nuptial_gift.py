@@ -15,6 +15,11 @@ any explicit kin-recognition mechanism. Within-lifetime foraging/hunting/
 dispersal behavior is learned by shared PPO policies (one per sex, plus prey)
 and is not inherited (Baldwinian layer).
 
+Pass --fixed-donation-rate to run the fixed-genome fitness-sweep mode instead
+of the real evolutionary mode: genome_enabled is forced False and every
+predator_male uses the same fixed, non-inherited donation rate (see
+run_fixed_genome_sweep.sh and README.md's staged rollout plan).
+
 Checkpoints and a copy of the environment source are saved under ~/ray_results/
 for provenance. male_donation_rate genome statistics and the female
 reproduction-gift-share metric are logged to TensorBoard via the EpisodeReturn
@@ -52,12 +57,24 @@ def parse_args():
         help="Override config_ppo['max_iters'] for this run.",
     )
     parser.add_argument(
+        "--fixed-donation-rate", type=float, default=None,
+        help="Run in fixed-genome fitness-sweep mode: forces genome_enabled=False "
+             "and fixes every predator_male's donation rate at this value (no "
+             "inheritance, no mutation, no per-agent variation). Omit for the "
+             "real evolutionary mode.",
+    )
+    parser.add_argument(
         "--cpu", action="store_true",
-        help="Force the CPU PPO config regardless of GPU availability.",
+        help="Force the CPU PPO config regardless of GPU availability. Use this "
+             "when a GPU exists on the machine but is already reserved by another "
+             "training run (e.g. via a shared Ray cluster) -- requesting a GPU "
+             "PPOConfig in that situation queues forever instead of erroring.",
     )
     parser.add_argument(
         "--num-env-runners", type=int, default=None,
-        help="Override config_ppo['num_env_runners'] for this run.",
+        help="Override config_ppo['num_env_runners'] for this run. Use this to "
+             "scale parallelism up when the machine is otherwise idle, or down "
+             "when sharing the machine with another training run.",
     )
     return parser.parse_args()
 
@@ -93,6 +110,12 @@ if __name__ == "__main__":
     config_env = copy.deepcopy(_base_config_env)
     if args.seed is not None:
         config_env["seed"] = args.seed
+    fixed_tag = ""
+    if args.fixed_donation_rate is not None:
+        config_env["genome_enabled"] = False
+        config_env["founder_genome"]["predator_male"]["male_donation_rate_mean"] = args.fixed_donation_rate
+        config_env["founder_genome"]["predator_female"]["male_donation_rate_mean"] = args.fixed_donation_rate
+        fixed_tag = f"_FIXED{args.fixed_donation_rate}"
 
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
@@ -103,7 +126,7 @@ if __name__ == "__main__":
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
-    version = f"ECO_EVOLUTION_NUPTIAL_GIFT{seed_tag}"
+    version = f"ECO_EVOLUTION_NUPTIAL_GIFT{seed_tag}{fixed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
@@ -183,7 +206,6 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
-        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )

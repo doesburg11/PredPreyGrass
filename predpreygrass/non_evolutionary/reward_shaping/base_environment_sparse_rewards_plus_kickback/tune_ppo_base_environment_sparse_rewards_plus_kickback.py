@@ -15,8 +15,8 @@ base_environment_sparse_rewards/tune_ppo_base_environment_sparse_rewards.py
 (no kickback) and the existing kick_back_rewards module (same mechanism,
 weaker magnitude), with everything else held equal.
 """
-from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment_sparse_rewards_plus_kickback.config_env import config_env
+from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.reward_shaping.base_environment_sparse_rewards_plus_kickback.config_env import config_env
 
 #  external libraries
 from datetime import datetime

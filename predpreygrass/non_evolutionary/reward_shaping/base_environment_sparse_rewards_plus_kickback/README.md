@@ -51,3 +51,21 @@ and compare against
 kickback) with matching resource configuration. Worth also revisiting
 [`kick_back_rewards`](../kick_back_rewards)'s own historical results at
 magnitude `4.0` if this run shows a different outcome at `10.0`.
+
+## Result
+
+Trained the full 1000 iterations (14.44h, completed 2026-08-01). Final
+checkpoint evaluated the same way as every other module in this family (3
+seeds, full 1000-step episodes, deterministic actions, births counted via
+each species' monotonic newborn-ID counter):
+
+**117.0 predator / 562.3 prey births — 86% / 96% of the sparse baseline**,
+zero extinctions across all 3 seeds, every episode ran the full 1000 steps.
+
+This is the best-recovering of the four reward-shaping variants tested in
+this family on *both* axes (ahead of `base_environment_sparse_rewards_plus_eating`'s
+82%/94%), despite adding a secondary reward at a much larger magnitude —
+but still short of pure sparse. The full ranking, the mechanistic
+explanation for both of those findings (why kickback beats eating, and why
+it still trails sparse), and citations live in
+[`../README.md`](../README.md), sections 4 through 9.
