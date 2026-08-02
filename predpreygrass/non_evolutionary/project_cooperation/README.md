@@ -47,9 +47,5 @@ available) training results — this file is just the index and the shared frami
 
 ## Related but intentionally excluded
 
-* **[`stag_hunt_vectorized`](../stag_hunt_vectorized)** — a performance refactor
-  of `stag_hunt` (vectorized hot paths, imports `stag_hunt`'s env/config
-  directly); explicitly not a new behavioral variant, so it stays with the other
-  infrastructure-style modules rather than here.
 * **[`red_queen`](../red_queen)** — the opposite theme: adversarial coevolutionary
   arms-race dynamics between competing prey types, not cooperation.
