@@ -19,14 +19,14 @@ config_env = {
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     # Predators
-    "n_possible_predators": 50,
+    "n_possible_predators": 2000,
     "n_initial_active_predator": 6,
     "initial_energy_predator": 5.0,
     # Cooperator prey (donate energy to adjacent prey each step)
-    "n_possible_cooperator_prey": 50,
+    "n_possible_cooperator_prey": 2000,
     "n_initial_active_cooperator_prey": 10,
     # Defector prey (keep all energy)
-    "n_possible_defector_prey": 50,
+    "n_possible_defector_prey": 2000,
     "n_initial_active_defector_prey": 10,
     # Shared prey energy settings
     "initial_energy_prey": 3.0,

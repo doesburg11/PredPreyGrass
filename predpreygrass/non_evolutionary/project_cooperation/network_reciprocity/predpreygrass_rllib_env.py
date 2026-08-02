@@ -16,6 +16,16 @@ Whether clusters persist depends on the cost/multiplier ratio — tune via confi
 
 Step 3 will add a clustering metric; Step 4 will replace fixed strategies with
 learned policies.
+
+RLlib-compliance fix: terminating agents previously had their terminal
+transition (terminated=True, final reward, final observation) silently
+dropped before reaching RLlib, and newborn IDs recycled freed slots in a way
+that could conflate unrelated individuals' trajectories -- same two bug
+classes found and fixed elsewhere in this repo (see
+project_reward_shaping/README.md section 2). Both fixed: agent removal is
+now deferred one step, and newborn IDs come from monotonically increasing,
+never-reused per-prefix counters (n_possible_predators/cooperator_prey/
+defector_prey raised to 2000 accordingly).
 """
 from predpreygrass.non_evolutionary.project_cooperation.network_reciprocity.config.config_env import config_env
 
@@ -129,6 +139,19 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_actions = len(self.action_to_move_tuple)
         self.agents_just_ate: set = set()
 
+        # Agents scheduled for removal from self.agents at the start of the next
+        # step() call (see step() for why removal is deferred by one step).
+        self._pending_removal: List[AgentID] = []
+        # Monotonically increasing per-prefix counters for assigning newborn IDs.
+        # Never reused within an episode -- required by RLlib's MultiAgentEpisode,
+        # which tracks one trajectory per agent-ID string for the entire episode
+        # and errors if a "done" ID produces more data.
+        self._next_idx = {
+            "predator_": self.n_initial_active_predator,
+            "cooperator_prey_": self.n_initial_active_cooperator_prey,
+            "defector_prey_": self.n_initial_active_defector_prey,
+        }
+
     # -------------------------------------------------------------------------
     # Reset
     # -------------------------------------------------------------------------
@@ -155,6 +178,14 @@ class PredPreyGrass(MultiAgentEnv):
         self.prey_positions = {}
         self.agent_energies = {}
         self.cumulative_rewards = {agent: 0.0 for agent in self.agents}
+
+        # Reset deferred-removal queue and newborn-ID counters for the new episode.
+        self._pending_removal = []
+        self._next_idx = {
+            "predator_": self.n_initial_active_predator,
+            "cooperator_prey_": self.n_initial_active_cooperator_prey,
+            "defector_prey_": self.n_initial_active_defector_prey,
+        }
 
         n_prey = self.n_initial_active_cooperator_prey + self.n_initial_active_defector_prey
         total_entities = self.n_initial_active_predator + n_prey + self.initial_num_grass
@@ -207,16 +238,19 @@ class PredPreyGrass(MultiAgentEnv):
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
 
+        # Remove agents that terminated *last* step from self.agents now. Removal is
+        # deferred by one step because RLlib's env-checker requires a terminating
+        # agent to still be listed in self.agents for the step in which it dies
+        # (its ID is excised starting the following step instead).
+        for agent in self._pending_removal:
+            if agent in self.agents:
+                self.agents.remove(agent)
+        self._pending_removal = []
+
         # Step 0: truncation
         if self.current_step >= self.max_steps:
-            for agent in self.possible_agents:
-                if agent in self.agents:
-                    observations[agent] = self._get_observation(agent)
-                else:
-                    obs_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
-                    observations[agent] = np.zeros(
-                        (self.num_obs_channels, obs_range, obs_range), dtype=np.float64
-                    )
+            for agent in self.agents:  # self.agents is already clean of past deaths (see above)
+                observations[agent] = self._get_observation(agent)
                 rewards[agent] = 0.0
                 truncations[agent] = True
                 terminations[agent] = False
@@ -333,15 +367,17 @@ class PredPreyGrass(MultiAgentEnv):
                 terminations[agent] = False
                 truncations[agent] = False
 
-        # Step 6: remove terminated agents
-        for agent in self.agents[:]:
-            if terminations.get(agent):
-                if self.verbose_engagement:
-                    print(f"[TERMINATED] {agent}")
-                self.agents.remove(agent)
+        # Step 6: schedule agent removals for the *next* step (see the deferred-
+        # removal block at the top of step() for why this isn't immediate).
+        self._pending_removal = [agent for agent in self.agents if terminations.get(agent)]
+        if self.verbose_engagement:
+            for agent in self._pending_removal:
+                print(f"[TERMINATED] {agent}")
 
         # Step 7: reproduction (offspring inherit parent's strategy)
         for agent in self.agents[:]:
+            if agent in self._pending_removal:
+                continue  # already dead this step; agent_energies no longer exists for it
             if "predator" in agent:
                 if self.agent_energies.get(agent, 0) >= self.predator_creation_energy_threshold:
                     self._spawn_offspring(agent, prefix="predator_", grid_channel=1)
@@ -366,6 +402,10 @@ class PredPreyGrass(MultiAgentEnv):
 
         terminations["__all__"] = current_num_prey <= 0 or self.current_num_predators <= 0
 
+        # self.agents still includes this step's newly-dead agents here (their
+        # removal is deferred to the top of the *next* step() call), which is
+        # exactly right: survivors get their next observation, and this step's
+        # dead agents get their final one (already populated above).
         observations = {a: observations[a] for a in self.agents if a in observations}
         rewards = {a: rewards[a] for a in self.agents if a in rewards}
         terminations = {a: terminations[a] for a in self.agents if a in terminations}
@@ -426,12 +466,18 @@ class PredPreyGrass(MultiAgentEnv):
     # -------------------------------------------------------------------------
 
     def _spawn_offspring(self, parent: AgentID, prefix: str, grid_channel: int):
-        candidates = [a for a in self.possible_agents if a not in self.agents and a.startswith(prefix)]
-        if not candidates:
+        pool_size = {
+            "predator_": self.n_possible_predators,
+            "cooperator_prey_": self.n_possible_cooperator_prey,
+            "defector_prey_": self.n_possible_defector_prey,
+        }[prefix]
+        next_idx = self._next_idx[prefix]
+        if next_idx >= pool_size:
             if self.verbose_spawning:
-                print(f"[SPAWN] No slots available for {prefix}")
+                print(f"[SPAWN] No new agent IDs left for {prefix}")
             return
-        new_agent = candidates[0]
+        new_agent = f"{prefix}{next_idx}"
+        self._next_idx[prefix] += 1
         occupied = set(self.agent_positions.values())
         new_pos = self._find_available_spawn_position(self.agent_positions[parent], occupied)
         if new_pos is None:
@@ -582,6 +628,8 @@ class PredPreyGrass(MultiAgentEnv):
             "current_num_cooperator_prey": self.current_num_cooperator_prey,
             "current_num_defector_prey": self.current_num_defector_prey,
             "agents_just_ate": self.agents_just_ate.copy(),
+            "pending_removal": self._pending_removal.copy(),
+            "next_idx": self._next_idx.copy(),
         }
 
     def restore_state_snapshot(self, snapshot):
@@ -599,3 +647,5 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_num_cooperator_prey = snapshot["current_num_cooperator_prey"]
         self.current_num_defector_prey = snapshot["current_num_defector_prey"]
         self.agents_just_ate = snapshot["agents_just_ate"].copy()
+        self._pending_removal = snapshot["pending_removal"].copy()
+        self._next_idx = snapshot["next_idx"].copy()
