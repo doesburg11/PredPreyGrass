@@ -119,13 +119,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.active_num_prey = 0
 
         self.agents = []
-        # Agents scheduled for removal from self.agents at the start of the next
-        # step() call (see step() for why removal is deferred by one step).
         self._pending_removal = []
-        # Monotonically increasing per-(agent_type, type) counters for assigning
-        # newborn IDs. Never reused within an episode -- required by RLlib's
-        # MultiAgentEpisode, which tracks one trajectory per agent-ID string for
-        # the entire episode and errors if a "done" ID produces more data.
         self._next_idx = {}
         # create active agents list based on config
         for agent_type in ["predator", "prey"]:
@@ -205,10 +199,6 @@ class PredPreyGrass(MultiAgentEnv):
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
 
-        # Remove agents that terminated *last* step from self.agents now. Removal is
-        # deferred by one step because RLlib's env-checker requires a terminating
-        # agent to still be listed in self.agents for the step in which it dies
-        # (its ID is excised starting the following step instead).
         for agent in self._pending_removal:
             if agent in self.agents:
                 self.agents.remove(agent)
@@ -242,8 +232,7 @@ class PredPreyGrass(MultiAgentEnv):
             elif "prey" in agent:
                 self._handle_prey_engagement(agent, observations, rewards, terminations, truncations)
 
-        # Step 6: Schedule agent removals for the *next* step (see the deferred-
-        # removal block at the top of step() for why this isn't immediate).
+        # Step 6: Schedule agent removals for the next step
         self._pending_removal = [agent for agent in self.agents if terminations.get(agent)]
         for agent in self._pending_removal:
             self._log(self.verbose_engagement, f"[TERMINATED] Agent {agent} terminated!", "red")
@@ -258,7 +247,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 7: Spawning of new agents
         for agent in self.agents[:]:
             if agent in self._pending_removal:
-                continue  # already dead this step; agent_energies no longer exists for it
+                continue
             if "predator" in agent:
                 self._handle_predator_reproduction(agent, rewards, observations, terminations, truncations)
             elif "prey" in agent:
@@ -269,11 +258,7 @@ class PredPreyGrass(MultiAgentEnv):
             if agent in self.agent_positions:
                 observations[agent] = self._get_observation(agent)
 
-        # output only observations, rewards for active agents. self.agents still
-        # includes this step's newly-dead agents here (their removal is deferred
-        # to the top of the *next* step() call), which is exactly right: survivors
-        # get their next observation, and this step's dead agents get their final
-        # one (already populated by the death/engagement handlers above).
+        # output only observations, rewards for active agents
         observations = {agent: observations[agent] for agent in self.agents if agent in observations}
         rewards = {agent: rewards[agent] for agent in self.agents if agent in rewards}
         terminations = {agent: terminations[agent] for agent in self.agents if agent in terminations}
@@ -288,7 +273,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         for agent in self.agents:
             if agent in self._pending_removal:
-                continue  # already dead this step; agent_positions/energies no longer exist for it
+                continue
             pos = self.agent_positions[agent]
             energy = self.agent_energies[agent]
             deltas = self._per_agent_step_deltas[agent]
@@ -462,7 +447,7 @@ class PredPreyGrass(MultiAgentEnv):
             Otherwise, returns None.
         """
         if self.current_step >= self.max_steps:
-            for agent in self.agents:  # self.agents is already clean of past deaths (see step())
+            for agent in self.agents:
                 observations[agent] = self._get_observation(agent)
                 rewards[agent] = 0.0
                 truncations[agent] = True

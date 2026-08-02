@@ -72,27 +72,12 @@ any adaptation is pure RL policy learning, not trait inheritance.
   (not committed) — loads checkpoints correctly, aggregates across seeds,
   and produces the expected JSON structure.
 
-## RLlib-compliance fix
+## Bug fix
 
-This environment previously had the same two RLlib-compliance bugs found and
-fixed elsewhere in this repo: a dying agent's terminal transition
-(`terminated=True`, final reward, final observation) was silently dropped
-before reaching RLlib, and newborn agent IDs were recycled within an episode
-in a way that could conflate two unrelated individuals' trajectories into
-one. Both are now fixed the same way as in `base_environment` and
-`walls_occlusion` — terminating agents stay listed through the step they die
-in, and newborn IDs (per predator/prey type, including mutation-driven type
-switches) are assigned from monotonically increasing, never-reused counters.
-`n_possible_type_1_predators`/`_2_predators`/`_1_prey`/`_2_prey` raised
-accordingly across all 6 config presets that set them. Verified: RLlib
-pre-check passes on `config_env_eval.py` and `config_env_train.py`, zero ID
-reuse across 3 seeds with 110 real deaths tracked correctly.
-
-**Unrelated bug also fixed**: `_handle_prey_reproduction`'s mutation check
-read `self.rng.random() < self.mutation_rate_predator` — prey type-switching
+`_handle_prey_reproduction`'s mutation check read
+`self.rng.random() < self.mutation_rate_predator` — prey type-switching
 was governed by the predator mutation-rate config value, not the prey one.
-Corrected to `self.mutation_rate_prey`. Not an RLlib-compliance issue, but
-found while reading this code for the fix above, and it directly affects the
+Corrected to `self.mutation_rate_prey`. Directly affects the
 "competing prey types" experiment's mutation dynamics.
 
 ## Training script

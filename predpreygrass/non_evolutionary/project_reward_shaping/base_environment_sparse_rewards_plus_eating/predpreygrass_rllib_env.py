@@ -5,12 +5,8 @@ same clean, discrete-event reward style as base_environment_sparse_rewards
 eating event itself (catching prey / eating grass), not just reproduction.
 Magnitudes are asymmetric by design (+1 predator / +0.1 prey) -- see
 config_env.py and the module README for the measured eats-per-reproduction
-data behind that choice. Also includes the same RLlib-compliance fixes as
-the other three base_environment_* modules (see README): deferred
-self.agents removal timing so terminal transitions actually reach RLlib,
-and never-reused monotonic agent IDs so a recycled ID doesn't collide with
-RLlib's per-episode agent identity model. Two types of agents: predators and
-prey, independently learning policies for each type.
+data behind that choice. Two types of agents: predators and prey,
+independently learning policies for each type.
 """
 from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards_plus_eating.config_env import config_env
 
@@ -72,13 +68,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.cumulative_rewards = {}  # Track total rewards per agent
 
-        # Agents scheduled for removal from self.agents at the start of the next
-        # step() call (see reset()/step() for why removal is deferred by one step).
         self._pending_removal: List[AgentID] = []
-        # Monotonically increasing per-species counters for assigning newborn IDs.
-        # Never reused within an episode (see reset()) -- required by RLlib's
-        # MultiAgentEpisode, which tracks one trajectory per agent-ID string for
-        # the entire episode and errors if a "done" ID produces more data.
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
 
@@ -165,7 +155,6 @@ class PredPreyGrass(MultiAgentEnv):
         # Reset cumulative rewards to zero
         self.cumulative_rewards: Dict[AgentID, float] = {agent_id: 0 for agent_id in self.agents}
 
-        # Reset deferred-removal queue and newborn-ID counters for the new episode.
         self._pending_removal = []
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
@@ -236,10 +225,6 @@ class PredPreyGrass(MultiAgentEnv):
     def step(self, action_dict):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
 
-        # Remove agents that terminated *last* step from self.agents now. Removal is
-        # deferred by one step because RLlib's env-checker requires a terminating
-        # agent to still be listed in self.agents for the step in which it dies
-        # (its ID is excised starting the following step instead).
         for agent in self._pending_removal:
             if agent in self.agents:
                 self.agents.remove(agent)
@@ -247,7 +232,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # step 0: check for truncation
         if self.current_step >= self.max_steps:
-            for agent in self.agents:  # self.agents is already clean of past deaths (see above)
+            for agent in self.agents:
                 observations[agent] = self._get_observation(agent)
                 rewards[agent] = 0.0
                 truncations[agent] = True
@@ -400,8 +385,7 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[agent] = False
                     truncations[agent] = False
 
-        # Step 4: Schedule agent removals for the *next* step (see the deferred-
-        # removal block at the top of step() for why this isn't immediate).
+        # Step 4: Schedule agent removals for the next step
         self._pending_removal = [agent for agent in self.agents if terminations.get(agent)]
         if self.verbose_engagement:
             for agent in self._pending_removal:
@@ -410,7 +394,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Step 5: Spawning of new agents
         for agent in self.agents[:]:
             if agent in self._pending_removal:
-                continue  # already dead this step; agent_energies no longer exists for it
+                continue
             if "predator" in agent:
                 if self.agent_energies[agent] >= self.predator_creation_energy_threshold:
                     # print(agent, "has sufficient energy for reproduction:", self.agent_energies[agent])

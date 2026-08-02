@@ -48,9 +48,9 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
-* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design, plus two RLlib-compliance bug fixes along the way. See **[predpreygrass/non_evolutionary/project_reward_shaping/README.md](predpreygrass/non_evolutionary/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
+* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design. See **[predpreygrass/non_evolutionary/project_reward_shaping/README.md](predpreygrass/non_evolutionary/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
 
-  * **[Sparse rewards, RLlib-fixed](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards)**: bug-fixed copy of the base environment — same sparse, reproduction-only reward, plus two RLlib-compliance fixes. The fair baseline for every other variant below.
+  * **[Sparse rewards](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards)**: same sparse, reproduction-only reward as the base environment. The fair baseline for every other variant below.
 
   * **[Dense rewards](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
 
@@ -105,17 +105,9 @@ training, and would a dense, per-step energy-delta reward fix it? Five trained e
 variants and a full investigation later, the answer reversed the question: **sparse reward wins
 on every axis tested, and adding density hurts** — not because of the sparsity itself, but
 because a continuous signal layered into the same reward channel as reproduction adds noise that
-outweighs the benefit it was meant to provide. Along the way this also surfaced two
-real RLlib-compliance bugs present in `base_environment` (dying agents' terminal transitions
-silently dropped, and agent IDs recycled within an episode in a way that conflates unrelated
-individuals' trajectories) — fixed first in the reward-shaping modules below, and since then
-audited and fixed (or confirmed already independently fixed) across every module under
-`predpreygrass/non_evolutionary/`: `base_environment`, `walls_occlusion`, `red_queen`,
-`drive_conditioned_environment`, and all ten `project_cooperation` modules. Not yet checked in
-`predpreygrass/evolutionary/` outside `eco_evolutionary_nuptial_gift`, which already had an
-independent, correct fix.
+outweighs the benefit it was meant to provide.
 
-**Full writeup — motivation, methodology, the bug discovery, every module's results, and open
+**Full writeup — motivation, methodology, every module's results, and open
 questions — lives in
 [`predpreygrass/non_evolutionary/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/project_reward_shaping).**
 

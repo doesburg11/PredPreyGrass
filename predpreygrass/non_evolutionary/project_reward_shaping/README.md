@@ -2,11 +2,10 @@
 
 This folder holds one connected line of investigation: starting from a
 single question ("is the base environment's sparse reward hurting
-training?"), it grew into five trained sibling environments, an unplanned
-discovery of two real RLlib-compliance bugs, and a headline result that
-reverses the question it started with — **reward shaping should be
-minimized here, not maximized.** This README is the full story: motivation,
-methodology, the bug discovery, every module's result, the mechanistic
+training?"), it grew into five trained sibling environments and a headline
+result that reverses the question it started with — **reward shaping should
+be minimized here, not maximized.** This README is the full story:
+motivation, methodology, every module's result, the mechanistic
 explanation, and what's still open.
 
 Each module below has its own README with implementation-level detail
@@ -36,71 +35,7 @@ was expected to improve outcomes.
 
 **This hypothesis is what the final result below falsifies.**
 
-## 2. An unplanned discovery: two RLlib-compliance bugs
-
-While implementing the first dense-reward variant, two real bugs surfaced
-in `base_environment`'s output-assembly logic — present by code lineage in
-most environments across this repo, not something specific to reward
-design:
-
-1. **Termination-reporting timing.** The environment's output filter used
-   `self.agents` *after* a dying agent had already been removed from it, so
-   that agent's `terminated=True`, final reward, and final observation were
-   silently dropped before ever reaching RLlib — only
-   `terminations["__all__"]` (full population collapse) was ever visible.
-   Fix: defer removal from `self.agents` to the start of the *next* step,
-   so a terminating agent stays listed through the step it dies in
-   (matches what RLlib's `MultiAgentEpisode`/env-checker requires). The
-   truncation branch (episode hits `max_steps`) had the same bug in a
-   different form — it returned entries for every `possible_agent`
-   (including ones never born that episode) instead of just `self.agents`.
-
-2. **Agent-ID reuse within an episode.** Newborns recycled freed ID slots
-   (`predator_0`..`49`, `prey_0`..`49`) — this collides with RLlib's
-   per-episode agent-identity model, where one agent-ID string maps to
-   exactly one continuous trajectory. Once bug #1 is fixed and terminations
-   are correctly reported, RLlib hard-errors (`MultiAgentEnvError`) the
-   instant a reused ID produces more data after being marked done.
-   **Without fixing bug #1 first, bug #2 doesn't crash — it silently
-   stitches two unrelated individuals' trajectories into one fabricated
-   continuous episode object instead**, which is how `base_environment` has
-   been running this whole time without ever erroring. Measured reuse rate
-   under default config: **~75% of all births reuse a retired ID within the
-   same episode** — not a rare edge case, the normal case. Fix: a
-   monotonically increasing, never-reused per-species newborn-ID counter,
-   reset only at `reset()`. This requires the ID pool
-   (`n_possible_predators`/`n_possible_prey`) to be sized well above
-   expected *cumulative* births per episode, not just concurrent
-   population — bumped `50 → 2000` in every module below (cheap: RLlib only
-   uses this list to build a per-episode space dict once per reset).
-
-**Scope caveat, important**: both fixes were originally applied only in the
-five modules in this folder — `base_environment` itself was deliberately
-left untouched at the time, kept as the historical original. It has since
-been retroactively fixed too (same two fixes, ported verbatim, plus the same
-`n_possible_predators`/`n_possible_prey` bump to `2000`), since it doubles as
-the repo's featured getting-started module. Everything else in
-`predpreygrass/non_evolutionary/` and every `eco_evolutionary_*` module
-besides [`lineage_rewards`](../lineage_rewards) (which was checked and
-already had an independent, correct fix for the same bug class — see
-[`lineage_rewards/PROPER_RLLIB_TERMINATION.md`](../lineage_rewards/PROPER_RLLIB_TERMINATION.md))
-and `eco_evolutionary_nuptial_gift` (also checked, also already has its own
-independent, correct-looking fix for both bugs) **is unverified** — don't
-assume fixed or unfixed without checking. This is a real, not-yet-fully-
-resolved implication for the Darwin/Baldwin evolutionary trial history — see
-section 7.
-
-A third, minor bug was also found and fixed in every module's training
-script: the diagnostic `EpisodeReturn.on_episode_end` callback's
-`episode.get_rewards()` call was observed to raise an `IndexError` on some
-episodes under this env's dynamic population (agents born/dying mid-
-episode), an apparent RLlib edge case in env-step↔agent-step index
-translation for episodes chunked across `sample()` calls. This is
-console-logging only — RLlib's own `env_runners/episode_return_mean`
-metrics come from a separate internal path — so it was hardened with a
-try/except rather than investigated further.
-
-## 3. Methodology
+## 2. Methodology
 
 Every module below was trained a full **1000 PPO iterations** under
 identical hyperparameters and resource configuration, so any difference in
@@ -134,7 +69,7 @@ species (predator/prey reproduction counts) and final population size,
 measured by running the final trained checkpoint through several seeded
 episodes with deterministic actions.
 
-## 4. Results table
+## 3. Results table
 
 | module | reward design | predator births (avg, 3 seeds) | prey births (avg) | % of sparse (pred / prey) | wall time |
 |---|---|---|---|---|---|
@@ -149,19 +84,18 @@ reproduction rate for both species, most balanced final predator:prey ratio,
 zero extinction events across all tested seeds (pure dense had one predator
 population go fully extinct even at its final, fully-trained checkpoint),
 and the fastest wall-clock time despite supporting the largest population
-(an anomaly not fully explained — see section 6). Kickback is the closest
+(an anomaly not fully explained — see section 5). Kickback is the closest
 runner-up of the four shaping variants — the only one to beat sparse+eating
 on *both* axes — but still falls short of sparse itself on both.
 
-## 5. Module by module
+## 4. Module by module
 
 ### `base_environment_sparse_rewards` — the baseline
 
 Byte-for-byte the same sparse, reproduction-only reward as
-`base_environment`, with only the two RLlib-compliance fixes applied.
-Exists to be a fair, bug-fixed comparison partner for every other module
-here. **Result**: 135.3 / 588.7 births, zero extinctions across tested
-seeds, first reached ~1000-step episodes at iteration 20.
+`base_environment`. Exists to be the fair comparison partner for every
+other module here. **Result**: 135.3 / 588.7 births, zero extinctions
+across tested seeds, first reached ~1000-step episodes at iteration 20.
 
 ### `base_environment_dense_rewards` — pure dense replacement
 
@@ -234,8 +168,7 @@ cannot deliver a new reward to an agent already marked `terminated=True`).
 
 This mechanism (`_reward_parent_for_child_reproduction`) had already been
 tried elsewhere in this repo's history, in a more complex two-predator-
-type/two-prey-type environment with walls and occlusion, verified
-independently RLlib-compliant, not affected by the two bugs in section 2.
+type/two-prey-type environment with walls and occlusion.
 That prior attempt was tested at `kin_kick_back_reward = 4.0` (~0.4× the
 `10.0` reproduction reward) and found no benefit. This module reimplements
 the same mechanism in the single-predator/single-prey-type
@@ -258,8 +191,8 @@ This makes kickback the best-recovering of the four shaping variants on
 *both* axes — ahead of `sparse_rewards_plus_eating` (82%/94%) despite
 adding a secondary reward at a much larger magnitude (`+10`, full 1:1
 weight vs. eating's asymmetric `+1`/`+0.1`). That's a genuine wrinkle in
-the section 6 "clean discrete signal costs little" explanation: magnitude
-alone doesn't predict the damage a secondary signal does. See section 6's
+the section 5 "clean discrete signal costs little" explanation: magnitude
+alone doesn't predict the damage a secondary signal does. See section 5's
 "Why kickback recovers more than eating" for the mechanistic explanation —
 in short, it isn't that eating and reproducing are opposed goals (eating is
 strictly necessary for reproduction here), it's that eating fires far more
@@ -270,17 +203,17 @@ guaranteed to leave the optimal policy unchanged (Ng, Harada & Russell,
 class as the primary reward (reproduction, one hop removed via kinship),
 so it can't inflate return the same way. This reading is plausible, not
 confirmed — n=1 training run, same caveat as every other result in this
-table (see section 8).
+table (see section 7).
 
 **Still short of pure sparse on both axes, though** (86%/96%, not
 100%/100%) — being "the least damaging of the shaping variants" is not the
 same as "reward-neutral," and the reason is a second, distinct mechanism:
-see section 6's "Why kickback still falls short of sparse" for the
+see section 5's "Why kickback still falls short of sparse" for the
 credit-assignment argument (kickback pays the *grandparent* for the
 *child's* reproduction — the receiving agent didn't cause the triggering
-event). This doesn't overturn the headline finding — see section 9.
+event). This doesn't overturn the headline finding — see section 8.
 
-## 6. Cross-cutting findings
+## 5. Cross-cutting findings
 
 **Episode-length ramp-up is identical across every variant.** How quickly
 agents learn to survive a full 1000-step episode at all was a dead heat —
@@ -353,7 +286,7 @@ protects it from doing so.
 Whether it actually does, and how much, comes down to how large a share of
 total return the shaping term contributes, and how tightly its firing rate
 tracks the true objective (reproduction) versus some other quantity. This
-environment's own numbers (section 5, `sparse_rewards_plus_eating`'s
+environment's own numbers (section 4, `sparse_rewards_plus_eating`'s
 writeup) make the comparison concrete:
 
 | | fires per reproduction cycle (avg) | reward per firing | contribution per cycle | as % of total cycle reward |
@@ -393,7 +326,7 @@ eating-bonus policies, or measuring whether eating-bonus prey/predators
 eat measurably more per reproduction cycle than sparse ones do for the
 same net progress toward the threshold. Not done here — flagged as the
 natural next diagnostic if this line of investigation continues (see
-section 9).
+section 8).
 
 **Why kickback still falls short of sparse — credit assignment, not misdirection.**
 The argument above explains why kickback beats eating; it does not explain
@@ -461,23 +394,14 @@ unconfirmed reading (n=1); a direct test would compare the *variance* of
 realized return across kickback-eligible vs. childless agents holding
 policy fixed, which hasn't been done here.
 
-## 7. Implications for the Darwin/Baldwin evolutionary project
+## 6. Implications for the Darwin/Baldwin evolutionary project
 
 This whole investigation started as groundwork for the project's evolutionary
-trials (see `project_darwin_baldwin_experiment_goal` in memory). Two
-implications follow from what was found here:
+trials (see `project_darwin_baldwin_experiment_goal` in memory). The
+motivating hypothesis for that groundwork (fix sparsity, then retry) is now
+falsified — reward density is not the fix worth pursuing.
 
-- The motivating hypothesis for that groundwork (fix sparsity, then retry) is
-  now falsified — reward density is not the fix worth pursuing.
-- More significantly: the RLlib-compliance bugs in section 2 are **not
-  verified fixed anywhere except the five modules in this folder**. Every
-  `eco_evolutionary_*` module used in the Darwin/Baldwin trials (Trials 1-7)
-  still has both bugs, unverified. This means those trials may have been
-  silently affected by agent-identity conflation (bug #2, when bug #1 is also
-  present) throughout their entire history — an open, unconfirmed risk, not
-  yet investigated or acted on.
-
-## 8. Open questions and caveats
+## 7. Open questions and caveats
 
 - **n=1 training run per condition.** Every result above comes from a single
   full training run per module (3 evaluation seeds at the end, not 3
@@ -485,13 +409,13 @@ implications follow from what was found here:
   3-seed training practice, there's no statistical replication here yet —
   treat magnitudes as indicative, not definitive.
 - **Findings may be specific to this environment's event frequencies**, not
-  universal. The mechanistic explanation in section 6 rests on this
+  universal. The mechanistic explanation in section 5 rests on this
   environment's particular gap sizes (~50-200 steps) and `gamma=0.99`
   effective horizon (~100 steps) being in the same range; environments with
   much larger gaps or different discounting might behave differently.
   Untested here.
 
-## 9. Conclusion
+## 8. Conclusion
 
 All five modules planned for this investigation are now complete. Ranked by
 reproduction-rate recovery relative to the sparse baseline (predator% /
@@ -513,7 +437,7 @@ dense is the only design to produce an extinction event at a fully-trained
 checkpoint. Reward density hurt, it didn't help.
 
 **The refinement kickback adds**: it's not simply "sparse beats dense" or
-even "discrete beats continuous" as flatly as section 6 first suggested —
+even "discrete beats continuous" as flatly as section 5 first suggested —
 magnitude alone doesn't predict the damage a secondary reward does; firing
 *frequency relative to the true objective* does. A shaping term is only
 guaranteed policy-invariant if it's potential-based (Ng, Harada & Russell,
@@ -545,18 +469,17 @@ different agent's action being a credit-assignment gap regardless of
 topical relevance — is what ruled out a *learned* nuptial-gift-donation
 action (as opposed to a heritable, mechanically-executed trait) in the
 `eco_evolutionary_nuptial_gift` line of the Darwin/Baldwin project; see
-section 6 for the full argument.
+section 5 for the full argument.
 
 **Practical takeaway for this codebase**: when adding a new reward-shaping
 mechanism to a `PredPreyGrass` variant (here or in the Darwin/Baldwin
-evolutionary line, once section 7's open bug-verification question is
-resolved), prefer sparse, discrete, reproduction-topical signals over
-continuous per-step ones, and expect a plain `+10`-on-reproduction baseline
-to be a genuinely hard bar to clear rather than a naive strawman worth
-automatically improving on.
+evolutionary line), prefer sparse, discrete, reproduction-topical signals
+over continuous per-step ones, and expect a plain `+10`-on-reproduction
+baseline to be a genuinely hard bar to clear rather than a naive strawman
+worth automatically improving on.
 
 **What would still need testing to firm this up**: a true n≥3 replication
-per module (section 8's biggest open caveat), and a kickback-magnitude
+per module (section 7's biggest open caveat), and a kickback-magnitude
 sweep to separate "firing-frequency tied to the terminal event" from raw
 "magnitude" as competing explanations for kickback's result — both out of
 scope for this investigation as currently resourced.
@@ -568,7 +491,7 @@ scope for this investigation as currently resourced.
   reward transformations: Theory and application to reward shaping.* In
   Proceedings of the Sixteenth International Conference on Machine
   Learning (ICML 1999) — the potential-based-shaping theorem underpinning
-  section 6's explanation for why kickback recovers more of sparse's
+  section 5's explanation for why kickback recovers more of sparse's
   reproduction rate than the eating bonus despite a larger per-event
   magnitude: only shaping terms expressible as `γΦ(s') − Φ(s)` for some
   potential function `Φ` are guaranteed to preserve the optimal policy: a
@@ -584,7 +507,7 @@ scope for this investigation as currently resourced.
   99-63 — introduces difference rewards/utilities: the general principle
   that a reward cleanly reinforces an agent's behavior only to the extent
   it reflects that *same* agent's own contribution, not another agent's
-  action. Underpins section 6's explanation for why kickback still trails
+  action. Underpins section 5's explanation for why kickback still trails
   pure sparse: the grandparent is paid for the child's reproduction event,
   not its own current action, adding attribution noise regardless of how
   on-topic the triggering event is.

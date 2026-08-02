@@ -14,10 +14,6 @@ The core idea: make hidden, sample-expensive-to-discover internal state directly
 
 **How this differs from `project_reward_shaping`**: that investigation found that adding *density* to the **reward channel** (a continuous per-step signal layered onto the sparse reproduction bonus) actively hurt learning — it added noise that made credit assignment harder, even though the extra signal was informative in principle. Drive-conditioning is a structurally different move: it enriches the **observation channel**, not the reward channel. It's not subject to that same failure mode, since it never touches what the agent is rewarded for — only what the agent can see going into its own policy network. That's why this module is a separate, standalone experiment rather than a `project_reward_shaping` variant (see below).
 
-### RLlib-compliance fix
-
-This environment previously had the same two RLlib-compliance bugs found and fixed in `base_environment` (unsurprising, since this module is a direct copy of it): a dying agent's terminal transition (`terminated=True`, final reward, final observation) was silently dropped before reaching RLlib, and newborn agent IDs were recycled within an episode in a way that could conflate two unrelated individuals' trajectories into one. Both are now fixed the same way — terminating agents stay listed through the step they die in, and newborn IDs are assigned from a monotonically increasing, never-reused counter (`n_possible_predators`/`n_possible_prey` raised to `2000` accordingly). Verified: RLlib pre-check passes, zero ID reuse across 3 seeds with 70 real deaths tracked correctly, observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), all 5 drive-feature formulas verified numerically at both boundary and mid-range values, and a 2-iteration PPO smoke-run completes with no RLlib hard-errors.
-
 ## Current baseline
 
 - Predators, prey, and grass are randomly placed in a gridworld at reset.
@@ -35,7 +31,7 @@ This environment previously had the same two RLlib-compliance bugs found and fix
 
 ## Status
 
-Drive-conditioned logic is now implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct (see "RLlib-compliance fix" above for the verification method). Not yet done: the three-way baseline-vs-drive-conditioned-vs-stronger-affordances comparison this module exists to run — no results doc exists yet.
+Drive-conditioned logic is now implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct: observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), and all 5 drive-feature formulas were verified numerically at both boundary and mid-range values. Not yet done: the three-way baseline-vs-drive-conditioned-vs-stronger-affordances comparison this module exists to run — no results doc exists yet.
 
 ## Expected advantages (predictions for future work, not yet validated)
 
