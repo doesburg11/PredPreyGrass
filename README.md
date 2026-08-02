@@ -46,8 +46,6 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
 
-* **[Stag hunt with defection](predpreygrass/non_evolutionary/stag_hunt_defection)** : Humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding. ([implementation](predpreygrass/non_evolutionary/stag_hunt_defection))
-
 * **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
 
 * **Reward shaping**: five sibling environments comparing sparse vs. dense reward design, plus two RLlib-compliance bug fixes along the way. See **[predpreygrass/non_evolutionary/project_reward_shaping/README.md](predpreygrass/non_evolutionary/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
@@ -62,27 +60,31 @@ These environments hold every agent trait fixed and instead vary the interaction
 
   * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
 
+* **Cooperation**: ten sibling environments testing how cooperation emerges under a fixed-trait RL policy — joint/team hunting, cooperate/defect dilemmas with free-riding, reputation-conditioned cooperation, reciprocity (direct and spatial/network), and kin-selection altruism. See **[predpreygrass/non_evolutionary/project_cooperation/README.md](predpreygrass/non_evolutionary/project_cooperation)** for the shared framing.
+
+  * **["Stag hunt"](predpreygrass/non_evolutionary/project_cooperation/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
+
+  * **[Stag hunt with defection](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_defection)**: humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have to decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding.
+
+  * **[Stag hunt forward view](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
+
+  * **[Stag hunt reputation](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
+
+  * **[Mammoth hunting](predpreygrass/non_evolutionary/project_cooperation/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards.
+
+  * **[Mammoths defection](predpreygrass/non_evolutionary/project_cooperation/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
+
+  * **[Shared prey](predpreygrass/non_evolutionary/project_cooperation/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
+
+  * **[Direct reciprocity](predpreygrass/non_evolutionary/project_cooperation/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
+
+  * **[Network reciprocity](predpreygrass/non_evolutionary/project_cooperation/network_reciprocity)**: fixed cooperator/defector prey strategies (cooperators donate energy to adjacent prey), testing whether spatial clustering of cooperators lets them persist against defectors (Nowak & May 1992).
+
+  * **[Lineage rewards](predpreygrass/non_evolutionary/project_cooperation/lineage_rewards)**: agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
+
 * **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
 
 * **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment; work in progress toward drive-conditioned behavior.
-
-* **[Lineage rewards](predpreygrass/non_evolutionary/lineage_rewards)**: agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
-
-* **[Direct reciprocity](predpreygrass/non_evolutionary/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
-
-* **[Network reciprocity](predpreygrass/non_evolutionary/network_reciprocity)**: reciprocity/sharing decisions are structured over an explicit social-network graph rather than spatial proximity.
-
-* **[Shared prey](predpreygrass/non_evolutionary/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
-
-* **[Mammoth hunting](predpreygrass/non_evolutionary/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards. ([implementation](predpreygrass/non_evolutionary/mammoths))
-
-* **[Mammoths defection](predpreygrass/non_evolutionary/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
-
-* **["Stag hunt"](predpreygrass/non_evolutionary/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
-
-* **[Stag hunt forward view](predpreygrass/non_evolutionary/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
-
-* **[Stag hunt reputation](predpreygrass/non_evolutionary/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
 
 * **[Stag hunt vectorized](predpreygrass/non_evolutionary/stag_hunt_vectorized)**: a performance refactor of stag hunt (vectorized hot paths); not a new behavioral variant.
 

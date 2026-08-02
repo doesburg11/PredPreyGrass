@@ -1,17 +1,14 @@
 """
-Old stag_hunt environment with the new PPO config used for vectorized runs.
-Use this to isolate PPO-config effects without the vectorized env changes.
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.non_evolutionary.project_cooperation.stag_hunt.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import (
-    config_env,
-)
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.episode_return_callback import (
-    EpisodeReturn,
-)
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.networks import (
-    build_multi_module_spec,
-)
+from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.config.config_env_mammoths import config_env
+from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -19,27 +16,52 @@ from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
 import os
+import ast
+import importlib.util
 from datetime import datetime
 from pathlib import Path
 import json
 import shutil
 
 
+def copy_imported_modules(source_dir: Path) -> None:
+    """
+    Copy all imported modules in the current script to the source_dir, 
+    for reproducibility.
+    Args:
+        source_dir (Path): The directory where the imported modules will be copied.
+    """
+    script_path = Path(__file__).resolve()
+    tree = ast.parse(script_path.read_text(encoding="utf-8"))
+    modules = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                modules.add(alias.name)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            modules.add(node.module)
+
+    for name in sorted(modules):
+        if not name.startswith("predpreygrass."):
+            continue
+        spec = importlib.util.find_spec(name)
+        if not spec or not spec.origin or not spec.origin.endswith(".py"):
+            continue
+        shutil.copy2(spec.origin, source_dir / Path(spec.origin).name)
+
+    shutil.copy2(script_path, source_dir / script_path.name)
+
+
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_gpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.config.config_ppo_gpu_mammoths import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.config.config_ppo_cpu_mammoths import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.mammoths_defection.config.config_ppo_cpu_mammoths import config_ppo
     return config_ppo
 
 
@@ -63,28 +85,28 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # --- Main training setup ---
+
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
-
     register_env("PredPreyGrass", env_creator)
+
     # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    env_config = {**config_env, "seed": None}
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_vectorized/ray_results/"
+    # Enable strict RLlib outputs so only live agent IDs are emitted each step.
+    env_config = {**config_env, "seed": None, "strict_rllib_output": True}
+
+
+    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/mammoths_defection/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_OLDENV_NEWPPO"
+    version = "MAMMOTHS_DEFECTION_COOP_COST_0.0"
     experiment_name = f"{version}_{timestamp}"
-    experiment_path = ray_results_path / experiment_name
+    experiment_path = ray_results_path / experiment_name 
 
     experiment_path.mkdir(parents=True, exist_ok=True)
-    # --- Save environment source file for provenance ---
-    source_dir = experiment_path / "SOURCE_CODE_ENV"
+    source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
-    env_file = (
-        Path(__file__).resolve().parent.parent / "stag_hunt" / "predpreygrass_rllib_env.py"
-    )
-    shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
+    copy_imported_modules(source_dir)
 
     config_ppo = get_config_ppo()
     config_metadata = {
@@ -93,6 +115,7 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
     sample_env = env_creator(config=env_config)
     # Ensure spaces are populated before extracting
@@ -152,11 +175,21 @@ if __name__ == "__main__":
             rollout_fragment_length=config_ppo["rollout_fragment_length"],
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
-        )
+            batch_mode="truncate_episodes",
+        )     
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
-        .callbacks(EpisodeReturn)
+        # .evaluation(
+        #     evaluation_interval=5,
+        #     evaluation_duration=2,
+        #     evaluation_duration_unit="episodes",
+        #     evaluation_config={
+        #         "explore": False,
+        #         "env_config": {**config_env, "seed": 41, "strict_rllib_output": True},
+        #     },
+        # )
+       .callbacks(EpisodeReturn)
     )
 
     max_iters = config_ppo["max_iters"]
@@ -178,5 +211,5 @@ if __name__ == "__main__":
         ),
     )
 
-    tuner.fit()
+    result = tuner.fit()
     ray.shutdown()

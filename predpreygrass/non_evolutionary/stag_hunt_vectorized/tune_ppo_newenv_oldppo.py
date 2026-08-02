@@ -28,16 +28,16 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_gpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.project_cooperation.stag_hunt.config.config_ppo_gpu_stag_hunt import (
             config_ppo,
         )
     elif num_cpus == 8:
-        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.project_cooperation.stag_hunt.config.config_ppo_cpu_stag_hunt import (
             config_ppo,
         )
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.non_evolutionary.stag_hunt.config.config_ppo_cpu_stag_hunt import (
+        from predpreygrass.non_evolutionary.project_cooperation.stag_hunt.config.config_ppo_cpu_stag_hunt import (
             config_ppo,
         )
     return config_ppo

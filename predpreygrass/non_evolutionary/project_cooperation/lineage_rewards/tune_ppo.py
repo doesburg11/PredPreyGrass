@@ -1,17 +1,14 @@
 """
-Old stag_hunt environment with the new PPO config used for vectorized runs.
-Use this to isolate PPO-config effects without the vectorized env changes.
+This script trains a multi-agent environment with PPO using Ray RLlib new API stack.
+It uses a custom environment that simulates a predator-prey-grass ecosystem.
+The environment is a grid world where predators and prey move around.
+Predators try to catch prey, and prey try to eat grass.
+Predators and prey both either can be of type_1 or type_2.
 """
-from predpreygrass.non_evolutionary.project_cooperation.stag_hunt.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_env_stag_hunt_vectorized import (
-    config_env,
-)
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.episode_return_callback import (
-    EpisodeReturn,
-)
-from predpreygrass.non_evolutionary.stag_hunt_vectorized.utils.networks import (
-    build_multi_module_spec,
-)
+from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.config.config_env_lineage_rewards import config_env
+from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.utils.episode_return_callback import EpisodeReturn
+from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.utils.networks import build_multi_module_spec
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
@@ -28,18 +25,12 @@ import shutil
 def get_config_ppo():
     num_cpus = os.cpu_count()
     if num_cpus == 32:
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_gpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.config.config_ppo_gpu_lineage_rewards import config_ppo
     elif num_cpus == 8:
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.config.config_ppo_cpu_lineage_rewards import config_ppo
     else:
         # Default to CPU config for other CPU counts to keep training usable across machines.
-        from predpreygrass.non_evolutionary.stag_hunt_vectorized.config.config_ppo_cpu_stag_hunt_vectorized import (
-            config_ppo,
-        )
+        from predpreygrass.non_evolutionary.project_cooperation.lineage_rewards.config.config_ppo_cpu_lineage_rewards import config_ppo
     return config_ppo
 
 
@@ -63,27 +54,25 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
 
 
 # --- Main training setup ---
+
 if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
     register_env("PredPreyGrass", env_creator)
-    # Override static seed at runtime to avoid deterministic placements; keep config file unchanged.
-    env_config = {**config_env, "seed": None}
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_vectorized/ray_results/"
+
+    ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    version = "STAG_HUNT_OLDENV_NEWPPO"
-    experiment_name = f"{version}_{timestamp}"
+    version = "NO_LINEAGE_REWARDS_DEFAULT_CONFIG_PRED_DECAY_0_20_GRASS_REGROWTH_0_0_8"
+    experiment_name = f"PPO_REPRODUCTION_REWARD_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 
     experiment_path.mkdir(parents=True, exist_ok=True)
     # --- Save environment source file for provenance ---
-    source_dir = experiment_path / "SOURCE_CODE_ENV"
+    source_dir = experiment_path / "SOURCE_CODE"
     source_dir.mkdir(exist_ok=True)
-    env_file = (
-        Path(__file__).resolve().parent.parent / "stag_hunt" / "predpreygrass_rllib_env.py"
-    )
+    env_file = Path(__file__).parent / "predpreygrass_rllib_env.py"
     shutil.copy2(env_file, source_dir / f"predpreygrass_rllib_env_{version}.py")
 
     config_ppo = get_config_ppo()
@@ -93,10 +82,9 @@ if __name__ == "__main__":
     }
     with open(experiment_path / "run_config.json", "w") as f:
         json.dump(config_metadata, f, indent=4)
+    # print(f"Saved config to: {experiment_path/'run_config.json'}")
 
-    sample_env = env_creator(config=env_config)
-    # Ensure spaces are populated before extracting
-    sample_env.reset(seed=None)
+    sample_env = env_creator(config=config_env)
 
     # Group spaces per policy id (first agent of each policy defines the space)
     obs_by_policy, act_by_policy = {}, {}
@@ -105,10 +93,6 @@ if __name__ == "__main__":
         if pid not in obs_by_policy:
             obs_by_policy[pid] = obs_space
             act_by_policy[pid] = sample_env.action_spaces[agent_id]
-
-    # Explicitly include action_space_struct so connectors see every agent ID
-    # (avoids KeyErrors when new agents appear mid-episode).
-    sample_env.action_space_struct = sample_env.action_spaces
 
     # Build one MultiRLModuleSpec in one go
     multi_module_spec = build_multi_module_spec(obs_by_policy, act_by_policy)
@@ -122,7 +106,7 @@ if __name__ == "__main__":
     # Build config dictionary for Tune
     ppo_config = (
         PPOConfig()
-        .environment(env="PredPreyGrass", env_config=env_config)
+        .environment(env="PredPreyGrass", env_config=config_env)
         .framework("torch")
         .multi_agent(
             policies=policies,
@@ -153,6 +137,7 @@ if __name__ == "__main__":
             sample_timeout_s=config_ppo["sample_timeout_s"],
             num_cpus_per_env_runner=config_ppo["num_cpus_per_env_runner"],
         )
+        
         .resources(
             num_cpus_for_main_process=config_ppo["num_cpus_for_main_process"],
         )
@@ -178,5 +163,5 @@ if __name__ == "__main__":
         ),
     )
 
-    tuner.fit()
+    result = tuner.fit()
     ray.shutdown()
