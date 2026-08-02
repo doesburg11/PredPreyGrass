@@ -88,8 +88,6 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Red Queen](predpreygrass/non_evolutionary/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
 
-* **[Malthusian RL](predpreygrass/non_evolutionary/malthusian_rl)**: two-timescale Leibo-style Malthusian RL — within-episode PPO learning, plus a between-episode reallocation of each species' population share across spatially isolated islands based on measured fitness.
-
 
 
 ### Experiments:
