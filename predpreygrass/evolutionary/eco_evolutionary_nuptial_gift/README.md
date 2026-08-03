@@ -233,17 +233,41 @@ Following the same discipline used for `offspring_investment_fraction` (R4-R7) a
 2. **Fixed-genome fitness sweep** — partially done, see above. Two-point contrast (`0.0` vs
    `1.0`) confirms a real, dramatic fitness landscape exists; the middle three values are an
    open gap, not a null result.
-3. **Neutral-control replication** — **in progress as of 2026-08-02**. 3 real seeds (42, 43, 44)
-   + 3 neutral-control seeds (42, 43, 44), 1000 iterations each, sequential (GPU + 28 env
-   runners), via `run_replication_seeds.sh`. Compared via Mann-Whitney U on
-   `live_genome/{predator_male,predator_female}_male_donation_rate_mean` drift magnitude, using
-   `analyze_replication_seeds.py` (mirrors `offspring_investment_fraction`'s R7 methodology).
-   Auto-launched by a chain watcher once the fixed-genome sweep's process exited. Estimated
-   ~13-14h per run, ~82h (~3.4 days) total for all 6, sequential (not concurrent — two
-   GPU-using Ray clusters sharing one physical GPU is a documented OOM risk, see
-   `predpreygrass/non_evolutionary/project_reward_shaping/README.md`'s "Concurrent vs. sequential
-   training"). Results not yet available — do not treat any number as final until this section
-   is updated.
+3. **Neutral-control replication** — **stopped early, 2026-08-03, not completed**. 3 real seeds
+   (42, 43, 44) + 3 neutral-control seeds (42, 43, 44) planned, 1000 iterations each, sequential
+   (GPU + 28 env runners), via `run_replication_seeds.sh`, auto-launched by a chain watcher once
+   the fixed-genome sweep's process exited. Founder mean was bumped `0.0 -> 0.5` (std `0.1`)
+   first, after an earlier attempt at founder mean `0.0` deadlocked completely (see "Retuning"
+   above) — that fix worked mechanically (gifts flowed, reproduction was no longer literally
+   impossible), but the resulting run still wasn't informative enough to justify the remaining
+   ~4 days of compute:
+
+   - **Real seed 42 ran to completion** (1000/1000 iterations, 15.9h). Result: **too few
+     reproductions to be meaningful** — 18.59 total reproduction events summed across the whole
+     run, ~80% of iterations (796/998) had *zero* reproduction events, and no growth trend
+     (first-100-iteration mean 0.0164/iter vs. last-100 mean 0.0142/iter — flat to slightly
+     down, not rising). **No meaningful episode-length increase** — oscillated in the 50-70 step
+     range the entire run (overall mean 61.4, first-100 mean 56.8 vs. last-100 mean 61.7), never
+     showing the sustained climb into the 80-130 range that the `rate=1.0` fixed-genome pilot
+     showed. **No meaningful directional drift** — `male_donation_rate_mean` oscillated in a
+     narrow ~0.53-0.58 band around the founder value of `0.5` for the entire run (started
+     0.575, ended 0.571), no visible upward or downward trend.
+   - Real seed 43 was killed partway (~52%, iteration ~519/1000) when the decision was made to
+     stop; no complete data from it. No control seeds were started.
+   - **Verdict**: this specific config (founder mean `0.5`, real evolutionary mode) produces a
+     population that survives but doesn't reproduce often enough, or drift its genome enough,
+     for the real-vs-control comparison to plausibly say anything — continuing to the full 6-run
+     replication was judged not worth ~4 more days of compute given this trajectory.
+
+   **Candidate next steps, not yet started**: (a) further retune the energy economy (e.g.
+   another bump to `initial_energy_predator_female` or `cooperation_range`, or lowering
+   `predator_female_creation_energy_threshold`) to push reproduction rate up before attempting
+   the replication again; or (b) sidestep the evolutionary bootstrap problem entirely for a first
+   look by training with genome evolution disabled and `male_donation_rate` **fixed at `0.8`**
+   (i.e. extending the fixed-genome sweep, which only directly tested `0.0` and `1.0` — see
+   "Fixed-genome sweep results" above) to check whether a real run (not just the 60-iteration
+   pilot) sustains healthy reproduction and longer episodes at a high-but-not-maximal rate,
+   before reinvesting in the harder evolutionary-drift question.
 
 ## What This Is Not
 
