@@ -111,11 +111,6 @@ outweighs the benefit it was meant to provide.
 questions — lives in
 [`predpreygrass/non_evolutionary/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/project_reward_shaping).**
 
-### Hyperparameter tuning
-
-* Hyperparameter tuning base environment - **Population-Based Training** ([Implementation](predpreygrass/hyper_parameter_tuning/tune_population_based_training.py))
-
-
 ## Installation of the repository
 
 **Editor used:** Visual Studio Code 1.107.0 on Linux Mint 22.0 Cinnamon
