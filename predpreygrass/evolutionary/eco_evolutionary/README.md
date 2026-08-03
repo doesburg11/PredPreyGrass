@@ -209,8 +209,6 @@ This module does not copy parent PPO weights into offspring. Learned policy
 weights remain shared by policy group unless a future experiment explicitly adds
 individual policy inheritance.
 
-For policy-weight evolution, use `checkpoint_genomes` as a comparison treatment.
-
 ## Key Files
 
 - `predpreygrass_rllib_env.py`: environment with lineage + genome inheritance.
