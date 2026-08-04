@@ -1,11 +1,9 @@
 # Training Analysis — eco_evolutionary_cultural_plasticity
 
-**Status: implementation + verification only. No PPO training pilot or
-replication run has been launched yet.** See `README.md` for the trait
-design (dual inheritance: `plasticity` genetic, `dialect` cultural) and
-`predpreygrass/evolutionary/RESULTS.md`'s Trial 8 entry for the cross-module
-framing and the current state of the follow-up decision on whether/when to
-launch a real run.
+**Status: pilot complete, full neutral-control replication in progress.**
+See `README.md` for the trait design (dual inheritance: `plasticity`
+genetic, `dialect` cultural) and `predpreygrass/evolutionary/RESULTS.md`'s
+Trial 8 entry for the cross-module framing.
 
 ---
 
@@ -41,25 +39,44 @@ launch a real run.
   no learning occurred — it only exercises the full step/reproduction/
   cultural-learning/metrics code path at realistic population scale.
 
-## 2. Not yet done
+## 2. Pilot results (seed=1, 300 iterations, real config)
 
-- **Sustainability/coexistence pilot** under PPO training (criteria 1/2 of
-  the project's Darwin/Baldwin goal). The satiation-throttle constants are
-  ported unchanged from already-validated modules, so this is expected to
-  transfer, but hasn't been confirmed for this specific environment variant
-  (the two new observation channels and the coordination-bonus energy
-  dynamics are new).
-- **Real vs. neutral-control multi-seed replication** on `plasticity` drift
-  (criterion 3 — the actual dual-inheritance selection test). Requires the
-  pilot above first, per this project's own established discipline (every
-  prior module paid for skipping straight to replication at least once).
-- **Parameter tuning.** `n_dialects=4`, `culture_range=3`,
-  `coordination_bonus_multiplier=1.5`, `plasticity_check_interval=5`, and
-  the founder `plasticity_mean=0.1` are reasonable starting defaults, not
-  validated against real training data.
+Single-seed pilot run to check criteria 1/2 (sustainability/coexistence)
+and confirm the cultural-learning mechanism is genuinely active before
+committing to a full replication. Final-iteration metrics:
 
-## 3. Next step
+- **Sustainability/coexistence: confirmed.** `episode_len_mean` reached
+  202 (max 326, min 131) by iteration 300 — predator, prey, and grass all
+  coexisted without population collapse under PPO training. The
+  satiation-throttle constants ported from `eco_evolutionary_metabolic_code`
+  transferred cleanly; the two new observation channels and the
+  coordination-bonus energy dynamics did not destabilize the ecology.
+- **Cultural-learning mechanism: confirmed genuinely active.**
+  `dialect_match_rate` reached 0.688 (predator) / 0.823 (prey), both far
+  above the chance baseline for `n_dialects=4` (0.25) — agents are
+  actually converging on shared local dialects via the
+  `_local_majority_dialect` / plasticity-gated adoption mechanism, not
+  just tracking founder noise.
+- **`plasticity` drift: flat, as expected at this scale.** `plasticity_mean`
+  sat at 0.092 (predator) / 0.084 (prey) against a founder mean of 0.1 —
+  no meaningful movement yet. This is not a red flag; 300 iterations is a
+  sustainability check, not a selection-detection window (every prior
+  module in this family needed the full 1000-iteration, multi-seed
+  replication to see any directional signal at all, if one existed).
+  `plasticity_repro_spearman` was likewise near zero (0.019 predator,
+  -0.011 prey), consistent with "no signal yet" rather than "no signal
+  possible."
 
-Launch a short single-seed pilot (a few hundred iterations) to check
-sustainability/coexistence before committing to a full replication —
-same pilot-first discipline used by every prior module in this family.
+**Conclusion: cleared to proceed to the full replication** — both
+pilot-stage questions (does it survive PPO training, is the cultural
+mechanism real) came back positive.
+
+## 3. Full replication (in progress)
+
+Launched via `run_replication_seeds.sh`: 3 real seeds (42/43/44) + 3
+neutral-control seeds (42/43/44), 1000 iterations each, sequential (GPU
+sharing risk — see `predpreygrass/non_evolutionary/reward_shaping/README.md`'s
+"Concurrent vs. sequential training"). Compares real vs. control
+`plasticity` drift via `analyze_replication_seeds.py` once enough seeds
+finish — this is the actual criterion-3 (selection-driven genome drift)
+test. Results will be added here once the replication completes.

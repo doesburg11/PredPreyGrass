@@ -142,9 +142,11 @@ Directly ported from `eco_evolutionary_metabolic_code` / `eco_evolutionary_inves
 Implemented and unit-tested (27 tests covering genome sampling/mutation for
 both channels, the cultural-learning update rule and its plasticity-gating,
 the coordination-bonus energy-gain hook, neutral-drift-control template
-selection, and the metrics builders), plus a 300-step random-policy smoke run
-with no errors. No PPO training pilot or replication run launched yet —
-launching one is a separate, expensive decision, not automatic once
-implementation lands. See `predpreygrass/evolutionary/RESULTS.md`'s Trial 8
-entry for the current state of that decision, and `RESULTS.md` in this
-directory for the (currently empty) run log.
+selection, and the metrics builders). A 300-iteration single-seed pilot
+(seed=1) confirmed sustainability/coexistence under PPO training and a
+genuinely active cultural-learning mechanism (`dialect_match_rate` up to
+0.82, far above the chance baseline). The full 3-real + 3-neutral-control-seed
+replication (1000 iterations each) is now in progress. See
+`predpreygrass/evolutionary/RESULTS.md`'s Trial 8 entry for the cross-module
+framing, and `RESULTS.md` in this directory for the full pilot results and
+replication run log.

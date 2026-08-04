@@ -338,7 +338,7 @@ direction) not yet made.
 
 ---
 
-## Trial 8 — `eco_evolutionary_cultural_plasticity` — implemented, not yet run
+## Trial 8 — `eco_evolutionary_cultural_plasticity` — pilot complete, replication in progress
 
 **Mechanism, not just another trait.** Trials 1-7 all share one structural
 property regardless of trait shape: a single heritable channel feeding a
@@ -386,9 +386,14 @@ founder| test (à la `metabolic_rate`/`investment`), not Trial 7's directional
 one, since plasticity has no a-priori predicted drift direction.
 
 **Status:** implemented, 27 unit tests passing, 300-step random-policy smoke
-run clean. No PPO training pilot or replication run launched yet — see
-`eco_evolutionary_cultural_plasticity/RESULTS.md` for what remains before a
-real Darwin-signal test can be read from this module.
+run clean. A 300-iteration single-seed pilot (seed=1) then confirmed
+sustainability/coexistence under real PPO training and a genuinely active
+cultural-learning mechanism (`dialect_match_rate` up to 0.82, far above the
+0.25 chance baseline); `plasticity` itself hadn't moved yet, as expected at
+pilot scale. The full 3-real + 3-neutral-control-seed replication (1000
+iterations each) is now running — see
+`eco_evolutionary_cultural_plasticity/RESULTS.md` for pilot detail and the
+replication run log.
 
 ---
 
