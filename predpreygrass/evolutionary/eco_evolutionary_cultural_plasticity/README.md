@@ -145,8 +145,19 @@ the coordination-bonus energy-gain hook, neutral-drift-control template
 selection, and the metrics builders). A 300-iteration single-seed pilot
 (seed=1) confirmed sustainability/coexistence under PPO training and a
 genuinely active cultural-learning mechanism (`dialect_match_rate` up to
-0.82, far above the chance baseline). The full 3-real + 3-neutral-control-seed
-replication (1000 iterations each) is now in progress. See
-`predpreygrass/evolutionary/RESULTS.md`'s Trial 8 entry for the cross-module
-framing, and `RESULTS.md` in this directory for the full pilot results and
-replication run log.
+0.82, far above the chance baseline).
+
+**Stopped early.** The full replication was launched (3 real seeds), but
+stopped after all 3 real seeds finished and before any neutral-control
+seed ran: `plasticity_mean` stayed within about one founder-std of the 0.1
+starting value in all 3 real seeds, with no consistent direction, and
+individual-level plasticity-vs-reproduction correlation
+(`plasticity_repro_spearman`) was essentially zero in every seed, both
+species — the same flat, no-fitness-correlation pattern seen in the 7
+single-channel trait trials this module's dual-inheritance design was
+specifically meant to route around. Continuing to the ~21h neutral-control
+leg was judged not worth it before that mechanism-level design change
+showed any sign of working. See `RESULTS.md` in this directory (§3-4) for
+the full real-seed numbers and candidate next steps, and
+`predpreygrass/evolutionary/RESULTS.md`'s Trial 8 entry for the
+cross-module framing.

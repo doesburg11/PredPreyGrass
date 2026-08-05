@@ -338,7 +338,7 @@ direction) not yet made.
 
 ---
 
-## Trial 8 — `eco_evolutionary_cultural_plasticity` — pilot complete, replication in progress
+## Trial 8 — `eco_evolutionary_cultural_plasticity` — stopped early, likely null
 
 **Mechanism, not just another trait.** Trials 1-7 all share one structural
 property regardless of trait shape: a single heritable channel feeding a
@@ -386,14 +386,22 @@ founder| test (à la `metabolic_rate`/`investment`), not Trial 7's directional
 one, since plasticity has no a-priori predicted drift direction.
 
 **Status:** implemented, 27 unit tests passing, 300-step random-policy smoke
-run clean. A 300-iteration single-seed pilot (seed=1) then confirmed
+run clean. A 300-iteration single-seed pilot (seed=1) confirmed
 sustainability/coexistence under real PPO training and a genuinely active
 cultural-learning mechanism (`dialect_match_rate` up to 0.82, far above the
-0.25 chance baseline); `plasticity` itself hadn't moved yet, as expected at
-pilot scale. The full 3-real + 3-neutral-control-seed replication (1000
-iterations each) is now running — see
-`eco_evolutionary_cultural_plasticity/RESULTS.md` for pilot detail and the
-replication run log.
+0.25 chance baseline). The full replication was launched but **stopped
+early, after all 3 real seeds finished and before any neutral-control
+seed**: `plasticity_mean` stayed within roughly one founder-std of its 0.1
+starting value in all 3 real seeds with no consistent direction, and
+individual-level plasticity-vs-reproduction correlation was essentially
+zero in every seed, both species — the same flat, no-fitness-correlation
+pattern as Trials 1-7, despite this trial's dual-inheritance,
+frequency-dependent design being specifically intended to route around
+that failure mode. No control-seed data was collected, so this isn't a
+Mann-Whitney-confirmed null, but the descriptive real-seed signal was
+judged too weak to justify the remaining ~21h of control-seed compute.
+See `eco_evolutionary_cultural_plasticity/RESULTS.md` (§3-4) for the full
+real-seed numbers, the stop rationale, and candidate next steps.
 
 ---
 

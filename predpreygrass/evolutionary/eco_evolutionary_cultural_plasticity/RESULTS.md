@@ -1,9 +1,10 @@
 # Training Analysis — eco_evolutionary_cultural_plasticity
 
-**Status: pilot complete, full neutral-control replication in progress.**
-See `README.md` for the trait design (dual inheritance: `plasticity`
-genetic, `dialect` cultural) and `predpreygrass/evolutionary/RESULTS.md`'s
-Trial 8 entry for the cross-module framing.
+**Status: stopped early, after all 3 real seeds but before any control
+seed.** See §4 below for why. See `README.md` for the trait design (dual
+inheritance: `plasticity` genetic, `dialect` cultural) and
+`predpreygrass/evolutionary/RESULTS.md`'s Trial 8 entry for the
+cross-module framing.
 
 ---
 
@@ -71,12 +72,85 @@ committing to a full replication. Final-iteration metrics:
 pilot-stage questions (does it survive PPO training, is the cultural
 mechanism real) came back positive.
 
-## 3. Full replication (in progress)
+## 3. Full replication — real seeds (completed) before stopping
 
 Launched via `run_replication_seeds.sh`: 3 real seeds (42/43/44) + 3
 neutral-control seeds (42/43/44), 1000 iterations each, sequential (GPU
 sharing risk — see `predpreygrass/non_evolutionary/reward_shaping/README.md`'s
-"Concurrent vs. sequential training"). Compares real vs. control
-`plasticity` drift via `analyze_replication_seeds.py` once enough seeds
-finish — this is the actual criterion-3 (selection-driven genome drift)
-test. Results will be added here once the replication completes.
+"Concurrent vs. sequential training"). All 3 **real** seeds completed
+1000/1000 iterations before the run was stopped (see §4); no control seed
+was run. Final-iteration metrics, real seeds only (founder
+`plasticity_mean = 0.1` for both species):
+
+| seed | predator `plasticity_mean` | prey `plasticity_mean` | predator repro-spearman | prey repro-spearman | `dialect_match_rate` (pred / prey) | `episode_len_mean` |
+|---|---|---|---|---|---|---|
+| 42 | 0.098 | 0.089 | -0.026 | +0.077 | 0.737 / 0.782 | 253.3 |
+| 43 | 0.079 | 0.115 | -0.0001 | -0.024 | 0.702 / 0.847 | 182.8 |
+| 44 | 0.101 | 0.096 | +0.027 | +0.002 | 0.777 / 0.858 | 261.5 |
+
+Sustainability held in all 3 runs (no population collapse; `episode_len_mean`
+stayed in a healthy 183–262 range) and the cultural-learning mechanism stayed
+robustly active in all 3 (`dialect_match_rate` well above the 0.25
+chance baseline for `n_dialects=4`, both species, every seed). But
+`plasticity_mean` stayed within roughly one founder-std of the 0.1 starting
+value in every seed, with no consistent direction across seeds, and
+`plasticity_repro_spearman` (individual-level correlation between an
+agent's plasticity and its own reproductive success) sat at essentially
+zero in every seed, both species. No control-seed data was collected, so
+this is descriptive only — not a Mann-Whitney-confirmed null — but the
+pattern is the same "flat, no fitness correlation" shape seen in the 7
+single-channel trait trials that preceded this one.
+
+## 4. Why this was stopped
+
+Stopped by explicit user decision after reviewing the 3 real-seed results
+above, before launching any control seed. Rationale: Trial 8 was designed
+specifically to route around the failure mode diagnosed after Trial 7 —
+add a second, frequency-dependent, coordination-game inheritance channel
+instead of another single smooth scalar trait, per the Hinton & Nowlan
+theoretical note in `predpreygrass/evolutionary/RESULTS.md`. The real-seed
+data shows the same flat-drift, zero-fitness-correlation pattern as every
+prior trial anyway, despite the design change — so continuing to the full
+neutral-control replication (3 more ~7h runs, ~21h of compute) was judged
+not worth it before seeing whether the mechanism-level fix actually
+changes the outcome. The remaining unknown is technically still open (does
+this flat-looking real-seed drift exceed an even-flatter control-noise
+floor?), but the descriptive signal was judged too weak to justify the
+compute for confirming what looks like an eighth null result.
+
+**If a future session picks this up:** the cheapest next check is probably
+not another full 6-seed replication. Consider either (a) a single
+real-vs-control seed pair (not 3+3) as a fast, cheap directional check
+before committing to the full replication again, or (b) treating this as
+sufficient evidence (alongside Trials 1–7) that a single shared per-species
+PPO policy on this environment may not produce a detectable Baldwin/Darwin
+signal for *any* smooth or frequency-dependent trait design tried so far,
+and pivoting the search itself — e.g. per-agent (not per-species-shared)
+policies, or a trait with a harder, more obligate fitness gate in the
+style of `eco_evolutionary_nuptial_gift`'s design intent (though that
+module's own real-run results were similarly discouraging — see its
+README).
+
+**A third, literature-grounded candidate: environmental non-stationarity.**
+This module's specific trait — a genetically-evolving *propensity to
+culturally learn* (`plasticity`) — has a real theoretical precedent outside
+this codebase: **Rogers' Paradox** (Rogers, 1988). Rogers modeled a gene
+controlling social-vs-individual learning and found that at evolutionary
+equilibrium in a static environment, the social-learning gene shows **no
+fitness advantage** over individual learning — social learning only pays
+off when copying a behavior tuned to a *different* environment than the
+copier is currently in, and that advantage dilutes to zero as social
+learners come to dominate the population. Follow-up work resolving the
+paradox (Boyd & Richerson, 1995; Enquist, Eriksson & Ghirlanda, 2007) shows
+the gene *does* acquire a detectable, directional selection signal once the
+environment is made **changing/heterogeneous**, which makes individual
+learning costlier and unreliable enough for conditional/conformist social
+learning to become a real fitness advantage.
+
+PredPreyGrass's environment is static (no seasonal or regime shift in
+grass-growth, energy dynamics, etc.) — exactly Rogers' null condition, not
+a trait-design flaw. If this line is revisited, adding some form of
+environmental non-stationarity (e.g., a periodically-shifting grass-growth
+rate or energy-cost regime) is a theoretically-motivated candidate for
+actually producing a `plasticity` selection signal, rather than trying a
+ninth static-environment trait variant.
