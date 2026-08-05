@@ -10,11 +10,28 @@ staying flat.
 `season_length_steps` steps, then by `season_low_multiplier` for the next
 `season_length_steps` steps, repeating for the rest of the episode (a square wave, computed
 purely from the env's own per-episode step counter — see `_current_season_multiplier()` in
-`predpreygrass_rllib_env.py`). Defaults in [`config_env.py`](./config_env.py):
+`predpreygrass_rllib_env.py`). At each step: `phase = (current_step // season_length_steps) % 2` —
+phase 0 uses the high multiplier, phase 1 uses the low one.
 
-- `season_length_steps: 40` (one phase's length; a full cycle is 80 steps)
-- `season_high_multiplier: 1.5`
-- `season_low_multiplier: 0.5`
+Three config keys in [`config_env.py`](./config_env.py) control it:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `season_length_steps` | 40 | how many env steps each phase lasts (a full cycle is 80 steps) |
+| `season_high_multiplier` | 1.5 | multiplier during the "abundant" phase |
+| `season_low_multiplier` | 0.5 | multiplier during the "scarce" phase |
+
+With the defaults, grass regrows at 0.06/step for steps 0-39, 0.02/step for steps 40-79,
+0.06/step again for 80-119, and so on.
+
+**Equivalence to `base_environment`:** setting *both* `season_high_multiplier = 1.0` and
+`season_low_multiplier = 1.0` makes this module behave exactly like `base_environment` — the
+multiplier always evaluates to 1.0 regardless of `current_step`/`season_length_steps`, so
+`energy_gain_per_step_grass * 1.0` is byte-for-byte the same flat rate as the original
+(covered by `test_season_disabled_reproduces_flat_baseline` in
+[`tests/test_seasonal_grass_regrowth.py`](./tests/test_seasonal_grass_regrowth.py)). Setting
+only *one* of the two multipliers to 1.0 does **not** reproduce the original — you'd still get
+an alternating cycle, just asymmetric (e.g. flat-then-scarce instead of constant-rate).
 
 Everything else — energy costs, reproduction thresholds, rewards, population sizes — is
 unchanged from `base_environment`.
