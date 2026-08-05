@@ -44,14 +44,18 @@ class EpisodeReturn(RLlibCallback):
         Logs the total and average rewards separately for predators and prey.
 
         This is diagnostic console logging only -- it must never crash the
-        sampling worker. `episode.get_rewards()` has been observed to raise
-        an IndexError on some episodes under this env's dynamic agent
-        population (agents born/dying mid-episode), apparently an edge case
-        in RLlib's env-step<->agent-step index translation for episodes that
-        get chunked across sample() calls. Since this callback has no effect
-        on training itself (RLlib's own env_runners/episode_return_mean etc.
-        metrics come from a separate, internal path), any failure here is
-        caught and skipped rather than allowed to take down a worker.
+        sampling worker. `episode.get_rewards()`'s default `env_steps=True`
+        applies one shared set of env-step indices to every agent's own reward
+        buffer, which raises IndexError for any agent whose lifetime (buffer
+        length) is shorter than the episode itself -- the norm here, since
+        agents die/spawn continuously. Passing `env_steps=False` below indexes
+        each agent's rewards by its own per-agent timestep instead, which is
+        what this loop actually wants (it sums each agent's full personal
+        reward history) and fixes the crash at the root. The try/except is
+        kept as a defensive backstop only -- this callback has no effect on
+        training itself (RLlib's own env_runners/episode_return_mean etc.
+        metrics come from a separate, internal path), so any further failure
+        here is caught and skipped rather than allowed to take down a worker.
         """
         self.num_episodes += 1
         try:
@@ -64,7 +68,7 @@ class EpisodeReturn(RLlibCallback):
             prey_count = 0
 
             # Retrieve rewards
-            rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
+            rewards = episode.get_rewards(env_steps=False)  # Dictionary of {agent_id: list_of_rewards}
 
             for agent_id, reward_list in rewards.items():
                 total_reward = sum(reward_list)  # Sum all rewards for the episode

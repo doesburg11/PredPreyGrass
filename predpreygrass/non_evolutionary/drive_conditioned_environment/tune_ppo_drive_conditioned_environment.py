@@ -42,8 +42,13 @@ class EpisodeReturn(RLlibCallback):
         predator_count = 0
         prey_count = 0
 
-        # Retrieve rewards
-        rewards = episode.get_rewards()  # Dictionary of {agent_id: list_of_rewards}
+        # Retrieve rewards. env_steps=False is required here: with the default
+        # env_steps=True, indices are shared env-step positions applied to every
+        # agent's own reward buffer, which raises IndexError for any agent whose
+        # lifetime (buffer length) is shorter than the episode itself -- the norm
+        # here, since agents die/spawn continuously. env_steps=False indexes each
+        # agent's rewards by its own per-agent timestep instead.
+        rewards = episode.get_rewards(env_steps=False)  # Dictionary of {agent_id: list_of_rewards}
 
         for agent_id, reward_list in rewards.items():
             total_reward = sum(reward_list)  # Sum all rewards for the episode
