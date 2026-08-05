@@ -10,15 +10,102 @@ from predpreygrass.non_evolutionary.base_environment_seasonal.predpreygrass_rlli
 from predpreygrass.non_evolutionary.base_environment_seasonal.config_env import config_env
 
 #  external libraries
+import argparse
+from datetime import datetime
+from typing import Optional
+
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
+from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 from ray.rllib.utils.typing import AgentID, EpisodeType, PolicyID
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--season-high", type=float, default=None,
+        help="Override config_env['season_high_multiplier'] for this run. Tags the experiment name.",
+    )
+    parser.add_argument(
+        "--season-low", type=float, default=None,
+        help="Override config_env['season_low_multiplier'] for this run. Tags the experiment name.",
+    )
+    parser.add_argument(
+        "--max-iters", type=int, default=None,
+        help="Override the training_iteration stop condition for this run.",
+    )
+    return parser.parse_args()
+
+
+def _resolve_env(env=None, env_index: int = 0, **kwargs) -> Optional[PredPreyGrass]:
+    """Unwrap RLlib's vector/wrapper env shapes down to the raw PredPreyGrass instance."""
+
+    def safe_index(value) -> int:
+        try:
+            return int(value)
+        except Exception:
+            return 0
+
+    def unwrap(candidate, index: int):
+        current = candidate
+        seen = set()
+        for _ in range(10):
+            if current is None:
+                return None
+            if id(current) in seen:
+                return None
+            seen.add(id(current))
+
+            if isinstance(current, PredPreyGrass):
+                return current
+
+            if isinstance(current, (list, tuple)):
+                if not current:
+                    return None
+                current = current[index] if 0 <= index < len(current) else current[0]
+                continue
+
+            unwrapped = getattr(current, "unwrapped", None)
+            if unwrapped is not None and unwrapped is not current:
+                current = unwrapped
+                continue
+
+            for attr in ("envs", "_envs"):
+                sub_envs = getattr(current, attr, None)
+                if isinstance(sub_envs, (list, tuple)) and sub_envs:
+                    current = sub_envs[index] if 0 <= index < len(sub_envs) else sub_envs[0]
+                    break
+            else:
+                sub_envs = None
+            if sub_envs is not None:
+                continue
+
+            for attr in ("env", "_env", "vector_env", "_vector_env", "base_env"):
+                inner = getattr(current, attr, None)
+                if inner is not None and inner is not current:
+                    current = inner
+                    break
+            else:
+                return None
+
+        return None
+
+    index = safe_index(env_index)
+    for candidate in (
+        env,
+        kwargs.get("env_runner"),
+        getattr(kwargs.get("env_runner"), "env", None),
+    ):
+        resolved = unwrap(candidate, index)
+        if resolved is not None:
+            return resolved
+    return None
 
 
 class EpisodeReturn(RLlibCallback):
@@ -27,10 +114,20 @@ class EpisodeReturn(RLlibCallback):
         self.overall_sum_of_rewards = 0.0
         self.num_episodes = 0
 
-    def on_episode_end(self, *, episode, **kwargs):
+    def on_episode_end(
+        self,
+        *,
+        episode,
+        metrics_logger: Optional[MetricsLogger] = None,
+        env=None,
+        env_index: int = 0,
+        **kwargs,
+    ):
         """
         Called at the end of each episode.
-        Logs the total and average rewards separately for predators and prey.
+        Logs the total and average rewards separately for predators and prey,
+        plus births and end-of-episode population/grass metrics for the
+        seasonal-multiplier sweep (see run_season_multiplier_sweep.sh).
         """
         self.num_episodes += 1
         self.overall_sum_of_rewards += episode.get_return()
@@ -68,6 +165,28 @@ class EpisodeReturn(RLlibCallback):
         print(f"  - Predators: Total Reward = {predator_total_reward:.2f}, Avg Reward = {predator_avg_reward:.2f}")
         print(f"  - Prey: Total Reward = {prey_total_reward:.2f}, Avg Reward = {prey_avg_reward:.2f}")
 
+        # Births and end-of-episode population/grass metrics, read directly off
+        # the env's own running counters (_next_predator_idx/_next_prey_idx count
+        # up from n_initial_active_* on every reproduction event, so the delta is
+        # exactly this episode's birth count). Defensive: this is diagnostic-only
+        # logging and must never crash a sampling worker.
+        if metrics_logger is not None:
+            try:
+                resolved_env = _resolve_env(env=env, env_index=env_index, **kwargs)
+                if resolved_env is not None:
+                    predator_births = resolved_env._next_predator_idx - resolved_env.n_initial_active_predator
+                    prey_births = resolved_env._next_prey_idx - resolved_env.n_initial_active_prey
+                    metrics_logger.log_value("predator_births", float(predator_births))
+                    metrics_logger.log_value("prey_births", float(prey_births))
+                    metrics_logger.log_value("predator_count_end", float(resolved_env.current_num_predators))
+                    metrics_logger.log_value("prey_count_end", float(resolved_env.current_num_prey))
+                    metrics_logger.log_value("grass_count_end", float(resolved_env.current_num_grass))
+                    if resolved_env.grass_energies:
+                        grass_energy_mean = sum(resolved_env.grass_energies.values()) / len(resolved_env.grass_energies)
+                        metrics_logger.log_value("grass_energy_mean_end", float(grass_energy_mean))
+            except Exception as e:
+                print(f"Episode {self.num_episodes}: [births/population metrics failed, skipping: {type(e).__name__}: {e}]")
+
 
 def env_creator(config):
     return PredPreyGrass(config or config_env)
@@ -83,6 +202,12 @@ def policy_mapping_fn(agent_id: AgentID, episode: EpisodeType) -> PolicyID:
 
 
 if __name__ == "__main__":
+    args = parse_args()
+    if args.season_high is not None:
+        config_env = dict(config_env, season_high_multiplier=args.season_high)
+    if args.season_low is not None:
+        config_env = dict(config_env, season_low_multiplier=args.season_low)
+
     register_env("PredPreyGrass", env_creator)
     ray.shutdown()
     ray.init(
@@ -187,11 +312,18 @@ if __name__ == "__main__":
         .callbacks(EpisodeReturn)
     )
 
+    max_iters = args.max_iters if args.max_iters is not None else 1000
+    high_tag = f"_HIGH{config_env['season_high_multiplier']}" if args.season_high is not None else ""
+    low_tag = f"_LOW{config_env['season_low_multiplier']}" if args.season_low is not None else ""
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    experiment_name = f"BASE_ENV_SEASONAL{high_tag}{low_tag}_{timestamp}"
+
     tuner = Tuner(
         ppo.algo_class,
         param_space=ppo.to_dict(),
         run_config=RunConfig(
-            stop={"training_iteration": 1000},
+            name=experiment_name,
+            stop={"training_iteration": max_iters},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,
                 checkpoint_frequency=10,
