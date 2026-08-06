@@ -36,6 +36,47 @@ an alternating cycle, just asymmetric (e.g. flat-then-scarce instead of constant
 Everything else — energy costs, reproduction thresholds, rewards, population sizes — is
 unchanged from `base_environment`.
 
+## Season-multiplier parameter sweep
+
+[`run_season_multiplier_sweep.sh`](./run_season_multiplier_sweep.sh) trains 6 regimes
+sequentially (single GPU), 500 iterations each, sweeping `season_high_multiplier` /
+`season_low_multiplier` from `1.0/1.0` (no seasonality, equivalent to `base_environment` — see
+above) up to `1.5/0.5` (this module's committed default), in steps of `0.1`/`-0.1`:
+`1.0/1.0`, `1.1/0.9`, `1.2/0.8`, `1.3/0.7`, `1.4/0.6`, `1.5/0.5`.
+
+```
+bash predpreygrass/non_evolutionary/base_environment_seasonal/run_season_multiplier_sweep.sh
+```
+
+Each regime is launched via `tune_ppo_base_environment_seasonal.py --season-high H --season-low
+L --max-iters 500`, tagging the experiment name (`BASE_ENV_SEASONAL_HIGH<h>_LOW<l>_<timestamp>`)
+so results land in distinct `~/ray_results` directories. The training script's `EpisodeReturn`
+callback also logs, per episode, via `metrics_logger`: `predator_births` / `prey_births` (read
+directly off the env's own `_next_predator_idx`/`_next_prey_idx` counters — the primary metric
+of interest for this sweep), plus `predator_count_end` / `prey_count_end` / `grass_count_end` /
+`grass_energy_mean_end` (end-of-episode population/resource snapshot).
+
+**Status: in progress.** Results for finished regimes are moved into `~/ray_results/seasonal/`.
+
+**Regime 1 (`1.0/1.0`) vs. regime 2 (`1.1/0.9`)**, last-50-iteration averages, single seed each
+(not replicated — treat as a directional read, not a confirmed effect):
+
+| Metric | 1.0/1.0 | 1.1/0.9 | Δ |
+|---|---|---|---|
+| `predator_births` | 107.6 ± 8.3 | 125.2 ± 7.0 | +16% |
+| `prey_births` | 511.7 ± 16.7 | 555.0 ± 10.9 | +8% |
+| `predator_count_end` | 16.5 ± 2.8 | 17.5 ± 2.4 | +6% |
+| `prey_count_end` | 30.5 ± 5.2 | 24.9 ± 4.9 | -18% |
+| `grass_energy_mean_end` | 0.34 ± 0.06 | 0.50 ± 0.11 | +47% |
+| `episode_return_mean` | 6192.8 ± 227.9 | 6802.6 ± 152.8 | +10% |
+
+Both regimes converge to sustained, full-length (~1001-step) episodes equally fast (by
+iteration 10) — mild seasonality doesn't destabilize the ecosystem. Births, predator count, and
+reward are all higher under `1.1/0.9` than the flat baseline; prey count-at-episode-end is
+lower despite higher prey births, implying a higher prey death rate too. This will be updated as
+regimes 3-6 (`1.2/0.8` through `1.5/0.5`) complete, to check whether this is a real
+dose-response trend or single-seed noise.
+
 <p align="center">
     <img align="center" src="../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
