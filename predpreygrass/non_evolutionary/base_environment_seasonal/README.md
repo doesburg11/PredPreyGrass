@@ -56,26 +56,35 @@ directly off the env's own `_next_predator_idx`/`_next_prey_idx` counters — th
 of interest for this sweep), plus `predator_count_end` / `prey_count_end` / `grass_count_end` /
 `grass_energy_mean_end` (end-of-episode population/resource snapshot).
 
-**Status: in progress.** Results for finished regimes are moved into `~/ray_results/seasonal/`.
+**Status: complete.** All 6 regimes finished (~44h total), zero crashes. Results are in
+`~/ray_results/seasonal/`.
 
-**Regime 1 (`1.0/1.0`) vs. regime 2 (`1.1/0.9`)**, last-50-iteration averages, single seed each
-(not replicated — treat as a directional read, not a confirmed effect):
+**Final comparison**, last-50-of-500-iteration averages, single seed per regime (not
+replicated — see caveat below):
 
-| Metric | 1.0/1.0 | 1.1/0.9 | Δ |
-|---|---|---|---|
-| `predator_births` | 107.6 ± 8.3 | 125.2 ± 7.0 | +16% |
-| `prey_births` | 511.7 ± 16.7 | 555.0 ± 10.9 | +8% |
-| `predator_count_end` | 16.5 ± 2.8 | 17.5 ± 2.4 | +6% |
-| `prey_count_end` | 30.5 ± 5.2 | 24.9 ± 4.9 | -18% |
-| `grass_energy_mean_end` | 0.34 ± 0.06 | 0.50 ± 0.11 | +47% |
-| `episode_return_mean` | 6192.8 ± 227.9 | 6802.6 ± 152.8 | +10% |
+| Metric | 1.0/1.0 | 1.1/0.9 | 1.2/0.8 | 1.3/0.7 | 1.4/0.6 | 1.5/0.5 |
+|---|---|---|---|---|---|---|
+| `predator_births` | 107.6±8.3 | 125.2±7.0 | 125.8±8.6 | **139.2±7.6** | 100.1±12.7 | 115.1±8.1 |
+| `prey_births` | 511.7±16.7 | 555.0±10.9 | 544.8±13.7 | **572.2±16.9** | 471.0±24.7 | 512.5±15.3 |
+| `predator_count_end` | 16.5±2.8 | 17.5±2.4 | 17.4±2.2 | **18.0±2.4** | 14.5±3.0 | 15.7±2.7 |
+| `prey_count_end` | 30.5±5.2 | 24.9±4.9 | 27.9±4.6 | 23.2±4.9 | **39.7±6.6** | 35.1±5.7 |
+| `grass_energy_mean_end` | 0.34±0.06 | 0.50±0.11 | 0.48±0.08 | **0.67±0.14** | 0.39±0.06 | 0.46±0.08 |
+| `episode_return_mean` | 6192.8±227.9 | 6802.6±152.8 | 6705.9±204.7 | **7113.9±211.9** | 5711.3±360.5 | 6275.9±211.8 |
 
-Both regimes converge to sustained, full-length (~1001-step) episodes equally fast (by
-iteration 10) — mild seasonality doesn't destabilize the ecosystem. Births, predator count, and
-reward are all higher under `1.1/0.9` than the flat baseline; prey count-at-episode-end is
-lower despite higher prey births, implying a higher prey death rate too. This will be updated as
-regimes 3-6 (`1.2/0.8` through `1.5/0.5`) complete, to check whether this is a real
-dose-response trend or single-seed noise.
+All 6 regimes converge to sustained, full-length (~1001-step) episodes equally fast (by
+iteration 10) — no regime destabilizes the ecosystem outright.
+
+**Not a clean dose-response.** Nearly every metric rises steadily from `1.0/1.0` through
+`1.2/0.8`, peaks sharply at **`1.3/0.7`** (highest births, population, grass energy, and reward
+of the whole sweep), then **crashes at `1.4/0.6`** — below even the flat `1.0/1.0` baseline on
+`predator_births`, `episode_return_mean`, and population counts, with the widest variance in the
+sweep — before **partially recovering at `1.5/0.5`** (this module's original committed default),
+though still well below the `1.3/0.7` peak. A genuinely smooth underlying effect would not crash
+at `1.4/0.6` and then partially recover at the even-more-extreme `1.5/0.5`, so this zigzag is
+most likely single-seed training noise superimposed on a real but weaker trend, not a genuine
+"`1.4/0.6` is uniquely bad" effect. **Caveat: one seed per regime, not replicated** — if this
+matters for a firm conclusion, the next step is replicating at least the `1.3/0.7` peak and
+`1.4/0.6` trough with 2-3 more seeds each to check whether they hold up.
 
 <p align="center">
     <img align="center" src="../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
