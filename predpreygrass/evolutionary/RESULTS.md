@@ -405,6 +405,37 @@ real-seed numbers, the stop rationale, and candidate next steps.
 
 ---
 
+## Trial 9 — `eco_evolutionary_cultural_plasticity_seasonal` — replication in progress
+
+**Targets the actual diagnosis behind Trial 8's null result, not just the trait shape again.**
+Trial 8's postmortem pointed to Rogers' Paradox (Rogers, 1988): a gene for social-vs-individual
+learning has no fitness advantage in a *static* environment, because Trial 8's coordination bonus
+rewards matching the *local majority* dialect — a self-referential game with no external
+"correct answer" that ever changes. A separate exploration this session
+(`base_environment_seasonal`, a 6-regime resource-abundance sweep on the plain, non-evolutionary
+base env) confirmed a simple on/off timer keyed on the env's own per-episode step counter works
+cleanly, but scaling *how much* food exists doesn't test the right thing for Rogers' Paradox
+either — what's needed is a change to *which behavior is correct*.
+
+**The change, on top of Trial 8's dual-inheritance design (unchanged):** a new
+`_current_target_dialect()` (same square-wave-on-`current_step` pattern as
+`base_environment_seasonal`'s `_current_season_multiplier`, cycling through all `n_dialects`
+every `dialect_season_length_steps` instead of high/low) replaces `_local_majority_dialect` as
+what `_dialect_match_bonus` checks against. `_apply_cultural_learning` (how dialects spread via
+copying) is untouched. After each flip, the population is briefly stuck matching the old target;
+only fast adopters (high `plasticity`) recover the bonus quickly — a concrete, repeated
+opportunity for `plasticity` to pay off that Trial 8's static coordination game never had.
+
+**Status:** implemented, 29 unit tests passing (27 ported from Trial 8, 2 new for
+`_current_target_dialect()`'s phase-cycling, and Trial 8's 2 coordination-bonus tests rewritten
+as the regression guard for this module's one behavioral change). Smoke run, an extra short run,
+and a single-seed pilot have completed; the first real replication seed (42) is in progress
+(833/1000 iterations as of 2026-08-08 20:21) — no results analyzed yet, seeds 43/44 and the
+neutral-control replication not yet started. See `eco_evolutionary_cultural_plasticity_seasonal/RESULTS.md`
+for full run inventory and what remains before a real Darwin-signal test can be read from this module.
+
+---
+
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
 This motivated the Trial 7 pivot above (`eco_evolutionary_metabolic_code`) — recorded here in full since it's the theoretical basis for that module's design, not just a historical note anymore.
