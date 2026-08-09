@@ -1,11 +1,58 @@
 # Training Analysis — eco_evolutionary_erl_baldwin
 
-**Status: implemented, tested, two performance fixes applied, 15-seed survival screen done,
-a long run (seed 1, up to 1M steps) in progress.** See `README.md` for the Ackley & Littman
-(1991) precedent this module replicates (with documented adaptations) and why it's a
-structurally different test than Trials 1-9 or the positive control.
+**Status (2026-08-09, latest): the world was rebuilt from scratch to match Ackley &
+Littman's actual World AL mechanics (100×100 grid, carnivores as a separate non-adaptive
+species, trees, walls, corpses, health+energy, exact 4-direction action semantics) instead
+of this project's own simpler predator-prey-grass ecology used in every result below. All
+18 unit tests pass on the rebuilt world; one full-scale smoke run completed cleanly (see
+§6). No comparative study has been run on the rebuilt world yet -- everything in §1-5 below
+is from the superseded, simpler-ecology version and should not be read as describing the
+current codebase.** See `README.md` for exactly what's now matched vs. still adapted, and
+why the world was rebuilt (a comparative-study result on the old world came out only
+partially consistent with the paper, and there was no way to tell whether that was a scale
+problem or a world/mechanics problem -- see §5 below for the study that prompted this).
 
 ---
+
+## 6. World AL rebuild (2026-08-09)
+
+**Why:** the comparative study in §5 below (run on the old, simpler ecology) reproduced the
+paper's headline result (ERL beats luck) but not its internal ranking (E vs. L), and scaling
+up the sample size and step budget didn't resolve it within the time tried. Before sinking
+more compute into scale alone, the world was rebuilt to remove world/mechanics as a
+confound -- see README.md's "World AL rebuild" section for the full list of what's now
+matched (including every exact number the paper actually publishes: grid size, sense
+ranges, carnivore spawn interval, min_plants) vs. still necessarily chosen by me (the paper
+never publishes damage/threshold/growth-rate constants).
+
+**Structural correction, not just cosmetic:** the old world had two adaptive species
+(predator + prey, both genome+learning). The paper has exactly one adaptive species
+("agents") plus a separate, permanently non-adaptive species ("carnivores", hard-coded FSA,
+never affected by `strategy`). This is now correctly reflected -- `Carnivore` has no genome
+field at all (see `test_carnivores_have_no_genome_or_learning`).
+
+**Status:**
+- 18/18 unit tests passing (up from 12; new tests cover the Agent/Carnivore split and
+  updated strategy-comparison mechanics against the new reproduction method names).
+- One full-scale smoke run (`--seed 1 --steps 20000`, 100×100 grid, default population):
+  ran 365 steps before agent-population extinction (carnivores overwhelmed a population that
+  had itself boomed rapidly -- final state 0 agents, 351 carnivores). Confirms the mechanics
+  run without crashing; this specific early extinction is not evidence of anything beyond
+  "my chosen, unpublished-by-the-paper constants produce a fast boom-bust here," same
+  caveat as every other first-pass parameterization in this project.
+- **Performance dropped substantially**: ~30 steps/sec on this machine (100×100 grid,
+  carnivores, trees, walls, corpses), down from ~240 steps/sec on the old, simpler ecology.
+  Reaching the paper's 1,000,000-step comparative-study ceiling is now estimated at **~9
+  hours per seed** that survives that long -- worth confirming scope again before launching
+  another 500-run study, since the earlier ~90-min-per-seed estimate no longer applies.
+
+## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
+
+Everything from here down describes the version of this module before the 2026-08-09
+rebuild above -- kept for the record, not because it describes current behavior. In
+particular, the 5-strategy comparative study below (ERL/E/L/F/B) was run on the old
+predator-prey-grass world, not the rebuilt World AL, and would need to be re-run on the
+current codebase to say anything about the rebuilt version.
 
 ## 1. What's been done so far
 
@@ -78,18 +125,69 @@ reports (only ~18% of *their* 100 random populations reached even 10,000 steps) 
 read as consistent with the mechanism working as expected, not as evidence of a bug
 worth re-tuning away.
 
-## 4. Long run in progress
+## 4. Long run (seed 1) — completed, not the survivor it looked like
 
-Seed 1, launched 2026-08-09, `--steps 1000000 --log-every 2000 --constraint-window 10000`,
-background process, output at `~/erl_results/ERL_BALDWIN_long_seed1/`. Not yet analyzed.
+Seed 1's extended run (target 1,000,000 steps) terminated by prey extinction at step
+45,107 -- far short of the target, and short of any timescale where a genetic-assimilation
+signature would be expected to appear. Population trace (published as an artifact during
+this work) showed real oscillation for ~40,000 steps, then a sharp, fast collapse in the
+final ~2,000 -- diagnosed at the time as *not* a growing-amplitude instability (checked
+against the full trace, no clean amplitude trend), more consistent with ordinary
+demographic stochasticity hitting the zero boundary while population counts happened to be
+lower than typical. No clean, actionable fix identified; treated as expected rarity of
+long-term survival, consistent with the paper's own low success rate.
 
-## 5. Still not done
+## 4b. Five-strategy comparative study (ERL vs. E vs. L vs. F vs. B)
 
-- Reading the functional-constraint signature once the long run has enough data: does
-  `action_site_change_rate` drop below `eval_site_change_rate` over generations (the
-  direct Baldwin-Effect signature)?
-- Multiple long-running seeds, not just seed 1 -- one survivor isn't enough to trust a
-  pattern as real rather than this-seed-specific.
-- No comparison against evolution-alone / learning-alone / no-adaptation controls yet --
-  the paper's actual headline result was the *comparison* between ERL and these three
-  degraded variants (100 seeds each), not ERL survival in isolation. Not built yet.
+The paper's actual headline result is this comparison, not any single population's
+survival -- run three times, each fixing a real methodological problem found in the
+previous pass.
+
+**Pass 1** (15 seeds/condition, 20,000-step cap): ERL significantly beat L, F, and B
+(Mann-Whitney p ≤ 0.002 each) but *not* E (p=0.47). Internal ranking was the reverse of the
+paper's: E beat L significantly (p=0.0005), and L was statistically indistinguishable from
+pure luck (p=0.51) -- opposite of the paper's finding that learning-alone was their
+second-best strategy.
+
+**Root cause found and fixed:** strategy L's "no evolution" was implemented as fully
+independent random genome resampling at every birth (zero heritability) -- stricter than
+the paper's own description ("L can never move beyond the randomly generated evaluation
+functions found in the *initial* populations", implying cloning without mutation, i.e.
+inheritance still happens). Fixed: L/F now clone the parent's genome exactly (no mutation,
+no crossover) instead of resampling.
+
+**Pass 2** (L/F re-run, same 15 seeds, corrected cloning): median survival rose sharply for
+both (L: 148→1,014; F: 293→551). New ranking: ERL (2,369) > E (1,538) > L (1,014) > F (551)
+> B (160) -- monotonic, intuitive, and much closer to the paper's picture. ERL vs. L became
+not significant (p=0.33, matching the paper's own finding that ERL and L track closely for
+a long stretch); E vs. L became a statistical tie (p=0.73, softer than the paper's
+significant L-beats-E finding but no longer a reversal). One clean remaining discrepancy:
+F significantly beat B (p=0.008) where the paper found F doing *worse* than B -- plausibly
+because F's cloned-but-frozen action network lets a luckily-decent founder policy persist
+and spread via ordinary reproduction, which Brownian (re-randomized every single step) has
+no way to do.
+
+**Pass 3, attempted then abandoned for cause:** scaled to 20 seeds/condition (ERL/E/L only)
+at a 300,000-step budget, to reach closer to the paper's own timescale (they report the
+ERL-vs-L separation only appears past ~500,000 steps) with more statistical power (paper
+used 100 seeds/condition, not 15-20). Killed partway through at the user's request in favor
+of rebuilding the world itself (§6 above) rather than continuing to scale up a world never
+calibrated against the paper's actual mechanics -- see §6 for why.
+
+**A full-scale attempt (5 conditions × 100 seeds × 1,000,000-step ceiling, matching the
+paper's actual sample size and ceiling) was launched and then explicitly killed** when the
+user asked for the world rebuild instead, on the reasoning that scale alone couldn't resolve
+whether the remaining discrepancies (E vs. L, F vs. B) were a power problem or a
+world/mechanics problem. That question is what §6 exists to answer.
+
+## 5. Still not done (on the rebuilt World AL)
+
+- **No comparative study run yet on the rebuilt world at all.** Everything in §4/4b above is
+  from the superseded simpler ecology.
+- Reading the functional-constraint signature on a real long run of the rebuilt world: does
+  `action_site_change_rate` drop below `eval_site_change_rate` over generations?
+- Tuning the rebuilt world's chosen-by-me constants (damage, thresholds, growth rates) --
+  the one smoke run went extinct in 365 steps, which says more about first-pass parameter
+  balance than about the mechanism.
+- Given the ~9-hour-per-long-seed cost estimate (§6), a full 500-run study at the paper's
+  exact scale needs an explicit go-ahead on scope/time before launching again.

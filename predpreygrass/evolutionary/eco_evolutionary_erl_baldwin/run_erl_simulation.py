@@ -18,16 +18,12 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.world import ErlWor
 
 FIELDNAMES = [
     "step",
-    "predator_count",
-    "prey_count",
-    "predator_eval_weight_absmean",
-    "predator_action_weight_absmean",
-    "prey_eval_weight_absmean",
-    "prey_action_weight_absmean",
-    "predator_eval_site_change_rate",
-    "predator_action_site_change_rate",
-    "prey_eval_site_change_rate",
-    "prey_action_site_change_rate",
+    "agent_count",
+    "carnivore_count",
+    "eval_weight_absmean",
+    "action_weight_absmean",
+    "eval_site_change_rate",
+    "action_site_change_rate",
 ]
 
 
@@ -42,6 +38,10 @@ def parse_args():
              "(rates() reflects change since the last reset, not the whole run).",
     )
     parser.add_argument("--out-dir", type=str, default=None, help="Override output directory.")
+    parser.add_argument(
+        "--strategy", type=str, default=None, choices=["ERL", "E", "L", "F", "B"],
+        help="Override config_erl['strategy'] -- Ackley & Littman's 5 comparative conditions.",
+    )
     return parser.parse_args()
 
 
@@ -50,6 +50,8 @@ def main():
     cfg = dict(config_erl)
     if args.seed is not None:
         cfg["seed"] = args.seed
+    if args.strategy is not None:
+        cfg["strategy"] = args.strategy
     rng = np.random.default_rng(cfg["seed"])
     world = ErlWorld(cfg, rng)
 
@@ -66,23 +68,23 @@ def main():
         world.step()
         counts = world.population_counts()
 
-        if counts["predator"] == 0 or counts["prey"] == 0:
+        # Extinction of the adaptive agent population ends the run, matching
+        # the paper ("simulation ends after 1 million steps or extinction").
+        # Carnivores respawn every carnivore_spawn_interval steps regardless
+        # and are not part of the survival-time measurement.
+        if counts["agent"] == 0:
             extinction_step = step
             break
 
         if step % args.log_every == 0:
-            row = {"step": step, "predator_count": counts["predator"], "prey_count": counts["prey"]}
+            row = {"step": step, "agent_count": counts["agent"], "carnivore_count": counts["carnivore"]}
             row.update(world.genome_stats())
-            for species in ("predator", "prey"):
-                rates = world.constraint_trackers[species].rates()
-                row[f"{species}_eval_site_change_rate"] = rates["eval_site_change_rate"]
-                row[f"{species}_action_site_change_rate"] = rates["action_site_change_rate"]
+            row.update(world.constraint_tracker.rates())
             logger.log(row)
             logger.flush()
 
         if step - last_window_reset >= args.constraint_window:
-            for tracker in world.constraint_trackers.values():
-                tracker.reset_window()
+            world.constraint_tracker.reset_window()
             last_window_reset = step
 
     elapsed = time.time() - start
@@ -90,7 +92,7 @@ def main():
 
     print(f"Finished at step {world.current_step} in {elapsed:.1f}s ({world.current_step / max(elapsed, 1e-9):.0f} steps/sec).")
     if extinction_step is not None:
-        print(f"Population extinction at step {extinction_step} (one species reached 0).")
+        print(f"Agent population extinction at step {extinction_step}.")
     else:
         print(f"Reached step limit ({args.steps}) without extinction.")
     print(f"Final population: {world.population_counts()}")

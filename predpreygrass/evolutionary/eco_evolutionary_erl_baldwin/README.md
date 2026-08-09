@@ -84,63 +84,80 @@ sight of danger, while remaining fit because their action network avoided it
 reflexively regardless. Worth watching for if this module's danger-sensing
 channels (prey's predator-detection) ever show the same pattern.
 
-## What's reused vs. adapted from the original paper
+## World AL rebuild (2026-08-09) -- what's reused vs. adapted
 
-**Reused as-is:** the ERL mechanism itself (two networks, genome/live-network
-split, `R_t = E_t - E_{t-1}`, GA reproduction), and the functional-constraint
-detection method.
+An earlier version of this module ran the ERL mechanism on top of this
+project's own simpler predator-prey-grass ecology instead of Ackley &
+Littman's actual World AL. After a comparative-study run (see RESULTS.md)
+came out only partially consistent with the paper and left an open question
+about whether that was scale or a world/mechanics difference, the world was
+rebuilt to match their described mechanics directly, not this project's ecology.
 
-**Adapted, documented here so it isn't mistaken for the original:**
-- **World:** this module reuses PredPreyGrass's simpler predator-prey-grass
-  ecology (energy-based survival/reproduction, no separate carnivores, trees,
-  or walls) rather than Ackley & Littman's exact World AL. Their world is
-  richer; this project's ecology is already validated elsewhere in this
-  repo, and the point of this module is to test the ERL *mechanism*, not
-  reproduce their world byte-for-byte.
-- **Observation:** 9 features -- nearest food/danger in each of 4 compass
-  directions (closer = larger value) plus own normalized energy -- matching
-  their *design principle* (small, semantically pre-processed input suited to
-  a single-layer network) rather than their exact visual-appearance encoding.
-- **Action network output:** a softmax categorical policy (5 actions:
-  stay/N/S/E/W) rather than their specific 2-bit stochastic-threshold
-  encoding. Functionally equivalent (stochastic, genome/learning-influenced
-  action selection); simpler to implement and verify correctly.
-- **Learning rule:** `networks.py::reinforce_update` is a standard REINFORCE
-  policy-gradient step with separate positive/negative learning rates
-  (mirroring their `eta_+`/`eta_-`), not a bit-for-bit replica of their CRBP
-  backprop-through-stochastic-threshold algorithm (Figure 3 of the paper).
-  Same complementary-reinforcement logic (reward increases the taken action's
-  probability, punishment decreases it); different implementation.
-- **Genome encoding:** real-valued weight vectors with Gaussian mutation,
-  not their redundant 4-bit-per-weight bit-string encoding (a specific 1991
-  error-correction choice, not essential to the scientific claim).
+**Reused/matched from the paper, including every exact number it actually
+publishes:**
+- 100×100 grid, non-toroidal (`grid_size=100`).
+- **Two distinct populations**, not two adaptive ones: a single ADAPTIVE
+  species (`Agent` -- genome + learning, omnivorous: eats plants, dead
+  agents, dead carnivores) and a permanently NON-adaptive species
+  (`Carnivore` -- no genome, no network, no learning, hard-coded "seek
+  nearest visible agent" rule, *regardless of `strategy`*). This is a real
+  structural correction from the earlier version, which had two adaptive
+  species (predator+prey) -- the paper has exactly one experimental subject.
+- Agents sense 4 cells in each compass direction, carnivores 6
+  (`agent_sense_range=4`, `carnivore_sense_range=6` -- exact paper values).
+- A new carnivore spawns every 200 steps (`carnivore_spawn_interval=200` --
+  exact paper value, Figure 4).
+- `min_plants=50` reseed floor (exact paper value).
+- Trees (shelter, one occupant, carnivores can't climb or attack a sheltered
+  agent), walls (permanent, damage on collision), corpses (persistent,
+  partially edible over multiple bites, decay over time) -- all present per
+  Figure 4/5, mechanics implemented as described.
+- Action semantics exactly matching Figure 5's table: 4 directions (no
+  "stay"), effect determined by target-cell contents (Enter / Eat all /
+  Climb / Damage self / Damage other / Eat some), including that carnivores
+  structurally cannot target a wall or occupied tree ("as programmed").
+- Observation vector matches Figure 4's input panel: visual appearance in
+  4 directions + in-tree binary + health + energy (`OBS_DIM=7`; the paper's
+  explicit "bias" input unit is instead a standard network bias term --
+  behaviorally equivalent, not an extra input feature).
 
-**Why this counts as testing the same hypothesis despite the adaptations:**
-none of the deviations touch the two things actually being tested here --
-individually-owned, genome-initialized networks, and genome/live-network
-separation preventing Lamarckian inheritance. Those are reproduced exactly.
+**Still not the same, and can't be, because the paper doesn't say:** damage
+amounts, energy thresholds, growth/birth/death probabilities, wall density,
+and reproduction costs are never published as numbers -- only described
+qualitatively ("minor damage", "geometric growth", "sufficiently
+nourished"). Every such constant in `config.py` is my own chosen value,
+clearly marked there. No amount of rebuilding recovers numbers the paper
+never printed.
 
-## No RLlib, no PPO, no GPU
+**Still a deliberate simplification, not yet revisited in this rebuild:**
+the learning rule (`networks.py::reinforce_update`) is a standard REINFORCE
+policy-gradient step, not their exact CRBP backprop-through-stochastic-
+threshold algorithm (Figure 3) -- same complementary-reinforcement logic,
+different implementation. Genome encoding is real-valued weights with
+Gaussian mutation, not their redundant 4-bit-per-weight bit-string.
 
-Deliberately: each agent's network is tiny (single-layer, ~50-90 weights) and
-learns locally with plain NumPy, not backprop-through-time or a centralized
-PPO training loop. `run_erl_simulation.py` runs as a plain Python script --
-no Ray, no gymnasium multi-agent API, no GPU. Roughly 240 steps/sec observed
-on this machine (single-threaded); a run of the length Ackley & Littman used
-for their clearest genetic-assimilation results (~1-9 million steps) is
-estimated at 1-10 hours, not the multi-GPU-hour cost of a PPO pilot.
+## No RLlib, no PPO, no GPU -- but slower than the earlier ecology
+
+Each agent's network is still tiny (single-layer) and learns locally with
+plain NumPy -- no Ray, no gymnasium multi-agent API, no GPU. But the richer
+World AL mechanics (100×100 grid, carnivores, trees, walls, corpses) run
+at roughly **30 steps/sec** single-threaded on this machine, down from the
+~240 steps/sec the simpler ecology managed. A run to the paper's own
+1,000,000-step comparative-study ceiling is now estimated at **~9 hours per
+seed** that actually survives that long, not 1-10 hours as the earlier
+(simpler-world) estimate said. Worth knowing before launching another
+full-scale comparative study on this rebuilt world.
 
 ## What to watch for
 
-- `{species}_action_site_change_rate` becoming lower than
-  `{species}_eval_site_change_rate` over generations (action genes becoming
-  *more* constrained than eval genes) is the direct genetic-assimilation
-  signature -- the thing Trials 1-9 could never measure this way, since they
-  have no per-agent genome-initialized network for a "site" to even mean
-  anything.
-- `{species}_eval_weight_absmean` / `action_weight_absmean` drifting from the
-  founder distribution is the coarser, population-mean-level signal (same
-  category as everything tried so far, kept for comparison).
+- `action_site_change_rate` becoming lower than `eval_site_change_rate` over
+  generations (action genes becoming *more* constrained than eval genes) is
+  the direct genetic-assimilation signature -- the thing Trials 1-9 could
+  never measure this way, since they have no per-agent genome-initialized
+  network for a "site" to even mean anything.
+- `eval_weight_absmean` / `action_weight_absmean` drifting from the founder
+  distribution is the coarser, population-mean-level signal (same category
+  as everything tried so far, kept for comparison).
 - Population survival itself: per Ackley & Littman, most initial random
   populations die out quickly; a handful survive far longer. Extinction on a
   short run (see `RESULTS.md`) is expected, not a bug -- multiple
