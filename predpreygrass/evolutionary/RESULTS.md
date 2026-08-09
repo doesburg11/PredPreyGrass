@@ -429,10 +429,86 @@ opportunity for `plasticity` to pay off that Trial 8's static coordination game 
 **Status:** implemented, 29 unit tests passing (27 ported from Trial 8, 2 new for
 `_current_target_dialect()`'s phase-cycling, and Trial 8's 2 coordination-bonus tests rewritten
 as the regression guard for this module's one behavioral change). Smoke run, an extra short run,
-and a single-seed pilot have completed; the first real replication seed (42) is in progress
-(833/1000 iterations as of 2026-08-08 20:21) — no results analyzed yet, seeds 43/44 and the
-neutral-control replication not yet started. See `eco_evolutionary_cultural_plasticity_seasonal/RESULTS.md`
-for full run inventory and what remains before a real Darwin-signal test can be read from this module.
+a single-seed pilot, and the first real replication seed (42) have all completed
+(2026-08-08, full 1000/1000 iterations). `plasticity_mean` and `plasticity_repro_spearman`
+bounced with no consistent direction the whole run, the same flat shape as Trial 8 — not yet
+a formal real-vs-control comparison (seeds 43/44 and the neutral-control replication not
+started), but discouraging on this one seed. (Earlier progress notes here cited "833/1000
+iterations" — that number came from a CSV-parsing bug on the reporting side, not an actual
+pause; corrected.) See `eco_evolutionary_cultural_plasticity_seasonal/RESULTS.md` for full run
+inventory.
+
+---
+
+## Trial 10 — `eco_evolutionary_metabolic_rate_positive_control` — pipeline sanity check, weak-but-real signal, mutation ruled out as bottleneck
+
+**Not a new trait — a diagnostic.** After Trials 1-9, the project had never confirmed the
+training pipeline (genome inheritance + mutation + differential reproduction + population-level
+metric aggregation) could detect selection *at all*, independent of any trait's design. This
+module clones Trial 3 (`eco_evolutionary_metabolic_rate`) and pushes `metabolic_rate_alpha`
+from the parent's subtle sub-linear 0.4-0.7 range to a deliberately extreme super-linear 3.0 —
+a 16x efficiency gap between the trait's bounds, an overwhelming advantage with no interior
+optimum and no dependence on policy quality (unlike the parent module's design).
+
+**Pilot 1** (mutation std=0.04, same as everything else): weak partial signal, not a clean
+pass. `metabolic_rate_mean` climbed from 1.0 to only ~1.05-1.06 then plateaued (bound is 2.0).
+`predator_mr_repro_spearman` (individual-level: does higher trait value actually predict
+reproduction?) stayed consistently positive through the run's second half (last-quarter mean
++0.046) — real, but small. `prey_mr_repro_spearman` showed no direction. Rules out "the
+pipeline can't detect selection at all" but also rules out "effect size alone was the
+bottleneck," since a 16x gradient should dominate fast and cleanly if effect size were the only
+constraint.
+
+**Pilot 2** (mutation std lowered 0.04→0.01, alpha unchanged): isolated the mutation-rate
+hypothesis directly. No improvement over Pilot 1 — predator's correlation was weaker (+0.021 vs.
++0.046), population mean did not climb further (1.041 vs. 1.054), std did not narrow. Mutation
+rate is not the dominant bottleneck, at least across this range.
+
+**Verdict:** population size, not mutation rate, is the better-supported explanation for why
+Trials 1-9's much subtler trait effects never showed up — consistent with Trial 6's own earlier
+finding (above) that scaling population produced the strongest directional signal seen anywhere
+in this project, for a different trait. A population-size isolation pilot is the logical next
+step for this module, not yet run. Also surfaced and partially fixed a real infrastructure bug
+along the way: Ray Tune's CSV logger silently drops any metric key not present in the first
+reported iteration's result, which had hidden `mr_repro_spearman` from `progress.csv` in this
+module (recovered via the TensorBoard event file) and, checked retroactively, in Trial 3's
+original real-seed runs too (though Trial 3's documented "flat" conclusion held up against the
+recovered data — nothing to revise there). Full detail in
+`eco_evolutionary_metabolic_rate_positive_control/RESULTS.md`.
+
+---
+
+## Trial 11 — `eco_evolutionary_erl_baldwin` — different architecture, not a new trait or a retune
+
+**The one thing Trials 1-10 structurally cannot test.** Every trial so far uses a single PPO
+policy shared across each species, with genome as a side-channel scalar that never touches the
+policy itself. This module replaces that architecture entirely for a parallel experiment: each
+agent gets its own genome-initialized network and its own lifetime of local reinforcement
+learning, following **Ackley & Littman (1991), "Interactions Between Learning and Evolution,"**
+*Artificial Life II* — the paper that coined "Evolutionary Reinforcement Learning" (ERL) and
+computationally demonstrated the Baldwin Effect in almost exactly this architecture (predator-
+prey-food agents, GA-evolved genome, individually-learning behavior). No RLlib, no PPO, no GPU —
+plain Python/NumPy, ~240 steps/sec single-threaded, since each agent's network is a single
+layer.
+
+**Critical design property, explicitly tested:** reproduction copies an agent's *genome*
+record, never its live, post-learning network weights — Darwinian, not Lamarckian, by
+construction, not convention. Unit-tested directly
+(`test_offspring_genome_does_not_inherit_parents_learned_weights`).
+
+Detects genetic assimilation via **functional-constraint analysis** (tracking how much each
+genome site's value survives mutation across generations) rather than the population-
+mean-drift / individual-correlation approach used in every other trial — a method that doesn't
+compete with the population-size noise floor Trial 10 diagnosed, since it measures whether
+mutations at a site are purged by selection at all, at any population size.
+
+**Status:** implemented, 12/12 unit tests passing, one short smoke run complete (9,830 steps,
+predator extinction — expected per the paper's own finding that most initial random populations
+die out quickly). Far too short to read anything about assimilation; see
+`eco_evolutionary_erl_baldwin/RESULTS.md` for what a real run requires (likely 100k-1M+ steps,
+multiple seeds). This is a new, parallel avenue, not a replacement for the PPO-based trial
+family — it tests a different architectural hypothesis than Trial 10 (which pointed at
+population size for the *existing* architecture), not a claim that PPO itself is the problem.
 
 ---
 

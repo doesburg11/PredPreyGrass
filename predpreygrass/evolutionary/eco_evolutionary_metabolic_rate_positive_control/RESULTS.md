@@ -1,7 +1,8 @@
 # Training Analysis — eco_evolutionary_metabolic_rate_positive_control
 
-**Status: Pilot 1 complete (weak partial signal, not a clean pass). Pilot 2 in progress,
-testing whether mutation rate rather than effect size was the bottleneck.** See `README.md`
+**Status: Pilot 1 and Pilot 2 both complete. Neither is a clean pass; Pilot 2 (lower mutation)
+showed no improvement over Pilot 1, ruling out mutation rate as the dominant bottleneck.
+Population size is the better-motivated next lever, not yet tested here.** See `README.md`
 for what this module is and why it exists — a positive control, not a new trait design.
 
 ---
@@ -94,26 +95,51 @@ grass, where the same edge barely moves the needle on whether any given individu
 enough food. Traits tied to a scarce, contested resource may be inherently more detectable
 than traits tied to an abundant one, independent of raw effect size.
 
-### Pilot 2 — alpha=3.0 (unchanged), mutation std=0.04 → 0.01 — in progress
+### Pilot 2 — alpha=3.0 (unchanged), mutation std=0.04 → 0.01 — complete, no improvement over Pilot 1
 
-Isolates the mutation-rate hypothesis: same overwhelming 16x gradient as Pilot 1, but less
-mutation noise fighting it. If the predator signal strengthens and the population mean
-actually climbs toward the bound instead of plateauing, mutation rate (relative to population
-size) is the real bottleneck — a cheap fix (lower mutation, and/or larger population) rather
-than requiring the bigger architectural change (per-agent/genome-conditioned policies).
+Isolated the mutation-rate hypothesis: same 16x gradient as Pilot 1, 4x less mutation noise.
+Result does not support mutation rate as the dominant bottleneck:
+
+| | Pilot 1 (std=0.04) | Pilot 2 (std=0.01) |
+|---|---|---|
+| predator `mr_repro_spearman` (last-quarter avg) | +0.046 | +0.021 (weaker) |
+| prey `mr_repro_spearman` | -0.024 | -0.015 (still ~0) |
+| predator `metabolic_rate_mean` | 1.054 | 1.041 (not higher) |
+| predator `metabolic_rate_std` | 0.055-0.058 | 0.057-0.061 (not narrower) |
+
+Lowering mutation 4x neither strengthened predator's correlation nor pushed the population
+mean further toward the 2.0 bound nor narrowed the std — all four readings are flat-to-slightly-
+worse, not better. Likely within single-seed noise rather than mutation making things actively
+worse, but it clearly does not show the "mutation was the bottleneck" signature Pilot 2 was
+designed to detect. This lines up with Trial 6's own prior evidence
+(`predpreygrass/evolutionary/RESULTS.md`, 2026-07-24): scaling *population size* (not mutation)
+produced the strongest directional signal seen anywhere in this project for a different trait.
+Population size, not mutation rate, is the more promising next lever.
+
+**Also found while pulling these results: the CSV-logging fix from Pilot 1 was incomplete.**
+`mr_repro_spearman` is still missing from Pilot 2's `progress.csv` (values above read from
+TensorBoard directly, same workaround as Pilot 1). Root cause is a second, deeper bug: episode
+completion, not just population size, gates whether the metric key exists on iteration 1 --
+`episode_len_mean` is also blank for iterations 1-5 (zero episodes completed in that window),
+so the metrics-building method is never even called, regardless of the earlier fix. A real fix
+needs to happen at the `on_train_result` level (called every iteration unconditionally) rather
+than relying on `on_episode_end` firing. Not yet fixed.
 
 ## 3. Not yet done
 
-- Pilot 2 results (in progress).
-- Isolating population size specifically (Pilot 2 only changes mutation; a further run
-  holding mutation at Pilot 1's value but relaxing whatever caps active population at ~20-30
-  would isolate that variable separately).
-- A second seed of whichever pilot config looks most promising, before trusting the direction
+- **Population-size isolation pilot.** Same alpha=3.0, mutation reset to Pilot 1's 0.04, but
+  relax whatever caps active population at ~20-30 individuals. This is now the better-motivated
+  next test than mutation rate.
+- A second seed of whichever pilot config looks most promising, before trusting any direction
   as real rather than one-seed luck.
 - No neutral-control comparison run yet (needed to confirm any drift seen is selection, not
   just mutation + finite-population sampling noise, same discipline as every prior module).
+- The deeper CSV-logging bug (zero-episodes-completed iterations) is unfixed.
 
 ## 4. Next step
 
-Let Pilot 2 finish and compare its `mr_repro_spearman` and `metabolic_rate_mean` trajectories
+Population-size isolation pilot, once prioritized -- see also the separate
+`eco_evolutionary_erl_baldwin` module, a structurally different approach to the same underlying
+question (started 2026-08-09), which sidesteps this population/mutation noise-floor problem
+entirely by using a direct genetic-assimilation detection method instead of population-mean
 against Pilot 1's numbers above.
