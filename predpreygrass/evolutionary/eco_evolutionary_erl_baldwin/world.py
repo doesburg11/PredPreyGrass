@@ -126,9 +126,7 @@ class ErlWorld:
                 return 1.0 - 0.5 * (dist - 1) / max(self.sense_range - 1, 1)
         return 0.0
 
-    def _observe(self, agent: Agent) -> np.ndarray:
-        prey_cells = {(a.row, a.col) for a in self.agents if a.alive and a.species == "prey"}
-        predator_cells = {(a.row, a.col) for a in self.agents if a.alive and a.species == "predator"}
+    def _observe(self, agent: Agent, prey_cells: set, predator_cells: set) -> np.ndarray:
         obs = np.zeros(OBS_DIM)
         dirs = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W
         if agent.species == "prey":
@@ -159,10 +157,28 @@ class ErlWorld:
         order = list(self.agents)
         self.rng.shuffle(order)
 
+        # Snapshot positions once per step (rather than rebuilding inside
+        # _observe per agent, which was O(agents) per call -> O(agents^2)
+        # per step). Agents therefore sense the world as of the start of
+        # this step, not a live view updated by earlier-acting agents'
+        # moves within the same step -- a deliberate simplification
+        # (simultaneous-move semantics), not a bug. Eating/death (in
+        # _apply_action below) still uses live, current positions, so kills
+        # are still fully accurate regardless of this snapshot.
+        prey_cells = {(a.row, a.col) for a in self.agents if a.alive and a.species == "prey"}
+        predator_cells = {(a.row, a.col) for a in self.agents if a.alive and a.species == "predator"}
+
+        # Live position->agent index for prey, kept in sync as prey move/get
+        # eaten during this step, so a predator's catch check is O(1) instead
+        # of a linear scan over every agent (the other O(agents^2) hotspot).
+        self._prey_by_cell = {
+            (a.row, a.col): a for a in self.agents if a.alive and a.species == "prey"
+        }
+
         for agent in order:
             if not agent.alive:
                 continue
-            obs = self._observe(agent)
+            obs = self._observe(agent, prey_cells, predator_cells)
             e_now = evaluate(obs, agent.genome.eval_weights, agent.genome.eval_bias)
 
             # Reinforce the PREVIOUS action using how the evaluation changed
@@ -202,6 +218,9 @@ class ErlWorld:
         dr, dc = _DELTAS[action]
         new_row = min(max(agent.row + dr, 0), self.grid_size - 1)
         new_col = min(max(agent.col + dc, 0), self.grid_size - 1)
+        if agent.species == "prey" and agent.alive:
+            self._prey_by_cell.pop((agent.row, agent.col), None)
+            self._prey_by_cell[(new_row, new_col)] = agent
         agent.row, agent.col = new_row, new_col
         agent.energy -= self.cfg["movement_energy_cost"]
         self._try_eat(agent)
@@ -214,11 +233,11 @@ class ErlWorld:
                 agent.energy += gain
                 self.grass_energy[agent.row, agent.col] -= gain
         else:
-            for other in self.agents:
-                if other.alive and other.species == "prey" and other.row == agent.row and other.col == agent.col:
-                    agent.energy += self.cfg["max_energy_gain_per_prey"]
-                    other.alive = False
-                    break
+            prey = self._prey_by_cell.get((agent.row, agent.col))
+            if prey is not None and prey.alive:
+                agent.energy += self.cfg["max_energy_gain_per_prey"]
+                prey.alive = False
+                del self._prey_by_cell[(agent.row, agent.col)]
 
     def _handle_reproduction(self):
         newborns = []

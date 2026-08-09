@@ -1,10 +1,9 @@
 # Training Analysis — eco_evolutionary_erl_baldwin
 
-**Status: implemented, tested, one short smoke run complete. No conclusion possible yet --
-the smoke run is far too short to say anything about genetic assimilation.** See `README.md`
-for the Ackley & Littman (1991) precedent this module replicates (with documented
-adaptations) and why it's a structurally different test than Trials 1-9 or the positive
-control.
+**Status: implemented, tested, two performance fixes applied, 15-seed survival screen done,
+a long run (seed 1, up to 1M steps) in progress.** See `README.md` for the Ackley & Littman
+(1991) precedent this module replicates (with documented adaptations) and why it's a
+structurally different test than Trials 1-9 or the positive control.
 
 ---
 
@@ -38,28 +37,59 @@ control.
   too few reproduction events (population maxed around 87) to read a genetic-assimilation
   signature into this; needs a much longer run.
 
-## 2. Not yet done
+## 2. Performance fixes (found while screening seeds)
 
-- **A real, long run.** The paper's clearest genetic-assimilation evidence took ~3 million
-  steps within a population that survived to that point; their long-term case study ran to
-  ~9 million steps. At ~240 steps/sec single-threaded, 1 million steps is roughly 70 minutes
-  -- feasible, but not yet attempted here. Also worth first tuning initial survival odds
-  (learning rates, founder weight std, energy economics) given most short runs are expected
-  to go extinct early, per the paper's own finding.
-- **Multiple seeds.** One smoke run says nothing about whether *any* seed survives long
-  enough to show assimilation; the paper's own comparative study ran 100 random initial
-  populations and found only ~18% reached even 10,000 steps.
-- **Reading the functional-constraint signature properly** once a long run exists: does
-  `action_site_change_rate` drop below `eval_site_change_rate` over generations (the direct
-  Baldwin-Effect signature), and does that happen for food-seeking behavior specifically
-  (the paper's clearest case) as opposed to danger-avoidance (where they found "shielding"
-  instead)?
-- **No comparison against evolution-alone / learning-alone / no-adaptation controls yet**
-  -- the paper's actual headline result was the *comparison* between ERL and these three
+The smoke run's ~240 steps/sec turned out not to hold once population grew past ~100
+agents. Profiling a slow seed found two O(agents²)-per-step hotspots, both fixed
+2026-08-09:
+- `_observe` rebuilt the full prey/predator position sets from scratch for *every
+  individual agent's* observation each step. Fixed: built once per step instead (a
+  documented simplification -- agents now sense positions as of the start of the step,
+  not a live view updated by earlier-acting agents within the same step; eating/death
+  still use fully live, current positions regardless).
+- `_try_eat` linearly scanned the *entire* agent list for every predator, every step, to
+  check for a co-located prey. Fixed: an O(1) per-step `row,col -> prey` dict, kept in
+  sync as prey move or get eaten during the step.
+- Profiling also found `rng.choice`'s generic validation overhead dominated
+  `sample_action` at this (tiny, 5-action) scale. Replaced with a direct
+  cumulative-probability draw.
+- Net effect: ~2.3x speedup on a representative seed (232 vs. ~100 steps/sec at a
+  ~230-agent population size). All 12 unit tests still pass unchanged.
+
+## 3. Survival screen (15 seeds, up to 100k steps each, 2026-08-09)
+
+Following the paper's own comparative-study spirit (run many random initial
+populations, most die quickly, a minority survive far longer) rather than hand-tuning
+parameters to force artificial stability:
+
+| seed | extinction step | which species died |
+|---|---|---|
+| 3, 9 | 104, 91 | predator (near-instant) |
+| 7, 11 | 722, 389 | prey / predator |
+| 4, 5, 6, 13 | 2134, 1750, 2369, 1659 | mixed |
+| 8, 12, 14, 15 | 2466, 4711, 3462, 3633 | mixed |
+| 2, 10 | 12877, 12682 | predator (prey overran) |
+| **1** | **not yet extinct** | still running |
+
+Median extinction ~2,400 steps; two seeds (2, 10) reached ~12,800; **seed 1 is a clear
+outlier**, surviving past the 90s screening cutoff twice. This distribution (most die
+young, a minority survive far longer) is qualitatively the same shape the paper itself
+reports (only ~18% of *their* 100 random populations reached even 10,000 steps) --
+read as consistent with the mechanism working as expected, not as evidence of a bug
+worth re-tuning away.
+
+## 4. Long run in progress
+
+Seed 1, launched 2026-08-09, `--steps 1000000 --log-every 2000 --constraint-window 10000`,
+background process, output at `~/erl_results/ERL_BALDWIN_long_seed1/`. Not yet analyzed.
+
+## 5. Still not done
+
+- Reading the functional-constraint signature once the long run has enough data: does
+  `action_site_change_rate` drop below `eval_site_change_rate` over generations (the
+  direct Baldwin-Effect signature)?
+- Multiple long-running seeds, not just seed 1 -- one survivor isn't enough to trust a
+  pattern as real rather than this-seed-specific.
+- No comparison against evolution-alone / learning-alone / no-adaptation controls yet --
+  the paper's actual headline result was the *comparison* between ERL and these three
   degraded variants (100 seeds each), not ERL survival in isolation. Not built yet.
-
-## 3. Next step
-
-Tune initial survival odds with a few short (~50k-step) exploratory runs across seeds to
-find parameters where populations reliably survive past ~100k steps, then launch a longer
-run (multiple seeds, ~1M+ steps) and read the functional-constraint trajectories.
