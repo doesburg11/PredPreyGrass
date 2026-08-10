@@ -1,16 +1,11 @@
 # Training Analysis — eco_evolutionary_erl_baldwin
 
-**Status (2026-08-09, latest): the world was rebuilt from scratch to match Ackley &
-Littman's actual World AL mechanics (100×100 grid, carnivores as a separate non-adaptive
-species, trees, walls, corpses, health+energy, exact 4-direction action semantics) instead
-of this project's own simpler predator-prey-grass ecology used in every result below. All
-18 unit tests pass on the rebuilt world; one full-scale smoke run completed cleanly (see
-§6). No comparative study has been run on the rebuilt world yet -- everything in §1-5 below
-is from the superseded, simpler-ecology version and should not be read as describing the
-current codebase.** See `README.md` for exactly what's now matched vs. still adapted, and
-why the world was rebuilt (a comparative-study result on the old world came out only
-partially consistent with the paper, and there was no way to tell whether that was a scale
-problem or a world/mechanics problem -- see §5 below for the study that prompted this).
+**Status (2026-08-10, latest): World AL rebuild (§6) plus a full 500-run comparative study
+(§7) plus a two-stage parameter retune (§8) after that study's null result was root-caused
+to an agent-population boom-bust, not the ERL mechanism. A second full 500-run study is in
+progress on the retuned config.** See `README.md` for exactly what's matched vs. adapted
+from the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09)
+and should not be read as describing the current codebase.
 
 ---
 
@@ -45,6 +40,59 @@ field at all (see `test_carnivores_have_no_genome_or_learning`).
   Reaching the paper's 1,000,000-step comparative-study ceiling is now estimated at **~9
   hours per seed** that survives that long -- worth confirming scope again before launching
   another 500-run study, since the earlier ~90-min-per-seed estimate no longer applies.
+
+## 7. First full-scale comparative study on the rebuilt World AL (2026-08-09/10) — clean null, root-caused
+
+Full paper-scale study: 5 conditions × 100 seeds × 1,000,000-step ceiling, 24-way
+parallel. All 500 runs completed.
+
+| strategy | median | mean | max | reached 1M |
+|---|---|---|---|---|
+| ERL | 371 | 408 | 2,004 | 0 |
+| E | 380 | 513 | 12,285 | 0 |
+| L | 384 | 1,344 | 95,065 | 0 |
+| F | 391 | 419 | 1,915 | 0 |
+| B | 393 | 857 | 17,172 | 0 |
+
+Every median sits in a 371-393 band. **No pairwise comparison was significant** (Mann-
+Whitney, n=100 each) -- not even ERL vs. B (p=0.056), the one result that had survived
+every prior version of this study. Not a single one of 500 runs reached even 10% of the
+step ceiling.
+
+**Diagnosis:** direct population trace (seed 1, ERL) showed the founder population of 60
+agents exploding to 1,916 by step 120 -- fed by abundant plants and an easy reproduction
+threshold -- which then fed an equally explosive carnivore boom (6→739 by step 280),
+collapsing the agent population entirely by ~step 400. Every strategy dies at the same
+rate because death arrives via this boom-bust cycle before behavioral differences have any
+time window to matter, not because learning/evolution don't work. A structural/parameter
+problem in my own necessarily-guessed constants (see config.py's limitation notice), not a
+finding about the ERL mechanism.
+
+## 8. Two-stage retune (2026-08-10)
+
+**Attempt 1 (didn't work):** raised `carnivore_reproduction_energy_threshold` (14→18) and
+`carnivore_reproduction_energy_cost` (7→10), reasoning that carnivore population growth was
+the runaway variable. Validation (5 seeds, 50k-step budget) showed no improvement --
+extinction still at 369-534 steps, carnivore populations still exploding to 300+.
+
+**Root cause, found by tracing the actual population dynamics:** the trigger wasn't
+carnivore reproduction, it was agent reproduction being too easy. At
+`reproduction_energy_threshold_agent=10.0` (only ~2 plant bites above the starting energy
+of 5.0) against abundant plants (up to ~2,700 on this grid), the agent population had no
+real ceiling before it overshot the environment's actual carrying capacity -- and that
+overshoot is what fed the carnivore boom, not carnivore-side parameters.
+
+**Attempt 2 (fixed it):** raised `max_energy_agent` (15→30) and
+`reproduction_energy_threshold_agent` (10→22) and `reproduction_energy_cost_agent` (5→10)
+-- directly targeting the trigger. Re-traced the same seed: agent population now oscillates
+in a sustained 100-700 range (rather than overshooting to ~1,900) and was still healthy at
+step 3,000, roughly 7.5x longer than the previous full collapse point. Quick multi-seed
+check (6 seeds) confirmed the same pattern -- all 6 outlasted a 90-second screening cutoff
+that previously killed every seed within it.
+
+**A second full 500-run study was launched on the retuned config** (same 5×100×1M design as
+§7) once this validation held up. Not yet analyzed -- see top of this file for current
+status.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

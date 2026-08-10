@@ -39,7 +39,15 @@ config_erl = {
     # --- Trees (shelter from carnivores; infrequent birth/death) ---
     "tree_birth_prob": 0.0005,  # per empty-cell, per-step; not specified ("infrequent")
     "tree_death_prob": 0.0005,  # per existing tree, per-step; not specified
-    "min_trees": 20,  # reseed floor; not specified, chosen by analogy to min_plants
+    # min_trees raised 20->100 in the 2026-08-10 retune: the paper's stated purpose
+    # for trees is specifically shelter from carnivores ("provide shelter for
+    # agents from carnivores but no food"), and a full-scale run at 20 gave agents
+    # almost nowhere to flee to -- see RESULTS.md for the diagnosis (all 5
+    # strategies died at statistically the same rate, no room for behavior to
+    # matter). More trees is the paper-consistent lever: it's the *escape*
+    # mechanism the paper describes, not a change to combat/damage numbers,
+    # which the paper explicitly says should stay lethal ("the agent always loses").
+    "min_trees": 100,  # reseed floor; not specified, retuned 2026-08-10 (was 20)
 
     # --- Plants (agents' food; geometric growth up to a crowding limit) ---
     "plant_growth_prob": 0.02,  # per empty-cell, per-step; not specified
@@ -50,13 +58,25 @@ config_erl = {
     # --- Agent (the single adaptive species) energetics ---
     "initial_energy_agent": 5.0,
     "initial_health_agent": 10.0,
-    "max_energy_agent": 15.0,
+    # max_energy_agent raised 15.0->30.0 and reproduction_energy_threshold_agent
+    # 10.0->22.0 in the 2026-08-10 retune, root-caused via direct trace: at the
+    # old values, agents reproduced after ~2 plant bites, and abundant plants
+    # (plant_crowding_limit_frac=0.3 allows ~2,700 on a 100x100 grid) let the
+    # founder population of 60 explode to 1,916 agents by step 120 -- a
+    # population overshoot the environment can't sustain, which then fed an
+    # equally explosive carnivore boom (6->739 by step 280) that wiped
+    # everything out by step ~400, at statistically the same rate regardless
+    # of `strategy`. This is the actual root cause diagnosed after the first
+    # retune attempt (throttling carnivore reproduction alone) didn't help --
+    # see RESULTS.md. Raising the agent reproduction bar directly targets the
+    # trigger, not the downstream symptom.
+    "max_energy_agent": 30.0,  # was 15.0
     "max_health_agent": 10.0,
     "basal_energy_cost_agent": 0.05,  # per step; not specified
     "move_energy_cost_agent": 0.02,  # per move; not specified
     "health_regen_agent": 0.05,  # passive recovery per step when not at max; paper says this happens, not the rate
-    "reproduction_energy_threshold_agent": 10.0,  # "sufficiently nourished"; not specified
-    "reproduction_energy_cost_agent": 5.0,  # not specified
+    "reproduction_energy_threshold_agent": 22.0,  # was 10.0
+    "reproduction_energy_cost_agent": 10.0,  # was 5.0
     "corpse_bite_energy": 2.0,  # energy per "eat some" bite off a corpse; not specified
     "corpse_total_energy": 6.0,  # total energy in a corpse before it's fully consumed; not specified
     "agent_attack_damage": 1.5,  # damage dealt by "Living agent -> Damage other" (agent-on-agent aggression); not specified
@@ -71,8 +91,17 @@ config_erl = {
     "move_energy_cost_carnivore": 0.03,
     "health_regen_carnivore": 0.05,
     "carnivore_attack_damage": 6.0,  # paper: "in a slugfest ... the agent always loses" -> must clearly exceed agent_attack_damage
-    "carnivore_reproduction_energy_threshold": 14.0,  # "reproduce by eating enough agents"; not specified
-    "carnivore_reproduction_energy_cost": 7.0,
+    # carnivore_reproduction_energy_threshold/cost retuned 2026-08-10: at 14.0/7.0
+    # against max_energy_carnivore=20.0, carnivores reproduced easily on top of
+    # the paper's own fixed spawn-every-200-steps rate, creating a runaway
+    # population feedback loop (more carnivores -> more agents killed -> more-fed
+    # carnivores -> more carnivore reproduction) not described in the paper at
+    # all -- diagnosed as the likely cause of every strategy dying at the same
+    # rate in the first full-scale run (see RESULTS.md). Raised close to the
+    # energy cap so the fixed 200-step spawn interval (the paper's actual,
+    # published carnivore-growth mechanism) dominates population growth instead.
+    "carnivore_reproduction_energy_threshold": 18.0,  # was 14.0
+    "carnivore_reproduction_energy_cost": 10.0,  # was 7.0
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,
