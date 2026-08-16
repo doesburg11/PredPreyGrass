@@ -502,13 +502,26 @@ mean-drift / individual-correlation approach used in every other trial — a met
 compete with the population-size noise floor Trial 10 diagnosed, since it measures whether
 mutations at a site are purged by selection at all, at any population size.
 
-**Status:** implemented, 12/12 unit tests passing, one short smoke run complete (9,830 steps,
-predator extinction — expected per the paper's own finding that most initial random populations
-die out quickly). Far too short to read anything about assimilation; see
-`eco_evolutionary_erl_baldwin/RESULTS.md` for what a real run requires (likely 100k-1M+ steps,
-multiple seeds). This is a new, parallel avenue, not a replacement for the PPO-based trial
+**Status: the comparative-study claim is confirmed, with real statistical power.** The world
+was rebuilt to match the paper's actual World AL mechanics (100×100 grid, carnivores as a
+separate non-adaptive hard-coded species, trees/walls/corpses/health — not the simpler
+predator-prey-grass ecology this project uses elsewhere), retuned once to fix a boom-bust
+collapse, then run as a full 5-condition × 100-seed × 1,000,000-step comparative study,
+matching the paper's own scale. Result: **ERL (nature + nurture combined) significantly beats
+evolution alone, learning alone, neither, and pure luck — p<0.00001 against all four** — the
+strongest, most statistically legitimate result in this project's entire trial history (1-11).
+The internal structure substantially reproduces the paper's own findings too (learning-alone
+significantly beats evolution-alone; no-adaptation is statistically indistinguishable from
+luck). One honest discrepancy remains (evolution-alone beats luck here; the paper found the
+reverse), and overall survival difficulty isn't calibrated to their reported rate (83% of ERL
+runs reach the step ceiling here vs. their ~7%) — the *ranking* matches, the *absolute
+difficulty* doesn't. This is a new, parallel avenue, not a replacement for the PPO-based trial
 family — it tests a different architectural hypothesis than Trial 10 (which pointed at
-population size for the *existing* architecture), not a claim that PPO itself is the problem.
+population size for the *existing* shared-policy architecture): whether genome can causally
+shape behavior at all via individually-owned, genome-initialized networks. It can, and
+combining it with learning measurably outperforms either alone. Full detail, significance
+tables, and what's still not attempted (the paper's deeper single-population longitudinal
+genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ---
 

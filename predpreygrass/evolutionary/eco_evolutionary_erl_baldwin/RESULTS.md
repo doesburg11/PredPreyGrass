@@ -1,11 +1,16 @@
 # Training Analysis — eco_evolutionary_erl_baldwin
 
-**Status (2026-08-10, latest): World AL rebuild (§6) plus a full 500-run comparative study
-(§7) plus a two-stage parameter retune (§8) after that study's null result was root-caused
-to an agent-population boom-bust, not the ERL mechanism. A second full 500-run study is in
-progress on the retuned config.** See `README.md` for exactly what's matched vs. adapted
-from the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09)
-and should not be read as describing the current codebase.
+**Status (2026-08-16, latest): the retuned comparative study (§9) completed — 500/500 runs,
+5 conditions × 100 seeds, matching the paper's own scale. Result: ERL significantly beats
+every other condition (p<0.00001 vs. E, L, F, and B), and the internal structure
+substantially reproduces the paper's own findings (L beats E, F≈B). The strongest, most
+statistically legitimate result in this entire project's trial history (Trials 1-11). One
+real, honest discrepancy remains (E beats B here; the paper found the reverse) and overall
+survival difficulty is not calibrated to their reported rate (83% of ERL runs reach the step
+ceiling here vs. their ~7%).** See `README.md` for exactly what's matched vs. adapted from
+the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09) and
+should not be read as describing the current codebase; §7-8 describe the null result and
+retune that preceded this final study.
 
 ---
 
@@ -91,8 +96,84 @@ check (6 seeds) confirmed the same pattern -- all 6 outlasted a 90-second screen
 that previously killed every seed within it.
 
 **A second full 500-run study was launched on the retuned config** (same 5×100×1M design as
-§7) once this validation held up. Not yet analyzed -- see top of this file for current
-status.
+§7) once this validation held up. Interrupted once mid-run (2026-08-13) for a real hardware
+concern -- sustained 24-way parallel load pushed CPU temperature to 95.8°C during a period of
+high ambient/outside temperature -- killed deliberately, then resumed 2026-08-15 from a
+resume-safe runner (skips any seed/strategy pair with an already-completed log) once
+conditions were judged safe again. Completed 2026-08-16. Results in §9.
+
+## 9. Final comparative study result (2026-08-16) — ERL significantly beats every other condition
+
+500/500 runs complete, 100 seeds per condition, run to the paper's own 1,000,000-step
+comparative-study ceiling, on the retuned World AL (§8).
+
+| strategy | median | mean | reached 1M cap |
+|---|---|---|---|
+| **ERL** | **1,000,000** | 832,097 | **83%** |
+| L | 40,413 | 407,919 | 37% |
+| E | 3,221 | 335,594 | 33% |
+| F | 1,746 | 43,256 | 2% |
+| B | 1,242 | 302,136 | 23% |
+
+ERL's *median* survival time is the step ceiling itself -- more than half of all 100 ERL runs
+ran the full 1,000,000 steps without agent extinction.
+
+**Significance (Mann-Whitney U, two-sided, n=100 each):**
+
+| comparison | p-value | |
+|---|---|---|
+| ERL vs. E | <0.00001 | *** |
+| ERL vs. L | <0.00001 | *** |
+| ERL vs. F | <0.00001 | *** |
+| ERL vs. B | <0.00001 | *** |
+| E vs. L | 0.00424 | ** |
+| E vs. F | <0.00001 | *** |
+| E vs. B | 0.00067 | *** |
+| L vs. F | <0.00001 | *** |
+| L vs. B | <0.00001 | *** |
+| F vs. B | 0.97268 | n.s. |
+
+**Headline result:** ERL (nature + nurture combined) significantly outperforms evolution
+alone, learning alone, neither, and pure luck -- p<0.00001 against all four, with real
+statistical power (n=100/condition, matching the paper's own sample size). This is the
+direct, well-founded answer to the question this whole comparative-study effort was for
+(see README.md and the "what are we trying to achieve" discussion in conversation), and the
+strongest, most statistically legitimate result anywhere in this project's trial history
+(Trials 1-11).
+
+**The internal structure substantially reproduces the paper's own findings, not just the
+headline claim:**
+- **L significantly beats E** (p=0.004) -- reproducing Ackley & Littman's own "surprising"
+  finding that learning alone outperforms evolution alone (their explanation: it's easier to
+  evolve a good *goal*, the compact evaluation network, than to evolve a good *behavior*,
+  the full action network -- learning fills the gap evolution alone can't).
+- **F ≈ B** (p=0.97, no significant difference) -- no-adaptation and pure random luck are
+  statistically indistinguishable, consistent with the paper's observation that non-learning
+  strategies don't meaningfully beat chance.
+
+**One honest, real discrepancy, not glossed over:** the paper reports evolution-alone (E)
+doing *worse* than luck (B) in the first ~500,000 steps. Here, **E significantly beats B**
+(p=0.0007) -- the opposite direction. Not yet explained; a plausible candidate is that this
+world's carnivore-avoidance/food-finding dynamics give even an unlearned-but-evolving genome
+more traction than in their world, but this is a hypothesis, not a diagnosed cause.
+
+**Also unresolved: overall survival difficulty is not calibrated to the paper's reported
+rate.** ERL reaches the 1M-step ceiling in 83% of runs here, versus their reported ~7%
+(comparative study) to ~18% (a different measure, 10,000-step survival) across their whole
+five-strategy population. The *ranking* matches well; the *absolute difficulty* of long-term
+survival does not -- this world remains easier for a well-adapted population than theirs was,
+a direct consequence of retuning away from the boom-bust collapse in §7/§8 using my own
+necessarily-guessed constants, not something recoverable from the paper.
+
+**What would close the remaining gap, if pursued further:** implementing the paper's exact
+CRBP learning algorithm (currently a REINFORCE approximation), their redundant bit-string
+genome encoding (currently real-valued weights), recalibrating constants toward their
+reported ~7-18% survival-difficulty range, and attempting their deeper single-population
+longitudinal study (extending a successful ERL population to millions of steps and running
+the functional-constraint genetic-assimilation analysis, §README) -- none of which this
+comparative study attempted. Worth deciding deliberately whether that additional fidelity is
+worth pursuing now that the headline comparative claim is established, rather than assuming
+more precision is automatically valuable.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
@@ -228,14 +309,19 @@ user asked for the world rebuild instead, on the reasoning that scale alone coul
 whether the remaining discrepancies (E vs. L, F vs. B) were a power problem or a
 world/mechanics problem. That question is what §6 exists to answer.
 
-## 5. Still not done (on the rebuilt World AL)
+## 5. Status as of this writing (superseded by §9 above -- kept for the historical trail)
 
-- **No comparative study run yet on the rebuilt world at all.** Everything in §4/4b above is
-  from the superseded simpler ecology.
-- Reading the functional-constraint signature on a real long run of the rebuilt world: does
-  `action_site_change_rate` drop below `eval_site_change_rate` over generations?
-- Tuning the rebuilt world's chosen-by-me constants (damage, thresholds, growth rates) --
-  the one smoke run went extinct in 365 steps, which says more about first-pass parameter
-  balance than about the mechanism.
-- Given the ~9-hour-per-long-seed cost estimate (§6), a full 500-run study at the paper's
-  exact scale needs an explicit go-ahead on scope/time before launching again.
+Everything below this line was written before the retuned comparative study (§9) completed;
+kept for the record of how the investigation actually proceeded, not as current status.
+
+- ~~No comparative study run yet on the rebuilt world at all.~~ Done -- see §9.
+- Reading the functional-constraint signature on a real long run of the rebuilt world (does
+  `action_site_change_rate` drop below `eval_site_change_rate` over generations?) -- **still
+  not done**. §9's comparative study measured survival time only, not the genetic-assimilation
+  signature; that needs the longitudinal single-population study the paper itself only
+  attempted after their comparative study, not this one.
+- Tuning the rebuilt world's chosen-by-me constants -- done, see §8; §9 notes the remaining
+  calibration gap (survival difficulty, not just ranking).
+- Given the ~9-hour-per-long-seed cost estimate, a full 500-run study needed an explicit
+  go-ahead on scope/time -- given, launched, interrupted once for a real hardware/heat
+  concern, resumed, and completed. See §9.
