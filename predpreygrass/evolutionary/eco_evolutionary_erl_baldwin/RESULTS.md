@@ -157,6 +157,29 @@ doing *worse* than luck (B) in the first ~500,000 steps. Here, **E significantly
 world's carnivore-avoidance/food-finding dynamics give even an unlearned-but-evolving genome
 more traction than in their world, but this is a hypothesis, not a diagnosed cause.
 
+**Worth being precise about which direction is actually the surprising one here.** "Evolution
+alone beats pure randomness" is the intuitive, textbook-biology expectation -- natural
+selection is a real directional force, and even simple hard-wired instincts generally
+outperform organisms with no behavioral structure at all. So this project's result (E beats B)
+isn't the odd one out relative to general intuition. **The paper's finding is the
+counterintuitive one, and they say so themselves** -- their explanation is that pure
+mutation-and-selection search, with no within-lifetime correction, can get systematically
+stuck producing *confidently bad* behavior (e.g. a mutated action network with a consistent
+bias toward danger), not just noisy behavior -- worse than Brownian motion, which has no
+consistent bias at all, just no intelligence. That failure mode needs a large, rugged,
+high-dimensional behavior search space and/or weak selection pressure relative to it; it isn't
+automatic. Candidate reasons this world doesn't reproduce that specific trap, none confirmed:
+(a) a simpler action space (4-way categorical vs. their exact 2-bit CRBP-driven encoding) may
+just be easier for blind mutation-selection to avoid landing on a *confidently wrong* policy;
+(b) the retune that fixed the boom-bust collapse (§8) raised reproduction thresholds broadly,
+which may have incidentally given every condition, including E, enough population size/
+mutation balance to purge bad mutations effectively -- this project's own history (Trial 6,
+Trial 10) already established that population size strongly determines whether a selection
+signal shows up at all; (c) different world mechanics (carnivore threat model, observation
+encoding) may simply make a confidently-wrong policy harder to evolve here than in their
+richer sensory-action space. Distinguishing these would need looking at what E's evolved
+policies actually do behaviorally, not just their survival-time distribution -- not done.
+
 **Also unresolved: overall survival difficulty is not calibrated to the paper's reported
 rate.** ERL reaches the 1M-step ceiling in 83% of runs here, versus their reported ~7%
 (comparative study) to ~18% (a different measure, 10,000-step survival) across their whole
