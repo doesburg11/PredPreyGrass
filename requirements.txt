@@ -1,3 +1,7 @@
+# requires NVIDIA driver >=595.45.04 for CUDA 13.2
+--extra-index-url https://download.pytorch.org/whl/cu132
+torch==2.13.0
+
 pettingzoo==1.25.0
 stable-baselines3[extra]==2.6.0
 SuperSuit==3.9.3
