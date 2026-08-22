@@ -43,6 +43,13 @@ def parse_args():
         "--strategy", type=str, default=None, choices=["ERL", "E", "L", "F", "B"],
         help="Override config_erl['strategy'] -- Ackley & Littman's 5 comparative conditions.",
     )
+    parser.add_argument(
+        "--render", type=str, default="none", choices=["none", "live", "snapshots"],
+        help="Visualize the grid: 'live' pops up a live-updating matplotlib window, "
+             "'snapshots' saves PNG frames to out_dir/frames/ every --render-every steps. "
+             "Adds overhead -- use a short --steps run, not a full comparative-study run.",
+    )
+    parser.add_argument("--render-every", type=int, default=2000, help="Steps between rendered frames.")
     return parser.parse_args()
 
 
@@ -61,6 +68,20 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     logger = CsvLogger(out_dir / "progress.csv", FIELDNAMES)
 
+    renderer = None
+    if args.render != "none":
+        from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.visualize import WorldRenderer
+
+        if args.render == "live":
+            import matplotlib.pyplot as plt
+
+            plt.ion()
+        renderer = WorldRenderer(cfg["grid_size"])
+        if args.render == "live":
+            renderer.show(world, 0)
+        else:
+            renderer.save(world, 0, out_dir / "frames")
+
     start = time.time()
     last_window_reset = 0
     extinction_step = None
@@ -75,6 +96,8 @@ def main():
         # and are not part of the survival-time measurement.
         if counts["agent"] == 0:
             extinction_step = step
+            if renderer is not None:
+                renderer.show(world, step) if args.render == "live" else renderer.save(world, step, out_dir / "frames")
             break
 
         if step % args.log_every == 0:
@@ -84,12 +107,17 @@ def main():
             logger.log(row)
             logger.flush()
 
+        if renderer is not None and step % args.render_every == 0:
+            renderer.show(world, step) if args.render == "live" else renderer.save(world, step, out_dir / "frames")
+
         if step - last_window_reset >= args.constraint_window:
             world.constraint_tracker.reset_window()
             last_window_reset = step
 
     elapsed = time.time() - start
     logger.close()
+    if renderer is not None:
+        renderer.close()
 
     print(f"Finished at step {world.current_step} in {elapsed:.1f}s ({world.current_step / max(elapsed, 1e-9):.0f} steps/sec).")
     if extinction_step is not None:
