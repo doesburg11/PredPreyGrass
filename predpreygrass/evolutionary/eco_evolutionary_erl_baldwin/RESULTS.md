@@ -107,6 +107,14 @@ conditions were judged safe again. Completed 2026-08-16. Results in §9.
 500/500 runs complete, 100 seeds per condition, run to the paper's own 1,000,000-step
 comparative-study ceiling, on the retuned World AL (§8).
 
+![Per-seed survival time by strategy -- ERL, L, E, F, B](erl_survival_by_strategy.png)
+
+Full per-seed distribution (not just the summary stats below), generated from the same
+500 run logs by `plot_full_study_survival.py`. Shows the shape behind the medians: ERL's
+83% pile up exactly at the ceiling, while E-alone and L-alone spread across a long tail of
+early deaths mixed with occasional long survivors -- a qualitative difference, not just a
+quantitative one.
+
 | strategy | median | mean | reached 1M cap |
 |---|---|---|---|
 | **ERL** | **1,000,000** | 832,097 | **83%** |
