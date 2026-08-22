@@ -37,7 +37,7 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
-RAY_RESULTS_DIR = Path(os.path.expanduser("~/ray_results"))
+from predpreygrass.global_config import RAY_RESULTS_DIR
 # Optional relative path override, e.g.
 # PPO_ECO_EVOLUTION_.../PPO_PredPreyGrass_..._00000_...
 CHECKPOINT_ROOT = os.environ.get("CADENCE_CHECKPOINT_ROOT")
@@ -104,7 +104,7 @@ def _find_latest_cadence_run_path(ray_results_dir: Path) -> Path:
         raise FileNotFoundError(
             f"No cadence PPO run found under {ray_results_dir}. "
             "Train predpreygrass/eco_evolutionary_cadence/tune_ppo.py first, "
-            "or set CADENCE_CHECKPOINT_ROOT to a run directory relative to ~/ray_results."
+            "or set CADENCE_CHECKPOINT_ROOT to a run directory relative to ~/simulation_results/ray_results."
         )
 
     return max(candidates, key=lambda path: path.stat().st_mtime)

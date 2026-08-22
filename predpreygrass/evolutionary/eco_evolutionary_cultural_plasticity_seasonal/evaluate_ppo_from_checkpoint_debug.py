@@ -44,7 +44,7 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
-RAY_RESULTS_DIR = os.path.expanduser("~/ray_results")
+from predpreygrass.global_config import RAY_RESULTS_DIR
 CHECKPOINT_ROOT = (
     "PPO_ECO_EVOLUTION_2026-06-23_10-30-31/"
     "PPO_PredPreyGrass_cc36a_00000_0_2026-06-23_10-30-31"

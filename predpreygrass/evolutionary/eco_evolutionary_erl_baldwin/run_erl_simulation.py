@@ -15,6 +15,7 @@ import numpy as np
 from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.config import config_erl
 from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.metrics import CsvLogger
 from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.world import ErlWorld
+from predpreygrass.global_config import ERL_RESULTS_DIR
 
 FIELDNAMES = [
     "step",
@@ -56,7 +57,7 @@ def main():
     world = ErlWorld(cfg, rng)
 
     timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-    out_dir = Path(args.out_dir) if args.out_dir else Path.home() / "erl_results" / f"ERL_BALDWIN_{timestamp}"
+    out_dir = Path(args.out_dir) if args.out_dir else Path(ERL_RESULTS_DIR) / f"ERL_BALDWIN_{timestamp}"
     out_dir.mkdir(parents=True, exist_ok=True)
     logger = CsvLogger(out_dir / "progress.csv", FIELDNAMES)
 

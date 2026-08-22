@@ -9,7 +9,7 @@ linearly, creating a policy-dependent interior optimum — the two-way Darwin/Ba
 loop. Within-lifetime foraging and hunting behavior is learned by shared PPO
 policies and is not inherited (Baldwinian layer).
 
-Checkpoints and a copy of the environment source are saved under ~/ray_results/
+Checkpoints and a copy of the environment source are saved under ~/simulation_results/ray_results/
 for provenance. Metabolic-rate genome statistics are logged to TensorBoard
 via the EpisodeReturn callback.
 """
@@ -30,6 +30,7 @@ import argparse
 import json
 import shutil
 from typing import Any
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 def parse_args():
@@ -80,7 +81,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
 
     # ray_results_dir = "~/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    ray_results_dir = "~/ray_results/"
+    ray_results_dir = RAY_RESULTS_DIR
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""

@@ -29,6 +29,7 @@ from predpreygrass.non_evolutionary.red_queen.config.config_env_eval import conf
 from predpreygrass.non_evolutionary.red_queen.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.red_queen.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.non_evolutionary.red_queen.utils.networks import build_multi_module_spec
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 def get_config_ppo():
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_path = Path("~/ray_results/").expanduser()
+    ray_results_path = Path(RAY_RESULTS_DIR)
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     experiment_name = f"PPO_RED_QUEEN_{timestamp}"
     experiment_path = ray_results_path / experiment_name

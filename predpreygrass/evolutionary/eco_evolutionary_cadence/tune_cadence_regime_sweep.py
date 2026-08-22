@@ -7,7 +7,7 @@ speed should drift above the founder distribution without saturating near 1.0.
 Examples:
     python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep
     CADENCE_SWEEP_ITERS=40 python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep
-    python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep --summarize ~/ray_results/PPO_CADENCE_REGIME_SWEEP_...
+    python -m predpreygrass.evolutionary.eco_evolutionary_cadence.tune_cadence_regime_sweep --summarize ~/simulation_results/ray_results/PPO_CADENCE_REGIME_SWEEP_...
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from predpreygrass.evolutionary.eco_evolutionary_cadence.predpreygrass_rllib_env
 from predpreygrass.evolutionary.eco_evolutionary_cadence.tune_ppo import get_config_ppo, policy_mapping_fn
 from predpreygrass.evolutionary.eco_evolutionary_cadence.utils.episode_return_callback import EpisodeReturn
 from predpreygrass.evolutionary.eco_evolutionary_cadence.utils.networks import build_multi_module_spec
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 SOFT_REGIMES: list[dict[str, float | str]] = [
@@ -174,7 +175,7 @@ def run_sweep() -> Path:
     ray.init(log_to_driver=True, ignore_reinit_error=True)
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_path = Path(os.environ.get("RAY_RESULTS_DIR", "~/ray_results")).expanduser()
+    ray_results_path = Path(os.environ.get("RAY_RESULTS_DIR", RAY_RESULTS_DIR)).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     experiment_name = f"PPO_CADENCE_REGIME_SWEEP_{timestamp}"
     experiment_path = ray_results_path / experiment_name

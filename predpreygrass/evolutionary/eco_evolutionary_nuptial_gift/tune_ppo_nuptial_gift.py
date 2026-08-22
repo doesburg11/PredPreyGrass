@@ -20,7 +20,7 @@ of the real evolutionary mode: genome_enabled is forced False and every
 predator_male uses the same fixed, non-inherited donation rate (see
 run_fixed_genome_sweep.sh and README.md's staged rollout plan).
 
-Checkpoints and a copy of the environment source are saved under ~/ray_results/
+Checkpoints and a copy of the environment source are saved under ~/simulation_results/ray_results/
 for provenance. male_donation_rate genome statistics and the female
 reproduction-gift-share metric are logged to TensorBoard via the EpisodeReturn
 callback. See README.md for the full argument.
@@ -43,6 +43,7 @@ from pathlib import Path
 import json
 import shutil
 from typing import Any
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 def parse_args():
@@ -122,7 +123,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/ray_results/"
+    ray_results_dir = RAY_RESULTS_DIR
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""

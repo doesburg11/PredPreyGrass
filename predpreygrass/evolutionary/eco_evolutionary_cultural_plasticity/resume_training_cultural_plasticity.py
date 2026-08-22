@@ -2,7 +2,7 @@
 Resume PPO training for eco_evolutionary_cultural_plasticity from the latest checkpoint.
 
 Automatically finds the most recent PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_* experiment
-directory under ~/ray_results/ and calls Tuner.restore() to continue training.
+directory under ~/simulation_results/ray_results/ and calls Tuner.restore() to continue training.
 """
 
 from predpreygrass.evolutionary.eco_evolutionary_cultural_plasticity.predpreygrass_rllib_env import PredPreyGrass
@@ -18,6 +18,7 @@ from ray.tune import Tuner
 import os
 from pathlib import Path
 from typing import Any
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 def get_config_ppo():
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_path = Path("~/ray_results/").expanduser()
+    ray_results_path = Path(RAY_RESULTS_DIR)
     experiment_path = find_latest_experiment(ray_results_path, "PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_")
 
     config_ppo = get_config_ppo()

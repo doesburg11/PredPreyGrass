@@ -14,7 +14,7 @@ lifetime foraging/hunting/dispersal behavior is learned by shared PPO policies
 and is not inherited (Baldwinian layer); the RL-learned dispersal pattern in
 turn determines local relatedness, closing the two-way Darwin/Baldwin loop.
 
-Checkpoints and a copy of the environment source are saved under ~/ray_results/
+Checkpoints and a copy of the environment source are saved under ~/simulation_results/ray_results/
 for provenance. Cooperation-rate genome statistics are logged to TensorBoard
 via the EpisodeReturn callback.
 """
@@ -34,6 +34,7 @@ from pathlib import Path
 import json
 import shutil
 from typing import Any
+from predpreygrass.global_config import RAY_RESULTS_DIR
 
 
 def get_config_ppo():
@@ -65,7 +66,7 @@ if __name__ == "__main__":
 
     register_env("PredPreyGrass", env_creator)
 
-    ray_results_dir = "~/ray_results/"
+    ray_results_dir = RAY_RESULTS_DIR
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     version = "ECO_EVOLUTION_COOPERATION"
