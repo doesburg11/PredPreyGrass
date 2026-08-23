@@ -18,7 +18,10 @@ dependencies = [
     "numpy==1.26.4",
     "scipy==1.11.4",
     "Pillow>=10.0.0",
-    "imageio>=2.34.0"
+    "imageio>=2.34.0",
+    "matplotlib==3.10.1",
+    "opencv-python==4.11.0.86",
+    "pygame==2.6.1"
 ]
 
 [project.optional-dependencies]
