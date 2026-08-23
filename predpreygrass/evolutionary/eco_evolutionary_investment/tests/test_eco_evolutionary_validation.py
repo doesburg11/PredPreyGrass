@@ -51,17 +51,24 @@ class _FakeMetricsLogger:
         self.values[name] = value
 
 
+class _FakeAgentEpisode:
+    def __init__(self, total_return):
+        self._total_return = total_return
+
+    def get_return(self):
+        return self._total_return
+
+
 class _FakeEpisode:
     length = 3
 
+    agent_episodes = {
+        "predator_0": _FakeAgentEpisode(3.0),
+        "prey_0": _FakeAgentEpisode(-1.0),
+    }
+
     def get_return(self):
         return 2.0
-
-    def get_rewards(self):
-        return {
-            "predator_0": [1.0, 2.0],
-            "prey_0": [-1.0],
-        }
 
     def get_last_infos(self):
         return {
