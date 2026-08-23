@@ -2,9 +2,6 @@
 --extra-index-url https://download.pytorch.org/whl/cu132
 torch==2.13.0
 
-pettingzoo==1.24.3
-SuperSuit==3.9.3
-
 ray[rllib]==2.58.0
 tensorboard==2.20.0
 
