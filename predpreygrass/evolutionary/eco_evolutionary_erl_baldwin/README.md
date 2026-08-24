@@ -202,3 +202,45 @@ are first-guess values, and `_agent_group_is_cooperative_fit`'s box-scan
 cost hasn't been profiled at the population scales a real study would need.
 See `RESULTS.md` for how this gets validated at scale before trusting any
 comparative result.
+
+## Kin selection (K / ERLK) -- a second, independent cooperation question
+
+Nowak's five mechanisms for the evolution of cooperation include both group
+selection (what C/ERLC above approximates) and kin selection (Hamilton's
+rule: an act that costs the actor is favored if it benefits a relative
+enough, weighted by relatedness). This adds kin selection as a second,
+separate mechanism -- not combined with C/ERLC, kept independently testable.
+
+Rather than inventing new machinery, it reuses two things already in this
+world: the agent-on-agent aggression branch in `_resolve_agent_action`
+(an agent already deals `agent_attack_damage` to another agent it moves
+onto), and the genome itself as a relatedness proxy -- `genome.
+genome_similarity` is an RBF-kernel distance over each agent's behavioral
+genes (eval + action weights), which correlates with true kinship because
+agents mate locally (`mate_search_radius`) and reproduce via
+crossover+mutation, without needing separate parent/lineage bookkeeping.
+A new evolvable trait, `genome.kinship_sensitivity` (sigmoid-transformed),
+lets the population itself evolve toward or away from kin-biased leniency,
+rather than hard-coding a fixed discount -- under "K"/"ERLK", an attacker's
+damage is discounted by `sigmoid(kinship_sensitivity) *
+kinship_discount_cap * genome_similarity(attacker, victim)`.
+
+Two new strategies, independent of C/ERLC and of each other's mechanism:
+  - **"K"**: like "E" (evolution alone, no learning) plus the kinship
+    discount.
+  - **"ERLK"**: like "ERL", plus the same discount.
+
+**Status:** mechanism implemented and unit-tested (`tests/test_kin_selection.py`,
+11 tests -- including a direct check that near-identical genomes get the
+full discount and very different ones get none, and a regression guard that
+ERL/E/L/F/B/C/ERLC never enter the kinship code path at all). Smoke-tested
+at `grid_size=100` (paper default) over 3,000 steps: surviving-population
+pairwise genome-similarity ranged from 0.120 to 1.000 (mean 0.568) -- real
+spread, not degenerate, confirming actual encounters in a live population
+span the full spectrum from close-kin-large-discount to
+unrelated-no-discount. **Not yet run as a comparative study** --
+`kinship_similarity_scale` and `kinship_discount_cap` are first-guess
+values, and the relatedness-as-genome-similarity proxy is expected to
+degrade in a large, well-mixed population where similarity no longer
+tracks recent common ancestry -- worth checking against actual lineage data
+before trusting a result.

@@ -53,6 +53,56 @@ which competency -- a group-fitness credit-sharing mechanism analogous to
 Houghton's group-of-four Baldwin-Effect commentary, adapted to this
 world's continuous, spatially-local, energy-gated reproduction instead of
 his synchronous single-generation toy model.
+
+--- Kin selection (K / ERLK) -- NEW, also not in Ackley & Littman ---
+
+A second, independent cooperation mechanism, added alongside C/ERLC rather
+than combined with it (keeping each mechanism testable in isolation, the
+same incremental style Ackley & Littman themselves used for E/L/F/B/ERL).
+Models Hamilton's rule (kin selection reduces aggression toward relatives
+in proportion to relatedness and the discount's own evolved strength) using
+machinery already in this world:
+
+  - Relatedness proxy: `genome.genome_similarity` -- an RBF-kernel distance
+    over each agent's BEHAVIORAL genes (eval + action weights/biases). This
+    is NOT literal genealogical tracking (no parent/lineage bookkeeping
+    added) -- it's a proxy that holds because agents mate locally
+    (`mate_search_radius`) and reproduce via crossover+mutation, so kin
+    really do tend to share more similar weights than unrelated agents.
+    Simpler than adding lineage IDs, and avoids inventing a second,
+    unvalidated kinship-tracking mechanism when the genome itself already
+    encodes the relevant history.
+  - Evolvable nepotism trait: `genome.kinship_sensitivity`, a new heritable
+    scalar (sigmoid-transformed before use, so any real value is valid).
+    Lets the population itself evolve toward or away from kin-biased
+    leniency, rather than hard-coding a fixed discount -- the more
+    interesting scientific question is whether this trait's value (and,
+    per functional-constraint tracking, its own genetic stability) changes
+    over generations, not just whether kin-biased damage exists.
+  - Mechanism: reuses the EXISTING agent-on-agent aggression branch in
+    `_resolve_agent_action` (an agent already deals `agent_attack_damage`
+    to another agent it moves onto) -- under "K"/"ERLK" only, that damage
+    is discounted by `sigmoid(attacker.genome.kinship_sensitivity) *
+    kinship_discount_cap * genome_similarity(attacker, victim)`. No new
+    action, no new event type -- same "extend an existing event" style as
+    the C/ERLC competency tracking.
+  - "K": like "E" (evolution alone, no learning) plus the kinship discount.
+    "ERLK": like "ERL" (learning + evolution) plus the kinship discount.
+    Neither combines with C/ERLC in this first pass -- see above.
+
+KNOWN NOT YET DONE for kin selection, mirroring the C/ERLC caveats:
+  - `kinship_similarity_scale` and `kinship_discount_cap` are first-guess
+    values (see config.py), not tuned against any real run.
+  - `kinship_sensitivity`'s own drift/constraint over generations isn't fed
+    into the validated FunctionalConstraintTracker (deliberately -- see
+    `Genome.flatten()`'s docstring) -- only a coarse population-mean stat
+    (`genome_stats()`'s `kinship_sensitivity_mean`) exists so far. A
+    dedicated tracker would be needed to ask the more interesting question
+    (does nepotism itself get genetically assimilated over time).
+  - The relatedness-as-genome-similarity proxy will degrade in a large,
+    well-mixed population where genome similarity no longer tracks true
+    recent common ancestry -- worth checking against actual lineage data
+    before trusting a result, not assumed to hold indefinitely.
 """
 
 from dataclasses import dataclass
@@ -62,6 +112,7 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.genome import (
     Genome,
     crossover,
     founder_genome,
+    genome_similarity,
     mutate,
 )
 from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.networks import (
@@ -82,6 +133,10 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 _NEVER = -10**9  # sentinel: "this competency has never been demonstrated"
+
+
+def _sigmoid(x):
+    return 1.0 / (1.0 + np.exp(-x))
 
 
 @dataclass
@@ -141,23 +196,31 @@ class ErlWorld:
         (and hence the genome) entirely, choosing uniformly at random
         every step.
 
-    Two additional conditions, NOT from Ackley & Littman -- see this
-    module's docstring for the full cooperation mechanism:
+    Four additional conditions, NOT from Ackley & Littman -- see this
+    module's docstring for both mechanisms:
       - "C" (cooperation alone): like "E" (evolution, no learning), plus a
         group-fitness reproduction-threshold discount.
       - "ERLC": like "ERL", plus the same group-fitness discount. Tests
         whether cooperation adds anything on top of learning+evolution.
-    For "ERL"/"E"/"L"/"F"/"B" the cooperation code path is never entered
-    (see `_handle_agent_reproduction`'s `coop = self.strategy in ("C",
-    "ERLC")` guard) -- those five behave byte-identically to before this
-    was added.
+      - "K" (kin selection alone): like "E", plus an evolved kinship-based
+        discount on agent-on-agent attack damage.
+      - "ERLK": like "ERL", plus the same kinship discount.
+    For "ERL"/"E"/"L"/"F"/"B" neither the cooperation nor kin-selection code
+    paths are ever entered (see `_handle_agent_reproduction`'s `coop =
+    self.strategy in ("C", "ERLC")` guard and `_resolve_agent_action`'s
+    `self.strategy in ("K", "ERLK")` guard) -- those five behave
+    byte-identically to before either was added. C/ERLC and K/ERLK are
+    independent of each other too -- neither strategy pair triggers the
+    other's mechanism.
     """
 
     def __init__(self, config: dict, rng: np.random.Generator):
         self.cfg = config
         self.rng = rng
         self.strategy = config.get("strategy", "ERL")
-        assert self.strategy in ("ERL", "E", "L", "F", "B", "C", "ERLC"), self.strategy
+        assert self.strategy in (
+            "ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK",
+        ), self.strategy
         self.grid_size = config["grid_size"]
         self.current_step = 0
         self._next_agent_id = 0
@@ -322,7 +385,7 @@ class ErlWorld:
     def _step_agents(self):
         order = list(self.agents)
         self.rng.shuffle(order)
-        learning_enabled = self.strategy in ("ERL", "L", "ERLC")
+        learning_enabled = self.strategy in ("ERL", "L", "ERLC", "ERLK")
         coop = self.strategy in ("C", "ERLC")
         for agent in order:
             if not agent.alive:
@@ -382,7 +445,18 @@ class ErlWorld:
                 if occupant.health <= 0:
                     self._kill_carnivore(occupant)
             elif isinstance(occupant, Agent) and occupant is not agent:
-                occupant.health -= self.cfg["agent_attack_damage"]
+                damage = self.cfg["agent_attack_damage"]
+                if self.strategy in ("K", "ERLK"):
+                    relatedness = genome_similarity(
+                        agent.genome, occupant.genome, self.cfg["kinship_similarity_scale"]
+                    )
+                    discount = (
+                        _sigmoid(agent.genome.kinship_sensitivity)
+                        * self.cfg["kinship_discount_cap"]
+                        * relatedness
+                    )
+                    damage *= (1.0 - discount)
+                occupant.health -= damage
                 if occupant.health <= 0:
                     self._kill_agent(occupant)
             return
@@ -737,10 +811,19 @@ class ErlWorld:
     def genome_stats(self) -> dict[str, float]:
         genomes = [a.genome for a in self.agents if a.alive]
         if not genomes:
-            return {"eval_weight_absmean": float("nan"), "action_weight_absmean": float("nan")}
+            return {
+                "eval_weight_absmean": float("nan"),
+                "action_weight_absmean": float("nan"),
+                "kinship_sensitivity_mean": float("nan"),
+            }
         eval_vals = np.concatenate([g.eval_weights for g in genomes])
         action_vals = np.concatenate([g.action_weights.ravel() for g in genomes])
+        kinship_vals = np.array([g.kinship_sensitivity for g in genomes])
         return {
             "eval_weight_absmean": float(np.mean(np.abs(eval_vals))),
             "action_weight_absmean": float(np.mean(np.abs(action_vals))),
+            # Population-mean nepotism trait -- a coarse signal only (see
+            # module docstring for why this isn't fed into the validated
+            # FunctionalConstraintTracker).
+            "kinship_sensitivity_mean": float(np.mean(_sigmoid(kinship_vals))),
         }

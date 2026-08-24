@@ -11,7 +11,9 @@ ceiling here vs. their ~7%).** See `README.md` for exactly what's matched vs. ad
 the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09) and
 should not be read as describing the current codebase; §7-8 describe the null result and
 retune that preceded this final study. §10 (2026-08-24) adds a new, non-paper cooperation
-mechanism (C/ERLC) -- mechanism validated, not yet run as a comparative study.
+mechanism (C/ERLC) -- mechanism validated, not yet run as a comparative study. §11
+(2026-08-24) adds a second, independent new mechanism, kin selection (K/ERLK) -- same
+status: mechanism validated, not yet run as a comparative study.
 
 ---
 
@@ -239,6 +241,38 @@ fact in §2 above.
   events -- worth explicitly checking the bonus's actual firing rate at
   `grid_size=100` population scales before reading anything into a low-
   signal comparative result, the same lesson already learned once there.
+
+## 11. Kin selection (K / ERLK) merged (2026-08-24) -- mechanism validated, not yet run at scale
+
+A second, independent new question (Nowak's kin-selection mechanism,
+alongside §10's group-selection-flavored cooperation) -- see `README.md`'s
+"Kin selection (K / ERLK)" section for the full mechanism.
+
+**What's done:** implementation (`genome.py`'s new `kinship_sensitivity`
+trait and `genome_similarity` relatedness proxy, `world.py`'s discounted
+aggression branch, `config.py`'s two new parameters), unit tests
+(`tests/test_kin_selection.py`, 11 tests, all passing alongside the
+original 24 and the 9 C/ERLC tests -- full suite is 44/44), and a smoke
+run at the paper-default `grid_size=100` confirming the relatedness proxy
+has real dynamic range in an actual live population (pairwise
+genome-similarity among 51 survivors at step 3,000: min=0.120, mean=0.568,
+max=1.000) rather than being degenerate (all near 0 or all near 1).
+
+**What's NOT done, before trusting a real K/ERLK comparative study:**
+- `kinship_similarity_scale=2.0` and `kinship_discount_cap=0.9` are
+  first-guess values, not tuned against any real run.
+- No comparative study has been run for K or ERLK -- this section
+  documents mechanism validation, not a survival-time result.
+- The genome-similarity-as-relatedness proxy is expected to degrade in a
+  large, well-mixed population where similarity no longer tracks recent
+  common ancestry (no parent/lineage IDs are tracked) -- worth checking
+  against actual lineage data before trusting a result, not assumed to
+  hold indefinitely.
+- `kinship_sensitivity`'s own selection dynamics (does nepotism itself get
+  genetically assimilated?) aren't fed into the validated
+  FunctionalConstraintTracker by design (see `Genome.flatten()`'s
+  docstring) -- only a coarse population-mean stat exists so far
+  (`genome_stats()`'s `kinship_sensitivity_mean`).
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

@@ -21,7 +21,7 @@ from the paper, because the paper doesn't contain it. See README.md.
 
 config_erl = {
     "seed": 41,
-    "strategy": "ERL",  # one of ERL, E, L, F, B, C, ERLC -- see world.py::ErlWorld docstring
+    "strategy": "ERL",  # one of ERL, E, L, F, B, C, ERLC, K, ERLK -- see world.py::ErlWorld docstring
 
     # --- World AL structure ---
     "grid_size": 100,  # paper: 100x100, non-toroidal
@@ -127,4 +127,13 @@ config_erl = {
     "cooperation_radius": 3,  # reuses mate_search_radius's scale; not tuned separately yet
     "competency_window": 200,  # steps; a guess, ~1/3 of a well-fed agent's basal-cost lifespan at max_energy_agent
     "coop_threshold_discount_frac": 0.20,  # fraction off reproduction_energy_threshold_agent when group is fit
+
+    # --- Kin selection condition (K / ERLK) -- NEW, not in Ackley & Littman ---
+    # Discounts agent-on-agent attack damage (see world.py's aggression
+    # branch) by sigmoid(kinship_sensitivity) * kinship_discount_cap *
+    # genome_similarity(attacker, victim). Both constants below are first
+    # guesses, not tuned against any real run -- see world.py's module
+    # docstring for the reasoning and known caveats.
+    "kinship_similarity_scale": 2.0,  # RBF kernel scale; founder genomes ~4-5 apart in flat-vector distance
+    "kinship_discount_cap": 0.9,  # max fraction of damage removable even between genetically-identical agents
 }
