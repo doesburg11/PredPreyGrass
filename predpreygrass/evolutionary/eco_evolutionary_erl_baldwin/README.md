@@ -162,3 +162,43 @@ full-scale comparative study on this rebuilt world.
   populations die out quickly; a handful survive far longer. Extinction on a
   short run (see `RESULTS.md`) is expected, not a bug -- multiple
   seeds/longer runs are needed before reading anything into it.
+
+## Cooperation (C / ERLC) -- a new question, not from Ackley & Littman
+
+Houghton (2024), a commentary on Hinton & Nowlan (1987) -- the paper this
+whole module's Baldwin-Effect framing traces back to -- proposes that
+*cooperation*, not just learning, can guide evolution toward a complex
+multi-gene target. His toy model: agents in fixed groups of four, a group
+"fit" once its members collectively cover all 20 needed sub-traits (blind
+to which member supplies which), with breeding biased toward fit-group
+members. That mechanism doesn't port literally -- this world's genome is
+continuous weights producing one composite survival behavior, with no
+decomposable sub-traits the way his 20 binary genes are. What's adapted
+instead: three competencies this world already produces as events
+(foraging, carnivore evasion, reproduction) stand in for his sub-traits. A
+local group (an agent + living agents within `cooperation_radius`) gets a
+reproduction-energy-threshold discount once it has collectively
+demonstrated all three within a recent window, by any member -- the same
+group-blind-to-which-individual credit assignment, adapted from his
+synchronous single-generation toy model to this world's continuous,
+spatially-local, energy-gated reproduction.
+
+Two new strategies, added alongside the original five without changing
+them (`ErlWorld`'s docstring has the full mechanism and code pointers):
+  - **"C"**: like "E" (evolution alone, no learning) plus the group-fitness
+    breeding bonus. Isolates cooperation's marginal effect over evolution
+    alone, the way "L" isolates learning's effect over "F".
+  - **"ERLC"**: like "ERL", plus the same bonus. Tests whether cooperation
+    adds anything on top of learning+evolution combined.
+
+**Status:** mechanism implemented and unit-tested (`tests/test_cooperation.py`,
+including a direct test of the Houghton-style credit assignment -- three
+agents, each missing two of three competencies individually, register as a
+fit group because *between* them all three are covered). Smoke-tested at
+`grid_size=40` for population-scale behavior: the group-fitness check fired
+in ~28% of evaluations, a real, non-trivial rate. **Not yet run as a full
+comparative study** -- `competency_window` and `coop_threshold_discount_frac`
+are first-guess values, and `_agent_group_is_cooperative_fit`'s box-scan
+cost hasn't been profiled at the population scales a real study would need.
+See `RESULTS.md` for how this gets validated at scale before trusting any
+comparative result.

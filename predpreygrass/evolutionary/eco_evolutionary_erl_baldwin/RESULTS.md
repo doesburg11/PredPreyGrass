@@ -10,7 +10,8 @@ survival difficulty is not calibrated to their reported rate (83% of ERL runs re
 ceiling here vs. their ~7%).** See `README.md` for exactly what's matched vs. adapted from
 the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09) and
 should not be read as describing the current codebase; §7-8 describe the null result and
-retune that preceded this final study.
+retune that preceded this final study. §10 (2026-08-24) adds a new, non-paper cooperation
+mechanism (C/ERLC) -- mechanism validated, not yet run as a comparative study.
 
 ---
 
@@ -205,6 +206,39 @@ the functional-constraint genetic-assimilation analysis, §README) -- none of wh
 comparative study attempted. Worth deciding deliberately whether that additional fidelity is
 worth pursuing now that the headline comparative claim is established, rather than assuming
 more precision is automatically valuable.
+
+## 10. Cooperation (C / ERLC) merged (2026-08-24) -- mechanism validated, not yet run at scale
+
+A new, non-Ackley-&-Littman question, motivated by Houghton (2024)'s
+commentary on Hinton & Nowlan (the paper this whole module's Baldwin-Effect
+framing traces back to): can group-level cooperation act as a second
+search accelerant alongside learning? See `README.md`'s "Cooperation (C /
+ERLC)" section for the full mechanism and its relationship to Houghton's
+toy model.
+
+**What's done:** implementation (`world.py`'s cooperation bookkeeping and
+`_agent_group_is_cooperative_fit`, `config.py`'s three new parameters),
+unit tests (`tests/test_cooperation.py`, 9 tests, all passing alongside the
+original 24 -- full suite is 33/33), and a smoke run confirming the
+mechanism isn't a dead no-op: at `grid_size=40`, the group-fitness check
+fired in ~28% of evaluations across a run to extinction (step 375). The
+`_agent_group_is_cooperative_fit` box-scan (O(cooperation_radius^2) per
+reproduction-eligible agent) was implemented directly rather than as a
+later retrofit, unlike the O(agents^2) hotspots found and fixed after the
+fact in §2 above.
+
+**What's NOT done, before trusting a real C/ERLC comparative study:**
+- `competency_window=200` and `coop_threshold_discount_frac=0.20` are
+  first-guess values, not tuned against any real run at the paper-default
+  `grid_size=100` scale.
+- No comparative study (paper-matching 100 seeds/condition, à la §9) has
+  been run for C or ERLC at all -- this section documents mechanism
+  validation, not a survival-time result.
+- This project's own trial history (nuptial-gift, cultural-plasticity) shows
+  social/cooperative mechanisms tend to starve on too few qualifying
+  events -- worth explicitly checking the bonus's actual firing rate at
+  `grid_size=100` population scales before reading anything into a low-
+  signal comparative result, the same lesson already learned once there.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

@@ -40,8 +40,10 @@ def parse_args():
     )
     parser.add_argument("--out-dir", type=str, default=None, help="Override output directory.")
     parser.add_argument(
-        "--strategy", type=str, default=None, choices=["ERL", "E", "L", "F", "B"],
-        help="Override config_erl['strategy'] -- Ackley & Littman's 5 comparative conditions.",
+        "--strategy", type=str, default=None, choices=["ERL", "E", "L", "F", "B", "C", "ERLC"],
+        help="Override config_erl['strategy'] -- ERL/E/L/F/B are Ackley & Littman's 5 "
+             "comparative conditions; C/ERLC add the cooperation breeding-bonus "
+             "(see world.py module docstring).",
     )
     parser.add_argument(
         "--render", type=str, default="none", choices=["none", "live", "snapshots"],

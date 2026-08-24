@@ -21,7 +21,7 @@ from the paper, because the paper doesn't contain it. See README.md.
 
 config_erl = {
     "seed": 41,
-    "strategy": "ERL",  # one of ERL, E, L, F, B -- see world.py::ErlWorld docstring
+    "strategy": "ERL",  # one of ERL, E, L, F, B, C, ERLC -- see world.py::ErlWorld docstring
 
     # --- World AL structure ---
     "grid_size": 100,  # paper: 100x100, non-toroidal
@@ -115,4 +115,16 @@ config_erl = {
     "lr_negative": 0.02,
 
     "max_population_cap": 2000,  # safety valve (pure-Python performance), not in the paper
+
+    # --- Cooperation condition (C / ERLC) -- NEW, not in Ackley & Littman ---
+    # A local group (agent + living agents within `cooperation_radius`,
+    # Chebyshev distance) gets a breeding-eligibility bonus once it has
+    # collectively demonstrated all three tracked competencies -- foraging,
+    # carnivore evasion, reproduction -- within the last `competency_window`
+    # steps, by ANY of its members (selection is blind to which individual
+    # supplied which competency, mirroring Houghton 2024's group-of-four
+    # mechanism). See world.py::_agent_group_is_cooperative_fit.
+    "cooperation_radius": 3,  # reuses mate_search_radius's scale; not tuned separately yet
+    "competency_window": 200,  # steps; a guess, ~1/3 of a well-fed agent's basal-cost lifespan at max_energy_agent
+    "coop_threshold_discount_frac": 0.20,  # fraction off reproduction_energy_threshold_agent when group is fit
 }

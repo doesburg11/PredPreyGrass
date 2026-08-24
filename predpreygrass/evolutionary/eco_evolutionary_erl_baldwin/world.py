@@ -40,6 +40,19 @@ plain categorical/softmax network output rather than literal 2 output
 bits -- same information content, simpler and more standard to train).
 Effect of choosing a direction is determined by the target cell's contents,
 per Figure 5's table -- see `_resolve_action` below.
+
+--- Cooperation (C / ERLC) -- NEW, not in Ackley & Littman 1991 ---
+
+Two additional comparative conditions, layered on top of the five above
+without changing them (see `ErlWorld`'s docstring for the full mechanism,
+its Houghton (2024) motivation, and known caveats/next steps). In one
+sentence: a local group of agents that has collectively demonstrated
+foraging, carnivore evasion, and reproduction within a recent window gets
+a reproduction-energy-threshold discount, blind to which member supplied
+which competency -- a group-fitness credit-sharing mechanism analogous to
+Houghton's group-of-four Baldwin-Effect commentary, adapted to this
+world's continuous, spatially-local, energy-gated reproduction instead of
+his synchronous single-generation toy model.
 """
 
 from dataclasses import dataclass
@@ -68,6 +81,8 @@ TERRAIN_TREE = 2
 
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
+_NEVER = -10**9  # sentinel: "this competency has never been demonstrated"
+
 
 @dataclass
 class Agent:
@@ -85,6 +100,10 @@ class Agent:
     prev_action: int | None = None
     prev_eval: float | None = None
     alive: bool = True
+    # --- cooperation bookkeeping (unused unless strategy is "C"/"ERLC") ---
+    last_forage_step: int = _NEVER
+    last_evade_step: int = _NEVER
+    last_reproduce_step: int = _NEVER
 
 
 @dataclass
@@ -121,13 +140,24 @@ class ErlWorld:
       - "B" (Brownian/luck alone): action selection ignores the network
         (and hence the genome) entirely, choosing uniformly at random
         every step.
+
+    Two additional conditions, NOT from Ackley & Littman -- see this
+    module's docstring for the full cooperation mechanism:
+      - "C" (cooperation alone): like "E" (evolution, no learning), plus a
+        group-fitness reproduction-threshold discount.
+      - "ERLC": like "ERL", plus the same group-fitness discount. Tests
+        whether cooperation adds anything on top of learning+evolution.
+    For "ERL"/"E"/"L"/"F"/"B" the cooperation code path is never entered
+    (see `_handle_agent_reproduction`'s `coop = self.strategy in ("C",
+    "ERLC")` guard) -- those five behave byte-identically to before this
+    was added.
     """
 
     def __init__(self, config: dict, rng: np.random.Generator):
         self.cfg = config
         self.rng = rng
         self.strategy = config.get("strategy", "ERL")
-        assert self.strategy in ("ERL", "E", "L", "F", "B"), self.strategy
+        assert self.strategy in ("ERL", "E", "L", "F", "B", "C", "ERLC"), self.strategy
         self.grid_size = config["grid_size"]
         self.current_step = 0
         self._next_agent_id = 0
@@ -268,8 +298,16 @@ class ErlWorld:
 
     def step(self):
         self.current_step += 1
+        coop = self.strategy in ("C", "ERLC")
+        threatened_ids = self._agents_with_carnivore_nearby() if coop else frozenset()
+        self._attacked_this_step: set[int] = set()
+
         self._step_agents()
         self._step_carnivores()
+
+        if coop:
+            self._record_evasions(threatened_ids)
+
         self._handle_agent_reproduction()
         self._handle_carnivore_reproduction()
         self._decay_corpses()
@@ -284,7 +322,8 @@ class ErlWorld:
     def _step_agents(self):
         order = list(self.agents)
         self.rng.shuffle(order)
-        learning_enabled = self.strategy in ("ERL", "L")
+        learning_enabled = self.strategy in ("ERL", "L", "ERLC")
+        coop = self.strategy in ("C", "ERLC")
         for agent in order:
             if not agent.alive:
                 continue
@@ -305,7 +344,7 @@ class ErlWorld:
                 probs = action_probs(obs, agent.action_weights, agent.action_bias)
                 action = sample_action(probs, self.rng)
 
-            self._resolve_agent_action(agent, action)
+            self._resolve_agent_action(agent, action, track_forage=coop)
 
             agent.prev_obs = obs
             agent.prev_action = action
@@ -316,7 +355,7 @@ class ErlWorld:
                 if agent.energy <= 0 or agent.health <= 0:
                     self._kill_agent(agent)
 
-    def _resolve_agent_action(self, agent: Agent, action: int):
+    def _resolve_agent_action(self, agent: Agent, action: int, track_forage: bool = False):
         dr, dc = _DIRS[action]
         tr, tc = agent.row + dr, agent.col + dc
         if not (0 <= tr < self.grid_size and 0 <= tc < self.grid_size):
@@ -354,12 +393,16 @@ class ErlWorld:
             corpse.energy -= bite
             if corpse.energy <= 0:
                 del self.corpses[(tr, tc)]
+            if track_forage:
+                agent.last_forage_step = self.current_step
             return
 
         if self.plant[tr, tc]:
             agent.energy = min(agent.energy + self.cfg["plant_energy"], self.cfg["max_energy_agent"])
             self.plant[tr, tc] = False
             self._move_agent(agent, tr, tc)
+            if track_forage:
+                agent.last_forage_step = self.current_step
             return
 
         # empty cell, nothing there: Enter
@@ -439,6 +482,8 @@ class ErlWorld:
 
         if isinstance(occupant, Agent):
             occupant.health -= self.cfg["carnivore_attack_damage"]
+            if self.strategy in ("C", "ERLC"):
+                self._attacked_this_step.add(occupant.agent_id)
             if occupant.health <= 0:
                 self._kill_agent(occupant)
             return
@@ -466,12 +511,90 @@ class ErlWorld:
         self.occupant.pop((carnivore.row, carnivore.col), None)
         self.corpses[(carnivore.row, carnivore.col)] = Corpse(kind="carnivore", energy=self.cfg["corpse_total_energy"])
 
+    # ---- cooperation bookkeeping (gated to "C"/"ERLC" by callers) ----
+
+    def _agents_with_carnivore_nearby(self) -> frozenset[int]:
+        """Ground-truth (not a perceptual channel) bookkeeping helper: which
+        agents had a living carnivore within `agent_sense_range` (Chebyshev)
+        at the START of this step, before anyone moved. O(agents *
+        carnivores) -- cheap given carnivore counts stay small relative to
+        agents in this world (spawn-rate-limited, not population-limited).
+        """
+        if not self.carnivores:
+            return frozenset()
+        r = self.cfg["agent_sense_range"]
+        threatened = set()
+        for agent in self.agents:
+            if not agent.alive:
+                continue
+            for c in self.carnivores:
+                if not c.alive:
+                    continue
+                if abs(c.row - agent.row) <= r and abs(c.col - agent.col) <= r:
+                    threatened.add(agent.agent_id)
+                    break
+        return frozenset(threatened)
+
+    def _record_evasions(self, threatened_ids: frozenset[int]):
+        """An agent 'evades' this step if it was threatened at the step's
+        start and survived the carnivore phase without being attacked.
+        Called after `_step_carnivores` so `_attacked_this_step` is final."""
+        for agent in self.agents:
+            if agent.alive and agent.agent_id in threatened_ids and agent.agent_id not in self._attacked_this_step:
+                agent.last_evade_step = self.current_step
+
+    def _agent_group_is_cooperative_fit(self, agent: Agent) -> bool:
+        """True if `agent`'s local group (itself + living agents within
+        `cooperation_radius`, Chebyshev) has collectively demonstrated all
+        three tracked competencies within `competency_window` steps, by
+        ANY member -- blind to which member supplied which competency,
+        mirroring Houghton (2024)'s group-fitness credit assignment.
+
+        Implemented as a bounded box-scan over `self.occupant` (O(radius^2)
+        cell lookups, radius=cooperation_radius) rather than a linear scan
+        over `self.agents` (O(population)) -- the same class of fix already
+        applied to `_observe`/`_try_eat` in this world's earlier
+        performance pass (see RESULTS.md section 2), applied here from the
+        start rather than as a later retrofit.
+        """
+        radius = self.cfg["cooperation_radius"]
+        cutoff = self.current_step - self.cfg["competency_window"]
+        foraged = agent.last_forage_step >= cutoff
+        evaded = agent.last_evade_step >= cutoff
+        reproduced = agent.last_reproduce_step >= cutoff
+        if foraged and evaded and reproduced:
+            return True
+        for dr in range(-radius, radius + 1):
+            for dc in range(-radius, radius + 1):
+                if dr == 0 and dc == 0:
+                    continue
+                r, c = agent.row + dr, agent.col + dc
+                if not (0 <= r < self.grid_size and 0 <= c < self.grid_size):
+                    continue
+                other = self.occupant.get((r, c))
+                if isinstance(other, Agent) and other.alive:
+                    if other.last_forage_step >= cutoff:
+                        foraged = True
+                    if other.last_evade_step >= cutoff:
+                        evaded = True
+                    if other.last_reproduce_step >= cutoff:
+                        reproduced = True
+                    if foraged and evaded and reproduced:
+                        return True
+        return foraged and evaded and reproduced
+
     # ---- reproduction ----
 
     def _handle_agent_reproduction(self):
+        coop = self.strategy in ("C", "ERLC")
         newborns = []
         for agent in self.agents:
-            if not agent.alive or agent.energy < self.cfg["reproduction_energy_threshold_agent"]:
+            if not agent.alive:
+                continue
+            threshold = self.cfg["reproduction_energy_threshold_agent"]
+            if coop and self._agent_group_is_cooperative_fit(agent):
+                threshold *= (1.0 - self.cfg["coop_threshold_discount_frac"])
+            if agent.energy < threshold:
                 continue
             if len(self.agents) + len(newborns) >= self.cfg["max_population_cap"]:
                 continue
@@ -489,6 +612,8 @@ class ErlWorld:
             self.constraint_tracker.record(agent.genome.flatten(), child_genome.flatten())
 
             agent.energy -= self.cfg["reproduction_energy_cost_agent"]
+            if coop:
+                agent.last_reproduce_step = self.current_step
             row, col = cell
             child = Agent(
                 agent_id=self._next_agent_id,
