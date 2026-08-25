@@ -15,9 +15,12 @@ mechanism (C/ERLC) -- mechanism validated. §11
 (2026-08-24) adds a second, independent new mechanism, kin selection (K/ERLK) -- same
 status: mechanism validated. §12 (2026-08-25) is a pilot comparative study (n=20,
 300k-step budget) for both: no statistically detectable effect from either mechanism at
-this scale, but learning still dominates strongly regardless (p=0.002, p=0.027) -- a
-full paper-scale study (n=100, 1M-step ceiling) has NOT been run; see §12 for the
-~12-day wall-clock cost estimate.
+this scale, but learning still dominates strongly regardless (p=0.002, p=0.027). §13
+(2026-08-25) resolves §12's ambiguity with a cheap diagnostic (mechanisms deliberately
+strengthened, not more seeds): both C/ERLC and K/ERLK get WORSE, not better, when
+strengthened (p=0.0005, p=0.02 for the learning-combined conditions) -- **both mechanism
+designs are now treated as a documented dead end**, the ~12-day full-scale study was
+never run and isn't planned, see §13 for the reasoning.
 
 ---
 
@@ -213,7 +216,7 @@ comparative study attempted. Worth deciding deliberately whether that additional
 worth pursuing now that the headline comparative claim is established, rather than assuming
 more precision is automatically valuable.
 
-## 10. Cooperation (C / ERLC) merged (2026-08-24) -- mechanism validated; see §12 for pilot-scale results
+## 10. Cooperation (C / ERLC) merged (2026-08-24) -- mechanism validated; see §12-13 for results (now a documented dead end)
 
 A new, non-Ackley-&-Littman question, motivated by Houghton (2024)'s
 commentary on Hinton & Nowlan (the paper this whole module's Baldwin-Effect
@@ -248,7 +251,7 @@ fact in §2 above.
   `grid_size=100` population scales before reading anything into a low-
   signal comparative result, the same lesson already learned once there.
 
-## 11. Kin selection (K / ERLK) merged (2026-08-24) -- mechanism validated; see §12 for pilot-scale results
+## 11. Kin selection (K / ERLK) merged (2026-08-24) -- mechanism validated; see §12-13 for results (now a documented dead end)
 
 A second, independent new question (Nowak's kin-selection mechanism,
 alongside §10's group-selection-flavored cooperation) -- see `README.md`'s
@@ -340,6 +343,65 @@ ERLC: 324h, K: 144h, ERLK: 333h scaled to n=100/1M-steps) -- **~293 hours
 pilot**, or proportionally faster at higher parallelism if the thermal
 margin allows (§9's own study used 24-way parallel). Not launched as part
 of this pilot -- a deliberate scope decision, not yet made.
+
+## 13. Cranked-sensitivity diagnostic (2026-08-25) -- resolves §12's ambiguity: not underpowered, actively harmful when strengthened
+
+§12's pilot left a real ambiguity open: is the null result "no effect" or "too
+weak a study to see a real effect"? Rather than jumping straight to the
+~12-day full-scale study to resolve this the expensive way, ran a cheap
+diagnostic first (mirroring how the original ERL result was actually
+unblocked -- §8's retune, not §7's attempt to just add more seeds to an
+uncalibrated config): 32 runs (`C`/`ERLC`/`K`/`ERLK` x 8 seeds), same
+300k-step budget, but with the mechanisms deliberately made much stronger
+than their first-guess defaults --
+`coop_threshold_discount_frac` 0.20->0.70, `competency_window` 200->500,
+`cooperation_radius` 3->5, `kinship_similarity_scale` 2.0->6.0
+(`kinship_discount_cap` left at 0.9, already near its ceiling).
+
+**Results:**
+
+| condition | n | reached 300k cap | median | vs. baseline | vs. §12 default-pilot |
+|---|---|---|---|---|---|
+| C (cranked) | 8 | 0% | 3,412 | p=0.38 (n.s.) | p=0.78 (n.s.) |
+| K (cranked) | 8 | 25% | 3,650 | p=0.67 (n.s.) | p=0.62 (worse) |
+| ERLC (cranked) | 8 | 25% | 16,069 | **p=0.0005 (WORSE)** | p=0.069 (worse) |
+| ERLK (cranked) | 8 | 50% | 153,013 | **p=0.02 (WORSE)** | p=0.17 (worse) |
+
+**Conclusion: cranking the mechanisms did not reveal a hidden benefit -- it
+revealed active harm, decisively so for the learning-combined conditions
+despite the small n=8.** `ERLC` collapsed from §12's 75% cap-rate / 300,000
+median (default params) down to 25% / 16,069 under the stronger discount --
+a large, statistically clear drop, not noise. `ERLK` shows the same
+direction. This resolves §12's ambiguity in the LESS favorable direction:
+the result is not "underpowered," it's "the mechanism's lever is
+counterproductive, and more so the harder you push it."
+
+**Why, most likely:** both mechanisms work by making reproduction/survival
+easier for qualifying agents (`C`/`ERLC` via a reproduction-threshold
+discount, `K`/`ERLK` via reduced aggression damage). That is structurally
+the same lever that caused the ORIGINAL boom-bust collapse (§7) before the
+2026-08-10 retune (§8) -- population overshoot feeding an explosive
+carnivore boom that wipes everything out. Cranking these mechanisms harder
+plausibly re-triggers a milder version of that exact failure mode rather
+than amplifying a real survival benefit. Not directly confirmed via a
+population trace in this diagnostic, but consistent with every number
+observed and with this project's own established history.
+
+**Decision: treat the current C/ERLC/K/ERLK mechanism designs as a
+documented dead end, not worth the ~12-day full-scale study** -- the same
+category of stopping decision already made for the nuptial-gift and
+cultural-plasticity trials when their signal-to-cost ratio didn't justify
+continuing. This is NOT a claim that cooperation or kin selection are
+uninteresting questions for this world in general -- it's specifically
+that THESE mechanism designs, which both route through easing
+reproduction/survival cost, hit the same structural failure mode this
+world is already known to be sensitive to. A mechanism that doesn't touch
+reproduction thresholds or damage at all (e.g. something that only affects
+information/perception, like Houghton's original toy model's group-fitness
+credit without a threshold-discount implementation, or a resource-sharing
+mechanic bounded well below the reproduction-threshold retune's existing
+margins) would be a genuinely separate question, not something this result
+rules out -- just not pursued further here.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

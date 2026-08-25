@@ -196,12 +196,15 @@ including a direct test of the Houghton-style credit assignment -- three
 agents, each missing two of three competencies individually, register as a
 fit group because *between* them all three are covered). Smoke-tested at
 `grid_size=40` for population-scale behavior: the group-fitness check fired
-in ~28% of evaluations, a real, non-trivial rate. **Not yet run as a full
-comparative study** -- `competency_window` and `coop_threshold_discount_frac`
-are first-guess values, and `_agent_group_is_cooperative_fit`'s box-scan
-cost hasn't been profiled at the population scales a real study would need.
-See `RESULTS.md` for how this gets validated at scale before trusting any
-comparative result.
+in ~28% of evaluations, a real, non-trivial rate. **A pilot comparative
+study and a follow-up sensitivity check (RESULTS.md §12-13) since found
+this mechanism design is a dead end**: no detectable benefit at default
+strength, and actively *worse* survival when strengthened -- most likely
+because its reproduction-threshold-discount lever re-triggers the same
+boom-bust failure mode (§7) the base world needed retuning to avoid. Not
+pursued further as designed; see §13 for what a genuinely different
+mechanism (one that doesn't touch reproduction thresholds) would need to
+look like instead.
 
 ## Kin selection (K / ERLK) -- a second, independent cooperation question
 
@@ -238,9 +241,10 @@ at `grid_size=100` (paper default) over 3,000 steps: surviving-population
 pairwise genome-similarity ranged from 0.120 to 1.000 (mean 0.568) -- real
 spread, not degenerate, confirming actual encounters in a live population
 span the full spectrum from close-kin-large-discount to
-unrelated-no-discount. **Not yet run as a comparative study** --
-`kinship_similarity_scale` and `kinship_discount_cap` are first-guess
-values, and the relatedness-as-genome-similarity proxy is expected to
-degrade in a large, well-mixed population where similarity no longer
-tracks recent common ancestry -- worth checking against actual lineage data
-before trusting a result.
+unrelated-no-discount. **A pilot comparative study and a follow-up
+sensitivity check (RESULTS.md §12-13) since found this mechanism design is
+a dead end**: no detectable benefit at default strength, and actively
+*worse* survival when strengthened -- most likely because reducing
+aggression damage this broadly re-triggers the same reproduction/survival-
+easing dynamic that caused the base world's boom-bust problem (§7) before
+its retune. Not pursued further as designed.
