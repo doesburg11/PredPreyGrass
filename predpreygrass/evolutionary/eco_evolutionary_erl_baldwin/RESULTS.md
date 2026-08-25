@@ -11,9 +11,13 @@ ceiling here vs. their ~7%).** See `README.md` for exactly what's matched vs. ad
 the paper. §1-5 below describe the superseded, simpler-ecology version (pre-2026-08-09) and
 should not be read as describing the current codebase; §7-8 describe the null result and
 retune that preceded this final study. §10 (2026-08-24) adds a new, non-paper cooperation
-mechanism (C/ERLC) -- mechanism validated, not yet run as a comparative study. §11
+mechanism (C/ERLC) -- mechanism validated. §11
 (2026-08-24) adds a second, independent new mechanism, kin selection (K/ERLK) -- same
-status: mechanism validated, not yet run as a comparative study.
+status: mechanism validated. §12 (2026-08-25) is a pilot comparative study (n=20,
+300k-step budget) for both: no statistically detectable effect from either mechanism at
+this scale, but learning still dominates strongly regardless (p=0.002, p=0.027) -- a
+full paper-scale study (n=100, 1M-step ceiling) has NOT been run; see §12 for the
+~12-day wall-clock cost estimate.
 
 ---
 
@@ -209,7 +213,7 @@ comparative study attempted. Worth deciding deliberately whether that additional
 worth pursuing now that the headline comparative claim is established, rather than assuming
 more precision is automatically valuable.
 
-## 10. Cooperation (C / ERLC) merged (2026-08-24) -- mechanism validated, not yet run at scale
+## 10. Cooperation (C / ERLC) merged (2026-08-24) -- mechanism validated; see §12 for pilot-scale results
 
 A new, non-Ackley-&-Littman question, motivated by Houghton (2024)'s
 commentary on Hinton & Nowlan (the paper this whole module's Baldwin-Effect
@@ -233,16 +237,18 @@ fact in §2 above.
 - `competency_window=200` and `coop_threshold_discount_frac=0.20` are
   first-guess values, not tuned against any real run at the paper-default
   `grid_size=100` scale.
-- No comparative study (paper-matching 100 seeds/condition, à la §9) has
-  been run for C or ERLC at all -- this section documents mechanism
-  validation, not a survival-time result.
+- No FULL-SCALE comparative study (paper-matching 100 seeds/condition, à la
+  §9) has been run for C or ERLC -- a smaller pilot (n=20, 300k-step budget)
+  has, see §12: no statistically detectable effect vs. E/ERL at that scale,
+  but not enough power yet to distinguish "no effect" from "too small a
+  study to see it."
 - This project's own trial history (nuptial-gift, cultural-plasticity) shows
   social/cooperative mechanisms tend to starve on too few qualifying
   events -- worth explicitly checking the bonus's actual firing rate at
   `grid_size=100` population scales before reading anything into a low-
   signal comparative result, the same lesson already learned once there.
 
-## 11. Kin selection (K / ERLK) merged (2026-08-24) -- mechanism validated, not yet run at scale
+## 11. Kin selection (K / ERLK) merged (2026-08-24) -- mechanism validated; see §12 for pilot-scale results
 
 A second, independent new question (Nowak's kin-selection mechanism,
 alongside §10's group-selection-flavored cooperation) -- see `README.md`'s
@@ -261,8 +267,10 @@ max=1.000) rather than being degenerate (all near 0 or all near 1).
 **What's NOT done, before trusting a real K/ERLK comparative study:**
 - `kinship_similarity_scale=2.0` and `kinship_discount_cap=0.9` are
   first-guess values, not tuned against any real run.
-- No comparative study has been run for K or ERLK -- this section
-  documents mechanism validation, not a survival-time result.
+- No FULL-SCALE comparative study has been run for K or ERLK -- a smaller
+  pilot (n=20, 300k-step budget) has, see §12: no statistically detectable
+  effect vs. E/ERL at that scale, but not enough power yet to distinguish
+  "no effect" from "too small a study to see it."
 - The genome-similarity-as-relatedness proxy is expected to degrade in a
   large, well-mixed population where similarity no longer tracks recent
   common ancestry (no parent/lineage IDs are tracked) -- worth checking
@@ -273,6 +281,65 @@ max=1.000) rather than being degenerate (all near 0 or all near 1).
   FunctionalConstraintTracker by design (see `Genome.flatten()`'s
   docstring) -- only a coarse population-mean stat exists so far
   (`genome_stats()`'s `kinship_sensitivity_mean`).
+
+## 12. Pilot comparative study: C/ERLC/K/ERLK vs. baselines (2026-08-25) -- no detectable effect at this scale; learning still dominates
+
+A first, deliberately cheaper look at whether cooperation (§10) or kin
+selection (§11) actually help survival, before committing to a full
+paper-scale study. Design: 80 runs -- `C`, `ERLC`, `K`, `ERLK` x 20 seeds
+each, 300,000-step budget (not the full 1,000,000-step ceiling) -- compared
+against the existing `E`/`ERL` logs from the original 500-run study (§9),
+truncated to the same 300k-step window rather than re-run. 3-way parallel
+(the thermal ceiling found the day before, see the hardware note below),
+completed in under 24 hours wall-clock.
+
+**Results:**
+
+| comparison | n | reached 300k cap | median | p-value | direction |
+|---|---|---|---|---|---|
+| C vs E | 20 vs 100 | 20% vs 33% | 1,854 vs 3,221 | 0.16 | not significant |
+| K vs E | 20 vs 100 | 40% vs 33% | 5,518 vs 3,221 | 0.54 | not significant |
+| ERLC vs ERL | 20 vs 100 | 75% vs 83% | both at cap | 0.36 | not significant |
+| ERLK vs ERL | 20 vs 100 | 80% vs 83% | both at cap | 0.66 | not significant |
+
+**Neither new mechanism shows a statistically detectable effect, positive or
+negative, at this scale.** Worth flagging a real methodological lesson from
+how this was reached: with only 10/20 `ERLC` seeds in, an interim read
+showed `ERLC` significantly *worse* than `ERL` (p=0.01) -- that result did
+NOT replicate once the remaining 10 seeds landed, regressing to p=0.36 (no
+difference). A clean demonstration of why a partial n=10 read shouldn't be
+trusted, kept here as a documented caution against reading too much into
+in-progress batches, not just a note-to-self.
+
+**What IS clearly reproduced, strongly:**
+
+| comparison | p-value |
+|---|---|
+| ERLC vs C (does learning help on top of cooperation?) | **0.002** |
+| ERLK vs K (does learning help on top of kin selection?) | **0.027** |
+
+Adding either new mechanism doesn't change the headline finding from §9:
+within-lifetime learning remains the dominant lever by a wide margin
+(75-80% cap-reach rate with learning vs. 20-40% without, regardless of
+which cooperation mechanism is present).
+
+**Honest interpretation:** this is NOT evidence that cooperation or kin
+selection don't work -- it's evidence that, at n=20 and a 300k-step budget,
+neither effect (if real) is large enough to separate from noise next to
+learning's much bigger effect. The base ERL-vs-baseline signal itself only
+became clearly significant at the full n=100/1M-step scale (§7's null
+result at a shorter budget, fixed by scaling up, not by the mechanism being
+wrong) -- the same could be true here. Distinguishing "no effect" from "too
+small a study to see it" needs the full-scale version.
+
+**Cost of a full-scale version** (n=100, 1M-step ceiling, matching §9's
+design, computed from this pilot's actual observed per-seed timing rather
+than estimated): ~878 CPU-hours total across all four conditions (C: 78h,
+ERLC: 324h, K: 144h, ERLK: 333h scaled to n=100/1M-steps) -- **~293 hours
+(~12 days) wall-clock at the thermal-safe 3-way parallelism used for this
+pilot**, or proportionally faster at higher parallelism if the thermal
+margin allows (§9's own study used 24-way parallel). Not launched as part
+of this pilot -- a deliberate scope decision, not yet made.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
