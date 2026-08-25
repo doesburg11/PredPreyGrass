@@ -20,7 +20,11 @@ this scale, but learning still dominates strongly regardless (p=0.002, p=0.027).
 strengthened, not more seeds): both C/ERLC and K/ERLK get WORSE, not better, when
 strengthened (p=0.0005, p=0.02 for the learning-combined conditions) -- **both mechanism
 designs are now treated as a documented dead end**, the ~12-day full-scale study was
-never run and isn't planned, see §13 for the reasoning.
+never run and isn't planned, see §13 for the reasoning. §14 (2026-08-25) adds a THIRD,
+independent mechanism -- communication/alarm calls (S/ERLS), modeled on Ackley &
+Littman's own 1994 follow-up -- deliberately using a different lever (pure information,
+no reproduction/damage discount) than the two that failed. Mechanism validated; not yet
+run at any scale.
 
 ---
 
@@ -402,6 +406,39 @@ credit without a threshold-discount implementation, or a resource-sharing
 mechanic bounded well below the reproduction-threshold retune's existing
 margins) would be a genuinely separate question, not something this result
 rules out -- just not pursued further here.
+
+## 14. Communication / alarm calls (S / ERLS) merged (2026-08-25) -- mechanism validated, not yet run at scale
+
+A third, independent cooperation mechanism, deliberately built on a
+different lever than C/ERLC and K/ERLK -- see README.md's "Communication /
+alarm calls (S / ERLS)" section for the full mechanism and its direct
+grounding in Ackley & Littman's own 1994 follow-up, "Altruism in the
+Evolution of Communication" (Artificial Life IV), found via literature
+search after §13 closed out the reproduction/damage-discount approach.
+
+**What's done:** implementation (`genome.py`'s new `alarm_call_propensity`
+trait, `world.py`'s per-strategy `self.obs_dim` extension -- genomes and
+observations grow by one dimension only for "S"/"ERLS", every other
+strategy stays byte-identical -- plus the alarm-signal ray-cast, call
+emission, and carnivore-targeting cost), unit tests
+(`tests/test_communication.py`, 17 tests, all passing alongside the
+original 24 and the 9+11 C/ERLC and K/ERLK tests -- full suite is 61/61),
+and a smoke run at the paper-default `grid_size=100` confirming the
+mechanism fires in practice (461 calls for `S`, 1,286 for `ERLS` before
+extinction) without crashing, at normal throughput.
+
+**What's NOT done, before trusting a result:**
+- `alarm_recency_window=2` and `call_conspicuousness_multiplier=1.8` are
+  first-guess values, not tuned against any real run.
+- No comparative study of any kind has been run for S or ERLS yet -- this
+  section documents mechanism validation only, the same status C/ERLC and
+  K/ERLK had before §12's pilot.
+- Unlike C/ERLC and K/ERLK, this mechanism does not touch reproduction
+  thresholds or damage at all -- §13's dead-end finding for the other two
+  mechanisms provides no evidence either way about this one. The natural
+  next step, if pursued, is the same disciplined sequence already used
+  once: a cheap pilot (n=20, 300k-step budget, §12's design) before any
+  full-scale commitment.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

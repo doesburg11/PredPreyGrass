@@ -21,7 +21,7 @@ from the paper, because the paper doesn't contain it. See README.md.
 
 config_erl = {
     "seed": 41,
-    "strategy": "ERL",  # one of ERL, E, L, F, B, C, ERLC, K, ERLK -- see world.py::ErlWorld docstring
+    "strategy": "ERL",  # one of ERL, E, L, F, B, C, ERLC, K, ERLK, S, ERLS -- see world.py::ErlWorld docstring
 
     # --- World AL structure ---
     "grid_size": 100,  # paper: 100x100, non-toroidal
@@ -136,4 +136,15 @@ config_erl = {
     # docstring for the reasoning and known caveats.
     "kinship_similarity_scale": 2.0,  # RBF kernel scale; founder genomes ~4-5 apart in flat-vector distance
     "kinship_discount_cap": 0.9,  # max fraction of damage removable even between genetically-identical agents
+
+    # --- Communication condition (S / ERLS) -- NEW, not in Ackley & Littman ---
+    # An alarm call, modeled on Ackley & Littman's own 1994 follow-up
+    # ("Altruism in the Evolution of Communication"). A calling agent is
+    # more visible to carnivore targeting for this many steps
+    # (`alarm_recency_window`), scaled by `call_conspicuousness_multiplier`
+    # -- the cost side. Reception is purely informational (an extra
+    # observation input, see world.py); no bonus is hard-coded on the
+    # receiving end. Both values are first guesses, not tuned.
+    "alarm_recency_window": 2,  # steps a call remains perceivable/conspicuous
+    "call_conspicuousness_multiplier": 1.8,  # how much louder a caller looks to carnivore targeting
 }

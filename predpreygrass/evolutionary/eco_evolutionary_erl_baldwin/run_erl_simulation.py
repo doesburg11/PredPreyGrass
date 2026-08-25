@@ -41,10 +41,11 @@ def parse_args():
     parser.add_argument("--out-dir", type=str, default=None, help="Override output directory.")
     parser.add_argument(
         "--strategy", type=str, default=None,
-        choices=["ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK"],
+        choices=["ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK", "S", "ERLS"],
         help="Override config_erl['strategy'] -- ERL/E/L/F/B are Ackley & Littman's 5 "
              "comparative conditions; C/ERLC add the cooperation breeding-bonus, K/ERLK "
-             "add the kin-selection damage discount (see world.py module docstring).",
+             "add the kin-selection damage discount, S/ERLS add the alarm-call "
+             "communication mechanism (see world.py module docstring for all three).",
     )
     parser.add_argument(
         "--render", type=str, default="none", choices=["none", "live", "snapshots"],

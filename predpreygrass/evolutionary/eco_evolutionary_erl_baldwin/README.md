@@ -248,3 +248,50 @@ a dead end**: no detectable benefit at default strength, and actively
 aggression damage this broadly re-triggers the same reproduction/survival-
 easing dynamic that caused the base world's boom-bust problem (§7) before
 its retune. Not pursued further as designed.
+
+## Communication / alarm calls (S / ERLS) -- a third mechanism, deliberately different lever
+
+C/ERLC and K/ERLK both work by DISCOUNTING a survival/reproduction cost --
+which is most likely why both hit the same boom-bust failure mode this
+world already needed retuning to avoid. This third mechanism is built on a
+structurally different lever: pure information, no discount on anything.
+
+Directly modeled on Ackley & Littman's OWN 1994 follow-up to their 1991
+paper -- "Altruism in the Evolution of Communication" (Artificial Life IV)
+-- which extended World AL with evolved alarm/food signaling and found
+predator-warning calls reliably evolve when predators significantly affect
+survival and the signal can interfere with predator success, despite being
+costly (it can attract the predator to the caller).
+
+Mechanism: agents under "S"/"ERLS" get one extra observation input (line-
+of-sight alarm signal, same blocking semantics as the existing visual
+channels), fed by a new evolvable trait `genome.alarm_call_propensity`
+(sigmoid-transformed) that determines the probability of calling when a
+carnivore is nearby -- deliberately evolvable, not hard-coded, since
+whether a costly signal is worth emitting at all is the actual question.
+The cost is real: a calling agent becomes measurably more conspicuous to
+carnivore targeting (`call_conspicuousness_multiplier`) for a few steps.
+Critically, there is NO hard-coded benefit on the receiving end -- whether
+the existing evolved eval network learns to treat the alarm as "danger"
+and the existing learned/evolved action network learns to move away from
+it is left entirely to the same machinery that drives every other
+behavior. No new reflex, on purpose: otherwise this would just be a third
+bespoke bonus, not a fair test of whether general learning+evolution can
+exploit an information channel.
+
+Two new strategies, independent of C/ERLC, K/ERLK, and each other:
+  - **"S"**: like "E" (evolution alone, no learning) plus the alarm
+    mechanism.
+  - **"ERLS"**: like "ERL", plus the same mechanism.
+
+**Status:** mechanism implemented and unit-tested (`tests/test_communication.py`,
+17 tests -- including line-of-sight blocking, propensity-driven call
+decisions, and a direct test that a carnivore prefers a calling agent over
+an equally-distant quiet one). Smoke-tested at `grid_size=100` (paper
+default): the mechanism fires in practice (461 calls for `S`, 1,286 for
+`ERLS` over a few thousand steps) without crashing, at normal throughput.
+**Not yet run as any kind of comparative study** -- `alarm_recency_window`
+and `call_conspicuousness_multiplier` are first-guess values. Unlike
+C/ERLC and K/ERLK, this mechanism does not touch reproduction thresholds
+or damage at all, so their negative result says nothing about whether this
+one works -- that's the entire point of building it.

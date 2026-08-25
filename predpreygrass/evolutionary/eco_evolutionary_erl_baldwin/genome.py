@@ -38,6 +38,14 @@ class Genome:
     # very negative means "never discount," very positive means "discount
     # up to the configured cap." See world.py's kin-selection docstring.
     kinship_sensitivity: float = 0.0
+    # --- communication condition (S / ERLS) -- NEW, unused by other strategies ---
+    # Evolvable propensity to emit an alarm call when a carnivore is
+    # detected nearby (sigmoid-transformed before use, see world.py). This
+    # is deliberately evolvable rather than hard-coded: whether a costly
+    # signal is worth emitting is itself the scientific question, per
+    # Ackley & Littman's own 1994 follow-up ("Altruism in the Evolution of
+    # Communication") -- see world.py's module docstring.
+    alarm_call_propensity: float = 0.0
 
     def copy(self) -> "Genome":
         return Genome(
@@ -46,6 +54,7 @@ class Genome:
             action_weights=self.action_weights.copy(),
             action_bias=self.action_bias.copy(),
             kinship_sensitivity=self.kinship_sensitivity,
+            alarm_call_propensity=self.alarm_call_propensity,
         )
 
     def flatten(self) -> np.ndarray:
@@ -73,6 +82,7 @@ def founder_genome(obs_dim: int, n_actions: int, rng: np.random.Generator, init_
         action_weights=rng.normal(0.0, init_std, size=(obs_dim, n_actions)),
         action_bias=rng.normal(0.0, init_std, size=n_actions),
         kinship_sensitivity=float(rng.normal(0.0, init_std)),
+        alarm_call_propensity=float(rng.normal(0.0, init_std)),
     )
 
 
@@ -95,6 +105,9 @@ def mutate(genome: Genome, rng: np.random.Generator, rate: float, std: float) ->
     if rng.random() < rate:
         child.kinship_sensitivity += float(rng.normal(0.0, std))
 
+    if rng.random() < rate:
+        child.alarm_call_propensity += float(rng.normal(0.0, std))
+
     return child
 
 
@@ -113,6 +126,7 @@ def crossover(a: Genome, b: Genome, rng: np.random.Generator) -> Genome:
         action_weights=mix(a.action_weights, b.action_weights),
         action_bias=mix(a.action_bias, b.action_bias),
         kinship_sensitivity=a.kinship_sensitivity if rng.random() < 0.5 else b.kinship_sensitivity,
+        alarm_call_propensity=a.alarm_call_propensity if rng.random() < 0.5 else b.alarm_call_propensity,
     )
 
 

@@ -103,6 +103,72 @@ KNOWN NOT YET DONE for kin selection, mirroring the C/ERLC caveats:
     well-mixed population where genome similarity no longer tracks true
     recent common ancestry -- worth checking against actual lineage data
     before trusting a result, not assumed to hold indefinitely.
+
+--- Communication / alarm calls (S / ERLS) -- NEW, also not in Ackley & Littman 1991 ---
+
+A third, independent cooperation mechanism. C/ERLC and K/ERLK both help
+agents by DISCOUNTING a survival/reproduction cost (easier reproduction,
+less damage) -- and both turned out to be dead ends (RESULTS.md §12-13),
+most likely because that lever re-triggers this world's known boom-bust
+failure mode (§7). This mechanism uses a structurally different lever:
+pure information, no discount on anything.
+
+Directly modeled on Ackley & Littman's OWN 1994 follow-up to their 1991
+paper -- "Altruism in the Evolution of Communication" (Artificial Life IV)
+-- which extended World AL with evolved alarm/food signaling and found
+predator-warning calls reliably evolve when predators significantly affect
+survival and the signal can interfere with predator success, despite
+signaling being costly (it can attract the predator to the caller).
+
+Mechanism:
+  - Agents under "S"/"ERLS" get one extra observation input (`self.obs_dim`
+    = OBS_DIM + 1 instead of OBS_DIM; genomes are sized accordingly via
+    `founder_genome`'s existing `obs_dim` parameter -- no change needed to
+    genome/network code, which was already dimension-agnostic). All other
+    strategies keep `self.obs_dim == OBS_DIM` exactly as before --
+    byte-identical, unaffected.
+  - A new evolvable trait, `genome.alarm_call_propensity` (sigmoid-
+    transformed), determines the PROBABILITY an agent calls when a
+    carnivore is within `agent_sense_range` -- deliberately evolvable, not
+    hard-coded, because whether a costly signal is worth emitting at all is
+    the actual scientific question (mirroring the source paper).
+  - Calling sets `Agent.last_call_step`. Reception is purely informational:
+    `_alarm_signal` ray-casts in the four compass directions (same
+    line-of-sight semantics as `_visual_signal` -- blocked by the first
+    non-empty cell) for a living agent that called within
+    `alarm_recency_window` steps, and the strongest such signal becomes the
+    new observation input. Nothing forces a useful response -- whether the
+    EXISTING evolved eval network learns to treat alarm as "bad" and the
+    EXISTING learned/evolved action network learns to move away from it is
+    left entirely to the same machinery that already drives every other
+    behavior. No new hard-coded reflex, on purpose -- otherwise this would
+    just be a fourth bespoke bonus, not a fair test of whether general
+    learning+evolution can exploit an information channel.
+  - The cost: `_carnivore_fsa_action`'s target-signal calculation multiplies
+    a calling agent's visibility to carnivores by
+    `call_conspicuousness_multiplier` (>1) for `alarm_recency_window` steps
+    after calling -- a caller is genuinely more likely to be targeted,
+    mirroring the source paper's "signaling can attract predators." This
+    reads `Agent.last_call_step`, which only ever gets set for S/ERLS
+    agents, so it's automatically a no-op for every other strategy without
+    needing an explicit strategy check in the carnivore code.
+  - "S": like "E" (evolution alone, no learning) plus the alarm mechanism.
+    "ERLS": like "ERL", plus the same mechanism.
+
+KNOWN NOT YET DONE for communication, mirroring the earlier caveats:
+  - `alarm_recency_window` and `call_conspicuousness_multiplier` are
+    first-guess values (see config.py), not tuned against any real run.
+  - Not run as any kind of comparative study yet -- unit-tested and
+    smoke-tested only (see tests/test_communication.py).
+  - `alarm_call_propensity`'s own selection dynamics aren't fed into the
+    validated FunctionalConstraintTracker (same reasoning as
+    `kinship_sensitivity` -- see `Genome.flatten()`'s docstring); only a
+    population-mean stat would need to be added if this becomes worth
+    tracking over generations.
+  - Unlike C/ERLC and K/ERLK, this mechanism does NOT touch reproduction
+    thresholds or damage at all -- it's a genuinely different lever, and
+    the negative result for the other two mechanisms says nothing about
+    whether this one works. That is the entire point of building it.
 """
 
 from dataclasses import dataclass
@@ -159,6 +225,7 @@ class Agent:
     last_forage_step: int = _NEVER
     last_evade_step: int = _NEVER
     last_reproduce_step: int = _NEVER
+    last_call_step: int = _NEVER
 
 
 @dataclass
@@ -196,8 +263,8 @@ class ErlWorld:
         (and hence the genome) entirely, choosing uniformly at random
         every step.
 
-    Four additional conditions, NOT from Ackley & Littman -- see this
-    module's docstring for both mechanisms:
+    Six additional conditions, NOT from Ackley & Littman -- see this
+    module's docstring for all three mechanisms:
       - "C" (cooperation alone): like "E" (evolution, no learning), plus a
         group-fitness reproduction-threshold discount.
       - "ERLC": like "ERL", plus the same group-fitness discount. Tests
@@ -205,13 +272,18 @@ class ErlWorld:
       - "K" (kin selection alone): like "E", plus an evolved kinship-based
         discount on agent-on-agent attack damage.
       - "ERLK": like "ERL", plus the same kinship discount.
-    For "ERL"/"E"/"L"/"F"/"B" neither the cooperation nor kin-selection code
-    paths are ever entered (see `_handle_agent_reproduction`'s `coop =
-    self.strategy in ("C", "ERLC")` guard and `_resolve_agent_action`'s
-    `self.strategy in ("K", "ERLK")` guard) -- those five behave
-    byte-identically to before either was added. C/ERLC and K/ERLK are
-    independent of each other too -- neither strategy pair triggers the
-    other's mechanism.
+      - "S" (communication alone): like "E", plus an evolved alarm-call
+        mechanism (extra observation input, no cost/reproduction discount
+        at all).
+      - "ERLS": like "ERL", plus the same alarm-call mechanism.
+    For "ERL"/"E"/"L"/"F"/"B" none of the cooperation, kin-selection, or
+    communication code paths are ever entered (see `_handle_agent_reproduction`'s
+    `coop = self.strategy in ("C", "ERLC")` guard, `_resolve_agent_action`'s
+    `self.strategy in ("K", "ERLK")` guard, and `step`'s
+    `signal = self.strategy in ("S", "ERLS")` guard) -- those five behave
+    byte-identically to before any of the three were added. C/ERLC, K/ERLK,
+    and S/ERLS are all independent of each other too -- no strategy pair
+    triggers another mechanism's code path.
     """
 
     def __init__(self, config: dict, rng: np.random.Generator):
@@ -219,15 +291,16 @@ class ErlWorld:
         self.rng = rng
         self.strategy = config.get("strategy", "ERL")
         assert self.strategy in (
-            "ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK",
+            "ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK", "S", "ERLS",
         ), self.strategy
+        self.obs_dim = OBS_DIM + 1 if self.strategy in ("S", "ERLS") else OBS_DIM
         self.grid_size = config["grid_size"]
         self.current_step = 0
         self._next_agent_id = 0
         self._next_carnivore_id = 0
         self.agents: list[Agent] = []
         self.carnivores: list[Carnivore] = []
-        self.constraint_tracker = FunctionalConstraintTracker(OBS_DIM, N_ACTIONS)
+        self.constraint_tracker = FunctionalConstraintTracker(self.obs_dim, N_ACTIONS)
         self.reset()
 
     # ---- setup ----
@@ -306,7 +379,7 @@ class ErlWorld:
         if cell is None:
             return
         row, col = cell
-        genome = founder_genome(OBS_DIM, N_ACTIONS, self.rng, self.cfg["founder_weight_std"])
+        genome = founder_genome(self.obs_dim, N_ACTIONS, self.rng, self.cfg["founder_weight_std"])
         agent = Agent(
             agent_id=self._next_agent_id,
             row=row, col=col,
@@ -348,13 +421,35 @@ class ErlWorld:
                 return 1.0 - 0.5 * (dist - 1) / max(sense_range - 1, 1)
         return 0.0
 
+    def _alarm_signal(self, row: int, col: int, drow: int, dcol: int, sense_range: int) -> float:
+        """Same line-of-sight semantics as `_visual_signal` (blocked by the
+        first non-empty cell in that direction), but the target of interest
+        is specifically a living agent that called within
+        `alarm_recency_window` steps -- see module docstring."""
+        cutoff = self.current_step - self.cfg["alarm_recency_window"]
+        for dist in range(1, sense_range + 1):
+            r, c = row + drow * dist, col + dcol * dist
+            if not (0 <= r < self.grid_size and 0 <= c < self.grid_size):
+                break
+            occ = self.occupant.get((r, c))
+            if isinstance(occ, Agent) and occ.alive and occ.last_call_step >= cutoff:
+                return 1.0 - 0.5 * (dist - 1) / max(sense_range - 1, 1)
+            if occ is not None or (r, c) in self.corpses or self.plant[r, c] or self.terrain[r, c] != TERRAIN_EMPTY:
+                break
+        return 0.0
+
     def _observe_agent(self, agent: Agent) -> np.ndarray:
-        obs = np.zeros(OBS_DIM)
+        obs = np.zeros(self.obs_dim)
         for i, (dr, dc) in enumerate(_DIRS):
             obs[i] = self._visual_signal(agent.row, agent.col, dr, dc, self.cfg["agent_sense_range"])
         obs[4] = 1.0 if agent.in_tree else 0.0
         obs[5] = min(agent.health / self.cfg["max_health_agent"], 1.0)
         obs[6] = min(agent.energy / self.cfg["max_energy_agent"], 1.0)
+        if self.obs_dim > OBS_DIM:
+            best = 0.0
+            for dr, dc in _DIRS:
+                best = max(best, self._alarm_signal(agent.row, agent.col, dr, dc, self.cfg["agent_sense_range"]))
+            obs[OBS_DIM] = best
         return obs
 
     # ---- step ----
@@ -362,8 +457,12 @@ class ErlWorld:
     def step(self):
         self.current_step += 1
         coop = self.strategy in ("C", "ERLC")
-        threatened_ids = self._agents_with_carnivore_nearby() if coop else frozenset()
+        signal = self.strategy in ("S", "ERLS")
+        threatened_ids = self._agents_with_carnivore_nearby() if (coop or signal) else frozenset()
         self._attacked_this_step: set[int] = set()
+
+        if signal:
+            self._process_alarm_calls(threatened_ids)
 
         self._step_agents()
         self._step_carnivores()
@@ -385,7 +484,7 @@ class ErlWorld:
     def _step_agents(self):
         order = list(self.agents)
         self.rng.shuffle(order)
-        learning_enabled = self.strategy in ("ERL", "L", "ERLC", "ERLK")
+        learning_enabled = self.strategy in ("ERL", "L", "ERLC", "ERLK", "ERLS")
         coop = self.strategy in ("C", "ERLC")
         for agent in order:
             if not agent.alive:
@@ -517,6 +616,7 @@ class ErlWorld:
         wall or an occupied tree (carnivores "as programmed" don't choose
         those moves -- Figure 5's footnote)."""
         best_dir, best_signal = None, 0.0
+        call_cutoff = self.current_step - self.cfg["alarm_recency_window"]
         for i, (dr, dc) in enumerate(_DIRS):
             for dist in range(1, self.cfg["carnivore_sense_range"] + 1):
                 r, c = carnivore.row + dr * dist, carnivore.col + dc * dist
@@ -525,6 +625,12 @@ class ErlWorld:
                 occ = self.occupant.get((r, c))
                 if isinstance(occ, Agent) or (r, c) in self.corpses and self.corpses[(r, c)].kind == "agent":
                     signal = 1.0 - 0.5 * (dist - 1) / max(self.cfg["carnivore_sense_range"] - 1, 1)
+                    # A recently-calling agent is more conspicuous to carnivores --
+                    # the cost side of the alarm-call mechanism (see module
+                    # docstring). No-op for every other strategy: last_call_step
+                    # only ever gets set under "S"/"ERLS".
+                    if isinstance(occ, Agent) and occ.last_call_step >= call_cutoff:
+                        signal *= self.cfg["call_conspicuousness_multiplier"]
                     if signal > best_signal:
                         best_signal, best_dir = signal, i
                     break
@@ -616,6 +722,19 @@ class ErlWorld:
         for agent in self.agents:
             if agent.alive and agent.agent_id in threatened_ids and agent.agent_id not in self._attacked_this_step:
                 agent.last_evade_step = self.current_step
+
+    def _process_alarm_calls(self, threatened_ids: frozenset[int]):
+        """Each threatened agent calls with probability
+        sigmoid(genome.alarm_call_propensity) -- an evolvable decision, not
+        a hard-coded reflex (see module docstring). Called BEFORE
+        `_step_agents` so calls decided this step are already visible to
+        `_observe_agent`'s alarm-signal computation for agents acting later
+        in this same step's shuffled order."""
+        for agent in self.agents:
+            if agent.alive and agent.agent_id in threatened_ids:
+                call_prob = _sigmoid(agent.genome.alarm_call_propensity)
+                if self.rng.random() < call_prob:
+                    agent.last_call_step = self.current_step
 
     def _agent_group_is_cooperative_fit(self, agent: Agent) -> bool:
         """True if `agent`'s local group (itself + living agents within
