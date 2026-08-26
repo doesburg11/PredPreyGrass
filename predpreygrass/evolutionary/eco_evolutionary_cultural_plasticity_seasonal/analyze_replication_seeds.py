@@ -35,17 +35,18 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import mannwhitneyu
 
+from predpreygrass.evolutionary.model_selection import report_hunt_fits
 from predpreygrass.global_config import RAY_RESULTS_DIR
 FOUNDER_MEAN = 0.1  # see founder_genome.{predator,prey}.plasticity_mean in config_env_eco_evolutionary.py
 
-REAL_PATTERN = re.compile(r"^PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEED(\d+)_")
-CONTROL_PATTERN = re.compile(r"^PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_NEUTRAL_CONTROL_SEED(\d+)_")
+REAL_PATTERN = re.compile(r"^PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_SEED(\d+)_")
+CONTROL_PATTERN = re.compile(r"^PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_NEUTRAL_CONTROL_SEED(\d+)_")
 
 
 def find_seed_runs(pattern: re.Pattern) -> dict[int, Path]:
     """Return {seed: result.json path} for the most recent run of each seed."""
     matches: dict[int, tuple[float, Path]] = {}
-    for exp_dir in RAY_RESULTS_DIR.glob("PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY*"):
+    for exp_dir in RAY_RESULTS_DIR.glob("PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL*"):
         m = pattern.match(exp_dir.name)
         if not m:
             continue
@@ -153,6 +154,9 @@ def main():
                 f"(n={len(real_vals)})  control={np.mean(control_vals):.4f} (n={len(control_vals)})  "
                 f"U={stat:.1f}  p(real>control)={p:.3f}"
             )
+    print()
+
+    report_hunt_fits(real_runs, control_runs, trait="plasticity", prefix="live_culture")
 
 
 if __name__ == "__main__":

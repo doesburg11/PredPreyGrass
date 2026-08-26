@@ -125,6 +125,37 @@ so the metrics-building method is never even called, regardless of the earlier f
 needs to happen at the `on_train_result` level (called every iteration unconditionally) rather
 than relying on `on_episode_end` firing. Not yet fixed.
 
+### Hunt (2006) model-fit corroboration — complete, consistent-but-inconclusive signal
+
+Applied `predpreygrass/evolutionary/model_selection.py`'s AICc model selection (Stasis vs.
+URW vs. GRW — see `predpreygrass/evolutionary/README.md`) directly to Pilot 1 and Pilot 2's
+own `metabolic_rate_mean` trajectories. This method needs no neutral-control run (the gap
+flagged in §3 below) since it draws its evidence from a single trajectory's own
+generation-by-generation shape, not from a real-vs-control comparison:
+
+| pilot | species | best model | GRW mstep |
+|---|---|---|---|
+| Pilot 1 | predator | URW | +0.00009 |
+| Pilot 1 | prey | URW | +0.00035 |
+| Pilot 2 | predator | URW | +0.00005 |
+| Pilot 2 | prey | URW | +0.00019 |
+
+URW (pure drift) wins on AICc in all four cases — at only 200 generations, this is not a
+statistically decisive result either way. But the qualitative pattern differs from every null
+trait design checked with the same method elsewhere in this project (`eco_evolutionary_metabolic_rate`,
+`eco_evolutionary_investment`, `eco_evolutionary_cultural_plasticity` — see each module's own
+`analyze_replication_seeds.py` output): there, `mstep` is ~1e-5 and randomly signed across
+seeds/species, consistent with pure noise. Here `mstep` is **consistently positive across all
+four pilot x species combinations** and 5-35x larger in magnitude — the trait is drifting
+toward higher `metabolic_rate` (the fitness-favored direction) in every case checked, just not
+decisively enough for AICc to prefer the extra parameter over pure drift at this few
+generations. This is independent corroboration, by a different statistical method, of the same
+"weak partial signal, not a clean pass" verdict Pilot 1's own `mr_repro_spearman` reading
+already gave above — and a concrete argument that more generations (not more seeds) is the
+right lever for a sharper answer here: URW/GRW distinguishability scales with trajectory
+length, and these 200-iteration pilots are short on exactly that relative to the
+1000-iteration runs where this method cleanly nulled out elsewhere in this project.
+
 ## 3. Not yet done
 
 - **Population-size isolation pilot.** Same alpha=3.0, mutation reset to Pilot 1's 0.04, but
@@ -134,6 +165,9 @@ than relying on `on_episode_end` firing. Not yet fixed.
   as real rather than one-seed luck.
 - No neutral-control comparison run yet (needed to confirm any drift seen is selection, not
   just mutation + finite-population sampling noise, same discipline as every prior module).
+  Partially addressed without one via the Hunt (2006) model-fit above, which needs no control
+  group — but that check was inconclusive (URW still wins on AICc), so a real neutral-control
+  run is still the more decisive test if this module gets revisited.
 - The deeper CSV-logging bug (zero-episodes-completed iterations) is unfixed.
 
 ## 4. Next step

@@ -35,6 +35,7 @@ from pathlib import Path
 import numpy as np
 from scipy.stats import mannwhitneyu
 
+from predpreygrass.evolutionary.model_selection import report_hunt_fits
 from predpreygrass.global_config import RAY_RESULTS_DIR
 FOUNDER_MEAN = 0.1  # see founder_genome.{predator,prey}.plasticity_mean in config_env_eco_evolutionary.py
 
@@ -153,6 +154,9 @@ def main():
                 f"(n={len(real_vals)})  control={np.mean(control_vals):.4f} (n={len(control_vals)})  "
                 f"U={stat:.1f}  p(real>control)={p:.3f}"
             )
+    print()
+
+    report_hunt_fits(real_runs, control_runs, trait="plasticity", prefix="live_culture")
 
 
 if __name__ == "__main__":

@@ -24,7 +24,11 @@ never run and isn't planned, see §13 for the reasoning. §14 (2026-08-25) adds 
 independent mechanism -- communication/alarm calls (S/ERLS), modeled on Ackley &
 Littman's own 1994 follow-up -- deliberately using a different lever (pure information,
 no reproduction/damage discount) than the two that failed. Mechanism validated; not yet
-run at any scale.
+run at any scale. §15 (2026-08-26) analyzes the longitudinal single-seed run (ERL, seed 1,
+3M steps, launched 2026-08-23) for the paper's genetic-assimilation crossover signature --
+**not found**: action-network genes are more evolutionarily constrained than eval-network
+genes from the very first logged point onward, a persistent and widening asymmetry, not the
+paper's early-eval/late-action reversal. Does not affect §9's survival-time result.
 
 ---
 
@@ -439,6 +443,61 @@ extinction) without crashing, at normal throughput.
   next step, if pursued, is the same disciplined sequence already used
   once: a cheap pilot (n=20, 300k-step budget, §12's design) before any
   full-scale commitment.
+
+## 15. Longitudinal genetic-assimilation analysis (seed 1, 3M steps, 2026-08-26) -- crossover not observed
+
+The single-population longitudinal study §9 flagged as never attempted (extending a
+successful ERL run to millions of steps and running the functional-constraint
+genetic-assimilation analysis). Launched 2026-08-23 (`--strategy ERL --seed 1 --steps 3000000
+--log-every 5000 --constraint-window 5000`), completed 2026-08-24 09:47 (52,433s runtime, 57
+steps/sec) -- reached the full 3,000,000-step budget without extinction (final population: 878
+agents, 5 carnivores).
+
+**Method:** `progress.csv` logs `eval_site_change_rate` and `action_site_change_rate` every
+5,000 steps (600 points total) -- the paper's own functional-constraint metric: sites that
+matter for survival get purged of mutations (low change rate = "constrained"). Their reported
+signature is a *crossover*: evaluation-network sites constrained early (learned goal doing the
+work), action-network sites becoming constrained instead by ~3 million steps (behavior
+"hard-wired," no learning required).
+
+**Headline: no crossover found.** `action_site_change_rate` is lower than
+`eval_site_change_rate` (action sites more constrained) from the very first logged point
+(step 5,000: eval=0.0650, action=0.0615) onward, not just late in the run -- true for 93% of
+all 600 logged points, including the entire first quintile. There is no reversal of which
+network is more constrained at any point; 48 noisy sign-crossings occur, but they cluster
+before step 2,335,000 and stop entirely after that.
+
+**What does change over time, and it's substantial:** both change rates *increase* across the
+run (quintile means, eval: 0.028 -> 0.035 -> 0.044 -> 0.061 -> 0.066; action: 0.024 -> 0.030 ->
+0.038 -> 0.045 -> 0.050), and the gap between them widens monotonically (action-minus-eval
+quintile means: -0.0045, -0.0053, -0.0058, -0.0162, -0.0160). Spearman rank correlation against
+step: rho=0.89 (eval_rate), rho=0.95 (action_rate), rho=-0.54 (the gap) -- strong, consistent
+monotonic trends by any reasonable read, not a marginal call (raw p-values are effectively
+zero but are not treated as literal, given ~600 autocorrelated time points).
+
+**Interpretation:** action-network genes are consistently -- and increasingly -- more
+evolutionarily constrained than eval-network genes throughout this run, but that is a
+*persistent, widening asymmetry present from the start*, not the paper's specific *reversal*
+signature. Two honest candidate explanations, neither confirmed:
+- This world's action space may be more immediately fatal to get wrong (a bad action network
+  gets an agent killed directly; a bad eval network is more forgiving since live learning can
+  still correct behavior) -- producing a standing action-constraint advantage rather than one
+  that develops over time.
+- 3,000,000 steps / one seed may simply not be the regime where this rebuilt World AL shows the
+  paper's crossover, if it appears here at all -- the paper does not publish the step count or
+  population trajectory at which their own crossover occurs, so there is no independent way to
+  check whether more steps, a different seed, or a different starting population would surface
+  it.
+
+**Does not contradict §9.** ERL's survival-time dominance over E/L/F/B is a separate,
+already-well-powered (n=100/condition) result and stands regardless of this finding. This
+result is narrower: the specific *mechanism* (a constraint-crossover) the paper attributes to
+Baldwinian assimilation is not confirmed by this run's data, distinct from the (confirmed)
+claim that ERL outperforms alternatives.
+
+**Not yet done:** a second and third longitudinal seed, before treating "no crossover" as a
+stable property of this world rather than one seed's trajectory -- the same single-seed caveat
+already flagged when this run was launched.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
