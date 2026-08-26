@@ -642,6 +642,13 @@ decision.
 
 **Status:** R7 complete (null). R8 not applicable given the null result.
 
+**Addendum (2026-08-26): Hunt (2006) model-fit corroboration.** Independently re-checked with
+`predpreygrass/evolutionary/model_selection.py`'s AICc model selection (Stasis/URW/GRW),
+applied per-seed to each run's own 1000-generation `offspring_investment_fraction_mean`
+trajectory. **URW wins in all 6 real and all 6 control seeds**, `mstep` ~1e-5 and randomly
+signed in every case — confirms R7's null verdict via a method that doesn't need the
+real-vs-control group comparison. See `analyze_replication_seeds.py`'s Hunt-fit section.
+
 ---
 
 ### R9 — Trial 6: population-scaled replication (complete)
@@ -727,6 +734,17 @@ next-step decision.
 
 **Status:** R9 complete. Predator: null. Prey: directionally positive, at the n=3
 significance ceiling — not yet confirmed at adequate power.
+
+**Addendum (2026-08-26): Hunt (2006) model-fit — does not corroborate the prey signal above.**
+Same method (`predpreygrass/evolutionary/model_selection.py`) applied to R9's own
+1000-generation trajectories, real and control, seeds 42/43/44: **URW wins for both species in
+every seed**, `mstep` ~1e-5 and randomly signed including for prey (e.g. real seed 42:
+-0.000021; real seed 44: -0.000012) — no directional trend detected for prey in either group.
+This does not corroborate the p=0.050 "suggestive" prey separation above. The two methods
+measure different things (a full-trajectory model fit vs. a Q1-to-Q5 quintile-mean comparison),
+so this isn't a contradiction so much as an additional reason not to treat the p=0.050 result
+as confirmed without more prey seeds — consistent with the "warrants a decision... rather than
+being treated as... a confirmed win" caveat already above.
 
 ---
 

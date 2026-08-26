@@ -12,10 +12,10 @@ mirrors metabolic_rate/investment's |deviation from founder| approach rather
 than metabolic_code's directional one.
 
 Expects experiment directories under ~/simulation_results/ray_results/ named:
-  PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEED<seed>_<timestamp>                (real)
-  PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_NEUTRAL_CONTROL_SEED<seed>_<timestamp> (control)
+  PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_SEED<seed>_<timestamp>                (real)
+  PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_NEUTRAL_CONTROL_SEED<seed>_<timestamp> (control)
 
-as produced by tune_ppo_cultural_plasticity.py / tune_ppo_cultural_plasticity_neutral_control.py
+as produced by tune_ppo_cultural_plasticity_seasonal.py / tune_ppo_cultural_plasticity_seasonal_neutral_control.py
 when run with --seed. Missing runs are reported, not treated as an error, so this
 can be run before all seeds have finished.
 

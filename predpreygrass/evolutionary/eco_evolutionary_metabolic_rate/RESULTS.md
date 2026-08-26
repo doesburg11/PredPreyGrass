@@ -791,6 +791,17 @@ selection either. This does not prove selection is absent — n=3 vs n=3 has ver
 but it removes the basis for treating the Iteration 0-3 drift trajectories as evidence of a
 working Darwin/Baldwin loop for this trait. See "Next steps" below.
 
+**Addendum (2026-08-26): Hunt (2006) model-fit corroboration.** Independently re-checked this
+null result with a different statistical method —
+`predpreygrass/evolutionary/model_selection.py`'s AICc model selection (Stasis/URW/GRW, see
+`predpreygrass/evolutionary/README.md`) — applied directly to each seed's own 1000-generation
+`metabolic_rate_mean` trajectory rather than a real-vs-control group comparison. **URW (pure
+drift) wins in all 6 real seeds and all 6 control seeds** (predator + prey × seeds 42/43/44),
+with the directional-selection term (`mstep`) landing at ~1e-5 and randomly signed in every
+case — indistinguishable from noise. Confirms the Mann-Whitney verdict above with a method that
+draws its statistical power from each run's own trajectory rather than needing the 3-vs-3 group
+comparison. Run via `analyze_replication_seeds.py`'s Hunt-fit section.
+
 ---
 
 ## Comparison at a glance

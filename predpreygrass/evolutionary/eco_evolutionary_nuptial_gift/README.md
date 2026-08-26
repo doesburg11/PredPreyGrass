@@ -254,6 +254,18 @@ Following the same discipline used for `offspring_investment_fraction` (R4-R7) a
      0.575, ended 0.571), no visible upward or downward trend.
    - Real seed 43 was killed partway (~52%, iteration ~519/1000) when the decision was made to
      stop; no complete data from it. No control seeds were started.
+   - **Addendum (2026-08-26):** independently checked seed 42's `male_donation_rate_mean`
+     trajectory with `predpreygrass/evolutionary/model_selection.py`'s AICc model selection
+     (Stasis/URW/GRW). Predator-male fits **Stasis** with Akaike weight 1.000 — a formal
+     confirmation of the "oscillated in a narrow band, no visible trend" read above, not a new
+     or surprising finding once seen alongside it: with only ~18.6 reproduction events across
+     the whole 1000-iteration run, there are too few mutation/inheritance events for the trait
+     to accumulate any real random-walk variance, so a near-zero-process-noise (Stasis-like) fit
+     is the mechanistically expected result, not an anomaly. Predator-female's own fit (URW,
+     Akaike weight 0.421) is close enough to Stasis' fit for the same seed to not be a
+     meaningful qualitative difference — both point at the same "too little reproduction for
+     drift, real or neutral, to say anything" conclusion the paragraph above already reaches by
+     a different route.
    - **Verdict**: this specific config (founder mean `0.5`, real evolutionary mode) produces a
      population that survives but doesn't reproduce often enough, or drift its genome enough,
      for the real-vs-control comparison to plausibly say anything — continuing to the full 6-run

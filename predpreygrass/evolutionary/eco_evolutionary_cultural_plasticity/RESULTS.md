@@ -101,6 +101,23 @@ this is descriptive only — not a Mann-Whitney-confirmed null — but the
 pattern is the same "flat, no fitness correlation" shape seen in the 7
 single-channel trait trials that preceded this one.
 
+**Correction (2026-08-26):** a control seed 42 run does exist on disk
+(`PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_NEUTRAL_CONTROL_SEED42_2026-08-04_13-17-06`,
+367/1000 iterations, presumably interrupted when the effort was stopped) —
+the "no control seed was run" framing above is not quite accurate, though it
+doesn't change the substance: a single partial control seed still isn't a
+Mann-Whitney-confirmed comparison.
+
+**Addendum (2026-08-26): Hunt (2006) model-fit corroboration.** Checked with
+`predpreygrass/evolutionary/model_selection.py`'s AICc model selection
+(Stasis/URW/GRW) against every available seed's own `plasticity_mean`
+trajectory — the two pilot seeds (1: 300 gens, 2: 150 gens), all three real
+seeds (42/43/44: 1000 gens each), and the partial control seed above (42:
+367 gens). **URW wins in every case**, `mstep` near zero (~1e-4 to 1e-5,
+randomly signed) throughout — consistent with, and independent corroboration
+of, the "flat, no fitness correlation" read above. Run via
+`analyze_replication_seeds.py`'s Hunt-fit section.
+
 ## 4. Why this was stopped
 
 Stopped by explicit user decision after reviewing the 3 real-seed results

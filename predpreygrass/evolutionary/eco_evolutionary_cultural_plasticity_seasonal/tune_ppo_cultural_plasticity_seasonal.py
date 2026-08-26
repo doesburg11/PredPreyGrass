@@ -92,7 +92,7 @@ if __name__ == "__main__":
     ray_results_path = Path(ray_results_dir).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
-    version = f"ECO_EVOLUTION_CULTURAL_PLASTICITY{seed_tag}"
+    version = f"ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL{seed_tag}"
     experiment_name = f"PPO_{version}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
 

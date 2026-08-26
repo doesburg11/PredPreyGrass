@@ -1,7 +1,7 @@
 """
-Resume PPO training for eco_evolutionary_cultural_plasticity from the latest checkpoint.
+Resume PPO training for eco_evolutionary_cultural_plasticity_seasonal from the latest checkpoint.
 
-Automatically finds the most recent PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_* experiment
+Automatically finds the most recent PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_* experiment
 directory under ~/simulation_results/ray_results/ and calls Tuner.restore() to continue training.
 """
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", env_creator)
 
     ray_results_path = Path(RAY_RESULTS_DIR)
-    experiment_path = find_latest_experiment(ray_results_path, "PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_")
+    experiment_path = find_latest_experiment(ray_results_path, "PPO_ECO_EVOLUTION_CULTURAL_PLASTICITY_SEASONAL_")
 
     config_ppo = get_config_ppo()
 
