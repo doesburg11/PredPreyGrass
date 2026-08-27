@@ -1,5 +1,20 @@
 # Training Analysis — eco_evolutionary_erl_baldwin
 
+## Where things stand (2026-08-27)
+
+- **Established**: ERL (evolution + individual lifetime learning) significantly beats
+  evolution alone, learning alone, and no-adaptation — p<0.00001 at n=100/condition (§9),
+  the strongest result in the whole project's trial history.
+- **Closed as dead ends**: three follow-on cooperation mechanisms built on top of ERL --
+  group-fitness cooperation (`C`/`ERLC`, §10, §12-13), kin selection (`K`/`ERLK`,
+  §11-13), and alarm-call communication (`S`/`ERLS`, §14, §16) -- each for a specific,
+  diagnosed reason, not an ambiguous null.
+- **Open**: whether the paper's specific genetic-assimilation crossover signature is real
+  but undetected, or whether the metric is measuring a structural asymmetry unrelated to
+  assimilation (§15).
+
+Detailed, dated log follows below.
+
 **Status (2026-08-16, latest): the retuned comparative study (§9) completed — 500/500 runs,
 5 conditions × 100 seeds, matching the paper's own scale. Result: ERL significantly beats
 every other condition (p<0.00001 vs. E, L, F, and B), and the internal structure

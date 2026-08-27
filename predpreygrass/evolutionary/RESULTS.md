@@ -6,6 +6,39 @@ tracks the sequence of attempts against that goal: what was tried, why each pivo
 happened, and the current state of the search. Each module below (`eco_evolutionary_*`)
 also has its own detailed RESULTS.md with full data. Read top to bottom.
 
+## Where things stand (2026-08-27)
+
+One thing is established with real statistical power: **nature and nurture combined
+beats either alone.** Trial 11 (`eco_evolutionary_erl_baldwin`) found ERL agents (genome
++ individual lifetime learning) significantly outsurvive evolution-alone, learning-alone,
+and no-adaptation controls (p<0.00001, n=100/condition) — the strongest result in this
+project's history, and the one still standing.
+
+Everything built on top of or alongside that result has come back null or unresolved:
+
+- **Single-continuous-scalar traits** (`metabolic_rate`, `offspring_investment_fraction`,
+  `cooperation_rate` — Trials 2/3/5/6): real fitness landscapes exist, but no
+  selection-driven drift beyond neutral noise in properly-replicated tests. One partial
+  exception: Trial 6's population-scaling pilot showed a directional (but n=3-ceiling)
+  signal for prey investment — inconclusive, not followed up.
+- **Combinatorial genome** (`loci`, Trial 7): also null, reversed on the headline metric.
+- **Dual-inheritance / cultural learning** (Trials 8-9): flat so far, both the
+  static-coordination and seasonal-target versions.
+- **Positive control** (Trial 10): confirms the pipeline *can* detect a real signal given
+  an extreme (16x) gradient — population size, not mutation rate, is the likelier reason
+  subtler traits above show nothing.
+- **Cooperation, kin selection, and alarm-call communication** (built on top of Trial
+  11's ERL architecture — see
+  `predpreygrass/evolutionary/eco_evolutionary_erl_baldwin/RESULTS.md` §10-16): all
+  three closed as dead ends, each for a specific, understood reason, not an ambiguous
+  null.
+- **Genetic-assimilation timing**
+  (`predpreygrass/evolutionary/eco_evolutionary_erl_baldwin/RESULTS.md` §15): the
+  paper's specific crossover signature wasn't found; genuinely open whether that's a
+  real absence or a metric problem.
+
+Read the trial-by-trial log below for how each conclusion was reached.
+
 ---
 
 ## Trial 1 — `eco_evolutionary_cadence` — rejected
