@@ -155,3 +155,7 @@ Moved to **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary#the
 - [RLlib: Industry-Grade, Scalable Reinforcement Learning](https://docs.ray.io/en/master/rllib/index.html)
 - [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
 - [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
+
+## Acknowledgments
+
+Developed with AI coding assistance from [Claude](https://claude.com/claude-code) (Anthropic) and [Codex](https://openai.com/codex) (OpenAI), used for implementation, review, and analysis throughout this repository.
