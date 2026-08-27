@@ -158,4 +158,4 @@ Moved to **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary#the
 
 ## Acknowledgments
 
-Developed with AI coding assistance from [Claude](https://claude.com/claude-code) (Anthropic) and [Codex](https://openai.com/codex) (OpenAI), used for implementation, review, and analysis throughout this repository.
+Developed with AI coding assistance from [Claude](https://claude.com/claude-code) (Anthropic), which does the implementation, with [Codex](https://openai.com/codex) (OpenAI) acting as an independent second opinion, peer-reviewing Claude's nontrivial code changes.
