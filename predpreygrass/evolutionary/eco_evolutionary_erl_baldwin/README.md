@@ -284,14 +284,20 @@ Two new strategies, independent of C/ERLC, K/ERLK, and each other:
     mechanism.
   - **"ERLS"**: like "ERL", plus the same mechanism.
 
-**Status:** mechanism implemented and unit-tested (`tests/test_communication.py`,
-17 tests -- including line-of-sight blocking, propensity-driven call
-decisions, and a direct test that a carnivore prefers a calling agent over
-an equally-distant quiet one). Smoke-tested at `grid_size=100` (paper
-default): the mechanism fires in practice (461 calls for `S`, 1,286 for
-`ERLS` over a few thousand steps) without crashing, at normal throughput.
-**Not yet run as any kind of comparative study** -- `alarm_recency_window`
-and `call_conspicuousness_multiplier` are first-guess values. Unlike
-C/ERLC and K/ERLK, this mechanism does not touch reproduction thresholds
-or damage at all, so their negative result says nothing about whether this
-one works -- that's the entire point of building it.
+**Status: closed as a documented dead end (RESULTS.md §16), but for a
+different, better-supported reason than C/K.** A pilot (n=20, 300k steps)
+found `S` statistically indistinguishable from `E` (p=1.0000 -- about as
+clean a null as a test produces) and `ERLS` from `ERL` (p=0.36). A
+follow-up long-budget diagnostic (n=8, the full 1,000,000-step ceiling,
+mechanism parameters unchanged) ruled out "just needs more generations"
+directly -- `ERLS`'s cap-reach rate trended *below* `ERL`'s even with 3x
+the steps. Reading Ackley & Littman's actual 1994 paper in full (not just
+secondary summaries) explains why: their own conclusion is that costly
+signaling only evolves and stabilizes when the beneficiaries of a call are
+disproportionately the caller's own kin -- otherwise "information
+parasites" erode it. This design broadcasts to any nearby agent
+uniformly, with no kin-bias at all -- the one ingredient their own theory
+says is necessary is the one thing never built here. A kin-biased version
+(restricting the signal's benefit toward genetically similar listeners,
+reusing K/ERLK's `genome_similarity`) would be a structurally different
+second attempt, not ruled out by anything found here -- just not built.

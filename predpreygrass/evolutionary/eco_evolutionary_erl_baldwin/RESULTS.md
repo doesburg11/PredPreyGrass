@@ -23,12 +23,17 @@ designs are now treated as a documented dead end**, the ~12-day full-scale study
 never run and isn't planned, see §13 for the reasoning. §14 (2026-08-25) adds a THIRD,
 independent mechanism -- communication/alarm calls (S/ERLS), modeled on Ackley &
 Littman's own 1994 follow-up -- deliberately using a different lever (pure information,
-no reproduction/damage discount) than the two that failed. Mechanism validated; not yet
-run at any scale. §15 (2026-08-26) analyzes the longitudinal single-seed run (ERL, seed 1,
-3M steps, launched 2026-08-23) for the paper's genetic-assimilation crossover signature --
-**not found**: action-network genes are more evolutionarily constrained than eval-network
-genes from the very first logged point onward, a persistent and widening asymmetry, not the
-paper's early-eval/late-action reversal. Does not affect §9's survival-time result.
+no reproduction/damage discount) than the two that failed. §15 (2026-08-26) analyzes the
+longitudinal single-seed run (ERL, seed 1, 3M steps, launched 2026-08-23) for the paper's
+genetic-assimilation crossover signature -- **not found**: action-network genes are more
+evolutionarily constrained than eval-network genes from the very first logged point onward,
+a persistent and widening asymmetry, not the paper's early-eval/late-action reversal. Does
+not affect §9's survival-time result. §16 (2026-08-26/27) closes out S/ERLS: neither a
+pilot (n=20, 300k steps) nor a long-budget diagnostic (n=8, full 1M steps, ruling out "just
+needs more generations") found any benefit -- **also now a documented dead end**, but for a
+different, better-supported reason than C/K: reading the actual 1994 source paper in full
+showed it requires kin-biased reception for costly signaling to stabilize, which this
+design never included.
 
 ---
 
@@ -411,7 +416,7 @@ mechanic bounded well below the reproduction-threshold retune's existing
 margins) would be a genuinely separate question, not something this result
 rules out -- just not pursued further here.
 
-## 14. Communication / alarm calls (S / ERLS) merged (2026-08-25) -- mechanism validated, not yet run at scale
+## 14. Communication / alarm calls (S / ERLS) merged (2026-08-25) -- mechanism validated; see §16 for the closed-out result
 
 A third, independent cooperation mechanism, deliberately built on a
 different lever than C/ERLC and K/ERLK -- see README.md's "Communication /
@@ -498,6 +503,67 @@ claim that ERL outperforms alternatives.
 **Not yet done:** a second and third longitudinal seed, before treating "no crossover" as a
 stable property of this world rather than one seed's trajectory -- the same single-seed caveat
 already flagged when this run was launched.
+
+## 16. S/ERLS pilot + long-budget diagnostic (2026-08-26/27) -- closed as a dead end, but for a different reason than C/K
+
+Two follow-on checks after §14 merged the communication mechanism,
+mirroring the §12/§13 pattern used for C/ERLC and K/ERLK.
+
+**Pilot (n=20, 300k-step budget)**, compared against the existing E/ERL
+logs (truncated to the same window):
+
+| comparison | n | reached 300k cap | median | p-value |
+|---|---|---|---|---|
+| S vs E | 20 vs 100 | 30% vs 33% | 3,520 vs 3,221 | **p=1.0000** |
+| ERLS vs ERL | 20 vs 100 | 75% vs 83% | both at cap | p=0.36 |
+| ERLS vs S (learning effect) | | | | p=0.017 |
+
+`S` vs `E` at p=1.0000 is about as clean a null as a statistical test
+produces -- not a borderline result, genuinely indistinguishable. Unlike
+`C`/`K`'s pilot, there was no hint of harm here at all, which ruled out
+recycling §13's "crank the cost/benefit knobs" diagnostic (cost isn't
+obviously the bottleneck when there's no sign of harm to begin with).
+
+**Long-budget diagnostic (n=8, full 1,000,000-step ceiling)**, testing a
+different hypothesis: does the alarm-call mechanism need more generations
+to co-discover both halves of a working protocol (a caller worth having
+AND a receiver that reacts usefully), the same way the base ERL-vs-
+baseline signal itself needed the full 1M-step scale (§7 vs. §9) rather
+than a shorter budget? All mechanism parameters left at their §14
+defaults -- only the step budget changed, isolating time as the one
+variable:
+
+| condition | n | reached 1M cap | vs. baseline |
+|---|---|---|---|
+| S | 8 | 25% | p=0.86 vs E's 33% -- still no difference |
+| ERLS | 8 | 62% | p=0.16 vs ERL's 83% -- not significant, trending LOWER, not higher |
+
+**More time did not reveal a hidden benefit.** If anything, `ERLS`'s
+cap-reach rate trended below `ERL`'s even at the full budget (not
+statistically distinguishable at n=8, but the opposite of what the
+"just needs more generations" hypothesis predicted).
+
+**What actually explains the null, per the source paper itself (read in
+full 2026-08-26, not just secondary summaries):** Ackley & Littman's own
+1994 paper concludes that costly signaling like this only evolves and
+stabilizes when communication range and breeding range are *mostly but
+not always* aligned -- kin selection needs the beneficiaries of a call to
+disproportionately be the caller's own relatives, or "information
+parasites" erode it. `S`/`ERLS` as built broadcasts to any nearby agent
+uniformly, with no kin-bias at all -- the one ingredient their own
+theoretical account says is actually necessary is the one thing this
+design never included. That is a much better-supported explanation for
+the null than either "too weak an effect" or "needs more time," both of
+which this diagnostic and the pilot before it now rule out directly.
+
+**Decision: `S`/`ERLS` as designed here is closed, same category as
+C/ERLC and K/ERLK (§13), but via a different, more specific diagnosis** --
+not a structural failure mode this world is fragile to (unlike C/K's
+boom-bust lever), but a missing ingredient the mechanism never had. A
+kin-biased version (restricting the alarm signal's benefit toward
+genetically similar listeners, reusing K/ERLK's `genome_similarity`) would
+be a structurally different, second attempt at the same idea -- not ruled
+out by anything found here, just not built.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
