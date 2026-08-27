@@ -146,10 +146,6 @@ Pretrained checkpoints and historical training outputs are preserved in the lega
 
 ## References
 
-### Darwinian vs. Baldwinian evolution
-
-Moved to **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary#theory-darwinian-vs-baldwinian-evolution)** — the goal statement, success criteria, and theory references for the `eco_evolutionary_*` environments all live there together now.
-
 ### General
 
 - [RLlib: Industry-Grade, Scalable Reinforcement Learning](https://docs.ray.io/en/master/rllib/index.html)
