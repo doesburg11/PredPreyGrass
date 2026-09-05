@@ -1,105 +1,38 @@
-[![Python 3.11.13](https://img.shields.io/badge/python-3.11.13-blue.svg)](https://www.python.org/downloads/release/python-31111/)
+[![Python 3.11.13](https://img.shields.io/badge/python-3.11.13-blue.svg)](https://www.python.org/downloads/release/python-31113/)
 [![RLlib](https://img.shields.io/badge/RLlib-v2.58.0-blue)](https://docs.ray.io/en/latest/rllib/)
-
+[![Tests](https://github.com/doesburg11/PredPreyGrass/actions/workflows/linux-test.yml/badge.svg)](https://github.com/doesburg11/PredPreyGrass/actions/workflows/linux-test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 # Predator-Prey-Grass
 ## Multi-Agent Deep Reinforcement Learning meets Darwinian and Baldwinian evolution
 
-> Nature and nurture combined adapt faster than either alone — Darwinian evolution across generations, Multi-Agent Deep RL within a lifetime, each mechanism amplifying the other.
+**A multi-agent reinforcement-learning ecosystem for studying how cooperation emerges through learning within lifetimes and evolution across generations.**
 
-Legacy snapshot: the pre-cleanup research codebase is archived at [PredPreyGrassLegacy](https://github.com/doesburg11/PredPreyGrassLegacy).
-
-This project explores whether cooperative behavior, coevolution, defection, and free-riding can emerge and stabilize in a spatial, resource-limited ecosystem, by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It probes the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) — including a direct test of the **Baldwin effect**: whether genetic selection and learned behavior actually shape each other, not just coexist. We combine **Multi-Agent Deep Reinforcement Learning** (MADRL) with **evolutionary dynamics** across a multi-agent dynamic ecosystem of Predators, Prey, and regenerating Grass. Agents differ by speed, vision, energy metabolism, and decision policies—offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained*—they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
-
-<p align="center">
-    <b>Fixed-trait game-theoretic hunting (non-evolutionary branch): coevolution, cooperation, defection and free-riding</b></p>
 <p align="center">
     <img align="center" src="./assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
+<p align="center"><sub>Fixed-trait game-theoretic hunting: coevolution, cooperation, defection and free-riding emerging under a fixed reward design.</sub></p>
 
-## Environments
+- **Darwinian evolution** of inherited traits (speed, cooperation rate, metabolic rate, and more) via reproduction and mutation
+- **Baldwinian interaction** between evolution and learning tested directly — do genetic selection and learned behavior actually shape each other, or just coexist?
+- **Emergent cooperation, defection, reciprocity and coevolution**, studied under both evolving and fixed-trait agent populations
+- Built with Python, Gymnasium and RLlib 2.58's new API stack (`RLModule` / `Learner` / `EnvRunner`), with dynamic, lifecycle-changing agent populations
 
-This repo splits into two structurally different families of experiment, matching the
-`predpreygrass/evolutionary/` vs `predpreygrass/non_evolutionary/` directory split:
+**Start here:** [Quick start](#quick-start-run-a-demo-in-under-five-minutes) to run a demo in under five minutes, or the [headline result](#headline-result-sparse-rewards-beat-dense-rewards) below for the project's strongest empirical finding.
 
-- **Evolutionary**: agents carry a heritable genome trait, passed parent → offspring
-  with mutation. What gets selected is discovered, not designed.
-- **Non-evolutionary**: every agent trait is fixed; only the RL policy adapts. What
-  emerges is a behavioral equilibrium under a given incentive design, not a change in
-  the population's genetics.
+## How it works
 
-### Darwinian/Baldwinian evolutionary environments
+This project explores whether cooperative behavior, coevolution, defection, and free-riding can emerge and stabilize in a spatial, resource-limited ecosystem, by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It probes the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) — including a direct test of the **Baldwin effect**: whether genetic selection and learned behavior actually shape each other, not just coexist. Agents differ by speed, vision, energy metabolism, and decision policies — offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained* — they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
-These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations. See **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary)** for the shared goal, success criteria, and cross-module trial log — start there before any individual module below.
+Legacy snapshot: the pre-cleanup research codebase is archived at [PredPreyGrassLegacy](https://github.com/doesburg11/PredPreyGrassLegacy).
 
-* **[Eco-evolutionary](predpreygrass/evolutionary/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
+## Headline result: sparse rewards beat dense rewards
 
-* **[Eco-evolutionary cadence](predpreygrass/evolutionary/eco_evolutionary_cadence)**: evolves the same `speed` trait, expressed as a graded movement cooldown instead of a discrete distance threshold.
+> In controlled reward-shaping experiments, a sparse, reproduction-only reward outperformed four denser alternatives across every tested ecological outcome — reproduction rate, final population balance, and extinction risk.
 
-* **[Eco-evolutionary cooperation](predpreygrass/evolutionary/eco_evolutionary_cooperation)**: evolves a `cooperation_rate` trait — the fraction of an agent's net energy gain donated to nearby same-species agents, relying on spatial viscosity (offspring spawn near parents) for implicit kin selection.
-
-* **[Eco-evolutionary investment](predpreygrass/evolutionary/eco_evolutionary_investment)**: evolves an `offspring_investment_fraction` trait — how much energy a parent hands each offspring at birth.
-
-* **[Eco-evolutionary metabolic rate](predpreygrass/evolutionary/eco_evolutionary_metabolic_rate)**: evolves a `metabolic_rate` trait that symmetrically scales both energy gain and basal energy cost.
-
-* **["Stag hunt" nature + nurture](predpreygrass/evolutionary/stag_hunt_forward_view_nature_nurture)**: a hybrid case — predators carry a heritable cooperation trait (nature) alongside the learned voluntary `join_hunt` action (nurture); team-capture success depends on both.
-
-### Fixed-trait behavioral & game-theoretic environments
-
-These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
-
-* **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
-
-* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design. See **[predpreygrass/non_evolutionary/project_reward_shaping/README.md](predpreygrass/non_evolutionary/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
-
-  * **[Sparse rewards](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards)**: same sparse, reproduction-only reward as the base environment. The fair baseline for every other variant below.
-
-  * **[Dense rewards](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards)**: replaces the sparse reward with a dense, per-step net energy-delta reward (decay + move + eat + reproduction cost), no reproduction bonus.
-
-  * **[Dense rewards, additive](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards_additive)**: same dense per-step reward, plus the sparse variant's `+10` reproduction bonus layered on top.
-
-  * **[Sparse rewards + eating bonus](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_eating)**: still no continuous energy-delta signal — same clean, discrete-event reward style as the sparse baseline, plus a flat reward for the eating event itself (`+1` predator / `+0.1` prey, asymmetric).
-
-  * **[Sparse rewards + kick-back bonus](predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_kickback)**: keeps the `+10` reproduction reward, adds a second `+10` "kick-back" to a grandparent every time its own child reproduces. Training completed 2026-08-01 (1000/1000 iterations); see that folder's README for results.
-
-* **Cooperation**: ten sibling environments testing how cooperation emerges under a fixed-trait RL policy — joint/team hunting, cooperate/defect dilemmas with free-riding, reputation-conditioned cooperation, reciprocity (direct and spatial/network), and kin-selection altruism. See **[predpreygrass/non_evolutionary/project_cooperation/README.md](predpreygrass/non_evolutionary/project_cooperation)** for the shared framing.
-
-  * **["Stag hunt"](predpreygrass/non_evolutionary/project_cooperation/stag_hunt)**: cooperative and solo hunting with large (mammoths) and small (rabbits) prey. Hunting mammoths usually provides more energy but also needs cooperation of humans and therefore yields a more uncertain outcome.
-
-  * **[Stag hunt with defection](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_defection)**: humans can hunt solo for rabbits but mammoths usually cannot be killed alone, so they have to decide to cooperate at an energy cost or to defect at zero cost, giving opportunities for free-riding.
-
-  * **[Stag hunt forward view](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_forward_view)**: stag hunt defection with forward-shifted predator observations.
-
-  * **[Stag hunt reputation](predpreygrass/non_evolutionary/project_cooperation/stag_hunt_reputation)**: adds a per-predator reputation signal (join/defect history) on top of forward-view stag hunt defection, to test conditional cooperation.
-
-  * **[Mammoth hunting](predpreygrass/non_evolutionary/project_cooperation/mammoths)**: mammoths are only hunted down and eaten by humans in its Moore neighborhood if the cumulative energy of the surrounding humans is *strictly larger* than the mammoth's energy. On failure (if cumulative human energy is too low), humans optionally lose energy proportional to their share of the attacking group's energy (`energy_percentage_loss_per_failed_attacked_prey`). On success, prey energy is split among attackers (proportional by default, optional equal split via `team_capture_equal_split`). Only reproduction rewards.
-
-  * **[Mammoths defection](predpreygrass/non_evolutionary/project_cooperation/mammoths_defection)**: adds a voluntary join/free-ride decision to mammoth hunting.
-
-  * **[Shared prey](predpreygrass/non_evolutionary/project_cooperation/shared_prey)**: this environment is very similar in logic to `mammoth hunting`, but in this case the typical energy level of a prey is smaller than that of a predator. With `mammoth hunting` this is typically the other way around: prey possess more energy than predators. Only reproduction rewards.
-
-  * **[Direct reciprocity](predpreygrass/non_evolutionary/project_cooperation/direct_reciprocity)**: every prey is solo-catchable; predators get a voluntary `share_food` action, testing whether costly food sharing emerges without any coordination necessity.
-
-  * **[Network reciprocity](predpreygrass/non_evolutionary/project_cooperation/network_reciprocity)**: fixed cooperator/defector prey strategies (cooperators donate energy to adjacent prey), testing whether spatial clustering of cooperators lets them persist against defectors (Nowak & May 1992).
-
-  * **[Lineage rewards](predpreygrass/non_evolutionary/project_cooperation/lineage_rewards)**: agents are rewarded for descendants surviving over time, with fertility-age caps that shift agents from reproducing to protecting offspring late in life.
-
-* **[Walls occlusion](predpreygrass/non_evolutionary/walls_occlusion)**: an extension with walls and occluded vision. Only reproduction rewards.
-
-* **[Drive-conditioned environment](predpreygrass/non_evolutionary/drive_conditioned_environment)**: starts as a copy of the base environment, adding biologically-motivated internal-state signals (hunger, reproductive readiness, local threat/opportunity) as extra observation channels — reward and action space stay unchanged, only what the agent can see is enriched. See that folder's README for the full rationale and predicted effects.
-
-* **[Red Queen](predpreygrass/non_evolutionary/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
-
-
-
-### Experiments:
-
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([original implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/non_evolutionary/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)). A stronger multi-seed, multi-checkpoint-pair evaluation harness plus a training script (previously missing) were added later — see [`red_queen/README.md`](predpreygrass/non_evolutionary/red_queen) for the current methodology and what's still needed to produce a new result.
-
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey. ([implementation](predpreygrass/mutating_agents), [results](predpreygrass/mutating_agents#co-evolution-and-the-red-queen-effect))
-
-
-### Sparse rewards versus Dense rewards
+<p align="center">
+    <img align="center" src="./assets/images/readme/reward_shaping_headline.png" width="640" />
+</p>
 
 Started from a simple question: the base environment's only nonzero reward anywhere is a flat
 `+10` bonus on successful reproduction — every other hook is `0.0`. Does that sparsity hurt
@@ -113,7 +46,39 @@ outweighs the benefit it was meant to provide.
 questions — lives in
 [`predpreygrass/non_evolutionary/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/project_reward_shaping).**
 
-## Installation of the repository
+## Start here
+
+The repo splits into two structurally different families of experiment, matching the
+`predpreygrass/evolutionary/` vs `predpreygrass/non_evolutionary/` directory split:
+
+- **Evolutionary**: agents carry a heritable genome trait, passed parent → offspring
+  with mutation. What gets selected is discovered, not designed.
+- **Non-evolutionary**: every agent trait is fixed; only the RL policy adapts. What
+  emerges is a behavioral equilibrium under a given incentive design, not a change in
+  the population's genetics.
+
+The full catalogue of environments and experiments — evolutionary trials, reward-shaping
+variants, cooperation/game-theory environments, and the Red Queen evaluations — lives in
+**[EXPERIMENTS.md](EXPERIMENTS.md)**.
+
+## Quick start: run a demo in under five minutes
+
+```bash
+git clone https://github.com/doesburg11/PredPreyGrass.git
+cd PredPreyGrass
+python -m venv .venv && source .venv/bin/activate
+pip install -e .
+python ./predpreygrass/non_evolutionary/base_environment/random_policy.py
+```
+
+This installs the base dependencies and runs a random policy in the base environment —
+no VS Code or Conda required. `pygame` (for the rendered window) ships as a regular pip
+dependency; the Conda/GCC setup below is only needed if your platform lacks a
+prebuilt `pygame` wheel.
+
+Pretrained checkpoints and historical training outputs are preserved in the legacy archive rather than shipped in the active source tree.
+
+## Full setup (Visual Studio Code + Conda)
 
 **Editor used:** Visual Studio Code 1.107.0 on Linux Mint 22.0 Cinnamon
 
@@ -130,19 +95,11 @@ questions — lives in
    - ```bash
      pip install -e .
      ```
-3. Install the additional system dependency for Pygame visualization:
+3. Install the additional system dependency for Pygame visualization (only needed if
+   `pip install` can't find a prebuilt `pygame` wheel for your platform):
     -   ```bash
         conda install -y -c conda-forge gcc=14.2.0
         ```
-## Quick start
-Run a random policy in a Visual Studio Code terminal:
-
-```bash
-python ./predpreygrass/non_evolutionary/base_environment/random_policy.py
-
-```
-
-Pretrained checkpoints and historical training outputs are preserved in the legacy archive rather than shipped in the active source tree.
 
 ## Acknowledgments
 
@@ -153,3 +110,7 @@ Developed with AI coding assistance from [Claude](https://claude.com/claude-code
 - [RLlib: Industry-Grade, Scalable Reinforcement Learning](https://docs.ray.io/en/master/rllib/index.html)
 - [Paper Collection of Multi-Agent Reinforcement Learning (MARL)](https://github.com/LantaoYu/MARL-Papers)
 - [Multi-Agent Reinforcement Learning: Foundations and Modern Approaches. Stefano V. Albrecht, Filippos Christianos, and Lukas Schäfer](https://www.marl-book.com/download/marl-book.pdf)
+
+## Citation
+
+If you use this software in your research, please cite it — see [CITATION.cff](CITATION.cff).

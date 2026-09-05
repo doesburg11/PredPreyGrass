@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "PredPreyGrass: Multi-Agent Deep Reinforcement Learning meets Darwinian and Baldwinian evolution"
+authors:
+  - family-names: "van Doesburg"
+    given-names: "Peter"
+    email: petervandoesburg11@gmail.com
+repository-code: "https://github.com/doesburg11/PredPreyGrass"
+url: "https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass"
+license: MIT
+type: software
+keywords:
+  - multi-agent reinforcement learning
+  - evolutionary computation
+  - emergent cooperation
+  - coevolution
+  - baldwin effect
+  - artificial life
