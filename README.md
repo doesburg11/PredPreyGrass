@@ -80,7 +80,7 @@ Pretrained checkpoints and historical training outputs are preserved in the lega
 
 ## Full setup (Visual Studio Code + Conda)
 
-**Editor used:** Visual Studio Code 1.107.0 on Linux Mint 22.0 Cinnamon
+**Editor used:** Visual Studio Code on Linux Mint 22.0 Cinnamon
 
 1. Clone the repository:
    ```bash
