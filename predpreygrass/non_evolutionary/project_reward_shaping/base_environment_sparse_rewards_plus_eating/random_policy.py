@@ -15,6 +15,7 @@ if __name__ == "__main__":
     seed = 3
     env = env_creator({})
     observations, _ = env.reset(seed=seed)
+    active_agents = list(observations.keys())
 
     grid_size = (env.grid_size, env.grid_size)
     visualizer = PyGameRenderer(grid_size, ennable_speed_slider=False)
@@ -26,8 +27,12 @@ if __name__ == "__main__":
     truncated = False
 
     while not terminated and not truncated:
-        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
+        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in active_agents}
         observations, rewards, terminations, truncations, info = env.step(action_dict)
+        active_agents = [
+            a for a in observations
+            if not terminations.get(a, False) and not truncations.get(a, False)
+        ]
 
         visualizer.update(
             agent_positions=env.agent_positions,
@@ -38,8 +43,8 @@ if __name__ == "__main__":
             step=env.current_step,
         )
 
-        terminated = any(terminations.values())
-        truncated = any(truncations.values())
+        terminated = terminations.get("__all__", False)
+        truncated = truncations.get("__all__", False)
 
         clock.tick(target_fps)
 

@@ -134,6 +134,7 @@ if __name__ == "__main__":
     env = env_creator({})
     # Reset environment and get initial observations
     observations, _ = env.reset(seed=seed)
+    active_agents = list(observations.keys())
 
     # --- PyGame renderer ---
     grid_size = (env.grid_size, env.grid_size)
@@ -179,7 +180,12 @@ if __name__ == "__main__":
                 print(f"[ViewerControl] Step Backward → Step {env.current_step}")
 
                 # --- REGENERATE observations to match restored state ---
-                observations = {agent: env._get_observation(agent) for agent in env.agents}
+                observations = {
+                    agent: env._get_observation(agent)
+                    for agent in env.agents
+                    if agent in env.agent_positions
+                }
+                active_agents = list(observations.keys())
 
                 # --- Also rewind history lists ---
                 if len(time_steps) > 0:
@@ -206,9 +212,13 @@ if __name__ == "__main__":
                     rl_modules[policy_mapping_fn(agent_id)],
                     deterministic=True,
                 )
-                for agent_id in env.agents
+                for agent_id in active_agents
             }
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
+            active_agents = [
+                a for a in observations
+                if not terminations.get(a, False) and not truncations.get(a, False)
+            ]
 
             # Save snapshot AFTER step
             snapshots.append(env.get_state_snapshot())

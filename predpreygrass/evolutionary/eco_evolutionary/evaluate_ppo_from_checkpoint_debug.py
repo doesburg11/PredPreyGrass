@@ -214,7 +214,12 @@ def step_backwards_if_requested(
             snapshots.pop()
             env.restore_state_snapshot(snapshots[-1])
             print(f"[ViewerControl] Step Backward → Step {env.current_step}")
-            observations = {agent: env._get_observation(agent) for agent in env.agents}
+            observations = {
+                agent: env._get_observation(agent)
+                for agent in env.agents
+                if agent in env.agent_positions
+            }
+            env.active_agents = list(observations.keys())
             if time_steps:
                 time_steps.pop()
                 predator_counts.pop()
@@ -257,12 +262,16 @@ def step_forward(
     video_writer,
 ):
     action_dict = {}
-    for agent_id in env.agents:
+    for agent_id in env.active_agents:
         group = policy_mapping_fn(agent_id)
         if group in rl_modules:
             action_dict[agent_id] = policy_pi(observations[agent_id], rl_modules[group], deterministic=True)
 
     observations, rewards, terminations, truncations, _ = env.step(action_dict)
+    env.active_agents = [
+        a for a in observations
+        if not terminations.get(a, False) and not truncations.get(a, False)
+    ]
     # print("----------------------------------------------")
     # print(f"Step {env.current_step}")
     # print(f"Rewards: {rewards}")
@@ -491,6 +500,7 @@ if __name__ == "__main__":
 
     env, visualizer, rl_modules, ceviz, pdviz, eval_output_dir = setup_environment_and_visualizer(now)
     observations, _ = env.reset(seed=seed)
+    env.active_agents = list(observations.keys())
 
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()

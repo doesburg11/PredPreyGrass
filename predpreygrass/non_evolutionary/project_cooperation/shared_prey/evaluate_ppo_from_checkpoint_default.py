@@ -73,6 +73,7 @@ if __name__ == "__main__":
     )
 
     observations, _ = env.reset(seed=SEED)
+    active_agents = list(observations.keys())
     # FOV overlays will be shown for: type_1_predator_0 and type_1_prey_0
 
     if SAVE_MOVIE:
@@ -87,8 +88,12 @@ if __name__ == "__main__":
 
     terminated, truncated = False, False
     while not terminated and not truncated:
-        action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
+        action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in active_agents}
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
+        active_agents = [
+            a for a in observations
+            if not terminations.get(a, False) and not truncations.get(a, False)
+        ]
 
         visualizer.update(
             grass_positions=env.grass_positions,
@@ -106,8 +111,8 @@ if __name__ == "__main__":
             video_writer.write(frame)
 
         total_reward += sum(rewards.values())
-        terminated = all(terminations.values())
-        truncated = all(truncations.values())
+        terminated = terminations.get("__all__", False)
+        truncated = truncations.get("__all__", False)
         clock.tick(visualizer.target_fps)
 
     print(f"\n Evaluation complete! Total Reward: {total_reward:.2f}")

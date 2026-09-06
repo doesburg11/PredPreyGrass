@@ -62,6 +62,7 @@ if __name__ == "__main__":
         rl_modules, checkpoint_path = setup_modules()
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
+        active_agents = list(observations.keys())
         if SAVE_EVAL_RESULTS:
             eval_output_dir = os.path.join(checkpoint_path, f"eval_multiple_runs_PRED_DECAY_0_20_PRED_OBS_RANGE_9_GRID_30_INITS_15_{now}")
             os.makedirs(eval_output_dir, exist_ok=True)
@@ -74,8 +75,12 @@ if __name__ == "__main__":
         truncated = False 
 
         while not terminated and not truncated:
-            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
+            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in active_agents}
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
+            active_agents = [
+                a for a in observations
+                if not terminations.get(a, False) and not truncations.get(a, False)
+            ]
             if visualizer:
                 visualizer.record(
                     agent_ids=env.agents,

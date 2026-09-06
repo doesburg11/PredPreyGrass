@@ -34,6 +34,7 @@ if __name__ == "__main__":
     np.random.seed(seed)
     env = env_creator(cfg)
     observations, _ = env.reset(seed=seed)
+    active_agents = list(observations.keys())
 
     # Seed each action space with a distinct but reproducible seed to avoid
     # agents sampling identical action sequences in lockstep.
@@ -66,8 +67,12 @@ if __name__ == "__main__":
 
     while not terminated and not truncated:
         # --- Step forward using random actions ---
-        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
-        env.step(action_dict)
+        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in active_agents}
+        observations, _, terminations, truncations, _ = env.step(action_dict)
+        active_agents = [
+            a for a in observations
+            if not terminations.get(a, False) and not truncations.get(a, False)
+        ]
         # print(f"Step {env.current_step}")
         # print(f"{terminations}")
 

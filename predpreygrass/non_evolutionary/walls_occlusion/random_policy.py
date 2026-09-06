@@ -37,6 +37,7 @@ if __name__ == "__main__":
     cfg.setdefault("include_visibility_channel", True)
     env = env_creator(cfg)
     observations, _ = env.reset(seed=cfg.get("seed", 42))
+    active_agents = list(observations.keys())
 
     # Debug: print one observation shape to confirm visibility channel present
     if observations:
@@ -63,8 +64,12 @@ if __name__ == "__main__":
 
     while not terminated and not truncated:
         # --- Step forward using random actions ---
-        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in env.agents}
+        action_dict = {agent_id: random_policy_pi(agent_id, env) for agent_id in active_agents}
         observations, rewards, terminations, truncations, _ = env.step(action_dict)
+        active_agents = [
+            a for a in observations
+            if not terminations.get(a, False) and not truncations.get(a, False)
+        ]
 
         # --- Update visualizer ---
         try:
@@ -86,8 +91,8 @@ if __name__ == "__main__":
                 per_step_agent_data=env.per_step_agent_data,
             )
 
-        terminated = any(terminations.values())
-        truncated = any(truncations.values())
+        terminated = terminations.get("__all__", False)
+        truncated = truncations.get("__all__", False)
 
         # Frame rate control
         clock.tick(visualizer.target_fps)

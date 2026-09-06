@@ -93,18 +93,23 @@ def run_episode(
     run_idx: int,
 ) -> dict:
     env = PredPreyGrass(cfg)
-    env.reset(seed=seed)
+    observations, _ = env.reset(seed=seed)
+    active_agents = list(observations.keys())
     info_all_list: list[dict] = []
 
     for _ in range(steps):
         action_dict = {}
-        for agent_id in env.agents:
+        for agent_id in active_agents:
             sampled = env.action_spaces[agent_id].sample()
             if force_predator_join is not None and "predator" in agent_id:
                 sampled = _force_join_action(sampled, force_predator_join)
             action_dict[agent_id] = sampled
 
-        _, _, terms, truncs, infos = env.step(action_dict)
+        observations, _, terms, truncs, infos = env.step(action_dict)
+        active_agents = [
+            a for a in observations
+            if not terms.get(a, False) and not truncs.get(a, False)
+        ]
         info_all_list.append(infos.get("__all__", {}))
         if terms.get("__all__") or truncs.get("__all__"):
             break

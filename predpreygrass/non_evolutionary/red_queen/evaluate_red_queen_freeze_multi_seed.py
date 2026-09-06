@@ -95,15 +95,20 @@ def run_one_episode(pred_ckpt_path, prey_ckpt_path, module_cache, max_steps, see
 
     env = PredPreyGrass(config=config_env)
     obs, _ = env.reset(seed=seed)
+    active_agents = list(obs.keys())
     total_reward = 0.0
 
     for _ in range(max_steps):
         action_dict = {}
-        for agent_id in env.agents:
+        for agent_id in active_agents:
             policy_id = policy_mapping_fn(agent_id)
             action_dict[agent_id] = policy_pi(obs[agent_id], rl_modules[policy_id])
 
         obs, rewards, terminations, truncations, _ = env.step(action_dict)
+        active_agents = [
+            a for a in obs
+            if not terminations.get(a, False) and not truncations.get(a, False)
+        ]
         total_reward += sum(rewards.values())
 
         if terminations.get("__all__") or truncations.get("__all__"):

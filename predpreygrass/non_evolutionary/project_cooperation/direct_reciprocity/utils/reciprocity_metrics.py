@@ -146,11 +146,16 @@ def run_rollout(steps: int, seed: int | None) -> PredPreyGrass:
     cfg = dict(config_env)
     cfg["max_steps"] = max(int(cfg.get("max_steps", steps)), steps)
     env = PredPreyGrass(cfg)
-    env.reset(seed=seed)
+    observations, _ = env.reset(seed=seed)
+    active_agents = list(observations.keys())
 
     for _ in range(steps):
-        actions = {aid: env.action_spaces[aid].sample() for aid in env.agents}
-        _, _, terms, truncs, _ = env.step(actions)
+        actions = {aid: env.action_spaces[aid].sample() for aid in active_agents}
+        observations, _, terms, truncs, _ = env.step(actions)
+        active_agents = [
+            a for a in observations
+            if not terms.get(a, False) and not truncs.get(a, False)
+        ]
         if terms.get("__all__") or truncs.get("__all__"):
             break
 

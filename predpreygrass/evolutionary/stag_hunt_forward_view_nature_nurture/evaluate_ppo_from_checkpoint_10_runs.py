@@ -625,6 +625,7 @@ if __name__ == "__main__":
         rl_modules, checkpoint_path = setup_modules()
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=seed)  # Use different seed per attempt
+        active_agents = list(observations.keys())
         if SAVE_EVAL_RESULTS:
             eval_output_dir = get_eval_output_dir(checkpoint_path, now)
             eval_output_dir.mkdir(parents=True, exist_ok=True)
@@ -647,8 +648,12 @@ if __name__ == "__main__":
 
         counts_history = []
         while not terminated and not truncated:
-            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in env.agents}
+            action_dict = {aid: policy_pi(observations[aid], rl_modules[policy_mapping_fn(aid)]) for aid in active_agents}
             observations, rewards, terminations, truncations, _ = env.step(action_dict)
+            active_agents = [
+                a for a in observations
+                if not terminations.get(a, False) and not truncations.get(a, False)
+            ]
             if visualizer:
                 visualizer.record(
                     agent_ids=env.agents,
