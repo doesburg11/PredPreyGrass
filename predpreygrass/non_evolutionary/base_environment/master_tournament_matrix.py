@@ -26,9 +26,9 @@ Usage:
     python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
         --run-dir <path-to-trial-dir> --stride 10 --episodes-per-cell 1 --max-steps 200
 
-    # 3. Full sweep once training has produced all checkpoints:
+    # 3. Full sweep once training has produced all checkpoints, using 30 worker processes:
     python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
-        --run-dir <path-to-trial-dir>
+        --run-dir <path-to-trial-dir> --workers 30
 
     # 4. Re-render the heatmap from a previous sweep's results without rerunning episodes:
     python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
@@ -46,16 +46,19 @@ from predpreygrass.non_evolutionary.base_environment.evaluate_ppo_from_checkpoin
 
 # --- External libraries ---
 import argparse
+import multiprocessing as mp
+import os
 import pickle
 import time
 from collections import defaultdict
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import torch
 from ray.rllib.core.rl_module.rl_module import RLModule
 
 VALID_METRICS = [
@@ -138,6 +141,14 @@ def parse_args():
         "--dry-run", action="store_true",
         help="Print the discovered checkpoint index/iteration grid and a full-sweep "
              "size estimate, then exit. Loads nothing (no RLModules, no env).",
+    )
+    parser.add_argument(
+        "--workers", type=int, default=30,
+        help="Number of worker processes to evaluate cells in parallel (fork start "
+             "method; Linux only). Each worker pins itself to a single torch thread "
+             "so total CPU demand tracks this number directly instead of every "
+             "worker also fanning out its own internal thread pool. Use 1 to fall "
+             "back to plain sequential execution in a single subprocess.",
     )
     args = parser.parse_args()
     if not args.replot and not args.run_dir:
@@ -248,6 +259,54 @@ def run_one_episode(env: PredPreyGrass, predator_module: RLModule, prey_module: 
     return metrics
 
 
+# --- Parallel cell evaluation -----------------------------------------------
+# These globals are populated in the MAIN process, before the worker Pool is
+# created. With the "fork" start method (Linux default), each worker process is
+# a copy-on-write snapshot of the parent taken at fork time, so every worker
+# inherits the already-preloaded RLModules and the already-constructed env for
+# free -- no reloading from disk per worker, no pickling heavy objects through
+# IPC. Each worker's copy of `_ENV` is independently mutated from then on
+# (separate address space after fork), so there's no cross-worker interference.
+_ENV: Optional[PredPreyGrass] = None
+_PREDATOR_MODULES: Optional[Dict[int, RLModule]] = None
+_PREY_MODULES: Optional[Dict[int, RLModule]] = None
+_ITERATIONS: Optional[List[int]] = None
+_EPISODES_PER_CELL: int = 1
+_SEED: int = 42
+_DETERMINISTIC: bool = True
+
+
+def _worker_init():
+    """Pool initializer: run once per worker process. Without this, every one
+    of the N worker processes would independently ask torch for its own
+    multi-threaded intra-op thread pool (sized off the whole machine's core
+    count), causing severe oversubscription -- N processes x many threads each
+    fighting over the same physical cores. Pinning each worker to a single
+    thread makes total CPU demand track --workers directly."""
+    torch.set_num_threads(1)
+
+
+def _run_cell(task: Tuple[int, int]) -> List[dict]:
+    """Run all episodes for one (predator_ckpt_index, prey_ckpt_index) cell,
+    using the module-level globals inherited via fork. Returns one row dict per
+    episode (kept separate, not pre-averaged, so results_long.csv stays as rich
+    as the sequential version's)."""
+    i, j = task
+    rows = []
+    for ep in range(_EPISODES_PER_CELL):
+        seed = _SEED + ep
+        row = run_one_episode(_ENV, _PREDATOR_MODULES[i], _PREY_MODULES[j], seed, _DETERMINISTIC)
+        row.update(
+            predator_ckpt_index=i,
+            prey_ckpt_index=j,
+            predator_iteration=_ITERATIONS[i],
+            prey_iteration=_ITERATIONS[j],
+            episode_index=ep,
+        )
+        rows.append(row)
+    return rows
+
+
 def build_matrix(df: pd.DataFrame, metric: str, n: int) -> np.ndarray:
     pivot = df.groupby(["predator_ckpt_index", "prey_ckpt_index"])[metric].mean().unstack()
     pivot = pivot.reindex(index=range(n), columns=range(n))
@@ -346,43 +405,71 @@ def main():
         env_config["max_steps"] = args.max_steps
     env = PredPreyGrass(env_config)
 
-    results = []
-    episode_times = []
+    # This process's own torch thread pool is irrelevant once workers fork from
+    # it (each worker pins itself to 1 thread in _worker_init), but pin it here
+    # too in case --workers 1 is used (no pool overhead, everything runs via
+    # _run_cell directly in-process below).
+    torch.set_num_threads(1)
+
+    global _ENV, _PREDATOR_MODULES, _PREY_MODULES, _ITERATIONS, _EPISODES_PER_CELL, _SEED, _DETERMINISTIC
+    _ENV = env
+    _PREDATOR_MODULES = predator_modules
+    _PREY_MODULES = prey_modules
+    _ITERATIONS = iterations
+    _EPISODES_PER_CELL = episodes_per_cell
+    _SEED = args.seed
+    _DETERMINISTIC = deterministic
+
+    tasks = [(i, j) for i in range(n) for j in range(n)]
     total_episodes = n * n * episodes_per_cell
-    done_episodes = 0
+    num_workers = max(1, args.workers)
+    cpu_count = os.cpu_count() or 1
+    if num_workers > cpu_count:
+        print(f"[warn] --workers {num_workers} exceeds the {cpu_count} logical CPUs detected "
+              f"on this machine; processes will contend for cores rather than run in parallel.")
+    print(f"[sweep] evaluating {len(tasks)} cells ({total_episodes} episodes total) "
+          f"with {num_workers} worker process(es)")
+
+    results: List[dict] = []
     sweep_start = time.perf_counter()
+    done_cells = 0
+    progress_stride = max(1, len(tasks) // 20)  # ~20 progress lines regardless of matrix size
 
-    for i in range(n):
-        for j in range(n):
-            for ep in range(episodes_per_cell):
-                seed = args.seed + ep
-                t0 = time.perf_counter()
-                row = run_one_episode(env, predator_modules[i], prey_modules[j], seed, deterministic)
-                episode_times.append(time.perf_counter() - t0)
-                row.update(
-                    predator_ckpt_index=i,
-                    prey_ckpt_index=j,
-                    predator_iteration=iterations[i],
-                    prey_iteration=iterations[j],
-                    episode_index=ep,
-                )
-                results.append(row)
-                done_episodes += 1
-        elapsed = time.perf_counter() - sweep_start
-        print(f"[sweep] predator checkpoint {i + 1}/{n} done "
-              f"({done_episodes}/{total_episodes} episodes, {elapsed:.1f}s elapsed)")
+    if num_workers == 1:
+        for task in tasks:
+            results.extend(_run_cell(task))
+            done_cells += 1
+            if done_cells % progress_stride == 0 or done_cells == len(tasks):
+                elapsed = time.perf_counter() - sweep_start
+                print(f"[sweep] {done_cells}/{len(tasks)} cells done ({elapsed:.1f}s elapsed)")
+    else:
+        # fork (not the platform default on all OSes, but this repo targets Linux):
+        # workers inherit the already-preloaded modules/env from this process's
+        # memory at fork time rather than re-loading anything from disk.
+        ctx = mp.get_context("fork")
+        with ctx.Pool(processes=num_workers, initializer=_worker_init) as pool:
+            for cell_rows in pool.imap_unordered(_run_cell, tasks):
+                results.extend(cell_rows)
+                done_cells += 1
+                if done_cells % progress_stride == 0 or done_cells == len(tasks):
+                    elapsed = time.perf_counter() - sweep_start
+                    print(f"[sweep] {done_cells}/{len(tasks)} cells done ({elapsed:.1f}s elapsed)")
 
-    mean_episode_time = float(np.mean(episode_times))
+    total_wall = time.perf_counter() - sweep_start
+    implied_per_episode = total_wall / total_episodes if total_episodes else 0.0
     effective_max_steps = env_config["max_steps"]
-    print(f"[timing] {len(episode_times)} episodes run; "
-          f"mean wall time/episode: {mean_episode_time:.3f}s (max_steps={effective_max_steps})")
+    print(f"[timing] {total_episodes} episodes across {len(tasks)} cells finished in "
+          f"{timedelta(seconds=int(total_wall))} using {num_workers} worker(s) "
+          f"(max_steps={effective_max_steps}); implied {implied_per_episode:.3f}s/episode "
+          f"at this parallelism level")
     if args.max_steps is not None:
         print(f"[timing] NOTE: this run used --max-steps {args.max_steps}, shortened from "
               f"config_env's default {config_env['max_steps']}. A full sweep at the default "
               "max_steps will likely take proportionally longer per episode than the "
               "extrapolation below assumes.")
-    estimated_full_seconds = full_episodes * mean_episode_time
+    estimated_full_seconds = full_episodes * implied_per_episode
     print(f"[timing] full-sweep extrapolation using all {len(all_ckpts)} discovered checkpoints "
+          f"at this same --workers {num_workers} level "
           f"({full_cells} cells x {episodes_per_cell} episodes/cell = {full_episodes} episodes): "
           f"~{timedelta(seconds=int(estimated_full_seconds))} (HH:MM:SS)")
 
