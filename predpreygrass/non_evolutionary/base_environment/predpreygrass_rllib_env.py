@@ -132,7 +132,14 @@ class PredPreyGrass(MultiAgentEnv):
         """
         super().reset(seed=seed)
         self.current_step = 0
-        self.rng = np.random.default_rng(seed)
+        # Per the Gymnasium reset(seed=...) contract: only reseed when an
+        # explicit seed is given. RLlib's auto-reset between episodes calls
+        # reset(seed=None); recreating self.rng unconditionally here (the
+        # previous behavior) would silently draw fresh OS entropy every
+        # episode after the first, making --seed only affect episode 0 of
+        # each env-runner slot instead of the whole run.
+        if seed is not None or not hasattr(self, "rng"):
+            self.rng = np.random.default_rng(seed)
 
         # Initialize grid_world_state
         self.grid_world_state = self.initial_grid_world_state.copy()
@@ -153,6 +160,13 @@ class PredPreyGrass(MultiAgentEnv):
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
 
+        # Per-episode counters for training-time ecology metrics (see
+        # _build_episode_training_metrics), surfaced to TensorBoard via the
+        # EpisodeReturn callback so a baseline-vs-drive-conditioned comparison
+        # doesn't have to rely on reward curves alone.
+        self.episode_births = {"predator": 0, "prey": 0}
+        self.episode_deaths = {"predator": 0, "prey": 0}
+
         def generate_random_positions(grid_size: int, num_positions: int):
             """
             Generate unique random positions on a grid.
@@ -167,11 +181,13 @@ class PredPreyGrass(MultiAgentEnv):
             if num_positions > grid_size * grid_size:
                 raise ValueError("Cannot place more unique positions than grid cells.")
 
-            rng = np.random.default_rng(seed)
+            # Use the persistent self.rng (see reset()'s seeding comment above)
+            # rather than a fresh np.random.default_rng(seed), which would
+            # ignore the seed entirely on auto-reset (seed=None) episodes.
             positions = set()
 
             while len(positions) < num_positions:
-                pos = tuple(rng.integers(0, grid_size, size=2))
+                pos = tuple(self.rng.integers(0, grid_size, size=2))
                 positions.add(pos)  # Ensures uniqueness because positions is a set
 
             return list(positions)
@@ -290,10 +306,12 @@ class PredPreyGrass(MultiAgentEnv):
                 truncations[agent] = False
                 if "predator" in agent:
                     self.current_num_predators -= 1
+                    self.episode_deaths["predator"] += 1
                     self.grid_world_state[1, *self.agent_positions[agent]] = 0
                     del self.predator_positions[agent]
                 elif "prey" in agent:
                     self.current_num_prey -= 1
+                    self.episode_deaths["prey"] += 1
                     self.grid_world_state[2, *self.agent_positions[agent]] = 0
                     del self.prey_positions[agent]
                 del self.agent_positions[agent]
@@ -332,6 +350,7 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[caught_prey] = True
                     truncations[caught_prey] = False
                     self.current_num_prey -= 1
+                    self.episode_deaths["prey"] += 1
                     self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
                     del self.agent_positions[caught_prey]
                     del self.prey_positions[caught_prey]
@@ -405,6 +424,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[1, *self.agent_positions[new_agent]] = self.initial_energy_predator
                         self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_predators += 1
+                        self.episode_births["predator"] += 1
                         rewards[new_agent] = 0
                         rewards[agent] = self.reproduction_reward_predator
                         self.cumulative_rewards[new_agent] = 0
@@ -434,6 +454,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[2, *self.agent_positions[new_agent]] = self.initial_energy_prey
                         self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_prey += 1
+                        self.episode_births["prey"] += 1
                         rewards[new_agent] = 0
                         rewards[agent] = self.reproduction_reward_prey
                         self.cumulative_rewards[agent] += rewards[agent]
@@ -471,6 +492,25 @@ class PredPreyGrass(MultiAgentEnv):
         self.current_step += 1
 
         return observations, rewards, terminations, truncations, infos
+
+    def _build_episode_training_metrics(self) -> Dict[str, float]:
+        """
+        Ecology metrics for the baseline-vs-drive-conditioned comparison
+        (episode length/extinction/births/deaths/population, per
+        drive_conditioned_environment/README.md's "Useful metrics" list).
+        Read by the EpisodeReturn callback via env introspection.
+        """
+        return {
+            "episode_length": float(self.current_step),
+            "births_predator": float(self.episode_births["predator"]),
+            "births_prey": float(self.episode_births["prey"]),
+            "deaths_predator": float(self.episode_deaths["predator"]),
+            "deaths_prey": float(self.episode_deaths["prey"]),
+            "final_num_predators": float(self.current_num_predators),
+            "final_num_prey": float(self.current_num_prey),
+            "extinct_predator": float(self.current_num_predators <= 0),
+            "extinct_prey": float(self.current_num_prey <= 0),
+        }
 
     def _get_movement_energy_cost(self, agent, current_position, new_position, distance_factor=0.1):
         """

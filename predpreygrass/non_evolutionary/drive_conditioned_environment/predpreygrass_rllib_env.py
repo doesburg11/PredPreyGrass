@@ -167,7 +167,14 @@ class PredPreyGrass(MultiAgentEnv):
         """
         super().reset(seed=seed)
         self.current_step = 0
-        self.rng = np.random.default_rng(seed)
+        # Per the Gymnasium reset(seed=...) contract: only reseed when an
+        # explicit seed is given. RLlib's auto-reset between episodes calls
+        # reset(seed=None); recreating self.rng unconditionally here (the
+        # previous behavior) would silently draw fresh OS entropy every
+        # episode after the first, making --seed only affect episode 0 of
+        # each env-runner slot instead of the whole run.
+        if seed is not None or not hasattr(self, "rng"):
+            self.rng = np.random.default_rng(seed)
 
         # Initialize grid_world_state
         self.grid_world_state = self.initial_grid_world_state.copy()
@@ -188,6 +195,17 @@ class PredPreyGrass(MultiAgentEnv):
         self._next_predator_idx = self.n_initial_active_predator
         self._next_prey_idx = self.n_initial_active_prey
 
+        # Per-episode counters for training-time ecology metrics (see
+        # _build_episode_training_metrics), surfaced to TensorBoard via the
+        # EpisodeReturn callback so a baseline-vs-drive-conditioned comparison
+        # doesn't have to rely on reward curves alone.
+        self.episode_births = {"predator": 0, "prey": 0}
+        self.episode_deaths = {"predator": 0, "prey": 0}
+        # feature_name -> [sum, count, min, max], for checking whether the
+        # drive-channel normalizers are well-calibrated (not saturating near
+        # 0 or 1 across the densities actually encountered).
+        self._drive_value_stats: Dict[str, List[float]] = {}
+
         def generate_random_positions(grid_size: int, num_positions: int):
             """
             Generate unique random positions on a grid.
@@ -202,11 +220,13 @@ class PredPreyGrass(MultiAgentEnv):
             if num_positions > grid_size * grid_size:
                 raise ValueError("Cannot place more unique positions than grid cells.")
 
-            rng = np.random.default_rng(seed)
+            # Use the persistent self.rng (see reset()'s seeding comment above)
+            # rather than a fresh np.random.default_rng(seed), which would
+            # ignore the seed entirely on auto-reset (seed=None) episodes.
             positions = set()
 
             while len(positions) < num_positions:
-                pos = tuple(rng.integers(0, grid_size, size=2))
+                pos = tuple(self.rng.integers(0, grid_size, size=2))
                 positions.add(pos)  # Ensures uniqueness because positions is a set
 
             return list(positions)
@@ -248,6 +268,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         # Generate observations
         observations = {agent: self._get_observation(agent) for agent in self.agents}
+        self._record_drive_value_stats(observations)
 
         return observations, {}
 
@@ -270,6 +291,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Mark global truncation and return immediately
             truncations["__all__"] = True
             terminations["__all__"] = False
+            self._record_drive_value_stats(observations)
             return observations, rewards, terminations, truncations, infos
 
         # For stepwise display eating in grid
@@ -325,10 +347,12 @@ class PredPreyGrass(MultiAgentEnv):
                 truncations[agent] = False
                 if "predator" in agent:
                     self.current_num_predators -= 1
+                    self.episode_deaths["predator"] += 1
                     self.grid_world_state[1, *self.agent_positions[agent]] = 0
                     del self.predator_positions[agent]
                 elif "prey" in agent:
                     self.current_num_prey -= 1
+                    self.episode_deaths["prey"] += 1
                     self.grid_world_state[2, *self.agent_positions[agent]] = 0
                     del self.prey_positions[agent]
                 del self.agent_positions[agent]
@@ -367,6 +391,7 @@ class PredPreyGrass(MultiAgentEnv):
                     terminations[caught_prey] = True
                     truncations[caught_prey] = False
                     self.current_num_prey -= 1
+                    self.episode_deaths["prey"] += 1
                     self.grid_world_state[2, *self.agent_positions[caught_prey]] = 0
                     del self.agent_positions[caught_prey]
                     del self.prey_positions[caught_prey]
@@ -440,6 +465,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[1, *self.agent_positions[new_agent]] = self.initial_energy_predator
                         self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_predators += 1
+                        self.episode_births["predator"] += 1
                         rewards[new_agent] = 0
                         rewards[agent] = self.reproduction_reward_predator
                         self.cumulative_rewards[new_agent] = 0
@@ -469,6 +495,7 @@ class PredPreyGrass(MultiAgentEnv):
                         self.grid_world_state[2, *self.agent_positions[new_agent]] = self.initial_energy_prey
                         self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
                         self.current_num_prey += 1
+                        self.episode_births["prey"] += 1
                         rewards[new_agent] = 0
                         rewards[agent] = self.reproduction_reward_prey
                         self.cumulative_rewards[agent] += rewards[agent]
@@ -505,6 +532,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Increment step counter
         self.current_step += 1
 
+        self._record_drive_value_stats(observations)
         return observations, rewards, terminations, truncations, infos
 
     def _get_movement_energy_cost(self, agent, current_position, new_position, distance_factor=0.1):
@@ -586,6 +614,29 @@ class PredPreyGrass(MultiAgentEnv):
             dtype=np.float64,
         )
 
+    def _record_drive_value_stats(self, observations: Dict[AgentID, NDArray[np.float64]]) -> None:
+        """
+        Accumulate drive-channel value stats from the observations actually
+        returned to RLlib (exactly once per agent per step). Must NOT be
+        hooked into _get_observation/_get_drive_features directly: those are
+        called multiple times per agent within a single step() (mid-engagement
+        and again in the final "generate observations" pass), which would
+        double- or triple-count the same logical observation.
+        """
+        if not self.enable_drive_channels:
+            return
+        for agent_id, obs in observations.items():
+            feature_names = self.predator_drive_channels if "predator" in agent_id else self.prey_drive_channels
+            for offset, name in enumerate(feature_names):
+                value = float(obs[self.num_world_channels + offset, 0, 0])
+                stats = self._drive_value_stats.setdefault(name, [0.0, 0, float("inf"), float("-inf")])
+                stats[0] += value
+                stats[1] += 1
+                if value < stats[2]:
+                    stats[2] = value
+                if value > stats[3]:
+                    stats[3] = value
+
     def _get_drive_feature(self, agent, observation, feature_name):
         energy = self.agent_energies[agent]
 
@@ -614,6 +665,33 @@ class PredPreyGrass(MultiAgentEnv):
         if not np.isfinite(value):
             return 0.0
         return float(np.clip(value, 0.0, 1.0))
+
+    def _build_episode_training_metrics(self) -> Dict[str, float]:
+        """
+        Ecology metrics for the baseline-vs-drive-conditioned comparison
+        (episode length/extinction/births/deaths/population, per the
+        module README's "Useful metrics" list), plus per-drive-channel
+        value stats to check the normalizer constants aren't saturating
+        near 0 or 1. Read by the EpisodeReturn callback via env introspection.
+        """
+        metrics = {
+            "episode_length": float(self.current_step),
+            "births_predator": float(self.episode_births["predator"]),
+            "births_prey": float(self.episode_births["prey"]),
+            "deaths_predator": float(self.episode_deaths["predator"]),
+            "deaths_prey": float(self.episode_deaths["prey"]),
+            "final_num_predators": float(self.current_num_predators),
+            "final_num_prey": float(self.current_num_prey),
+            "extinct_predator": float(self.current_num_predators <= 0),
+            "extinct_prey": float(self.current_num_prey <= 0),
+        }
+        for name, (value_sum, count, value_min, value_max) in self._drive_value_stats.items():
+            if count == 0:
+                continue
+            metrics[f"drive_{name}_mean"] = value_sum / count
+            metrics[f"drive_{name}_min"] = value_min
+            metrics[f"drive_{name}_max"] = value_max
+        return metrics
 
     def _obs_clip(self, x, y, observation_range):
         """

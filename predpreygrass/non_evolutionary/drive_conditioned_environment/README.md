@@ -31,9 +31,52 @@ The core idea: make hidden, sample-expensive-to-discover internal state directly
 
 ## Status
 
-Drive-conditioned logic is now implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct: observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), and all 5 drive-feature formulas were verified numerically at both boundary and mid-range values. Not yet done: the three-way baseline-vs-drive-conditioned-vs-stronger-affordances comparison this module exists to run — no results doc exists yet.
+Drive-conditioned logic is implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct: observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), and all 5 drive-feature formulas were verified numerically at both boundary and mid-range values. A first baseline-vs-drive-conditioned (full drive set) comparison has now been run — see **Results** below. Not yet done: the energy-only arm, additional seeds, and the stronger-affordances arm of the originally planned three-way comparison.
 
-## Expected advantages (predictions for future work, not yet validated)
+## Results: baseline vs. drive-conditioned, single seed (2026-09-06)
+
+**Key message**: adding drive-conditioned observations made agents reproduce about 6% more successfully overall — mostly by helping predators specifically — in this one training run. A promising early sign, not proof yet, since it's only been tested once.
+
+**Setup**: `base_environment` and `drive_conditioned_environment --drive-set full`, both seed 42, both 1000 PPO training iterations, identical `config_env.py` settings and PPO hyperparameters (verified like-for-like beforehand — the only difference is the 3-4 extra drive channels drive-conditioned adds to the observation). Runs: `PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45` and `PPO_DRIVE_CONDITIONED_FULL_SEED42_2026-09-06_07-26-38` under `~/simulation_results/ray_results/`. Both completed cleanly (1000/1000 iterations, no crashes, no extinctions to speak of — `extinct_predator`/`extinct_prey` ≈ 0 throughout).
+
+**Headline**: drive-conditioned showed a **+6.0% higher pooled return** over the full run — 7322.6 vs. 6905.1, episode-count-weighted across 1057 vs. 1055 completed episodes (pooling by actual completed episodes, not by per-iteration means, since many iterations complete only 0-3 episodes and a naive per-iteration-mean read is noisy/misleading — an extraction bug an independent Codex review caught and corrected in this analysis).
+
+**Shape of the effect over training** (episode-pooled return, gap vs. baseline):
+
+| Iterations | Gap |
+|---|---|
+| 1–25 (both still learning to survive) | +76.0% |
+| 26–50 (both just reached full-length episodes) | +28.9% |
+| 51–100 | +9.3% |
+| 101–200 | +4.4% |
+| 201–300 | +6.0% |
+| 301–400 | +6.5% |
+| 401–500 | +6.6% |
+| 501–600 | +3.1% |
+| 601–700 | +2.8% |
+| 701–800 | +5.3% |
+| 801–900 | +5.3% |
+| 901–1000 | +7.3% |
+
+A large transient advantage during the early survival-learning phase, then a positive-but-variable advantage (roughly +3% to +9%) that persists to the end of training without decaying to zero. This early-transient-then-persistent shape is consistent with the variance-reduction argument for why drive-conditioning should help (see "Conceptual evidence" below) — though see the caveat at the end of this section before reading too much into it.
+
+**Mechanism**: reward is reproduction-only (10.0 per birth for either species), so return is an exact identity: `return = 10 × (predator_births + prey_births)`. The advantage is disproportionately a **predator** effect — predator births explain 70.7% of the full-run return gap, and essentially all (~100%) of the gap in the back half of training (iterations 501-1000). Prey births were only modestly higher for drive-conditioned (+1-2%) throughout.
+
+**A population-composition effect seen mid-run did not hold up**: around iteration 332, drive-conditioned showed a notably more prey-heavy population (26.3 prey/17.3 predators vs. baseline's 14.0/22.0). Checked against the completed run, this was transient — pooled over iterations 501-1000, final population composition is essentially identical between arms (~17-18 predators, ~23-24 prey either way). Flagged here specifically because it looked real at the time and would have been a misleading claim if reported without checking the full trajectory.
+
+**Drive-channel calibration held up**: none of the five drive channels saturated near a constant value during this run — each showed a real spread from ~0 to ~1 with a non-degenerate mean (`hunger_pressure` mean 0.15, `reproductive_readiness` 0.48, `prey_opportunity` 0.50, `predator_danger_pressure` 0.55, `grass_opportunity` 0.39). This resolves the "unvalidated normalizer constants" caveat from earlier in this document, at least for this seed.
+
+**The caveat that matters most**: this is a single seed per arm. Per an independent Codex review of the raw data: *"state it as a documented single-run observation, not evidence of a statistically robust algorithmic advantage without multi-seed replication and variance/confidence intervals."* The consistent positive sign across nearly every 100-iteration window in this one run is suggestive, but a different seed could plausibly show a smaller, larger, or reversed gap purely from randomness.
+
+### TODO: energy-only arm (not yet run)
+
+The two-group prediction earlier in this document (see "Rationale") is that `hunger_pressure`/`reproductive_readiness` — own-energy-based, encoding thresholds the raw observation cannot otherwise contain — should matter more than the three local-density-based drives (`prey_opportunity`, `predator_danger_pressure`, `grass_opportunity`), which a CNN could plausibly learn to approximate on its own from the raw channels. The completed comparison above found the advantage was disproportionately a **predator** effect (predator births explain ~71% of the full-run gap, ~100% of the back-half gap) — worth knowing whether that's coming from the 2 energy-based channels alone or needs the density-based ones too.
+
+`--drive-set energy_only` (predator + prey each get just `hunger_pressure`/`reproductive_readiness`, no density channels) is already implemented and CLI-ready specifically to test this. A run was started on 2026-09-06 (seed 42, same setup as above) but was killed shortly after launch and its output removed — it was launched as an unplanned add-on immediately after the base-vs-drive result, without re-confirming the ~13-hour GPU cost with the user first, and was stopped once that was clarified. No data exists from it; this is a clean deferral, not an interrupted or failed run.
+
+**To pick this back up**: `python -m predpreygrass.non_evolutionary.drive_conditioned_environment.tune_ppo_drive_conditioned_environment --seed 42 --drive-set energy_only --max-iters 1000`, then compare against the `full` run above the same way (episode-count-weighted pooling, not per-iteration means — see "Results" above for why). If `energy_only` captures most of the +6% gap, that confirms the two-group prediction; if it captures little of it, the density-based drives (or their interaction with the energy-based ones) are doing more of the work than predicted. Additional seeds (for both `full` and `energy_only`) remain the other open item — this single-seed result is a documented observation, not yet a validated effect.
+
+## Expected advantages (predictions for future work, partially checked above)
 
 Two separate questions worth keeping apart when the baseline-vs-drive-conditioned comparison finally runs: does it train faster, and is it worth having regardless of speed?
 
