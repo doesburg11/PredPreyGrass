@@ -4,7 +4,7 @@
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img align="center" src="../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
+    <img align="center" src="../../../assets/images/gifs/rllib_pygame_seed42_iter1000.gif" width="600" height="500" />
 </p>
 
 ### Features base environment
