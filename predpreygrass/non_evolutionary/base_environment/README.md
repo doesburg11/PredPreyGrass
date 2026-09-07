@@ -138,11 +138,35 @@ this frozen opponent at all?). If reward/`final_num_prey` climb well past the
 mature-region baseline, that's evidence of stagnation; if they stay flat even
 against a fixed target, that's evidence of a real local equilibrium.
 
-*(Results of this follow-up experiment pending — see
-`~/simulation_results/ray_results/RETRAIN_FROZEN-*` for the four runs: freeze
-predator/warm-start prey, freeze predator/prey-from-scratch, freeze
-prey/warm-start predator, freeze prey/predator-from-scratch, each starting
-from the iteration-500 checkpoint.)*
+**Result: not a symmetric equilibrium.** Evaluating each run's checkpoint near
+the start of retraining against the same checkpoint near the end (5 episodes
+each, offline, against the fixed frozen opponent) gives:
+
+| Run | `final_num_prey` (start &rarr; end) | frozen side's own reward |
+|---|---|---|
+| Freeze prey, warm-start predator | 19.6 &rarr; 19.6 (+0.0) | flat (9.591 &rarr; 9.612) |
+| Freeze predator, warm-start prey | 14.6 &rarr; 26.2 (**+11.6**) | flat (9.866 &rarr; 9.873) |
+| Freeze prey, predator from scratch | 37.6 &rarr; 6.4 | reaches ~ceiling by iteration ~10 |
+| Freeze predator, prey from scratch | 13.0 &rarr; 22.0 (+9.0) | climbs toward ceiling |
+
+- **The predator reached a genuine, robust equilibrium.** Warm-starting it
+  against a truly stationary prey for 300 more iterations changed nothing —
+  reward and ecological outcome both stayed flat. Starting from scratch
+  converges to essentially the same strong result within ~10 iterations. This
+  optimization problem appears to have one strong, easily-reachable attractor.
+- **The prey's co-trained convergence was premature.** Its own reward barely
+  moves either way (it's already pinned near the reward ceiling), but its
+  *ecological* outcome (`final_num_prey`) improves by roughly 80% once the
+  predator target stops moving — real headroom existed that ordinary
+  co-training, against a constantly-shifting predator, never let it reach.
+
+This refines rather than overturns the equilibrium reading: the flat mature
+region of the tournament matrix reflects the predator having converged for
+real, while the prey's side of that same flatness was closer to stagnation —
+plausibly explaining the matrix's original early-training asymmetry
+(predator escalates faster, prey only partially compensates) as more than a
+transient effect. Caveat: 5 episodes/condition, one seed — suggestive, not a
+rigorous statistical test.
 
 ## Centralized versus decentralized training
 The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/predpreygrass/pettingzoo).
