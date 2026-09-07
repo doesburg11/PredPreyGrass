@@ -59,6 +59,91 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 </p>
 
 
+## Coevolutionary dynamics: is the predator-prey arms race still going?
+
+Population and reward curves confirm the ecosystem sustains itself and produces
+Lotka-Volterra-like cycles, but they don't answer a sharper question: over 1000
+training iterations, is the predator-prey coevolution still an *ongoing arms
+race*, or does it settle into a stable equilibrium at some point? Answering
+this requires more than inspecting a single training run's reward curve — it
+means cross-evaluating checkpoints from *different points in training*
+against each other.
+
+### The Master Tournament matrix
+
+[`master_tournament_matrix.py`](./master_tournament_matrix.py) cross-evaluates
+every saved predator-policy checkpoint against every saved prey-policy
+checkpoint (mixing checkpoints from different training iterations into one
+episode) and records outcome metrics into an NxN matrix. A clean diagonal
+gradient in the resulting heatmap indicates genuine, ongoing directional
+progress; a flat, noisy matrix indicates a [Red Queen](https://en.wikipedia.org/wiki/Red_Queen_hypothesis)-style
+stalemate where both sides keep changing but neither gains lasting ground.
+
+The script preloads all RLModule checkpoints once (avoiding N² redundant disk
+reads), runs cells in parallel via `multiprocessing` (`--workers`, fork-based,
+each worker pinned to a single torch thread to keep total CPU demand
+predictable), and supports a `--dry-run`/pilot workflow (`--stride`,
+`--checkpoints-limit`, `--episodes-per-cell`, `--max-steps`) to calibrate
+timing before committing to a full sweep.
+
+A full 100x100 sweep (all checkpoints saved every 10 iterations across the
+1000-iteration SEED42 run, 3 episodes/cell, 30 parallel workers) produced:
+
+<p align="center">
+    <img src="../../../assets/images/readme/master_tournament_heatmap.png" width="480" height="450"/>
+</p>
+
+**Finding: a two-phase pattern, not a single clean gradient.**
+
+- **Early training (iterations <300): a real, asymmetric arms race.** Predator
+  training iteration strongly predicts prey losses (`corr(predator_iteration,
+  final_num_prey) = -0.72`); prey training iteration only partially compensates
+  (`corr(prey_iteration, final_num_prey) = +0.38`). The predator escalates
+  faster than the prey can keep up.
+- **Mature training (iterations >=300, both axes): flattens out.** Both
+  correlations drop to weak values (+0.24 / +0.23), and outcomes settle into a
+  narrow, noisy band (mean 20.5, std 6.6) regardless of exactly which pair of
+  mature checkpoints is used.
+
+Cross-checking against each side's own average reward (which, in the
+sparse-reward configuration, is essentially a per-capita reproduction-rate
+proxy, since reproduction is the only nonzero reward term) sharpens this:
+reward saturates *even earlier* (by iteration ~150-200, near its structural
+ceiling) and then stays flat with near-zero variance for the rest of training.
+That the ecological outcome (`final_num_prey`) took longer to settle than the
+reward did, but *both* eventually flattened, is more consistent with the
+system converging to a stable joint equilibrium than with an ongoing,
+mutually-cancelling arms race.
+
+### Distinguishing equilibrium from stagnation
+
+A flat matrix in the mature region is consistent with two very different
+explanations that look identical from the outside:
+
+1. A genuine mutual equilibrium — neither side can improve further given the
+   other's strategy.
+2. Stagnation — self-play converged to *a* joint local optimum and stopped
+   exploring (this run uses `entropy_coeff=0.0` and no Hall-of-Fame/opponent-diversity
+   mechanism, both flagged in the coevolutionary-robotics literature as common
+   causes of arms races failing to trigger or stalling early).
+
+[`retrain_frozen_opponent.py`](./retrain_frozen_opponent.py) tells these apart
+directly: it freezes one policy at a mature checkpoint (via RLlib's
+`policies_to_train`, verified to leave the frozen policy's weights
+byte-for-byte unchanged) and continues training the other side against that
+now-stationary target — either warm-started from its own mature checkpoint
+(the sharper test: can this specific already-converged policy still climb once
+the opponent stops co-adapting?) or from scratch (can any policy learn to beat
+this frozen opponent at all?). If reward/`final_num_prey` climb well past the
+mature-region baseline, that's evidence of stagnation; if they stay flat even
+against a fixed target, that's evidence of a real local equilibrium.
+
+*(Results of this follow-up experiment pending — see
+`~/simulation_results/ray_results/RETRAIN_FROZEN-*` for the four runs: freeze
+predator/warm-start prey, freeze predator/prey-from-scratch, freeze
+prey/warm-start predator, freeze prey/predator-from-scratch, each starting
+from the iteration-500 checkpoint.)*
+
 ## Centralized versus decentralized training
 The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/predpreygrass/pettingzoo).
 
