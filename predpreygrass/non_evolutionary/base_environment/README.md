@@ -58,6 +58,14 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
     <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
+Same pattern from the current SEED42 run's final (iteration 1000) checkpoint, a full
+1000-step self-play episode: grass saturates at carrying capacity, prey booms then
+settles into oscillation, predators track prey with a lag.
+
+<p align="center">
+    <img src="../../../assets/images/readme/population_dynamics_seed42_iter1000.png" width="450" height="270"/>
+</p>
+
 
 ## Coevolutionary dynamics: is the predator-prey arms race still going?
 
