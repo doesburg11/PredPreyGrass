@@ -29,6 +29,13 @@ def parse_args():
     parser.add_argument("--max-steps", type=int, default=None, help="Override config_env's max_steps.")
     parser.add_argument("--output", type=str, default="population_dynamics.png")
     parser.add_argument("--title", type=str, default=None)
+    parser.add_argument(
+        "--no-grass", action="store_true",
+        help="Omit the grass line. Grass sits flat near its carrying capacity "
+             "for the whole episode, so leaving it out lets the y-axis "
+             "autoscale to the (much smaller, more visually interesting) "
+             "predator/prey range instead of being dominated by grass's scale.",
+    )
     return parser.parse_args()
 
 
@@ -78,7 +85,8 @@ if __name__ == "__main__":
           f"predators={env.current_num_predators}, prey={env.current_num_prey}, grass={env.current_num_grass}")
 
     plt.figure(figsize=(9, 5.4))
-    plt.plot(steps, grass_counts, label="Grass", color="green")
+    if not args.no_grass:
+        plt.plot(steps, grass_counts, label="Grass", color="green")
     plt.plot(steps, prey_counts, label="Prey", color="blue")
     plt.plot(steps, predator_counts, label="Predators", color="red")
     plt.xlabel("Time step")

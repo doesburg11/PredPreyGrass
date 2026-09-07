@@ -52,15 +52,7 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 
 - The trained policies make the ecosystem perpetuate much longer than a random policy.
 
-- The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
-
-<p align="center">
-    <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
-</p>
-
-Same pattern from the current SEED42 run's final (iteration 1000) checkpoint, a full
-1000-step self-play episode: grass saturates at carrying capacity, prey booms then
-settles into oscillation, predators track prey with a lag.
+- The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. Below: a full 1000-step self-play episode from the SEED42 run's final (iteration 1000) checkpoint. Prey booms early, then predators catch up and the two settle into a lagged oscillation for the rest of the episode (grass, which sits flat near its carrying capacity throughout, is omitted so the predator/prey cycle is easier to read):
 
 <p align="center">
     <img src="../../../assets/images/readme/population_dynamics_seed42_iter1000.png" width="450" height="270"/>
