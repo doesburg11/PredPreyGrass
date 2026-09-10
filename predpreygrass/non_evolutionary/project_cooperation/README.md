@@ -45,6 +45,19 @@ available) training results — this file is just the index and the shared frami
   survival, and fertility-age caps shift older agents from reproducing toward
   protecting existing offspring.
 
+## Fixed-population variant (different ecology, not just a different mechanic)
+
+* **[`pack_hunt_opponent_shaping`](pack_hunt_opponent_shaping)** — same broad
+  theme (predator join/free-ride cooperation) as `stag_hunt_defection` and
+  `stag_hunt_reputation`, but deliberately **not** built on the full ecology
+  those modules share: no reproduction, no death, a fixed predator population
+  for the whole run, and scripted (non-learning) prey. That's a second axis of
+  "fixed" beyond what the rest of this folder means by it — the population
+  itself is fixed, not just each agent's traits — needed to keep the dilemma a
+  well-posed repeated game for an N-player LOLA-style opponent-shaping training
+  algorithm, which requires a stable set of co-learners to anticipate. Design
+  only at this point; see its own README for the full reasoning.
+
 ## Related but intentionally excluded
 
 * **[`red_queen`](../red_queen)** — the opposite theme: adversarial coevolutionary
