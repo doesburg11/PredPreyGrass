@@ -55,8 +55,12 @@ available) training results — this file is just the index and the shared frami
   "fixed" beyond what the rest of this folder means by it — the population
   itself is fixed, not just each agent's traits — needed to keep the dilemma a
   well-posed repeated game for an N-player LOLA-style opponent-shaping training
-  algorithm, which requires a stable set of co-learners to anticipate. Design
-  only at this point; see its own README for the full reasoning.
+  algorithm, which requires a stable set of co-learners to anticipate.
+  Environment, a random-policy pygame viewer, the naive-PPO baseline, and a
+  from-scratch pairwise N-player opponent-shaping training loop (verified to
+  reduce exactly to Foerster2018's own `lola_pg_update` at N=2) all exist and
+  are verified; no full training run to convergence has been done yet. See
+  its own README for the full reasoning.
 
 ## Related but intentionally excluded
 

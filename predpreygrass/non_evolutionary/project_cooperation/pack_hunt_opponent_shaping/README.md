@@ -1,10 +1,71 @@
 # Pack Hunt Opponent Shaping
 
-**Status: design only — not yet implemented.** This README documents the design as
-worked out in full before any code was written, in the same spirit as this repo's
-other `research_question.md` notes: the reasoning and the rejected alternatives are
-kept, not just the final answer, so the choices can be revisited if the resulting
-dynamics don't look right.
+**Status: all three pieces exist and are verified -- environment, naive-PPO
+baseline (condition 1), and pairwise N-player opponent-shaping (condition 2).
+No full training run to convergence has been done yet; what's verified is
+correctness of the mechanism, not the resulting equilibrium behavior.**
+
+`predpreygrass_rllib_env.py` implements the mechanics below as an RLlib
+`MultiAgentEnv`; `random_policy.py` runs it with uniformly random predator
+actions and a pygame viewer (`utils/pygame_renderer.py`) so the engagement/
+effort-cost/catch mechanic can be watched directly; `tune_ppo.py` trains it
+with independent per-predator RLlib PPO and no opponent-awareness (condition
+1); `tune_opponent_shaping.py` (`opponent_shaping/`) is the pairwise N-player
+opponent-shaping training loop (condition 2) -- a from-scratch policy-
+gradient loop, not RLlib, for the reason Section 8 gives.
+
+That opponent-shaping implementation was checked the same way this whole
+project family checks this kind of thing -- not trusted on inspection alone:
+the per-sample score function (needed because a neural-network policy has no
+closed-form score the way Foerster2018's 5-parameter table does) is verified
+against brute-force `torch.autograd.grad`; the pairwise correction's
+Hessian-vector-product formulation (needed because materializing a full
+parameter x parameter matrix per pair is impractical at network scale) is
+verified against the naive materialized-matrix computation for exact
+numerical equivalence; and, strongest of all, **the N-player update is
+verified to reduce exactly to Foerster2018's own `lola_pg_update` function,
+called directly from the sibling reproduction repo, at N=2** -- this is a
+generalization of that reproduction, not a loose reinterpretation inspired
+by it.
+
+**Independent review.** Per this project family's standing practice, `codex
+exec` (OpenAI Codex CLI) reviewed `utils/policy_network.py`,
+`opponent_shaping/pairwise_lola_pg.py`, `opponent_shaping/rollout.py`, and
+`tune_opponent_shaping.py` for correctness bugs specific to N >= 3 (i.e.
+that wouldn't show up in the N=2-vs-Foerster2018 comparison above), rollout
+timestep/indexing bugs, and autograd/state-leakage issues. It confirmed the
+pairwise sum, timestep alignment, and per-batch environment independence
+were all correct, and found one real gap plus three low-severity portability
+issues, all fixed: `collect_rollout` didn't guard against a rollout horizon
+exceeding `max_episode_steps` (would silently step an already-truncated
+env rather than reset, splicing two logical episodes into one trajectory --
+now raises); the math utilities and rollout storage hardcoded CPU/float32
+instead of deriving device/dtype from the model (now fixed, for future
+GPU use); and per-sample scores retained an unnecessary autograd graph
+(now explicitly detached, matching Foerster2018's own "scores are plain
+numbers" convention). All four correctness checks above were re-run after
+the fixes and still pass exactly.
+
+This README documents the design as worked out in full before the code was
+written, in the same spirit as this repo's other `research_question.md`
+notes: the reasoning and the rejected alternatives are kept, not just the
+final answer, so the choices can be revisited if the resulting dynamics
+don't look right.
+
+Run the viewer with:
+```
+python -m predpreygrass.non_evolutionary.project_cooperation.pack_hunt_opponent_shaping.random_policy
+```
+
+Run the naive-PPO baseline with:
+```
+python -m predpreygrass.non_evolutionary.project_cooperation.pack_hunt_opponent_shaping.tune_ppo
+```
+
+Run the pairwise opponent-shaping loop with:
+```
+python -m predpreygrass.non_evolutionary.project_cooperation.pack_hunt_opponent_shaping.tune_opponent_shaping
+```
 
 ## 1. Where this comes from
 
@@ -215,15 +276,27 @@ Three conditions to compare:
 
 1. **Naive** — independent policy-gradient, no opponent-awareness. Expected
    baseline: free-riding dominates, low engagement rate.
-2. **Pairwise N-player opponent shaping** (primary candidate) — each predator's
-   update includes an opponent-shaping correction term per *other* predator
-   (summed pairwise), rather than the exact 2-player method's exhaustive joint
-   state-space enumeration, which scales as `(actions)^N` and is infeasible past
-   a couple of agents. This is the direct N-player generalization of LOLA's own
-   mechanism.
-3. **M-FOS-style meta-policy** (fallback) — if condition 2 proves unstable at
-   `N = 3`, fall back to a model-free meta-policy trained via ordinary PPO
-   instead of tuning the differentiable pairwise correction further.
+2. **Pairwise N-player opponent shaping** (implemented, `opponent_shaping/` +
+   `tune_opponent_shaping.py`) — each predator's update includes an
+   opponent-shaping correction term per *other* predator (summed pairwise),
+   rather than the exact 2-player method's exhaustive joint state-space
+   enumeration, which scales as `(actions)^N` and is infeasible past a couple
+   of agents. This is the direct N-player generalization of LOLA's own
+   mechanism, and is checked to reduce exactly to Foerster2018's own
+   `lola_pg_update` at `N = 2` -- see `opponent_shaping/pairwise_lola_pg.py`'s
+   module docstring for the correctness checks. Because a neural-network
+   policy has no closed-form score function the way a 5-parameter table
+   does, this needed two departures from Foerster2018's own implementation,
+   both purely about *how* the same quantity is computed, not what it is:
+   per-sample scores come from `torch.func.grad` + `vmap` instead of a
+   closed-form formula, and the pairwise correction is computed as a
+   Hessian-*vector* product instead of materializing a full
+   parameter x parameter matrix per pair (impractical at network scale, unlike
+   Foerster2018's `P=5`).
+3. **M-FOS-style meta-policy** (fallback, not built) — if condition 2 proves
+   unstable at `N = 3`, fall back to a model-free meta-policy trained via
+   ordinary PPO instead of tuning the differentiable pairwise correction
+   further.
 
 ### Why pairwise opponent-shaping over a fully model-free approach here specifically
 

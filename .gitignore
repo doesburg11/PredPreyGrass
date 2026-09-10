@@ -4,6 +4,7 @@ ray_results/
 genomes/
 ray_results_failed
 ray_results_archive/
+**/opponent_shaping_runs/
 # Rllib archive files
 predpreygrass/archive/
 # Byte-compiled / optimized / DLL files
