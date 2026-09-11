@@ -141,7 +141,7 @@ of cooperating":
 - **Coordination risk (stag-hunt structure)**: commit to a joint strategy that
   only pays off if a partner also commits; if the partner doesn't show up, the
   committed agent gets nothing. This is the mechanic
-  [Leibo et al. (2017)](/learned-cooperation/leibo2017)'s Wolfpack environment
+  [Leibo et al. (2017)](https://humanbehaviorpatterns.org/learned-cooperation/leibo2017)'s Wolfpack environment
   actually uses (already reproduced in this project's sibling
   [Leibo2017](https://github.com/doesburg11/Leibo2017) repo).
 - **Effort cost (producer–scrounger / public-goods structure)**: pursuing is a

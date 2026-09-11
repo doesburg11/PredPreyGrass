@@ -3,7 +3,7 @@
 <p align="center">
     <b>Emerging human cooperation, defection and free-riding</b></p>
 <p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
+    <img align="center" src="./../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
 This module is a full copy of `stag_hunt_forward_view` with a new
@@ -125,7 +125,7 @@ observations but centered prey observations. [1][2]
 Visualization (grid-world style; centered vs forward-shifted):
 
 <p align="center">
-  <img align="center" src="./../../../../assets/images/readme/forward_view_observation_shift.svg" width="960" />
+  <img align="center" src="./../../../assets/images/readme/forward_view_observation_shift.svg" width="960" />
 </p>
 
 Diagonal moves push the window into a corner, and the human LOS mask is computed
@@ -392,9 +392,9 @@ angle = acos(dot / (distance * |facing|))   # in degrees
 **Visuals**
 Legend: P = predator, R = prey, arrow = facing.
 
-![Deliberate vs coincidental example](../../../../assets/eval_comparison_summary_plots/deliberate_vs_coincidental.svg)
-![Alignment border cases](../../../../assets/eval_comparison_summary_plots/alignment_border_cases.svg)
-![Alignment example grid](../../../../assets/eval_comparison_summary_plots/alignment_examples_grid.svg)
+![Deliberate vs coincidental example](../../../assets/eval_comparison_summary_plots/deliberate_vs_coincidental.svg)
+![Alignment border cases](../../../assets/eval_comparison_summary_plots/alignment_border_cases.svg)
+![Alignment example grid](../../../assets/eval_comparison_summary_plots/alignment_examples_grid.svg)
 
 **Caveat**
 Facing reflects the last non-zero movement, not necessarily movement in the current step. If the predator is
@@ -435,7 +435,7 @@ Condensed findings from `eval_comparison_report.md` (5 trainings, 30 eval runs e
 
 Full tables, plots, and derivations: `eval_comparison_report.md`.
 
-![Reproduction Reward by Hunt Style](../../../../assets/eval_hunt_style_plots/repro_by_hunt_style.svg)
+![Reproduction Reward by Hunt Style](../../../assets/eval_hunt_style_plots/repro_by_hunt_style.svg)
 
 ## Opportunity-conditioned preference (mammoth vs rabbit)
 

@@ -43,7 +43,7 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
 
-* **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/pred-prey-grass/overview-ppg))
+* **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass))
 
 * **[Base environment, seasonal](predpreygrass/non_evolutionary/base_environment_seasonal)**: same mechanics as the base environment, plus a seasonal grass-regrowth cycle (a square wave alternating "abundant" and "scarce" phases over the episode) instead of a flat regrowth rate.
 
@@ -91,4 +91,4 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * Testing the **Red Queen Hypothesis** in the co-evolutionary setting of (non-mutating) predators and prey ([original implementation](https://github.com/doesburg11/PredPreyGrass/blob/main/predpreygrass/non_evolutionary/red_queen/evaluate_red_queen_freeze_type_1_only.py), [results](https://humanbehaviorpatterns.org/pred-prey-grass/red-queen/)). A stronger multi-seed, multi-checkpoint-pair evaluation harness plus a training script (previously missing) were added later — see [`red_queen/README.md`](predpreygrass/non_evolutionary/red_queen) for the current methodology and what's still needed to produce a new result.
 
-* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey — this earlier implementation predates the evolutionary/non-evolutionary directory split and isn't in the active source tree; see the [legacy archive](https://github.com/doesburg11/PredPreyGrassLegacy) for that codebase.
+* Testing the **Red Queen Hypothesis** in the co-evolutionary setting of mutating predators and prey — this earlier implementation predates the evolutionary/non-evolutionary directory split and isn't in the active source tree; see the [legacy archive](https://github.com/doesburg11/PredPreyGrassLegacy/tree/main/src/predpreygrass/rllib/red_queen) for that codebase.

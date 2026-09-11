@@ -127,7 +127,7 @@ and `free_rider` (no join events, but scavenger/free‑ride events present). Val
 by reducing energy and therefore reproduction opportunities.
 
 ### Reproduction Reward by Hunt Style (Chart)
-![Reproduction Reward by Hunt Style](../../../../assets/eval_hunt_style_plots/repro_by_hunt_style.svg)
+![Reproduction Reward by Hunt Style](../../../assets/eval_hunt_style_plots/repro_by_hunt_style.svg)
 *(Chart values are per‑agent means within each group; raw reproduction reward, no cost subtraction.)*
 
 | scavenger | group_hunters_n | solo_hunters_n | free_riders_n | group_repro | solo_repro | free_repro |
@@ -194,28 +194,28 @@ Join cost per successful capture
 Plots
 
 ### Join vs Defect Decision Rate
-![Join vs Defect Decision Rate](../../../../assets/eval_comparison_summary_plots/join_defect_rate.png)
+![Join vs Defect Decision Rate](../../../assets/eval_comparison_summary_plots/join_defect_rate.png)
 
 ### Coop vs Solo Capture Rate
-![Coop vs Solo Capture Rate](../../../../assets/eval_comparison_summary_plots/coop_solo_capture_rate.png)
+![Coop vs Solo Capture Rate](../../../assets/eval_comparison_summary_plots/coop_solo_capture_rate.png)
 
 ### Free Rider Share
-![Free Rider Share](../../../../assets/eval_comparison_summary_plots/free_rider_share.png)
+![Free Rider Share](../../../assets/eval_comparison_summary_plots/free_rider_share.png)
 
 ### Team Capture Failure Rate
-![Team Capture Failure Rate](../../../../assets/eval_comparison_summary_plots/team_capture_failure_rate.png)
+![Team Capture Failure Rate](../../../assets/eval_comparison_summary_plots/team_capture_failure_rate.png)
 
 ### Failure Rate: Coop vs Solo
-![Failure Rate: Coop vs Solo](../../../../assets/eval_comparison_summary_plots/team_capture_failure_rate_coop_solo.png)
+![Failure Rate: Coop vs Solo](../../../assets/eval_comparison_summary_plots/team_capture_failure_rate_coop_solo.png)
 
 ### Failure Rate: Mammoth vs Rabbit
-![Failure Rate: Mammoth vs Rabbit](../../../../assets/eval_comparison_summary_plots/team_capture_failure_rate_prey.png)
+![Failure Rate: Mammoth vs Rabbit](../../../assets/eval_comparison_summary_plots/team_capture_failure_rate_prey.png)
 
 ### Free Rider Rates in Coop Captures
-![Free Rider Rates in Coop Captures](../../../../assets/eval_comparison_summary_plots/coop_free_rider_rates.png)
+![Free Rider Rates in Coop Captures](../../../assets/eval_comparison_summary_plots/coop_free_rider_rates.png)
 
 ### Join Cost per Predator
-![Join Cost per Predator](../../../../assets/eval_comparison_summary_plots/join_cost_per_predator.png)
+![Join Cost per Predator](../../../assets/eval_comparison_summary_plots/join_cost_per_predator.png)
 
 ### Join Cost per Successful Capture
-![Join Cost per Successful Capture](../../../../assets/eval_comparison_summary_plots/join_cost_per_capture.png)
+![Join Cost per Successful Capture](../../../assets/eval_comparison_summary_plots/join_cost_per_capture.png)
