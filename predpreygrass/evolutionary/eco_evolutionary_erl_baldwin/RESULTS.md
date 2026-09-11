@@ -12,6 +12,11 @@
 - **Open**: whether the paper's specific genetic-assimilation crossover signature is real
   but undetected, or whether the metric is measuring a structural asymmetry unrelated to
   assimilation (§15).
+- **New, not yet run**: per-agent lineage logging, checkpoint/resume, and a
+  proximate-vs-ultimate-reward analysis script, testing Singh, Lewis, Barto & Sorg (2010)'s
+  claim that evolution's reward function need not resemble the fitness criterion it's
+  selected for (§17). Infrastructure only -- validated end-to-end on short runs including a
+  real resume-after-interruption test, no real-scale result yet.
 
 Detailed, dated log follows below.
 
@@ -48,7 +53,13 @@ pilot (n=20, 300k steps) nor a long-budget diagnostic (n=8, full 1M steps, rulin
 needs more generations") found any benefit -- **also now a documented dead end**, but for a
 different, better-supported reason than C/K: reading the actual 1994 source paper in full
 showed it requires kin-biased reception for costly signaling to stabilize, which this
-design never included.
+design never included. §17 (2026-09-11) adds per-agent lineage logging (each agent's
+evolved `eval_weights` genome paired with its realized `offspring_count`), checkpoint
+save/load with `--resume-from` (crash-safe, verified with a real stale-log/resume test),
+`eval_checkpoint.py` for standalone inspection/visualization of a saved population, and
+`analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s claim that
+evolution optimizes a reward function for fitness without that reward needing to resemble
+fitness itself -- **infrastructure only, not yet run at any real scale.**
 
 ---
 
@@ -579,6 +590,107 @@ kin-biased version (restricting the alarm signal's benefit toward
 genetically similar listeners, reusing K/ERLK's `genome_similarity`) would
 be a structurally different, second attempt at the same idea -- not ruled
 out by anything found here, just not built.
+
+## 17. Proximate-vs-ultimate reward: lineage logging, checkpoint/resume, and analysis (2026-09-11) -- infrastructure only, no run yet
+
+New direction, not a follow-up to §10-16's three closed-out mechanisms.
+Singh, Lewis, Barto & Sorg (2010), *"Intrinsically Motivated Reinforcement
+Learning: An Evolutionary Perspective"* (IEEE TAMD), draws a distinction
+this codebase's own architecture already embodies without ever measuring
+it directly: evolution optimizes a *reward function* (here, `genome.eval_weights`
+-- the evaluation network, lifetime-fixed, see README.md's mechanism section)
+for a *fitness function* (here, `offspring_count`), but the reward evolution
+finds need not resemble fitness itself -- a dense, always-available proximate
+substitute (e.g. weighting `health_norm`/`energy_norm` heavily) can serve
+evolution's purpose better than a reward that tries to track the sparse,
+delayed ultimate criterion directly. See the module's `REFERENCES.md`
+"Evolved / Optimal Reward" section for the wider literature this sits in.
+
+**Built:**
+- `Agent` gains `born_step`/`offspring_count`; `_handle_agent_reproduction`
+  increments both genetic parents' `offspring_count` (the initiating agent
+  AND its crossover mate, since crossover mixes genome sites from both --
+  see below); `_kill_agent` fires an optional `on_agent_death(agent, step)`
+  callback once death state is committed.
+- `metrics.lineage_fieldnames`/`lineage_record`: pairs an agent's evolved
+  `eval_weights`/`eval_bias` with its realized `offspring_count`,
+  `lifespan`, and a `censored` flag for agents still alive when a run ends
+  (right-censored, per survival-analysis convention -- their true lifetime
+  offspring count is a lower bound, not a final value).
+- `run_erl_simulation.py` wires a `lineage_fitness.csv` logger to the new
+  callback, flushed on the same cadence as `progress.csv`. Deliberately logs
+  ONLY real deaths, never run-end survivors (see the checkpoint/resume bugs
+  below for why).
+- `analyze_proximate_reward.py` (new script): loads one or more
+  `lineage_fitness.csv` files, reports each observation channel's evolved
+  `|eval_weight|` magnitude alongside its Pearson correlation and
+  standardized-OLS coefficient against realized `offspring_count` (raw and
+  per-step rate) -- the falsifiable signature being a channel evolution
+  weighted heavily that is *not* the strongest fitness predictor. A
+  `--checkpoint` option adds a checkpoint's currently-alive agents as
+  right-censored rows to the analysis in memory, without ever persisting
+  them to `lineage_fitness.csv` (see below).
+- `checkpoint.py` (new module) + `run_erl_simulation.py --resume-from`/
+  `--checkpoint-every`/`--checkpoint-dir`: pickles the whole `ErlWorld`
+  object (atomically, temp-file-then-rename) so a long unattended run can
+  resume after a crash instead of losing all progress -- built before any
+  real-scale run, per this project's usual practice. `eval_checkpoint.py`
+  (new script): loads any checkpoint standalone and steps/renders it
+  forward for visual inspection, or prints a quick offspring-count-ranked
+  summary of the evolved population, without retraining or a full run.
+
+**Two rounds of Codex review, four real bugs found total, all fixed before
+this was considered done:**
+- **Mate-crediting bias (high severity, round 1).** The initial version only
+  incremented the *initiating* agent's `offspring_count`, even though
+  `genome.crossover` mixes ~half of each genome site from the mate into
+  the child -- a fit mate that never itself initiates reproduction would
+  have shown `offspring_count=0` despite propagating its `eval_weights`
+  into the population, biasing the analysis toward hiding real fitness
+  effects. Fixed: both genetic parents are now credited.
+- **Callback-ordering robustness (medium severity, round 1).** The callback
+  originally fired *before* `agent.alive` was set to `False`; an observer
+  that raised (e.g. a CSV write failure) would leave the agent half-dead --
+  marked for death but never actually removed from play. Fixed: death
+  state (`alive`, `occupant`, `corpses`) is committed first, callback
+  second.
+- **Stale log rows across a resume (high severity, round 2, checkpoint
+  review).** `progress.csv`/`lineage_fitness.csv` are flushed more often
+  than checkpoints are saved (`--log-every` vs `--checkpoint-every`), so a
+  crash between the last checkpoint and the next log flush leaves rows
+  describing steps the checkpoint never captured -- resuming and appending
+  would duplicate them once those steps were re-simulated. Fixed:
+  `metrics.truncate_csv_after_step` drops any row past the checkpoint's
+  step before appending.
+- **Duplicate/contradictory censored rows across resumes (high severity,
+  round 2).** The original design logged every currently-alive agent as a
+  "censored" row at the end of every invocation -- but an invocation that
+  gets `--resume-from`'d again later has no way to know its survivors
+  aren't final, so the same agent could end up with two different,
+  contradicting censored rows across resumes. Fixed by removing run-end
+  survivor logging entirely: `lineage_fitness.csv` now contains only real,
+  one-time death events (never duplicated, since `_kill_agent` is
+  idempotent regardless of resume), and `analyze_proximate_reward.py
+  --checkpoint` adds survivors from a specific checkpoint at analysis time
+  instead, in memory only.
+- Two medium-severity robustness gaps also fixed in the same review:
+  `CsvLogger(append=True)` now validates the existing file's header exactly
+  (raises rather than silently writing misaligned rows) and correctly
+  writes a header into a zero-byte existing file; and resuming now calls
+  `world.constraint_tracker.reset_window()` immediately, discarding the
+  partial pre-crash window instead of extending the first post-resume
+  window past `--constraint-window`.
+
+**Status: infrastructure only, validated but not yet run at scale.**
+Verified end-to-end on real short runs (fresh run with periodic
+checkpointing, `--resume-from` continuing correctly with logs deduplicated,
+`eval_checkpoint.py` rendering + ranking a loaded population,
+`analyze_proximate_reward.py --checkpoint` combining death and survivor
+data) -- all far too short (low thousands of steps) for evolution to have
+shaped `eval_weights` meaningfully; no correlation reported from any of
+these runs should be read as a finding. A real run (matching §9's
+longitudinal scale, or at minimum the same order of magnitude as §15's
+3M-step single seed) is the planned next step, not yet launched.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 

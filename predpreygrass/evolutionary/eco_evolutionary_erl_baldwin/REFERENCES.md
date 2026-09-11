@@ -81,6 +81,29 @@ The literature this experiment actually builds on.
 - [Evolving Self-taught Neural Networks: The Baldwin Effect and the Emergence of Intelligence](https://arxiv.org/abs/1906.08854)
 - [Meta-Learning by the Baldwin Effect](https://arxiv.org/pdf/1806.07917) — connects Baldwin effect to modern meta-learning framing
 
+## Evolved / Optimal Reward (evolution shapes *what* is optimized, not just the policy) [realism]
+
+A distinct-but-adjacent thread from the Baldwin-effect section above. Baldwin-effect work asks
+how lifetime learning changes what evolution can find, given some (usually fixed, extrinsic)
+reward. This thread instead asks where the reward signal an agent optimizes within its lifetime
+*comes from*: evolution operates one level up, searching reward-function space for whatever
+internal reward best serves reproductive fitness, while RL inside each lifetime optimizes
+behavior against that (evolved, not fitness-identical) reward. The two threads compose — this
+experiment's Baldwin-effect design could in principle be extended by also evolving the reward
+each agent's RL optimizes, rather than holding it fixed.
+
+- [Where Do Rewards Come From?](https://era.library.ualberta.ca/items/22ff5aa7-c3b9-476c-ab8c-c26acdcf4f61) (Singh, Lewis, Barto, CogSci 2009) — states the core distinction: a *fitness function* (evolution's currency) vs. a *reward function* (what the agent actually optimizes); the "Optimal Reward Problem"
+- [Intrinsically Motivated Reinforcement Learning: An Evolutionary Perspective](https://ieeexplore.ieee.org/document/5551163) (Singh, Lewis, Barto, Sorg, *IEEE TAMD* 2010) — the direct theoretical model of "evolution optimizes the reward function for fitness; RL optimizes behavior against that reward within the lifetime"
+- [Reward Design via Online Gradient Ascent](https://papers.nips.cc/paper/2010/hash/168908dd3227b8358eababa07fcaf091-Abstract.html) (Sorg, Singh, Lewis, NeurIPS 2010) — gradient-based (not evolutionary) instantiation of the same bi-level structure
+- [Finding Intrinsic Rewards by Embodied Evolution and Constrained Reinforcement Learning](https://www.sciencedirect.com/science/article/pii/S0893608008000643) (Uchibe & Doya, *Neural Networks* 2008) — multi-agent: evolution sets reward parameters, RL learns the policy
+- [Genetic Programming for Reward Function Search](https://ieeexplore.ieee.org/document/5654532) (Niekum, Barto, Spector, *IEEE TAMD* 2010)
+- [Evolving Intrinsic Motivations for Altruistic Behavior](https://arxiv.org/abs/1811.05931) (Wang, Hughes, Fernando, Czarnecki, Duéñez-Guzmán, Leibo, AAMAS 2019) — PBT evolves each agent's intrinsic-reward network, actor-critic RL runs inside each individual's lifetime against it; replicated in this project's ecosystem, see [Wang2019](https://github.com/doesburg11/Wang2019)
+- [Evolved Policy Gradients](https://arxiv.org/abs/1802.04821) (Houthooft et al., NeurIPS 2018) — evolution strategies meta-learn a loss function, policy gradient optimizes the policy against it within-lifetime
+- [On Learning Intrinsic Rewards for Policy Gradient Methods](https://arxiv.org/abs/1804.06459) (Zheng, Oh, Singh, NeurIPS 2018) — LIRPG, gradient-based outer loop instead of evolutionary, same bi-level structure
+- [Meta-Gradient Reinforcement Learning](https://arxiv.org/abs/1805.09801) (Xu, van Hasselt, Silver, 2018) — meta-gradient outer loop tunes reward/discount hyperparameters
+- [Meta-Learning Curiosity Algorithms](https://arxiv.org/abs/2003.05325) (Alet et al., ICLR 2020) — searches over intrinsic-reward programs
+- [Reward is Enough](https://www.sciencedirect.com/science/article/pii/S0004370221000862) (Silver, Singh, Precup, Sutton, *Artificial Intelligence* 2021) — position paper leaning on this evolution↔reward↔behavior stack
+
 ## Related mechanisms: evolution ↔ fast-timescale interaction, beyond Baldwin [realism]
 
 The Baldwin effect is one specific mechanism in a broader family that all address how a

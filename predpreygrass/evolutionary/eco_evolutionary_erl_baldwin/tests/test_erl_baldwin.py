@@ -163,6 +163,87 @@ def test_world_smoke_runs_without_crashing(rng):
     # this only checks the mechanics don't crash.
 
 
+def test_reproduction_increments_parent_offspring_count(rng):
+    cfg = _small_world_cfg()
+    world = ErlWorld(cfg, rng)
+    parent = world.agents[0]
+    assert parent.offspring_count == 0
+
+    parent.energy = cfg["reproduction_energy_threshold_agent"] + 1
+    world._handle_agent_reproduction()
+
+    assert parent.offspring_count == 1
+    child = world.agents[-1]
+    assert child.offspring_count == 0
+    assert child.born_step == world.current_step
+
+
+def test_reproduction_credits_both_genetic_parents(rng):
+    """Crossover mixes genome sites from both `agent` and its `mate` into the
+    child (genome.crossover) -- offspring_count must credit both, not just the
+    initiating `agent`, or the mate's genome propagates into lineage data with
+    zero recorded fitness, biasing analyze_proximate_reward.py's correlation."""
+    cfg = _small_world_cfg(n_initial_agents=2, mutation_rate=0.0)
+    world = ErlWorld(cfg, rng)
+    agent, mate = world.agents[0], world.agents[1]
+    agent.row, agent.col = 5, 5
+    mate.row, mate.col = 5, 6  # within mate_search_radius=3
+
+    agent.energy = cfg["reproduction_energy_threshold_agent"] + 1
+    world._handle_agent_reproduction()
+
+    assert agent.offspring_count == 1
+    assert mate.offspring_count == 1
+
+
+def test_kill_agent_fires_on_death_callback_with_lineage_data(rng):
+    cfg = _small_world_cfg()
+    world = ErlWorld(cfg, rng)
+    agent = world.agents[0]
+    agent.offspring_count = 3
+    world.current_step = 42
+
+    calls = []
+
+    def on_death(a, step):
+        # Death state must already be committed by the time the callback
+        # fires (see world.py's _kill_agent) -- an observer that raises
+        # (e.g. IO failure) must not leave the agent half-dead.
+        assert a.alive is False
+        calls.append((a, step))
+
+    world.on_agent_death = on_death
+    world._kill_agent(agent)
+
+    assert len(calls) == 1
+    dead_agent, death_step = calls[0]
+    assert dead_agent is agent
+    assert death_step == 42
+
+    from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.metrics import lineage_record
+
+    record = lineage_record(dead_agent, death_step, censored=False)
+    assert record["offspring_count"] == 3
+    assert record["lifespan"] == 42 - agent.born_step
+    assert record["censored"] is False
+    assert record[f"eval_weight_{OBS_DIM - 1}"] == pytest.approx(agent.genome.eval_weights[-1])
+
+
+def test_kill_agent_is_idempotent_for_on_death_callback(rng):
+    """A double-kill (already dead) must not re-fire the callback -- lineage
+    rows would otherwise be duplicated for every code path that kills an agent."""
+    cfg = _small_world_cfg()
+    world = ErlWorld(cfg, rng)
+    agent = world.agents[0]
+    calls = []
+    world.on_agent_death = lambda a, step: calls.append((a, step))
+
+    world._kill_agent(agent)
+    world._kill_agent(agent)  # already dead -- must be a no-op
+
+    assert len(calls) == 1
+
+
 def test_genome_stats_nan_when_no_agents(rng):
     world = ErlWorld(_small_world_cfg(n_initial_agents=0), rng)
     stats = world.genome_stats()

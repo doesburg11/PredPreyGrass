@@ -221,6 +221,9 @@ class Agent:
     prev_action: int | None = None
     prev_eval: float | None = None
     alive: bool = True
+    # --- lineage-fitness bookkeeping (see metrics.lineage_record) ---
+    born_step: int = 0
+    offspring_count: int = 0
     # --- cooperation bookkeeping (unused unless strategy is "C"/"ERLC") ---
     last_forage_step: int = _NEVER
     last_evade_step: int = _NEVER
@@ -301,6 +304,11 @@ class ErlWorld:
         self.agents: list[Agent] = []
         self.carnivores: list[Carnivore] = []
         self.constraint_tracker = FunctionalConstraintTracker(self.obs_dim, N_ACTIONS)
+        # Optional callback(agent, death_step) fired from `_kill_agent`, before the
+        # agent is dropped from `self.agents` -- lets a caller log per-agent lineage
+        # data (eval_weights, offspring_count) without World doing any file IO itself.
+        # See run_erl_simulation.py and metrics.lineage_record.
+        self.on_agent_death = None
         self.reset()
 
     # ---- setup ----
@@ -390,6 +398,7 @@ class ErlWorld:
             action_weights=genome.action_weights.copy(),
             action_bias=genome.action_bias.copy(),
             generation=0,
+            born_step=self.current_step,
         )
         self._next_agent_id += 1
         self.agents.append(agent)
@@ -594,6 +603,12 @@ class ErlWorld:
         agent.alive = False
         self.occupant.pop((agent.row, agent.col), None)
         self.corpses[(agent.row, agent.col)] = Corpse(kind="agent", energy=self.cfg["corpse_total_energy"])
+        # Death state is committed above BEFORE notifying the callback: if the
+        # installed observer raises (e.g. lineage-logging IO failure), the kill
+        # itself must still have taken effect rather than leaving the agent in a
+        # half-dead, still-`alive` state that the rest of World logic doesn't expect.
+        if self.on_agent_death is not None:
+            self.on_agent_death(agent, self.current_step)
 
     # ---- carnivores: hard-coded FSA, never affected by `strategy` ----
 
@@ -794,6 +809,7 @@ class ErlWorld:
             cell = self._nearest_empty_adjacent(agent.row, agent.col)
             if cell is None:
                 continue
+            mate = None
             if self.strategy in ("L", "F"):
                 child_genome = agent.genome.copy()
             else:
@@ -805,6 +821,13 @@ class ErlWorld:
             self.constraint_tracker.record(agent.genome.flatten(), child_genome.flatten())
 
             agent.energy -= self.cfg["reproduction_energy_cost_agent"]
+            agent.offspring_count += 1
+            if mate is not None:
+                # Crossover mixes ~half of each genome site from `mate` into the
+                # child (see genome.crossover) -- both genetic parents' eval_weights
+                # propagate, so both must be credited for lineage-fitness analysis
+                # (analyze_proximate_reward.py), not just the initiating `agent`.
+                mate.offspring_count += 1
             if coop:
                 agent.last_reproduce_step = self.current_step
             row, col = cell
@@ -818,6 +841,7 @@ class ErlWorld:
                 action_weights=child_genome.action_weights.copy(),
                 action_bias=child_genome.action_bias.copy(),
                 generation=agent.generation + 1,
+                born_step=self.current_step,
             )
             self._next_agent_id += 1
             newborns.append(child)
