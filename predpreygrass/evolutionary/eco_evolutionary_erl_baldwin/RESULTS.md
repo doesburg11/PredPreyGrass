@@ -14,7 +14,7 @@
   assimilation (§15).
 - **New, first real-scale seed in**: per-agent lineage logging + `analyze_proximate_reward.py`,
   testing Singh, Lewis, Barto & Sorg (2010)'s claim that evolution's reward function need not
-  resemble the fitness criterion it's selected for (§17). Seed 1 (1,000,000 steps, 5.16M
+  resemble the fitness criterion it's selected for (§17). Seed 102 (1,000,000 steps, 5.16M
   logged agent lifetimes) shows a real divergence: evolution weighted `health_norm`/
   `energy_norm` ~3-4x more heavily than any other channel, despite those two channels having
   ~zero raw correlation with realized `offspring_count`. Directionally matches the paper's
@@ -61,7 +61,7 @@ save/load with `--resume-from` (crash-safe, verified with a real stale-log/resum
 `eval_checkpoint.py` for standalone inspection/visualization of a saved population, and
 `analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s claim that
 evolution optimizes a reward function for fitness without that reward needing to resemble
-fitness itself. §17 (2026-09-12) adds the first real-scale run: seed 1, full 1,000,000 steps,
+fitness itself. §17 (2026-09-12) adds the first real-scale run: seed 102, full 1,000,000 steps,
 survived to completion -- evolution weighted `health_norm`/`energy_norm` far more heavily than
 any other channel despite near-zero raw correlation with realized fitness, a real divergence
 matching the paper's own result. **n=1 seed -- two more seeds launched for replication.**
@@ -692,7 +692,7 @@ deduplicated, `eval_checkpoint.py` rendering + ranking a loaded population,
 `analyze_proximate_reward.py --checkpoint` combining death and survivor
 data) before committing to any real-scale run.
 
-**First real-scale result (2026-09-12, seed 1, `--strategy ERL --steps
+**First real-scale result (2026-09-12, seed 102, `--strategy ERL --steps
 1000000`):** survived the full 1,000,000-step budget (14,238s wall time, 70
 steps/sec, final population 308 agents / 46 carnivores). `lineage_fitness.csv`
 logged 5,156,641 agent lifetimes; `analyze_proximate_reward.py --checkpoint`
