@@ -66,3 +66,14 @@ but still short of pure sparse. The full ranking, the mechanistic
 explanation for both of those findings (why kickback beats eating, and why
 it still trails sparse), and citations live in
 [`../README.md`](../README.md), sections 4 through 9.
+
+**Open TODO (§7 of the parent README):** the shortfall vs. sparse is
+explained there as a credit-assignment gap — kickback pays the grandparent
+for the child's independent action. A refinement raised in conversation
+2026-09-12 argues the *root cause* of that gap is that a parent has no way
+to identify its own offspring in the observation at all (the internal
+`agent_parent` link is never surfaced to it), so no protective parental
+behavior for kickback to reinforce can exist in the first place. Concrete,
+untested prediction: add an offspring-identity channel to the observation
+and kickback should close more of the gap to sparse. Not yet built or run
+— see the parent README for the full argument.

@@ -392,7 +392,10 @@ kickback is a bonus on top — but it's the same structural point in a less
 severe form. As with the eating explanation above, this is a plausible,
 unconfirmed reading (n=1); a direct test would compare the *variance* of
 realized return across kickback-eligible vs. childless agents holding
-policy fixed, which hasn't been done here.
+policy fixed, which hasn't been done here. See section 7 for a refinement
+of this argument — kin-blindness in the observation space as the likely
+*cause* of the credit-assignment gap, not a separate problem alongside it
+— and a concrete, not-yet-run follow-up it predicts.
 
 ## 6. Implications for the Darwin/Baldwin evolutionary project
 
@@ -414,6 +417,39 @@ falsified — reward density is not the fix worth pursuing.
   effective horizon (~100 steps) being in the same range; environments with
   much larger gaps or different discounting might behave differently.
   Untested here.
+- **TODO — refine the kickback credit-assignment explanation: kin-blindness
+  in the observation is the likely root cause, not an independent problem.**
+  (Raised in conversation 2026-09-12, not yet tested.) Section 5 explains
+  kickback's shortfall as reward paid to the grandparent for a *different*
+  agent's (the child's) action. But look at *why* the grandparent's own
+  actions can't causally reach that event: the observation
+  (`predpreygrass_rllib_env.py`'s 4-channel local grid — border, and
+  predator/prey/grass presence weighted by energy) carries no agent
+  identity, no parent/child linkage, and no age. A parent has no way to
+  tell its own offspring apart from any other nearby conspecific of the
+  same species — even though the environment *internally* tracks exactly
+  this (`agent_parent: Dict[child_id, parent_id]`, the same dict kickback's
+  own payout logic reads), that linkage is used only for the reward
+  computation and is never surfaced to the policy as an input.
+  Consequently there is no possible parent *behavior* (e.g. staying near,
+  or otherwise favoring, a specific identified offspring to raise its
+  survival-to-reproduction odds) that could exist for kickback to reinforce
+  in the first place — not because learning it would be hard, but because
+  the observation doesn't contain the discriminating signal needed to
+  express it. On this reading, kin-blindness isn't a second problem beside
+  credit assignment — it's the mechanism *by which* credit assignment
+  fails here: good credit assignment requires the receiving agent's own
+  actions to have a causal path to the rewarded event, and without kin
+  identification, a parent's actions structurally cannot have one.
+  **Concrete, testable prediction this implies**: add an observation
+  channel that lets an agent distinguish its own offspring from unrelated
+  nearby conspecifics (cheap to add — the parent/child link already exists
+  in `agent_parent`, it just needs to be surfaced into the existing local
+  observation window rather than computed anew). If kin-blindness is
+  really the binding constraint, giving parents this channel should let
+  kickback (or a similar lineage-based reward) close more of the remaining
+  gap to sparse, since the parent would then have a real, learnable action
+  with a genuine causal path to the rewarded event. Not yet built or run.
 
 ## 8. Conclusion
 
