@@ -12,11 +12,13 @@
 - **Open**: whether the paper's specific genetic-assimilation crossover signature is real
   but undetected, or whether the metric is measuring a structural asymmetry unrelated to
   assimilation (§15).
-- **New, not yet run**: per-agent lineage logging, checkpoint/resume, and a
-  proximate-vs-ultimate-reward analysis script, testing Singh, Lewis, Barto & Sorg (2010)'s
-  claim that evolution's reward function need not resemble the fitness criterion it's
-  selected for (§17). Infrastructure only -- validated end-to-end on short runs including a
-  real resume-after-interruption test, no real-scale result yet.
+- **New, first real-scale seed in**: per-agent lineage logging + `analyze_proximate_reward.py`,
+  testing Singh, Lewis, Barto & Sorg (2010)'s claim that evolution's reward function need not
+  resemble the fitness criterion it's selected for (§17). Seed 1 (1,000,000 steps, 5.16M
+  logged agent lifetimes) shows a real divergence: evolution weighted `health_norm`/
+  `energy_norm` ~3-4x more heavily than any other channel, despite those two channels having
+  ~zero raw correlation with realized `offspring_count`. Directionally matches the paper's
+  Hungry-Thirsty result. **n=1 seed -- replication in progress, not yet a stable finding.**
 
 Detailed, dated log follows below.
 
@@ -59,7 +61,10 @@ save/load with `--resume-from` (crash-safe, verified with a real stale-log/resum
 `eval_checkpoint.py` for standalone inspection/visualization of a saved population, and
 `analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s claim that
 evolution optimizes a reward function for fitness without that reward needing to resemble
-fitness itself -- **infrastructure only, not yet run at any real scale.**
+fitness itself. §17 (2026-09-12) adds the first real-scale run: seed 1, full 1,000,000 steps,
+survived to completion -- evolution weighted `health_norm`/`energy_norm` far more heavily than
+any other channel despite near-zero raw correlation with realized fitness, a real divergence
+matching the paper's own result. **n=1 seed -- two more seeds launched for replication.**
 
 ---
 
@@ -591,7 +596,7 @@ genetically similar listeners, reusing K/ERLK's `genome_similarity`) would
 be a structurally different, second attempt at the same idea -- not ruled
 out by anything found here, just not built.
 
-## 17. Proximate-vs-ultimate reward: lineage logging, checkpoint/resume, and analysis (2026-09-11) -- infrastructure only, no run yet
+## 17. Proximate-vs-ultimate reward: lineage logging, checkpoint/resume, and analysis (2026-09-11/12) -- first real seed shows the predicted divergence
 
 New direction, not a follow-up to §10-16's three closed-out mechanisms.
 Singh, Lewis, Barto & Sorg (2010), *"Intrinsically Motivated Reinforcement
@@ -681,16 +686,52 @@ this was considered done:**
   partial pre-crash window instead of extending the first post-resume
   window past `--constraint-window`.
 
-**Status: infrastructure only, validated but not yet run at scale.**
-Verified end-to-end on real short runs (fresh run with periodic
-checkpointing, `--resume-from` continuing correctly with logs deduplicated,
-`eval_checkpoint.py` rendering + ranking a loaded population,
+**Infrastructure validated end-to-end** on real short runs first (fresh run
+with periodic checkpointing, `--resume-from` continuing correctly with logs
+deduplicated, `eval_checkpoint.py` rendering + ranking a loaded population,
 `analyze_proximate_reward.py --checkpoint` combining death and survivor
-data) -- all far too short (low thousands of steps) for evolution to have
-shaped `eval_weights` meaningfully; no correlation reported from any of
-these runs should be read as a finding. A real run (matching §9's
-longitudinal scale, or at minimum the same order of magnitude as §15's
-3M-step single seed) is the planned next step, not yet launched.
+data) before committing to any real-scale run.
+
+**First real-scale result (2026-09-12, seed 1, `--strategy ERL --steps
+1000000`):** survived the full 1,000,000-step budget (14,238s wall time, 70
+steps/sec, final population 308 agents / 46 carnivores). `lineage_fitness.csv`
+logged 5,156,641 agent lifetimes; `analyze_proximate_reward.py --checkpoint`
+(adding the 308 still-alive agents as right-censored rows) gives:
+
+| channel | evolved `\|w\|` | corr with `offspring_count` |
+|---|---|---|
+| `health_norm` | **1.105** | 0.006 |
+| `energy_norm` | **0.972** | -0.005 |
+| `visual_W` | 0.365 | -0.000 |
+| `visual_E` | 0.316 | -0.000 |
+| `visual_S` | 0.311 | 0.004 |
+| `visual_N` | 0.252 | 0.005 |
+| `in_tree` | 0.160 | 0.002 |
+
+Evolution weighted `health_norm`/`energy_norm` roughly 3-4x more heavily
+than any of the other five channels -- but neither one has any meaningful
+raw correlation with realized `offspring_count` on its own (all seven
+channels sit at |corr| < 0.006 for raw offspring count; up to ~0.05 for the
+per-step rate). This is the same qualitative pattern as the paper's own
+Hungry-Thirsty result: the evolved reward concentrates on dense,
+always-available internal state (health/energy -- this world's closest
+analogue to "food reward") rather than on whatever single channel happens
+to best predict the ultimate fitness event directly.
+
+**Two honest caveats before this counts as a finding, not just a
+data point:**
+- **Single-channel correlation is not the same as causal irrelevance.**
+  `offspring_count` depends on the whole policy the action network learned
+  against all 7 weighted channels jointly; a channel with near-zero marginal
+  correlation could still matter through interaction effects this table
+  can't see. The mismatch between evolved weight and marginal correlation is
+  suggestive of divergence, not proof any specific channel is causally
+  unnecessary.
+- **n=1 seed.** This project's own standard (§3, §7, and every trial in this
+  log) is 3+ seeds before treating a pattern as real rather than indicative.
+  Two more seeds (via the same `--strategy ERL`, auto-retrying on early
+  extinction) were launched immediately after this result to check whether
+  the health/energy-dominant pattern replicates.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
