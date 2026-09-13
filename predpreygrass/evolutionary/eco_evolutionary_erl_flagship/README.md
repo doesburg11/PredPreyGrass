@@ -90,26 +90,23 @@ simulator (`env.step(action_dict)` in a hand-written loop, `driver.py`) — no
    id" inside `MultiRLModuleSpec`/`policy_mapping_fn`. `RLModule.from_checkpoint`
    is used for exactly one thing: the frozen predator.
 
-6. **Non-reproducible env-internal randomness.** flagship's own
-   `_find_available_spawn_position` fallback path uses the bare global
-   `np.random` module (not a seeded per-instance generator) — unlike this
-   module's own `driver.rng`, which is fully seeded and checkpointed. A resumed
-   run is not bit-for-bit reproducible against an uninterrupted one, even with
-   identical `--seed`. Not fixed here — flagship's env is shared code, out of
-   scope to modify for this module.
+6. **The run stops when EITHER population goes extinct, not just prey.**
+   `run_trial13_simulation.py`'s main loop breaks on `prey_count == 0` (matching
+   Trial 12) or on `predator_count == 0` — once the fixed predator threat is
+   gone, the rest of the step budget would just watch prey grow unchecked with
+   no predation pressure, which isn't what this trial tests and wastes compute.
+   `eval_checkpoint.py`'s eval loop does the same.
 
-7. **Predator/prey founding-population overrides, a Stage-0 calibration fix, not
-   a cosmetic default.** `initial_energy_predator=11.0` (was 5.0),
-   `n_initial_active_prey=16` (was 8), `n_initial_active_predator=4` (was 6).
-   See "Status" below and `config.py`'s own docstring for the full diagnosis —
-   flagship's stock values left predators starving out within ~100-150 steps
-   against genome-driven prey specifically (not against the checkpoint's own
-   co-trained PPO prey, verified directly), because genome prey's untrained
-   early foraging ramps population far slower than the PPO prey the predator
-   was calibrated against, and predators only had a ~33-step energy runway to
-   find a first meal.
+7. **Founding-population sizes are flagship's stock values, not tuned.** An
+   earlier version of this module raised `initial_energy_predator`/
+   `n_initial_active_prey`/`n_initial_active_predator` to compensate for
+   predators starving out fast — but that was compensating for an undertrained
+   predator checkpoint and a since-fixed reproducibility bug (see "Status"
+   below), and re-tested against the corrected setup, the tuning showed no
+   clear benefit over stock. Reverted; see `config.py`'s docstring for the full
+   history.
 
-## Status (2026-09-13): Stage 0 complete, predator-survival calibration resolved
+## Status (2026-09-13)
 
 **Stage 0 (smoke test) passed all its mechanics checks**, both via the unit test
 suite (`tests/`, 23/23 passing) and real live runs: `env.step()` runs continuously
@@ -119,39 +116,59 @@ via `eval_checkpoint.py` against a saved checkpoint — distinct evolving lineag
 generations incrementing, genomes mutating parent-to-child as expected); the
 `n_possible_prey` override is nowhere near exhausted at this scale.
 
-**Predator-survival finding, diagnosed and fixed.** At flagship's stock values,
-predators consistently starved out within ~100-150 steps against genome-driven
-prey. Before adjusting anything, this was verified NOT to be a loading/inference
-bug: the identical checkpoint, loaded via the identical code path, thrived
-(6→13, then 6→19-21 under Trial 13's own config overrides) when pitted against
-its own co-trained PPO `prey_policy` instead of genome-driven prey — ruling out a
-broken predator and confirming flagship's real reproduction/energy mechanics work
-as expected end-to-end.
+**Two real bugs found and fixed during calibration, both about reproducibility,
+not simulation logic:**
 
-Root cause: a predator only has `initial_energy_predator / energy_loss_per_step_predator`
-≈ 33 steps of runway before starving with zero catches. flagship's PPO
-`prey_policy` is a fully-trained forager that reproduces fast (8→32 prey by step
-20), giving predators abundant targets almost immediately — the population
-density the checkpoint's hunting behavior was implicitly calibrated against.
-Genome-driven prey start as random, untrained linear policies with no learned
-foraging yet, so their population ramps far slower early on; predators were
-starving out before genome-prey density ever caught up.
+1. **Predator action sampling was silently unseeded.** `FrozenPredatorPolicy.act()`
+   used `torch.distributions.Categorical(...).sample()`, which draws from
+   PyTorch's global RNG — never touched by `--seed`, which only seeds
+   `driver.rng` (a NumPy `Generator`, for genome/mutation/prey action sampling).
+   Found by running the identical `--seed 2` invocation twice and getting wildly
+   different population trajectories. Fixed: `FrozenPredatorPolicy` now owns its
+   own `torch.Generator`, seeded explicitly, and samples via `torch.multinomial`
+   (which accepts a `generator`) instead of `Categorical` (which doesn't).
 
-Fix (now in `config.py`): raise `initial_energy_predator` to 11.0 — deliberately
-kept strictly below `predator_creation_energy_threshold` (12.0) so predators
-still must actually hunt to reproduce (15.0+ was tried and rejected: it let
-founders reproduce for free at spawn with zero hunting, an artifact rather than a
-fix) — combined with more founding prey (16) and fewer founding predators (4) for
-better early encounter odds. Verified across 3 seeds at up to 800 steps: real,
-sustained hunting/reproduction/predator-prey cycling for hundreds of steps (one
-seed ran 700+ steps with predators cycling 1-12 and prey 12-46), a substantial
-improvement over the ~150-step collapse. Eventual predator extinction in some
-seeds at long horizons was still observed and is accepted as normal finite-
-population stochastic dynamics (Trial 12's own conditions don't guarantee
-eternal survival either) — not something further tuned away.
+2. **Founder agent/grass placement was silently unseeded too, and was the
+   dominant cause.** `driver.reset()` called `env.reset()` with no arguments;
+   flagship's own `PredPreyGrass.reset(seed=None)` only (re)seeds its internal
+   placement RNG when given an explicit seed — otherwise it draws fresh OS
+   entropy every time (`predpreygrass_rllib_env.py:141-142`). So founder
+   positions — which determine early predator/prey encounter geometry, the
+   single biggest driver of whether predators find food in time — were never
+   actually controlled by `--seed` at all. Fixed: `driver.reset()` now calls
+   `env.reset(seed=self.cfg.get("seed"))`. Verified: the identical `--seed 2`
+   invocation run twice now produces bit-for-bit identical `progress.csv` output.
 
-Ready for Stage 1 (single-seed pilot, 50,000-100,000 steps) — see the
-Darwin/Baldwin Trial Log for status.
+Both bugs meant every "seed comparison" run before this fix (including an
+in-progress Stage 1 pilot at the time) was not actually testing reproducible
+seeds — each invocation was an independent random draw that happened to be
+*labeled* with a seed. That data was discarded, not treated as a result.
+
+**Predator checkpoint switched from iteration 110 to iteration 1000** (the same
+tournament run's final, most-converged checkpoint —
+`DEFAULT_PREDATOR_CHECKPOINT_DIR`). Iteration 110 was chosen originally on the
+theory that an early, less-converged predator would be a gentler adversary; in
+practice, once the above bugs were fixed and its behavior could actually be
+observed reliably, it looked erratic rather than gentle — sometimes barely
+hunting at all, sometimes wiping prey out almost immediately, both within the
+same few hundred steps depending on seed. Iteration 1000 produces clearly more
+legible dynamics: real population growth from successful hunting (one seed grew
+4→10 predators by step 120), then a gradual decline — a sensible boom-bust
+pattern rather than chaotic swings.
+
+**Open, accepted limitation: predators still often go extinct within a few
+hundred steps**, even with the correct checkpoint and working reproducibility —
+confirmed not fixable by the founder-population tuning that was tried (see
+deviation 7 above). This looks like real finite-population stochastic dynamics
+(a founder population of 4-6 predators is small; one unlucky early stretch can
+wipe out the founding cohort before it reproduces) rather than a remaining bug.
+Not tuned away further for now — the run-stops-on-predator-extinction behavior
+(deviation 6) means a pilot seed that loses predators early just ends early and
+can be rerun with a different seed, rather than wasting budget on unchecked
+prey growth.
+
+Ready for a real Stage 1 pilot (single-seed, now genuinely reproducible) — see
+the Darwin/Baldwin Trial Log for status.
 
 ## Usage
 

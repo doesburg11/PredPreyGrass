@@ -42,9 +42,21 @@ except Exception:  # noqa: BLE001 -- best-effort; only affects legacy checkpoint
 
 
 class FrozenPredatorPolicy:
-    """Wraps one loaded `predator_policy` RLModule for standalone action inference."""
+    """Wraps one loaded `predator_policy` RLModule for standalone action inference.
 
-    def __init__(self, checkpoint_dir: str | Path, deterministic: bool = False):
+    Sampling uses its OWN `torch.Generator`, seeded explicitly (`seed`), rather
+    than `torch.distributions.Categorical(...).sample()`'s implicit draw from
+    PyTorch's global RNG -- found the hard way: `--seed N` run twice produced
+    wildly different population trajectories (one run's predators nearly wiped
+    out prey by step 80; the same seed's other run sustained calm coexistence to
+    step 200), because predator action sampling was silently running on
+    whatever random state PyTorch's global generator happened to be in that
+    process -- never touched by `--seed`, which only seeds `driver.rng` (a NumPy
+    `Generator`, for genome/mutation/prey action sampling). `torch.multinomial`
+    accepts an explicit `generator`, so that's used instead of `Categorical`,
+    which doesn't expose one."""
+
+    def __init__(self, checkpoint_dir: str | Path, deterministic: bool = False, seed: int | None = None):
         module_path = Path(checkpoint_dir) / "learner_group" / "learner" / "rl_module" / "predator_policy"
         if not module_path.is_dir():
             raise FileNotFoundError(
@@ -54,6 +66,9 @@ class FrozenPredatorPolicy:
             )
         self._module = RLModule.from_checkpoint(module_path)
         self.deterministic = deterministic
+        self._generator = torch.Generator()
+        if seed is not None:
+            self._generator.manual_seed(seed)
 
     def act(self, observation: np.ndarray) -> int:
         """Single-agent action for one (4, obs_range, obs_range) observation."""
@@ -65,5 +80,5 @@ class FrozenPredatorPolicy:
             raise KeyError("FrozenPredatorPolicy.act: action_dist_inputs not found in action_output.")
         if self.deterministic:
             return int(torch.argmax(logits, dim=-1).item())
-        dist = torch.distributions.Categorical(logits=logits)
-        return int(dist.sample().item())
+        probs = torch.softmax(logits, dim=-1)
+        return int(torch.multinomial(probs, num_samples=1, generator=self._generator).item())

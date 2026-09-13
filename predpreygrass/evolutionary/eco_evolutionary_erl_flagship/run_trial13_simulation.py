@@ -112,7 +112,7 @@ def main():
         env.restore_state_snapshot(payload["env_snapshot"])
 
         predator_policy = FrozenPredatorPolicy(
-            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"]
+            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
         )
         driver = Trial13Driver(env, predator_policy, cfg, rng)
         driver.registry = payload["registry"]
@@ -139,7 +139,7 @@ def main():
 
         env = PredPreyGrass(config_env)
         predator_policy = FrozenPredatorPolicy(
-            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"]
+            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
         )
         driver = Trial13Driver(env, predator_policy, cfg, rng)
         driver.reset()
@@ -175,6 +175,7 @@ def main():
     start = time.time()
     last_checkpoint_step = driver.current_step
     extinction_step = None
+    predator_extinction_step = None
 
     for _ in range(args.steps):
         driver.step()
@@ -183,10 +184,16 @@ def main():
 
         # Extinction of the evolved prey population ends the run -- matching
         # Trial 12's "simulation ends after N steps or extinction" convention.
-        # The frozen predator population is not part of the survival-time
-        # measurement (it isn't adaptive here; it's a fixed threat).
         if counts["prey"] == 0:
             extinction_step = step
+            break
+
+        # Predator extinction also ends the run: once the fixed threat is gone,
+        # the rest of the budget just watches prey grow unchecked against no
+        # selection pressure from predation -- not what this trial is testing,
+        # and it wastes the remaining step budget on uninformative dynamics.
+        if counts["predator"] == 0:
+            predator_extinction_step = step
             break
 
         if step % args.log_every == 0:
@@ -215,6 +222,8 @@ def main():
     )
     if extinction_step is not None:
         print(f"Prey population extinction at step {extinction_step}.")
+    elif predator_extinction_step is not None:
+        print(f"Predator population extinction at step {predator_extinction_step} -- run stopped early.")
     else:
         print(f"Reached step limit ({args.steps}) without extinction.")
     print(f"Final population: {driver.population_counts()}")

@@ -60,7 +60,15 @@ class Trial13Driver:
         self.on_agent_death = None
 
     def reset(self):
-        self.env.reset()
+        # Must pass seed= explicitly: PredPreyGrass.reset() only (re)seeds its
+        # internal self.rng -- which drives founder agent/grass placement --
+        # when given one. seed=None (the default if omitted) draws fresh OS
+        # entropy instead (predpreygrass_rllib_env.py:141-142), which was
+        # silently making every Trial 13 run's founder positions non-
+        # reproducible regardless of --seed, found via two identical-seed CLI
+        # runs producing wildly different population trajectories from the
+        # very first logged step.
+        self.env.reset(seed=self.cfg.get("seed"))
         self.current_step = 0
         self.registry = {}
         for agent_id in list(self.env.agents):

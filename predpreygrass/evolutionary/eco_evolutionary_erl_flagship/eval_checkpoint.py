@@ -75,7 +75,9 @@ def main():
     env.reset()
     env.restore_state_snapshot(payload["env_snapshot"])
 
-    predator_policy = FrozenPredatorPolicy(cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"])
+    predator_policy = FrozenPredatorPolicy(
+        cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
+    )
     driver = Trial13Driver(env, predator_policy, cfg, rng)
     driver.registry = payload["registry"]
     driver.current_step = payload["current_step"]
@@ -95,7 +97,8 @@ def main():
     start = time.time()
     for _ in range(args.steps):
         driver.step()
-        if driver.population_counts()["prey"] == 0:
+        counts = driver.population_counts()
+        if counts["prey"] == 0 or counts["predator"] == 0:
             break
     elapsed = time.time() - start
 

@@ -1,7 +1,8 @@
 """Simulation parameters for eco_evolutionary_erl_flagship (Trial 13).
 
-Several deliberate deviations from flagship's shipped `config_env` (base_environment/
-config_env.py) -- see this module's README.md for the full reasoning:
+Two deliberate deviations from flagship's shipped `config_env` (base_environment/
+config_env.py), both required for a long, non-resetting multi-generational run --
+see this module's README.md for the full reasoning:
 
   - max_steps: flagship's default (1000) truncates the "episode" and resets all
     agents to their initial positions/counts. Overridden here to an effectively
@@ -19,31 +20,22 @@ config_env.py) -- see this module's README.md for the full reasoning:
     step budget could plausibly produce; validate at Stage 0 that this is
     actually large enough (see tests/test_newborn_parent_pairing.py and
     run_trial13_simulation.py's own --steps run).
-  - initial_energy_predator / n_initial_active_prey / n_initial_active_predator:
-    a Stage-0 calibration fix, not a cosmetic default. At flagship's own values
-    (5.0 / 8 / 6), predators consistently starved out within ~100-150 steps
-    against genome-driven prey, even though the SAME checkpoint thrived (6->19+)
-    against its own co-trained PPO prey_policy under identical conditions --
-    verified directly, ruling out a loading/inference bug. Root cause: a
-    predator only has ~33 steps of energy runway before starving
-    (initial_energy_predator / energy_loss_per_step_predator), and flagship's
-    PPO prey_policy is a fully-trained forager that reproduces fast (8->32 prey
-    by step 20) -- giving predators abundant targets almost immediately. Genome
-    prey start with RANDOM, untrained linear policies, so their population
-    ramps much slower early on, and predators were starving before genome-prey
-    density ever caught up to what the checkpoint was calibrated to expect.
-    initial_energy_predator=11.0 keeps predators strictly BELOW
-    predator_creation_energy_threshold (12.0) -- deliberately, so predators
-    still must actually hunt to reproduce, unlike 15.0+ which was tried and
-    rejected: it let founders reproduce for free at spawn with zero hunting (an
-    artifact, not a fix). Combined with more founding prey (16, was 8) and
-    fewer founding predators (4, was 6) -- more early targets per predator --
-    this produced real, sustained hunting/reproduction/cycling for hundreds of
-    steps across multiple seeds (one ran 700+ steps with predators cycling
-    1-12 and prey 12-46) instead of a ~150-step collapse. Eventual predator
-    extinction in some seeds was still observed at longer horizons -- accepted
-    as normal finite-population stochastic dynamics, not something further
-    tuned away; see README.md's status section.
+
+Founding-population sizes and initial_energy_predator are FLAGSHIP'S STOCK
+VALUES, not tuned -- an earlier version of this file tuned them upward
+(initial_energy_predator 5.0->11.0, n_initial_active_prey 8->16,
+n_initial_active_predator 6->4) to compensate for predators starving out fast
+against genome-driven prey. That tuning turned out to be compensating for two
+things that no longer apply: (1) an undertrained predator checkpoint (see
+DEFAULT_PREDATOR_CHECKPOINT_DIR below -- iteration 110 vs. the now-used 1000),
+and (2) a since-fixed reproducibility bug (see driver.py's reset() and
+predator_policy.py -- Trial 13 runs were NOT actually reproducible by seed
+before that fix, so the "seeds" that earlier tuning was validated against
+weren't real repeatable trials). Re-tested against the correct checkpoint with
+working reproducibility, the tuned values showed no clear improvement over
+stock -- one tuned-config seed even crashed prey down to a single individual,
+worse than the stock config's equivalent seed. Reverted rather than kept as an
+unjustified deviation. See README.md's status section for the full history.
 """
 
 from predpreygrass.global_config import RAY_RESULTS_DIR
@@ -55,20 +47,21 @@ config_env_flagship = dict(_flagship_config_env)
 config_env_flagship["max_steps"] = 10_000_000
 config_env_flagship["n_possible_prey"] = 500_000
 config_env_flagship["n_possible_predators"] = 500_000
-config_env_flagship["initial_energy_predator"] = 11.0  # was 5.0 -- see module docstring
-config_env_flagship["n_initial_active_prey"] = 16  # was 8
-config_env_flagship["n_initial_active_predator"] = 4  # was 6
 
-# A converged, non-trivial PPO predator_policy checkpoint that already exists on
-# disk from a prior base_environment tournament run (see master_tournament_matrix.py).
-# checkpoint_000010 is iteration 110 -- deliberately an EARLY, less-converged
-# checkpoint (not the run's most-trained one) for Stage 0/1's weaker adversary; see
-# README.md's "Predator handling" section and the plan's risk #1 (a fully-converged
-# predator is likely lethal enough to prevent any prey genome from ever reproducing).
+# A converged PPO predator_policy checkpoint from a prior base_environment
+# tournament run (see master_tournament_matrix.py). checkpoint_000099 is
+# training_iteration 1000 -- the run's final, most-converged checkpoint.
+# checkpoint_000010 (iteration 110) was used originally on the theory that an
+# early, less-converged predator would be a gentler adversary; in practice it
+# behaved erratically (sometimes barely hunting at all, sometimes wiping prey
+# out almost immediately) while iteration 1000 produced clearly more sensible,
+# legible boom-bust predator-prey dynamics (real growth from successful
+# hunting, gradual decline, not chaotic swings) -- see README.md's status
+# section.
 DEFAULT_PREDATOR_CHECKPOINT_RUN_DIR = (
     RAY_RESULTS_DIR / "master_tournament_2026-09-06" / "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
 )
-DEFAULT_PREDATOR_CHECKPOINT_DIR = DEFAULT_PREDATOR_CHECKPOINT_RUN_DIR / "checkpoint_000010"
+DEFAULT_PREDATOR_CHECKPOINT_DIR = DEFAULT_PREDATOR_CHECKPOINT_RUN_DIR / "checkpoint_000099"
 
 # --- Prey genome architecture ---
 OBS_DIM = 8  # energy_norm, predator_dx/dy/proximity, food_dx/dy/proximity, local_grass_density (features.py)
