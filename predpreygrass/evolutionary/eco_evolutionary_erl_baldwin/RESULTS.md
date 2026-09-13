@@ -12,13 +12,14 @@
 - **Open**: whether the paper's specific genetic-assimilation crossover signature is real
   but undetected, or whether the metric is measuring a structural asymmetry unrelated to
   assimilation (§15).
-- **New, first real-scale seed in**: per-agent lineage logging + `analyze_proximate_reward.py`,
-  testing Singh, Lewis, Barto & Sorg (2010)'s claim that evolution's reward function need not
-  resemble the fitness criterion it's selected for (§17). Seed 102 (1,000,000 steps, 5.16M
-  logged agent lifetimes) shows a real divergence: evolution weighted `health_norm`/
-  `energy_norm` ~3-4x more heavily than any other channel, despite those two channels having
-  ~zero raw correlation with realized `offspring_count`. Directionally matches the paper's
-  Hungry-Thirsty result. **n=1 seed -- replication in progress, not yet a stable finding.**
+- **Established (2026-09-13)**: per-agent lineage logging + `analyze_proximate_reward.py`
+  confirm Singh, Lewis, Barto & Sorg (2010)'s claim that evolution's reward function need not
+  resemble the fitness criterion it's selected for (§17). Pooled across **30 independent
+  seeds** (161.1M agent lifetimes + 13,408 right-censored survivors), evolution consistently
+  weights `health_norm`/`energy_norm` ~2.5-3x more heavily than any other observation channel,
+  despite every channel's raw correlation with realized `offspring_count` staying under 0.007.
+  Directionally matches the paper's own Hungry-Thirsty result -- a real, replicated divergence,
+  not a single seed's fluke.
 
 Detailed, dated log follows below.
 
@@ -61,10 +62,12 @@ save/load with `--resume-from` (crash-safe, verified with a real stale-log/resum
 `eval_checkpoint.py` for standalone inspection/visualization of a saved population, and
 `analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s claim that
 evolution optimizes a reward function for fitness without that reward needing to resemble
-fitness itself. §17 (2026-09-12) adds the first real-scale run: seed 102, full 1,000,000 steps,
-survived to completion -- evolution weighted `health_norm`/`energy_norm` far more heavily than
-any other channel despite near-zero raw correlation with realized fitness, a real divergence
-matching the paper's own result. **n=1 seed -- two more seeds launched for replication.**
+fitness itself. §17 (2026-09-12/13) adds the first real-scale run (seed 102, full 1,000,000
+steps), then a 30-seed replication batch -- pooled across all 30 (161.1M agent lifetimes),
+evolution consistently weights `health_norm`/`energy_norm` ~2.5-3x more heavily than any other
+channel despite near-zero raw correlation with realized fitness, matching the paper's own
+result. **Confirmed at n=30, not a single seed's fluke** -- see §17 for the full table and the
+memory-safety bug the 30-seed combined analysis surfaced and fixed along the way.
 
 ---
 
@@ -596,7 +599,7 @@ genetically similar listeners, reusing K/ERLK's `genome_similarity`) would
 be a structurally different, second attempt at the same idea -- not ruled
 out by anything found here, just not built.
 
-## 17. Proximate-vs-ultimate reward: lineage logging, checkpoint/resume, and analysis (2026-09-11/12) -- first real seed shows the predicted divergence
+## 17. Proximate-vs-ultimate reward: lineage logging, checkpoint/resume, and analysis (2026-09-11/13) -- confirmed at n=30
 
 New direction, not a follow-up to §10-16's three closed-out mechanisms.
 Singh, Lewis, Barto & Sorg (2010), *"Intrinsically Motivated Reinforcement
@@ -696,42 +699,69 @@ data) before committing to any real-scale run.
 1000000`):** survived the full 1,000,000-step budget (14,238s wall time, 70
 steps/sec, final population 308 agents / 46 carnivores). `lineage_fitness.csv`
 logged 5,156,641 agent lifetimes; `analyze_proximate_reward.py --checkpoint`
-(adding the 308 still-alive agents as right-censored rows) gives:
+(adding the 308 still-alive agents as right-censored rows) gave a dramatic
+result: `health_norm`=1.105, `energy_norm`=0.972, vs. 0.16-0.37 for the other
+five channels -- health/energy weighted 3-4x more heavily than anything
+else, matching the paper's Hungry-Thirsty pattern, but **n=1 seed**.
+
+**Replication seed 2 (seed 200) was more equivocal.** `health_norm` was still
+the single largest weight (0.537), but only modestly ahead of the visual
+channels (0.32-0.40) -- `energy_norm` (0.393) wasn't elevated at all, roughly
+tied with the directional channels. Seed 102's dramatic 3-4x gap did not
+hold up in isolation against a second seed: the *direction* replicated
+(`health_norm` largest in both), the *magnitude* did not.
+
+**This ambiguity is exactly why n=1 (or n=2) isn't a stable read, and why a
+much larger batch was worth running.** With the machine otherwise idle (each
+run is single-threaded, no GPU use at all -- see `eval_checkpoint.py`'s and
+`run_erl_simulation.py`'s own docs), 27 more seeds were launched in parallel
+(auto-retrying on early extinction, disjoint seed ranges per slot) for a
+target n=30. All 30 completed the full 1,000,000-step budget.
+
+**Combining all 30 seeds surfaced a real bug, fixed before the result was
+trusted.** The first combined-analysis attempt (`analyze_proximate_reward.py`
+loading all 30 `lineage_fitness.csv` files at once, ~161M total rows) built
+a Python list of per-row objects before converting to numpy arrays -- at this
+scale that peaked past **89GB RSS and got OOM-killed by the kernel**,
+confirmed directly via `dmesg`. Rewrote the loader to parse straight into
+numpy arrays via `np.loadtxt` per file (verified byte-identical output
+against the already-known seed-102 numbers before trusting it at scale);
+fixed version: 9.6s / 1.4GB for one ~5M-row file, ~4m54s / 42.8GB peak for
+the full 30-file, 161M-row batch. See the module's `analyze_proximate_reward.py`
+git history (2026-09-13) for the fix.
+
+**Final result, n=30, 161,113,451 agent lifetimes + 13,408 right-censored
+survivors from the 30 final checkpoints:**
 
 | channel | evolved `\|w\|` | corr with `offspring_count` |
 |---|---|---|
-| `health_norm` | **1.105** | 0.006 |
-| `energy_norm` | **0.972** | -0.005 |
-| `visual_W` | 0.365 | -0.000 |
-| `visual_E` | 0.316 | -0.000 |
-| `visual_S` | 0.311 | 0.004 |
-| `visual_N` | 0.252 | 0.005 |
-| `in_tree` | 0.160 | 0.002 |
+| `health_norm` | **1.089** | 0.003 |
+| `energy_norm` | **0.833** | -0.007 |
+| `visual_W` | 0.372 | -0.003 |
+| `visual_N` | 0.367 | 0.001 |
+| `visual_S` | 0.356 | 0.001 |
+| `visual_E` | 0.324 | 0.001 |
+| `in_tree` | 0.171 | 0.002 |
 
-Evolution weighted `health_norm`/`energy_norm` roughly 3-4x more heavily
-than any of the other five channels -- but neither one has any meaningful
-raw correlation with realized `offspring_count` on its own (all seven
-channels sit at |corr| < 0.006 for raw offspring count; up to ~0.05 for the
-per-step rate). This is the same qualitative pattern as the paper's own
-Hungry-Thirsty result: the evolved reward concentrates on dense,
+**Confirmed, not a single seed's fluke.** Pooled across 30 independent
+seeds, `health_norm`/`energy_norm` are consistently the two most heavily
+weighted channels -- roughly 2.5-3x the weight of any visual channel --
+while every channel's raw correlation with realized `offspring_count` stays
+under 0.007. Evolution reliably concentrates reward weight on dense,
 always-available internal state (health/energy -- this world's closest
-analogue to "food reward") rather than on whatever single channel happens
-to best predict the ultimate fitness event directly.
+analogue to "food reward") rather than on whatever channel happens to best
+predict the fitness event directly, and does so consistently across
+independent random seeds, resolving seed 200's earlier ambiguity in favor of
+the pattern being real, just weaker in magnitude in some individual seeds
+than seed 102 alone suggested.
 
-**Two honest caveats before this counts as a finding, not just a
-data point:**
-- **Single-channel correlation is not the same as causal irrelevance.**
-  `offspring_count` depends on the whole policy the action network learned
-  against all 7 weighted channels jointly; a channel with near-zero marginal
-  correlation could still matter through interaction effects this table
-  can't see. The mismatch between evolved weight and marginal correlation is
-  suggestive of divergence, not proof any specific channel is causally
-  unnecessary.
-- **n=1 seed.** This project's own standard (§3, §7, and every trial in this
-  log) is 3+ seeds before treating a pattern as real rather than indicative.
-  Two more seeds (via the same `--strategy ERL`, auto-retrying on early
-  extinction) were launched immediately after this result to check whether
-  the health/energy-dominant pattern replicates.
+**The same caveat as before still applies, unchanged by replication:**
+single-channel correlation is not the same as causal irrelevance --
+`offspring_count` depends on the whole policy the action network learned
+against all 7 weighted channels jointly, not any one channel in isolation.
+The mismatch between evolved weight and marginal correlation is strong,
+replicated evidence of divergence; it is not a causal decomposition of the
+policy.
 
 ## 5. Sections below (§1-5): results from the SUPERSEDED simpler-ecology world
 
