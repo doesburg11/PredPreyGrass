@@ -297,6 +297,12 @@ class ErlWorld:
             "ERL", "E", "L", "F", "B", "C", "ERLC", "K", "ERLK", "S", "ERLS",
         ), self.strategy
         self.obs_dim = OBS_DIM + 1 if self.strategy in ("S", "ERLS") else OBS_DIM
+        fixed_eval_weights = config.get("fixed_eval_weights")
+        if fixed_eval_weights is not None and len(fixed_eval_weights) != self.obs_dim:
+            raise ValueError(
+                f"config['fixed_eval_weights'] has {len(fixed_eval_weights)} values, but "
+                f"strategy {self.strategy!r} needs obs_dim={self.obs_dim}."
+            )
         self.grid_size = config["grid_size"]
         self.current_step = 0
         self._next_agent_id = 0
@@ -387,7 +393,10 @@ class ErlWorld:
         if cell is None:
             return
         row, col = cell
-        genome = founder_genome(self.obs_dim, N_ACTIONS, self.rng, self.cfg["founder_weight_std"])
+        genome = founder_genome(
+            self.obs_dim, N_ACTIONS, self.rng, self.cfg["founder_weight_std"],
+            fixed_eval_weights=self.cfg.get("fixed_eval_weights"),
+        )
         agent = Agent(
             agent_id=self._next_agent_id,
             row=row, col=col,

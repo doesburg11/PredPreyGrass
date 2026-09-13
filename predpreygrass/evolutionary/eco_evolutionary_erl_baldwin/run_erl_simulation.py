@@ -68,6 +68,14 @@ def parse_args():
     )
     parser.add_argument("--render-every", type=int, default=2000, help="Steps between rendered frames.")
     parser.add_argument(
+        "--fixed-eval-weights", type=str, default=None,
+        help="Comma-separated floats (length obs_dim) to use as every founder's eval_weights "
+             "instead of a random init -- e.g. a weight vector empirically discovered by "
+             "analyze_proximate_reward.py. Pair with --strategy L so the reward stays fixed "
+             "across generations (no mutation) while each agent still learns its own action "
+             "network via RL within its lifetime.",
+    )
+    parser.add_argument(
         "--resume-from", type=str, default=None,
         help="Resume from a checkpoint: either a checkpoint_step_*.pkl file, or a "
              "checkpoints/ directory (uses the highest-step checkpoint in it). "
@@ -99,6 +107,11 @@ def main():
             resume_path = found
 
     if resume_path is not None:
+        if args.fixed_eval_weights is not None:
+            # A resumed world's agents already have their genomes; there are no new
+            # founders left to apply this to, so silently accepting it would look
+            # like it took effect when it did nothing.
+            raise ValueError("--fixed-eval-weights has no effect with --resume-from (no new founders are spawned).")
         world = load_checkpoint(resume_path)
         # checkpoints/ lives directly under the original run's out_dir.
         out_dir = Path(args.out_dir) if args.out_dir else resume_path.parent.parent
@@ -109,6 +122,11 @@ def main():
             cfg["seed"] = args.seed
         if args.strategy is not None:
             cfg["strategy"] = args.strategy
+        if args.fixed_eval_weights is not None:
+            # Dimension validated authoritatively inside ErlWorld.__init__ (the one
+            # place that actually knows obs_dim for the chosen strategy) -- not
+            # re-derived here, so this can't drift out of sync with world.py.
+            cfg["fixed_eval_weights"] = [float(x) for x in args.fixed_eval_weights.split(",")]
         rng = np.random.default_rng(cfg["seed"])
         world = ErlWorld(cfg, rng)
         timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")

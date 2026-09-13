@@ -75,9 +75,24 @@ class Genome:
         )
 
 
-def founder_genome(obs_dim: int, n_actions: int, rng: np.random.Generator, init_std: float = 0.5) -> Genome:
+def founder_genome(
+    obs_dim: int,
+    n_actions: int,
+    rng: np.random.Generator,
+    init_std: float = 0.5,
+    fixed_eval_weights: np.ndarray | None = None,
+) -> Genome:
+    """`fixed_eval_weights`, if given (shape (obs_dim,)), replaces the random
+    init for every founder's `eval_weights` -- e.g. an empirically-evolved
+    weight vector from `analyze_proximate_reward.py`, to test a specific
+    discovered reward function directly rather than a random one. Everything
+    else (eval_bias, action_weights, ...) is still randomly initialized as
+    usual. Pair with `strategy="L"` (genome cloned exactly, no mutation) to
+    keep the reward fixed across generations while each agent still learns
+    its own action network via RL within its lifetime."""
     return Genome(
-        eval_weights=rng.normal(0.0, init_std, size=obs_dim),
+        eval_weights=np.array(fixed_eval_weights, dtype=float) if fixed_eval_weights is not None
+        else rng.normal(0.0, init_std, size=obs_dim),
         eval_bias=float(rng.normal(0.0, init_std)),
         action_weights=rng.normal(0.0, init_std, size=(obs_dim, n_actions)),
         action_bias=rng.normal(0.0, init_std, size=n_actions),

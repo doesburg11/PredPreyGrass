@@ -28,6 +28,25 @@ def test_founder_genome_shapes(rng):
     assert isinstance(g.eval_bias, float)
 
 
+def test_founder_genome_fixed_eval_weights_overrides_random_init(rng):
+    fixed = [0.987, -0.243, -0.040, -0.011, -0.079, -0.067, 0.057][:OBS_DIM]
+    g = founder_genome(OBS_DIM, N_ACTIONS, rng, fixed_eval_weights=fixed)
+    assert np.allclose(g.eval_weights, fixed)
+    # Everything else still randomly initialized, not zeroed/fixed.
+    assert g.action_weights.shape == (OBS_DIM, N_ACTIONS)
+    assert not np.allclose(g.action_weights, 0.0)
+
+
+def test_founder_genome_without_fixed_eval_weights_is_unaffected(rng):
+    """Passing fixed_eval_weights=None (the default) must reproduce the exact
+    prior random-init behavior -- a regression check that adding the parameter
+    didn't change anything for every existing caller that doesn't use it."""
+    g1 = founder_genome(OBS_DIM, N_ACTIONS, np.random.default_rng(7))
+    g2 = founder_genome(OBS_DIM, N_ACTIONS, np.random.default_rng(7), fixed_eval_weights=None)
+    assert np.array_equal(g1.eval_weights, g2.eval_weights)
+    assert np.array_equal(g1.action_weights, g2.action_weights)
+
+
 def test_genome_copy_is_independent(rng):
     g = founder_genome(OBS_DIM, N_ACTIONS, rng)
     c = g.copy()
@@ -116,6 +135,63 @@ def _small_world_cfg(**overrides):
     )
     base.update(overrides)
     return base
+
+
+def test_world_spawns_founders_with_fixed_eval_weights_from_config(rng):
+    fixed = [0.987, -0.243, -0.040, -0.011, -0.079, -0.067, 0.057]
+    cfg = _small_world_cfg(n_initial_agents=5, fixed_eval_weights=fixed)
+    world = ErlWorld(cfg, rng)
+    assert len(world.agents) == 5
+    for agent in world.agents:
+        assert np.allclose(agent.genome.eval_weights, fixed)
+        assert np.allclose(agent.action_weights, agent.genome.action_weights)  # still randomly initialized
+
+
+def test_world_founders_use_random_eval_weights_when_not_configured(rng):
+    """No fixed_eval_weights key at all (the common case) must be unaffected --
+    world.cfg.get(...) returning None must fall through to the normal random init."""
+    cfg = _small_world_cfg(n_initial_agents=3)
+    assert "fixed_eval_weights" not in cfg
+    world = ErlWorld(cfg, rng)
+    weights = [a.genome.eval_weights for a in world.agents]
+    assert not all(np.allclose(weights[0], w) for w in weights[1:]), "founders should differ (random init)"
+
+
+def test_world_rejects_fixed_eval_weights_of_wrong_dimension(rng):
+    """World is the single authoritative validator (not re-derived/duplicated in
+    the CLI) so a caller constructing ErlWorld directly -- not just the CLI --
+    is protected too, and a malformed vector fails loudly here rather than
+    later, confusingly, inside network evaluation."""
+    cfg = _small_world_cfg(fixed_eval_weights=[0.1, 0.2, 0.3])  # OBS_DIM=7, only 3 given
+    with pytest.raises(ValueError):
+        ErlWorld(cfg, rng)
+
+
+def test_fixed_eval_weights_offspring_stay_fixed_under_L_but_can_drift_under_ERL(rng):
+    """Codex review flag: fixed_eval_weights only ever seeds FOUNDERS
+    (founder_genome) -- offspring come from crossover/mutation of parent
+    genomes instead, so whether a fixed reward actually STAYS fixed across
+    generations depends entirely on strategy, not on this feature itself.
+    Under L (clone exactly, no mutation) it stays fixed; under a mutating
+    strategy it doesn't, and that's correct, not a bug -- pin it down here so
+    a future change can't silently break either half."""
+    fixed = [0.987, -0.243, -0.040, -0.011, -0.079, -0.067, 0.057]
+
+    world_L = ErlWorld(_small_world_cfg(strategy="L", fixed_eval_weights=fixed), rng)
+    parent = world_L.agents[0]
+    parent.energy = world_L.cfg["reproduction_energy_threshold_agent"] + 1
+    world_L._handle_agent_reproduction()
+    child_L = world_L.agents[-1]
+    assert np.allclose(child_L.genome.eval_weights, fixed)
+
+    world_erl = ErlWorld(
+        _small_world_cfg(strategy="ERL", mutation_rate=1.0, mutation_std=1.0, fixed_eval_weights=fixed), rng
+    )
+    parent = world_erl.agents[0]
+    parent.energy = world_erl.cfg["reproduction_energy_threshold_agent"] + 1
+    world_erl._handle_agent_reproduction()
+    child_erl = world_erl.agents[-1]
+    assert not np.allclose(child_erl.genome.eval_weights, fixed)
 
 
 def test_offspring_genome_does_not_inherit_parents_learned_weights(rng):
