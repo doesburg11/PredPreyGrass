@@ -39,9 +39,6 @@ import numpy as np
 # Matches world.py's OBS_DIM comment; index 7 only exists under S/ERLS (obs_dim=8).
 CHANNEL_NAMES = ["visual_N", "visual_S", "visual_E", "visual_W", "in_tree", "health_norm", "energy_norm", "alarm_signal"]
 
-Row = tuple[list[float], float, float]  # (eval_weights, offspring_count, lifespan)
-
-
 def _find_csvs(paths: list[str]) -> list[Path]:
     found = []
     for p in paths:
@@ -66,34 +63,39 @@ def _check_dim(obs_dim: int | None, this_dim: int, source: Path) -> int:
     return this_dim
 
 
-def _rows_from_csv(path: Path) -> tuple[list[Row], int]:
-    rows: list[Row] = []
+def _array_from_csv(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray, int]:
+    """Returns (eval_weights [n, obs_dim], offspring_count [n], lifespan [n], obs_dim).
+
+    Parses straight into numpy arrays via `np.loadtxt` rather than building a Python
+    list of per-row objects first -- at real multi-seed scale (30 seeds x ~5M rows =
+    ~150M rows) the row-by-row Python-object version peaked past 89GB RSS and got
+    OOM-killed by the kernel (2026-09-13). Each row here costs 9 float64s (72 bytes)
+    instead of a Python list+tuple+float objects (several hundred bytes with
+    interpreter overhead), and nothing is held twice during array construction.
+    """
     with open(path, newline="") as f:
-        reader = csv.DictReader(f)
-        weight_cols = sorted(
-            (k for k in reader.fieldnames if k.startswith("eval_weight_")),
-            key=lambda k: int(k.split("_")[-1]),
-        )
-        for row in reader:
-            rows.append(
-                (
-                    [float(row[c]) for c in weight_cols],
-                    float(row["offspring_count"]),
-                    float(row["lifespan"]),
-                )
-            )
-    return rows, len(weight_cols)
+        header = next(csv.reader(f))
+    weight_cols = sorted(
+        (c for c in header if c.startswith("eval_weight_")),
+        key=lambda c: int(c.split("_")[-1]),
+    )
+    obs_dim = len(weight_cols)
+    usecols = [header.index(c) for c in weight_cols] + [header.index("offspring_count"), header.index("lifespan")]
+    arr = np.loadtxt(path, delimiter=",", skiprows=1, usecols=usecols, dtype=np.float64, ndmin=2)
+    return arr[:, :obs_dim], arr[:, obs_dim], arr[:, obs_dim + 1], obs_dim
 
 
-def _rows_from_checkpoint(path: Path) -> tuple[list[Row], int]:
+def _rows_from_checkpoint(path: Path) -> tuple[list, int]:
     """Currently-alive agents in a checkpoint, as right-censored lineage rows --
     see metrics.lineage_record's `censored` semantics. lifespan is a lower bound
     (the agent may go on to live/reproduce further; only real deaths in
-    lineage_fitness.csv are final)."""
+    lineage_fitness.csv are final). Population is bounded (max_population_cap),
+    so the plain-Python-object version here is fine -- unlike the CSV path above,
+    this never scales to hundreds of millions of rows."""
     from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.checkpoint import load_checkpoint
 
     world = load_checkpoint(path)
-    rows: list[Row] = [
+    rows = [
         (list(a.genome.eval_weights), float(a.offspring_count), float(world.current_step - a.born_step))
         for a in world.agents
         if a.alive
@@ -105,23 +107,30 @@ def _load(
     csv_paths: list[Path], checkpoint_paths: list[Path]
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
     """Returns (eval_weights [n, obs_dim], offspring_count [n], lifespan [n], obs_dim, n_censored)."""
-    all_rows: list[Row] = []
+    weights_parts: list[np.ndarray] = []
+    offspring_parts: list[np.ndarray] = []
+    lifespan_parts: list[np.ndarray] = []
     obs_dim = None
     n_censored = 0
     for path in csv_paths:
-        rows, this_dim = _rows_from_csv(path)
+        w, o, l, this_dim = _array_from_csv(path)
         obs_dim = _check_dim(obs_dim, this_dim, path)
-        all_rows.extend(rows)
+        weights_parts.append(w)
+        offspring_parts.append(o)
+        lifespan_parts.append(l)
     for path in checkpoint_paths:
         rows, this_dim = _rows_from_checkpoint(path)
         obs_dim = _check_dim(obs_dim, this_dim, path)
-        all_rows.extend(rows)
-        n_censored += len(rows)
-    if not all_rows:
+        if rows:
+            weights_parts.append(np.array([r[0] for r in rows]))
+            offspring_parts.append(np.array([r[1] for r in rows]))
+            lifespan_parts.append(np.array([r[2] for r in rows]))
+            n_censored += len(rows)
+    if not weights_parts:
         raise ValueError(f"No data rows found in: {csv_paths + checkpoint_paths}")
-    weights = np.array([r[0] for r in all_rows])
-    offspring = np.array([r[1] for r in all_rows])
-    lifespan = np.array([r[2] for r in all_rows])
+    weights = np.concatenate(weights_parts, axis=0)
+    offspring = np.concatenate(offspring_parts, axis=0)
+    lifespan = np.concatenate(lifespan_parts, axis=0)
     return weights, offspring, lifespan, obs_dim, n_censored
 
 

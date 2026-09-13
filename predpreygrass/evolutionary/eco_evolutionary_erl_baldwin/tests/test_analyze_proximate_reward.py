@@ -82,6 +82,17 @@ def test_load_checkpoint_only(tmp_path, rng):
     assert len(offspring) == n_living
 
 
+def test_load_from_csv_with_single_row(tmp_path):
+    """np.loadtxt can silently squeeze a single-data-row file to 1D instead of
+    (1, ncols) -- ndmin=2 in _array_from_csv must prevent that, or a lone-row
+    CSV would raise/misparse instead of producing one agent's data."""
+    path = _write_lineage_csv(tmp_path, [(4, 12)])
+    weights, offspring, lifespan, obs_dim, n_censored = _load([path], [])
+    assert weights.shape == (1, OBS_DIM)
+    assert list(offspring) == [4.0]
+    assert list(lifespan) == [12.0]
+
+
 def test_load_raises_on_obs_dim_mismatch_between_csv_and_checkpoint(tmp_path, rng):
     csv_path = _write_lineage_csv(tmp_path, [(1, 5)])  # OBS_DIM=7 columns
 
