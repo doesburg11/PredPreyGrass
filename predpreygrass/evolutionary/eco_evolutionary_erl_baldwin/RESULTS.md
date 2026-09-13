@@ -23,7 +23,7 @@
 
 Detailed, dated log follows below.
 
-**Status (2026-08-16, latest): the retuned comparative study (§9) completed — 500/500 runs,
+**Status (2026-08-16): the retuned comparative study (§9) completed — 500/500 runs,
 5 conditions × 100 seeds, matching the paper's own scale. Result: ERL significantly beats
 every other condition (p<0.00001 vs. E, L, F, and B), and the internal structure
 substantially reproduces the paper's own findings (L beats E, F≈B). The strongest, most
@@ -56,18 +56,20 @@ pilot (n=20, 300k steps) nor a long-budget diagnostic (n=8, full 1M steps, rulin
 needs more generations") found any benefit -- **also now a documented dead end**, but for a
 different, better-supported reason than C/K: reading the actual 1994 source paper in full
 showed it requires kin-biased reception for costly signaling to stabilize, which this
-design never included. §17 (2026-09-11) adds per-agent lineage logging (each agent's
-evolved `eval_weights` genome paired with its realized `offspring_count`), checkpoint
-save/load with `--resume-from` (crash-safe, verified with a real stale-log/resume test),
-`eval_checkpoint.py` for standalone inspection/visualization of a saved population, and
-`analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s claim that
-evolution optimizes a reward function for fitness without that reward needing to resemble
-fitness itself. §17 (2026-09-12/13) adds the first real-scale run (seed 102, full 1,000,000
-steps), then a 30-seed replication batch -- pooled across all 30 (161.1M agent lifetimes),
-evolution consistently weights `health_norm`/`energy_norm` ~2.5-3x more heavily than any other
-channel despite near-zero raw correlation with realized fitness, matching the paper's own
-result. **Confirmed at n=30, not a single seed's fluke** -- see §17 for the full table and the
-memory-safety bug the 30-seed combined analysis surfaced and fixed along the way.
+design never included.
+
+**Status (2026-09-13, latest): §17 adds per-agent lineage logging, checkpoint/resume, and
+`analyze_proximate_reward.py`, to test Singh, Lewis, Barto & Sorg (2010)'s Optimal Reward
+Problem -- confirmed at n=30 (161.1M agent lifetimes + 13,408 right-censored survivors
+across 30 independent seeds): evolution consistently weights `health_norm`/`energy_norm`
+~2.5-3x more heavily than any other channel despite near-zero raw correlation with realized
+fitness, matching the paper's own Hungry-Thirsty result.** One seed alone (102) gave a
+dramatic but equivocal signal; a second seed (200) showed the same direction at much weaker
+magnitude, so 27 more seeds were run to resolve the ambiguity -- all 30 completed the full
+1,000,000-step budget. The 30-seed combined analysis itself surfaced and fixed a real
+memory-safety bug (loading all 161M rows as Python objects peaked past 89GB RSS and got
+OOM-killed; rewritten to parse straight into numpy arrays). See §17 for the full table and
+methodology.
 
 ---
 
