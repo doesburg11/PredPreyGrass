@@ -21,21 +21,39 @@ see this module's README.md for the full reasoning:
     actually large enough (see tests/test_newborn_parent_pairing.py and
     run_trial13_simulation.py's own --steps run).
 
-Founding-population sizes and initial_energy_predator are FLAGSHIP'S STOCK
-VALUES, not tuned -- an earlier version of this file tuned them upward
-(initial_energy_predator 5.0->11.0, n_initial_active_prey 8->16,
-n_initial_active_predator 6->4) to compensate for predators starving out fast
-against genome-driven prey. That tuning turned out to be compensating for two
-things that no longer apply: (1) an undertrained predator checkpoint (see
-DEFAULT_PREDATOR_CHECKPOINT_DIR below -- iteration 110 vs. the now-used 1000),
-and (2) a since-fixed reproducibility bug (see driver.py's reset() and
-predator_policy.py -- Trial 13 runs were NOT actually reproducible by seed
-before that fix, so the "seeds" that earlier tuning was validated against
-weren't real repeatable trials). Re-tested against the correct checkpoint with
-working reproducibility, the tuned values showed no clear improvement over
-stock -- one tuned-config seed even crashed prey down to a single individual,
-worse than the stock config's equivalent seed. Reverted rather than kept as an
-unjustified deviation. See README.md's status section for the full history.
+Founding-population sizes and initial_energy_predator/prey are the result of a
+systematic sweep (15 configs x 10 seeds = 150 runs), not a guess -- run AFTER
+predator competence and reward design were both independently validated (see
+the "Predator strategy" note below and README.md's status section), so this
+sweep wasn't confounded by either. Two earlier, narrower tuning attempts are
+in the git history, both abandoned: one compensated for an undertrained
+predator checkpoint and a since-fixed reproducibility bug (neither applies
+anymore); a second (this same sweep's own baseline, "config A") is what's
+still used as the comparison point below.
+
+Sweep finding: prey ABUNDANCE is the dominant lever, not predator count --
+more predators alone (8 prey / 10 predators) made survival WORSE (mean 138
+steps) than the stock baseline (8 prey / 6 predators, mean 310 steps), since
+more mouths compete for the same scarce prey. More prey, and predator energy
+raised toward (but kept below) the reproduction threshold, both helped
+independently and combined. Best config found: n_initial_active_prey=24,
+n_initial_active_predator=8, initial_energy_predator=10.0 (initial_energy_prey
+unchanged at 3.0) -- mean survival 487 steps, best seed 1629, vs. the stock
+baseline's mean 310 / best 811. Applied below.
+
+IMPORTANT REFRAME, not just a numbers footnote: across all 150 sweep runs, at
+a 50,000-step budget, NOT ONE run avoided eventual predator extinction. This
+is expected, not a tuning failure to keep chasing -- a finite population with
+no immigration/reseeding mechanism is, mathematically, an absorbing Markov
+chain: extinction is the only steady state, almost certain to be reached
+eventually regardless of population size. What tuning actually controls is
+EXPECTED TIME to that outcome, not whether it happens. The practical target
+is therefore "long enough for a real pilot to accumulate meaningful data
+before predation pressure ends," not "extinction-proof" -- mean ~487 steps
+(vs. Trial 12's own scale of up to 1,000,000 steps/seed) sets that bar
+meaningfully higher than the ~150-310-step baseline, but a Trial-12-style
+pooled multi-seed analysis (not a single long run) is still the right shape
+for this ecology, not a design flaw to fix away.
 """
 
 from predpreygrass.global_config import RAY_RESULTS_DIR
@@ -47,6 +65,12 @@ config_env_flagship = dict(_flagship_config_env)
 config_env_flagship["max_steps"] = 10_000_000
 config_env_flagship["n_possible_prey"] = 500_000
 config_env_flagship["n_possible_predators"] = 500_000
+config_env_flagship["n_initial_active_prey"] = 24  # was 8 -- see module docstring's sweep finding
+config_env_flagship["n_initial_active_predator"] = 8  # was 6
+config_env_flagship["initial_energy_predator"] = 10.0  # was 5.0 -- kept below the 12.0 reproduction
+# threshold deliberately, so predators still must actually hunt to reproduce
+# (see the earlier, abandoned tuning attempt's note in git history about why
+# exceeding the threshold is an artifact, not a fix).
 
 # A converged PPO predator_policy checkpoint from a prior base_environment
 # tournament run (see master_tournament_matrix.py). checkpoint_000099 is

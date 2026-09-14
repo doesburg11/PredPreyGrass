@@ -108,14 +108,17 @@ simulator (`env.step(action_dict)` in a hand-written loop, `driver.py`) — no
    no predation pressure, which isn't what this trial tests and wastes compute.
    `eval_checkpoint.py`'s eval loop does the same.
 
-7. **Founding-population sizes are flagship's stock values, not tuned.** An
-   earlier version of this module raised `initial_energy_predator`/
-   `n_initial_active_prey`/`n_initial_active_predator` to compensate for
-   predators starving out fast — but that was compensating for an undertrained
-   predator checkpoint and a since-fixed reproducibility bug (see "Status"
-   below), and re-tested against the corrected setup, the tuning showed no
-   clear benefit over stock. Reverted; see `config.py`'s docstring for the full
-   history.
+7. **Founding-population sizes are tuned, from a real systematic sweep — not
+   flagship's stock values, and not a guess.** `n_initial_active_prey=24` (was
+   8), `n_initial_active_predator=8` (was 6), `initial_energy_predator=10.0`
+   (was 5.0). Two earlier, narrower tuning attempts were tried and abandoned
+   first (one compensated for an undertrained predator checkpoint and a
+   since-fixed reproducibility bug; neither applies anymore). This tuning is
+   different: run only after predator competence and reward design were both
+   independently validated, via a real 15-config x 10-seed sweep, not
+   incremental guessing. See `config.py`'s docstring and "Status" below for
+   the full history and the important reframe about what this tuning does
+   and doesn't achieve.
 
 ## Status (2026-09-13)
 
@@ -233,22 +236,49 @@ own `reproduction_reward_predator` signal). Re-screening the same 15 seeds
 showed a further, real improvement: mean survival ~252 steps, longest run 811
 steps (up from 261 for that seed pre-fix).
 
-**Open, accepted limitation: even a confirmed-adapting, correctly-rewarded
-predator still eventually goes extinct in every seed tested (15/15).** With
-predator competence and reward design now both ruled out as the cause across
-three different predator designs and two reward-signal iterations, this
-cleanly isolates the remaining blocker as population SCALE, not behavior: a
-founding cohort of 4-6 predators is small enough that one unlucky stretch —
-regardless of how well they hunt — can wipe it out before it recovers, since
-flagship has no immigration/reseeding mechanism. This is the founder-
-population-sizing question (deviation 7) again, now unconfounded by any
-remaining predator-competence or reward-design question. Not yet addressed.
-The run-stops-on-predator-extinction behavior (deviation 6) means a pilot seed
-that loses predators early just ends early and can be rerun, rather than
-wasting budget on unchecked prey growth.
+**Confirmed predator competence and reward design were never the remaining
+cause, via a sharp user question about the base_environment reward-density
+result.** The project's own `project_reward_shaping` study found sparse
+reproduction-only reward beats every hand-crafted denser alternative for PPO
+— reasonably raising the question of whether the predator's reward here
+should mirror that (sparse, fitness-identical) instead of the catch-based
+signal. Tested directly rather than assumed: literal `+10`-on-reproduction
+sparse reward performed WORSE for this predator (mean 162.6 steps, vs. 252 for
+the catch-based signal) — because PPO's sparse-reward result depends on
+`gamma=0.99` + GAE value-function bootstrapping to propagate a distant reward
+backward across the many steps that caused it, and this predator's 1-step
+REINFORCE has no equivalent mechanism. A sparse reproduction-only reward here
+mostly credits whatever arbitrary action a predator took on the exact step
+its energy crossed the threshold, not the actual hunting that got it there.
+Reproducing the reward-density result's *form* without its *mechanism*
+doesn't reproduce its benefit.
 
-Ready for the founder-population-sizing calibration pass, now well-isolated as
-the real remaining blocker — see the Darwin/Baldwin Trial Log for status.
+**A systematic founder-population-size sweep (15 configs x 10 seeds = 150
+runs) confirmed population scale as the real remaining lever, and found a
+meaningfully better config** — see deviation 7 and `config.py`'s docstring
+for the full sweep results and the config now in use
+(`n_initial_active_prey=24`, `n_initial_active_predator=8`,
+`initial_energy_predator=10.0`): mean survival 487 steps (vs. 310 baseline),
+best seed 1629 (vs. 811). Key finding: prey ABUNDANCE is the dominant lever,
+not predator count — more predators alone (holding prey fixed) made survival
+*worse*, not better, since more mouths compete for the same scarce prey.
+
+**Important reframe, not a remaining bug to keep chasing: none of the 150
+swept configurations ever avoided eventual predator extinction.** A finite
+population with no immigration/reseeding mechanism is, mathematically, an
+absorbing Markov chain — extinction is the only steady state, and tuning
+controls the EXPECTED TIME to reach it, not whether it happens. The practical
+target is therefore "long enough for a real multi-seed pilot to accumulate
+meaningful data," which the tuned config now clears meaningfully better than
+the untuned baseline — not "extinction-proof," which isn't achievable by
+founder-population tuning at all, at any population size. The
+run-stops-on-predator-extinction behavior (deviation 6) means a pilot seed
+that loses predators early just ends early and can be rerun or pooled with
+others, rather than wasting budget on unchecked prey growth afterward.
+
+Ready for a real, pooled multi-seed batch run (Trial-12-style: n=1 → n=2 →
+n=30, not a single long run) using the tuned config — see the Darwin/Baldwin
+Trial Log for status.
 
 ## Usage
 
