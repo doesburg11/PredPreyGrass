@@ -96,8 +96,10 @@ def main():
     start = time.time()
     for _ in range(args.steps):
         driver.step()
-        counts = driver.population_counts()
-        if counts["prey"] == 0 or counts["predator"] == 0:
+        # Only prey extinction stops an eval pass -- see
+        # run_trial13_simulation.py's main loop for why predator extinction no
+        # longer does (generational depth, not early stopping, is the goal).
+        if driver.population_counts()["prey"] == 0:
             break
     elapsed = time.time() - start
 

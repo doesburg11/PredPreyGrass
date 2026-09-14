@@ -186,13 +186,20 @@ def main():
             extinction_step = step
             break
 
-        # Predator extinction also ends the run: once the fixed threat is gone,
-        # the rest of the budget just watches prey grow unchecked against no
-        # selection pressure from predation -- not what this trial is testing,
-        # and it wastes the remaining step budget on uninformative dynamics.
-        if counts["predator"] == 0:
+        # Predator extinction is recorded but no longer ends the run (reversed
+        # from an earlier version): reproduction and selection on eval_weights
+        # continue fine without predators, driven by food-finding/energy
+        # dynamics instead -- and generational depth, not seed count, turned
+        # out to be the lever that actually moves the proximate-reward signal
+        # (see README.md's status section). A real n=30 batch that stopped at
+        # predator extinction gave a median lineage depth of just 7
+        # generations; using the full step budget regardless buys much more
+        # depth per seed, for less total compute than multiplying seed count.
+        # lineage_fitness.csv's born_step lets post-hoc analysis stratify
+        # before/after this point if the predation-present vs. predation-free
+        # generations need to be compared separately.
+        if predator_extinction_step is None and counts["predator"] == 0:
             predator_extinction_step = step
-            break
 
         if step % args.log_every == 0:
             row = {"step": step, "prey_count": counts["prey"], "predator_count": counts["predator"]}
@@ -220,10 +227,13 @@ def main():
     )
     if extinction_step is not None:
         print(f"Prey population extinction at step {extinction_step}.")
-    elif predator_extinction_step is not None:
-        print(f"Predator population extinction at step {predator_extinction_step} -- run stopped early.")
     else:
-        print(f"Reached step limit ({args.steps}) without extinction.")
+        print(f"Reached step limit ({args.steps}) without prey extinction.")
+    if predator_extinction_step is not None:
+        print(
+            f"Predator population extinction at step {predator_extinction_step} -- "
+            f"run continued past it ({driver.current_step - predator_extinction_step} more steps)."
+        )
     print(f"Final population: {driver.population_counts()}")
     print(f"Log written to: {out_dir / 'progress.csv'}")
     print(f"Lineage log written to: {out_dir / 'lineage_fitness.csv'}")
