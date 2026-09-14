@@ -276,9 +276,32 @@ run-stops-on-predator-extinction behavior (deviation 6) means a pilot seed
 that loses predators early just ends early and can be rerun or pooled with
 others, rather than wasting budget on unchecked prey growth afterward.
 
+**A real n=30 pooled batch at the population-tuned config still showed no
+divergence signal — diagnosed as shallow generational depth, not absence of
+divergence.** Evolved `eval_weights` across all 30 seeds (4,162 total lifetime
+records) were statistically indistinguishable from random initialization,
+clustering tightly around `Normal(0, founder_weight_std)`'s expected
+magnitude. Checked directly rather than assumed: max `generation` reached
+across the entire batch was 9, median 1 — 5%-per-site mutation simply hasn't
+had enough successive rounds to move weights anywhere yet, regardless of how
+many total lifetime records exist. Survival steps and generational depth are
+related but distinct quantities.
+
+**A second sweep targeting generational depth specifically found
+`prey_creation_energy_threshold` (how much energy a prey needs to reproduce)
+is the controlling lever**, independent of the population-size tuning above.
+Lowering it from flagship's stock 8.0 to 4.0 raised mean generational depth
+~4-5x (baseline mean 5.1, max 12 → tuned mean ~21-28, max up to 143) and also
+increased mean survival. See `config.py`'s docstring for the full sweep
+results and an honest caveat about a global-RNG artifact in these particular
+exploratory sweep scripts (not the production CLI) that makes their own
+cross-run numbers directional rather than bit-precise — the direction and
+scale of the improvement is robust across two independent sweep rounds either
+way.
+
 Ready for a real, pooled multi-seed batch run (Trial-12-style: n=1 → n=2 →
-n=30, not a single long run) using the tuned config — see the Darwin/Baldwin
-Trial Log for status.
+n=30, not a single long run) using the generation-tuned config — see the
+Darwin/Baldwin Trial Log for status.
 
 ## Usage
 

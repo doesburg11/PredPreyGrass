@@ -54,6 +54,46 @@ before predation pressure ends," not "extinction-proof" -- mean ~487 steps
 meaningfully higher than the ~150-310-step baseline, but a Trial-12-style
 pooled multi-seed analysis (not a single long run) is still the right shape
 for this ecology, not a design flaw to fix away.
+
+A SECOND sweep targeted GENERATIONAL DEPTH specifically (max/median
+`generation` reached per run), a different quantity than survival steps --
+prompted by an actual pooled n=30 batch at the tuned population config above
+still showing evolved eval_weights statistically indistinguishable from
+random initialization (matching Normal(0, founder_weight_std)'s expected
+|weight| almost exactly). Root cause, confirmed by checking directly: max
+generation reached across that entire 30-seed batch was only 9, median 1 --
+essentially no time for 5%-per-site mutation to accumulate a detectable
+signal, regardless of how many total lifetime records exist. Survival steps
+and generational depth are related but NOT the same thing: a long-surviving
+population with slow reproduction can still have shallow lineages.
+
+`prey_creation_energy_threshold` (how much energy a prey needs to reproduce)
+is the lever that actually controls generation cadence, independent of the
+population-size tuning above. Lowering it from flagship's stock 8.0 to 4.0
+raised mean generational depth roughly 4-5x (baseline mean 5.1 generations,
+max 12 -> tuned mean ~21-28, max up to 143) and *also* increased mean survival
+(~487 -> ~1100-1900 steps, both directions confirmed independently across two
+sweep rounds). More prey (32) or fewer prey (16, 8) than the already-tuned 24
+both hurt generational depth at this threshold -- 24 stays the right count.
+
+Caveat surfaced by this second sweep, worth being explicit about: comparing
+the identical thresh=4.0/24-prey config's own numbers *across the two sweep
+rounds* showed real run-to-run variation (1385 vs 1119 mean steps; 27.8 vs
+21.5 mean generations) despite using the same 10 seeds both times. Traced to
+flagship's own `_find_available_spawn_position` fallback path
+(predpreygrass_rllib_env.py), which still uses the bare global `np.random`
+(not a seeded per-instance generator) -- a known, documented gap left
+unfixed since it's shared flagship code, not modified here. It matters more
+at the higher population densities this second sweep explored than it did
+for the shorter, sparser runs the first sweep and earlier calibration work
+tested, because each internal sweep script batches many configs' seeded runs
+in one Python process, and how much global RNG state a PRIOR config's runs
+already consumed leaks into a LATER config's fallback-spawn draws. This does
+NOT affect the actual CLI (`run_trial13_simulation.py`), where each invocation
+is already its own fresh process -- only these internal exploratory sweep
+scripts' own cross-config numeric comparisons, which should be read as
+directional (the 4-5x generational-depth improvement is robust and consistent
+across both rounds), not bit-precise.
 """
 
 from predpreygrass.global_config import RAY_RESULTS_DIR
@@ -71,6 +111,8 @@ config_env_flagship["initial_energy_predator"] = 10.0  # was 5.0 -- kept below t
 # threshold deliberately, so predators still must actually hunt to reproduce
 # (see the earlier, abandoned tuning attempt's note in git history about why
 # exceeding the threshold is an artifact, not a fix).
+config_env_flagship["prey_creation_energy_threshold"] = 4.0  # was 8.0 -- see module docstring's
+# second sweep finding: controls generation CADENCE, not population size.
 
 # A converged PPO predator_policy checkpoint from a prior base_environment
 # tournament run (see master_tournament_matrix.py). checkpoint_000099 is
