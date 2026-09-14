@@ -801,7 +801,14 @@ class PredPreyGrass(MultiAgentEnv):
         free_positions = list(all_positions - occupied_positions)
 
         if free_positions:
-            return free_positions[np.random.randint(len(free_positions))]
+            # self.rng (not the bare np.random module) so this stays covered by
+            # reset(seed=...)'s reproducibility contract -- see reset()'s own
+            # comment. Rarely exercised at low population density (this is only
+            # reached when a newborn's preferred adjacent cell is occupied), so
+            # the gap was easy to miss; it fires constantly at higher density
+            # and was making runs silently non-reproducible by seed whenever it
+            # did.
+            return free_positions[self.rng.integers(len(free_positions))]
 
         return None  # No available position found
 
