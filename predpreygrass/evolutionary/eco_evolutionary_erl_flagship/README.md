@@ -311,6 +311,65 @@ Ready for a real, pooled multi-seed batch run (Trial-12-style: n=1 → n=2 →
 n=30, not a single long run) using the generation-tuned config — see the
 Darwin/Baldwin Trial Log for status.
 
+**n=30 at the tuned config still showed no stable "winning channel" across
+independent batches, and pushing generational depth further (mean 222
+generations, `prey_creation_energy_threshold=4.0` retuned harder) changed
+which channel led rather than converging one.** Three independent scale/depth
+attempts each showed a real, growing divergence of `eval_weights` from random
+initialization (spread ratio vs. founder std: ~1.18x at ~9 generations, ~1.5x
+at ~94 generations (n=15), ~1.6x at ~222 generations (n=30)) — but a
+*different* channel led each time (energy_norm at n=15/94gen;
+local_grass_density at n=30/94gen; food_proximity at n=30/222gen), while every
+individual channel's correlation with realized `offspring_count` stayed
+robustly ~0 throughout every batch. Reported at the time as a genuinely
+unresolved, nuanced finding rather than forced into either a clean positive or
+negative result.
+
+**Resolved with the project's existing Hunt (2006)/Lande (1976) drift-vs-
+selection model-fitting tool (`predpreygrass/evolutionary/model_selection.py`,
+already used elsewhere in the project — see the Hunt model-selection tool
+memory), applied directly to per-generation `eval_weights` trajectories from
+`lineage_fitness.csv` (its core `fit_all_models` is file-format-agnostic; only
+a small adapter was needed since the tool's convenience wrappers assume
+RLlib's `result.json` format, which Trial 13 doesn't use).** A single deep
+seed (520 generations) initially looked like a clean answer — Stasis
+decisively rejected for all 8 channels, and `predator_dx` showing strong,
+confident directional selection (GRW favored at 93.5% Akaike weight, a
+cumulative directional shift ~2.7x larger than the diffusive noise expected
+from drift alone). **That did not replicate.** Refit across all 30 seeds
+reaching ≥50 generations (mean depth 439 generations, deepest batch run
+against this config):
+
+- **Stasis rejected 0/30 seeds, every one of the 8 channels** — genomes are
+  never frozen at founder values; evolution is always moving them somewhere.
+- **URW (drift) vs. GRW (directional selection) splits close to 50/50 for
+  every channel** (URW favored in 13-22 of 30 seeds depending on channel;
+  `predator_dx`'s apparently strong single-seed signal favored GRW in only
+  14/30 seeds on refit).
+- **Decisive: even in the seeds where GRW is favored, the *sign* of the
+  fitted trend (`mstep`) is itself close to a coin flip across independent
+  seeds** — 43-57% positive for every channel, no channel exceeding that. If
+  any channel were under genuine directional selection, independent
+  populations would agree on which direction it moved far more often than
+  chance; none of the 8 do. This sign-inconsistency, not the raw URW/GRW
+  model-fit counts alone, is what rules out selection: a random walk
+  routinely *looks* directional over any one finite window (explaining the
+  single-seed result and the shifting "winning channel" across earlier
+  batches), but independent replicates of real drift don't agree on which way
+  it went.
+
+**Answer to "is there an optimal reward function to be found": no, not for
+this feature set.** This sharpens rather than merely replicates Trial 12's
+original divergence finding. Trial 12 showed the specific weights evolution
+lands on don't correlate with realized fitness — the reward proxy is
+imperfect. This result goes further: for essentially all 8 channels, the
+*process* generating those weights across generations is statistically
+indistinguishable from neutral genetic drift under mutation, not selection
+homing in on an imperfect-but-real optimum. There is no reproducible
+population-level "best" reward-channel weighting being converged upon here;
+the apparent leaders in earlier, shallower batches were drift's leading edge
+at that moment, not partial progress toward an answer.
+
 ## Usage
 
 ```bash

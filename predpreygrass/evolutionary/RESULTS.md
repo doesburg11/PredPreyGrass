@@ -560,7 +560,7 @@ genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ## Trial 12 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
 
-**Status: in progress.** Ports Trial 11's genome/REINFORCE architecture onto the project's
+**Status: resolved — sharper than Trial 11's original finding, not just a replication.** Ports Trial 11's genome/REINFORCE architecture onto the project's
 flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
 abstract World AL rebuild, to test whether the same proximate-vs-ultimate reward divergence
 Trial 11 confirmed at n=30 (evolution weights `health_norm`/`energy_norm` ~2.5-3× more heavily
@@ -599,6 +599,28 @@ surfaced and fixed a genuine bug in shared flagship code: `predpreygrass_rllib_e
 spawn-position fallback drew from the unseeded global `np.random` instead of the environment's
 own seeded `self.rng`, silently breaking `--seed` reproducibility at higher population densities
 (reviewed with Codex, verified fixed).
+
+**A real n=30 batch at the tuned config still showed no stable "winning channel" — three
+independent scale/depth attempts each found a real, growing divergence of `eval_weights` from
+random initialization, but a *different* channel led each time** (energy_norm at n=15/94
+generations; local_grass_density at n=30/94 generations; food_proximity at n=30/222 generations),
+while every individual channel's correlation with realized `offspring_count` stayed robustly ~0
+throughout. Resolved with the project's existing Hunt (2006)/Lande (1976) drift-vs-selection
+model-fitting tool (`model_selection.py`), applied to per-generation `eval_weights` trajectories.
+A single very deep seed (520 generations) initially looked decisive — Stasis rejected for all 8
+channels, one channel (`predator_dx`) showing strong apparent directional selection — but this did
+**not** replicate: refit across all 30 seeds reaching ≥50 generations (mean depth 439) found Stasis
+still rejected 0/30 everywhere (genomes always move), but URW (drift) vs. GRW (directional
+selection) splits close to 50/50 per channel, and — decisively — even where GRW is favored, the
+*sign* of the fitted trend is itself a near-coin-flip across independent seeds (43-57% positive,
+every channel). Independent drift trajectories routinely look directional over any one finite
+window, which is exactly what produced both the single-seed illusion and the shifting
+"winning channel" across earlier batches; real selection would have independent seeds agreeing on
+direction far more often than that. **Conclusion: no, there is no optimal reward function being
+found here for this feature set** — sharper than Trial 11's original result. Trial 11 showed
+evolution's chosen weights don't correlate with fitness (an imperfect proxy). This shows the
+*process* generating those weights is statistically indistinguishable from neutral drift for
+essentially all 8 channels, not selection converging on an imperfect-but-real answer.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
