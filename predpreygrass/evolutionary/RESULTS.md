@@ -643,14 +643,24 @@ points relative to a visible predator/food at decision time (a Codex review caug
 real bugs in an earlier, realized-post-step-distance version — survivorship bias from excluding
 agents that died that same step, and confounding with the predator's own simultaneous movement):
 agents rewarded for fleeing predators pointed toward a visible predator at the same rate (36.0%)
-as agents rewarded for approaching them (36.6%, p=0.45) — behavior itself never differentiates by
-genome. Root cause, traceable to the architecture: every prey's live action network starts each
-generation from the same frozen random initialization and gets only one weak (`lr`~0.02-0.05),
-1-step-REINFORCE lifetime to learn from, none of it inherited — nowhere near enough for any
-reward genome to express itself behaviorally. **The reward genome never reaches behavior at
-all** — not evolution failing to find a good answer, but a broken genome-to-behavior pipeline
-upstream of where selection could ever act. Points at strengthening within-lifetime learning
-(not reward-function redesign) as the next real lever.
+as agents rewarded for approaching them (36.6%, p=0.45) at n=5 — read at the time as "behavior
+itself never differentiates by genome."
+
+**Correction: this was an overclaim, itself a false negative from insufficient power, not a
+genuine null.** `lr_sweep.py` tested the same contrast with a properly paired design (Wilcoxon
+signed-rank on matched seeds, Holm-corrected across learning-rate multipliers — a Codex review
+caught the first version used the wrong, unpaired test and an uncorrected p-value). At n=5,
+nothing reached significance, matching the claim above — but n=5 is too few for this test to
+ever pass Holm correction regardless of true effect size. Rescaled to n=30: the DEFAULT learning
+rate already shows a real, significant difference (37.1% vs. 37.9%, p_holm=0.0155), growing
+sharply with learning rate (29.6% vs. 41.5% at 20x, p_holm<0.0001). **The reward genome does
+reach behavior, even at baseline** — the effect is just small enough (~1 percentage point at
+default settings) to need n=30 and a matched-pair test to detect reliably. Whether this
+behavioral effect is large enough to move realized fitness (the `positive_control.py` null above
+was only tested at n=10, default LR) is the next open question, not yet answered at matching
+rigor — not "evolution failing to find a good answer" or "a broken pipeline," but a real,
+measurable, if currently small, effect whose downstream consequences aren't fully characterized
+yet.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.

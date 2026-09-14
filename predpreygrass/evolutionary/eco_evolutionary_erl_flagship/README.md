@@ -429,29 +429,50 @@ version: `avoider` (punished for predator proximity) had its actions point
 toward a visible predator 36.0% of the time; `anti_adaptive` (rewarded for
 the opposite) pointed toward one 36.6% of the time — statistically
 indistinguishable (Kruskal-Wallis across 4 genomes, p=0.45). Food-approach
-direction likewise indistinguishable across genomes (p=0.996). **(b)
-confirmed, (a) ruled out: behavior itself never differentiates by genome at
-all**, regardless of ecological consequences.
+direction likewise indistinguishable across genomes (p=0.996) at this n and
+depth. **Read at the time as "(b) confirmed, (a) ruled out: behavior itself
+never differentiates by genome at all" — corrected below, this was too
+strong a claim, itself a false negative from insufficient statistical power,
+not a genuine null.**
 
-**Root cause, traceable directly from the architecture, not just observed as
-a correlation:** every prey's live action network starts each generation from
-the same frozen random initialization (`action_weights` is genome-encoded
-and untouched at `mutation_rate=0`; even mutation-on, it changes slowly) and
-gets only that one individual's own lifetime — typically a few hundred
-steps — of weak, 1-step REINFORCE nudging (`lr_positive=0.05`,
-`lr_negative=0.02`) before death or reproduction, none of it inherited
-(Darwinian by design, matching Trial 12). That is not enough signal or time
-to produce genome-appropriate behavior regardless of reward-function
-quality. **The reward genome never gets the chance to express itself** — not
-"evolution failed to find a good answer," but "the mechanism connecting what
-an agent values to what an agent does barely exists yet in this
-architecture." This reframes the whole trial's question: before a
-homeostatic/state-dependent reward redesign (a bigger, more theoretically
-motivated next step, closer to how real drive systems work) is worth testing,
-the action side needs strengthening first — faster/more capable within-
-lifetime learning, more steps per lifetime, or multi-step credit assignment
-instead of 1-step REINFORCE — so that reward-genome variation can actually
-reach behavior at all.
+**Correction, found while testing whether strengthening within-lifetime
+learning would fix the (mis-diagnosed) problem:** `lr_sweep.py` tests
+`avoider` vs. `anti_adaptive` at increasing learning-rate multipliers, using
+a properly paired design (same seed range reused across both genomes --
+matched environment/predator-policy draws per seed) with a Wilcoxon
+signed-rank test and Holm-Bonferroni correction across multipliers tested (a
+Codex review caught that an earlier version of this script used an unpaired
+Mann-Whitney test, which does not use the pairing the design actually has,
+and reported significance from a single uncorrected p-value across 4
+multipliers -- both fixed). **At n=5 seeds, nothing reached significance
+after correction, including at higher learning rates (p_holm=0.25 best
+case) — consistent with the "genome never reaches behavior" claim above.
+But n=5 is too few for a paired Wilcoxon test to ever reach significance
+after Holm correction (its raw-p floor at n=5 is 0.0625, already above the
+corrected threshold) — indistinguishable from "truly no effect" using that
+test alone.** Rerun at n=30 seeds (properly powered from the start this
+time, not incrementally): **the default learning rate (1x, the config used
+for every result above) already shows a real, Holm-corrected-significant
+difference** — `avoider` points toward a visible predator 37.1% of the time
+vs. `anti_adaptive`'s 37.9% (p_holm=0.0155). The gap grows sharply with
+learning rate: 34.8% vs. 40.2% at 5x (p_holm<0.0001), 29.6% vs. 41.5% at 20x
+(p_holm<0.0001).
+
+**Revised conclusion: the reward genome DOES reach behavior, even at the
+architecture's default learning rate — the effect just starts small (about
+1 percentage point) and needs n=30 with a properly paired test to detect
+reliably, which none of this section's earlier diagnostics (n=5-10,
+unpaired, testing 4-5 genomes at once rather than the single starkest
+matched contrast) had the power to do.** This does not overturn the earlier
+Hunt-test drift finding (that used real per-generation trajectories at much
+larger effective sample sizes, not a small hand-picked contrast) or the
+`positive_control.py` fitness-leverage null (still only tested at n=10,
+default LR -- an open question given what's now known about power, not yet
+rechecked at matching rigor). It does mean **"genome never reaches behavior
+at all" was an overclaim** -- the honest, current picture is "a real but
+small effect on behavior at baseline, growing substantially with learning
+rate; whether that behavioral effect is large enough to matter for realized
+fitness is the next open question, not yet answered at adequate power."
 
 ## Usage
 

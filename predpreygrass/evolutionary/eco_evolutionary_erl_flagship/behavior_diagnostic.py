@@ -84,11 +84,17 @@ def _classify(obs: np.ndarray, action: int, move_tuple: dict, dx_i: int, dy_i: i
         counts[f"{prefix}_same"] += 1
 
 
-def run_one(genome_name: str, seed: int, steps: int) -> dict:
+def run_one(genome_name: str, seed: int, steps: int, lr_multiplier: float = 1.0) -> dict:
+    import math
+    if not (math.isfinite(lr_multiplier) and lr_multiplier >= 0):
+        raise ValueError(f"lr_multiplier must be finite and >= 0, got {lr_multiplier}.")
+
     cfg = dict(config_erl_flagship)
     cfg["seed"] = seed
     cfg["fixed_eval_weights"] = GENOMES[genome_name]
     cfg["mutation_rate"] = 0.0
+    cfg["lr_positive"] = cfg["lr_positive"] * lr_multiplier
+    cfg["lr_negative"] = cfg["lr_negative"] * lr_multiplier
 
     config_env = dict(config_env_flagship)
     rng = np.random.default_rng(seed)
@@ -115,9 +121,11 @@ def run_one(genome_name: str, seed: int, steps: int) -> dict:
         living_before = set(driver.registry.keys())
         died_this_step.clear()
         driver.step()
-        if driver.population_counts()["prey"] == 0:
-            break
+        extinct = driver.population_counts()["prey"] == 0
 
+        # Process this step's data BEFORE checking for extinction and breaking -- a Codex
+        # review caught that breaking first silently dropped the final step's deaths,
+        # excluding exactly the terminal actions most relevant to the predator statistic.
         for obs, action in died_this_step:
             _classify(obs, action, env.action_to_move_tuple, PRED_DX, PRED_DY, PRED_PROX, counts, "pred")
             _classify(obs, action, env.action_to_move_tuple, FOOD_DX, FOOD_DY, FOOD_PROX, counts, "food")
@@ -128,6 +136,9 @@ def run_one(genome_name: str, seed: int, steps: int) -> dict:
             _classify(state.prev_obs, state.prev_action, env.action_to_move_tuple, PRED_DX, PRED_DY, PRED_PROX, counts, "pred")
             _classify(state.prev_obs, state.prev_action, env.action_to_move_tuple, FOOD_DX, FOOD_DY, FOOD_PROX, counts, "food")
 
+        if extinct:
+            break
+
     return dict(counts)
 
 
@@ -137,17 +148,25 @@ def main():
     parser.add_argument("--seeds", type=int, default=5)
     parser.add_argument("--genomes", type=str, default="avoider,anti_adaptive,forager,inert",
                          help="Comma-separated genome names from positive_control.GENOMES.")
+    parser.add_argument("--lr-multiplier", type=float, default=1.0,
+                         help="Scale config_erl_flagship's lr_positive/lr_negative by this factor "
+                              "(see lr_sweep.py for testing whether a stronger learning rate lets "
+                              "the reward genome reach behavior at all).")
     args = parser.parse_args()
     genome_names = args.genomes.split(",")
     jobs = [(name, seed) for name in genome_names for seed in range(1, args.seeds + 1)]
     workers = max(1, (os.cpu_count() or 4) - 2)
-    print(f"Running {len(jobs)} runs ({len(genome_names)} genomes x {args.seeds} seeds) on {workers} workers...")
+    print(f"Running {len(jobs)} runs ({len(genome_names)} genomes x {args.seeds} seeds) on {workers} workers, "
+          f"lr_multiplier={args.lr_multiplier}...")
 
     agg = {name: defaultdict(float) for name in genome_names}
     per_seed_frac_pred_toward = defaultdict(list)  # for a significance test across seeds, not just pooled counts
     per_seed_frac_food_toward = defaultdict(list)
     with ProcessPoolExecutor(max_workers=workers) as pool:
-        futures = {pool.submit(run_one, name, seed, args.steps): (name, seed) for name, seed in jobs}
+        futures = {
+            pool.submit(run_one, name, seed, args.steps, args.lr_multiplier): (name, seed)
+            for name, seed in jobs
+        }
         for fut in as_completed(futures):
             name, seed = futures[fut]
             counts = fut.result()
