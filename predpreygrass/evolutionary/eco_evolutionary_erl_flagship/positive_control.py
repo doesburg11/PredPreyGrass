@@ -19,19 +19,33 @@ population-level fitness (survival, total births, final population). If even an
 obviously-good vector (forager/avoider) doesn't outperform an obviously-bad one
 (anti_adaptive), the bottleneck is (a): the action side, not the reward side.
 
+An n=10, default-learning-rate run found no significant fitness differences
+anywhere. A SEPARATE behavioral check (behavior_diagnostic.py/lr_sweep.py) later
+found this specific claim's sibling ("behavior itself never differentiates by
+genome") was an underpowered false negative -- at n=30 with a properly paired
+test, genome DOES measurably shape behavior, even at the default learning rate,
+growing sharply at higher rates. This script's --lr-multiplier support (mirroring
+run_trial13_simulation.py's) and paired Wilcoxon+Holm significance section (see
+lr_sweep.py for the same fix, Codex-reviewed) exist to re-ask the FITNESS question
+at matching rigor: does that confirmed behavioral effect actually move survival/
+reproduction, or does it stay behaviorally real but fitness-irrelevant?
+
 Usage:
     python -m predpreygrass.evolutionary.eco_evolutionary_erl_flagship.positive_control \\
-        --steps 20000 --seeds 10
+        --steps 20000 --seeds 30 --genomes avoider,anti_adaptive --lr-multipliers 1,20
 """
 
 import argparse
 import csv
+import math
 import re
 import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+
+from scipy import stats
 
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.checkpoint import load_checkpoint
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.config import config_env_flagship
@@ -59,8 +73,21 @@ EXTINCTION_RE = re.compile(r"Prey population extinction at step (\d+)")
 FINAL_POP_RE = re.compile(r"Final population: \{'prey': (\d+), 'predator': (\d+)\}")
 
 
-def run_one(genome_name: str, weights: list[float], seed: int, steps: int, out_root: Path) -> dict:
-    out_dir = out_root / genome_name / f"seed_{seed}"
+def holm_correct(pvals: list[float]) -> list[float]:
+    """Holm-Bonferroni step-down correction. Returns adjusted p-values in the
+    original order of `pvals`."""
+    order = sorted(range(len(pvals)), key=lambda i: pvals[i])
+    m = len(pvals)
+    adjusted = [None] * m
+    running_max = 0.0
+    for rank, i in enumerate(order):
+        running_max = max(running_max, min(1.0, (m - rank) * pvals[i]))
+        adjusted[i] = running_max
+    return adjusted
+
+
+def run_one(genome_name: str, weights: list[float], seed: int, steps: int, out_root: Path, lr_multiplier: float) -> dict:
+    out_dir = out_root / f"lr{lr_multiplier}" / genome_name / f"seed_{seed}"
     cmd = [
         sys.executable, "-m",
         "predpreygrass.evolutionary.eco_evolutionary_erl_flagship.run_trial13_simulation",
@@ -73,10 +100,11 @@ def run_one(genome_name: str, weights: list[float], seed: int, steps: int, out_r
         # negative weight, e.g. anti_adaptive's -1.0) as a new flag otherwise.
         "--fixed-eval-weights=" + ",".join(str(w) for w in weights),
         "--mutation-rate", "0.0",
+        "--lr-multiplier", str(lr_multiplier),
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     stdout = result.stdout
-    row = {"genome": genome_name, "seed": seed, "ok": result.returncode == 0}
+    row = {"genome": genome_name, "seed": seed, "lr_multiplier": lr_multiplier, "ok": result.returncode == 0}
     if not row["ok"]:
         row["stderr_tail"] = result.stderr[-2000:]
         return row
@@ -135,9 +163,31 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--steps", type=int, default=20000, help="Step budget per run (extinction ends it earlier).")
     parser.add_argument("--seeds", type=int, default=10, help="Number of seeds per genome (seeds 1..N).")
+    parser.add_argument("--genomes", type=str, default="forager,avoider,balanced,inert,anti_adaptive",
+                         help="Comma-separated genome names from GENOMES. The paired significance "
+                              "section only runs for exactly 2 genomes.")
+    parser.add_argument("--lr-multipliers", type=str, default="1",
+                         help="Comma-separated lr_positive/lr_negative multipliers to test (default: "
+                              "just the architecture's default rate, i.e. no scaling).")
     parser.add_argument("--workers", type=int, default=None, help="Parallel worker cap (default: nproc - 2).")
     parser.add_argument("--out-dir", type=str, default=None)
     args = parser.parse_args()
+
+    genome_names = args.genomes.split(",")
+    if len(set(genome_names)) != len(genome_names):
+        raise ValueError(f"--genomes must not repeat a name, got {genome_names!r}.")
+    for name in genome_names:
+        if name not in GENOMES:
+            raise ValueError(f"Unknown genome {name!r}; choices are {sorted(GENOMES)}.")
+    lr_multipliers = [float(x) for x in args.lr_multipliers.split(",")]
+    for mult in lr_multipliers:
+        if not (math.isfinite(mult) and mult >= 0):
+            raise ValueError(f"--lr-multipliers must all be finite and >= 0, got {mult}.")
+    if len(set(lr_multipliers)) != len(lr_multipliers):
+        # Two spellings of the same value (e.g. "1" and "1.0") both normalize to the same
+        # out_dir segment and would race to write the same files -- a Codex review caught
+        # this gap.
+        raise ValueError(f"--lr-multipliers must not repeat a value (after float parsing), got {lr_multipliers!r}.")
 
     import os
     workers = args.workers or max(1, (os.cpu_count() or 4) - 2)
@@ -147,47 +197,98 @@ def main():
     out_root.mkdir(parents=True, exist_ok=True)
 
     jobs = [
-        (genome_name, weights, seed)
-        for genome_name, weights in GENOMES.items()
+        (genome_name, GENOMES[genome_name], seed, mult)
+        for mult in lr_multipliers
+        for genome_name in genome_names
         for seed in range(1, args.seeds + 1)
     ]
-    print(f"Launching {len(jobs)} runs ({len(GENOMES)} genomes x {args.seeds} seeds), "
-          f"{args.steps} steps each, {workers} parallel workers.")
+    print(f"Launching {len(jobs)} runs ({len(lr_multipliers)} lr multiplier(s) x {len(genome_names)} genomes x "
+          f"{args.seeds} seeds), {args.steps} steps each, {workers} parallel workers.")
     print(f"Output: {out_root}")
 
     start = time.time()
     results = []
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
-            pool.submit(run_one, name, weights, seed, args.steps, out_root): (name, seed)
-            for name, weights, seed in jobs
+            pool.submit(run_one, name, weights, seed, args.steps, out_root, mult): (mult, name, seed)
+            for name, weights, seed, mult in jobs
         }
         done = 0
         for fut in as_completed(futures):
-            name, seed = futures[fut]
+            mult, name, seed = futures[fut]
             row = fut.result()
             results.append(row)
             done += 1
             status = "OK" if row["ok"] else "FAILED"
-            print(f"[{done}/{len(jobs)}] {name} seed={seed}: {status}")
+            if done % 10 == 0 or done == len(jobs):
+                print(f"[{done}/{len(jobs)}] lr={mult} {name} seed={seed}: {status}")
 
     elapsed = time.time() - start
     print(f"\nAll runs finished in {elapsed:.0f}s.\n")
 
-    print(f"{'genome':<16}{'n':<4}{'mean_final_step':<18}{'frac_extinct':<14}"
-          f"{'mean_offspring':<17}{'mean_final_prey':<16}{'mean_max_gen'}")
-    for name in GENOMES:
-        rows = [r for r in results if r["genome"] == name and r["ok"]]
-        n = len(rows)
-        if n == 0:
-            print(f"{name:<16}{'0 (all failed)'}")
-            continue
-        mean_step = sum(r["final_step"] for r in rows) / n
-        frac_ext = sum(1 for r in rows if r["extinct"]) / n
-        mean_offspring = sum(r["total_offspring"] for r in rows) / n
-        mean_prey = sum(r["final_prey"] for r in rows) / n
-        mean_gen = sum(r["max_generation"] for r in rows) / n
-        print(f"{name:<16}{n:<4}{mean_step:<18.0f}{frac_ext:<14.2f}{mean_offspring:<17.1f}{mean_prey:<16.1f}{mean_gen:.1f}")
+    for mult in lr_multipliers:
+        print(f"--- lr_multiplier={mult} ---")
+        print(f"{'genome':<16}{'n':<4}{'mean_final_step':<18}{'frac_extinct':<14}"
+              f"{'mean_offspring':<17}{'mean_final_prey':<16}{'mean_max_gen'}")
+        for name in genome_names:
+            rows = [r for r in results if r["genome"] == name and r["lr_multiplier"] == mult and r["ok"]]
+            n = len(rows)
+            if n == 0:
+                print(f"{name:<16}{'0 (all failed)'}")
+                continue
+            mean_step = sum(r["final_step"] for r in rows) / n
+            frac_ext = sum(1 for r in rows if r["extinct"]) / n
+            mean_offspring = sum(r["total_offspring"] for r in rows) / n
+            mean_prey = sum(r["final_prey"] for r in rows) / n
+            mean_gen = sum(r["max_generation"] for r in rows) / n
+            print(f"{name:<16}{n:<4}{mean_step:<18.0f}{frac_ext:<14.2f}{mean_offspring:<17.1f}{mean_prey:<16.1f}{mean_gen:.1f}")
+        print()
+
+    # Paired significance section: only meaningful for exactly 2 genomes, matched by seed
+    # (same seed range reused across both genomes -- common-random-number pairing, matching
+    # environment/predator-policy draws per seed). See lr_sweep.py for the same fix.
+    if len(genome_names) == 2:
+        a, b = genome_names
+        print(f"=== Paired significance: {a} vs {b} (Wilcoxon signed-rank, Holm-corrected across "
+              f"{len(lr_multipliers)} lr multiplier(s)) ===")
+        print(
+            "(total_offspring and final_prey are treated as two SEPARATE predeclared hypothesis "
+            "families, each independently Holm-corrected across lr multipliers only -- not "
+            "jointly across both metrics. A Codex review flagged this as a choice to state "
+            "explicitly rather than leave implicit: they're two distinct, both-interesting "
+            "population outcomes, not one endpoint measured twice.)"
+        )
+        for metric in ["total_offspring", "final_prey"]:
+            raw_pvals, mult_with_pval = [], []
+            rows_by_mult = {}
+            for mult in lr_multipliers:
+                by_seed_a = {r["seed"]: r[metric] for r in results if r["genome"] == a and r["lr_multiplier"] == mult and r["ok"]}
+                by_seed_b = {r["seed"]: r[metric] for r in results if r["genome"] == b and r["lr_multiplier"] == mult and r["ok"]}
+                common = sorted(set(by_seed_a) & set(by_seed_b))
+                xa = [by_seed_a[s] for s in common]
+                xb = [by_seed_b[s] for s in common]
+                rows_by_mult[mult] = (xa, xb, common)
+                if len(common) >= 2 and any(xa[i] != xb[i] for i in range(len(common))):
+                    try:
+                        _, p = stats.wilcoxon(xa, xb)
+                        raw_pvals.append(p)
+                        mult_with_pval.append(mult)
+                    except ValueError:
+                        pass
+            adjusted = dict(zip(mult_with_pval, holm_correct(raw_pvals))) if raw_pvals else {}
+            print(f"\n{metric}:")
+            print(f"  {'lr_multiplier':<15}{'n_paired':<10}{'mean_' + a:<18}{'mean_' + b:<18}{'p_raw':<10}p_holm")
+            for mult in lr_multipliers:
+                xa, xb, common = rows_by_mult[mult]
+                mean_a = sum(xa) / len(xa) if xa else float("nan")
+                mean_b = sum(xb) / len(xb) if xb else float("nan")
+                p_raw = None
+                for i, m in enumerate(mult_with_pval):
+                    if m == mult:
+                        p_raw = raw_pvals[i]
+                p_raw_s = f"{p_raw:.4f}" if p_raw is not None else "n/a"
+                p_holm_s = f"{adjusted[mult]:.4f}" if mult in adjusted else "n/a"
+                print(f"  {mult:<15}{len(common):<10}{mean_a:<18.1f}{mean_b:<18.1f}{p_raw_s:<10}{p_holm_s}")
 
     failed = [r for r in results if not r["ok"]]
     if failed:

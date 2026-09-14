@@ -662,6 +662,21 @@ rigor — not "evolution failing to find a good answer" or "a broken pipeline," 
 measurable, if currently small, effect whose downstream consequences aren't fully characterized
 yet.
 
+**Answered: rechecked at matching rigor (n=30, paired Wilcoxon + Holm correction).** At baseline
+LR, still no significant fitness difference (offspring p=0.13, population p=0.89). At 20x LR,
+where the behavioral gap is large, fitness moves decisively — but not as a simple "good genome
+wins": `anti_adaptive` (rewarded for approaching predators, avoiding food) produces 53% MORE
+total offspring (12,070 vs. 8,615, p<0.0001) and 2.5x deeper lineages (544 vs. 214 generations),
+while dying 38% faster (mean lifespan 108.8 vs. 175.5 steps) and ending with a 10% SMALLER
+standing population (68.5 vs. 75.4, p<0.001) than `avoider`. Confirmed mechanism directly from
+lineage data, not inference: higher predation mortality culls the population faster, relieving
+food competition among survivors and letting them reproduce more often per unit time —
+density-release/compensatory dynamics. Whether reward genome "wins" depends on which fitness
+currency is used (standing population size vs. total reproductive throughput), and this
+ambiguity plausibly helps explain why the Hunt test found no clean directional selection signal
+in the first place: opposite-pointing fitness measures for the same genome can look driftlike
+under a single scalar view of selection even when the genome does something real.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

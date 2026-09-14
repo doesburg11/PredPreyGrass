@@ -474,6 +474,39 @@ small effect on behavior at baseline, growing substantially with learning
 rate; whether that behavioral effect is large enough to matter for realized
 fitness is the next open question, not yet answered at adequate power."
 
+**Answered: rechecked `positive_control.py`'s fitness question at matching
+rigor (n=30, paired Wilcoxon + Holm correction, `--lr-multiplier` support
+added) -- does the confirmed behavioral effect actually move fitness?** At
+baseline (1x) learning rate, still no significant fitness difference between
+`avoider` and `anti_adaptive` (total offspring p=0.13, final population
+p=0.89) -- the small baseline behavioral gap doesn't reach a detectable
+fitness signal at this n. **At 20x learning rate, where the behavioral gap
+is large, it does move fitness -- decisively, but not as a simple "good
+genome wins":**
+
+| metric | avoider | anti_adaptive | p (Holm) |
+|---|---|---|---|
+| total offspring | 8,615 | 12,070 (+53%) | <0.0001 |
+| final population | 75.4 | 68.5 (-10%) | 0.0009 |
+| mean lifespan | 175.5 steps | 108.8 steps (-38%) | (direct lineage check) |
+| generational depth | 214 | 544 (+154%) | (direct lineage check) |
+
+`anti_adaptive` prey (rewarded for approaching predators, avoiding food) die
+38% faster and produce 53% MORE total offspring and 2.5x deeper lineages,
+while ending with a SMALLER standing population than `avoider`. Confirmed
+mechanism, not just inference: higher predation mortality culls the
+population faster, which relieves food/grass competition among survivors,
+letting them cross the reproduction threshold more often per unit time --
+classic density-release/compensatory population dynamics, not a defect in
+the measurement. **Whether reward genome "wins" depends on which fitness
+currency is used** -- standing population size (avoider ahead) or total
+reproductive throughput and generational depth (anti_adaptive ahead, by a
+lot). This ambiguity is plausibly part of why the Hunt test found no clean
+directional selection signal on `eval_weights` in the first place: if
+different fitness measures point in opposite directions for the same
+genome, a single scalar notion of "selection" can look driftlike even when
+the genome is doing something real and measurable.
+
 ## Usage
 
 ```bash

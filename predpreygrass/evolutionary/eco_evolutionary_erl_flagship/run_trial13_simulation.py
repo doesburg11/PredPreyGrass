@@ -18,6 +18,7 @@ Usage (staged validation -- see README.md for the full rationale):
 """
 
 import argparse
+import math
 import time
 from pathlib import Path
 
@@ -75,6 +76,14 @@ def parse_args():
              "vector from evolutionary drift (see positive_control.py).",
     )
     parser.add_argument(
+        "--lr-multiplier", type=float, default=None,
+        help="Scale config_erl_flagship's lr_positive/lr_negative by this factor (default: no "
+             "scaling). See lr_sweep.py/behavior_diagnostic.py: a properly powered (n=30, paired) "
+             "check found the reward genome reaches realized behavior even at the default rate, "
+             "with the effect growing sharply at higher multipliers -- this flag lets "
+             "positive_control.py test whether that behavioral effect also moves fitness.",
+    )
+    parser.add_argument(
         "--resume-from", type=str, default=None,
         help="Resume from a checkpoint: either a checkpoint_step_*.pkl file, or a "
              "checkpoints/ directory (uses the highest-step checkpoint in it). "
@@ -107,6 +116,8 @@ def main():
 
     if args.mutation_rate is not None and not (0.0 <= args.mutation_rate <= 1.0):
         raise ValueError(f"--mutation-rate must be within [0.0, 1.0], got {args.mutation_rate}.")
+    if args.lr_multiplier is not None and not (math.isfinite(args.lr_multiplier) and args.lr_multiplier >= 0):
+        raise ValueError(f"--lr-multiplier must be finite and >= 0, got {args.lr_multiplier}.")
 
     if resume_path is not None:
         if args.fixed_eval_weights is not None:
@@ -115,6 +126,11 @@ def main():
             raise ValueError(
                 "--mutation-rate has no effect with --resume-from -- cfg (including mutation_rate) "
                 "comes from the checkpoint, not from this invocation's flags."
+            )
+        if args.lr_multiplier is not None:
+            raise ValueError(
+                "--lr-multiplier has no effect with --resume-from -- cfg (including lr_positive/"
+                "lr_negative) comes from the checkpoint, not from this invocation's flags."
             )
         payload = load_checkpoint(resume_path)
         cfg = payload["cfg"]
@@ -145,6 +161,9 @@ def main():
             cfg["fixed_eval_weights"] = weights
         if args.mutation_rate is not None:
             cfg["mutation_rate"] = args.mutation_rate
+        if args.lr_multiplier is not None:
+            cfg["lr_positive"] = cfg["lr_positive"] * args.lr_multiplier
+            cfg["lr_negative"] = cfg["lr_negative"] * args.lr_multiplier
 
         config_env = dict(config_env_flagship)
         rng = np.random.default_rng(cfg["seed"])
