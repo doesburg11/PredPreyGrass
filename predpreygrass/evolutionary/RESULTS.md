@@ -558,6 +558,53 @@ genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ---
 
+## Trial 12 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
+
+**Status: in progress.** Ports Trial 11's genome/REINFORCE architecture onto the project's
+flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
+abstract World AL rebuild, to test whether the same proximate-vs-ultimate reward divergence
+Trial 11 confirmed at n=30 (evolution weights `health_norm`/`energy_norm` ~2.5-3× more heavily
+than their near-zero correlation with realized fitness would predict) also shows up in a richer,
+spatial-image-observation ecology. Only prey get an evolved reward genome (8 hand-reduced
+features echoing Trial 11's channel design); predators are a real, adapting threat but not
+themselves a subject of reward-discovery.
+
+**Three predator designs were tried and diagnosed in sequence, not guessed at.** A frozen,
+pretrained PPO checkpoint (reused from the flagship's own tournament runs) always led to
+predator extinction — root-caused by directly measuring action-distribution entropy: genome-
+prey's randomly initialized linear policy is close to uniform-random movement, while even the
+earliest available real `prey_policy` checkpoint is already noticeably more structured — a
+predator's learned pursuit strategy is calibrated to exploit structure in movement and has no
+grip on genuine randomness, regardless of training iteration. A rule-based hunter (move toward
+nearest visible prey) fixed the transfer problem but, being unable to adapt, swung between
+predator extinction and prey extinction depending on seed. The current design — proposed by the
+user — is a single, centrally-updated policy shared by every predator and learned online via
+REINFORCE from real per-agent energy-change experience; two real reward-design bugs were found
+and fixed along the way (ambient per-step drain dominating the signal; reproduction's own energy
+cost being misattributed as a bad action), each confirmed via direct multi-seed measurement, not
+assumed. A literal sparse reproduction-only reward — mirroring both this project's own
+reward-density finding and fitness directly — was tested and found to perform *worse* here,
+because that finding depends on PPO's `gamma`+GAE credit assignment, which this predator's
+1-step REINFORCE has no equivalent of.
+
+**Two systematic sweeps, plus a real shared-code bug fix, replaced guessed calibration.** A
+150-run population-size sweep found prey abundance, not predator count, is the dominant lever
+for predator survival time. A second, generation-depth-targeted sweep found
+`prey_creation_energy_threshold` controls reproduction cadence independently of population size
+— raising generational depth roughly 4-5×, after a real n=30 pooled batch at the
+population-tuned config alone still showed no divergence signal (evolved weights statistically
+indistinguishable from random init, traced directly to a median lineage depth of only 1
+generation). Chasing down a discrepancy between sweep predictions and real CLI runs also
+surfaced and fixed a genuine bug in shared flagship code: `predpreygrass_rllib_env.py`'s
+spawn-position fallback drew from the unseeded global `np.random` instead of the environment's
+own seeded `self.rng`, silently breaking `--seed` reproducibility at higher population densities
+(reviewed with Codex, verified fixed).
+
+Full architecture, the complete diagnostic history for all of the above, and current status:
+`eco_evolutionary_erl_flagship/README.md`.
+
+---
+
 ## Theoretical note — Hinton & Nowlan (1987), a candidate future trait direction
 
 This motivated the Trial 7 pivot above (`eco_evolutionary_metabolic_code`) — recorded here in full since it's the theoretical basis for that module's design, not just a historical note anymore.
