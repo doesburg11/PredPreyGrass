@@ -622,6 +622,15 @@ evolution's chosen weights don't correlate with fitness (an imperfect proxy). Th
 *process* generating those weights is statistically indistinguishable from neutral drift for
 essentially all 8 channels, not selection converging on an imperfect-but-real answer.
 
+**Checked, not assumed: is 439-generation mean depth actually enough to detect real but weak
+selection?** A power simulation using the same fitting code and the real 30-seed
+generation-depth/sample-size/drift-noise structure found a population-invariant selection
+pressure as small as 10-20% of the natural per-generation drift step already produces 85-100%
+cross-seed sign agreement — far above the ~50% actually observed for every channel. The null
+result is well-powered, not underpowered, for a universal (same-direction-everywhere) selection
+pressure. It does not rule out a founder-contingent landscape (different populations converging
+on different local optima) — a distinct claim from "no optimum exists at all."
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

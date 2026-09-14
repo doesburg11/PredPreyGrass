@@ -370,6 +370,27 @@ population-level "best" reward-channel weighting being converged upon here;
 the apparent leaders in earlier, shallower batches were drift's leading edge
 at that moment, not partial progress toward an answer.
 
+**Checked directly, not assumed: is 439-generation mean depth actually
+enough to detect a real but weak selection pressure, or just underpowered?**
+A null result from a model-fit never proves absence of an effect on its own
+— it can mean "no effect" or "too little data to see it." Ran a power
+simulation using the exact same fitting code, the real 30-seed
+generation-count/per-generation-sample-size structure, and the real observed
+drift-noise scale (`vstep`≈5e-5): injected a known, population-invariant
+`mstep` at increasing multiples of `sqrt(vstep)` and refit. A selection
+pressure as small as 10-20% of the natural per-generation drift step already
+produces 53-100% correct-sign detection power at n=30 seeds, and would show
+up as 85-100% cross-seed sign agreement — far above the ~50% actually
+observed for every channel. The null result is well-powered, not
+underpowered: a universal (same-direction-in-every-population) selection
+pressure of any magnitude worth calling "real" would have been visible at
+this depth and seed count. One thing this specific test cannot rule out:
+a *founder-contingent* landscape where each independently-founded population
+converges on a different local optimum (no shared global answer, rather than
+no answer at all) — a distinct claim the sign-consistency test isn't built
+to detect, since population-specific trends of opposite sign would also
+average to ~50% agreement.
+
 ## Usage
 
 ```bash
