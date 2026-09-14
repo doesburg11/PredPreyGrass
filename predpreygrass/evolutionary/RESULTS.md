@@ -677,6 +677,24 @@ ambiguity plausibly helps explain why the Hunt test found no clean directional s
 in the first place: opposite-pointing fitness measures for the same genome can look driftlike
 under a single scalar view of selection even when the genome does something real.
 
+**Pushed further: does a REAL, competing, evolving population maintain BOTH strategies at once,
+rather than one driving the other extinct?** The comparison above used two segregated
+single-genotype populations; `polymorphism_check.py` tests a real, mixed, evolving population
+(mutation on, neutral random init, 20x LR, ~260 mean generations, n=10 seeds) for whether its
+`predator_proximity` weight distribution becomes and stays bimodal, via a null-calibrated
+1-vs-2-component Gaussian mixture BIC comparison (Codex-reviewed, mirroring the `lr_sweep.py`
+false-positive lesson). **Partially confirmed, much more modestly than hoped**: the population
+maintains real, non-noise internal structure (0% null-calibrated false-positive rate; 6/10 seeds
+sustained across their last 3 checkpoints) rather than collapsing to one point, but the gap
+between the two detected modes stays small (~0.1-0.2 units) and does not grow over ~260
+generations — nowhere near the 4.0-unit separation between the two fitness-consequential
+strategies found above. Likely reason: that earlier result depended on each strategy
+monopolizing an entire segregated population's resource release from its own predation losses; a
+rare mutant of one strategy inside a population dominated by the other doesn't get that same
+benefit. Whether a polymorphism is evolutionarily stable depends on rare-strategy (invasion)
+fitness, not performance in isolation — a different question, and this check answers it directly
+at this depth: no, not yet.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

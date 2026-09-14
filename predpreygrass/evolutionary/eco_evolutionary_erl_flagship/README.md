@@ -507,6 +507,51 @@ different fitness measures point in opposite directions for the same
 genome, a single scalar notion of "selection" can look driftlike even when
 the genome is doing something real and measurable.
 
+**Pushed one step further: does a REAL, competing, evolving population
+(not two segregated single-genotype populations) maintain BOTH strategies
+at once, rather than one driving the other extinct?** `avoider` and
+`anti_adaptive` were each tested in its own isolated population -- neither
+had to compete with the other for the same food/space. Tested directly with
+a new `polymorphism_check.py`: run real evolution (mutation on, standard
+neutral random founder init, no fixed genomes) at 20x learning rate for
+~260 mean generations (n=10 seeds), and test at each of 10 checkpoints
+whether the live population's `predator_proximity` eval_weight -- the axis
+that separated `avoider` (-2.0) from `anti_adaptive` (+2.0) -- becomes and
+stays bimodal, via a 1- vs 2-component Gaussian mixture model compared by
+BIC (same "fit competing models, compare by information criterion" logic as
+the Hunt test, applied to population structure here). Rigor added after a
+Codex review of the first version (mirroring the `lr_sweep.py` false-positive
+lesson earlier in this investigation): a null-calibrated false-positive
+check (the identical procedure applied to a matched-size, matched-mean/std
+synthetic unimodal sample, at every checkpoint) and `n_init=10` for the
+2-component fit (not sklearn's single-init default, to avoid reporting a
+local optimum).
+
+**Result: partially confirmed, but much more modest than the headline
+hypothesis.** The population does maintain real, non-noise internal
+structure rather than collapsing to a single point -- the null-calibrated
+false-positive rate was 0% at every checkpoint (so this isn't the test
+firing spuriously), and 6/10 seeds showed a persisting two-component signal
+across their last 3 checkpoints. But the gap between the two detected modes
+is small (mean ~0.10-0.17 units) and, checked directly across the whole
+run, does NOT grow over ~260 generations -- it stays flat or even shrinks
+slightly. **The two dramatic, fitness-consequential strategies from the
+positive-control experiment (separated by 4.0 units) do not spontaneously
+emerge and stably coexist within a real, competing population at this
+depth.**
+
+Likely mechanism, not just a negative result: the "density release"
+advantage that made `anti_adaptive` look strong in `positive_control.py`
+was measured with it as the ONLY genotype present, monopolizing the whole
+population's resource release from its own predation losses. A rare
+`anti_adaptive`-type mutant inside a mostly-`avoider` population wouldn't
+get that same benefit -- its own predation losses barely dent food
+competition for the much larger surrounding population. Whether a
+polymorphism is evolutionarily stable depends on RARE-STRATEGY (invasion)
+fitness, not on how each strategy performs in isolation -- a different
+question from what the segregated fixed-genome comparison tested, and one
+this real-population check answers directly: at this generational depth, no.
+
 ## Usage
 
 ```bash
