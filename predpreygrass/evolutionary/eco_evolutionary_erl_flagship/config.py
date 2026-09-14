@@ -76,24 +76,28 @@ max 12 -> tuned mean ~21-28, max up to 143) and *also* increased mean survival
 sweep rounds). More prey (32) or fewer prey (16, 8) than the already-tuned 24
 both hurt generational depth at this threshold -- 24 stays the right count.
 
-Caveat surfaced by this second sweep, worth being explicit about: comparing
-the identical thresh=4.0/24-prey config's own numbers *across the two sweep
-rounds* showed real run-to-run variation (1385 vs 1119 mean steps; 27.8 vs
-21.5 mean generations) despite using the same 10 seeds both times. Traced to
-flagship's own `_find_available_spawn_position` fallback path
-(predpreygrass_rllib_env.py), which still uses the bare global `np.random`
-(not a seeded per-instance generator) -- a known, documented gap left
-unfixed since it's shared flagship code, not modified here. It matters more
-at the higher population densities this second sweep explored than it did
-for the shorter, sparser runs the first sweep and earlier calibration work
-tested, because each internal sweep script batches many configs' seeded runs
-in one Python process, and how much global RNG state a PRIOR config's runs
-already consumed leaks into a LATER config's fallback-spawn draws. This does
-NOT affect the actual CLI (`run_trial13_simulation.py`), where each invocation
-is already its own fresh process -- only these internal exploratory sweep
-scripts' own cross-config numeric comparisons, which should be read as
-directional (the 4-5x generational-depth improvement is robust and consistent
-across both rounds), not bit-precise.
+This second sweep also surfaced, and led to fixing, a real bug in shared
+flagship code: comparing the identical thresh=4.0/24-prey config's own numbers
+*across the two sweep rounds* showed real, large run-to-run variation (1385 vs
+1119 mean steps; 27.8 vs 21.5 mean generations) despite using the same 10
+seeds both times -- and a real CLI batch at this config showed numbers off by
+another 4-7x again (mean 298 steps, max generation 20). Traced to flagship's
+own `_find_available_spawn_position` (predpreygrass_rllib_env.py), whose
+fallback branch (reached when a newborn's preferred adjacent cell is occupied)
+drew from the bare `np.random` module instead of `self.rng`, the per-instance
+generator `reset(seed=...)` sets up specifically so the environment's own
+randomness is reproducible by seed. This was invisible at the low population
+densities earlier calibration work tested (the fallback is rarely reached when
+few newborns compete for cells), but fires constantly at the higher densities
+this tuning induces -- and, contrary to what an earlier version of this note
+claimed, DOES affect the real CLI too, not just these internal sweep scripts:
+a fresh Python process's global `np.random` state is itself unseeded (seeded
+from OS entropy at import time), so `--seed` never controlled this code path
+at all, in any context. Fixed directly in flagship's shared file (a one-line
+change, reviewed with Codex, verified: identical `--seed` CLI runs now
+produce bit-for-bit identical output even at this dense config) rather than
+worked around from this module, since it's a genuine bug against flagship's
+own stated reproducibility contract, not a Trial-13-specific concern.
 """
 
 from predpreygrass.global_config import RAY_RESULTS_DIR

@@ -291,13 +291,21 @@ related but distinct quantities.
 `prey_creation_energy_threshold` (how much energy a prey needs to reproduce)
 is the controlling lever**, independent of the population-size tuning above.
 Lowering it from flagship's stock 8.0 to 4.0 raised mean generational depth
-~4-5x (baseline mean 5.1, max 12 → tuned mean ~21-28, max up to 143) and also
-increased mean survival. See `config.py`'s docstring for the full sweep
-results and an honest caveat about a global-RNG artifact in these particular
-exploratory sweep scripts (not the production CLI) that makes their own
-cross-run numbers directional rather than bit-precise — the direction and
-scale of the improvement is robust across two independent sweep rounds either
-way.
+~4-5x in sweep testing (baseline mean 5.1, max 12 → tuned mean ~21-28, max up
+to 143) and also increased mean survival.
+
+**This sweep also led to a real bug fix in shared flagship code, not just a
+Trial-13-local workaround.** A real CLI batch at the tuned config gave numbers
+off by another 4-7x from the sweep's own predictions (mean 298 steps vs.
+~1100-1900, max generation 20 vs. up to 143) — traced to flagship's
+`_find_available_spawn_position` (`predpreygrass_rllib_env.py`) drawing its
+fallback spawn position from the bare `np.random` module instead of the
+environment's own seeded `self.rng`, silently breaking `--seed`
+reproducibility whenever that fallback fires (rare at low population density,
+constant at the densities this tuning induces). Fixed directly in flagship's
+file — a one-line change, reviewed with Codex, verified fixed: identical
+`--seed` CLI runs now produce bit-for-bit identical output even at this dense
+config. See `config.py`'s docstring for the full history.
 
 Ready for a real, pooled multi-seed batch run (Trial-12-style: n=1 → n=2 →
 n=30, not a single long run) using the generation-tuned config — see the
