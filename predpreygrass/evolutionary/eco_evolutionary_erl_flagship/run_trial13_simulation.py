@@ -68,6 +68,13 @@ def parse_args():
              "founder's eval_weights instead of a random init.",
     )
     parser.add_argument(
+        "--mutation-rate", type=float, default=None,
+        help="Override config_erl_flagship's mutation_rate (default 0.05). Set to 0.0 together "
+             "with --fixed-eval-weights for a positive-control run: every descendant keeps the "
+             "exact founder eval_weights forever, isolating fitness leverage of a fixed reward "
+             "vector from evolutionary drift (see positive_control.py).",
+    )
+    parser.add_argument(
         "--resume-from", type=str, default=None,
         help="Resume from a checkpoint: either a checkpoint_step_*.pkl file, or a "
              "checkpoints/ directory (uses the highest-step checkpoint in it). "
@@ -98,9 +105,17 @@ def main():
                 raise FileNotFoundError(f"No checkpoint_step_*.pkl found in {resume_path}")
             resume_path = found
 
+    if args.mutation_rate is not None and not (0.0 <= args.mutation_rate <= 1.0):
+        raise ValueError(f"--mutation-rate must be within [0.0, 1.0], got {args.mutation_rate}.")
+
     if resume_path is not None:
         if args.fixed_eval_weights is not None:
             raise ValueError("--fixed-eval-weights has no effect with --resume-from (no new founders are spawned).")
+        if args.mutation_rate is not None:
+            raise ValueError(
+                "--mutation-rate has no effect with --resume-from -- cfg (including mutation_rate) "
+                "comes from the checkpoint, not from this invocation's flags."
+            )
         payload = load_checkpoint(resume_path)
         cfg = payload["cfg"]
         config_env = payload["config_env"]
@@ -128,6 +143,8 @@ def main():
             if len(weights) != OBS_DIM:
                 raise ValueError(f"--fixed-eval-weights must have exactly {OBS_DIM} values, got {len(weights)}.")
             cfg["fixed_eval_weights"] = weights
+        if args.mutation_rate is not None:
+            cfg["mutation_rate"] = args.mutation_rate
 
         config_env = dict(config_env_flagship)
         rng = np.random.default_rng(cfg["seed"])

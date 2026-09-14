@@ -631,6 +631,27 @@ result is well-powered, not underpowered, for a universal (same-direction-everyw
 pressure. It does not rule out a founder-contingent landscape (different populations converging
 on different local optima) — a distinct claim from "no optimum exists at all."
 
+**Follow-up: does reward-genome content have ANY fitness leverage in this architecture, or is
+the search space flat regardless of what evolution could find?** A positive-control check
+(`positive_control.py`) ran 5 hand-picked, EXTREME, FIXED `eval_weights` vectors — including a
+deliberately adversarial one rewarded for approaching predators and avoiding food — with
+mutation disabled (no evolution in the loop at all), n=10 seeds each. Zero significant
+differences in survival, reproduction, or generational depth anywhere (Kruskal-Wallis p=0.33-0.95);
+even the starkest contrast (predator-avoider vs. predator-seeker) showed no fitness difference
+(p=0.91). A behavioral follow-up (`behavior_diagnostic.py`) measured which direction a prey's chosen action
+points relative to a visible predator/food at decision time (a Codex review caught and fixed two
+real bugs in an earlier, realized-post-step-distance version — survivorship bias from excluding
+agents that died that same step, and confounding with the predator's own simultaneous movement):
+agents rewarded for fleeing predators pointed toward a visible predator at the same rate (36.0%)
+as agents rewarded for approaching them (36.6%, p=0.45) — behavior itself never differentiates by
+genome. Root cause, traceable to the architecture: every prey's live action network starts each
+generation from the same frozen random initialization and gets only one weak (`lr`~0.02-0.05),
+1-step-REINFORCE lifetime to learn from, none of it inherited — nowhere near enough for any
+reward genome to express itself behaviorally. **The reward genome never reaches behavior at
+all** — not evolution failing to find a good answer, but a broken genome-to-behavior pipeline
+upstream of where selection could ever act. Points at strengthening within-lifetime learning
+(not reward-function redesign) as the next real lever.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

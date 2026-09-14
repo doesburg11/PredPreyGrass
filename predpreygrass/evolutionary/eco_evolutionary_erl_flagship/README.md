@@ -391,6 +391,68 @@ no answer at all) — a distinct claim the sign-consistency test isn't built
 to detect, since population-specific trends of opposite sign would also
 average to ~50% agreement.
 
+**Follow-up, prompted directly by the user finding the drift verdict
+unsatisfying ("this makes a more internal reward system, which humans
+definitely have, no closer"): does reward-genome content have ANY fitness
+leverage in this architecture at all, or is the search space genuinely flat
+regardless of what evolution could find?** Two candidate explanations: (a)
+behavior differs by genome but this ecology doesn't reward the difference, or
+(b) genome never reaches realized behavior at all. Tested directly with
+`positive_control.py`: 5 hand-picked, EXTREME, FIXED `eval_weights` vectors
+(`forager`, `avoider`, `balanced`, `inert`, and a deliberately adversarial
+`anti_adaptive` — rewarded for approaching predators and avoiding food),
+`mutation_rate=0.0` so every descendant keeps the exact founder vector
+forever (no evolution/drift in the loop at all), n=10 seeds each, 20,000-step
+budget. **Zero significant differences anywhere**: Kruskal-Wallis across all
+5 conditions gives p=0.95 (total births), p=0.33 (final population), p=0.59
+(generational depth). Even the starkest contrast available —
+`avoider` (punished for predator proximity) vs. `anti_adaptive` (rewarded for
+it) — shows no difference in final population (Mann-Whitney p=0.91). None of
+the 50 runs went extinct.
+
+**Distinguished (a) from (b) directly with `behavior_diagnostic.py`**: measure,
+every step, which direction a prey's CHOSEN action points relative to a
+visible predator/food at the exact moment it was chosen (dot product of the
+action's move vector with the threat/food offset) — same "measure behavior
+directly, don't assume it" method that root-caused the earlier
+predator-transfer puzzle via entropy. A Codex review of the first version
+caught two real bugs before this result was trusted: measuring realized
+*post-step* distance instead (a) excluded agents that died the same step from
+the sample (survivorship bias -- silently dropping exactly the "approached a
+predator and got caught" cases most relevant to the predator statistic), and
+(b) confounded the prey's own choice with the predator's own simultaneous
+movement and possible nearest-target changes. Fixed by measuring the chosen
+action's direction against the pre-step observation instead, which needs no
+post-step state at all (so dying agents are included) and isolates the one
+thing under the genome's control. n=5 seeds/genome, 5000 steps, corrected
+version: `avoider` (punished for predator proximity) had its actions point
+toward a visible predator 36.0% of the time; `anti_adaptive` (rewarded for
+the opposite) pointed toward one 36.6% of the time — statistically
+indistinguishable (Kruskal-Wallis across 4 genomes, p=0.45). Food-approach
+direction likewise indistinguishable across genomes (p=0.996). **(b)
+confirmed, (a) ruled out: behavior itself never differentiates by genome at
+all**, regardless of ecological consequences.
+
+**Root cause, traceable directly from the architecture, not just observed as
+a correlation:** every prey's live action network starts each generation from
+the same frozen random initialization (`action_weights` is genome-encoded
+and untouched at `mutation_rate=0`; even mutation-on, it changes slowly) and
+gets only that one individual's own lifetime — typically a few hundred
+steps — of weak, 1-step REINFORCE nudging (`lr_positive=0.05`,
+`lr_negative=0.02`) before death or reproduction, none of it inherited
+(Darwinian by design, matching Trial 12). That is not enough signal or time
+to produce genome-appropriate behavior regardless of reward-function
+quality. **The reward genome never gets the chance to express itself** — not
+"evolution failed to find a good answer," but "the mechanism connecting what
+an agent values to what an agent does barely exists yet in this
+architecture." This reframes the whole trial's question: before a
+homeostatic/state-dependent reward redesign (a bigger, more theoretically
+motivated next step, closer to how real drive systems work) is worth testing,
+the action side needs strengthening first — faster/more capable within-
+lifetime learning, more steps per lifetime, or multi-step credit assignment
+instead of 1-step REINFORCE — so that reward-genome variation can actually
+reach behavior at all.
+
 ## Usage
 
 ```bash
