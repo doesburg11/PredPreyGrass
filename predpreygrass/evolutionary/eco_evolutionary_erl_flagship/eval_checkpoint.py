@@ -25,7 +25,6 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.checkpoint import 
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.driver import Trial13Driver
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.features import FEATURE_NAMES
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.metrics import CsvLogger, lineage_fieldnames, lineage_record
-from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.predator_policy import FrozenPredatorPolicy
 from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
 
 
@@ -36,7 +35,8 @@ def _print_summary(driver: Trial13Driver, label: str):
     print(f"Population: {counts}")
     print(
         f"eval_weight_absmean={stats['eval_weight_absmean']:.3f}  "
-        f"action_weight_absmean={stats['action_weight_absmean']:.3f}"
+        f"action_weight_absmean={stats['action_weight_absmean']:.3f}  "
+        f"predator_action_weight_absmean={stats['predator_action_weight_absmean']:.3f}"
     )
     living = list(driver.registry.values())
     if living:
@@ -75,11 +75,10 @@ def main():
     env.reset()
     env.restore_state_snapshot(payload["env_snapshot"])
 
-    predator_policy = FrozenPredatorPolicy(
-        cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
-    )
+    predator_policy = payload["predator_policy"]  # LEARNED weights, not reconstructed fresh
     driver = Trial13Driver(env, predator_policy, cfg, rng)
     driver.registry = payload["registry"]
+    driver.predator_registry = payload["predator_registry"]
     driver.current_step = payload["current_step"]
 
     out_dir = Path(args.out_dir) if args.out_dir else checkpoint_path.parent.parent / "eval" / checkpoint_path.stem

@@ -13,9 +13,13 @@ This module asks the same question — does an evolved reward function diverge f
 fitness? — inside the project's flagship module
 (`predpreygrass/non_evolutionary/base_environment`) instead: a richer, 25×25
 predator/prey/grass ecology with a spatial image observation, normally trained via
-RLlib PPO against a fixed sparse reward. Only **prey** get an evolved reward genome
-here; predators keep flagship's existing behavior (a frozen, pretrained PPO
-checkpoint run in inference mode — see "Predator handling" below).
+RLlib PPO against a fixed sparse reward. Only **prey** get an evolved reward
+genome here — genuinely discovered, individually-inherited, the subject of the
+whole trial. Predators are a real, adapting threat but not themselves a subject
+of reward-discovery: they run a single, centrally-updated policy learned online
+via REINFORCE (see "Predator strategy" in `config.py`, and deviation 4 below) —
+after two earlier predator designs (a frozen PPO checkpoint, then a rule-based
+hunter) were tried and diagnosed as insufficient. See "Status" for the full history.
 
 ## Architecture
 
@@ -71,15 +75,22 @@ simulator (`env.step(action_dict)` in a hand-written loop, `driver.py`) — no
      (which resets the counter every episode), but a hard ceiling on TOTAL
      lifetime births once that reset is removed. Raised to 500,000 here.
 
-4. **Predator handling: a frozen, pretrained PPO checkpoint, not a rule-based
-   hunter.** Predators are inference-only — `predator_policy.py` loads an
-   already-converged `predator_policy` RLModule checkpoint from a prior
-   base_environment tournament run (`RLModule.from_checkpoint`, the same
-   no-Ray-runtime pattern `master_tournament_matrix.py` already uses) and never
-   receives gradient updates during a Trial 13 run. Chosen over hand-coding a
-   rule-based hunter (Trial 12's `Carnivore`) because it reuses a known-good,
-   already-calibrated adversary instead of open-ended new tuning with no
-   reference point in this codebase.
+4. **Predator handling: a centrally-learning shared policy, after two other
+   designs were tried and diagnosed as insufficient.** `centralized_predator.
+   CentralizedPredatorPolicy` is ONE small linear policy, shared by every
+   predator, updated online via REINFORCE from every predator's own real
+   experience (net energy change, baseline-subtracted -- see `driver.py`'s
+   `_select_predator_action`). Two earlier designs are kept in the module
+   (not deleted) as tested, working, documented alternatives:
+   - `predator_policy.FrozenPredatorPolicy` -- a frozen, pretrained PPO
+     checkpoint, inference-only. Reused a known-good, already-calibrated
+     adversary rather than open-ended new tuning. Diagnosed as fundamentally
+     mismatched to genome-driven prey (see "Status").
+   - `rule_based_predator.RuleBasedPredatorPolicy` -- a simple FSA (move
+     toward nearest visible prey, explore otherwise), like Trial 12's
+     `Carnivore`. Fixed the mismatch but couldn't adapt, causing either
+     predator or prey extinction depending on seed.
+   See "Status" for the full diagnostic chain.
 
 5. **No RLlib training loop for Trial 13 itself ("RLlib or not").** Concurrent
    population is small; an 8×9 linear genome (~90 params) is the same scale
@@ -145,30 +156,99 @@ seeds — each invocation was an independent random draw that happened to be
 *labeled* with a seed. That data was discarded, not treated as a result.
 
 **Predator checkpoint switched from iteration 110 to iteration 1000** (the same
-tournament run's final, most-converged checkpoint —
-`DEFAULT_PREDATOR_CHECKPOINT_DIR`). Iteration 110 was chosen originally on the
-theory that an early, less-converged predator would be a gentler adversary; in
-practice, once the above bugs were fixed and its behavior could actually be
-observed reliably, it looked erratic rather than gentle — sometimes barely
-hunting at all, sometimes wiping prey out almost immediately, both within the
-same few hundred steps depending on seed. Iteration 1000 produces clearly more
-legible dynamics: real population growth from successful hunting (one seed grew
-4→10 predators by step 120), then a gradual decline — a sensible boom-bust
-pattern rather than chaotic swings.
+tournament run's final, most-converged checkpoint). Iteration 110 was chosen
+originally on the theory that an early, less-converged predator would be a
+gentler adversary; in practice, once the above bugs were fixed and its
+behavior could actually be observed reliably, it looked erratic rather than
+gentle. Iteration 1000 produced clearly more legible dynamics — but see below:
+the checkpoint route was abandoned entirely regardless of iteration.
 
-**Open, accepted limitation: predators still often go extinct within a few
-hundred steps**, even with the correct checkpoint and working reproducibility —
-confirmed not fixable by the founder-population tuning that was tried (see
-deviation 7 above). This looks like real finite-population stochastic dynamics
-(a founder population of 4-6 predators is small; one unlucky early stretch can
-wipe out the founding cohort before it reproduces) rather than a remaining bug.
-Not tuned away further for now — the run-stops-on-predator-extinction behavior
-(deviation 6) means a pilot seed that loses predators early just ends early and
-can be rerun with a different seed, rather than wasting budget on unchecked
-prey growth.
+**Root-caused why the frozen-checkpoint predator always went extinct (30/30
+seeds), rather than accepting it as calibration noise** (prompted directly by
+a sharp "this can't be right" from the user, comparing against
+`base_environment`'s own tournament-matrix data — see its README's Master
+Tournament section). Measuring action-distribution entropy directly: genome-
+prey's randomly-initialized 8-feature linear policy is close to UNIFORM RANDOM
+movement (entropy ~1.92 of a 2.197 maximum), while even the EARLIEST available
+real `prey_policy` checkpoint (iteration 10, the very first save) is already
+noticeably more structured/predictable (~1.76, individual agents sometimes
+>85% probability on one action) — an architectural property of the CNN, not a
+training-progress effect. Cross-checked directly against the real tournament
+matrix data (`results_long.csv`): a mature predator vs. an early-iteration
+`prey_policy` shows 3% predator extinction / 39% prey extinction over 165
+real episodes — predators dominate. The resolution: "untrained" means
+something different in each case. Tournament-matrix "untrained" prey are
+unskilled but still confidently structured (a CNN property, present even at
+iteration 10); genome-prey's "untrained" is genuinely close to random noise. A
+predator's whole learned pursuit strategy is calibrated to exploit STRUCTURE
+in movement — something it encountered at every stage of its own training,
+skilled or not — and has no grip on real randomness, regardless of iteration.
+Confirmed by two further controls: the frozen checkpoint thrives (6→13,
+6→19-21) against its own co-trained `prey_policy` under identical code/RNG;
+and disabling genome-prey's within-lifetime learning entirely (frozen random
+weights, no REINFORCE) made predators die at the same rate — ruling out live
+adaptation as the cause and isolating the initial weight-scale/entropy
+mismatch as the actual mechanism.
 
-Ready for a real Stage 1 pilot (single-seed, now genuinely reproducible) — see
-the Darwin/Baldwin Trial Log for status.
+**First fix attempted: `rule_based_predator.RuleBasedPredatorPolicy`** (move
+toward nearest visible prey). Directly addresses the diagnosed mechanism — no
+calibration against any particular prey movement distribution needed.
+Confirmed working correctly (catches the nearest prey, explores when none
+visible). But screening 15 seeds at 20,000 steps found it swings between two
+failure modes depending on seed: predator extinction (10/15, 99-461 steps) or
+prey extinction from too-efficient uncalibrated hunting (5/15) — zero of 15
+seeds reached a stable, long coexistence. Being purely reactive, it can't
+adapt its behavior to the actual population dynamics it's facing.
+
+**Second fix, current default: `centralized_predator.CentralizedPredatorPolicy`**
+— one small linear policy shared by every predator, updated online via
+REINFORCE from real experience (net energy change), pooling every predator's
+transitions into the same weights rather than each relearning independently
+(proposed directly by the user as a way to get real adaptation without
+per-agent training cost). Caught and fixed one real bug along the way: the
+raw energy-change reward was dominated by the ambient per-step energy drain
+(present on almost every step, since catches are rare), so training on it
+directly mostly taught "whatever I just did was bad" uniformly rather than
+"catching is good" — confirmed directly, `predator_action_weight_absmean` was
+essentially flat (0.4037→0.4027) across a 400-step run. Fixed by
+baseline-subtracting the ambient drain (`energy_change +
+energy_loss_per_step_predator`), so an ordinary no-catch step nets to ~0
+reinforcement (a no-op) and a catch is an isolated, clear positive signal.
+Confirmed working after the fix: `predator_action_weight_absmean` now shows
+real, sustained movement (e.g. 0.373→0.364→0.432→0.452 across one run), and
+re-screening 15 seeds showed a real improvement in survival (mean ~231 steps,
+vs. ~147 for the rule-based hunter; longest run 888 steps, vs. 461).
+
+**A second, related reward bug found while answering a user question about
+what exactly predators are rewarded for**, and fixed the same way: reproduction
+ALSO costs the parent `initial_energy_predator` on top of the ambient drain
+(`predpreygrass_rllib_env.py:423`), landing on the same step as whatever
+action the predator happened to take — without correction, reproducing (a
+*good* outcome, reflecting past hunting success) showed up as a large spurious
+*negative* reinforcement for an essentially arbitrary action, since
+reproduction is triggered by an energy threshold, not caused by that step's
+action. Fixed by excluding the reproduction cost from the reinforcement
+too (`driver.py`'s `_predators_reproduced_last_step`, detected from the env's
+own `reproduction_reward_predator` signal). Re-screening the same 15 seeds
+showed a further, real improvement: mean survival ~252 steps, longest run 811
+steps (up from 261 for that seed pre-fix).
+
+**Open, accepted limitation: even a confirmed-adapting, correctly-rewarded
+predator still eventually goes extinct in every seed tested (15/15).** With
+predator competence and reward design now both ruled out as the cause across
+three different predator designs and two reward-signal iterations, this
+cleanly isolates the remaining blocker as population SCALE, not behavior: a
+founding cohort of 4-6 predators is small enough that one unlucky stretch —
+regardless of how well they hunt — can wipe it out before it recovers, since
+flagship has no immigration/reseeding mechanism. This is the founder-
+population-sizing question (deviation 7) again, now unconfounded by any
+remaining predator-competence or reward-design question. Not yet addressed.
+The run-stops-on-predator-extinction behavior (deviation 6) means a pilot seed
+that loses predators early just ends early and can be rerun, rather than
+wasting budget on unchecked prey growth.
+
+Ready for the founder-population-sizing calibration pass, now well-isolated as
+the real remaining blocker — see the Darwin/Baldwin Trial Log for status.
 
 ## Usage
 

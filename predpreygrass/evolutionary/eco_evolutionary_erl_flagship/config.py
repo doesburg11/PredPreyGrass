@@ -50,14 +50,9 @@ config_env_flagship["n_possible_predators"] = 500_000
 
 # A converged PPO predator_policy checkpoint from a prior base_environment
 # tournament run (see master_tournament_matrix.py). checkpoint_000099 is
-# training_iteration 1000 -- the run's final, most-converged checkpoint.
-# checkpoint_000010 (iteration 110) was used originally on the theory that an
-# early, less-converged predator would be a gentler adversary; in practice it
-# behaved erratically (sometimes barely hunting at all, sometimes wiping prey
-# out almost immediately) while iteration 1000 produced clearly more sensible,
-# legible boom-bust predator-prey dynamics (real growth from successful
-# hunting, gradual decline, not chaotic swings) -- see README.md's status
-# section.
+# training_iteration 1000, the run's final, most-converged checkpoint. NO
+# LONGER USED BY DEFAULT -- see the predator-strategy note below -- but kept
+# for anyone using predator_policy.FrozenPredatorPolicy directly.
 DEFAULT_PREDATOR_CHECKPOINT_RUN_DIR = (
     RAY_RESULTS_DIR / "master_tournament_2026-09-06" / "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
 )
@@ -66,6 +61,40 @@ DEFAULT_PREDATOR_CHECKPOINT_DIR = DEFAULT_PREDATOR_CHECKPOINT_RUN_DIR / "checkpo
 # --- Prey genome architecture ---
 OBS_DIM = 8  # energy_norm, predator_dx/dy/proximity, food_dx/dy/proximity, local_grass_density (features.py)
 N_ACTIONS = 9  # flagship's Discrete(9) Moore-neighborhood action space (predpreygrass_rllib_env.py)
+
+# --- Predator architecture ---
+PREDATOR_OBS_DIM = 4  # prey_dx/dy/proximity, energy_norm (predator_features.py)
+
+# Predator strategy: centralized_predator.CentralizedPredatorPolicy -- ONE
+# shared policy, updated from every predator's own experience each step, not
+# per-agent. Went through two earlier attempts, both diagnosed and abandoned:
+#
+#   1. predator_policy.FrozenPredatorPolicy (a frozen PPO checkpoint): always
+#      led to predator extinction (30/30 seeds tested). Root cause, confirmed
+#      by measuring action-distribution entropy directly: genome-prey's
+#      randomly initialized 8-feature linear policy is close to UNIFORM RANDOM
+#      movement (entropy ~1.92 of a 2.197 maximum), while even the earliest
+#      available real prey_policy checkpoint is noticeably more structured/
+#      predictable (~1.76) -- an architectural artifact of the CNN, not a
+#      training-progress effect. A PPO predator's learned pursuit strategy is
+#      calibrated to exploit STRUCTURE in movement; it never had to counter
+#      genuinely unpredictable movement, so it didn't transfer.
+#   2. rule_based_predator.RuleBasedPredatorPolicy (move toward nearest
+#      visible prey): fixed the transfer problem (confirmed catching prey
+#      correctly), but being purely reactive and unable to improve, it swung
+#      between two failure modes depending on seed -- predator extinction
+#      (10/15 seeds) or prey extinction from too-efficient, uncalibrated
+#      hunting (5/15 seeds). Never a stable coexistence in 15 seeds tested.
+#
+# A centralized, LEARNING predator addresses both: it gets real online
+# adaptation against the actual genome-driven prey it faces (fixing the
+# transfer problem properly, not just replacing it with a fixed rule), and
+# pooling every predator's experience into one shared policy converges faster
+# and more cheaply than either frozen-checkpoint calibration or N independent
+# per-predator learners would. See README.md's status section for the full
+# diagnostic history. FrozenPredatorPolicy and RuleBasedPredatorPolicy are
+# kept in the module (not deleted) as tested, working, documented
+# alternatives -- same as Trial 12 keeps its own dead-end strategies.
 
 config_erl_flagship = {
     "seed": 41,
@@ -83,11 +112,8 @@ config_erl_flagship = {
     "lr_positive": 0.05,
     "lr_negative": 0.02,
 
-    # --- Predator (frozen PPO checkpoint, inference-only -- see predator_policy.py) ---
-    "predator_checkpoint_dir": str(DEFAULT_PREDATOR_CHECKPOINT_DIR),
-    "predator_deterministic": False,  # sample from the policy's action distribution, not argmax -- an
-    # argmax-only predator is a fixed function of observation alone and can be
-    # exploited by memorizing one evasion pattern; sampling keeps it a genuine,
-    # somewhat-unpredictable threat, consistent with Trial 12's own carnivore
-    # (a hard-coded FSA, not a fixed lookup either).
+    # --- Predator (centralized, shared policy -- see centralized_predator.py) ---
+    "predator_founder_weight_std": 0.5,
+    "predator_lr_positive": 0.05,
+    "predator_lr_negative": 0.02,
 }

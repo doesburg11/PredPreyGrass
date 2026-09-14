@@ -1,7 +1,9 @@
 """Run Trial 13: an evolved prey reward genome inside flagship's PredPreyGrass
-ecology, against a frozen PPO predator. No RLlib training loop for Trial 13 itself
-(no ray.init()/PPOConfig/Tuner) -- flagship's env is reused directly as a plain
-Python simulator, per this module's README.md ("RLlib or not").
+ecology, against a centrally-learning predator (see config.py's "Predator
+strategy" note -- one shared policy, updated from every predator's own
+experience). No RLlib training loop for Trial 13 itself (no ray.init()/
+PPOConfig/Tuner) -- flagship's env is reused directly as a plain Python
+simulator, per this module's README.md ("RLlib or not").
 
 Usage (staged validation -- see README.md for the full rationale):
     # Stage 0: smoke test, mechanics only
@@ -26,7 +28,14 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.checkpoint import 
     load_checkpoint,
     save_checkpoint,
 )
-from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.config import config_env_flagship, config_erl_flagship, OBS_DIM
+from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.centralized_predator import CentralizedPredatorPolicy
+from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.config import (
+    N_ACTIONS,
+    OBS_DIM,
+    PREDATOR_OBS_DIM,
+    config_env_flagship,
+    config_erl_flagship,
+)
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.driver import Trial13Driver
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.metrics import (
     CsvLogger,
@@ -34,7 +43,6 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.metrics import (
     lineage_record,
     truncate_csv_after_step,
 )
-from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.predator_policy import FrozenPredatorPolicy
 from predpreygrass.global_config import ERL_RESULTS_DIR
 from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
 
@@ -44,6 +52,7 @@ FIELDNAMES = [
     "predator_count",
     "eval_weight_absmean",
     "action_weight_absmean",
+    "predator_action_weight_absmean",
 ]
 
 
@@ -57,15 +66,6 @@ def parse_args():
         "--fixed-eval-weights", type=str, default=None,
         help="Comma-separated floats (length 8, see features.FEATURE_NAMES) to use as every "
              "founder's eval_weights instead of a random init.",
-    )
-    parser.add_argument(
-        "--predator-checkpoint-dir", type=str, default=None,
-        help="Override the frozen predator_policy checkpoint directory "
-             "(default: config.py's DEFAULT_PREDATOR_CHECKPOINT_DIR).",
-    )
-    parser.add_argument(
-        "--predator-deterministic", action="store_true",
-        help="Argmax predator actions instead of sampling from its action distribution.",
     )
     parser.add_argument(
         "--resume-from", type=str, default=None,
@@ -111,11 +111,10 @@ def main():
         env.reset()
         env.restore_state_snapshot(payload["env_snapshot"])
 
-        predator_policy = FrozenPredatorPolicy(
-            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
-        )
+        predator_policy = payload["predator_policy"]  # LEARNED weights, not reconstructed fresh
         driver = Trial13Driver(env, predator_policy, cfg, rng)
         driver.registry = payload["registry"]
+        driver.predator_registry = payload["predator_registry"]
         driver.current_step = payload["current_step"]
 
         out_dir = Path(args.out_dir) if args.out_dir else resume_path.parent.parent
@@ -129,17 +128,16 @@ def main():
             if len(weights) != OBS_DIM:
                 raise ValueError(f"--fixed-eval-weights must have exactly {OBS_DIM} values, got {len(weights)}.")
             cfg["fixed_eval_weights"] = weights
-        if args.predator_checkpoint_dir is not None:
-            cfg["predator_checkpoint_dir"] = args.predator_checkpoint_dir
-        if args.predator_deterministic:
-            cfg["predator_deterministic"] = True
 
         config_env = dict(config_env_flagship)
         rng = np.random.default_rng(cfg["seed"])
 
         env = PredPreyGrass(config_env)
-        predator_policy = FrozenPredatorPolicy(
-            cfg["predator_checkpoint_dir"], deterministic=cfg["predator_deterministic"], seed=cfg["seed"]
+        predator_policy = CentralizedPredatorPolicy(
+            PREDATOR_OBS_DIM, N_ACTIONS, rng,
+            init_std=cfg["predator_founder_weight_std"],
+            lr_positive=cfg["predator_lr_positive"],
+            lr_negative=cfg["predator_lr_negative"],
         )
         driver = Trial13Driver(env, predator_policy, cfg, rng)
         driver.reset()

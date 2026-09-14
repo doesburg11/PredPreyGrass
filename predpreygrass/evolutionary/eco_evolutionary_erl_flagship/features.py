@@ -37,12 +37,15 @@ FEATURE_NAMES = [
 CH_BORDER, CH_PREDATOR, CH_PREY, CH_GRASS = 0, 1, 2, 3
 
 
-def _nearest_offset(channel: np.ndarray, half: int) -> tuple[float, float, float]:
+def nearest_offset(channel: np.ndarray, half: int) -> tuple[float, float, float]:
     """(dx, dy, proximity) to the nearest nonzero cell in `channel`, relative to
     the window's center cell (index `half` on both axes -- true for flagship's
     odd-sized observation windows, see _obs_clip's observation_offset). dx/dy are
     signed offsets normalized by `half`; proximity is 1.0 at the center, 0.0 at
-    the window edge. Returns (0.0, 0.0, 0.0) if no nonzero cell is visible."""
+    the window edge. Returns (0.0, 0.0, 0.0) if no nonzero cell is visible.
+
+    Public (not underscore-prefixed): also used by rule_based_predator.py to
+    find the nearest visible prey, not just by extract_prey_features below."""
     rows, cols = np.nonzero(channel)
     if rows.size == 0:
         return 0.0, 0.0, 0.0
@@ -62,8 +65,8 @@ def extract_prey_features(env, agent_id: str) -> np.ndarray:
     half = obs.shape[1] // 2
 
     energy_norm = min(env.agent_energies[agent_id] / env.prey_creation_energy_threshold, 1.0)
-    predator_dx, predator_dy, predator_proximity = _nearest_offset(obs[CH_PREDATOR], half)
-    food_dx, food_dy, food_proximity = _nearest_offset(obs[CH_GRASS], half)
+    predator_dx, predator_dy, predator_proximity = nearest_offset(obs[CH_PREDATOR], half)
+    food_dx, food_dy, food_proximity = nearest_offset(obs[CH_GRASS], half)
 
     in_bounds = obs[CH_BORDER] == 0
     local_grass_density = float((obs[CH_GRASS][in_bounds] > 0).mean()) if in_bounds.any() else 0.0

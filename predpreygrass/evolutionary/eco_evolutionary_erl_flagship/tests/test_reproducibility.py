@@ -1,18 +1,23 @@
 """Regression tests for two reproducibility bugs found during Stage-0 calibration
 (see README.md's Status section): (1) driver.reset() wasn't passing a seed to
 env.reset(), so founder agent/grass placement drew fresh OS entropy every run
-regardless of --seed; (2) FrozenPredatorPolicy sampled from PyTorch's unseeded
-global RNG. Both are exercised here with the REAL PredPreyGrass env (not a fake)
-since the bug was specifically about env.reset()'s own seeding contract.
+regardless of --seed; (2) the predator policy in use at the time
+(predator_policy.FrozenPredatorPolicy) sampled from PyTorch's unseeded global
+RNG. Both are exercised here with the REAL PredPreyGrass env (not a fake) since
+bug (1) was specifically about env.reset()'s own seeding contract. The
+end-to-end test now uses centralized_predator.CentralizedPredatorPolicy (the
+current default -- see config.py's "Predator strategy" note), since
+Trial13Driver.step() only drives predators through that stateful interface;
+FrozenPredatorPolicy/RuleBasedPredatorPolicy remain usable standalone (see
+their own test suites) but not through the driver.
 """
 
-from pathlib import Path
-
 import numpy as np
-import pytest
 
+from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.centralized_predator import CentralizedPredatorPolicy
 from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.config import (
-    DEFAULT_PREDATOR_CHECKPOINT_DIR,
+    N_ACTIONS,
+    PREDATOR_OBS_DIM,
     config_env_flagship,
     config_erl_flagship,
 )
@@ -51,20 +56,23 @@ def test_reset_with_different_seeds_gives_different_founder_positions():
     assert env_a.agent_positions != env_b.agent_positions
 
 
-@pytest.mark.skipif(
-    not Path(DEFAULT_PREDATOR_CHECKPOINT_DIR).is_dir(),
-    reason="Real predator checkpoint not present on this machine.",
-)
 def test_full_run_with_same_seed_is_bit_for_bit_reproducible():
     """End-to-end: same --seed, two independent driver instances (including the
-    frozen predator's own action sampling), must produce identical population
-    trajectories for a real number of steps."""
-    from predpreygrass.evolutionary.eco_evolutionary_erl_flagship.predator_policy import FrozenPredatorPolicy
+    shared predator policy's own initialization, action sampling, and online
+    updates), must produce identical population trajectories for a real number
+    of steps."""
 
     def run(seed, steps=60):
         env = PredPreyGrass(dict(config_env_flagship))
-        predator_policy = FrozenPredatorPolicy(DEFAULT_PREDATOR_CHECKPOINT_DIR, deterministic=False, seed=seed)
-        driver = Trial13Driver(env, predator_policy, _cfg(seed), np.random.default_rng(seed))
+        cfg = _cfg(seed)
+        rng = np.random.default_rng(seed)
+        predator_policy = CentralizedPredatorPolicy(
+            PREDATOR_OBS_DIM, N_ACTIONS, rng,
+            init_std=cfg["predator_founder_weight_std"],
+            lr_positive=cfg["predator_lr_positive"],
+            lr_negative=cfg["predator_lr_negative"],
+        )
+        driver = Trial13Driver(env, predator_policy, cfg, rng)
         driver.reset()
         trajectory = []
         for _ in range(steps):

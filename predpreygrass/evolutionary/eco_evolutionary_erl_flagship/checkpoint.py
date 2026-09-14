@@ -4,11 +4,15 @@ Unlike eco_evolutionary_erl_baldwin/checkpoint.py (which pickles the whole
 pure-Python `ErlWorld` object directly), this pickles a plain dict of the pieces
 needed to reconstruct a running `Trial13Driver`: flagship's own
 `env.get_state_snapshot()`/`restore_state_snapshot()` pair
-(predpreygrass_rllib_env.py:808-845) for the grid/energy/position state, plus the
-prey genome registry, RNG state, current step, and the run's cfg -- not the
-`PredPreyGrass` object itself, since it's an RLlib `MultiAgentEnv` and
+(predpreygrass_rllib_env.py:808-845) for the grid/energy/position state, the
+prey genome registry, the shared predator policy's LEARNED weights and its
+per-predator temporal state, RNG state, current step, and the run's cfg -- not
+the `PredPreyGrass` object itself, since it's an RLlib `MultiAgentEnv` and
 reconstructing state via its own documented snapshot API is more robust than
-pickling framework internals wholesale.
+pickling framework internals wholesale. The predator policy's weights are real
+state that must be checkpointed too, not just re-initialized on resume --
+unlike a frozen or rule-based predator, CentralizedPredatorPolicy has actually
+learned something over the run.
 
 To resume: construct a fresh `PredPreyGrass(cfg["config_env"])`, call `env.reset()`
 (so `__init__`-only state like `observation_spaces`/`possible_agents` is properly
@@ -28,6 +32,8 @@ def save_checkpoint(driver, cfg: dict, config_env: dict, path: Path):
     payload = {
         "env_snapshot": driver.env.get_state_snapshot(),
         "registry": driver.registry,
+        "predator_policy": driver.predator_policy,
+        "predator_registry": driver.predator_registry,
         "rng_state": driver.rng.bit_generator.state,
         "current_step": driver.current_step,
         "cfg": cfg,
