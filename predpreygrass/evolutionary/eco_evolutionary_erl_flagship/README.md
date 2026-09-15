@@ -2,28 +2,44 @@
 
 ## Key message
 
-**Caution beats recklessness, decisively, once they actually have to compete.**
-A reward that makes prey reckless around predators (`anti_adaptive`) can look
-fine, even thrive, when it never has to share space with more cautious prey —
-tested alone, it produced *more* total offspring and far deeper lineages than
-a predator-avoiding strategy (`avoider`), by benefiting from the extra food its
+**Caution beats recklessness, decisively, once they actually have to compete —
+and it beats the project's own literal fitness signal too.** A reward that
+makes prey reckless around predators (`anti_adaptive`) can look fine, even
+thrive, when it never has to share space with more cautious prey — tested
+alone, it produced *more* total offspring and far deeper lineages than a
+predator-avoiding strategy (`avoider`), by benefiting from the extra food its
 own predation losses freed up. But put the two side by side, competing for the
 same food and space, and caution wins outright: in 9 of 10 evolutionary runs,
 the cautious strategy completely excludes the reckless one within ~27
-generations and never gives ground back — even when it starts as the founder
-minority.
+generations. `avoider` even beats flagship's own original "+10 on
+reproduction, nothing else" reward — the fitness criterion itself, no proxy
+involved — 27 times out of 30 (p=0.000008), because a sparse signal gives this
+module's weak, one-step learning rule almost nothing to learn from between
+rare reproduction events.
 
-So there is no single abstract "optimal reward" to be found by evolution in
-this ecology — but not because reward-shaping is arbitrary or evolution can't
-find good answers. It's because "best" depends on what else is in the
-population. A strategy's value isn't fixed in isolation; it only resolves once
-you run the actual competition. That's a more informative, more biologically
-realistic conclusion than either of the two wrong turns taken en route to it
-in this module's history below: not "it's all just random noise" (a
-measurement problem, corrected), and not "the reward never reaches behavior at
-all" (also wrong, corrected once tested properly at adequate statistical
-power). See "Status" below for the full, evidence-by-evidence path to this
-conclusion, including the two overclaims caught and fixed along the way.
+**One precision this whole arc earns, not a footnote: `avoider` was hand-designed
+by a human, not evolved.** It was never discovered by this module's own
+mutation-and-selection process — separately confirmed (via the Hunt-test drift
+analysis below) that this trial's actual evolutionary mechanism does NOT
+reliably converge on anything like it; it drifts instead. So the honest reading
+is two separate claims, not one: a well-designed dense reward has real,
+demonstrated power in this architecture (true) — but evolution here is shown
+to be the mechanism that FINDS such a reward (not demonstrated; the opposite
+was shown). Reward design matters enormously; the design came from the
+experimenter, not from evolution.
+
+So there is no single abstract "optimal reward" for evolution to converge on
+in this ecology — but not because reward-shaping is arbitrary. It's because
+"best" depends on what else is in the population, resolves only once you run
+the actual competition, AND (per the precision above) isn't something this
+trial's evolutionary process actually finds on its own even when a good answer
+demonstrably exists. That's a more informative, more biologically realistic
+conclusion than either of the two wrong turns taken en route to it in this
+module's history below: not "it's all just random noise" (a measurement
+problem, corrected), and not "the reward never reaches behavior at all" (also
+wrong, corrected once tested properly at adequate statistical power). See
+"Status" below for the full, evidence-by-evidence path to this conclusion,
+including the overclaims caught and fixed along the way.
 
 ## Why this module exists
 
@@ -666,6 +682,29 @@ regardless of how well-aligned the sparse alternative is with fitness. Neither
 "sparse beats dense" nor "dense beats sparse" is the general truth -- which
 one wins is a property of the algorithm x reward-density pair, not either
 factor alone.
+
+**One more precision, worth stating plainly: BOTH "dense/shaped" cells in this
+table are HAND-DESIGNED, not evolved.** `project_reward_shaping`'s dense
+reward (`energy_after - energy_before`, tested against sparse under PPO) was
+a single a priori formula an experimenter wrote, never tuned or searched
+(n=1 per variant, per that module's own README). `avoider` was, the same way,
+hand-picked by the experimenter as a deliberately extreme "obviously good"
+predator-avoidance vector for this comparison -- not a genome this module's
+own evolutionary process discovered (see the Key message above and the Hunt
+test's drift finding: real evolution here does not reliably converge on
+anything like `avoider`). So this table is a genuine, fair 2x2 on the
+algorithm x reward-density axes -- but the two sides aren't symmetric in one
+respect worth being explicit about: PPO has no mechanism to search over
+reward functions at all -- a human necessarily supplies its reward, dense or
+sparse, by construction, so "would PPO find a good reward on its own" isn't
+even a meaningful question to ask about it. This module is different: it HAS
+a built-in reward-discovery mechanism (mutation and selection over
+`eval_weights`), and that mechanism was tested directly and found not to
+discover a reward like `avoider` on its own. So "dense/shaped wins" in this
+table demonstrates that a good dense reward has real power here once
+supplied -- for the PPO side, that's the whole, unremarkable story; for this
+module's side, it leaves open (and this trial separately answers, in the
+negative) whether the system's own evolutionary process is what supplies it.
 
 ```bash
 # Stage 0: smoke test, mechanics only

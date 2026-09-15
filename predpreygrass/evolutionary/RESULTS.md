@@ -560,16 +560,26 @@ genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ## Trial 12 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
 
-**Key message: caution beats recklessness, decisively, once they actually have to compete.** A
-reward that makes prey reckless around predators can look fine, even thrive, when it never has to
-share space with more cautious prey — tested alone, it produced more total offspring and far
-deeper lineages than a predator-avoiding strategy, by benefiting from the extra food its own
-predation losses freed up. But put the two side by side, competing for the same food and space,
-and caution wins outright in 9 of 10 evolutionary runs, excluding the reckless strategy within
-~27 generations and never giving ground back. So there is no single abstract "optimal reward"
-for evolution to find here — not because reward-shaping is arbitrary, but because a strategy's
-value isn't fixed in isolation; it only resolves once the actual competition is run. Full
-evidence-by-evidence path below, including two real overclaims made and corrected along the way.
+**Key message: caution beats recklessness, decisively, once they actually have to compete — and
+beats the project's own literal fitness signal too.** A reward that makes prey reckless around
+predators can look fine, even thrive, when it never has to share space with more cautious prey —
+tested alone, it produced more total offspring and far deeper lineages than a predator-avoiding
+strategy, by benefiting from the extra food its own predation losses freed up. But put the two
+side by side, competing for the same food and space, and caution wins outright in 9 of 10
+evolutionary runs. The same cautious strategy (`avoider`) even beats flagship's own original
+"+10 on reproduction, nothing else" reward — the fitness criterion itself — 27 of 30 times
+(p=0.000008), because a sparse signal gives this module's weak, one-step learning rule almost
+nothing to work with between rare reproduction events.
+
+**One precision worth stating plainly, not a footnote: `avoider` was hand-designed by a human,
+not evolved.** This module's own mutation-and-selection process does NOT reliably discover
+anything like it (see the Hunt-test drift finding below) — so this shows a good dense reward has
+real power once supplied, not that evolution here is the mechanism that supplies it. There is no
+single abstract "optimal reward" for evolution to converge on in this ecology — not because
+reward-shaping is arbitrary, but because a strategy's value isn't fixed in isolation (it only
+resolves once the actual competition is run), and because this trial's own evolutionary search
+doesn't reliably find a good answer even when one demonstrably exists. Full evidence-by-evidence
+path below, including the overclaims made and corrected along the way.
 
 **Status: resolved — sharper than Trial 11's original finding, not just a replication.** Ports Trial 11's genome/REINFORCE architecture onto the project's
 flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
@@ -737,6 +747,14 @@ potential confound in comparing two single-algorithm studies): sparse wins under
 (project's reward-density initiative), dense/shaped wins under this module's one-step rule
 (`avoider` beats both `anti_adaptive` and sparse reproduction). Reward density's effect isn't
 context-free — it's a property of the algorithm × reward-density pair, not either factor alone.
+Worth being explicit: BOTH "dense/shaped" cells are hand-designed, not evolved — the reward-density
+initiative's dense reward was a single a priori formula an experimenter wrote (n=1, never tuned),
+and `avoider` was hand-picked the same way, not discovered by this module's own evolutionary
+process. PPO has no mechanism to search over reward functions at all, so that's simply how PPO
+always works; this module DOES have such a mechanism (mutation/selection over `eval_weights`),
+and it was tested directly and found not to discover a reward like `avoider` on its own. The table
+shows a good dense reward has real power once supplied — not that either system's own
+optimization finds one unaided.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
