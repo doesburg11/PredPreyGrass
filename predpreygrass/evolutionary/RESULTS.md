@@ -771,15 +771,21 @@ updates landing on the same shared weights every step was unstable regardless of
 — each confirmed by direct debugging, not guessed. Calibrated to 0.02-0.05x the base learning
 rate (5/5 seeds healthy, matching the default architecture's own ~70-90 population plateau).
 
-**Result: a genuinely mixed picture, not a clean confirmation.** At n=10 seeds, 20,000 steps: 2
-seeds never showed bimodality, 7 stayed within the default architecture's own small-gap ceiling
-(~0.02-0.28), and 2 reached separations (~0.85-1.1) that never once appeared anywhere in the
-default architecture's own emergence test — real, not noise (0% null-calibrated false-positive
-rate throughout) — with one holding stable across its whole trajectory and one later collapsing
-back to baseline. Training-volume-per-individual was a real, partial bottleneck — fixing it
-clearly expands what's reachable — but it isn't the whole story: even with a properly stabilized,
-pooled, genome-conditioned learner, evolution reaches nowhere near `avoider`'s full separation
-reliably. What else limits it remains open.
+**Result: a genuinely mixed picture, not a clean confirmation — and it needed n=30, not n=10, to
+characterize properly.** A first n=10 pass found 2 seeds reaching separations (~0.85-1.1) never
+seen anywhere in the default architecture's own test — looked like a ~20% rate. Rescaled to n=30
+(this investigation's now-repeated lesson: don't trust a rate from a small sample): classifying
+every seed's full trajectory, 2/30 never showed bimodality, 22/30 stayed within the default
+architecture's own small-gap ceiling, 3/30 showed a brief single-checkpoint spike that collapsed
+immediately (likely noise), and **3/30 (10.0%, Wilson 95% CI 3.5-25.6%) showed SUSTAINED large
+separation** (>=0.5 held across >=2 consecutive checkpoints) — confirmed real and reproducible
+(bit-for-bit identical trajectories for the original 2 seeds), just rarer than the small sample
+suggested. None of the 30 reach anywhere near `avoider`'s full separation (magnitude 4.0). That a
+small minority of populations reach real divergence while 73% stay flat, using the identical
+architecture and calibration, points toward the remaining constraint being closer to founder-
+effect/early-stochastic-luck than a systematic pathway the pooling fix reliably opens.
+Training-volume-per-individual was a real bottleneck — fixing it reproducibly unlocks new
+territory — but it's a rare, not a reliable, unlock.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.

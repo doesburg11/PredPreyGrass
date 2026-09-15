@@ -770,42 +770,51 @@ reliable collapse here -- expected, since pooling means the EFFECTIVE
 learning rate scales with how many individuals update the shared weights
 each step, not just the nominal multiplier.
 
-**Emergence test at the calibrated setting (n=10 seeds, 20,000 steps,
-identical methodology to `polymorphism_check.py` for direct comparability):
-a genuinely mixed result, not a clean confirmation.** Per-seed
-`predator_proximity` mode-gap trajectories:
+**Emergence test at the calibrated setting, n=10 first (20,000 steps,
+identical methodology to `polymorphism_check.py` for direct
+comparability): a genuinely mixed result, not a clean confirmation.** 2 of
+10 seeds reached separations (~0.85-1.1) never once seen in the default
+architecture's own 10-seed test (confirmed real, not noise -- the same
+null-calibrated false-positive check stayed at 0% throughout). That
+looked like a ~20% rate -- but per this whole investigation's repeated
+lesson about not trusting small-sample rates, it needed n=30 before being
+believed.
 
-| pattern | seeds | detail |
+**Rescaled to n=30 (properly powered from the start of the check, not
+just the architecture): the true rate is lower, and more precisely
+characterized.** Classifying each seed's full trajectory (not just its
+single largest value) into three patterns:
+
+| pattern | seeds (of 30) | detail |
 |---|---|---|
 | never bimodal | 2 | seeds 2, 9 |
-| small, oscillating (~0.02-0.28) -- matches the default architecture's own ceiling | 7 | seeds 1, 3, 4, 6, 8, 10 |
-| **large, sustained separation (~0.83-0.98)** | 1 | seed 5 -- stable across its whole trajectory, gen 31 to 218 |
-| **large separation that later collapses** | 1 | seed 7 -- holds ~0.84-1.09 through gen 167, drops to ~0.08-0.10 by gen 230 |
+| small, oscillating (<0.5) -- matches the default architecture's own ceiling | 22 | the large majority |
+| brief single-checkpoint spike to >=0.5, collapses immediately | 3 | seeds 15, 18, 28 -- likely noise/transient, not real structure |
+| **sustained large separation (>=0.5 held across >=2 consecutive checkpoints)** | **3** | **seeds 5, 7, 20 -- 10.0% (Wilson 95% CI: 3.5%-25.6%)** |
 
-Pooling does unlock genuinely new territory -- 2 of 10 seeds reach
-separations (~0.85-1.1) that never once appeared in the default
-architecture's own 10-seed emergence test (which topped out around
-0.2-0.5), and these are confirmed real, not noise (the same null-calibrated
-false-positive check stayed at 0% throughout). But it's neither reliable
-(8/10 seeds are indistinguishable from the old architecture's small-gap
-ceiling) nor does it reach anywhere near `avoider`'s full separation
-(magnitude 4.0 -- even the largest gaps seen are only ~25% of the way
-there), and in one case (seed 7) it visibly erodes back down rather than
-holding or growing further.
+The true *sustained* rate is closer to 1-in-10, not the 1-in-5 the
+smaller sample suggested -- real (it replicates at n=30, including seed 5
+and 7 from the original 10, confirmed bit-for-bit reproducible), but
+genuinely rare. None of the 30 seeds reach anywhere near `avoider`'s full
+separation (magnitude 4.0 -- even the largest gaps seen are only ~25-28%
+of the way there), and even among the 3 "sustained" seeds, one (seed 7)
+later erodes back toward baseline rather than holding or growing further.
 
-**Honest conclusion: training-volume-per-individual was a real, partial
-bottleneck -- fixing it clearly expands what's reachable -- but it wasn't
-the whole story.** Something else still limits how far, and how reliably,
-evolution gets pulled toward the fitness-consequential extremes, even with
-a properly stabilized, pooled, genome-conditioned learner. Whether that
-remaining limit is generational depth (210 mean generations here vs. the
-~260 the default architecture reached -- comparable, not obviously short),
-the fitness landscape's own shape, or something else in the pooled
-architecture's own dynamics, is not yet resolved. A properly-powered
-(n=30) confirmation of the 2/10 large-separation rate, and a longer step
-budget to see whether seed 5's stable split keeps holding or seed 7's
-collapse pattern is the more typical eventual fate, are the natural next
-checks if this thread continues.
+**Honest conclusion: training-volume-per-individual was a real bottleneck
+-- fixing it clearly, reproducibly unlocks territory the default
+architecture never reached in any of its 10 tested seeds -- but it's a
+RARE, not a reliable, unlock (~1-in-10 populations), and even where it
+happens it falls well short of `avoider`'s magnitude.** That a small
+minority of populations reach real divergence while the large majority
+(73%) stay flat, using the identical architecture and calibration, points
+toward the dominant remaining constraint being closer to founder-effect/
+early-stochastic-luck (whether a population happens to wander the right
+direction before its dynamics settle into the small-oscillation regime)
+rather than a systematic pathway the pooling fix reliably opens. Whether
+even MORE generational depth would let more seeds eventually find that
+lucky early walk, or whether 73% of populations are structurally locked
+out of it regardless of depth, is not yet resolved -- the natural next
+check if this thread continues.
 
 ```bash
 # Stage 0: smoke test, mechanics only
