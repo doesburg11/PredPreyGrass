@@ -706,6 +706,107 @@ supplied -- for the PPO side, that's the whole, unremarkable story; for this
 module's side, it leaves open (and this trial separately answers, in the
 negative) whether the system's own evolutionary process is what supplies it.
 
+**Follow-up, prompted directly by the user: could a genuinely stronger inner-
+lifetime learner -- rather than just a higher learning rate -- let evolution
+discover something like `avoider` on its own?** `polymorphism_check.py`
+already showed the default per-individual architecture doesn't, even at 20x
+LR. Rather than swap in full PPO (bigger scope, uncertain payoff -- see
+below), built a smaller, targeted fix directly informed by the existing
+Wang2019 replication (`/home/doesburg/Projects/Wang2019`): its own null
+result was root-caused to each genotype getting only ~20 RL training
+episodes before being scored, far too few to separate real quality from
+noise. Individual prey lifetimes here (~100-500 steps) are similarly short
+for any learner. `centralized_prey.py` gives all living prey ONE shared,
+POOLED action network (mirroring `centralized_predator.py`'s already-proven
+pattern) instead of each learning alone within its own short life, while
+still letting each individual's OWN `eval_weights` genome shape its
+behavior via the network's input.
+
+**Getting this to work took three real, sequentially-diagnosed fixes, not
+one:**
+
+1. Naive concatenation of features and genome onto the input FAILED --
+   `action_probs`/`reinforce_update` are purely linear, so concatenation can
+   only shift a constant genome-dependent offset on the logits, not change
+   HOW the network responds to a given feature depending on genome (no
+   interaction terms in a linear map). Fixed by appending the flattened
+   OUTER PRODUCT of features and genome (a bilinear interaction term, not a
+   nonlinear/hidden-layer network) -- confirmed by direct debugging: the
+   naive version caused ecological collapse (predators died out normally,
+   then prey declined toward near-extinction from apparent foraging
+   failure, unlike the default architecture's healthy ~70-90 plateau at
+   the identical config).
+2. Even with genuine gating capacity, populations stayed small/fragile.
+   Root cause, measured directly: 80 input dimensions (vs. the default's 8)
+   at the same weight-init scale gives ~20x higher initial logit variance
+   -- a far more peaked, less-exploratory starting policy than the
+   deliberately near-uniform-random starting point every earlier result
+   relies on. Fixed with an empirically-calibrated `init_std`/
+   `interaction_scale` (measured real feature/genome/interaction value
+   distributions from a live run, solved for the weight scale that
+   reproduces the default architecture's initial logit variance).
+3. Still fragile. Root cause: every living prey (potentially dozens)
+   applied a full-strength, sequential single-example gradient update to
+   the SAME shared weights every step -- each one seeing the weights
+   already changed by the previous agent's update, a much less stable
+   regime than either the default architecture (one private update per
+   individual) or genuine batched SGD. Fixed with `accumulate()`/
+   `apply_batch()`: every living prey's experience this step is buffered,
+   then ONE averaged update is applied, every example's gradient computed
+   against the same pre-batch weights. A Codex review of this caught one
+   more real bug (the batch denominator silently excluded zero-
+   reinforcement examples, which would matter for sparse-reward prey even
+   though it's confirmed inert for this architecture's continuous
+   `e_now - prev_eval` signal -- 0/32,901 real calls hit exactly zero) and
+   one lifecycle gap (a mid-batch driver reset not clearing pending
+   updates) -- both fixed.
+
+**Calibration confirmed by direct sweep** (3 learning-rate multipliers x 5
+seeds x 10,000 steps): 0.02-0.05x the base rate gives robust, healthy
+populations in 5/5 seeds (67-82 prey, matching the default architecture's
+own ~70-90 plateau); 0.1x already shows real fragility (1/5 extinct); the
+20x that was optimal for the default (per-individual) architecture causes
+reliable collapse here -- expected, since pooling means the EFFECTIVE
+learning rate scales with how many individuals update the shared weights
+each step, not just the nominal multiplier.
+
+**Emergence test at the calibrated setting (n=10 seeds, 20,000 steps,
+identical methodology to `polymorphism_check.py` for direct comparability):
+a genuinely mixed result, not a clean confirmation.** Per-seed
+`predator_proximity` mode-gap trajectories:
+
+| pattern | seeds | detail |
+|---|---|---|
+| never bimodal | 2 | seeds 2, 9 |
+| small, oscillating (~0.02-0.28) -- matches the default architecture's own ceiling | 7 | seeds 1, 3, 4, 6, 8, 10 |
+| **large, sustained separation (~0.83-0.98)** | 1 | seed 5 -- stable across its whole trajectory, gen 31 to 218 |
+| **large separation that later collapses** | 1 | seed 7 -- holds ~0.84-1.09 through gen 167, drops to ~0.08-0.10 by gen 230 |
+
+Pooling does unlock genuinely new territory -- 2 of 10 seeds reach
+separations (~0.85-1.1) that never once appeared in the default
+architecture's own 10-seed emergence test (which topped out around
+0.2-0.5), and these are confirmed real, not noise (the same null-calibrated
+false-positive check stayed at 0% throughout). But it's neither reliable
+(8/10 seeds are indistinguishable from the old architecture's small-gap
+ceiling) nor does it reach anywhere near `avoider`'s full separation
+(magnitude 4.0 -- even the largest gaps seen are only ~25% of the way
+there), and in one case (seed 7) it visibly erodes back down rather than
+holding or growing further.
+
+**Honest conclusion: training-volume-per-individual was a real, partial
+bottleneck -- fixing it clearly expands what's reachable -- but it wasn't
+the whole story.** Something else still limits how far, and how reliably,
+evolution gets pulled toward the fitness-consequential extremes, even with
+a properly stabilized, pooled, genome-conditioned learner. Whether that
+remaining limit is generational depth (210 mean generations here vs. the
+~260 the default architecture reached -- comparable, not obviously short),
+the fitness landscape's own shape, or something else in the pooled
+architecture's own dynamics, is not yet resolved. A properly-powered
+(n=30) confirmation of the 2/10 large-separation rate, and a longer step
+budget to see whether seed 5's stable split keeps holding or seed 7's
+collapse pattern is the more typical eventual fate, are the natural next
+checks if this thread continues.
+
 ```bash
 # Stage 0: smoke test, mechanics only
 python -m predpreygrass.evolutionary.eco_evolutionary_erl_flagship.run_trial13_simulation \

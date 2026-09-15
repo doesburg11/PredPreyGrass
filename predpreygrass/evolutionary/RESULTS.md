@@ -756,6 +756,31 @@ and it was tested directly and found not to discover a reward like `avoider` on 
 shows a good dense reward has real power once supplied — not that either system's own
 optimization finds one unaided.
 
+**Follow-up: could a genuinely stronger inner-lifetime learner let evolution discover something
+like `avoider` on its own?** Individual prey lifetimes (~100-500 steps) are too short for any
+learner to build a low-noise fitness signal per genotype — the same bottleneck the existing
+Wang2019 replication (`/home/doesburg/Projects/Wang2019`) diagnosed for its own null result
+(~20 RL episodes per genotype, far too few). Built `centralized_prey.py`: one shared, pooled
+action network for all living prey (mirroring the predator's already-proven design), still
+letting each individual's own `eval_weights` shape its behavior via the network's input. Getting
+this stable took three sequential fixes (a bilinear feature-genome interaction term, since plain
+concatenation can only shift a constant offset with a linear model; empirically-calibrated
+weight-init scale, since 80 input dims at the default scale gave ~20x too much initial logit
+variance; and batched, not sequential, updates, since dozens of individuals' full-strength
+updates landing on the same shared weights every step was unstable regardless of learning rate)
+— each confirmed by direct debugging, not guessed. Calibrated to 0.02-0.05x the base learning
+rate (5/5 seeds healthy, matching the default architecture's own ~70-90 population plateau).
+
+**Result: a genuinely mixed picture, not a clean confirmation.** At n=10 seeds, 20,000 steps: 2
+seeds never showed bimodality, 7 stayed within the default architecture's own small-gap ceiling
+(~0.02-0.28), and 2 reached separations (~0.85-1.1) that never once appeared anywhere in the
+default architecture's own emergence test — real, not noise (0% null-calibrated false-positive
+rate throughout) — with one holding stable across its whole trajectory and one later collapsing
+back to baseline. Training-volume-per-individual was a real, partial bottleneck — fixing it
+clearly expands what's reachable — but it isn't the whole story: even with a properly stabilized,
+pooled, genome-conditioned learner, evolution reaches nowhere near `avoider`'s full separation
+reliably. What else limits it remains open.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

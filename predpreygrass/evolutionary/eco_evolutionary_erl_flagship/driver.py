@@ -78,9 +78,18 @@ class Trial13Driver:
     run_trial13_simulation.py). No death hook for predators -- they aren't
     individually lineage-tracked, since their policy is shared, not evolved."""
 
-    def __init__(self, env: PredPreyGrass, predator_policy: CentralizedPredatorPolicy, cfg: dict, rng: np.random.Generator):
+    def __init__(
+        self, env: PredPreyGrass, predator_policy: CentralizedPredatorPolicy, cfg: dict, rng: np.random.Generator,
+        prey_policy=None,
+    ):
         self.env = env
         self.predator_policy = predator_policy
+        # Optional CentralizedPreyPolicy (centralized_prey.py): when set, ALL living prey
+        # share one pooled, genome-conditioned action network instead of each learning its
+        # own action_weights/action_bias alone within its own (short) lifetime -- see
+        # centralized_prey_emergence_check.py for why. None (default) preserves the
+        # original per-individual-learner architecture every earlier Trial 13 result used.
+        self.prey_policy = prey_policy
         self.cfg = cfg
         self.rng = rng
         self.current_step = 0
@@ -105,6 +114,11 @@ class Trial13Driver:
         self.predator_registry = {}
         self._predators_reproduced_last_step = set()
         self._prey_reproduced_last_step = set()
+        if self.prey_policy is not None:
+            # A Codex review caught that a mid-batch reset (accumulate() called but
+            # apply_batch() not yet reached, e.g. after an exception) would otherwise
+            # leak stale transitions from the old run into the new one's first update.
+            self.prey_policy.clear_pending()
         for agent_id in list(self.env.agents):
             if "prey" in agent_id:
                 self.registry[agent_id] = self._new_founder(agent_id)
@@ -163,6 +177,16 @@ class Trial13Driver:
             elif "predator" in agent_id:
                 action_dict[agent_id] = self._select_predator_action(agent_id)
 
+        if self.prey_policy is not None:
+            # Every living prey's experience this step was buffered by _select_prey_action
+            # (accumulate(), not update()) -- apply it now as ONE averaged step, every
+            # example's gradient computed against the same pre-batch weights. See
+            # centralized_prey.py's module docstring, point 3, for why this matters:
+            # applying each of potentially dozens of individuals' updates immediately and
+            # sequentially (each seeing the previous one's effect) was unstable in a way no
+            # amount of learning-rate/scale tuning alone fixed.
+            self.prey_policy.apply_batch()
+
         observations, rewards, terminations, truncations, infos = self.env.step(action_dict)
         self.current_step = self.env.current_step
 
@@ -187,6 +211,24 @@ class Trial13Driver:
     def _select_prey_action(self, agent_id: str) -> int:
         state = self.registry[agent_id]
         feat = extract_prey_features(self.env, agent_id)
+
+        if self.prey_policy is not None:
+            # Pooled, genome-conditioned shared policy (centralized_prey.py) -- see
+            # centralized_prey_emergence_check.py. Only the ACTION NETWORK is shared
+            # across the whole live population; the REINFORCEMENT signal is still each
+            # individual's own genome-derived intrinsic reward (e_now - prev_eval,
+            # identical to the default per-individual architecture), so evolutionary
+            # reward diversity still has something real to select on.
+            augmented = self.prey_policy.augment(feat, state.genome.eval_weights)
+            e_now = evaluate(feat, state.genome.eval_weights, state.genome.eval_bias)
+            if state.prev_obs is not None:
+                reinforcement = e_now - state.prev_eval
+                self.prey_policy.accumulate(state.prev_obs, state.prev_action, reinforcement)
+            action = self.prey_policy.act(augmented, self.rng)
+            state.prev_obs = augmented
+            state.prev_action = action
+            state.prev_eval = e_now
+            return action
 
         if state.sparse_mode:
             # Bypasses genome.eval_weights entirely -- faithfully represents "+10 on
