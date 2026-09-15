@@ -69,6 +69,20 @@ def parse_args():
              "founder's eval_weights instead of a random init.",
     )
     parser.add_argument(
+        "--mixed-eval-weights-a", type=str, default=None,
+        help="Comma-separated floats (length 8) for founder cluster A. Each founder is randomly "
+             "assigned to cluster A or B (50/50), instead of a shared --fixed-eval-weights or a "
+             "fully random init -- for testing whether an ALREADY-established two-strategy split "
+             "is maintained by selection (mutation stays on), as opposed to "
+             "polymorphism_check.py's neutral-start 'does it emerge' question. Must be given "
+             "together with --mixed-eval-weights-b; mutually exclusive with --fixed-eval-weights. "
+             "See polymorphism_maintenance_check.py.",
+    )
+    parser.add_argument(
+        "--mixed-eval-weights-b", type=str, default=None,
+        help="See --mixed-eval-weights-a.",
+    )
+    parser.add_argument(
         "--mutation-rate", type=float, default=None,
         help="Override config_erl_flagship's mutation_rate (default 0.05). Set to 0.0 together "
              "with --fixed-eval-weights for a positive-control run: every descendant keeps the "
@@ -118,10 +132,16 @@ def main():
         raise ValueError(f"--mutation-rate must be within [0.0, 1.0], got {args.mutation_rate}.")
     if args.lr_multiplier is not None and not (math.isfinite(args.lr_multiplier) and args.lr_multiplier >= 0):
         raise ValueError(f"--lr-multiplier must be finite and >= 0, got {args.lr_multiplier}.")
+    if (args.mixed_eval_weights_a is None) != (args.mixed_eval_weights_b is None):
+        raise ValueError("--mixed-eval-weights-a and --mixed-eval-weights-b must be given together.")
+    if args.mixed_eval_weights_a is not None and args.fixed_eval_weights is not None:
+        raise ValueError("--mixed-eval-weights-a/-b and --fixed-eval-weights are mutually exclusive.")
 
     if resume_path is not None:
         if args.fixed_eval_weights is not None:
             raise ValueError("--fixed-eval-weights has no effect with --resume-from (no new founders are spawned).")
+        if args.mixed_eval_weights_a is not None:
+            raise ValueError("--mixed-eval-weights-a/-b have no effect with --resume-from (no new founders are spawned).")
         if args.mutation_rate is not None:
             raise ValueError(
                 "--mutation-rate has no effect with --resume-from -- cfg (including mutation_rate) "
@@ -159,6 +179,12 @@ def main():
             if len(weights) != OBS_DIM:
                 raise ValueError(f"--fixed-eval-weights must have exactly {OBS_DIM} values, got {len(weights)}.")
             cfg["fixed_eval_weights"] = weights
+        if args.mixed_eval_weights_a is not None:
+            vec_a = [float(x) for x in args.mixed_eval_weights_a.split(",")]
+            vec_b = [float(x) for x in args.mixed_eval_weights_b.split(",")]
+            if len(vec_a) != OBS_DIM or len(vec_b) != OBS_DIM:
+                raise ValueError(f"--mixed-eval-weights-a/-b must each have exactly {OBS_DIM} values.")
+            cfg["mixed_founder_weights"] = (vec_a, vec_b)
         if args.mutation_rate is not None:
             cfg["mutation_rate"] = args.mutation_rate
         if args.lr_multiplier is not None:

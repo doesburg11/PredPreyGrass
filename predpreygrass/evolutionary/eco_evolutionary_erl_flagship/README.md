@@ -552,7 +552,41 @@ fitness, not on how each strategy performs in isolation -- a different
 question from what the segregated fixed-genome comparison tested, and one
 this real-population check answers directly: at this generational depth, no.
 
-## Usage
+**Tested that different question directly: if the split is ALREADY
+established (not asked to spontaneously emerge), is it then maintained?**
+`polymorphism_maintenance_check.py` seeds founders 50/50 directly from
+`avoider` and `anti_adaptive` (`driver.py`'s new `mixed_founder_weights`
+cfg option, each founder randomly assigned to one cluster; mutation stays
+on, same 20x LR, n=10 seeds, 20,000 steps). **Answer: no -- and decisively,
+not a borderline result.** At every one of 10 checkpoints per seed, every
+live agent in 9/10 seeds was classified to `avoider`'s side and every live
+agent in the remaining 1/10 was classified to `anti_adaptive`'s side --
+zero intermediate values observed anywhere, in 100 checkpoint-seed
+combinations. The split resolves to complete exclusion by the FIRST
+checkpoint (~27 generations) and never reverses afterward. Verified this
+isn't a founder-count artifact: founder composition varied naturally around
+50/50 (binomial noise, e.g. seed 5 started 7/24 `avoider` vs. 17/24
+`anti_adaptive` -- a clear minority), yet `avoider` still won completely in
+8 of 9 seeds where it wasn't the founder majority, including that 7-vs-17
+minority start. Only the single most extreme minority start (5/24) went the
+other way. **`avoider` has a real, substantial competitive edge once both
+strategies share the same food/space** -- strong enough to overcome a
+sizeable founder disadvantage in most cases -- consistent with the
+mechanism proposed above: `anti_adaptive`'s density-release advantage in
+the segregated comparison depended on monopolizing an entire population's
+predation losses, a benefit a competing `avoider` population, which itself
+suffers far less predation, ends up capturing instead.
+
+**Closing picture for this whole line of investigation:** the reward
+genome is real, and moves both behavior and fitness once learning is strong
+enough -- but that doesn't make an ecological trade-off automatically into
+a stable population-level polymorphism. `avoider` and `anti_adaptive` are
+not two co-viable strategies waiting to be discovered together; once they
+actually compete, one wins, consistently, for an identifiable ecological
+reason. The earlier "what does an optimal reward function even mean" framing
+undersold this: there IS a real answer here, for THIS pair of strategies in
+THIS ecology -- it's just not visible from segregated single-genotype
+comparisons alone, and required actually running the competition to find.
 
 ```bash
 # Stage 0: smoke test, mechanics only

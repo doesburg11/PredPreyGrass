@@ -102,7 +102,18 @@ class Trial13Driver:
                 self.predator_registry[agent_id] = PredatorTrainingState(agent_id=agent_id)
 
     def _new_founder(self, agent_id: str) -> PreyGenomeState:
-        fixed_eval_weights = self.cfg.get("fixed_eval_weights")
+        # mixed_founder_weights (a pair of eval_weights vectors), if set, randomly assigns
+        # each founder to ONE of the two clusters (50/50) instead of a single shared
+        # fixed_eval_weights or a fully random init -- for testing whether an
+        # ALREADY-established two-strategy split is maintained by selection (as opposed to
+        # fixed_eval_weights/polymorphism_check.py's neutral-start "does it emerge" question).
+        # See polymorphism_maintenance_check.py.
+        mixed = self.cfg.get("mixed_founder_weights")
+        if mixed is not None:
+            vec_a, vec_b = mixed
+            fixed_eval_weights = vec_a if self.rng.random() < 0.5 else vec_b
+        else:
+            fixed_eval_weights = self.cfg.get("fixed_eval_weights")
         genome = founder_genome(
             OBS_DIM, N_ACTIONS, self.rng, self.cfg["founder_weight_std"], fixed_eval_weights
         )

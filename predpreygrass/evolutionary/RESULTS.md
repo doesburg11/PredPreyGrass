@@ -695,6 +695,21 @@ benefit. Whether a polymorphism is evolutionarily stable depends on rare-strateg
 fitness, not performance in isolation — a different question, and this check answers it directly
 at this depth: no, not yet.
 
+**Tested that different question directly: seed the split already-established (50/50 founders
+from `avoider`/`anti_adaptive` directly), does it then stay?** No — decisively. Across n=10 seeds,
+20,000 steps, every live agent in 9/10 seeds classified to `avoider`'s side and every live agent
+in the remaining seed to `anti_adaptive`'s, at every one of 10 checkpoints — zero intermediate
+values in 100 checkpoint-seed combinations. Resolves to complete exclusion by the first checkpoint
+(~27 generations) and never reverses. Verified not a founder-count artifact: `avoider` won even
+when it started as a clear founder minority (e.g. 7/24 vs. 17/24 in one seed). `avoider` has a
+real, substantial competitive edge once both strategies share the same resources — the
+`anti_adaptive` density-release advantage found in the segregated comparison depended on
+monopolizing an entire population's own predation losses, a benefit a competing, less-predated
+`avoider` population ends up capturing instead. Closing picture: the reward genome is real and
+moves fitness, but that doesn't make a trade-off into a stable polymorphism — `avoider` and
+`anti_adaptive` aren't two co-viable strategies, one wins once they actually compete, for an
+identifiable ecological reason invisible from segregated comparisons alone.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 
