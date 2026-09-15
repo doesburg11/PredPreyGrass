@@ -787,6 +787,18 @@ effect/early-stochastic-luck than a systematic pathway the pooling fix reliably 
 Training-volume-per-individual was a real bottleneck — fixing it reproducibly unlocks new
 territory — but it's a rare, not a reliable, unlock.
 
+**Scope caveat, raised directly by the user: this is NOT a clean test of "more individual
+training volume helps," and shouldn't be read as one.** Every other result in this trial family
+depends on each new individual's action network starting from a fresh, never-learned copy of its
+genome's stored weights every generation — Darwinian, not Lamarckian, deliberately. The pooled
+policy breaks that: the shared network is never reset, so competence accumulates across the
+entire run's history, not within one individual's lifetime — a cross-generational transfer
+channel that isn't genetic at all, closer to population-level cultural/social learning than to
+"each generation learns alone." Individual genome-driven behavioral diversity survives this
+(confirmed directly), but the "~10% of seeds reach new territory" finding is honestly a test of
+whether a partly-cultural learning mechanism helps, not whether more individual training volume
+does — a different, less clean claim than the rest of this module's framing.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 

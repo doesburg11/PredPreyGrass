@@ -816,6 +816,30 @@ lucky early walk, or whether 73% of populations are structurally locked
 out of it regardless of depth, is not yet resolved -- the natural next
 check if this thread continues.
 
+**Scope caveat, raised directly by the user and worth stating plainly: this
+result is NOT a clean test of "does more individual training volume help,"
+and shouldn't be read as one.** Every other result in this trial family
+(and the reason `run_trial13_simulation.py`'s docstrings keep repeating
+"Darwinian, not Lamarckian") depends on a specific design: each new
+individual's action network starts from a completely fresh copy of its
+GENOME's stored, never-learned initial weights every generation -- nothing
+about a parent's own within-lifetime learning ever reaches a child except
+through mutation of the genome itself. `CentralizedPreyPolicy` breaks that:
+the shared action network is never reset -- it keeps improving across the
+ENTIRE run's history, generation after generation, not just within one
+individual's lifetime. That's a real form of cross-generational competence
+transfer that isn't genetic at all -- closer to a population-level
+cultural/experiential channel (more individuals learning from a shared
+pool of accumulated experience, the way real social learning works) than
+to "each generation learns alone, only the genome carries forward."
+Individual genome-driven behavioral diversity survives this change
+(confirmed directly -- see the interaction-term fix above), but the
+"~10% of seeds reach new territory" finding is honestly a test of "does
+moving to a partly-cultural learning mechanism help," not "does more
+individual training volume help" as such -- a different, less clean claim
+than the rest of this module's Darwinian/Baldwinian framing, and worth
+reading as its own thing rather than folding into the same story.
+
 ```bash
 # Stage 0: smoke test, mechanics only
 python -m predpreygrass.evolutionary.eco_evolutionary_erl_flagship.run_trial13_simulation \
