@@ -1,5 +1,30 @@
 # ERL Flagship (Trial 13) — the proximate-vs-ultimate reward question, in the richer ecology
 
+## Key message
+
+**Caution beats recklessness, decisively, once they actually have to compete.**
+A reward that makes prey reckless around predators (`anti_adaptive`) can look
+fine, even thrive, when it never has to share space with more cautious prey —
+tested alone, it produced *more* total offspring and far deeper lineages than
+a predator-avoiding strategy (`avoider`), by benefiting from the extra food its
+own predation losses freed up. But put the two side by side, competing for the
+same food and space, and caution wins outright: in 9 of 10 evolutionary runs,
+the cautious strategy completely excludes the reckless one within ~27
+generations and never gives ground back — even when it starts as the founder
+minority.
+
+So there is no single abstract "optimal reward" to be found by evolution in
+this ecology — but not because reward-shaping is arbitrary or evolution can't
+find good answers. It's because "best" depends on what else is in the
+population. A strategy's value isn't fixed in isolation; it only resolves once
+you run the actual competition. That's a more informative, more biologically
+realistic conclusion than either of the two wrong turns taken en route to it
+in this module's history below: not "it's all just random noise" (a
+measurement problem, corrected), and not "the reward never reaches behavior at
+all" (also wrong, corrected once tested properly at adequate statistical
+power). See "Status" below for the full, evidence-by-evidence path to this
+conclusion, including the two overclaims caught and fixed along the way.
+
 ## Why this module exists
 
 Trial 12 (`eco_evolutionary_erl_baldwin`) found, at n=30 confirmed, that evolution's

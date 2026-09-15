@@ -560,6 +560,17 @@ genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ## Trial 12 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
 
+**Key message: caution beats recklessness, decisively, once they actually have to compete.** A
+reward that makes prey reckless around predators can look fine, even thrive, when it never has to
+share space with more cautious prey — tested alone, it produced more total offspring and far
+deeper lineages than a predator-avoiding strategy, by benefiting from the extra food its own
+predation losses freed up. But put the two side by side, competing for the same food and space,
+and caution wins outright in 9 of 10 evolutionary runs, excluding the reckless strategy within
+~27 generations and never giving ground back. So there is no single abstract "optimal reward"
+for evolution to find here — not because reward-shaping is arbitrary, but because a strategy's
+value isn't fixed in isolation; it only resolves once the actual competition is run. Full
+evidence-by-evidence path below, including two real overclaims made and corrected along the way.
+
 **Status: resolved — sharper than Trial 11's original finding, not just a replication.** Ports Trial 11's genome/REINFORCE architecture onto the project's
 flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
 abstract World AL rebuild, to test whether the same proximate-vs-ultimate reward divergence
