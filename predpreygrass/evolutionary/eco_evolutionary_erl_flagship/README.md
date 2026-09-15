@@ -41,6 +41,19 @@ wrong, corrected once tested properly at adequate statistical power). See
 "Status" below for the full, evidence-by-evidence path to this conclusion,
 including the overclaims caught and fixed along the way.
 
+**Why evolution mostly can't find it stays genuinely open.** A much stronger,
+pooled learner unlocks the extreme region in ~10% of populations (n=30-
+confirmed) rather than 0% -- real, but rare, and itself only a test of a
+partly-cultural (not purely Darwinian) learning channel, not a clean fix.
+Population-size scaling -- the cheapest, most theoretically motivated lever
+left (larger populations should weaken genetic drift) -- was tested directly
+and showed no evidence of helping either (0/10 vs. baseline's 3/30, if
+anything numerically worse). The pattern -- a small, consistent minority of
+populations finding real divergence while the large majority don't, under
+every architecture and scale tested -- looks like founder-effect/early-
+stochastic-luck, not a bottleneck this investigation found an accessible
+fix for.
+
 ## Why this module exists
 
 Trial 12 (`eco_evolutionary_erl_baldwin`) found, at n=30 confirmed, that evolution's
@@ -839,6 +852,41 @@ moving to a partly-cultural learning mechanism help," not "does more
 individual training volume help" as such -- a different, less clean claim
 than the rest of this module's Darwinian/Baldwinian framing, and worth
 reading as its own thing rather than folding into the same story.
+
+**Last check: population-size scaling, the cheapest, most theoretically
+motivated remaining lever (classical population genetics: drift strength
+scales roughly as 1/N_e) -- showed no evidence of helping.**
+`population_scale_emergence_check.py` scales grid area, grass, and founder
+counts together by the same factor (so density and every other parameter
+stay identical to the calibrated baseline -- confirmed directly: at 4x
+scale, carrying capacity reaches ~300 prey, vs. ~70-90 at baseline). Using
+the SAME strict criterion as the n=30 baseline (gap >=0.5 held across
+>=2 consecutive checkpoints, not the looser "any detectable bimodality"
+figure the live script also prints -- a Codex review caught that
+conflating the two would make an apples-to-oranges comparison): n=10
+seeds at 4x population scale, ~125 mean generations reached (a genuinely
+shorter budget than the baseline's ~220, since throughput drops sharply,
+confirmed directly, ~7 steps/sec vs. ~40-65 at baseline -- worse than
+linear, likely O(N^2)-ish costs in agent-agent interactions) --
+**0/10 seeds showed sustained large separation**, vs. the baseline's
+3/30 (10.0%). The point estimate went DOWN, not up, though the small n
+here (Wilson 95% CI 0-27.8%) overlaps the baseline's (3.5-25.6%) enough
+that this isn't a statistically confident reversal either. Worth noting:
+the depth shortfall doesn't obviously explain the null away -- the
+baseline's own 3 successful seeds all showed their large separations
+emerging early (generation 29-36), well within the 125 generations
+reached here.
+
+**So: the single most promising remaining lever, tested directly, did not
+pan out.** This doesn't prove population size is irrelevant (n=10 at a
+reduced depth is not a definitive test, and a proper depth- and power-
+matched confirmation would cost substantially more compute than has been
+spent on any single check in this investigation so far, for a hypothesis
+that already looks weak on its own evidence). But it does mean the
+"founder-effect/early-stochastic-luck, not a systematic bottleneck"
+diagnosis doesn't have an easy, cheap fix -- and closes out this
+investigation's search for one. See the Key message at the top of this
+file for the resulting overall picture.
 
 ```bash
 # Stage 0: smoke test, mechanics only

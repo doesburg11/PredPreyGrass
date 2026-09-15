@@ -578,8 +578,16 @@ real power once supplied, not that evolution here is the mechanism that supplies
 single abstract "optimal reward" for evolution to converge on in this ecology — not because
 reward-shaping is arbitrary, but because a strategy's value isn't fixed in isolation (it only
 resolves once the actual competition is run), and because this trial's own evolutionary search
-doesn't reliably find a good answer even when one demonstrably exists. Full evidence-by-evidence
-path below, including the overclaims made and corrected along the way.
+doesn't reliably find a good answer even when one demonstrably exists. Why it mostly can't stays
+open: a much stronger, pooled learner unlocks the extreme region in ~10% of populations rather
+than 0% (real, n=30-confirmed, but rare, and itself only a partly-cultural, not purely Darwinian,
+learning channel — not a clean fix). Population-size scaling — the cheapest, most theoretically
+motivated lever left (larger populations should weaken genetic drift) — was tested directly and
+showed no evidence of helping either (0/10 vs. baseline's 3/30). A small, consistent minority of
+populations finding real divergence while the majority don't, under every architecture and scale
+tested, looks like founder-effect/early-stochastic-luck — not a bottleneck this investigation
+found an accessible fix for. Full evidence-by-evidence path below, including the overclaims made
+and corrected along the way.
 
 **Status: resolved — sharper than Trial 11's original finding, not just a replication.** Ports Trial 11's genome/REINFORCE architecture onto the project's
 flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
@@ -798,6 +806,19 @@ channel that isn't genetic at all, closer to population-level cultural/social le
 (confirmed directly), but the "~10% of seeds reach new territory" finding is honestly a test of
 whether a partly-cultural learning mechanism helps, not whether more individual training volume
 does — a different, less clean claim than the rest of this module's framing.
+
+**Last check: population-size scaling — the cheapest, most theoretically motivated remaining
+lever (drift strength scales roughly as 1/N_e) — showed no evidence of helping.** Scaled grid
+area, grass, and founders together (density unchanged, carrying capacity ~300 vs. baseline's
+~70-90). Using the SAME strict criterion as the n=30 baseline (a Codex review caught that the
+live script's looser "any bimodality" figure isn't comparable): n=10 seeds, ~125 mean
+generations (shorter than the baseline's ~220, since throughput drops sharply at this scale) —
+**0/10 sustained large separations, vs. the baseline's 3/30.** The point estimate went down, not
+up, though n=10 doesn't distinguish this confidently from the baseline rate either. The
+baseline's own successful seeds all emerged early (generation 29-36), well within the depth
+reached here, so a depth shortfall doesn't obviously explain the null away. The single most
+promising remaining lever, tested directly, did not pan out — closing this investigation's
+search for an accessible fix.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
