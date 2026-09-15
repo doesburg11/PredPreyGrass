@@ -60,6 +60,14 @@ class PreyGenomeState:
     prev_action: int | None = None
     prev_eval: float | None = None
     offspring_count: int = 0
+    # A lineage TAG, not a genome trait -- inherited unchanged parent-to-child (never
+    # mutated, unlike genome.eval_weights), see _handle_reproduction. When True,
+    # eval_weights is ignored entirely: reinforcement comes directly from the
+    # environment's own reproduction reward, not the genome's evaluation network.
+    # Faithfully represents "+10 on reproduction, nothing else" -- a signal that can't
+    # be expressed AS a genome, since reproduction isn't one of the 8 observed features
+    # (see sparse_reward_check.py, README.md's status section).
+    sparse_mode: bool = False
 
 
 class Trial13Driver:
@@ -79,6 +87,7 @@ class Trial13Driver:
         self.registry: dict[str, PreyGenomeState] = {}
         self.predator_registry: dict[str, PredatorTrainingState] = {}
         self._predators_reproduced_last_step: set[str] = set()
+        self._prey_reproduced_last_step: set[str] = set()
         self.on_agent_death = None
 
     def reset(self):
@@ -95,6 +104,7 @@ class Trial13Driver:
         self.registry = {}
         self.predator_registry = {}
         self._predators_reproduced_last_step = set()
+        self._prey_reproduced_last_step = set()
         for agent_id in list(self.env.agents):
             if "prey" in agent_id:
                 self.registry[agent_id] = self._new_founder(agent_id)
@@ -109,11 +119,20 @@ class Trial13Driver:
         # fixed_eval_weights/polymorphism_check.py's neutral-start "does it emerge" question).
         # See polymorphism_maintenance_check.py.
         mixed = self.cfg.get("mixed_founder_weights")
+        # sparse_reproduction_cluster ("a"/"b"), if set together with mixed_founder_weights,
+        # marks whichever cluster it names as sparse_mode=True -- see PreyGenomeState.sparse_mode
+        # and sparse_reward_check.py. sparse_reproduction_prey (a plain bool) does the same for a
+        # single-cluster (non-mixed) founder population.
+        sparse_cluster = self.cfg.get("sparse_reproduction_cluster")
         if mixed is not None:
             vec_a, vec_b = mixed
-            fixed_eval_weights = vec_a if self.rng.random() < 0.5 else vec_b
+            if self.rng.random() < 0.5:
+                fixed_eval_weights, sparse_mode = vec_a, sparse_cluster == "a"
+            else:
+                fixed_eval_weights, sparse_mode = vec_b, sparse_cluster == "b"
         else:
             fixed_eval_weights = self.cfg.get("fixed_eval_weights")
+            sparse_mode = bool(self.cfg.get("sparse_reproduction_prey", False))
         genome = founder_genome(
             OBS_DIM, N_ACTIONS, self.rng, self.cfg["founder_weight_std"], fixed_eval_weights
         )
@@ -124,6 +143,7 @@ class Trial13Driver:
             action_bias=genome.action_bias.copy(),
             generation=0,
             born_step=self.current_step,
+            sparse_mode=sparse_mode,
         )
 
     def step(self):
@@ -155,12 +175,43 @@ class Trial13Driver:
             agent_id for agent_id, r in rewards.items()
             if "predator" in agent_id and r == self.env.reproduction_reward_predator
         }
+        # Same idea, for sparse_mode prey (see _select_prey_action): the env's OWN
+        # reproduction signal, not anything derived from genome.eval_weights.
+        self._prey_reproduced_last_step = {
+            agent_id for agent_id, r in rewards.items()
+            if "prey" in agent_id and r == self.env.reproduction_reward_prey
+        }
 
         return observations, rewards, terminations, truncations, infos
 
     def _select_prey_action(self, agent_id: str) -> int:
         state = self.registry[agent_id]
         feat = extract_prey_features(self.env, agent_id)
+
+        if state.sparse_mode:
+            # Bypasses genome.eval_weights entirely -- faithfully represents "+10 on
+            # reproduction, nothing else" (can't be expressed AS a genome: reproduction
+            # isn't one of the 8 observed features). e_now/prev_eval stay unused;
+            # reinforcement is exactly 0.0 on every non-reproduction step, which
+            # reinforce_update's zero-reinforcement guard turns into a true no-op --
+            # not an approximation of sparse reward, the actual thing.
+            e_now = 0.0
+            if state.prev_obs is not None:
+                reinforcement = (
+                    self.env.reproduction_reward_prey if agent_id in self._prey_reproduced_last_step else 0.0
+                )
+                reinforce_update(
+                    state.action_weights, state.action_bias,
+                    state.prev_obs, state.prev_action, reinforcement,
+                    self.cfg["lr_positive"], self.cfg["lr_negative"],
+                )
+            probs = action_probs(feat, state.action_weights, state.action_bias)
+            action = sample_action(probs, self.rng)
+            state.prev_obs = feat
+            state.prev_action = action
+            state.prev_eval = e_now
+            return action
+
         e_now = evaluate(feat, state.genome.eval_weights, state.genome.eval_bias)
 
         if state.prev_obs is not None:
@@ -282,6 +333,7 @@ class Trial13Driver:
                 action_bias=child_genome.action_bias.copy(),
                 generation=parent_state.generation + 1,
                 born_step=self.current_step,
+                sparse_mode=parent_state.sparse_mode,  # a lineage tag, inherited exactly -- never mutated
             )
 
     def _handle_deaths(self, terminations: dict):

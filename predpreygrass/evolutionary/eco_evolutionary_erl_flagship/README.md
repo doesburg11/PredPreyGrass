@@ -613,6 +613,60 @@ undersold this: there IS a real answer here, for THIS pair of strategies in
 THIS ecology -- it's just not visible from segregated single-genotype
 comparisons alone, and required actually running the competition to find.
 
+**One more question this raised directly: does that mean the project's own
+original reward design (flagship's `+10` on reproduction, nothing else --
+literally the fitness criterion itself, no proxy involved) can't be beaten?**
+Tested directly with a new `sparse_reward_check.py`, against exactly the same
+mixed-competition methodology as the maintenance check above (real evolution,
+50/50 founders, 20x LR, n=30 seeds). Two build notes first: (1) `eval_weights`
+is a linear function of the 8 OBSERVED features, and "did I just reproduce"
+isn't one of them -- a genome literally cannot represent this reward. The
+faithful implementation bypasses `eval_weights` entirely for this condition
+(`PreyGenomeState.sparse_mode`, a lineage tag inherited unchanged, never
+mutated) and feeds the environment's own reproduction signal directly into
+the REINFORCE update -- not a proxy genome, the actual thing. (2) This isn't
+"REINFORCE can't handle sparse reward" in general -- textbook REINFORCE uses
+full-trajectory Monte Carlo returns and handles delayed reward fine, just
+with high variance. It's specifically this module's one-step simplification
+(`reinforcement = e_now - prev_eval`, a documented simplification of Ackley &
+Littman 1991, not a full-trajectory return) that has no multi-step credit
+assignment at all.
+
+**Result: no, it is beaten -- decisively.** `avoider` (dense, hand-shaped,
+genome-driven) wins 27/30 seeds against the sparse reproduction-only signal
+(binomial p=0.000008), reaching 90% mean population share, and -- unlike the
+`anti_adaptive` comparison, where the loser at least produced more total
+offspring -- `avoider` wins BOTH metrics cleanly here (7,402 vs. 1,595 total
+offspring). Mechanistically consistent with everything above: sparse
+reproduction-only reward gives this architecture's one-step update almost
+nothing to learn from between the rare reproduction events, so a
+sparse-reward prey behaves close to its random initial policy for its whole
+life -- more like the earlier `inert` genome (which also received ~zero
+reinforcement every step) than like a competently-trained agent. (Smaller,
+n=10 first pass gave a weaker, non-significant 7/10 split -- scaled to n=30
+for the properly-powered result above, the same lesson this investigation
+has repeated at every stage: check power before trusting a margin.)
+
+**This completes the algorithm x reward-density comparison as a real 2x2,
+not two studies stitched together (a real confound flagged directly by the
+user -- comparing "sparse+PPO" against "dense+this module's REINFORCE"
+conflates reward density with algorithm, since both differ at once):**
+
+| | sparse reward | dense/shaped reward |
+|---|---|---|
+| **PPO (gamma+GAE)** | wins (project's reward-density initiative) | loses |
+| **this module's one-step reinforcement** | loses (above, n=30, p<0.0001) | wins (`avoider` beats `anti_adaptive`, n=30) |
+
+Reward density's effect isn't context-free -- it flips depending on whether
+the learning algorithm can do multi-step credit assignment. Sparse, truthful
+reward needs a capable learner to turn into behavior; a capable learner (PPO)
+doesn't need reward shaping and can be hurt by it (reward hacking, misalignment
+risk). A weak learner (this module's one-step rule) needs the denser signal
+regardless of how well-aligned the sparse alternative is with fitness. Neither
+"sparse beats dense" nor "dense beats sparse" is the general truth -- which
+one wins is a property of the algorithm x reward-density pair, not either
+factor alone.
+
 ```bash
 # Stage 0: smoke test, mechanics only
 python -m predpreygrass.evolutionary.eco_evolutionary_erl_flagship.run_trial13_simulation \

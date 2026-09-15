@@ -721,6 +721,23 @@ moves fitness, but that doesn't make a trade-off into a stable polymorphism — 
 `anti_adaptive` aren't two co-viable strategies, one wins once they actually compete, for an
 identifiable ecological reason invisible from segregated comparisons alone.
 
+**Does that mean the project's own original reward design (flagship's literal `+10` on
+reproduction, the fitness criterion itself, no proxy) can't be beaten?** No — tested via the
+same mixed-competition methodology (a genome can't literally represent this reward, since
+reproduction isn't an observed feature; the faithful implementation bypasses `eval_weights`
+entirely and feeds the environment's own reproduction signal directly into the REINFORCE
+update). `avoider` beats it decisively: 27/30 seeds, 90% mean population share, binomial
+p=0.000008, winning BOTH population share and total offspring (7,402 vs. 1,595) — unlike the
+`anti_adaptive` result, no trade-off this time. Mechanism: sparse reward gives this module's
+one-step reinforcement rule (not REINFORCE in general, which uses full-trajectory returns and
+handles sparse reward fine — specifically this module's `e_now - prev_eval` one-step
+simplification) almost nothing to learn from between rare reproduction events. This completes
+the algorithm × reward-density comparison as a genuine 2×2 (flagged directly by the user as a
+potential confound in comparing two single-algorithm studies): sparse wins under PPO+GAE
+(project's reward-density initiative), dense/shaped wins under this module's one-step rule
+(`avoider` beats both `anti_adaptive` and sparse reproduction). Reward density's effect isn't
+context-free — it's a property of the algorithm × reward-density pair, not either factor alone.
+
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
 
