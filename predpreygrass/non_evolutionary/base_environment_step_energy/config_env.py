@@ -15,21 +15,21 @@ config_env = {
     "reproduction_reward_prey": 10.0,
     # Energy settings
     # base_environment applies energy_loss_per_step_* unconditionally every
-    # step, regardless of the action taken (including noop). This module adds
-    # a second, movement-conditional cost on top of that: energy_loss_per_move_*
-    # is only charged when the agent's action is not noop. To keep total
-    # per-step drain from simply stacking on top of the base_environment
-    # figures (which would starve agents faster and risk collapsing the
-    # population before training converges), the flat per-step figures below
-    # are halved from base_environment's 0.15/0.05, with the other half moved
-    # into the move cost. Net effect: an agent that moves every step pays the
-    # same total as base_environment; an agent that noops pays half -- so
-    # "standing still" is a real, cheaper option rather than a free lunch on
-    # top of the old cost.
-    "energy_loss_per_step_predator": 0.075,
-    "energy_loss_per_step_prey": 0.025,
-    "energy_loss_per_move_predator": 0.075,
-    "energy_loss_per_move_prey": 0.025,
+    # step, regardless of the action taken (including noop). This module
+    # replaces that with a purely movement-conditional cost: the flat,
+    # always-on tax is zeroed out, and the entire base_environment total
+    # (0.15 predator / 0.05 prey) is charged only via energy_loss_per_move_*,
+    # i.e. only on steps where the agent's action is not noop -- standing
+    # still costs nothing at all. Validated sustainable (0% extinction, full
+    # 1000-step episodes, ongoing reproduction by iteration ~30-40) via a
+    # single-seed, 100-iteration move-fraction sweep on 2026-09-16 -- see
+    # README.md's "Results" section, including caveats and the 0.5/0.75
+    # split points also tested. Reproduce or resweep with
+    # tune_ppo_base_environment_step_energy.py's --move-fraction flag.
+    "energy_loss_per_step_predator": 0.0,
+    "energy_loss_per_step_prey": 0.0,
+    "energy_loss_per_move_predator": 0.15,
+    "energy_loss_per_move_prey": 0.05,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     # Learning agents. IDs are never reused within an episode (RLlib requires

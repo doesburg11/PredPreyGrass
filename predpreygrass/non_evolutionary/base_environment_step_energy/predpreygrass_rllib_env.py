@@ -1,10 +1,11 @@
 """
-A copy of the PredPreyGrass base environment that adds a movement-conditional
-energy cost: taking any of the 8 directional actions costs energy, taking the
-noop action does not, on top of the existing per-step energy_loss_per_step_*
-(which still applies unconditionally every step, at a reduced default -- see
-config_env.py). Two types of agents: predators and prey. Independently
-learning policies for each type.
+A copy of the PredPreyGrass base environment that replaces the unconditional
+per-step energy tax with a movement-conditional one: taking any of the 8
+directional actions costs energy_loss_per_move_predator/prey, taking the noop
+action costs nothing. energy_loss_per_step_predator/prey (base_environment's
+always-on tax) defaults to 0 here -- see config_env.py for the validated
+sustainable defaults and the sweep that produced them. Two types of agents:
+predators and prey. Independently learning policies for each type.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env
 
@@ -39,12 +40,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
 
         # Energy settings
-        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.075)
-        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.025)
+        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.0)
+        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.0)
         # Movement-conditional energy cost: charged only when the agent's
         # action is not noop (see config_env.py for the rationale).
-        self.energy_loss_per_move_predator = config.get("energy_loss_per_move_predator", 0.075)
-        self.energy_loss_per_move_prey = config.get("energy_loss_per_move_prey", 0.025)
+        self.energy_loss_per_move_predator = config.get("energy_loss_per_move_predator", 0.15)
+        self.energy_loss_per_move_prey = config.get("energy_loss_per_move_prey", 0.05)
         self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
 
