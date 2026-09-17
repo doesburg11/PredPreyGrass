@@ -14,22 +14,31 @@ config_env = {
     "reproduction_reward_predator": 10.0,
     "reproduction_reward_prey": 10.0,
     # Energy settings
-    # base_environment applies energy_loss_per_step_* unconditionally every
-    # step, regardless of the action taken (including noop). This module
-    # replaces that with a purely movement-conditional cost: the flat,
-    # always-on tax is zeroed out, and the entire base_environment total
-    # (0.15 predator / 0.05 prey) is charged only via energy_loss_per_move_*,
-    # i.e. only on steps where the agent's action is not noop -- standing
-    # still costs nothing at all. Validated sustainable (0% extinction, full
-    # 1000-step episodes, ongoing reproduction by iteration ~30-40) via a
-    # single-seed, 100-iteration move-fraction sweep on 2026-09-16 -- see
-    # README.md's "Results" section, including caveats and the 0.5/0.75
-    # split points also tested. Reproduce or resweep with
-    # tune_ppo_base_environment_step_energy.py's --move-fraction flag.
-    "energy_loss_per_step_predator": 0.0,
-    "energy_loss_per_step_prey": 0.0,
-    "energy_loss_per_move_predator": 0.15,
-    "energy_loss_per_move_prey": 0.05,
+    # base_environment charges energy_loss_per_step_* unconditionally every
+    # step, regardless of the action taken (including noop) -- 0.15 predator
+    # / 0.05 prey. This module splits that single figure into two
+    # independent, additive costs instead of one flat tax:
+    #   homeostatic_energy_cost_per_step_* -- always charged, every step,
+    #     regardless of action (breathing/thermoregulation/upkeep; the
+    #     reason noop can never be free -- see RESULTS.md section 6 for why
+    #     a zero-cost noop turned out to be a real problem, not just an
+    #     experimental simplification).
+    #   move_energy_cost_per_step_* -- charged ON TOP of the homeostatic
+    #     cost, only on steps where the agent's action is not noop.
+    # These are independent values, not a split of a fixed shared total (an
+    # earlier energy_loss_per_step_*/energy_loss_per_move_* design coupled
+    # them via a --move-fraction split so their sum was pinned to
+    # base_environment's original figure -- see RESULTS.md for why that
+    # both mismodeled real metabolism and empirically failed at 500
+    # iterations). Defaults here are deliberately set so resting costs
+    # somewhat less than base_environment's original flat tax, and moving
+    # costs somewhat more: predator 0.10 resting / 0.20 moving (vs.
+    # original 0.15 flat); prey 0.035 resting / 0.07 moving (vs. original
+    # 0.05 flat). Not yet validated at training scale -- see RESULTS.md.
+    "homeostatic_energy_cost_per_step_predator": 0.10,
+    "homeostatic_energy_cost_per_step_prey": 0.035,
+    "move_energy_cost_per_step_predator": 0.10,
+    "move_energy_cost_per_step_prey": 0.035,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,
     # Learning agents. IDs are never reused within an episode (RLlib requires

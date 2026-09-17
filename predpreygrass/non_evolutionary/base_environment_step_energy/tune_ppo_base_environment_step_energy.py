@@ -52,15 +52,23 @@ def parse_args():
         help="Training-iteration stop condition.",
     )
     parser.add_argument(
-        "--move-fraction", type=float, default=None,
-        help="Fraction (0-1) of the total per-step energy budget (flat + move "
-             "cost, fixed at config_env.py's values summed) that is charged as "
-             "the movement-conditional cost rather than the unconditional flat "
-             "cost. 0.0 recovers base_environment's all-flat, noop-not-exempt "
-             "behavior; 1.0 makes noop completely free (all cost is "
-             "move-conditional). Default (omit this flag) uses config_env.py's "
-             "shipped split (0.5) unchanged. Overrides "
-             "energy_loss_per_step_predator/prey and energy_loss_per_move_predator/prey.",
+        "--homeostatic-cost-predator", type=float, default=None,
+        help="Override homeostatic_energy_cost_per_step_predator (always charged, "
+             "every step, regardless of action). Default: config_env.py's shipped value.",
+    )
+    parser.add_argument(
+        "--homeostatic-cost-prey", type=float, default=None,
+        help="Override homeostatic_energy_cost_per_step_prey. Default: config_env.py's shipped value.",
+    )
+    parser.add_argument(
+        "--move-cost-predator", type=float, default=None,
+        help="Override move_energy_cost_per_step_predator (charged on top of the "
+             "homeostatic cost, only when the action isn't noop). Default: "
+             "config_env.py's shipped value.",
+    )
+    parser.add_argument(
+        "--move-cost-prey", type=float, default=None,
+        help="Override move_energy_cost_per_step_prey. Default: config_env.py's shipped value.",
     )
     return parser.parse_args()
 
@@ -233,16 +241,15 @@ if __name__ == "__main__":
     args = parse_args()
 
     env_config = dict(config_env)
-    if args.move_fraction is not None:
-        move_frac = args.move_fraction
-        if not 0.0 <= move_frac <= 1.0:
-            raise ValueError(f"--move-fraction must be within [0, 1], got {move_frac}")
-        total_predator = config_env["energy_loss_per_step_predator"] + config_env["energy_loss_per_move_predator"]
-        total_prey = config_env["energy_loss_per_step_prey"] + config_env["energy_loss_per_move_prey"]
-        env_config["energy_loss_per_step_predator"] = total_predator * (1.0 - move_frac)
-        env_config["energy_loss_per_move_predator"] = total_predator * move_frac
-        env_config["energy_loss_per_step_prey"] = total_prey * (1.0 - move_frac)
-        env_config["energy_loss_per_move_prey"] = total_prey * move_frac
+    cost_overrides = {
+        "homeostatic_energy_cost_per_step_predator": args.homeostatic_cost_predator,
+        "homeostatic_energy_cost_per_step_prey": args.homeostatic_cost_prey,
+        "move_energy_cost_per_step_predator": args.move_cost_predator,
+        "move_energy_cost_per_step_prey": args.move_cost_prey,
+    }
+    for key, value in cost_overrides.items():
+        if value is not None:
+            env_config[key] = value
 
     register_env("PredPreyGrass", env_creator)
     ray.shutdown()
@@ -254,12 +261,11 @@ if __name__ == "__main__":
     ray_results_path = Path(RAY_RESULTS_DIR).expanduser()
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
-    move_frac_tag = f"_MOVEFRAC{args.move_fraction:g}" if args.move_fraction is not None else ""
-    experiment_name = args.name or f"PPO_BASE_ENVIRONMENT_STEP_ENERGY{move_frac_tag}{seed_tag}_{timestamp}"
+    experiment_name = args.name or f"PPO_BASE_ENVIRONMENT_STEP_ENERGY{seed_tag}_{timestamp}"
     experiment_path = ray_results_path / experiment_name
     experiment_path.mkdir(parents=True, exist_ok=True)
     with open(experiment_path / "run_config.json", "w") as f:
-        json.dump({"config_env": env_config, "seed": args.seed, "move_fraction": args.move_fraction}, f, indent=4)
+        json.dump({"config_env": env_config, "seed": args.seed, "cost_overrides": cost_overrides}, f, indent=4)
 
     sample_env = env_creator(env_config)  # Create a single instance
     # Observation/action spaces for the sample policies

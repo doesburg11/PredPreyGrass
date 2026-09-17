@@ -1,11 +1,13 @@
 """
-A copy of the PredPreyGrass base environment that replaces the unconditional
-per-step energy tax with a movement-conditional one: taking any of the 8
-directional actions costs energy_loss_per_move_predator/prey, taking the noop
-action costs nothing. energy_loss_per_step_predator/prey (base_environment's
-always-on tax) defaults to 0 here -- see config_env.py for the validated
-sustainable defaults and the sweep that produced them. Two types of agents:
-predators and prey. Independently learning policies for each type.
+A copy of the PredPreyGrass base environment that splits base_environment's
+single, unconditional per-step energy tax into two independent, additive
+costs: homeostatic_energy_cost_per_step_predator/prey (always charged, every
+step, regardless of action -- upkeep) and move_energy_cost_per_step_predator/
+prey (charged on top, only when the action isn't noop -- locomotion). See
+config_env.py for the current defaults and RESULTS.md for why noop can never
+be free (an earlier zero-homeostatic-cost design was tried and failed at
+training scale). Two types of agents: predators and prey. Independently
+learning policies for each type.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env
 
@@ -39,13 +41,13 @@ class PredPreyGrass(MultiAgentEnv):
         self.reproduction_reward_predator = config.get("reproduction_reward_predator", 10.0)
         self.reproduction_reward_prey = config.get("reproduction_reward_prey", 10.0)
 
-        # Energy settings
-        self.energy_loss_per_step_predator = config.get("energy_loss_per_step_predator", 0.0)
-        self.energy_loss_per_step_prey = config.get("energy_loss_per_step_prey", 0.0)
-        # Movement-conditional energy cost: charged only when the agent's
-        # action is not noop (see config_env.py for the rationale).
-        self.energy_loss_per_move_predator = config.get("energy_loss_per_move_predator", 0.15)
-        self.energy_loss_per_move_prey = config.get("energy_loss_per_move_prey", 0.05)
+        # Energy settings: homeostatic (always charged) and move (charged on
+        # top, only when the agent's action isn't noop) are independent,
+        # additive costs -- see config_env.py for the rationale and defaults.
+        self.homeostatic_energy_cost_per_step_predator = config.get("homeostatic_energy_cost_per_step_predator", 0.10)
+        self.homeostatic_energy_cost_per_step_prey = config.get("homeostatic_energy_cost_per_step_prey", 0.035)
+        self.move_energy_cost_per_step_predator = config.get("move_energy_cost_per_step_predator", 0.10)
+        self.move_energy_cost_per_step_prey = config.get("move_energy_cost_per_step_prey", 0.035)
         self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)
 
@@ -269,13 +271,15 @@ class PredPreyGrass(MultiAgentEnv):
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
 
-        # Step 1: Process energy depletion due to time steps
+        # Step 1: Process homeostatic energy depletion (always charged, every
+        # step, regardless of action -- see __init__ for why this can never
+        # be zero).
         for agent, action in action_dict.items():
             if "predator" in agent:
-                self.agent_energies[agent] -= self.energy_loss_per_step_predator
+                self.agent_energies[agent] -= self.homeostatic_energy_cost_per_step_predator
                 self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
             elif "prey" in agent:
-                self.agent_energies[agent] -= self.energy_loss_per_step_prey
+                self.agent_energies[agent] -= self.homeostatic_energy_cost_per_step_prey
                 self.grid_world_state[2, *self.agent_positions[agent]] = self.agent_energies[agent]
 
         for grass, grass_position in self.grass_positions.items():
@@ -527,15 +531,17 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _get_movement_energy_cost(self, agent, action):
         """
-        Energy cost of taking `action` this step. Noop (action_to_move_tuple
-        entry (0, 0)) is free; any of the 8 directional actions costs energy,
+        Additional energy cost of taking `action` this step, charged on top
+        of the homeostatic cost every agent already pays in Step 1. Noop
+        (action_to_move_tuple entry (0, 0)) adds nothing; any of the 8
+        directional actions adds move_energy_cost_per_step_predator/prey,
         whether or not the resulting move was actually blocked by an
         occupied cell -- the cost models the effort of attempting to move,
         not the resulting displacement.
         """
         if action == self.noop_action_id:
             return 0.0
-        return self.energy_loss_per_move_predator if "predator" in agent else self.energy_loss_per_move_prey
+        return self.move_energy_cost_per_step_predator if "predator" in agent else self.move_energy_cost_per_step_prey
 
     def _get_move(self, agent: AgentID, action: int) -> Tuple[int, int]:
         """
