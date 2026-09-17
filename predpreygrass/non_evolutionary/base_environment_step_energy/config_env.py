@@ -30,14 +30,16 @@ config_env = {
     # them via a --move-fraction split so their sum was pinned to
     # base_environment's original figure -- see RESULTS.md for why that
     # both mismodeled real metabolism and empirically failed at 500
-    # iterations). Defaults here are deliberately set so resting costs
-    # somewhat less than base_environment's original flat tax, and moving
-    # costs somewhat more: predator 0.10 resting / 0.20 moving (vs.
-    # original 0.15 flat); prey 0.035 resting / 0.07 moving (vs. original
-    # 0.05 flat). Not yet validated at training scale -- see RESULTS.md.
+    # iterations). Validated via two full 500-iteration runs (RESULTS.md
+    # sections 10-12): an initial symmetric split (predator homeostatic
+    # 0.10 / move 0.10) recovered from early instability but settled at a
+    # predator population well below base_environment's own equilibrium;
+    # easing only the predator move cost to 0.08 (below) fixed that,
+    # tracking base_environment closely and holding stable for 400+
+    # iterations with no late-run drift. This is the current default.
     "homeostatic_energy_cost_per_step_predator": 0.10,
     "homeostatic_energy_cost_per_step_prey": 0.035,
-    "move_energy_cost_per_step_predator": 0.10,
+    "move_energy_cost_per_step_predator": 0.08,
     "move_energy_cost_per_step_prey": 0.035,
     "predator_creation_energy_threshold": 12.0,
     "prey_creation_energy_threshold": 8.0,

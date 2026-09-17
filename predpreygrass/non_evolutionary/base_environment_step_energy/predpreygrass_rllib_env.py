@@ -46,7 +46,7 @@ class PredPreyGrass(MultiAgentEnv):
         # additive costs -- see config_env.py for the rationale and defaults.
         self.homeostatic_energy_cost_per_step_predator = config.get("homeostatic_energy_cost_per_step_predator", 0.10)
         self.homeostatic_energy_cost_per_step_prey = config.get("homeostatic_energy_cost_per_step_prey", 0.035)
-        self.move_energy_cost_per_step_predator = config.get("move_energy_cost_per_step_predator", 0.10)
+        self.move_energy_cost_per_step_predator = config.get("move_energy_cost_per_step_predator", 0.08)
         self.move_energy_cost_per_step_prey = config.get("move_energy_cost_per_step_prey", 0.035)
         self.predator_creation_energy_threshold = config.get("predator_creation_energy_threshold", 12.0)
         self.prey_creation_energy_threshold = config.get("prey_creation_energy_threshold", 8.0)

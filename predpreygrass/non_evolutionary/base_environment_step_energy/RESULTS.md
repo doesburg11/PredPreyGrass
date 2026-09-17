@@ -114,4 +114,33 @@ This has **not yet been run at training scale** — it's a redesign motivated by
 
 To address the "predator population too small relative to `base_environment`" finding in §10, without repeating §9's mistake of changing a shipped default before validating it: `move_energy_cost_per_step_predator` eased from 0.10 to **0.08** via CLI override (`--move-cost-predator 0.08`), leaving homeostatic cost (0.10) and both prey costs (0.035/0.035) unchanged. This drops predators' total moving cost from 0.20 to **0.18** — 20% above `base_environment`'s original 0.15, instead of 33% above. `config_env.py`'s shipped defaults are intentionally left unchanged pending this run's result.
 
-500-iteration run launched, seed 42, `PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42`. Result pending.
+500-iteration run launched, seed 42, `PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42`, 420.2 min total. **Complete, and this is the best result of the whole investigation:**
+
+| iterations | predator extinction | predators | prey | episode length |
+|---|---|---|---|---|
+| 1-100 | 27% | 8.0 | 33.6 | 784 |
+| 101-200 | 0% | 13.6 | 23.9 | 1000 |
+| 201-300 | 0% | 14.1 | 23.9 | 1000 |
+| 301-400 | 1% | 13.3 | 25.2 | 994 |
+| 401-500 | 0% | 12.2 | 28.9 | 1000 |
+
+After the usual early-training instability (27% extinction while the policy is still near-random, the same shape seen in every run including `base_environment` itself), it settled by iteration ~100 into a low-noise equilibrium that **held for the full remaining 400 iterations** — extinction pinned near 0%, episode length at or near the full 1000 throughout, populations (~12-14 predators, ~24-29 prey) in a tight, non-drifting band close to `base_environment`'s own equilibrium (~18-19 / ~19-25). No repeat of run A's late-run wobble.
+
+**Full three-way comparison, same iteration ranges, all now complete:**
+
+| iters | base_environment | | | | run A (homeostatic 0.10/0.035, move 0.10/0.035) | | | | run B (homeostatic 0.10/0.035, move 0.08/0.035) | | | |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| | **extinction predator** | **pred/episode** | **prey/episode** | **len** | **extinction predator** | **pred/episode** | **prey/episode** | **len** | **extinction predator** | **pred/episode** | **prey/episode** | **len** |
+| 1-100 | 22% | 12.3 | 35.2 | 818 | 58% | 2.3 | 46.7 | 558 | 27% | 8.0 | 33.6 | 784 |
+| 101-200 | 0% | 18.6 | 19.5 | 1000 | 40% | 3.7 | 48.0 | 775 | 0% | 13.6 | 23.9 | 1000 |
+| 201-300 | 0% | 19.8 | 18.0 | 997 | 17% | 7.0 | 39.3 | 908 | 0% | 14.1 | 23.9 | 1000 |
+| 301-400 | 0% | 19.4 | 19.2 | 1000 | 7% | 8.0 | 36.1 | 960 | 1% | 13.3 | 25.2 | 994 |
+| 401-500 | 0% | 19.1 | 18.8 | 992 | 15% | 6.1 | 41.6 | 914 | 0% | 12.2 | 28.9 | 1000 |
+
+Run B tracks `base_environment` far more closely than run A at every matching range, and does so without run A's late-run reversal.
+
+## 12. Decision: run B adopted as the shipped default (2026-09-17)
+
+Easing only the predator's move cost (leaving homeostatic cost and both prey costs untouched) fixed the problem run A surfaced, without reopening the noop-must-cost-something requirement from §6-9 (homeostatic cost is still 0.10/0.035, never zero). `config_env.py` now ships run B's values as the default: `move_energy_cost_per_step_predator = 0.08` (was 0.10); `homeostatic_energy_cost_per_step_predator/prey` and `move_energy_cost_per_step_prey` unchanged at 0.10 / 0.035 / 0.035.
+
+This closes the loop the module was built to investigate: `base_environment`'s flat, action-independent tax (§1) → a version where noop is completely free (§3, looked fine at 100 iterations, §5 showed it collapses at 500) → independent additive homeostatic+move costs so noop can never be free (§9) → still noticeably below-baseline predator population (§10) → predator move cost eased, now tracking baseline closely and stable for 400+ iterations (§11). Still open: only one seed (42) throughout: replication across 2-3 more seeds, and a run past 500 iterations to see how long the stability in §11 actually holds, are the natural next steps if this module is revisited.
