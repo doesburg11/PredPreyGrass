@@ -215,6 +215,8 @@ class PyGameRenderer:
         dead_prey=None,
         coop_events=None,
     ):
+        if per_step_agent_data is None:
+            raise ValueError("update(): per_step_agent_data is required (got None)")
         step_data = per_step_agent_data[step - 1]
         if agents_just_ate is None:
             agents_just_ate = set()
@@ -1064,9 +1066,6 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
-        self.fps_slider_rect = None
-        self.fps_slider_update_fn = None
-        self.is_dragging_slider = False
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -1094,29 +1093,6 @@ class ViewerControlHelper:
                     self.paused = True
                     self.step_backward = True
                     print("[ViewerControl] Step Backward")
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:
-                    if self.fps_slider_rect and self.fps_slider_rect.collidepoint(event.pos):
-                        self.is_dragging_slider = True
-                        self._update_fps_slider(event.pos[0])
-
-            elif event.type == pygame.MOUSEMOTION:
-                if self.is_dragging_slider:
-                    self._update_fps_slider(event.pos[0])
-
-            elif event.type == pygame.MOUSEBUTTONUP:
-                if event.button == 1 and self.is_dragging_slider:
-                    self.is_dragging_slider = False
-
-    def _update_fps_slider(self, slider_x):
-        slider_max_fps = self.visualizer.slider_max_fps
-        slider_start_x = self.fps_slider_rect.left
-        slider_width = self.fps_slider_rect.width
-        ratio = (slider_x - slider_start_x) / slider_width
-        ratio = min(max(ratio, 0.0), 1.0)
-        new_fps = int(1 + ratio * (slider_max_fps - 1))
-        self.fps_slider_update_fn(new_fps)
-        print(f"[ViewerControl] Target FPS set to {new_fps}")
 
 
 class LoopControlHelper:
