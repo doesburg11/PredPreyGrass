@@ -101,12 +101,15 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
+    # Final checkpoint (iteration ~500) of the validated run B: predator move
+    # cost eased to 0.08, seed 42 -- see RESULTS.md sections 11-12.
     checkpoint_path = os.path.join(
         os.path.expanduser("~"),
+        "simulation_results",
         "ray_results",
-        "PPO_2026-06-17_22-06-02",
-        "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
-        "checkpoint_000099",
+        "PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42",
+        "PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45",
+        "checkpoint_000049",
     )
 
     # Minimal sanity checks

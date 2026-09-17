@@ -144,3 +144,52 @@ Run B tracks `base_environment` far more closely than run A at every matching ra
 Easing only the predator's move cost (leaving homeostatic cost and both prey costs untouched) fixed the problem run A surfaced, without reopening the noop-must-cost-something requirement from §6-9 (homeostatic cost is still 0.10/0.035, never zero). `config_env.py` now ships run B's values as the default: `move_energy_cost_per_step_predator = 0.08` (was 0.10); `homeostatic_energy_cost_per_step_predator/prey` and `move_energy_cost_per_step_prey` unchanged at 0.10 / 0.035 / 0.035.
 
 This closes the loop the module was built to investigate: `base_environment`'s flat, action-independent tax (§1) → a version where noop is completely free (§3, looked fine at 100 iterations, §5 showed it collapses at 500) → independent additive homeostatic+move costs so noop can never be free (§9) → still noticeably below-baseline predator population (§10) → predator move cost eased, now tracking baseline closely and stable for 400+ iterations (§11). Still open: only one seed (42) throughout: replication across 2-3 more seeds, and a run past 500 iterations to see how long the stability in §11 actually holds, are the natural next steps if this module is revisited.
+
+## 13. A second, unplanned finding: predator spatial clustering (2026-09-17)
+
+Watching run B's trained policy in the interactive PyGame viewer (checkpoint_000049, ~iteration 500) next to `base_environment`'s, the user noticed predators appeared to cluster together spatially in run B more than in `base_environment`. This was investigated as a real, separate empirical question rather than dismissed as a visual impression.
+
+**Metric**: the Clark-Evans index -- the ratio of the actual mean nearest-neighbor distance between predators to the distance expected under a purely random (CSR) spatial distribution with the same predator count on the same 25x25 grid. R < 1 = clustered; R = 1 = random; R > 1 = dispersed. Normalizing against the CSR expectation for the actual predator count matters because `base_environment` and run B have different equilibrium population sizes (~18-19 vs ~12-14 -- see §12), and raw nearest-neighbor distance alone would confound "fewer points" with "more spread out."
+
+**First measurement**: one full deterministic (greedy-action) episode each, seed 42, using each config's own final seed-42 checkpoint (`base_environment`: iteration 1000; run B: iteration ~500).
+
+| | Clark-Evans R | mean predators |
+|---|---|---|
+| base_environment | 1.11 (mildly dispersed) | 16.6 |
+| run B | 0.90 (mildly clustered) | 14.3 |
+
+**Working mechanism hypothesis**: charging more for movement than for standing still (run B's design, per §9-12) is not a neutral change for spatial behavior. A predator can catch prey simply by having prey wander onto its cell, so a predator can sit motionless near a good ambush spot at minimal cost under run B's economy. `base_environment` has no such asymmetry -- moving costs exactly what resting costs, so there's no energetic reason to prefer standing still over continuous patrol. If multiple predators converge on the same handful of attractive waiting spots under run B's economy (e.g. near where prey must pass to reach grass), that would produce clustering that continuous, cost-free roaming under `base_environment` would not. This is the same underlying free-vs-costly-movement asymmetry already central to §6's mechanism for the §5 collapse, applied to a different observable (spatial pattern rather than population trajectory).
+
+**Caveat flagged immediately**: one episode, one seed. Could be noise from that one episode's specific trajectory, or specific to these two particular trained policies, rather than a property of the design change itself.
+
+## 14. Zero-training validation: robust for these two policies, not yet a generalization claim (2026-09-17)
+
+Asked to statistically validate §13's finding, two genuinely different questions were distinguished before choosing a test:
+
+1. *Is the R=1.11-vs-0.90 gap a robust, repeatable property of these two specific already-trained policies, or was it noise from one episode?* -- answerable with zero new training, just more evaluation episodes of the checkpoints already on disk.
+2. *Would a different training run of the same design reproduce this gap?* -- requires training genuinely new, independently-seeded policies; "seed" here means training seed, not evaluation seed, so there is no way to answer this without more training.
+
+Question 1 was answered first, at zero training cost: 30 evaluation episodes per config (different environment-reset seeds 100-129, deterministic actions, same two existing seed-42 checkpoints), one Clark-Evans R per episode (aggregated over that episode's ~1000 steps, not per-timestep, to avoid pseudoreplication from within-episode autocorrelation).
+
+| | n | mean R | median R | std |
+|---|---|---|---|---|
+| base_environment | 30 | 1.072 | 1.069 | 0.032 |
+| run B | 30 | 0.928 | 0.924 | 0.038 |
+
+The two distributions barely overlap (base_environment's single lowest value, 0.998, just touches run B's two highest, 1.005 and 1.022; everything else is cleanly separated). **Mann-Whitney U = 898, p ≈ 0.000000.**
+
+**Conclusion**: not a one-episode fluke. The clustering difference is a highly robust, consistent property of these two specific trained policies across 30 independent episodes each. **Explicit scope limit**: this validates the finding only for these two particular policies (both trained at seed 42) -- it says nothing about whether a differently-seeded training run of the same design would show the same pattern. Question 2 remains open.
+
+## 15. Follow-up in progress: does clustering generalize across independently-trained policies? (started 2026-09-17)
+
+**Rationale**: §14 ruled out "one lucky/unlucky episode" but not "this particular training run happened to produce a clustering policy by chance, independent of the design." Seed 42 is one random training trajectory; a design-level claim ("run B's cost structure causes clustering") requires checking that the pattern reappears across policies trained from different random seeds, which necessarily means training more policies -- there is no training-free way to answer this question.
+
+**Design chosen -- paired, not unpaired, by seed**: the same seed trains both a `base_environment` and a run B policy, so seed is naturally a matched-pairs variable rather than two independent groups. A paired Wilcoxon signed-rank test only needs each pair's within-seed difference to point the same direction, not full separation between all individual values across groups -- a much easier bar to clear than an unpaired test, and one that needs far fewer seeds to reach conventional significance: a paired sign test can reach p < 0.05 with 6 consistent-direction pairs (in the best case), versus an unpaired Mann-Whitney U test needing roughly 4-vs-4 groups at minimum and still requiring full separation even then. 3 matched pairs already exist in principle from prior sections (seed 42's `base_environment` and run B checkpoints are the first pair); 5 more matched seeds (43-47) are being trained now to reach 6 total pairs.
+
+**Training scale -- 300 iterations, not 500**: both configs converge to their stable population/behavioral equilibrium by iteration ~100-300 (§5, §11-12) -- the extra iterations used in the 500-iteration sustainability-confirmation runs elsewhere in this document aren't needed just to obtain a representative, converged policy for a clustering measurement. This roughly halves the training cost (~2 days for 10 runs instead of ~3.5).
+
+**A parallelization attempt was tried and abandoned -- worth recording so it isn't retried the same way**: running the 10 training runs concurrently (4-way, then 6-way) using Ray's `num_gpus_per_learner` fractional GPU request and reduced per-run CPU counts was attempted first, to cut wall-clock time. It failed on two counts: (1) the GPU fraction is only logical accounting inside each job's own separate Ray cluster, not a real CUDA memory cap, so 4 concurrent processes collectively exceeded the 16GB card and one crashed with `torch.OutOfMemoryError`; (2) even the surviving concurrent jobs ran at ~225-270s/iteration, 4-5x slower than a solo full-resource run, likely because reducing `num_cpus_per_env_runner` to 1 (from the usual 3) starved each env-runner rather than just adding total-CPU headroom -- the parallel approach was providing little to no net wall-clock benefit over sequential execution, possibly a net loss. Abandoned in favor of a plain sequential queue at full per-run resources (the settings that reliably gave ~45-70s/iteration in every other run this session).
+
+**Plan once training completes**: run the same zero-training evaluation methodology from §14 (30 episodes per new policy, one Clark-Evans R per episode) on each of the 10 new policies, aggregate one mean R per seed per config, then run the paired Wilcoxon signed-rank test across all 6 seed-pairs (42 existing + 43-47 new).
+
+**Status**: training running now (started 2026-09-17 19:37 CEST, sequential, ETA ~2026-09-19 21:37 CEST). Result pending.

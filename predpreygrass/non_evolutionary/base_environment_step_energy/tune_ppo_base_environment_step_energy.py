@@ -52,6 +52,23 @@ def parse_args():
         help="Training-iteration stop condition.",
     )
     parser.add_argument(
+        "--gpu-fraction", type=float, default=None,
+        help="Override num_gpus_per_learner (e.g. 0.25 to let 4 runs share one GPU "
+             "concurrently). Default: 1 if a GPU is available, else 0.",
+    )
+    parser.add_argument(
+        "--num-env-runners", type=int, default=None,
+        help="Override num_env_runners. Default: 8 if a GPU is available, else 6.",
+    )
+    parser.add_argument(
+        "--num-cpus-per-env-runner", type=int, default=None,
+        help="Override num_cpus_per_env_runner. Default: 3 if a GPU is available, else 1.",
+    )
+    parser.add_argument(
+        "--num-cpus-main", type=int, default=None,
+        help="Override num_cpus_for_main_process. Default: 4 if a GPU is available, else 1.",
+    )
+    parser.add_argument(
         "--homeostatic-cost-predator", type=float, default=None,
         help="Override homeostatic_energy_cost_per_step_predator (always charged, "
              "every step, regardless of action). Default: config_env.py's shipped value.",
@@ -319,11 +336,11 @@ if __name__ == "__main__":
     )
 
     use_gpu = torch.cuda.is_available()
-    num_gpus_per_learner = 1 if use_gpu else 0
-    num_env_runners = 8 if use_gpu else 6
+    num_gpus_per_learner = args.gpu_fraction if args.gpu_fraction is not None else (1 if use_gpu else 0)
+    num_env_runners = args.num_env_runners if args.num_env_runners is not None else (8 if use_gpu else 6)
     num_envs_per_env_runner = 3 if use_gpu else 1
-    num_cpus_per_env_runner = 3 if use_gpu else 1
-    num_cpus_for_main_process = 4 if use_gpu else 1
+    num_cpus_per_env_runner = args.num_cpus_per_env_runner if args.num_cpus_per_env_runner is not None else (3 if use_gpu else 1)
+    num_cpus_for_main_process = args.num_cpus_main if args.num_cpus_main is not None else (4 if use_gpu else 1)
 
     print(
         f"Starting new training experiment: {experiment_name}. "
