@@ -10,6 +10,8 @@ Run explicitly (not auto-discovered by the repo's pytest testpaths):
 """
 import copy
 
+import pytest
+
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.config_env import config_env as _base_config_env
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 
@@ -78,8 +80,10 @@ def test_predator_male_eats_fruit_and_hunts_same_step():
     """Both sexes can gather fruit; hunting is now a probabilistic contest for
     both sexes too (not a deterministic, male-only catch). Force the RNG into
     the success band so this remains a deterministic test of "gains energy
-    from both engagements in the same step" rather than a flaky one."""
-    env = _make_test_env()
+    from both engagements in the same step" rather than a flaky one.
+    Disables male provisioning (unrelated to what this test checks) so a
+    same-grid female doesn't add an untested energy deduction to the math."""
+    env = _make_test_env(overrides={"male_gift_donation_rate": 0.0})
     male = next(a for a in env.agents if "predator_male" in a)
     prey = next(a for a in env.agents if a.startswith("prey"))
     fruit = next(iter(env.fruit_positions))
@@ -181,6 +185,10 @@ def test_reproduction_succeeds_when_both_eligible_and_within_radius():
     )
     assert rewards[male] >= env.reproduction_reward_predator
     assert rewards[female] >= env.reproduction_reward_predator
+    # A successful reproduction event records the pair bond both ways, used
+    # by _apply_male_gift to restrict provisioning to this specific mate.
+    assert env.agent_mate[male] == female
+    assert env.agent_mate[female] == male
 
 
 def test_a_male_cannot_be_paired_twice_in_one_step():
@@ -332,20 +340,20 @@ def test_resolve_hunting_attempt_outcome_bands():
 
     predator_id, prey_id, pos = make_fake_pair("success")
     _force_next_random(env, 0.0)
-    outcome, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
+    outcome, _, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
     assert outcome == "success"
     assert prey_id not in env.agent_positions
 
     predator_id, prey_id, pos = make_fake_pair("death")
     _force_next_random(env, 0.6)
-    outcome, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
+    outcome, _, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
     assert outcome == "predator_dies"
     assert predator_id not in env.agent_positions
     assert prey_id in env.agent_positions  # untouched
 
     predator_id, prey_id, pos = make_fake_pair("failure")
     _force_next_random(env, 0.9)
-    outcome, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
+    outcome, _, _ = env._resolve_hunting_attempt(predator_id, pos, prey_id, success_prob, death_prob, {}, {}, {}, {})
     assert outcome == "failure"
     assert predator_id in env.agent_positions
     assert prey_id in env.agent_positions
@@ -500,3 +508,557 @@ def test_offspring_spawns_near_female_not_male():
 
     assert manhattan(child_pos, female_pos) == 1
     assert manhattan(child_pos, male_pos) != 1
+
+
+def test_male_hunting_success_donates_to_nearby_female():
+    """A predator_male's successful hunt donates male_gift_donation_rate of
+    the energy gained to HIS RECORDED MATE -- offsets her post-birth energy
+    deficit (see README's "Male provisioning" section). Provisioning is
+    exclusive/pair-bonded: it only reaches an agent recorded in
+    env.agent_mate, not just any nearby female (see
+    test_donation_goes_only_to_recorded_mate_not_other_nearby_females)."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    env.agent_mate[male] = female
+    env.agent_mate[female] = male
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_pos = (5, 6)  # Chebyshev distance 1 <= default predator_gift_range (3)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    female_energy_before = env.agent_energies[female]
+
+    _force_next_random(env, 0.0)  # forces the hunting-attempt success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    # Prey's energy at the moment of the catch already reflects its own
+    # Step-1 homeostatic deduction (applied to every agent before any
+    # engagement is resolved).
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    donation = env.male_gift_donation_rate * energy_gained
+
+    assert (
+        env.agent_energies[male]
+        == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained - donation
+    )
+    assert (
+        env.agent_energies[female] == female_energy_before - env.homeostatic_energy_cost_per_step_predator + donation
+    )
+
+
+def test_no_donation_before_first_reproduction():
+    """A male with no recorded mate yet (never successfully reproduced)
+    gives no gift, even to a female right next to him."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    assert male not in env.agent_mate  # no reproduction has happened yet
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_pos = (5, 6)  # would be well within default predator_gift_range (3)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    female_energy_before = env.agent_energies[female]
+
+    _force_next_random(env, 0.0)
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained
+    # Female's energy only reflects her own ordinary homeostatic cost -- no gift.
+    assert env.agent_energies[female] == female_energy_before - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_no_donation_when_mate_out_of_range():
+    """His recorded mate is out of predator_gift_range this step -- the
+    physical-proximity requirement still applies even to an established
+    pair bond. He keeps the full gain."""
+    env = _make_test_env(
+        overrides={
+            "n_initial_active_predator_male": 1,
+            "n_initial_active_predator_female": 1,
+            "predator_gift_range": 1,
+        }
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    env.agent_mate[male] = female
+    env.agent_mate[female] = male
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_pos = (5, 8)  # Chebyshev distance 3 > predator_gift_range (1)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    female_energy_before = env.agent_energies[female]
+
+    _force_next_random(env, 0.0)
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained
+    assert env.agent_energies[female] == female_energy_before - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_donation_goes_only_to_recorded_mate_not_other_nearby_females():
+    """Two predator_females are equally nearby, but only one is his recorded
+    mate -- she gets the full donation (not split), the other stranger
+    female gets nothing. Pins the exclusivity behavior the user specifically
+    asked for over the module's earlier broadcast-to-any-nearby-female
+    design."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 2}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    females = [a for a in env.agents if "predator_female" in a]
+    assert len(females) == 2
+    mate, stranger = females[0], females[1]
+    env.agent_mate[male] = mate
+    env.agent_mate[mate] = male
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_positions = {mate: (5, 6), stranger: (6, 5)}  # both Chebyshev distance 1
+    female_energies_before = {}
+    for female, pos in female_positions.items():
+        env.agent_positions[female] = pos
+        env.predator_positions[female] = pos
+        female_energies_before[female] = env.agent_energies[female]
+
+    prey_energy_before = env.agent_energies[prey]
+
+    _force_next_random(env, 0.0)
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    donation = env.male_gift_donation_rate * energy_gained
+
+    assert (
+        env.agent_energies[mate] == female_energies_before[mate] - env.homeostatic_energy_cost_per_step_predator + donation
+    )
+    # The stranger receives nothing, despite being equally nearby.
+    assert env.agent_energies[stranger] == female_energies_before[stranger] - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_female_successful_hunt_does_not_trigger_donation():
+    """Donation is unidirectional (male -> female only). A female's own
+    successful hunt must not affect a nearby male's energy at all."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    female_pos = (5, 5)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+    env.agent_positions[prey] = female_pos
+    env.prey_positions[prey] = female_pos
+    male_pos = (5, 6)  # nearby, within default predator_gift_range
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+
+    male_energy_before = env.agent_energies[male]
+
+    _force_next_random(env, 0.0)  # forces the female's own success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    assert prey not in env.agent_positions  # female's hunt succeeded
+    # Male is untouched -- only his own ordinary homeostatic cost applies.
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_no_donation_to_already_starving_female():
+    """A female whose energy is already <= 0 this step (about to starve) must
+    not receive a gift that rescues her. Regression test for an
+    order-dependent bug: on the very first step of an episode self.agents
+    isn't sorted yet (males precede females), so a male's turn -- and his
+    gift -- could run before a female's own starvation check, letting an
+    unfiltered gift push her energy back above zero and make her survive
+    purely as an accident of iteration order."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    env.agent_mate[male] = female
+    env.agent_mate[female] = male
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_pos = (5, 6)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+    # Guarantees her Step-1 homeostatic hit alone drops her to <= 0.
+    env.agent_energies[female] = env.homeostatic_energy_cost_per_step_predator / 2.0
+
+    # Force male-before-female iteration order this step, mimicking the
+    # unsorted post-reset agent list on an episode's first step.
+    env.agents = [male, female, prey]
+
+    _force_next_random(env, 0.0)  # forces the male's hunting success band
+    actions = _noop_actions(env)
+    obs, rewards, terms, truncs, infos = env.step(actions)
+
+    assert female not in env.agent_positions  # she starved as expected
+    assert terms.get(female) is True
+
+
+def test_remating_severs_stale_reverse_mate_pointer():
+    """Regression test: if a female was previously bonded to one male and
+    later remates with a different male, the first male's stale one-way
+    pointer to her must be removed -- otherwise he'd keep donating gifts to
+    an ex indefinitely, and she'd be receiving from two "mates" at once,
+    breaking the exclusivity _apply_male_gift is supposed to guarantee."""
+    env = _make_test_env(
+        overrides={"mate_search_radius": 2, "n_initial_active_predator_male": 2, "n_initial_active_predator_female": 1}
+    )
+    males = [a for a in env.agents if "predator_male" in a]
+    assert len(males) == 2
+    female = next(a for a in env.agents if "predator_female" in a)
+    m1, m2 = males
+
+    # Simulate a prior bond from an earlier reproduction event.
+    env.agent_mate[m1] = female
+    env.agent_mate[female] = m1
+
+    # Keep m1 far away and energy-ineligible so only m2+female pair this step.
+    env.agent_positions[m1] = (0, 0)
+    env.predator_positions[m1] = (0, 0)
+    env.agent_energies[m1] = 1.0
+
+    env.agent_energies[m2] = env.predator_creation_energy_threshold + 1.0
+    env.agent_energies[female] = env.predator_creation_energy_threshold + 1.0
+    env.agent_positions[m2] = (5, 5)
+    env.predator_positions[m2] = (5, 5)
+    env.agent_positions[female] = (5, 6)
+    env.predator_positions[female] = (5, 6)
+
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    assert env.agent_mate[female] == m2
+    assert env.agent_mate[m2] == female
+    # m1's stale pointer to the female must be gone -- either removed
+    # entirely or (if present for any other reason) not pointing at her.
+    assert env.agent_mate.get(m1) != female
+
+
+def test_reproduction_records_parentage():
+    """A successful reproduction event records agent_parents[child] =
+    (father, mother), used by _share_energy_with_offspring."""
+    env = _make_test_env(
+        overrides={"mate_search_radius": 2, "n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    initial_agent_ids = set(env.agents)
+
+    env.agent_energies[male] = env.predator_creation_energy_threshold + 1.0
+    env.agent_energies[female] = env.predator_creation_energy_threshold + 1.0
+    env.agent_positions[male] = (5, 5)
+    env.predator_positions[male] = (5, 5)
+    env.agent_positions[female] = (6, 6)
+    env.predator_positions[female] = (6, 6)
+
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    new_predators = [a for a in env.agents if "predator" in a and a not in initial_agent_ids]
+    assert len(new_predators) == 1
+    child = new_predators[0]
+    assert env.agent_parents[child] == (male, female)
+
+
+def test_male_hunt_success_shares_with_nearby_child():
+    """A father's successful hunt shares parent_offspring_share_rate of the
+    gain with his own nearby child, independent of (and on top of) the
+    mate-gift mechanic."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+
+    child = "predator_female_test_child"
+    child_pos = (5, 6)
+    env.agent_positions[child] = child_pos
+    env.predator_positions[child] = child_pos
+    env.agent_energies[child] = 2.0
+    env.cumulative_rewards[child] = 0
+    env.agent_parents[child] = (male, "predator_female_0")
+    env.agents.append(child)
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    child_energy_before = env.agent_energies[child]
+
+    _force_next_random(env, 0.0)  # forces the hunting-attempt success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    donation = env.parent_offspring_share_rate * energy_gained
+
+    assert (
+        env.agent_energies[male]
+        == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained - donation
+    )
+    assert env.agent_energies[child] == child_energy_before - env.homeostatic_energy_cost_per_step_predator + donation
+
+
+def test_female_fruit_success_shares_with_nearby_child():
+    """A mother's successful fruit-gather shares parent_offspring_share_rate
+    of the gain with her own nearby child -- parental care applies to
+    either sex's foraging, not just hunting."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    female = next(a for a in env.agents if "predator_female" in a)
+    fruit = next(iter(env.fruit_positions))
+
+    female_pos = (5, 5)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+    env.fruit_positions[fruit] = female_pos
+    env.fruit_energies[fruit] = 2.0
+
+    child = "predator_male_test_child"
+    child_pos = (5, 6)
+    env.agent_positions[child] = child_pos
+    env.predator_positions[child] = child_pos
+    env.agent_energies[child] = 2.0
+    env.cumulative_rewards[child] = 0
+    env.agent_parents[child] = ("predator_male_0", female)
+    env.agents.append(child)
+
+    female_energy_before = env.agent_energies[female]
+    child_energy_before = env.agent_energies[child]
+
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    donation = env.parent_offspring_share_rate * 2.0  # fruit's full energy, before her homeostatic cost
+
+    assert (
+        env.agent_energies[female]
+        == female_energy_before - env.homeostatic_energy_cost_per_step_predator + 2.0 - donation
+    )
+    assert env.agent_energies[child] == child_energy_before - env.homeostatic_energy_cost_per_step_predator + donation
+
+
+def test_no_share_with_unrelated_nearby_predator():
+    """A nearby predator that is NOT this agent's recorded offspring
+    receives nothing, even at the same distance a real child would."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+
+    stranger = "predator_female_test_stranger"
+    stranger_pos = (5, 6)
+    env.agent_positions[stranger] = stranger_pos
+    env.predator_positions[stranger] = stranger_pos
+    env.agent_energies[stranger] = 2.0
+    env.cumulative_rewards[stranger] = 0
+    # No agent_parents entry recorded for `stranger` at all -- not this
+    # male's child (or anyone's).
+    env.agents.append(stranger)
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    stranger_energy_before = env.agent_energies[stranger]
+
+    _force_next_random(env, 0.0)
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained
+    assert env.agent_energies[stranger] == stranger_energy_before - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_share_split_among_multiple_children():
+    """Two of the forager's own children, both nearby, split the donation
+    evenly (unlike the exclusive, single-recipient mate gift)."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+
+    children = ["predator_female_test_child_a", "predator_male_test_child_b"]
+    child_positions = [(5, 6), (6, 5)]
+    child_energies_before = {}
+    for child, pos in zip(children, child_positions):
+        env.agent_positions[child] = pos
+        env.predator_positions[child] = pos
+        env.agent_energies[child] = 2.0
+        env.cumulative_rewards[child] = 0
+        env.agent_parents[child] = (male, "predator_female_0")
+        env.agents.append(child)
+        child_energies_before[child] = env.agent_energies[child]
+
+    prey_energy_before = env.agent_energies[prey]
+
+    _force_next_random(env, 0.0)
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    donation_total = env.parent_offspring_share_rate * energy_gained
+    share = donation_total / 2
+
+    for child in children:
+        assert (
+            env.agent_energies[child]
+            == child_energies_before[child] - env.homeostatic_energy_cost_per_step_predator + share
+        )
+
+
+def test_male_fruit_success_shares_with_nearby_child():
+    """A father's successful fruit-gather (not just his hunts) shares with
+    his nearby child too."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    fruit = next(iter(env.fruit_positions))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.fruit_positions[fruit] = male_pos
+    env.fruit_energies[fruit] = 2.0
+
+    child = "predator_female_test_child"
+    child_pos = (5, 6)
+    env.agent_positions[child] = child_pos
+    env.predator_positions[child] = child_pos
+    env.agent_energies[child] = 2.0
+    env.cumulative_rewards[child] = 0
+    env.agent_parents[child] = (male, "predator_female_0")
+    env.agents.append(child)
+
+    male_energy_before = env.agent_energies[male]
+    child_energy_before = env.agent_energies[child]
+
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    donation = env.parent_offspring_share_rate * 2.0
+
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator + 2.0 - donation
+    assert env.agent_energies[child] == child_energy_before - env.homeostatic_energy_cost_per_step_predator + donation
+
+
+def test_female_hunt_success_shares_with_nearby_child():
+    """A mother's successful hunt (rare, but possible) shares with her
+    nearby child too -- not just her fruit-gathers."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    female_pos = (5, 5)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+    env.agent_positions[prey] = female_pos
+    env.prey_positions[prey] = female_pos
+
+    child = "predator_male_test_child"
+    child_pos = (5, 6)
+    env.agent_positions[child] = child_pos
+    env.predator_positions[child] = child_pos
+    env.agent_energies[child] = 2.0
+    env.cumulative_rewards[child] = 0
+    env.agent_parents[child] = ("predator_male_0", female)
+    env.agents.append(child)
+
+    prey_energy_before = env.agent_energies[prey]
+    female_energy_before = env.agent_energies[female]
+    child_energy_before = env.agent_energies[child]
+
+    _force_next_random(env, 0.0)  # forces the female's own hunting success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    donation = env.parent_offspring_share_rate * energy_gained
+
+    assert (
+        env.agent_energies[female]
+        == female_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained - donation
+    )
+    assert env.agent_energies[child] == child_energy_before - env.homeostatic_energy_cost_per_step_predator + donation
+
+
+def test_combined_donation_rates_exceeding_one_raises_error():
+    """male_gift_donation_rate and parent_offspring_share_rate both apply to
+    the same gross hunting gain (not sequentially off a shrinking
+    remainder) -- an unchecked sum above 1.0 could deduct more energy than
+    a hunt actually gained, so __init__ must reject it."""
+    with pytest.raises(ValueError):
+        _make_test_env(overrides={"male_gift_donation_rate": 0.7, "parent_offspring_share_rate": 0.4})

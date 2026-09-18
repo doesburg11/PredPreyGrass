@@ -40,6 +40,34 @@ config_env = {
     # eco_evolutionary_nuptial_gift's cooperation_range, which faces the
     # identical constraint for its male-female proximity check.
     "mate_search_radius": 3,
+    # Male provisioning (unidirectional male -> female energy gift on a
+    # successful hunt, exclusive to his recorded mate -- see self.agent_mate,
+    # not broadcast to any nearby female): offsets predator_female's
+    # post-birth energy deficit -- she pays the larger share of birth cost
+    # (predator_birth_cost_share_female below) but her only reliable income
+    # (fruit) is weak, shared, and depleting, unlike the male's much higher
+    # hunting success rate. Modeled on eco_evolutionary_nuptial_gift's
+    # male_donation_rate/cooperation_range, mechanically executed (not a
+    # learned action) for the same credit-assignment reasons documented in
+    # that module's README.
+    # __init__ raises ValueError unless the rate is in [0, 1].
+    "male_gift_donation_rate": 0.3,
+    "predator_gift_range": 3,
+    # Parental care: both parents (not just the mother) share a fraction of
+    # ANY successful forage -- hunt or fruit -- with their own nearby living
+    # offspring (self.agent_parents), reusing predator_gift_range rather
+    # than adding a separate proximity knob. Split evenly if a parent has
+    # multiple living offspring nearby at once (unlike the exclusive,
+    # single-recipient mate gift above). No explicit weaning-age cutoff:
+    # spatial dispersion already makes care taper off for free once a grown
+    # offspring wanders out of range. Mechanically executed, same
+    # credit-assignment rationale as male_gift_donation_rate above.
+    # __init__ raises ValueError unless the rate is in [0, 1], AND unless
+    # male_gift_donation_rate + parent_offspring_share_rate <= 1.0 -- a
+    # male's successful hunt applies both donations to the same gross gain
+    # (not sequentially off a shrinking remainder), so an unchecked sum
+    # above 1.0 could deduct more energy than the hunt actually gained.
+    "parent_offspring_share_rate": 0.2,
     # Birth cost is split asymmetrically between parents, modeled on parental
     # investment theory (Trivers, 1972): the female bears the larger share of
     # the shared reproductive cost because she is also the structurally
