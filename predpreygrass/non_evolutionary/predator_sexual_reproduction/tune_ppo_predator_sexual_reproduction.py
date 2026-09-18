@@ -73,6 +73,25 @@ def parse_args():
         help="Override mate_search_radius (Chebyshev distance for predator "
              "mate-finding). Default: config_env.py's shipped value.",
     )
+    parser.add_argument(
+        "--male-success-prob", type=float, default=None,
+        help="Override prey_vs_predator_male_success_prob. Useful for a positive-"
+             "control run (push odds to an extreme to confirm the risk-driven "
+             "specialization mechanism CAN produce a visible signal before "
+             "trusting a null result at the real settings).",
+    )
+    parser.add_argument(
+        "--male-death-prob", type=float, default=None,
+        help="Override prey_vs_predator_male_death_prob.",
+    )
+    parser.add_argument(
+        "--female-success-prob", type=float, default=None,
+        help="Override prey_vs_predator_female_success_prob.",
+    )
+    parser.add_argument(
+        "--female-death-prob", type=float, default=None,
+        help="Override prey_vs_predator_female_death_prob.",
+    )
     return parser.parse_args()
 
 
@@ -230,6 +249,14 @@ if __name__ == "__main__":
     env_config = dict(config_env)
     if args.mate_search_radius is not None:
         env_config["mate_search_radius"] = args.mate_search_radius
+    if args.male_success_prob is not None:
+        env_config["prey_vs_predator_male_success_prob"] = args.male_success_prob
+    if args.male_death_prob is not None:
+        env_config["prey_vs_predator_male_death_prob"] = args.male_death_prob
+    if args.female_success_prob is not None:
+        env_config["prey_vs_predator_female_success_prob"] = args.female_success_prob
+    if args.female_death_prob is not None:
+        env_config["prey_vs_predator_female_death_prob"] = args.female_death_prob
 
     register_env("PredPreyGrass", env_creator)
     ray.shutdown()
