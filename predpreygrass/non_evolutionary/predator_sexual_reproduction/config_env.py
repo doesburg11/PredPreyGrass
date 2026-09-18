@@ -109,8 +109,25 @@ config_env = {
     "n_possible_predator_male": 1000,
     "n_possible_predator_female": 1000,
     "n_possible_prey": 2000,
-    "n_initial_active_predator_male": 3,
-    "n_initial_active_predator_female": 3,
+    # Doubled from 3/3 to 6/6 (2026-09-18): a small starting population
+    # means one sex hitting zero (which ends the episode -- reproduction
+    # structurally needs both) can happen from a handful of unlucky combat
+    # deaths or starvation events, especially early in training before
+    # either policy has learned anything. More individuals per sex means
+    # more must die simultaneously to trigger that, buying more steps of
+    # experience per episode without changing any per-individual risk.
+    #
+    # Female bumped further, to 10 (same day): a symmetric 6/6 smoke test
+    # showed predator_female reaching 0 while predator_male still had 4-6
+    # left in every one of 5 random-policy seeds tried -- she absorbs both
+    # the higher per-attempt combat-death risk (prey_vs_predator_female_death_prob
+    # 0.10 vs male's 0.05) and the larger birth-cost share
+    # (predator_birth_cost_share_female 0.9), so she's structurally the
+    # bottleneck sex, not male. Biasing the starting population toward her
+    # targets that asymmetry directly instead of just buying more time
+    # symmetrically.
+    "n_initial_active_predator_male": 6,
+    "n_initial_active_predator_female": 10,
     "n_initial_active_prey": 8,
     "initial_energy_predator_male": 5.0,
     "initial_energy_predator_female": 5.0,

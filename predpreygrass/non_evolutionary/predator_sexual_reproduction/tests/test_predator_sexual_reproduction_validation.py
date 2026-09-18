@@ -763,6 +763,8 @@ def test_remating_severs_stale_reverse_mate_pointer():
     # Simulate a prior bond from an earlier reproduction event.
     env.agent_mate[m1] = female
     env.agent_mate[female] = m1
+    env.has_reproduced.add(m1)
+    env.has_reproduced.add(female)
 
     # Keep m1 far away and energy-ineligible so only m2+female pair this step.
     env.agent_positions[m1] = (0, 0)
@@ -784,6 +786,11 @@ def test_remating_severs_stale_reverse_mate_pointer():
     # m1's stale pointer to the female must be gone -- either removed
     # entirely or (if present for any other reason) not pointing at her.
     assert env.agent_mate.get(m1) != female
+    # has_reproduced is permanent history, unlike agent_mate's mutable
+    # current-pair bookkeeping -- remating must NOT un-mark m1 (or the
+    # female) as having reproduced before.
+    assert m1 in env.has_reproduced
+    assert female in env.has_reproduced
 
 
 def test_reproduction_records_parentage():
@@ -810,6 +817,10 @@ def test_reproduction_records_parentage():
     assert len(new_predators) == 1
     child = new_predators[0]
     assert env.agent_parents[child] == (male, female)
+    # Both parents are now breeding adults -- see has_reproduced.
+    assert male in env.has_reproduced
+    assert female in env.has_reproduced
+    assert child not in env.has_reproduced  # the newborn itself hasn't
 
 
 def test_male_hunt_success_shares_with_nearby_child():
@@ -1062,3 +1073,105 @@ def test_combined_donation_rates_exceeding_one_raises_error():
     a hunt actually gained, so __init__ must reject it."""
     with pytest.raises(ValueError):
         _make_test_env(overrides={"male_gift_donation_rate": 0.7, "parent_offspring_share_rate": 0.4})
+
+
+def test_no_share_with_offspring_that_has_reproduced():
+    """A reproduction-based independence cutoff: an offspring that has
+    already reproduced itself is a breeding adult, not a dependent
+    juvenile, so it stops receiving parental care even if it's recorded as
+    this forager's child and stands right next to it."""
+    env = _make_test_env(
+        overrides={"n_initial_active_predator_male": 1, "n_initial_active_predator_female": 1}
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+
+    grown_child = "predator_female_test_grown_child"
+    child_pos = (5, 6)
+    env.agent_positions[grown_child] = child_pos
+    env.predator_positions[grown_child] = child_pos
+    env.agent_energies[grown_child] = 5.0
+    env.cumulative_rewards[grown_child] = 0
+    env.agent_parents[grown_child] = (male, "predator_female_0")
+    env.has_reproduced.add(grown_child)  # already a breeding adult itself
+    env.agents.append(grown_child)
+
+    prey_energy_before = env.agent_energies[prey]
+    male_energy_before = env.agent_energies[male]
+    grown_child_energy_before = env.agent_energies[grown_child]
+
+    _force_next_random(env, 0.0)  # forces the hunting-attempt success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    energy_gained = prey_energy_before - env.homeostatic_energy_cost_per_step_prey
+    # Male keeps the whole gain (minus any mate gift, but he has no
+    # recorded mate here) -- no offspring-share deduction at all.
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator + energy_gained
+    # The grown child gets nothing beyond its own ordinary homeostatic cost.
+    assert (
+        env.agent_energies[grown_child]
+        == grown_child_energy_before - env.homeostatic_energy_cost_per_step_predator
+    )
+
+
+def test_training_metrics_track_hunting_and_provisioning():
+    """_build_episode_training_metrics reports hunting attempts/successes/
+    deaths by sex and mate-gift/parental-care event+energy totals -- the
+    observability needed to tell 'never attempts hunting' apart from
+    'attempts but fails' or 'never gets the chance', and to see whether the
+    provisioning mechanics are actually firing during training."""
+    env = _make_test_env(
+        overrides={
+            "n_initial_active_predator_male": 1,
+            "n_initial_active_predator_female": 1,
+            "n_initial_active_prey": 1,  # avoid a second prey coincidentally landing on the child's cell
+        }
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+
+    # A successful male hunt with the female as his recorded mate nearby,
+    # so both the hunting counters and the mate-gift counters fire.
+    env.agent_mate[male] = female
+    env.agent_mate[female] = male
+    male_pos = (5, 5)
+    env.agent_positions[male] = male_pos
+    env.predator_positions[male] = male_pos
+    env.agent_positions[prey] = male_pos
+    env.prey_positions[prey] = male_pos
+    female_pos = (5, 6)
+    env.agent_positions[female] = female_pos
+    env.predator_positions[female] = female_pos
+
+    child = "predator_male_test_child"
+    child_pos = (5, 4)
+    env.agent_positions[child] = child_pos
+    env.predator_positions[child] = child_pos
+    env.agent_energies[child] = 2.0
+    env.cumulative_rewards[child] = 0
+    env.agent_parents[child] = (male, female)
+    env.agents.append(child)
+
+    _force_next_random(env, 0.0)  # forces the male's hunting success band
+    actions = _noop_actions(env)
+    env.step(actions)
+
+    metrics = env._build_episode_training_metrics()
+
+    assert metrics["hunting_attempts_predator_male"] == 1
+    assert metrics["hunting_successes_predator_male"] == 1
+    assert metrics["hunting_success_rate_predator_male"] == 1.0
+    assert metrics["hunting_deaths_predator_male"] == 0
+    assert metrics["hunting_attempts_predator_female"] == 0
+    assert metrics["mate_gift_events"] == 1
+    assert metrics["mate_gift_energy_total"] > 0.0
+    assert metrics["parental_care_events"] == 1
+    assert metrics["parental_care_energy_total"] > 0.0

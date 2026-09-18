@@ -111,9 +111,15 @@ as humans in the first place. Unlike the exclusive, single-recipient mate
 gift, this splits evenly across however many of a parent's own children are
 currently nearby, since (unlike mates) a parent can have several living
 offspring at once. Reuses `predator_gift_range` for proximity rather than
-adding a separate knob, and needs no explicit "weaning age" cutoff -- a
-grown offspring that wanders off simply falls out of range on its own, so
-care tapers off for free. See `_share_energy_with_offspring`.
+adding a separate knob. See `_share_energy_with_offspring`.
+
+Care stops once the offspring has reproduced itself (`self.has_reproduced`)
+-- a **reproduction-based**, not age-based, independence cutoff: this
+module tracks no per-agent age at all, so "started its own family" is a
+much cheaper proxy for "grown up" than adding age/weaning-duration
+bookkeeping would be. Distance still tapers care off for free too -- a
+grown offspring that simply wanders away (without yet reproducing) falls
+out of range on its own.
 
 ### Why hunting is risky, and riskier for females
 
@@ -196,7 +202,17 @@ reproduction added (2026-09-18); male provisioning added the same day after
 identifying that the 90/10 birth-cost split left females with no viable way
 to recover the energy spent on a birth (later revised to be exclusive to a
 recorded mate rather than broadcast to any nearby female); parental care
-(both parents feeding their own nearby offspring) added the same day.
+(both parents feeding their own nearby offspring) added the same day, later
+capped with a reproduction-based independence cutoff (`self.has_reproduced`)
+so care doesn't continue indefinitely once an offspring is a breeding adult
+itself. `_build_episode_training_metrics` reports hunting attempts/
+successes/deaths-in-combat by sex and mate-gift/parental-care event+energy
+totals -- surfaced automatically to TensorBoard under `ecology/*` via the
+existing `EpisodeReturn` callback, no training-script changes needed --
+specifically so a real run's behavior (is anyone hunting, is provisioning
+firing, is it just starvation vs. combat) is readable from curves instead of
+requiring checkpoint replay.
+
 Smoke-tested via the unit test suite, a random-policy run, and a local PPO
 build/train iteration, not yet trained for real. Open questions for a first real run: whether
 `mate_search_radius=3` gives frequent-enough mating opportunities at this

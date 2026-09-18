@@ -36,9 +36,11 @@ self.agent_parents) -- direct parental care by both sexes, not just the
 mother, matching the cooperative-breeding literature's account of human
 parenting as distinctive among mammals. Split evenly across however many of
 a parent's own children are currently nearby (unlike the exclusive,
-single-recipient mate gift). See config_env.py for the mate-search/
-cost-split/gift/parental-care rationale and RESULTS.md (once populated) for
-empirical findings.
+single-recipient mate gift). Care stops once the offspring has reproduced
+itself (self.has_reproduced) -- a reproduction-based, not age-based,
+independence cutoff (this module tracks no per-agent age at all). See
+config_env.py for the mate-search/cost-split/gift/parental-care rationale
+and RESULTS.md (once populated) for empirical findings.
 """
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.config_env import config_env
 
@@ -206,6 +208,16 @@ class PredPreyGrass(MultiAgentEnv):
         # needed the remating fix).
         self.agent_parents: Dict[AgentID, Tuple[AgentID, AgentID]] = {}
 
+        # Reproduction-based independence cutoff for parental care: once an
+        # agent has reproduced itself, it's a breeding adult, not a
+        # dependent offspring, so _share_energy_with_offspring stops paying
+        # it out regardless of proximity to its own parents. Set once,
+        # alongside agent_mate/agent_parents, and never removed -- unlike
+        # agent_mate (which the remating fix can clear from an abandoned
+        # partner), "has this individual ever reproduced" is permanent, so
+        # it needs its own flag rather than reusing agent_mate membership.
+        self.has_reproduced: set[AgentID] = set()
+
         self._pending_removal: List[AgentID] = []
         self._next_predator_male_idx = self.n_initial_active_predator_male
         self._next_predator_female_idx = self.n_initial_active_predator_female
@@ -307,6 +319,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.agent_mate: Dict[AgentID, AgentID] = {}
         self.agent_parents: Dict[AgentID, Tuple[AgentID, AgentID]] = {}
+        self.has_reproduced: set[AgentID] = set()
 
         self._pending_removal = []
         self._next_predator_male_idx = self.n_initial_active_predator_male
@@ -315,6 +328,23 @@ class PredPreyGrass(MultiAgentEnv):
 
         self.episode_births = {"predator_male": 0, "predator_female": 0, "prey": 0}
         self.episode_deaths = {"predator_male": 0, "predator_female": 0, "prey": 0}
+
+        # Training-time observability for the hunting/provisioning
+        # mechanics -- surfaced via _build_episode_training_metrics, since
+        # episode_births/episode_deaths alone can't distinguish "no
+        # reproduction because no one hunts" from "no reproduction despite
+        # hunting succeeding" from "hunting succeeds but mates never meet."
+        self.hunting_attempts = {"predator_male": 0, "predator_female": 0}
+        self.hunting_successes = {"predator_male": 0, "predator_female": 0}
+        # Deaths specifically caused by a failed hunting attempt (a subset
+        # of episode_deaths, which doesn't distinguish cause -- the
+        # remainder, episode_deaths[sex] - hunting_deaths[sex], is
+        # starvation).
+        self.hunting_deaths = {"predator_male": 0, "predator_female": 0}
+        self.mate_gift_events = 0
+        self.mate_gift_energy_total = 0.0
+        self.parental_care_events = 0
+        self.parental_care_energy_total = 0.0
 
         def generate_random_positions(grid_size: int, num_positions: int):
             if num_positions > grid_size * grid_size:
@@ -769,6 +799,11 @@ class PredPreyGrass(MultiAgentEnv):
             self.predator_positions[new_agent] = new_position
             self.agent_energies[new_agent] = offspring_energy
             self.agent_parents[new_agent] = (male, mate)
+            # Both parents are now breeding adults -- see has_reproduced's
+            # docstring for why this ends their own eligibility for
+            # parental care from THEIR parents (_share_energy_with_offspring).
+            self.has_reproduced.add(male)
+            self.has_reproduced.add(mate)
 
             # mate is always the predator_female here (drawn from
             # female_snapshot, already filtered to "predator_female" in female).
@@ -843,6 +878,35 @@ class PredPreyGrass(MultiAgentEnv):
             "extinct_predator_male": float(self.current_num_predator_male <= 0),
             "extinct_predator_female": float(self.current_num_predator_female <= 0),
             "extinct_prey": float(self.current_num_prey <= 0),
+            # Hunting behavior/effectiveness by sex -- lets you distinguish
+            # "never attempts" (avoidance) from "attempts but fails/dies"
+            # from "never gets the chance," which births/deaths alone
+            # can't. hunting_deaths is combat-caused only; the remainder,
+            # deaths_predator_*[sex] - hunting_deaths_predator_*[sex], is
+            # starvation.
+            "hunting_attempts_predator_male": float(self.hunting_attempts["predator_male"]),
+            "hunting_attempts_predator_female": float(self.hunting_attempts["predator_female"]),
+            "hunting_successes_predator_male": float(self.hunting_successes["predator_male"]),
+            "hunting_successes_predator_female": float(self.hunting_successes["predator_female"]),
+            "hunting_success_rate_predator_male": (
+                self.hunting_successes["predator_male"] / self.hunting_attempts["predator_male"]
+                if self.hunting_attempts["predator_male"] > 0
+                else 0.0
+            ),
+            "hunting_success_rate_predator_female": (
+                self.hunting_successes["predator_female"] / self.hunting_attempts["predator_female"]
+                if self.hunting_attempts["predator_female"] > 0
+                else 0.0
+            ),
+            "hunting_deaths_predator_male": float(self.hunting_deaths["predator_male"]),
+            "hunting_deaths_predator_female": float(self.hunting_deaths["predator_female"]),
+            # Provisioning mechanics: how much energy is actually flowing
+            # through the mate-gift and parental-care mechanisms this
+            # episode (both are 0 if no one ever reproduces).
+            "mate_gift_events": float(self.mate_gift_events),
+            "mate_gift_energy_total": float(self.mate_gift_energy_total),
+            "parental_care_events": float(self.parental_care_events),
+            "parental_care_energy_total": float(self.parental_care_energy_total),
         }
 
     def _resolve_hunting_attempt(
@@ -877,6 +941,8 @@ class PredPreyGrass(MultiAgentEnv):
         "failure": no side effects; caller proceeds to fruit-gathering as
           normal. energy_gained is 0.0.
         """
+        sex = "predator_male" if "predator_male" in agent else "predator_female"
+        self.hunting_attempts[sex] += 1
         roll = self.rng.random()
         if roll < success_prob:
             if self.verbose_engagement:
@@ -897,6 +963,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_positions[caught_prey]
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
+            self.hunting_successes[sex] += 1
             return "success", self.reward_predator_catch_prey, energy_gained
 
         if roll < success_prob + death_prob:
@@ -913,6 +980,7 @@ class PredPreyGrass(MultiAgentEnv):
             else:
                 self.current_num_predator_female -= 1
                 self.episode_deaths["predator_female"] += 1
+            self.hunting_deaths[sex] += 1
             self.grid_world_state[1, *predator_position] = 0
             del self.predator_positions[agent]
             del self.agent_positions[agent]
@@ -975,6 +1043,8 @@ class PredPreyGrass(MultiAgentEnv):
         self.grid_world_state[1, *position] = self.agent_energies[agent]
         self.agent_energies[mate] += donation
         self.grid_world_state[1, *mate_position] = self.agent_energies[mate]
+        self.mate_gift_events += 1
+        self.mate_gift_energy_total += donation
 
     def _share_energy_with_offspring(self, agent, energy_gained):
         """Parental care: both parents share parent_offspring_share_rate of
@@ -985,10 +1055,24 @@ class PredPreyGrass(MultiAgentEnv):
         for the same credit-assignment reasoning. Unlike _apply_male_gift
         (exclusive to one recorded mate), this splits evenly across
         however many of the forager's own children are currently nearby,
-        since a parent can have multiple living offspring at once. No
-        explicit "weaning age" cutoff: a grown offspring that wanders off
-        simply falls out of range on its own, so care tapers off for free
-        without any extra state to track or decay.
+        since a parent can have multiple living offspring at once.
+
+        Cuts off once an offspring has reproduced itself
+        (self.has_reproduced): it's then a breeding adult, not a dependent
+        juvenile, regardless of how close it still stands to its own
+        parents. This is a reproduction-based independence cutoff, not an
+        age-based one -- this module tracks no per-agent age at all, and
+        "started its own family" is a cheaper, already-available proxy for
+        "grown up" than adding age/weaning-duration bookkeeping would be.
+        Distance still tapers care off naturally too: a grown offspring
+        that simply wanders away (without yet reproducing) falls out of
+        range on its own, no extra state needed for that part.
+
+        Note on same-step ordering: this runs during Step 3, which precedes
+        Step 5b (where has_reproduced gets updated). An offspring that
+        reproduces for the first time later in THIS step can therefore
+        still receive care earlier in this same step -- it only becomes
+        ineligible starting next step. Deterministic, not a bug.
         """
         if energy_gained <= 0.0 or self.parent_offspring_share_rate <= 0.0:
             return
@@ -998,6 +1082,7 @@ class PredPreyGrass(MultiAgentEnv):
             other
             for other, pos in self.predator_positions.items()
             if agent in self.agent_parents.get(other, ())
+            and other not in self.has_reproduced
             and self.agent_energies[other] > 0.0
             and max(abs(pos[0] - position[0]), abs(pos[1] - position[1])) <= radius
         ]
@@ -1010,6 +1095,8 @@ class PredPreyGrass(MultiAgentEnv):
         for child in children:
             self.agent_energies[child] += share
             self.grid_world_state[1, *self.agent_positions[child]] = self.agent_energies[child]
+        self.parental_care_events += 1
+        self.parental_care_energy_total += donation_total
 
     def _get_movement_energy_cost(self, agent, action):
         if action == self.noop_action_id:
@@ -1110,6 +1197,7 @@ class PredPreyGrass(MultiAgentEnv):
             "cumulative_rewards": self.cumulative_rewards.copy(),
             "agent_mate": self.agent_mate.copy(),
             "agent_parents": self.agent_parents.copy(),
+            "has_reproduced": self.has_reproduced.copy(),
             "current_num_predator_male": self.current_num_predator_male,
             "current_num_predator_female": self.current_num_predator_female,
             "current_num_prey": self.current_num_prey,
@@ -1135,6 +1223,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.cumulative_rewards = snapshot["cumulative_rewards"].copy()
         self.agent_mate = snapshot["agent_mate"].copy()
         self.agent_parents = snapshot["agent_parents"].copy()
+        self.has_reproduced = snapshot["has_reproduced"].copy()
         self.current_num_predator_male = snapshot["current_num_predator_male"]
         self.current_num_predator_female = snapshot["current_num_predator_female"]
         self.current_num_prey = snapshot["current_num_prey"]
