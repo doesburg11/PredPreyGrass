@@ -218,6 +218,8 @@ The two distributions barely overlap (base_environment's single lowest value, 0.
 
 **Sensitivity**: evaluating seed 42 at its final checkpoints instead (base iteration 1000, run B iteration 500) gives R = 1.072 vs 0.928 and leaves the paired result unchanged (p = 0.0156).
 
+*(Two statements in this section were corrected by the density analysis in §17: R ≈ 1 is not "random" on this bounded grid -- random placement gives R ≈ 1.13 -- so `base_environment` is also mildly clustered, just less than run B; and the density confound described below biases in the opposite direction from what is stated here.)*
+
 ### What this establishes, and what it doesn't
 
 - **Established**: run B's predators are spatially clustered relative to random placement, and `base_environment`'s are not, consistently across six independently-trained seeds -- the §13 observation is not an artifact of the seed-42 pair. A correction to §13: the seed-42 single episode gave R = 1.11 ("mildly dispersed") for `base_environment`; across seeds it is **≈ random (mean 1.02)**, not reliably dispersed. The robust contrast is "run B clusters; base_environment is about random."
@@ -225,3 +227,38 @@ The two distributions barely overlap (base_environment's single lowest value, 0.
 - **p = 0.0156 is the floor for a paired signed-rank test with six pairs** -- the design cannot produce a smaller paired p, and six seeds is a small sample. This is significant at the conventional 0.05 level but is not overwhelming evidence.
 - **The mechanism is still a hypothesis, not tested here.** §13's explanation (moving costs more than resting, so predators favor waiting near shared ambush spots) predicts the result, but these data don't test it. There is also a plausible confound this design cannot separate: run B and `base_environment` differ not only in cost structure but in equilibrium predator population (~12 vs ~19). Clark-Evans normalizes the expected distance for the actual predator count, but agents cannot share cells, and that exclusion pushes toward dispersion more at higher density -- which would bias `base_environment` toward *higher* R and could account for part of the gap independent of movement costs.
 - **Natural next test, not yet run**: a dose-response check across move-cost settings (run A at gap 0.10, run B at 0.08, the collapsed `move_fraction=1.0` run at 0.15, `base_environment` at 0) using existing checkpoints, which would test whether clustering scales with the move-minus-rest cost gap as the mechanism predicts, and could be paired with a density-matched comparison to address the confound above. (The `move_fraction=1.0` policy comes from a collapsing ecosystem, so it is a less clean point than the others.)
+
+## 17. Density and dose-response checks: the clustering difference is robust, its cause is not (2026-09-19)
+
+Two checks on §16, run on existing checkpoints only (no new training): the same 30-episode evaluation, now also recording mean predator count per episode, for all 12 policies, plus two extra seed-42 policies: run A (rest 0.10, move +0.10) and an earlier free-resting run (rest cost 0, move cost 0.15/0.05; a design since removed from the code, see §2-§9), evaluated with the equivalent additive-cost keys. Scripts: [`evaluate_clustering_density.py`](./evaluate_clustering_density.py), [`analyze_clustering_density.py`](./analyze_clustering_density.py); raw per-episode data in [`clustering_density_data/`](./clustering_density_data/). The R values reproduce §16's exactly (the evaluation is deterministic).
+
+**A correction to §16's reference point.** The Clark-Evans "R = 1 is random" reading assumes an unbounded plane. On this bounded 25x25 grid, with no two agents sharing a cell, N randomly placed predators give a *higher* R because of edge effects, and higher still at low N (simulated, 3,000 placements per N):
+
+| N predators | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 | 24 | 26 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| expected R under random placement | 1.24 | 1.20 | 1.18 | 1.16 | 1.15 | 1.14 | 1.13 | 1.13 | 1.13 | 1.13 |
+
+Measured against this null (excess = observed R minus random R at that policy's predator count), **both configurations are clustered**: `base_environment` −0.110, run B −0.235. So "`base_environment` is about random" (§16) was wrong; it is mildly clustered, and run B considerably more.
+
+**The density confound raised in §16 runs the other way.** §16 worried that the smaller run B population might be misread because agents cannot share cells. The null model shows the geometric bias at low density *raises* R (the random baseline is higher at run B's lower N), which works against finding clustering in run B. After adjustment the difference is unchanged in direction and slightly stronger: paired Wilcoxon one-sided p = 0.0156 (6/6 pairs; the floor for six pairs), unpaired Mann-Whitney one-sided p = 0.0011.
+
+**But density is not separable from configuration here, and one pattern points the other way.**
+- The configurations have **no overlap in predator count** (`base_environment` 18.2-18.5, run B 8.6-14.4 per policy), so no density-matched comparison across them exists in this data.
+- **Within run B, clustering weakens as predator count rises**: dR/dN = +0.015 per predator (episode level, policy-demeaned, p = 3.6e-5, r = 0.30); within `base_environment` there is no significant slope. Extrapolating that slope from run B's ~12 predators to `base_environment`'s ~18 would raise R by about 0.09, roughly the size of the gap. That extrapolation is outside the observed range and the relation could run either way (clustered predators may compete and end up fewer), so it is a warning, not a result.
+- Across all 14 policies R and predator count correlate at Spearman 0.73, confounded with configuration.
+
+**The dose-response does not show what the move-cost mechanism predicts** (seed 42, one policy per level; "gap" = extra cost of moving over resting):
+
+| gap | policy | R | mean predators | excess vs random |
+|---|---|---|---|---|
+| 0 | base_environment | 1.049 | 18.2 | −0.085 |
+| 0.08 | run B | 0.921 | 14.4 | −0.229 |
+| 0.10 | run A | 0.983 | 10.0 | −0.195 |
+| 0.15 | earlier free-resting run (rest cost 0; removed design) | 1.039 | 24.3 | −0.087 |
+
+It is non-monotonic, and it is one policy per level while run B's own seed-to-seed range is 0.882-0.998 -- so run A's 0.983 lies inside run B's spread and 0.08 vs 0.10 cannot be told apart. The informative point is the last row: with resting free, waiting near an ambush spot is costless, the mechanism's most extreme case, yet those predators are no more clustered than `base_environment` (excess −0.087). That is a different regime (prey collapsing, predators abundant at ~24, so density again differs), so it is not a clean refutation, but it is evidence against a simple "cheaper waiting -> more clustering" story, not for it.
+
+**Where this leaves the clustering finding**
+- **Established:** run B predators are more clustered than `base_environment` predators, consistently across six seeds, after correcting for the geometry of the bounded grid.
+- **Not established:** that the move/rest cost gap causes it. The ambush explanation of §13 is untested by these data and partly disfavored by the dose-response point above; a predator-density explanation cannot be excluded because the configurations do not overlap in density.
+- **What would separate them:** conditions that vary the cost gap while holding predator count fixed (or vice versa) -- for example run B-style costs with a larger initial or capped predator population, or several additional move-cost levels across seeds, which requires new training (~1.5-2 days, §15's estimate).
