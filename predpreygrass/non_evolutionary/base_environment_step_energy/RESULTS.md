@@ -192,4 +192,36 @@ The two distributions barely overlap (base_environment's single lowest value, 0.
 
 **Plan once training completes**: run the same zero-training evaluation methodology from §14 (30 episodes per new policy, one Clark-Evans R per episode) on each of the 10 new policies, aggregate one mean R per seed per config, then run the paired Wilcoxon signed-rank test across all 6 seed-pairs (42 existing + 43-47 new).
 
-**Status**: training running now (started 2026-09-17 19:37 CEST, sequential, ETA ~2026-09-19 21:37 CEST). Result pending.
+*(Correction added 2026-09-19, see §16: the "pairing is more powerful" argument above turned out to be wrong for this data -- the seed-paired base and step_energy values are uncorrelated, and at n=6 an unpaired test actually has a finer p-value floor. Both tests agree; §16 reports both.)*
+
+**Status**: training completed 2026-09-19 16:05 CEST (all 10 runs, sequential, no failures); evaluation and result in §16.
+
+## 16. Result: predator clustering in run B replicates across six independently-trained seeds (2026-09-19)
+
+**Setup**: six seeds (42-47), each with one `base_environment` and one run B (`base_environment_step_energy` defaults) policy. Seed 42 uses the pre-existing runs; seeds 43-47 were trained for this test (300 iterations each, sequentially, full resources). To keep training length identical, **all 12 policies are evaluated at their iteration-300 checkpoint** (`checkpoint_000029`; for seed 42 this is an intermediate checkpoint of its longer run). Each policy: 30 deterministic evaluation episodes (environment reset seeds 100-129), one Clark-Evans R per episode (§13), and the mean over episodes as that policy's value. Script: [`evaluate_clustering.py`](./evaluate_clustering.py); raw per-episode values: [`clustering_results.json`](./clustering_results.json).
+
+| seed | base_environment R | run B R | difference | within-seed Mann-Whitney p (30 vs 30 episodes) |
+|---|:---:|:---:|:---:|:---:|
+| 42 | 1.049 | 0.921 | 0.127 | 1.5e-11 |
+| 43 | 1.009 | 0.883 | 0.126 | 4.1e-10 |
+| 44 | 0.996 | 0.974 | 0.022 | 0.023 |
+| 45 | 1.029 | 0.883 | 0.146 | 8.1e-11 |
+| 46 | 1.026 | 0.998 | 0.028 | 0.018 |
+| 47 | 1.030 | 0.901 | 0.128 | 1.3e-10 |
+| **mean** | **1.023** | **0.927** | **0.096** | |
+
+**Primary test (pre-specified in §15): paired Wilcoxon signed-rank on the six seed-pair differences, H1: base R > run B R.** W = 21 (the maximum possible), exact **one-sided p = 0.0156** (two-sided p = 0.031). All 6/6 pairs point the same direction (sign test gives the same p). Paired t-test, one-sided p = 0.004; 95% CI on the mean paired difference [0.038, 0.155].
+
+**Supplementary, and arguably the more appropriate test: unpaired Mann-Whitney on the six vs six seed means, one-sided p = 0.0022.** Why this is reported alongside the pre-specified paired test: the pairing by seed number carries no signal (Spearman correlation between base R and run B R across seeds = -0.09, p = 0.87 -- the same seed in two different environments does not couple their randomness), so the paired design gives no variance-reduction benefit, and at n = 6 the signed-rank test's smallest attainable p (0.0156) is coarser than the unpaired test's. The pre-specified result stays primary; the two agree.
+
+**Episode-level picture**: pooled over seeds, `base_environment` R = 1.023 (sd 0.036) with 26% of episodes below 1; run B R = 0.927 (sd 0.070) with 84% of episodes below 1. Run B is below 1 (clustered) in all 6 seeds; `base_environment` is below 1 in only 1 of 6 (seed 44, at 0.996 -- effectively 1).
+
+**Sensitivity**: evaluating seed 42 at its final checkpoints instead (base iteration 1000, run B iteration 500) gives R = 1.072 vs 0.928 and leaves the paired result unchanged (p = 0.0156).
+
+### What this establishes, and what it doesn't
+
+- **Established**: run B's predators are spatially clustered relative to random placement, and `base_environment`'s are not, consistently across six independently-trained seeds -- the §13 observation is not an artifact of the seed-42 pair. A correction to §13: the seed-42 single episode gave R = 1.11 ("mildly dispersed") for `base_environment`; across seeds it is **≈ random (mean 1.02)**, not reliably dispersed. The robust contrast is "run B clusters; base_environment is about random."
+- **The effect size is heterogeneous.** Four seeds show a large gap (~0.13-0.15); seeds 44 and 46 show a small one (~0.02-0.03), and seed 46's run B value (0.998) is practically random. All six are in the predicted direction, but "run B is clustered" is far clearer in some seeds than others; the mean effect (0.096) is not what a typical single seed looks like.
+- **p = 0.0156 is the floor for a paired signed-rank test with six pairs** -- the design cannot produce a smaller paired p, and six seeds is a small sample. This is significant at the conventional 0.05 level but is not overwhelming evidence.
+- **The mechanism is still a hypothesis, not tested here.** §13's explanation (moving costs more than resting, so predators favor waiting near shared ambush spots) predicts the result, but these data don't test it. There is also a plausible confound this design cannot separate: run B and `base_environment` differ not only in cost structure but in equilibrium predator population (~12 vs ~19). Clark-Evans normalizes the expected distance for the actual predator count, but agents cannot share cells, and that exclusion pushes toward dispersion more at higher density -- which would bias `base_environment` toward *higher* R and could account for part of the gap independent of movement costs.
+- **Natural next test, not yet run**: a dose-response check across move-cost settings (run A at gap 0.10, run B at 0.08, the collapsed `move_fraction=1.0` run at 0.15, `base_environment` at 0) using existing checkpoints, which would test whether clustering scales with the move-minus-rest cost gap as the mechanism predicts, and could be paired with a density-matched comparison to address the confound above. (The `move_fraction=1.0` policy comes from a collapsing ecosystem, so it is a less clean point than the others.)
