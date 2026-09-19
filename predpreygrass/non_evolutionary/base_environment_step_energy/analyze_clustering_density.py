@@ -59,11 +59,11 @@ for kind, seeds in (("base", SEEDS), ("step", SEEDS), ("runA", [42]), ("freerest
 be = np.array([rows[("base", s)][2] for s in SEEDS])
 se = np.array([rows[("step", s)][2] for s in SEEDS])
 print("\nDENSITY-ADJUSTED TEST across the six seed pairs (excess clustering vs random at own density)")
-print(f"  base excess {be.mean():+.3f} | run B excess {se.mean():+.3f}")
+print(f"  base excess {be.mean():+.3f} | base_environment_step_energy excess {se.mean():+.3f}")
 print(f"  paired Wilcoxon one-sided p={wilcoxon(be, se, alternative='greater').pvalue:.4f}; "
       f"unpaired Mann-Whitney one-sided p={mannwhitneyu(be, se, alternative='greater').pvalue:.4f}; "
-      f"pairs base>run B: {(be > se).sum()}/6")
-print("  predator N ranges: base %.1f-%.1f, run B %.1f-%.1f (no overlap)" % (
+      f"pairs base>base_environment_step_energy: {(be > se).sum()}/6")
+print("  predator N ranges: base %.1f-%.1f, base_environment_step_energy %.1f-%.1f (no overlap)" % (
     min(rows[("base", s)][1] for s in SEEDS), max(rows[("base", s)][1] for s in SEEDS),
     min(rows[("step", s)][1] for s in SEEDS), max(rows[("step", s)][1] for s in SEEDS)))
 
@@ -80,9 +80,9 @@ print("  across all 14 policies, Spearman(R, N) = %.2f" % spearmanr(
     [v[1] for v in rows.values()], [v[0] for v in rows.values()])[0])
 
 print("\nSEED-42 DOSE-RESPONSE (one policy per level; move cost = extra cost of moving over resting)")
-for k, label, gap in (("base", "base_environment", 0.00), ("step", "run B", 0.08),
+for k, label, gap in (("base", "base_environment", 0.00), ("step", "base_environment_step_energy", 0.08),
                       ("runA", "run A", 0.10), ("freerest", "earlier free-resting run (rest 0)", 0.15)):
     v = rows[(k, 42)]
     print(f"  gap {gap:.2f}  {label:32s} R={v[0]:.3f} N={v[1]:.1f} excess={v[2]:+.3f}")
-print("  run B seed-to-seed R range at the SAME setting: %.3f - %.3f" % (
+print("  base_environment_step_energy seed-to-seed R range at the SAME setting: %.3f - %.3f" % (
     min(rows[("step", s)][0] for s in SEEDS), max(rows[("step", s)][0] for s in SEEDS)))

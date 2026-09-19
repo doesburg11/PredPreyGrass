@@ -37,6 +37,9 @@ config_env = {
     # easing only the predator move cost to 0.08 (below) fixed that,
     # tracking base_environment closely and holding stable for 400+
     # iterations with no late-run drift. This is the current default.
+    # Six-seed replication (RESULTS.md section 19): fewer predators than
+    # base_environment in every seed and sustainable in 5 of 6 seeds; in seed 45
+    # the predator population never established.
     "homeostatic_energy_cost_per_step_predator": 0.10,
     "homeostatic_energy_cost_per_step_prey": 0.035,
     "move_energy_cost_per_step_predator": 0.08,

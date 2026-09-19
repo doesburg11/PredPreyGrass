@@ -2,7 +2,7 @@
 
 This module is a **follow-up to plain `base_environment`**, where no move cost exists at all: `base_environment` charges `energy_loss_per_step_predator`/`_prey` every step, unconditionally, regardless of the action taken -- an agent that picks noop pays exactly the same tax as one that moves, and `_get_movement_energy_cost` sits in `base_environment` as a hook for a movement-based cost but is stubbed to always return `0` (dead code there). This module implements that hook for real, so that movement itself carries a cost `base_environment` never had.
 
-**See [`RESULTS.md`](./RESULTS.md) for the full investigation log** -- the reasoning, a failed first design, and the sequence of runs that led to the current, validated defaults below. This file just describes the current structure and how to run it.
+**See [`RESULTS.md`](./RESULTS.md) for the full investigation log** -- the reasoning, a failed first design, and the sequence of runs that led to the current defaults below. This file just describes the current structure and how to run it.
 
 ## Purpose
 
@@ -11,7 +11,7 @@ The per-step tax is split into two independent, additive costs instead of `base_
 - **`homeostatic_energy_cost_per_step_predator`/`_prey`** -- charged every step, regardless of action. Models basal metabolic upkeep (breathing, thermoregulation, cellular maintenance): every real organism burns energy continuously just to stay alive, even at complete rest, so this can never be zero (see `RESULTS.md` section 6 for what went wrong when an earlier design set it to zero -- predators could ambush prey for free, indefinitely, which no real animal can do).
 - **`move_energy_cost_per_step_predator`/`_prey`** -- charged *on top* of the homeostatic cost, only on steps where the agent's action isn't noop. Models the additional metabolic cost of locomotion.
 
-So resting costs `homeostatic`, moving costs `homeostatic + move` -- always more expensive than resting, never free, and never equal to `base_environment`'s single number since that number no longer exists as one quantity. Current defaults (`config_env.py`, validated -- see `RESULTS.md` sections 10-12):
+So resting costs `homeostatic`, moving costs `homeostatic + move` -- always more expensive than resting, never free, and never equal to `base_environment`'s single number since that number no longer exists as one quantity. Current defaults (`config_env.py`; see `RESULTS.md` sections 10-12 and 19):
 
 | | resting (homeostatic only) | moving (homeostatic + move) | `base_environment`'s flat tax (for reference) |
 |---|---|---|---|
@@ -39,14 +39,16 @@ The move cost is charged based on the **action chosen**, not on whether the agen
 
 ## Status
 
-**Validated at training scale (2026-09-17).** Getting here took two wrong turns worth knowing about before trusting any future change to this module -- both documented in full in `RESULTS.md`:
+**Partly validated at training scale (updated 2026-09-19).** Getting here took two wrong turns worth knowing about before trusting any future change to this module -- both documented in full in `RESULTS.md`:
 
-1. An earlier design let noop be completely free (`move_fraction=1.0`). It looked sustainable in a 100-iteration probe, then a full 500-iteration run showed it causes an accelerating predator-favoring collapse (prey population more than halved, 29% of episodes ending in prey extinction by the end) -- because a predator could ambush for zero energy cost indefinitely, which no real organism can do. Fixed by making the homeostatic cost structurally non-zero (`RESULTS.md` §5-9).
+1. An earlier design (a `move_fraction` parametrization, since removed from the code) let noop be completely free. It looked sustainable in a 100-iteration probe, then a full 500-iteration run showed it causes an accelerating predator-favoring collapse (prey population more than halved, 29% of episodes ending in prey extinction by the end) -- because a predator could ambush for zero energy cost indefinitely, which no real organism can do. Fixed by making the homeostatic cost structurally non-zero (`RESULTS.md` §5-9).
 2. The first version of the current additive model (predator move cost 0.10, same as homeostatic) avoided that collapse but settled at a predator population well below `base_environment`'s own equilibrium (`RESULTS.md` §10).
 
 The current defaults (predator move cost eased to 0.08) fixed that: a full 500-iteration run held a stable, low-extinction equilibrium (~12-14 predators, ~24-29 prey, 0% extinction, full-length episodes) for the final 400 iterations, tracking `base_environment`'s own equilibrium (~18-19 / ~19-25) closely and without drift (`RESULTS.md` §11-12).
 
-**Open**: only one seed (42) has been run throughout. Replication across 2-3 more seeds, and a run past 500 iterations to see how long the current stability holds, are the natural next steps.
+**Replicated across six seeds (300-iteration runs, `RESULTS.md` §19):** it is sustainable in most seeds but not all. Compared with `base_environment` (~19 predators and 0% predator extinction in every seed), the defaults give fewer predators in all six seeds (mean ~10.6, range 3.8-14.1) and more prey (mean ~32 vs ~19). Predator extinction is 0-4% in five seeds, but in seed 45 the predator population never established (~4 predators and 34-48% extinction across all 300 iterations). So expect roughly one failed run in six until this is understood.
+
+**Open**: why seed 45 failed and whether a slightly easier predator cost, longer training or more seeds change the failure rate; how long the stability of the other seeds holds beyond 500 iterations; and what causes the extra predator clustering (`RESULTS.md` §16-18).
 
 **To run**: `python -m predpreygrass.non_evolutionary.base_environment_step_energy.tune_ppo_base_environment_step_energy --seed 42 --max-iters 500`, using `config_env.py`'s shipped defaults, or override any of the four cost parameters directly:
 

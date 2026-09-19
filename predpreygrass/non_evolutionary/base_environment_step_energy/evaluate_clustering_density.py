@@ -4,7 +4,7 @@ Clustering evaluation that also records predator density (see RESULTS.md section
 Usage (repo root, project Python), one task per invocation, kind in {base, step, runA, freerest}:
     python predpreygrass/non_evolutionary/base_environment_step_energy/evaluate_clustering_density.py <kind> <seed>
 
-kind base/step: the seed's base_environment / run B policy (iteration-300 checkpoint);
+kind base/step: the seed's base_environment / base_environment_step_energy policy (iteration-300 checkpoint);
 runA: run A (rest 0.10, move +0.10) seed-42 policy; freerest: an earlier run in which resting was free
 (rest 0, move 0.15/0.05; a design since removed from the code) seed-42 policy, evaluated with the
 equivalent additive-cost keys.

@@ -3,7 +3,7 @@ Analysis of the birth-and-dispersal mechanism measurements (see RESULTS.md secti
 Reads clustering_mechanism_data/ (evaluate_clustering_mechanism.py) and clustering_density_data/
 (per-episode predator counts, evaluate_clustering_density.py) and prints:
   - per-policy movement, birth, dispersal and adjacency measures
-  - base_environment vs run B across the six seeds, one-sided in the direction the mechanism predicts
+  - base_environment vs base_environment_step_energy across the six seeds, one-sided in the direction the mechanism predicts
   - Spearman correlation of each measure with clustering R across the 12 policies
   - the mean parent-offspring dispersal profile by offspring age
   - adjacency measured against a random-placement null at each episode's own predator count
@@ -53,15 +53,15 @@ for (k, s), m in P.items():
 def compare(key, predicted):
     b = np.array([P[("base", s)][key] for s in SEEDS])
     st = np.array([P[("step", s)][key] for s in SEEDS])
-    alt = "greater" if predicted == "lower" else "less"  # test that base is greater when run B is predicted lower
+    alt = "greater" if predicted == "lower" else "less"  # test that base is greater when base_environment_step_energy is predicted lower
     p_unp = mannwhitneyu(b, st, alternative=alt).pvalue
     p_pair = wilcoxon(b, st, alternative=alt).pvalue
     n_dir = int((b > st).sum()) if predicted == "lower" else int((b < st).sum())
-    print(f"  {key:11s} base {b.mean():7.3f}  run B {st.mean():7.3f}  predicted run B {predicted:6s}: "
+    print(f"  {key:11s} base {b.mean():7.3f}  base_environment_step_energy {st.mean():7.3f}  predicted base_environment_step_energy {predicted:6s}: "
           f"{n_dir}/6 seeds, unpaired p={p_unp:.4f}, paired p={p_pair:.4f}")
 
 
-print("\nBASE vs RUN B across the six seeds (one-sided, direction predicted by the mechanism)")
+print("\nBASE vs BASE_ENVIRONMENT_STEP_ENERGY across the six seeds (one-sided, direction predicted by the mechanism)")
 print(" movement:")
 for k, d in (("noop_frac", "higher"), ("moved_frac", "lower"), ("mean_disp", "lower")):
     compare(k, d)
@@ -73,11 +73,11 @@ compare("birth_rate", "higher")
 
 keys = [(k, s) for k in ("base", "step") for s in SEEDS]
 Rv = [P[x]["R"] for x in keys]
-print("\nSPEARMAN of each measure with R across the 12 base + run B policies (negative = more of the measure, more clustering)")
+print("\nSPEARMAN of each measure with R across the 12 base + base_environment_step_energy policies (negative = more of the measure, more clustering)")
 for key in ("noop_frac", "moved_frac", "mean_disp", "birth_rate", "adj_frac", "d10", "d30", "d50"):
     r, p = spearmanr([P[x][key] for x in keys], Rv)
     print(f"  {key:11s} rho={r:+.2f} (p={p:.3f})")
-print("  within run B only (6 policies):")
+print("  within base_environment_step_energy only (6 policies):")
 for key in ("noop_frac", "mean_disp", "birth_rate", "d30"):
     r, p = spearmanr([P[("step", s)][key] for s in SEEDS], [P[("step", s)]["R"] for s in SEEDS])
     print(f"  {key:11s} rho={r:+.2f} (p={p:.3f})")
@@ -119,12 +119,12 @@ for k in ("base", "step"):
         obs_m[(k, s)], rnd_m[(k, s)] = obs.mean(), null.mean()
 b = np.array([ex[("base", s)] for s in SEEDS])
 st = np.array([ex[("step", s)] for s in SEEDS])
-print("  observed / random-expected: base %.3f / %.3f (x%.2f) | run B %.3f / %.3f (x%.2f)" % (
+print("  observed / random-expected: base %.3f / %.3f (x%.2f) | base_environment_step_energy %.3f / %.3f (x%.2f)" % (
     np.mean([obs_m[("base", s)] for s in SEEDS]), np.mean([rnd_m[("base", s)] for s in SEEDS]),
     np.mean([obs_m[("base", s)] for s in SEEDS]) / np.mean([rnd_m[("base", s)] for s in SEEDS]),
     np.mean([obs_m[("step", s)] for s in SEEDS]), np.mean([rnd_m[("step", s)] for s in SEEDS]),
     np.mean([obs_m[("step", s)] for s in SEEDS]) / np.mean([rnd_m[("step", s)] for s in SEEDS])))
-print("  excess adjacency: base %+.3f | run B %+.3f; run B > base in %d/6 seeds; unpaired one-sided p=%.4f; paired p=%.4f" % (
+print("  excess adjacency: base %+.3f | base_environment_step_energy %+.3f; base_environment_step_energy > base in %d/6 seeds; unpaired one-sided p=%.4f; paired p=%.4f" % (
     b.mean(), st.mean(), (st > b).sum(),
     mannwhitneyu(st, b, alternative="greater").pvalue, wilcoxon(st, b, alternative="greater").pvalue))
 r, p = spearmanr([ex[k] for k in keys], Rv)
