@@ -23,8 +23,25 @@ reconstructing it from conversation history.
 `predator_birth_cost_share_female/_male=0.9/0.1`, `male_gift_donation_rate=0.3`,
 `parent_offspring_share_rate=0.2`, initial population 6 male / 10 female predators / 8 prey).
 
-**Purpose:** confirm the risk-driven male/female specialization mechanism *can* produce a
-visible signal at all, before trusting a null result at realistic (much less extreme) odds.
+**Why this module tests division of labor at all:** predators (not prey) were chosen as this
+module's human analog specifically because humans hunt *and* gather while prey have no
+equivalent role (see README.md's "Research motivation"). The male-hunts+gathers/
+female-gathers-only split that predated this module's current design was replaced with a
+symmetric hunting ability plus a hard-coded risk asymmetry (males safer, females riskier at
+hunting), grounded in Trivers (1972) parental investment theory: the sex with more at stake in
+reproduction (here, females via the 90/10 birth-cost split and the sole gestational-style
+energy investment) should be more risk-averse. The design bet is that PPO training will *learn*
+male/female behavioral specialization (males hunt more, females gather more) as an emergent
+response to that risk asymmetry, rather than the specialization being hard-coded as a structural
+incapability the way it was in an earlier design (see README.md's mechanism history).
+
+**Purpose of this specific run:** before trusting a *null* result at the real, much milder risk
+asymmetry (module defaults: male 90%/5%, female 20%/10%, see Iteration 1 below), first confirm
+the mechanism is even *capable* of producing a visible specialization signal at all, at an odds
+gradient sharp enough that if training can't produce a signal even here, it almost certainly
+can't at the real, subtler odds either. This is the same "positive control before trusting a
+null" logic used in `predpreygrass/evolutionary/eco_evolutionary_metabolic_rate/RESULTS.md`'s
+Iteration 6 (sharpen the fitness gradient before concluding a trait lacks selective leverage).
 
 **Result: the extreme killed the mechanism outright rather than stress-testing it.**
 `hunting_success_rate_predator_male`/`_female` tracked the configured 95%/5% almost exactly
