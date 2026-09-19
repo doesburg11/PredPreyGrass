@@ -18,7 +18,11 @@ import numpy as np
 from numpy.typing import NDArray
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
-from ray.rllib.utils.typing import AgentID, Dict, List, Tuple
+from typing import Dict, List, Tuple
+
+# Ray types AgentID as Hashable, which type checkers cannot apply string operations to
+# (`"predator" in agent`, `agent.split("_")`); every agent id in this environment is a plain str.
+AgentID = str
 
 
 class PredPreyGrass(MultiAgentEnv):
@@ -141,7 +145,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_actions = len(self.action_to_move_tuple)
         self.agents_just_ate = set()  # agent_id → shows green ring this step
 
-    def reset(self, *, seed=None, options=None):
+    def reset(self, *, seed=None, options=None):  # pyright: ignore[reportIncompatibleMethodOverride]
         """
         Reset the environment to its initial state.
         """
@@ -159,7 +163,7 @@ class PredPreyGrass(MultiAgentEnv):
         # Initialize grid_world_state
         self.grid_world_state = self.initial_grid_world_state.copy()
 
-        self.possible_agents: List[AgentID] = [  # max_num of learning agents, placeholder inherited from MultiAgentEnv
+        self.possible_agents: List[AgentID] = [  # pyright: ignore[reportIncompatibleVariableOverride]
             f"predator_{i}" for i in range(self.n_possible_predators)
         ] + [f"prey_{j}" for j in range(self.n_possible_prey)]
         self.agents = [f"predator_{i}" for i in range(self.n_initial_active_predator)] + [
@@ -271,10 +275,13 @@ class PredPreyGrass(MultiAgentEnv):
         # For stepwise display eating in grid
         self.agents_just_ate.clear()
 
+        # MultiAgentEnv types action_dict with Ray's Hashable AgentID; the ids here are str.
+        actions: Dict[str, int] = action_dict  # pyright: ignore[reportAssignmentType]
+
         # Step 1: Process homeostatic energy depletion (always charged, every
         # step, regardless of action -- see __init__ for why this can never
         # be zero).
-        for agent, action in action_dict.items():
+        for agent, action in actions.items():
             if "predator" in agent:
                 self.agent_energies[agent] -= self.homeostatic_energy_cost_per_step_predator
                 self.grid_world_state[1, *self.agent_positions[agent]] = self.agent_energies[agent]
@@ -289,7 +296,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[3, *grass_position] = self.grass_energies[grass]
 
         # Step 2: Process movements
-        for agent, action in action_dict.items():
+        for agent, action in actions.items():
             if agent in self.agent_positions:
                 old_position = self.agent_positions[agent]
                 new_position = self._get_move(agent, action)
@@ -598,21 +605,6 @@ class PredPreyGrass(MultiAgentEnv):
         """
         return {position: agent for agent, position in self.agent_positions.items()}
 
-    def _remove_agent(self, agent: AgentID):
-        """
-        Removes an agent from all tracking dictionaries.
-        """
-        position = self.agent_positions[agent]
-        del self.agent_positions[agent]
-        del self.agent_energies[agent]
-
-        if "predator" in agent:
-            del self.predator_positions[position]
-            self.current_num_predators -= 1
-        elif "prey" in agent:
-            del self.prey_positions[position]
-            self.current_num_prey -= 1
-
     def _print_grid_from_positions(self):
         print(f"\nCurrent Grid State (IDs):  predators: {self.current_num_predators} prey: {self.current_num_prey}  \n")
 
@@ -821,7 +813,9 @@ class PredPreyGrass(MultiAgentEnv):
             # did.
             return free_positions[self.rng.integers(len(free_positions))]
 
-        return None  # No available position found
+        raise RuntimeError(
+            f"No free grid cell left to spawn a new agent (all {self.grid_size * self.grid_size} cells occupied)"
+        )
 
     def get_state_snapshot(self):
         return {
@@ -852,7 +846,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.grass_positions = snapshot["grass_positions"].copy()
         self.grass_energies = snapshot["grass_energies"].copy()
         self.grid_world_state = snapshot["grid_world_state"].copy()
-        self.agents = snapshot["agents"].copy()
+        self.agents = snapshot["agents"].copy()  # pyright: ignore[reportIncompatibleVariableOverride]
         self.cumulative_rewards = snapshot["cumulative_rewards"].copy()
         self.current_num_predators = snapshot["current_num_predators"]
         self.current_num_prey = snapshot["current_num_prey"]

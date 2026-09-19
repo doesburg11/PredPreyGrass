@@ -20,7 +20,7 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, Optional, cast
 
 import ray
 import torch
@@ -151,7 +151,7 @@ class EpisodeReturn(RLlibCallback):
         resolved_env = self._resolve_env(env=env, env_index=env_index, **kwargs)
         build_metrics = getattr(resolved_env, "_build_episode_training_metrics", None)
         if metrics_logger is not None and callable(build_metrics):
-            for metric_name, metric_value in build_metrics().items():
+            for metric_name, metric_value in cast(Dict[str, float], build_metrics()).items():
                 # reduce="mean": the default (EMA, coeff=0.01) would smooth
                 # these over ~100 episodes, badly lagging population/extinction
                 # swings; a per-iteration mean is what a baseline-vs-drive-
