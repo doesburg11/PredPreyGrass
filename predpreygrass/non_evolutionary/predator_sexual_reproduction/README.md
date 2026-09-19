@@ -214,7 +214,13 @@ firing, is it just starvation vs. combat) is readable from curves instead of
 requiring checkpoint replay.
 
 Smoke-tested via the unit test suite, a random-policy run, and a local PPO
-build/train iteration, not yet trained for real. Open questions for a first real run: whether
+build/train iteration. First real training run complete 2026-09-19 (a
+positive control at extreme hunting odds) -- see `RESULTS.md` for the full
+analysis; short version: the odds tested (90% female death per failed hunt)
+wiped out the female population before any specialization, mating, or
+parental-care behavior had a chance to occur, so the central question below
+is still open and needs a re-run at survivable odds. Open questions for that
+next run: whether
 `mate_search_radius=3` gives frequent-enough mating opportunities at this
 module's population density (see `base_environment_step_energy/RESULTS.md`
 for the equilibrium ~24-29 prey / ~12-14 predators baseline this module
