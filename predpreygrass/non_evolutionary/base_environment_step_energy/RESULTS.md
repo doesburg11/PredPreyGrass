@@ -262,3 +262,45 @@ It is non-monotonic, and it is one policy per level while run B's own seed-to-se
 - **Established:** run B predators are more clustered than `base_environment` predators, consistently across six seeds, after correcting for the geometry of the bounded grid.
 - **Not established:** that the move/rest cost gap causes it. The ambush explanation of §13 is untested by these data and partly disfavored by the dose-response point above; a predator-density explanation cannot be excluded because the configurations do not overlap in density.
 - **What would separate them:** conditions that vary the cost gap while holding predator count fixed (or vice versa) -- for example run B-style costs with a larger initial or capped predator population, or several additional move-cost levels across seeds, which requires new training (~1.5-2 days, §15's estimate).
+
+### Possible next steps (not planned; see §18 for what has since been checked)
+
+Item 1 of the original note (test the ambush story via noop/movement rates) has been done in §18: movement differs only slightly. The remaining ideas, in order of cost:
+
+1. **Zero-training causal test of the birth mechanism (see §18).** The policies only see local observations, so the same trained policies can be evaluated with a different spawn rule: place each newborn on a *random* free cell instead of an adjacent one, and compare the base-vs-run B clustering gap under both rules. If the clustering excess in both configurations shrinks under random spawning, adjacent births are causal for clustering; if the gap between the configurations also shrinks, births explain the difference between them; if the gap persists, something else does. Caveat: the policies were trained with adjacent spawning, so this is a mild distribution shift.
+2. **Separate density from configuration by matching predator count at evaluation time.** Run both configurations' policies at the same fixed number of predators (for example 12 and 18): set the initial predator count and disable predator births and deaths (or measure over an early window after a burn-in), and compare R at matched density.
+3. **Replicated dose-response with new training** (several move-cost levels at a fixed rest cost, at least 3-5 seeds each; ~4-5 hours per 300-iteration run, i.e. days), only if the cheaper checks leave the question open.
+
+## 18. Birth-and-dispersal mechanism: supported in direction, modest in size (2026-09-19)
+
+**The hypothesis (from the user, replacing §13's ambush explanation as the leading candidate).** (1) Offspring are born on a cell adjacent to the parent (`_find_available_spawn_position` takes the first free of the four neighbouring cells; the code is identical in both environments), so every birth creates an adjacent pair. (2) When moving away is costly, those pairs and groups disperse more slowly, so clusters persist longer. Unlike the ambush story, this does not require predators to choose good waiting spots. It predicts: run B predators move less; their offspring drift away from the parent more slowly; and adjacent pairs are over-represented.
+
+**Method.** The same 14 policies and 30 deterministic episodes as §17 (12 base/run B policies at iteration 300, plus run A and the earlier free-resting run at seed 42), instrumented (no training, CPU-only): per predator, the share of actions that are noop and the share of steps in which it changes cell; per-predator birth rate; mean parent-offspring distance at offspring ages of 1 to 100 steps (the spawn call is wrapped to capture each newborn's parent); and the share of predators with another predator within 1.5 cells. Scripts: [`evaluate_clustering_mechanism.py`](./evaluate_clustering_mechanism.py), [`analyze_clustering_mechanism.py`](./analyze_clustering_mechanism.py); raw data: [`clustering_mechanism_data/`](./clustering_mechanism_data/). The instrumented R values reproduce §16-17 exactly.
+
+| measure | base_environment | run B | seeds in the predicted direction | p (unpaired / paired, one-sided) |
+|---|:---:|:---:|:---:|:---:|
+| share of predator actions that are noop | 0.139 | 0.163 | 4/6 | 0.12 / 0.22 |
+| share of predator-steps in which the predator moves | 0.793 | 0.765 | 5/6 | 0.12 / 0.078 |
+| mean displacement per step (cells) | 0.964 | 0.931 | 4/6 | 0.24 / 0.16 |
+| parent-offspring distance at offspring age 10 (cells) | 4.94 | 4.68 | 5/6 | 0.021 / 0.031 |
+| ... at age 30 | 7.63 | 7.26 | 5/6 | 0.033 / 0.047 |
+| ... at age 50 | 9.29 | 8.59 | 5/6 | 0.033 / 0.031 |
+| births per 1000 predator-steps | 7.31 | 8.91 | 6/6 | 0.0011 / 0.016 |
+| adjacent-neighbour share, minus random expectation at the same predator count | +0.090 | +0.132 | 6/6 | 0.0043 / 0.016 |
+
+Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50, 75, 100; mean over seeds): base 1.72, 2.29, 2.77, 3.57, 4.94, 6.53, 7.63, 9.29, 10.60, 11.27; run B 1.76, 2.27, 2.72, 3.44, 4.68, 6.16, 7.26, 8.59, 9.66, 10.26. Newborns start equally close in both; run B's offspring fall behind gradually.
+
+**A measurement pitfall caught along the way.** The *raw* adjacent-neighbour share is not higher in run B (0.264 vs 0.285, 2/6 seeds), which at first looked like evidence against the mechanism. It is density-dependent: run B has fewer predators, so fewer are adjacent by chance. Against random placement at each episode's own predator count (2,000 random draws per N), adjacent pairs are 2.0x the random expectation in run B (0.264 vs 0.132) and 1.46x in base (0.285 vs 0.196); the excess in the table above uses this null.
+
+**Reading**
+- **Point 1 (births create adjacent pairs) is supported.** Adjacent pairs exceed random expectation in both configurations (base is also clustered, consistent with births alone), more so in run B, and run B predators reproduce more per capita (6/6 seeds, p = 0.001). Across the 12 policies, per-predator birth rate correlates with clustering R at Spearman -0.76 (p = 0.004), though this is confounded with configuration and within run B alone (6 policies) it is not significant (-0.37, p = 0.47).
+- **Point 2 (costly moving keeps clusters together) is supported only modestly.** Offspring end up 5-8% closer to the parent at ages 10-50 in run B (5/6 seeds), and dispersal distance tracks clustering across the 12 policies (Spearman +0.62 at age 30, +0.75 at age 50; +0.83 within run B, p = 0.042, n = 6). But overall movement barely differs: run B predators move in 77% of steps versus 79%, not significant. This is not predators sitting still; the effect is a small slowing of dispersal that accumulates over the offspring's lifetime. Noop share and movement do not track R across the policies.
+- **The two extra seed-42 policies fit "births and slow dispersal are both needed" (post hoc, one policy each).** The earlier free-resting run moves least (noop 0.22, displacement 0.85) but has the lowest birth rate (5.4 per 1000) and no extra clustering (R = 1.039); run A has the highest birth rate (10.5) but base-like movement (noop 0.11, displacement 0.99) and only moderate clustering (R = 0.983).
+
+**Caveats**
+- **Correlation, not causation.** Every measure differs between the two configurations together, so these data cannot say which one drives clustering. In particular the higher per-predator birth rate may itself be a consequence of the configuration (run B has more prey per predator), i.e. downstream of the cost structure rather than independent of it. Density remains entangled with configuration (§17).
+- **Multiple comparisons.** About a dozen base-vs-run B comparisons were made. Only the birth-rate result (p = 0.0011) clearly survives a strict correction (0.05/12 = 0.004); the adjacency excess (p = 0.0043) is borderline; the dispersal results (nominal p = 0.02-0.05) do not survive one and should be read as suggestive.
+- **Adjacency and R are related by construction.** Excess adjacency correlates with R at Spearman -0.92 across the policies, but adjacent pairs feed directly into R's nearest-neighbour distances, so this is largely definitional and is not independent evidence.
+- **Small sample and post hoc adjustments.** Six seeds; the density adjustment of the adjacency measure was made after seeing the raw result (for a stated, mechanical reason above).
+
+**Where this leaves it.** The leading explanation for run B's extra clustering is now births plus slower dispersal, not ambush waiting: the measurements point that way in direction, with modest effect sizes and no causal test yet. The cheapest causal test is listed first in the "Possible next steps" note at the end of §17: evaluate the same policies under a random-cell spawn rule and see how the clustering gap changes.
