@@ -63,22 +63,37 @@ PPO can learn male/female specialization while both sexes survive long enough to
 **Status:** complete, 100/100 iterations, no crashes. Raw data:
 `~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_POSITIVE_CONTROL_SEED42/`.
 
-**Adjustment → Iteration 1 (not yet run):** retry the positive control with a less extreme
-female death probability — enough to make hunting a clearly bad bet without being near-certain
-death on first attempt (e.g. in the 20-40% range rather than 90%) — and check whether female
-population survives long enough for any births/gifts/parental-care events to occur at all before
-drawing conclusions about specialization.
+**Adjustment → Iteration 1 (launched):** rather than invent a new synthetic intermediate death
+probability, use the module's own already-established realistic defaults directly — they're
+already far milder than the positive control's 90% (10% female death per attempt, ~10-attempt
+expected survival vs. ~1.1) and answer the module's actual research question rather than another
+calibration step. No new number needed; `config_env.py`'s shipped values already are the
+"survivable but bad-expected-value" config the positive control's null result called for.
+
+### Iteration 1 — Realistic (shipped-default) odds, first real run (running)
+
+**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42`, seed 42, 100 iterations, same
+population/env-runner setup as Iteration 0, but **no hunting-probability CLI overrides** — falls
+through to `config_env.py`'s shipped defaults: male 90% success / 5% death, female 20% success /
+10% death per hunting attempt. This is simultaneously the fix for Iteration 0's extinction
+problem and the first-ever real (non-positive-control) training run for this module — the
+module's README has said "not yet trained for real" since 2026-09-17.
+
+**Launched:** 2026-09-19 09:00, via `systemd-run --user` (unit
+`predator-sexual-repro-realistic-seed42.service`, detached from any terminal/IDE session).
+
+**Status:** running. Results to be added here once complete.
 
 ---
 
 ## Next steps
 
-1. **Re-run the positive control with a survivable female death probability** (see Iteration 0's
-   adjustment above) — the immediate next experiment.
-2. Once a config produces at least some predator births, extend the analysis to the
-   specialization question the positive control was actually designed to answer: do males and
+1. **Iteration 1 is running** — the real/shipped-default config, first non-positive-control run
+   for this module. Results pending.
+2. Once Iteration 1 completes, check first whether females survive at all this time (the
+   Iteration 0 failure mode) before looking at the actual specialization question: do males and
    females diverge in hunting-attempt rate / fruit-gathering rate in a way that tracks their
-   respective risk profiles, and does that hold at realistic (non-extreme) odds too?
-3. Real (non-positive-control) run at the module's default/realistic hunting odds has not yet
-   been attempted — still open per the module's own README "Not yet trained for real" status
-   note as of the mate-search-radius/gift-restriction/parental-care design being finalized.
+   respective risk profiles?
+3. If Iteration 1 shows a promising trend but 100 iterations isn't enough to see it clearly,
+   extend `--max-iters` (e.g. to 300, matching the `step_energy` sweep's scale) rather than
+   drawing conclusions from an under-trained run.
