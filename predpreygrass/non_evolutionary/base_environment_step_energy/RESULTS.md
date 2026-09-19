@@ -344,4 +344,39 @@ Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50
 - **The clustering result (§16) does not depend on seed 45**, even though it is the seed with the lowest predator count (8.6 in evaluation) and among the strongest clustering: without it, the five remaining pairs are all in the predicted direction (mean R 1.022 vs 0.935, difference 0.086 against 0.096 with all six; paired one-sided p = 0.031, the floor for five pairs; unpaired p = 0.008).
 - Seed 45 also fits the pattern in §17 that clustering is strongest where predator numbers are lowest, which again cannot separate configuration from density (§17).
 
-**Not investigated.** Why seed 45 failed (early-training luck in a policy that then never reaches a viable hunting strategy is the obvious candidate, but no analysis was done), and whether a slightly easier predator cost, more iterations, or more seeds change the failure rate.
+**Investigated in §20:** seed 45's predator policy never sharpened (its entropy stayed near random), so it acts too noisily when sampling its actions even though its greedy version survives. Not established: why it fell behind in the first place, and whether a slightly easier predator cost, more iterations, or more seeds change the failure rate.
+
+## 20. Why seed 45 failed: its predator policy never sharpened (2026-09-19)
+
+§19 found that seed 45 of `base_environment_step_energy` never established a predator population (34-48% predator extinction and ~4 predators for all 300 iterations) while `base_environment` seed 45 was fine (0% extinction, ~19 predators). This section looks for the cause using the existing training logs and checkpoints (no new training). Scripts: [`analyze_seed45.py`](./analyze_seed45.py) (reads the runs' Ray result logs and the saved evaluation data) and [`evaluate_sampled_actions.py`](./evaluate_sampled_actions.py); raw data in [`sampled_action_data/`](./sampled_action_data/).
+
+**1. Its predator policy barely learned.** Policy entropy is the training-log measure of how random a policy still is; a uniformly random policy over the 9 actions has entropy ln 9 = 2.20. Predator policy entropy by training window (1-50, 51-100, 101-150, 151-200, 201-250, 251-300):
+
+| | 1-50 | 51-100 | 101-150 | 151-200 | 201-250 | 251-300 |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| seed 45 | 2.04 | 1.92 | 1.92 | 1.92 | 1.89 | **1.85** |
+| other five `base_environment_step_energy` seeds (range) | 1.92-2.03 | 1.59-1.85 | 1.37-1.69 | 1.29-1.52 | 1.27-1.43 | **1.23-1.40** |
+| `base_environment`, six seeds (range) | 1.88-1.95 | 1.42-1.54 | 1.21-1.28 | 1.11-1.16 | 1.07-1.12 | **1.05-1.10** |
+
+Seed 45's predators stayed close to random for the whole run; every other seed's predator policy sharpened substantially. (Its prey policy did learn, though slightly less: entropy 1.09 against 0.99-1.07 in the other seeds at the end.) Predator births per completed episode tell the same story: after the first 50 iterations seed 45 stays at about 31-49, while the other five seeds run at roughly 88-146 from iteration 101 on.
+
+**2. It diverged during iterations 51-100, not at the start.** In iterations 1-50 seed 45 looks like the others (entropy 2.04 vs 1.92-2.03; 24 births per episode vs 22-52; 5.9 thousand predator training samples per iteration, identical to seed 46's, which then took off). The gap opens in iterations 51-100 (entropy 1.92 vs 1.59-1.85; 49 births vs 65-125). What made it lag at that point is not known.
+
+**3. It then trained on about half as much predator data.** Predator experiences per training iteration (thousands), windows as above: seed 45 5.9, 6.8, 5.8, 5.3, 6.0, 6.4; the other `base_environment_step_energy` seeds settle at roughly 10-14; `base_environment` at about 19 in all seeds. Cumulative predator samples by iteration 300: 1.81 million for seed 45, 2.96-3.74 million for the other step-energy seeds, 5.2-5.5 million for `base_environment`. Fewer predators means fewer predator experiences per iteration, which slows learning, which keeps predators few: a feedback loop that keeps a lagging seed lagging. It does not explain how seed 45 fell behind in the first place (the initial sample counts matched a seed that recovered).
+
+**4. The policy that acts greedily is viable; the policy that acts by sampling is not.** Training samples every action from the policy's distribution; the evaluations in §16-18 take the most likely action. Evaluating each iteration-300 policy both ways (30 episodes, same reset seeds):
+
+| | greedy: episodes ended early / mean predators | sampled: predator extinction / mean predators |
+|---|:---:|:---:|
+| seed 45, `base_environment_step_energy` | 0% / 8.6 | **27% / 6.3** |
+| other five `base_environment_step_energy` seeds | 0% / 12.4-14.4 | 0% / 10.6-13.3 |
+| `base_environment`, six seeds | 0-17% / 18.2-18.5 | 0% / 18.2-18.5 |
+
+Sampled-action evaluation reproduces the training-time failure for seed 45 only (27% extinction in evaluation against 34-48% in training) and for no other policy, while greedy evaluation of seed 45 shows no extinctions. So seed 45's policy contains a workable greedy strategy but is still too random to be reliable when it samples its actions, and predators, which start with few individuals and little energy, die out when their actions are noisy. (Greedy is not uniformly safer: `base_environment` seed 42 ended early in 17% of greedy episodes and 0% of sampled ones; the cause was not checked.)
+
+**What this says and does not say**
+- **The failure is a training-dynamics failure, not evidence that the cost structure cannot support a trained predator.** The policy did not sharpen; five other seeds with the same costs did, and even seed 45's greedy policy survives every evaluation episode.
+- **It is more likely under the step-energy economy.** All six `base_environment` predator policies sharpened within about 100-200 iterations, while the step-energy economy leaves a thinner margin (predators are fewer and get less data even when things go well: 10-14 thousand samples per iteration against 19 thousand), so a slow start is harder to recover from. With six seeds and one failure this is a plausible reading, not a measured failure rate.
+- **Nothing here tests why seed 45 lagged at iterations 51-100.** Early random luck is the obvious candidate. No intervention was tried (for example continuing training from the seed-45 checkpoint, or an entropy bonus; all runs used an entropy coefficient of 0, so nothing pushes a policy either to explore or to sharpen).
+- **Caveat for §16-18.** The clustering evaluations use greedy actions for all seeds, so for seed 45 they describe the greedy behavior of an under-trained predator policy. The clustering result does not depend on that seed (§19), and whether clustering holds under sampled actions was not tested.
+- **Possible next steps, none run:** continue seed 45's training from its checkpoint to see whether it eventually sharpens; train more seeds to estimate the real failure rate; test an entropy bonus or a different learning setup for the predator policy.
