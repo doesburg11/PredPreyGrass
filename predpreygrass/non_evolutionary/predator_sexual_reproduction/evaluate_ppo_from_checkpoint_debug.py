@@ -20,6 +20,7 @@ from predpreygrass.non_evolutionary.predator_sexual_reproduction.utils.pygame_gr
 )
 
 # --- External libs ---
+import glob
 import os
 import sys
 import types
@@ -88,13 +89,18 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "simulation_results",
-        "ray_results",
-        "PPO_PREDATOR_SEXUAL_REPRODUCTION_SEED42",  # placeholder -- update after training
-        "checkpoint_000049",
-    )
+    # Pass a checkpoint directory as argv[1] to override the default (final foraging-check checkpoint).
+    if len(sys.argv) > 1:
+        checkpoint_path = os.path.expanduser(sys.argv[1])
+    else:
+        _run_dir = os.path.join(
+            os.path.expanduser("~"),
+            "simulation_results",
+            "ray_results",
+            "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42",
+        )
+        _trial = sorted(glob.glob(os.path.join(_run_dir, "PPO_PredPreyGrass_*/")))[0]
+        checkpoint_path = os.path.join(_trial, "checkpoint_000029")
 
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
     predator_male_path = os.path.join(expected_rlmodule_root, "predator_male_policy")

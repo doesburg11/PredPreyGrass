@@ -11,6 +11,20 @@ reconstructing it from conversation history.
 
 ---
 
+## Run names used in this log
+
+- **REALISTIC** (Iteration 1): `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42`. Shipped-default
+  hunting odds and a **sparse reward**: only `reproduction_reward_predator/prey` = 10.0 is
+  nonzero. 100 iterations.
+- **FORAGING** (Iteration 2): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42`. Identical
+  to REALISTIC, plus `reward_predator_catch_prey` = 1.0 and `reward_predator_gather_fruit` = 0.5
+  for both sexes (a **foraging reward**). 300 iterations. A diagnostic, not a proposed reward.
+- **POSITIVE_CONTROL** (Iteration 0): extreme hunting odds, sparse reward. Not in the chart.
+
+All runs use seed 42.
+
+---
+
 ## Iteration log
 
 ### Iteration 0 — Positive control, extreme hunting-risk asymmetry (complete)
@@ -87,30 +101,99 @@ expected survival vs. ~1.1) and answer the module's actual research question rat
 calibration step. No new number needed; `config_env.py`'s shipped values already are the
 "survivable but bad-expected-value" config the positive control's null result called for.
 
-### Iteration 1 — Realistic (shipped-default) odds, first real run (running)
+### Iteration 1 — REALISTIC: shipped-default odds, sparse reward (complete)
 
-**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42`, seed 42, 100 iterations, same
-population/env-runner setup as Iteration 0, but **no hunting-probability CLI overrides** — falls
-through to `config_env.py`'s shipped defaults: male 90% success / 5% death, female 20% success /
-10% death per hunting attempt. This is simultaneously the fix for Iteration 0's extinction
-problem and the first-ever real (non-positive-control) training run for this module — the
-module's README has said "not yet trained for real" since 2026-09-17.
+**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42`, seed 42, 100 iterations, no
+hunting-probability overrides (male 90% success / 5% death, female 20% success / 10% death),
+sparse reward (only `reproduction_reward_predator/prey` = 10.0 is nonzero), initial population
+6 male / 10 female predators / 8 prey. Launched 2026-09-19 09:00 via `systemd-run --user`,
+CPU-only (`--gpu-fraction 0`, to leave the GPU to another run), about 480 s/iteration.
 
-**Launched:** 2026-09-19 09:00, via `systemd-run --user` (unit
-`predator-sexual-repro-realistic-seed42.service`, detached from any terminal/IDE session).
+**Training curves** (block means, per episode; see `results_figures/population_over_training.png`):
 
-**Status:** running. Results to be added here once complete.
+| Iterations | Episode length | Males alive at end | Females alive at end | Prey alive at end | Births M / F |
+|---|---|---|---|---|---|
+| 1-10 | 350 | 3.2 | 0.03 | 48.0 | 1.8 / 2.5 |
+| 41-50 | 534 | 4.6 | 0.33 | 49.4 | 4.2 / 4.5 |
+| 91-100 | 459 | 4.9 | 0.06 | 50.0 | 4.3 / 4.4 |
+
+Improvement in the first 50 iterations, then a noisy plateau. Females are essentially extinct by
+the end of every episode (0.06 alive), unlike males. Hunting attempts per episode are equal by
+sex (about 85 each), so there is no division of labor in the counts.
+
+**Checkpoint rollout** (`analyze_prey_approach_from_checkpoint.py`, checkpoints at iterations
+10/50/100, 40 episodes each): approach bias toward prey and toward fruit is within +-0.01 cells
+of a random mover for both sexes, P(step onto prey) is x0.96-1.04 of random, and predator policy
+entropy is 1.95-2.12 nats against the 2.197 maximum for 9 actions. **The predator policies
+learned essentially no steering in 100 iterations.** The prey policy did learn (entropy
+1.87 -> 0.7-0.85). So the missing specialization is not a female-specific failure; predators with
+a sparse, mate-dependent reward get almost no gradient. The metric was validated with synthetic
+policies: always-approach scores +1.4 cells (x8.4), always-avoid scores -1.0 (x0).
+
+### Iteration 2 — FORAGING: foraging-reward capability check (complete)
+
+**Purpose:** can predators learn to steer at all in this environment if given a dense signal?
+This is a diagnostic, not a proposed final reward: the project wants minimal shaping.
+
+**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42`, seed 42, **300 iterations**,
+shipped-default hunting odds, plus `reward_predator_catch_prey = 1.0` and
+`reward_predator_gather_fruit = 0.5` (new CLI flags `--reward-catch-prey`/`--reward-gather-fruit`),
+paid to both sexes alike. GPU default setup. Ran 2026-09-19 23:45 to 2026-09-20 07:51 as unit
+`psr-foraging-check` (about 8 hours; 30 s/iteration at first, about 115 s late, as episodes
+lengthen). A first attempt with 100 iterations was stopped at iteration 26 and restarted with 300;
+its partial output is kept as `..._ABORTED_PARTIAL` in `ray_results`.
+
+**Training curves** (block means, per episode):
+
+| Iterations | Episode length | Males alive at end | Females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
+|---|---|---|---|---|---|---|
+| 1-10 | 323 | 5.0 | 0.0 | 42.1 | 41 / 42 | 2.5 / 2.0 |
+| 91-100 | 829 | 8.9 | 1.0 | 41.5 | 208 / 179 | 16.7 / 16.7 |
+| 191-200 | 839 | 13.9 | 1.7 | 34.6 | 270 / 187 | 25.3 / 19.9 |
+| 291-300 | **1001** | 16.1 | 6.0 | 31.3 | 348 / 279 | 30.0 / 36.0 |
+
+Episodes reach the 1000-step cap: the ecosystem became sustainable, with far more births than
+in Iteration 1. Females stay the small, fragile population (6 against 16 males at the end).
+
+**Rollout: approach toward the target** (P(step onto target when adjacent) as a multiple of a
+random mover; 30 episodes per checkpoint; bootstrap CIs exclude 0 for every fruit value):
+
+| | Iter 100 | Iter 150 | Iter 200 | Iter 300 |
+|---|---|---|---|---|
+| Male, fruit | x1.25 | x1.34 | x1.40 | **x1.54** |
+| Female, fruit | x1.24 | x1.41 | x1.54 | **x1.65** |
+| Male, prey | x1.00 | x1.03 | x1.06 | **x1.07** |
+| Female, prey | x0.96 | x0.98 | x0.99 | **x0.99** |
+
+**Findings**
+1. Predators can learn to steer here. Fruit approach grew steadily and had not plateaued, in
+   both sexes. Iteration 1 showed none. So the earlier null result was at least partly a
+   reward-density problem.
+2. Prey approach stays near random (about 2% of an always-approach policy). Males lean slightly
+   toward prey (+0.027 cells) and females slightly away (-0.008): the direction the hypothesis
+   predicts, but from a single seed and far too small to call specialization.
+3. Hunting attempts by sex are still close (females about 80% of males). Success rates equal the
+   configured odds (0.90 / 0.20), so they carry no information about skill.
+4. **Likely reason there is no risk-driven specialization:** `penalty_predator_death_in_combat`
+   is 0 and the catch reward is the same for both sexes, so the learner never feels the female's
+   10% death risk. Only the diffuse loss of future reproduction reward penalizes dying.
+
+**Caveats:** one seed; 30 rollout episodes per checkpoint; the foraging reward is shaping applied
+symmetrically, so this run is a capability test, not evidence for the sparse-reward design.
 
 ---
 
 ## Next steps
 
-1. **Iteration 1 is running** — the real/shipped-default config, first non-positive-control run
-   for this module. Results pending.
-2. Once Iteration 1 completes, check first whether females survive at all this time (the
-   Iteration 0 failure mode) before looking at the actual specialization question: do males and
-   females diverge in hunting-attempt rate / fruit-gathering rate in a way that tracks their
-   respective risk profiles?
-3. If Iteration 1 shows a promising trend but 100 iterations isn't enough to see it clearly,
-   extend `--max-iters` (e.g. to 300, matching the `step_energy` sweep's scale) rather than
-   drawing conclusions from an under-trained run.
+1. **Run the combat-death penalty test** (`--penalty-combat-death` flag now exists; magnitude >= 0,
+   stored as `penalty_predator_death_in_combat = -value`) on top of the foraging reward, and check whether female hunting drops
+   relative to male. This is the direct test of the risk-asymmetry hypothesis. Reward shaping,
+   so a decision for the researcher.
+2. **More seeds** for the foraging configuration (seed 42 only so far) before trusting any
+   sex-difference in prey approach.
+3. **Fruit-only shaping** (no catch reward) to separate "learns to gather" from "learns to hunt".
+4. **Female survival:** females are near-extinct in the sparse run and 6 vs 16 in the foraging
+   run. Check whether birth cost, gift rate, or starting population is the limiting factor.
+5. Longer runs if the fruit-approach trend continues past 300 iterations.
+6. Unexplained: the early rise in births and episode length in Iteration 1 cannot come from
+   predator learning; the prey policy changing behavior is the untested guess.

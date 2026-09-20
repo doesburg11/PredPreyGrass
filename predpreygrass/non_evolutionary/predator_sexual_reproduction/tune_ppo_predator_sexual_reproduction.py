@@ -92,6 +92,22 @@ def parse_args():
         "--female-death-prob", type=float, default=None,
         help="Override prey_vs_predator_female_death_prob.",
     )
+    parser.add_argument(
+        "--reward-catch-prey", type=float, default=None,
+        help="Override reward_predator_catch_prey (foraging-shaping capability "
+             "check: can predators learn to steer at all given a dense signal?).",
+    )
+    parser.add_argument(
+        "--reward-gather-fruit", type=float, default=None,
+        help="Override reward_predator_gather_fruit.",
+    )
+    parser.add_argument(
+        "--penalty-combat-death", type=float, default=None,
+        help="Magnitude (>= 0) of the penalty a predator receives when it dies in a "
+             "failed hunt. Stored as penalty_predator_death_in_combat = -value, since "
+             "the env uses that key directly as the dying predator's reward. Default: "
+             "config_env.py's shipped value (0.0, i.e. no penalty).",
+    )
     return parser.parse_args()
 
 
@@ -257,6 +273,15 @@ if __name__ == "__main__":
         env_config["prey_vs_predator_female_success_prob"] = args.female_success_prob
     if args.female_death_prob is not None:
         env_config["prey_vs_predator_female_death_prob"] = args.female_death_prob
+
+    if args.reward_catch_prey is not None:
+        env_config["reward_predator_catch_prey"] = args.reward_catch_prey
+    if args.reward_gather_fruit is not None:
+        env_config["reward_predator_gather_fruit"] = args.reward_gather_fruit
+    if args.penalty_combat_death is not None:
+        if args.penalty_combat_death < 0:
+            raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")
+        env_config["penalty_predator_death_in_combat"] = -args.penalty_combat_death
 
     register_env("PredPreyGrass", env_creator)
     ray.shutdown()

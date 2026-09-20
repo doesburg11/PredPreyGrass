@@ -195,40 +195,52 @@ Run the validation test suite (not auto-discovered by the repo's pytest
 pytest predpreygrass/non_evolutionary/predator_sexual_reproduction/tests/ -v
 ```
 
-## Status
+## Status and key results
 
-Freshly scaffolded (2026-09-17); probabilistic combat + asymmetric
-reproduction added (2026-09-18); male provisioning added the same day after
-identifying that the 90/10 birth-cost split left females with no viable way
-to recover the energy spent on a birth (later revised to be exclusive to a
-recorded mate rather than broadcast to any nearby female); parental care
-(both parents feeding their own nearby offspring) added the same day, later
-capped with a reproduction-based independence cutoff (`self.has_reproduced`)
-so care doesn't continue indefinitely once an offspring is a breeding adult
-itself. `_build_episode_training_metrics` reports hunting attempts/
-successes/deaths-in-combat by sex and mate-gift/parental-care event+energy
-totals -- surfaced automatically to TensorBoard under `ecology/*` via the
-existing `EpisodeReturn` callback, no training-script changes needed --
-specifically so a real run's behavior (is anyone hunting, is provisioning
-firing, is it just starvation vs. combat) is readable from curves instead of
-requiring checkpoint replay.
+Built 2026-09-17 to 09-18 (sexual reproduction, stochastic hunting, exclusive mate
+provisioning, parental care, observability metrics). Trained 2026-09-19/20; full log in
+[`RESULTS.md`](RESULTS.md).
 
-Smoke-tested via the unit test suite, a random-policy run, and a local PPO
-build/train iteration. First real training run complete 2026-09-19 (a
-positive control at extreme hunting odds) -- see `RESULTS.md` for the full
-analysis; short version: the odds tested (90% female death per failed hunt)
-wiped out the female population before any specialization, mating, or
-parental-care behavior had a chance to occur, so the central question below
-is still open and needs a re-run at survivable odds. Open questions for that
-next run: whether
-`mate_search_radius=3` gives frequent-enough mating opportunities at this
-module's population density (see `base_environment_step_energy/RESULTS.md`
-for the equilibrium ~24-29 prey / ~12-14 predators baseline this module
-inherits its costs from -- predator count there wasn't split by sex, so the
-per-sex equilibrium here is untested); whether the 90/10 birth-cost split
-and `male_gift_donation_rate=0.3` need retuning against each other (does the
-gift actually offset the birth cost, or just soften it); and the central
-empirical question this module now exists to test -- **does training
-actually produce male-hunts/female-gathers specialization from the 90/5 vs
-20/10 success/death odds, or does the risk asymmetry turn out not to be
-enough to drive it?**
+**Key message: predators can learn to steer here, but only fruit-gathering emerged, and the
+risk-driven male-hunts / female-gathers split has not.**
+
+**The two runs compared** (both seed 42, both at the shipped-default hunting odds):
+
+| Name | Run directory | Reward | Iterations |
+|---|---|---|---|
+| **REALISTIC** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42` | Sparse: only reproduction pays (10.0); catching prey and gathering fruit pay 0 | 100 |
+| **FORAGING** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42` | REALISTIC plus catch prey +1.0 and gather fruit +0.5, paid to both sexes | 300 |
+
+FORAGING is a diagnostic to test whether predators can learn at all, not a proposed final reward.
+
+![Population over training](results_figures/population_over_training.png)
+
+*Top: REALISTIC run, sparse reward (100 iterations). Bottom: FORAGING run, catch 1.0 and fruit 0.5 (300
+iterations). Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 42.*
+
+- **REALISTIC (sparse reward, only reproduction pays):** predator policies stayed near random, and females
+  are almost extinct by the end of each episode. Episodes plateau at about 450 steps.
+- **FORAGING (small foraging reward added):** episodes reach the 1000-step cap, births rise about 10x, and
+  both sexes learn to approach fruit (P(step onto fruit) x1.54 male, x1.65 female against a
+  random mover).
+- **Prey:** approach is still near random for both sexes (male x1.07, female x0.99). The tiny
+  male-toward / female-away split points the predicted way but is far too small to call
+  specialization. Hunting attempts by sex stay close (females about 80% of males).
+- **Likely reason:** `penalty_predator_death_in_combat = 0`, so the learner never feels the
+  female's 10% death risk.
+- **Caveat:** single seed.
+
+Reproduce the chart with `python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_training_curves`
+and the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`.
+
+## TODO next
+
+1. Run the combat-death penalty test: the `--penalty-combat-death` flag now exists (a magnitude
+   >= 0, stored as a negative reward), so run FORAGING plus a small penalty, for example
+   `--reward-catch-prey 1.0 --reward-gather-fruit 0.5 --penalty-combat-death 1.0 --max-iters 300`,
+   and check whether female hunting drops relative to male. Not started yet; decide first whether
+   to add seeds to the plain FORAGING configuration.
+2. Run more seeds of the foraging configuration before trusting any sex difference.
+3. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
+4. Find out what limits female survival (birth cost, gift rate, or starting population).
+5. Longer runs, since the fruit-approach trend had not plateaued at 300 iterations.
