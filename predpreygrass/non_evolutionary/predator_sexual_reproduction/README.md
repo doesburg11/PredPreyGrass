@@ -218,6 +218,14 @@ FORAGING is a diagnostic to test whether predators can learn at all, not a propo
 *Top: REALISTIC run, sparse reward (100 iterations). Bottom: FORAGING run, catch 1.0 and fruit 0.5 (300
 iterations). Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 42.*
 
+![Evaluation episode population](results_figures/evaluation_population_foraging_iter300_seed42.png)
+
+*One evaluation episode of the FORAGING run's final checkpoint (iteration 300, seed 42, deterministic
+argmax actions, `evaluate_ppo_from_checkpoint_debug.py`). All three populations coexist for the full
+1000 steps. Prey oscillate between about 24 and 47. Females rise from 10 to about 19 (step 350),
+then decline to 3 by step 1000, while males rise from 6 to about 17-21: the female population is
+the fragile one. A single episode, so illustrative rather than statistical.*
+
 - **REALISTIC (sparse reward, only reproduction pays):** predator policies stayed near random, and females
   are almost extinct by the end of each episode. Episodes plateau at about 450 steps.
 - **FORAGING (small foraging reward added):** episodes reach the 1000-step cap, births rise about 10x, and

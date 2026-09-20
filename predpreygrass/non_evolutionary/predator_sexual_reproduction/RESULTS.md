@@ -155,6 +155,11 @@ its partial output is kept as `..._ABORTED_PARTIAL` in `ray_results`.
 Episodes reach the 1000-step cap: the ecosystem became sustainable, with far more births than
 in Iteration 1. Females stay the small, fragile population (6 against 16 males at the end).
 
+**Evaluation episode** (`results_figures/evaluation_population_foraging_iter300_seed42.png`, final
+checkpoint, seed 42, argmax actions): the episode runs the full 1000 steps with all three
+populations alive. Prey oscillate 24-47, females peak at about 19 near step 350 and fall to 3 by
+the end, males climb from 6 to about 17-21. One episode, illustrative only.
+
 **Rollout: approach toward the target** (P(step onto target when adjacent) as a multiple of a
 random mover; 30 episodes per checkpoint; bootstrap CIs exclude 0 for every fruit value):
 
