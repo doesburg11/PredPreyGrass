@@ -201,22 +201,24 @@ Built 2026-09-17 to 09-18 (sexual reproduction, stochastic hunting, exclusive ma
 provisioning, parental care, observability metrics). Trained 2026-09-19/20; full log in
 [`RESULTS.md`](RESULTS.md).
 
-**Key message: predators can learn to steer here, but only fruit-gathering emerged, and the
-risk-driven male-hunts / female-gathers split has not.**
+**Key message: predators can learn to steer here, but only fruit-gathering emerged. The
+risk-driven male-hunts / female-gathers split has not, and a combat-death penalty of 1.0 made
+things worse instead of producing it.**
 
-**The two runs compared** (both seed 42, both at the shipped-default hunting odds):
+**The three runs compared** (all seed 42, all at the shipped-default hunting odds):
 
 | Name | Run directory | Reward | Iterations |
 |---|---|---|---|
 | **REALISTIC** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42` | Sparse: only reproduction pays (10.0); catching prey and gathering fruit pay 0 | 100 |
 | **FORAGING** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42` | REALISTIC plus catch prey +1.0 and gather fruit +0.5, paid to both sexes | 300 |
+| **FORAGING_PENALTY** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42` | FORAGING plus -1.0 when a predator dies in a failed hunt (both sexes) | 300 |
 
-FORAGING is a diagnostic to test whether predators can learn at all, not a proposed final reward.
+FORAGING and FORAGING_PENALTY are diagnostics, not proposed final rewards.
 
 ![Population over training](results_figures/population_over_training.png)
 
-*Top: REALISTIC run, sparse reward (100 iterations). Bottom: FORAGING run, catch 1.0 and fruit 0.5 (300
-iterations). Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 42.*
+*Top: REALISTIC (sparse reward, 100 iterations). Middle: FORAGING (catch 1.0, fruit 0.5, 300
+iterations). Bottom: FORAGING_PENALTY (FORAGING plus a -1.0 combat-death penalty, 300 iterations). Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 42.*
 
 ![Evaluation episode population](results_figures/evaluation_population_foraging_iter300_seed42.png)
 
@@ -234,21 +236,25 @@ the fragile one. A single episode, so illustrative rather than statistical.*
 - **Prey:** approach is still near random for both sexes (male x1.07, female x0.99). The tiny
   male-toward / female-away split points the predicted way but is far too small to call
   specialization. Hunting attempts by sex stay close (females about 80% of males).
-- **Likely reason:** `penalty_predator_death_in_combat = 0`, so the learner never feels the
-  female's 10% death risk.
-- **Caveat:** single seed.
+- **FORAGING_PENALTY (combat-death penalty 1.0 added):** females lean away from prey about 7x more
+  than in FORAGING (-0.056 against -0.008 cells), but males also stopped stepping onto adjacent prey
+  (x0.87 against x1.07), since the penalty is not sex-specific. Hunting attempts fell about 70% in
+  both sexes (female/male ratio 0.72 against 0.80), the predator population shrank (episode length
+  607 against 1001, births about 10x lower, 0.35 females alive at the end) and prey rose to the cap.
+  So the penalty suppressed hunting instead of separating the sexes.
+- **Caveat:** single seed per run. FORAGING may itself be a lucky seed, and a penalty of 1.0 may just
+  be too large.
 
 Reproduce the chart with `python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_training_curves`
 and the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`.
 
 ## TODO next
 
-1. Run the combat-death penalty test: the `--penalty-combat-death` flag now exists (a magnitude
-   >= 0, stored as a negative reward), so run FORAGING plus a small penalty, for example
-   `--reward-catch-prey 1.0 --reward-gather-fruit 0.5 --penalty-combat-death 1.0 --max-iters 300`,
-   and check whether female hunting drops relative to male. Not started yet; decide first whether
-   to add seeds to the plain FORAGING configuration.
-2. Run more seeds of the foraging configuration before trusting any sex difference.
+1. Test a smaller combat-death penalty (0.1-0.3, `--penalty-combat-death`): does it keep the female
+   avoidance without collapsing the predator population?
+2. Run more seeds of the FORAGING configuration, to know how much of the FORAGING versus
+   FORAGING_PENALTY difference is seed luck. Consider a sex-specific penalty if a symmetric one
+   keeps suppressing male hunting too.
 3. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
 4. Find out what limits female survival (birth cost, gift rate, or starting population).
 5. Longer runs, since the fruit-approach trend had not plateaued at 300 iterations.

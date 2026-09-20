@@ -19,6 +19,9 @@ reconstructing it from conversation history.
 - **FORAGING** (Iteration 2): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42`. Identical
   to REALISTIC, plus `reward_predator_catch_prey` = 1.0 and `reward_predator_gather_fruit` = 0.5
   for both sexes (a **foraging reward**). 300 iterations. A diagnostic, not a proposed reward.
+- **FORAGING_PENALTY** (Iteration 3): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42`.
+  Identical to FORAGING, plus `penalty_predator_death_in_combat` = -1.0 (a predator that dies in a
+  failed hunt receives -1.0; applies to both sexes). 300 iterations.
 - **POSITIVE_CONTROL** (Iteration 0): extreme hunting odds, sparse reward. Not in the chart.
 
 All runs use seed 42.
@@ -186,16 +189,69 @@ random mover; 30 episodes per checkpoint; bootstrap CIs exclude 0 for every frui
 **Caveats:** one seed; 30 rollout episodes per checkpoint; the foraging reward is shaping applied
 symmetrically, so this run is a capability test, not evidence for the sparse-reward design.
 
+### Iteration 3 — FORAGING_PENALTY: combat-death penalty test (complete)
+
+**Purpose:** test the likely explanation from Iteration 2: with no penalty for dying in a failed
+hunt, the learner never feels the female's 10% death risk, so risk-driven division of labor has no
+gradient. If that is right, adding a penalty should make females (riskier) hunt less than males.
+
+**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42`, seed 42, 300 iterations,
+identical to FORAGING (catch +1.0, fruit +0.5) plus `--penalty-combat-death 1.0`
+(`penalty_predator_death_in_combat = -1.0`, both sexes). Ran 2026-09-20 09:58 to 19:06 as unit
+`psr-foraging-penalty` (about 9 hours, 82-115 s/iteration).
+
+**Training curves** (block means, per episode; FORAGING in brackets, see the chart):
+
+| Iterations | Episode length | Males / females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
+|---|---|---|---|---|---|
+| 91-100 | 707 (829) | 7.0 / 0.5 (8.9 / 1.0) | 44.5 (41.5) | 183 / 135 (208 / 179) | 12.4 / 11.8 (16.7 / 16.7) |
+| 191-200 | 545 (839) | 4.1 / 0.3 (13.9 / 1.7) | 49.6 (34.6) | 108 / 74 (270 / 187) | 4.9 / 5.3 (25.3 / 19.9) |
+| 291-300 | **607 (1001)** | 3.8 / 0.35 (16.1 / 6.0) | 49.8 (31.3) | 109 / 78 (348 / 279) | 3.0 / 3.6 (30.0 / 36.0) |
+
+Unlike FORAGING, which improved steadily, this run peaked around iteration 70 (episode length
+about 800) and then declined: the predator population shrank, births fell about 10x against
+FORAGING, and prey rose to the 50 cap.
+
+**Rollout: approach toward the target** (30 episodes per checkpoint; FORAGING at iteration 300 in
+brackets):
+
+| | Iter 100 | Iter 150 | Iter 200 | Iter 250 | Iter 300 |
+|---|---|---|---|---|---|
+| Female, prey (cells) | -0.010 | -0.025 | -0.039 | -0.044 | **-0.056** (-0.008) |
+| Male, prey (cells) | +0.005 | +0.014 | +0.018 | +0.015 | +0.013 (+0.027) |
+| Male, P(step onto prey) vs random | x0.96 | x0.99 | x0.95 | x0.92 | **x0.87** (x1.07) |
+| Female, P(step onto prey) vs random | x0.94 | x0.96 | x0.95 | x0.97 | x0.93 (x0.99) |
+| Female, fruit | x1.28 | x1.36 | x1.46 | x1.53 | x1.59 (x1.65) |
+| Male, fruit | x1.12 | x1.21 | x1.30 | x1.39 | x1.52 (x1.54) |
+
+**Findings**
+1. **The penalty did not create a sex-specific division of labor.** Females do lean away from prey
+   at a distance about 7x more than in FORAGING (-0.056 against -0.008 cells), the predicted
+   direction. But males also became less willing to step onto an adjacent prey (x0.87 against
+   x1.07 in FORAGING), because the penalty applies to both sexes and males can die too (5% per
+   attempt).
+2. **The penalty suppressed hunting in both sexes.** The female-to-male attempt ratio is unchanged
+   (0.72 against 0.80), while attempts fell about 70% in both. Fewer predators alive also lowers the
+   counts mechanically, so "hunt less" and "fewer hunters" cannot be fully separated.
+3. **The ecosystem got worse.** Episodes end at 607 steps instead of hitting the 1000 cap, and
+   females are nearly extinct at the end (0.35 alive).
+4. **Fruit learning is unaffected** (x1.59 / x1.52 against x1.65 / x1.54), and by iteration 300 the
+   male-female gap in fruit approach has closed.
+
+**Caveats:** one seed per configuration, so the FORAGING baseline may itself be a lucky seed
+(earlier trials in this project showed founder-effect luck). A penalty of 1.0 equals the catch
+reward and may simply be too large; a penalty is not sex-specific in this implementation.
+
 ---
 
 ## Next steps
 
-1. **Run the combat-death penalty test** (`--penalty-combat-death` flag now exists; magnitude >= 0,
-   stored as `penalty_predator_death_in_combat = -value`) on top of the foraging reward, and check whether female hunting drops
-   relative to male. This is the direct test of the risk-asymmetry hypothesis. Reward shaping,
-   so a decision for the researcher.
-2. **More seeds** for the foraging configuration (seed 42 only so far) before trusting any
-   sex-difference in prey approach.
+1. **Smaller combat-death penalty** (for example 0.1-0.3): a penalty of 1.0 suppressed hunting in
+   both sexes and degraded the ecosystem, so test whether a weaker one keeps the female avoidance
+   without the collapse.
+2. **More seeds** for the FORAGING configuration (seed 42 only so far): needed to know how much of the
+   FORAGING-versus-FORAGING_PENALTY difference is seed luck, and before trusting any sex difference.
+   A sex-specific penalty (females only) is a less clean alternative to a smaller symmetric one.
 3. **Fruit-only shaping** (no catch reward) to separate "learns to gather" from "learns to hunt".
 4. **Female survival:** females are near-extinct in the sparse run and 6 vs 16 in the foraging
    run. Check whether birth cost, gift rate, or starting population is the limiting factor.

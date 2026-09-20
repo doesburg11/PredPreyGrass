@@ -18,6 +18,7 @@ ROOT = os.path.expanduser("~/simulation_results/ray_results")
 RUNS = {
     "REALISTIC (sparse reward)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42",
     "FORAGING (foraging reward)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42",
+    "FORAGING_PENALTY (+ combat-death penalty 1.0)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42",
 }
 P = "ray/tune/env_runners/"
 TAGS = {
@@ -53,7 +54,7 @@ def series(data, key):
 
 def main():
     runs = {label: load(run) for label, run in RUNS.items()}
-    fig, axes = plt.subplots(2, 2, figsize=(13, 8), sharex=True)
+    fig, axes = plt.subplots(len(runs), 2, figsize=(13, 4.2 * len(runs)), sharex=True)
     colors = {"male": "tab:red", "female": "tab:purple", "prey": "tab:blue"}
     for row, (label, data) in enumerate(runs.items()):
         ax = axes[row, 0]
@@ -62,7 +63,7 @@ def main():
                 s, v = series(data, key)
                 x, y = smooth(s, v)
                 ax.plot(x, y, color=colors[key], label={"male": "predator male", "female": "predator female", "prey": "prey"}[key])
-        ax.set_title(f"{label}: alive at episode end (10-iter mean)")
+        ax.set_title(f"{label}:\nalive at episode end (10-iter mean)", fontsize=10)
         ax.set_ylabel("count")
         ax.grid(alpha=0.3)
         ax.legend(loc="upper left")
@@ -71,7 +72,7 @@ def main():
         x, y = smooth(s, v)
         ax.plot(x, y, color="black")
         ax.axhline(1000, color="gray", ls="--", lw=0.8)
-        ax.set_title(f"{label}: episode length (cap 1000)")
+        ax.set_title(f"{label}:\nepisode length (cap 1000)", fontsize=10)
         ax.set_ylim(0, 1050)
         ax.grid(alpha=0.3)
     for ax in axes[-1]:
