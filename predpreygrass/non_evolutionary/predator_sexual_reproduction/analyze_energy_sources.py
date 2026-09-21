@@ -129,7 +129,9 @@ def run_episodes(env_config, modules, n_episodes, seed0, random_policy=False):
             active = [a for a in observations if not terminations.get(a, False) and not truncations.get(a, False)]
             if terminations.get("__all__") or truncations.get("__all__"):
                 break
-        alive_at_end = set(active)
+        # Alive at the end = got an observation this step and did not terminate. At the step cap every agent is
+        # *truncated* (not terminated), so `active` (which drops truncated agents) is empty there and cannot be used.
+        alive_at_end = {a for a in observations if not terminations.get(a, False)}
         for a in first_seen:
             if "predator" not in a:
                 continue
@@ -157,6 +159,7 @@ def summarize(label, records, min_life):
         for name, rows in (
             ("all lives", [r for r in records if r["sex"] == sex]),
             (f"lives >= {min_life} steps", [r for r in records if r["sex"] == sex and r["life"] >= min_life]),
+            ("completed lives", [r for r in records if r["sex"] == sex and not r["censored"]]),
         ):
             if not rows:
                 lines.append(f"{label:20} {sex[9:]:6} {name:20} n=0")
@@ -167,10 +170,15 @@ def summarize(label, records, min_life):
             own = fruit + prey
             net = own + g_in + c_in - g_out - c_out
             share = prey / own if own > 0 else float("nan")
+            # individual prey shares (own foraging only), for lives with any own-forage energy
+            indiv = [r["prey_e"] / (r["prey_e"] + r["fruit_e"]) for r in rows if r["prey_e"] + r["fruit_e"] > 0]
+            med_share = float(np.median(indiv)) if indiv else float("nan")
+            n_cens = sum(1 for r in rows if r["censored"])
             lines.append(
                 f"{label:20} {sex[9:]:6} {name:20} n={len(rows):5d} life={life:6.1f} steps\n"
                 f"    own foraging: fruit {fruit:6.2f} ({m('n_fruit'):5.2f} fruit) + prey {prey:6.2f} ({m('n_prey'):5.2f} prey)"
-                f" = {own:6.2f}   prey share {100 * share:4.1f}%\n"
+                f" = {own:6.2f}   prey share (ratio of means) {100 * share:4.1f}%, median individual {100 * med_share:4.1f}%"
+                f"   [{n_cens} of {len(rows)} lives cut off at episode end]\n"
                 f"    received: from mate {g_in:5.2f}, from parents {c_in:5.2f}   given away: to mate {g_out:5.2f}, to offspring {c_out:5.2f}\n"
                 f"    net intake {net:6.2f} = {100.0 * net / life:5.2f} per 100 steps"
                 f" (own foraging {100.0 * own / life:5.2f}/100 steps)"

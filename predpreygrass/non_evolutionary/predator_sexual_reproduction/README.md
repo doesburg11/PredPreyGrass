@@ -15,8 +15,8 @@ traits under study, not just mechanics:
 - **Sexual reproduction** (a mate requirement, not solo energy-threshold
   reproduction), with asymmetric parental investment (see below), as a
   substrate for pair-bonding-like dynamics.
-- **Risk-driven division of labor by sex** -- both sexes can hunt, but face
-  very different odds (see "Why hunting is risky, and riskier for females"
+- **Sex differentiation in foraging (a "division of labor")** -- both sexes can hunt, but face
+  very different odds (the ablations suggest the difference in success rate matters more than the tested difference in death risk; see Status) (see "Why hunting is risky, and riskier for females"
   below), so any resulting specialization is meant to emerge from training,
   not be hardcoded by fiat -- a precondition many theories of human
   cooperation lean on.
@@ -210,13 +210,14 @@ provisioning, parental care, observability metrics). Trained 2026-09-19 to 09-21
 tables and the reasoning behind each step in [`RESULTS.md`](RESULTS.md).
 
 **Key message: with a flat reward per fruit and per catch, predators learn to steer toward fruit but
-not toward prey, and men eat no more prey than a random walker does. Replacing the flat rewards with
-one energy-proportional reward (`reward_predator_per_energy` = 0.5) gave a clear and repeatable
-male-hunts / female-gathers pattern on all three seeds tried: men take about 48% of their energy from
-prey (a random walker: 41%) and step onto adjacent prey about 1.4 times as often as chance; women take
-about 12% (random: 15%) and approach fruit the most. The ecosystem stays healthy. The absolute effect is
-modest, only k = 0.5 has been replicated, and it needs both the unequal hunting odds (removing them removes the split) and a reward
-that lets them be felt (flat rewards with the same odds gave no split).**
+not toward prey, and men eat no more prey than a random walker does. Under an energy-proportional reward
+(`reward_predator_per_energy` = 0.5), three training seeds consistently produced a partial sex
+differentiation in foraging: men take about 48% of their energy from prey (a random walker: 41%) and step
+onto adjacent prey about 1.4 times as often as chance; women take about 12% (random: 15%) and approach
+fruit the most; the ecosystem stays healthy. The effect is modest, and the mechanisms are hypotheses, not
+yet isolated: ablations suggest the difference in hunting success matters (giving women the men's success
+removes the split) but they change the ecosystem too, have one seed each, and are not perfectly
+single-factor. Only k = 0.5 is replicated.**
 
 **The runs compared** (all seed 42, all at the shipped-default hunting odds):
 
@@ -255,12 +256,15 @@ argmax actions, `evaluate_ppo_from_checkpoint_debug.py`). All three populations 
   female-gathers, but that did not reproduce when the same rewards were re-run at minibatch 1024 (REF), so it is unconfirmed.
 - **Where a predator's energy comes from** (`analyze_energy_sources.py`): men eat 120-160 fruits per life at only 0.4-0.5
   energy each (full is 2.0) and about 9 prey at 4.7 each; their prey share (about 37-40%) equals a random walker's. Gifts are
-  negligible (about 3% of a woman's intake). The flat fruit reward is being farmed: it pays per fruit regardless of energy, so
-  per unit of energy fruit pays about 4.6 times more than prey.
-- **PROP k=0.2:** closes the loophole (0.99 energy per fruit, net intake +60%) but women's incentive to gather drops and the
-  female population collapses (0.6 alive, births 8 against 32 in REF).
+  negligible (about 3% of a woman's intake). The flat rewards pay per event regardless of energy, so per unit of energy fruit pays about
+  4.6 times more than prey and repeatedly eating nearly empty fruit is strongly rewarded (a plausible reason the flat-reward runs show no
+  male prey preference; not isolated experimentally, see below).
+- **PROP k=0.2:** men eat fruit at 0.99 energy per fruit (0.40 in REF) and net intake rises 60%, but the female population collapses
+  (0.6 alive, births 8 against 32 in REF). k = 0.2 and 0.5 pay the same per unit of energy for fruit and prey and differ only in scale, so
+  the collapse at 0.2 points to reward scale (fruit worth about 0.1 reward to a woman) rather than to the fruit/prey ratio.
 - **PROP k=0.5 (three seeds):** men step onto adjacent prey x1.32-1.49 as often as a random mover (flat-reward runs
-  x0.85-1.08; approach bias +0.26 to +0.29 cells against about +-0.04 run-to-run noise) and draw 46.9-49.6% of their energy
+  x0.85-1.08; approach bias +0.26 to +0.29 cells against -0.010 to +0.040 in the flat-reward runs, which differ in minibatch so that range
+  is not a seed-variance estimate) and draw 46.9-49.6% of their energy
   from prey; women draw 11.1-12.1% from prey (less than a random walker's 14.8%) and approach fruit x1.83-1.91. The ecosystem
   is healthy in all three (births about 37-43, 19-20 men and 5-8 women alive at the end), though prey are depleted to about 18-21.
 - **Caveat:** only k = 0.5 has been replicated (REF and k = 0.2 have one seed each); k = 0.5 was chosen after k = 0.2 failed; the
@@ -269,48 +273,64 @@ argmax actions, `evaluate_ppo_from_checkpoint_debug.py`). All three populations 
 Reproduce the charts with `python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_training_curves`,
 the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`, and the energy split with `analyze_energy_sources`.
 
-### Is there a division of labor? What is and is not established
+### Is there a sex differentiation in foraging ("division of labor")? What is and is not established
 
-**Working definition.** A division of labor here means a difference between the sexes, emerging from training rather than
-hard-coded, in (a) what they do (approach toward prey and fruit) and (b) where their energy comes from (prey share of
-intake), while the population stays viable. Nothing forces it: both sexes can hunt and gather, and the male/female
-difference in hunting odds (90% / 5% against 20% / 10% success / death) is the only built-in asymmetry that bears on hunting.
+*This section was tightened after an independent second opinion (Codex); see `RESULTS.md`, "Second opinion".*
 
-**Established (three seeds, energy-proportional reward `reward_predator_per_energy` = 0.5, iteration 300):**
-- Men step onto an adjacent prey x1.32-1.49 as often as a random mover; women x1.02-1.07. With flat rewards men were x0.85-1.08.
-- Men take 46.9-49.6% of their energy from prey (a random walker: 41%; flat-reward runs 37-40%); women take 11.1-12.1%
-  (random 15%; flat-reward runs 13-15%).
+**Working definition.** Here "division of labor" only means a difference between the sexes, emerging from training rather than
+hard-coded, in (a) what they do (approach toward prey and fruit) and (b) where their energy comes from (prey share of gross
+own-forage energy), while the population stays viable. It does not imply coordination or task allocation. Nothing forces the
+difference: both sexes can hunt and gather, and the male/female difference in hunting odds (90% / 5% against 20% / 10% success /
+death) is the only built-in asymmetry that bears on hunting.
+
+**Established (descriptive; three training seeds, energy-proportional reward `reward_predator_per_energy` = 0.5, iteration 300):**
+- Men step onto an adjacent prey x1.32-1.49 as often as a random mover; women x1.02-1.07. In REF (flat rewards, same minibatch, one seed) men were x0.85.
+- Men take 46.9-49.6% of their gross own-forage energy from prey (a random walker: 41%; flat-reward runs 37-40%); women 11.1-12.1% (random 15%; flat-reward runs 13-15%).
 - Women approach fruit the most (x1.83-1.91), and the ecosystem stays healthy (births about 37-43, 19-20 men and 5-8 women alive).
 
-**The hunting odds are necessary but not sufficient.**
+**Supported by the runs but not isolated (working hypotheses):**
+- **Women's lower hunting success is what matters most.** Giving women the men's odds (90% / 5%; seeds 42, 43) removes the split; two
+  one-seed ablations point to the success rate: only the men's success (90% / 10%) removes and reverses it, only the men's death chance
+  (20% / 5%) leaves it slightly narrower.
 
-- **Necessary.** When women are given the men's hunting odds (90% success, 5% death; everything else unchanged, seeds 42 and 43) the
-  division of labor disappears: men take 34-38% of their energy from prey and women 37-38% (against 47-50% and 11-12% with the
-  unequal odds), women approach prey as hard as men (+0.35 to +0.41 cells against +0.25 to +0.40) and make 1.4-2.3 times as many hunting
-  attempts, and the prey are hunted to extinction within 175-270 steps. Without the difference in odds there is no split.
-- **Not sufficient.** The same unequal odds were in force in every run, yet the split appeared only under one reward design:
+  | Women's odds (success / death) | Men: prey share | Women: prey share | Prey alive | Split? |
+  |---|---|---|---|---|
+  | 20% / 10% (baseline, three seeds) | 47-50% | 11-12% | 18-21 | yes |
+  | 20% / 5% (only the men's death chance) | 44.9% | 15.3% | 19.0 | yes (slightly narrower) |
+  | 90% / 10% (only the men's success) | 33.4% | 47.9% | 2.9 | no, reversed |
+  | 90% / 5% (equal odds, two seeds) | 34-38% | 37-38% | 0-1.6 | no |
 
-  | Reward (odds unequal in all) | Division of labor? |
-  |---|---|
-  | Flat per event (+0.5 per fruit, +1.0 per catch), with or without a death penalty | **no** |
-  | Energy-proportional, k = 0.2 | no (women lose their incentive to gather and the female population collapses) |
-  | Energy-proportional, k = 0.5 | **yes**, on three seeds |
-
-  Reason: a learner follows the payoff it is shown, not the real payoff. With flat rewards a man was paid about 60-80 reward per life
-  for eating (mostly nearly empty) fruit against about 9 for prey, so his real advantage at hunting never reached what he learned. Only
-  when the reward tracks the energy actually gained (and is large enough to keep women gathering) can the difference in odds show through.
-- **So both parts are needed:** a difference between the sexes that makes hunting pay for one and not for the other (the odds), and a
-  reward that lets that difference be felt (energy-proportional at an adequate scale).
+  This suggests the success contrast is more influential than the 5-point death-chance contrast tested; it does not rule out a
+  contribution of risk. The interventions are not perfectly single-factor (success, death and failure share one random draw, so 90%
+  success also removes the 70% harmless-failure outcome), and the equal-odds and success-only runs collapse the prey (episodes of
+  175-393 steps), so they are not matched to the baseline in prey availability, lifetimes or density. Necessity of unequal odds is
+  therefore not demonstrated under matched ecological conditions.
+- **The reward design matters.** The same unequal odds gave no split under flat per-event rewards and under k = 0.2 (women's population
+  collapsed), and a split at k = 0.5. Flat rewards strongly reward repeatedly eating nearly empty fruit (a man collected about 60-80
+  reward per life from fruit against about 9 from prey), a plausible reason for the absence of the male prey preference; this has not been
+  isolated, because k = 0.2 and k = 0.5 pay the same per unit of energy for fruit and prey and differ only in reward scale (relative to
+  the reproduction reward of 10 and the death penalty), which may also matter.
 
 **Not established, or limits:**
-- **It is a shift in tendency, not exclusive specialization.** Men still get about half their energy from fruit; a woman catches
-  about one prey per life (0.8-1.0) against about 10 for a man.
-- **Success and death chance are not yet separated.** The ablation gave women the men's success (20% to 90%) and death chance (10% to 5%)
-  at once; two single-factor runs (women get only the men's success, or only the men's death chance) are running.
-- **Only k = 0.5 is replicated** (REF and k = 0.2 have one seed each), k = 0.5 was chosen after k = 0.2 failed, the effect is modest in
-  absolute size, and prey are depleted to about 18-21. The equal-odds ablation collapsed the prey, so its behaviour numbers come from short,
-  prey-poor lives.
-- **The birth-cost asymmetry** (women pay 90% of the birth cost) remained in the ablation and produced no split on its own.
+- **It is partial, not exclusive specialization, and no coordination is shown.** Men still get about half their energy from fruit; a
+  woman catches about one prey per life (0.8-1.0) against about 10 for a man.
+- **Few independent training runs.** Three seeds for k = 0.5; one each for REF, k = 0.2 and the single-factor ablations. The bootstrap
+  intervals in the analysis scripts cover rollout episodes of one trained checkpoint, not training-seed variation. k = 0.5 was chosen
+  after k = 0.2 failed, and only iteration 300 is analysed.
+- **Settings are mixed across older runs.** The minibatch-128 runs (FORAGING, penalty runs) are not like-for-like controls for the
+  minibatch-1024 runs; REF is the matched flat control, with one seed.
+- **Measurement caveats.** Rollouts sample actions from each policy, so approach and step-onto ratios mix action preference with the
+  states each policy creates; "step onto" is the probability of an action whose nominal destination is the target's cell. Energy figures
+  are gross own-forage energy, means over lives that include lives cut off at the end of the episode, and prey share is a ratio of means.
+- **The explicit combat-death penalty (-0.2) was present in all k = 0.5 runs;** a no-penalty test is in progress. The birth-cost
+  asymmetry remained in the ablations and produced no split on its own.
+
+**Current best statement of the result:** under energy-proportional forage reward with k = 0.5, three training seeds consistently
+produced partial sex differentiation: men show stronger prey-directed actions and obtain roughly 47-50% of their gross own-forage energy
+from prey, against roughly 11-12% for women. Flat-reward runs did not show the same pattern and strongly reward repeated consumption of
+depleted fruit. Equalizing or increasing women's hunting success eliminated or reversed the split, but those ablations also collapsed the
+prey and have limited seed replication. The results suggest, but do not yet isolate, a productivity-based mechanism modulated by reward
+design. The roles of the explicit death penalty and of death risk remain unresolved.
 
 ### Training speed and the minibatch size
 
@@ -328,8 +348,8 @@ slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 
 1. Try other k (0.3, 0.7) and re-tune the combat-death penalty (0.2) on top of the energy-proportional reward; watch whether
    prey depletion (about 18-21 alive) limits predators over longer runs.
-2. Finish the two single-factor ablations (women get only the men's success, or only the men's death chance) to separate the
-   two parts of the hunting-odds difference. Then try a higher female death chance (`--female-death-prob`, now 10%) on top of k = 0.5, watching the first 20 iterations.
+2. Replicate the single-factor ablations with more seeds and try intermediate success rates for women (40%, 60%) to see how the split
+   fades. A higher female death chance (`--female-death-prob`, now 10%) is now low priority, since the death chance matters little.
 3. Add seeds for the baselines (REF, k = 0.2), which have one each.
 4. Decide whether `--minibatch-size 1024` becomes the default (5.8x faster; recommended). The defaults stay 128 / 30 so
    earlier runs remain reproducible; the newer runs pass the flag explicitly.
