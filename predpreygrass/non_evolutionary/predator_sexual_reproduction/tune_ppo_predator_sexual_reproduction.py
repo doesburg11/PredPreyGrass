@@ -108,6 +108,14 @@ def parse_args():
              "the env uses that key directly as the dying predator's reward. Default: "
              "config_env.py's shipped value (0.0, i.e. no penalty).",
     )
+    parser.add_argument(
+        "--minibatch-size", type=int, default=128,
+        help="PPO minibatch_size (default 128, the value all earlier runs used).",
+    )
+    parser.add_argument(
+        "--num-epochs", type=int, default=30,
+        help="PPO num_epochs (default 30, the value all earlier runs used).",
+    )
     return parser.parse_args()
 
 
@@ -389,8 +397,8 @@ if __name__ == "__main__":
         )
         .training(
             train_batch_size_per_learner=1024,
-            minibatch_size=128,
-            num_epochs=30,
+            minibatch_size=args.minibatch_size,
+            num_epochs=args.num_epochs,
             gamma=0.99,
             lr=0.0003,
             entropy_coeff=0.0,

@@ -22,6 +22,11 @@ reconstructing it from conversation history.
 - **FORAGING_PENALTY** (Iteration 3): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42`.
   Identical to FORAGING, plus `penalty_predator_death_in_combat` = -1.0 (a predator that dies in a
   failed hunt receives -1.0; applies to both sexes). 300 iterations.
+- **FORAGING_PENALTY02** (Iteration 4): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY02_SEED42`.
+  Identical to FORAGING_PENALTY but with `penalty_predator_death_in_combat` = -0.2. 300 iterations.
+- **AB_MB1024** and **AB_EP10** (Iteration 5): 50-iteration speed variants of the FORAGING
+  configuration (`..._AB_MB1024_SEED42`: `--minibatch-size 1024`; `..._AB_EP10_SEED42`:
+  `--num-epochs 10`). All other runs use PPO `minibatch_size=128`, `num_epochs=30`.
 - **POSITIVE_CONTROL** (Iteration 0): extreme hunting odds, sparse reward. Not in the chart.
 
 All runs use seed 42.
@@ -242,19 +247,178 @@ brackets):
 (earlier trials in this project showed founder-effect luck). A penalty of 1.0 equals the catch
 reward and may simply be too large; a penalty is not sex-specific in this implementation.
 
+### Iteration 4 — FORAGING_PENALTY02: a smaller combat-death penalty (complete)
+
+**Purpose:** Iteration 3 showed a penalty of 1.0 suppresses hunting in both sexes and collapses
+the predator population. Test whether a much weaker penalty (0.2) keeps the female avoidance
+without the collapse.
+
+**Config:** `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY02_SEED42`, seed 42, 300 iterations,
+identical to FORAGING plus `--penalty-combat-death 0.2` (`penalty_predator_death_in_combat = -0.2`,
+both sexes). Ran 2026-09-20 20:31 to 2026-09-21 04:17 as unit `psr-foraging-penalty02` (about 7.8
+hours, 82-115 s/iteration). Minibatch 128, 30 epochs, like every run up to this point.
+
+**Training curves** (block means, per episode; FORAGING and FORAGING_PENALTY in brackets):
+
+| Iterations | Episode length | Males / females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
+|---|---|---|---|---|---|
+| 91-100 | 822 (829, 707) | 9.8 / 1.6 (8.9 / 1.0, 7.0 / 0.5) | 41.6 | 210 / 161 | 16.2 / 14.9 |
+| 191-200 | 973 (839, 545) | 17.8 / 3.5 (13.9 / 1.7, 4.1 / 0.3) | 31.4 | 369 / 237 | 35.6 / 28.3 |
+| 291-300 | **990** (1001, 607) | 19.2 / 4.9 (16.1 / 6.0, 3.8 / 0.35) | 28.3 | 366 / 278 | 36.9 / 39.2 |
+
+The ecosystem stays as healthy as plain FORAGING (episodes at the 1000-step cap, births and
+populations at or above FORAGING). The 1.0 penalty had already declined by iteration 150.
+
+**Rollout: approach toward the target** (30 episodes per checkpoint; FORAGING and FORAGING_PENALTY
+at iteration 300 in brackets):
+
+| | Iter 100 | Iter 200 | Iter 300 |
+|---|---|---|---|
+| Male, prey (cells) | +0.014 | +0.031 | **+0.040** (+0.027, +0.013) |
+| Female, prey (cells) | -0.004 | -0.011 | **-0.026** (-0.008, -0.056) |
+| Male, P(step onto prey) vs random | x1.00 | x1.06 | **x1.08** (x1.07, x0.87) |
+| Female, P(step onto prey) vs random | x0.99 | x0.99 | **x0.96** (x0.99, x0.93) |
+| Male, fruit | x1.24 | x1.39 | x1.52 (x1.54, x1.52) |
+| Female, fruit | x1.23 | x1.61 | **x1.74** (x1.65, x1.59) |
+
+**Findings**
+1. **No collapse.** Unlike 1.0, the 0.2 penalty leaves the ecosystem intact.
+2. **The predicted pattern appears.** Males approach prey and step onto it more than a random
+   mover (x1.08), where the 1.0 run made them stop (x0.87). Females lean away from prey about
+   three times as much as in FORAGING (-0.026 against -0.008 cells) and approach fruit more than
+   males (x1.74 against x1.52), where in FORAGING the sexes were equal. The prey avoidance grew
+   over training (-0.004, -0.011, -0.026 at iterations 100, 200, 300).
+3. **The hunting-attempt ratio does not show it.** The female/male attempt ratio was 0.64-0.77
+   across blocks (FORAGING 0.69-0.86), too noisy to use; the rollout approach measurement is the
+   informative one.
+
+**Caveats:** one seed per configuration (earlier trials in this project showed founder-effect
+luck); the rollout intervals cover only variation between episodes of one trained policy, not
+between training runs. The effect is small: the male-female gap in stepping onto adjacent prey is
+about 12 percentage points (x1.08 against x0.96), against 8 in FORAGING, where a real division of
+labor would be far larger. Only one penalty value between 0 and 1 has been tried.
+
+### Iteration 5 — Why training is slow, and the effect of the minibatch size (complete)
+
+Recorded in full because it changes what an experiment costs and may change what the policies learn.
+
+**Observation (2026-09-20 22:42, during the penalty-0.2 run at iteration 73).** The run used about
+1.2 CPU cores on average out of 32 (94.7% idle, load average 1.2-1.4). The GPU (RTX 5070 Ti) sat at
+31% utilization with 10.3 of 16.3 GB in use. RAM use was 31 of 93 GB. Ray reserved 28 CPUs and the
+whole GPU on paper, far more than the run used. The 8 environment runners were almost idle; one
+learner process ran at about 98% of a single core.
+
+**Two earlier statements of mine were wrong** and are corrected here: (1) that iterations are
+dominated by CPU environment simulation (they are not), and (2) that two runs would compete for the
+same cores (they would not; only Ray's reservation and, as found below, GPU memory limit running
+jobs in parallel).
+
+**Search.**
+- Read the PPO settings in the tune script: `train_batch_size_per_learner=1024` (in environment
+  steps), `minibatch_size=128`, `num_epochs=30`.
+- Tried `py-spy` on the running learner: refused (`Permission Denied`, `ptrace_scope=1`, would need
+  root). Not pursued; no system security settings were changed.
+- Read the per-phase timers already in the run's `progress.csv` and TensorBoard events:
+
+| Iteration | Total | Environment sampling | Learner update |
+|---|---|---|---|
+| ~10 | 31.5 s | 1.1 s | 30.4 s |
+| ~37 | 50.6 s | 1.4 s | 49.2 s |
+| ~73 | 68.2 s | 1.6 s | 66.5 s |
+
+  About 97% of every iteration is the learner update.
+- The logged training counters show about 1.26 million samples trained per policy per iteration,
+  identical for all three policies, with `module_train_batch_size_mean` = 128: about 9,800
+  minibatches per policy, about 29,000 gradient steps per iteration, about 2.3 ms per step.
+- Read the installed RLlib source (ray 2.58.0, `ray/rllib/utils/minibatch_utils.py`,
+  `MiniBatchCyclicIterator`).
+
+**Explanation.**
+1. The cost is the number of tiny gradient steps, not the mathematics: 128-sample steps on a small
+   network are limited by single-threaded Python and kernel-launch overhead, which is why one CPU
+   core is saturated while the GPU idles.
+2. The multi-agent iterator takes 128 samples from every policy in lockstep and runs until every
+   policy has covered its data `num_epochs` times. The policy with the most samples (prey, with the
+   most agent-steps per environment step) therefore sets the total number of steps. Policies with
+   fewer samples (the two predator policies) are cycled repeatedly and effectively receive many
+   more than 30 epochs per iteration, roughly 30 times the ratio of prey to predator samples.
+3. Possible science side effect (hypothesis, not proven): that extra reuse of the small predator
+   datasets may destabilize predator learning. Iteration 5's A/B result is consistent with it but
+   does not prove it.
+4. **GPU memory** limits parallelism: the learner grows from about 4 GB to about 10 GB of 16 GB, so
+   only one GPU run fits at a time; a second could trigger an out-of-memory error in the running
+   job. CPU-only learners (`--gpu-fraction 0`) are safe but were about 5 times slower in Iteration 1.
+
+**A/B test.** Two 50-iteration variants of the FORAGING configuration (catch +1.0, fruit +0.5, no
+penalty), seed 42, run one after the other on the GPU after the penalty-0.2 run finished, using the
+new flags added to the tune script (defaults unchanged, 128 and 30):
+
+```
+python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.tune_ppo_predator_sexual_reproduction \
+    --seed 42 --max-iters 50 --reward-catch-prey 1.0 --reward-gather-fruit 0.5 \
+    --name PPO_PREDATOR_SEXUAL_REPRODUCTION_AB_MB1024_SEED42 --minibatch-size 1024
+# and, for the second variant: --name ..._AB_EP10_SEED42 --num-epochs 10
+```
+
+The baseline for comparison is the first 50 iterations of the existing FORAGING run
+(minibatch 128, 30 epochs), not a re-run.
+
+| | Baseline (128, 30 ep) | **MB1024** (1024, 30 ep) | EP10 (128, 10 ep) |
+|---|---|---|---|
+| Time for 50 iterations | 84.7 min | **14.7 min** | 30.3 min |
+| Seconds per iteration | 41.3 | 8.1 | 15.6 |
+| Learner update per iteration | 40.0 s | 6.9 s | 14.4 s |
+| Speedup | 1x | **5.8x** | 2.8x |
+| Samples trained per iteration | 4.08M | 3.45M | 1.15M |
+| Iters 41-50: episode length | 657 | **992** | 811 |
+| Births male / female | 8.8 / 9.4 | 27.3 / 29.8 | 17.6 / 19.3 |
+| Males / females alive at end | 6.2 / 0.5 | 13.0 / 5.5 | 11.3 / 2.1 |
+| Hunting attempts M / F | 161 / 122 | 265 / 262 | 183 / 213 |
+
+**Rollout at iteration 50** (P(step onto target) vs a random mover, 30 episodes):
+
+| | Baseline | MB1024 | EP10 |
+|---|---|---|---|
+| Male, fruit | x1.18 | **x1.34** | x1.18 |
+| Female, fruit | x1.12 | **x1.47** | x1.27 |
+| Male, prey | x0.96 | x1.05 | x0.93 |
+| Female, prey | x0.95 | x1.00 | x0.87 |
+
+**Findings**
+1. `minibatch_size=1024` makes training **5.8x faster** (a 300-iteration run of about 1.5 hours
+   instead of 8-9), matching the 5-8x estimate from the diagnosis.
+2. Both variants also reached a healthier ecosystem than the baseline by iteration 50; MB1024 is
+   ahead of EP10 on every measure. At iteration 50 MB1024 shows roughly the fruit approach the
+   baseline reached at iteration 150 (male x1.34, female x1.41 there).
+3. Without any penalty, MB1024 shows females approaching fruit more than males (+0.102 against
+   +0.055 cells), a possible sex difference worth checking with more seeds.
+
+**Caveats:** one seed each, so the speedup is solid but the learning advantage could partly be seed
+luck; the hypothesis that excess predator epochs hurt learning is untested; the rollouts cover 50
+iterations only, not whether the final behavior at 300 iterations differs. Any change of
+`minibatch_size`/`num_epochs` changes the dynamics, so runs with different settings are not
+directly comparable; every run in Iterations 0-4 used 128 / 30.
+
+**Decision status:** the flags `--minibatch-size` / `--num-epochs` exist with the old defaults
+(128 / 30) so all documented runs stay reproducible. Recommended, not yet adopted: default
+`--minibatch-size 1024` for new runs, and re-run the key configurations (FORAGING, both penalties)
+on it for comparability.
+
 ---
 
 ## Next steps
 
-1. **Smaller combat-death penalty** (for example 0.1-0.3): a penalty of 1.0 suppressed hunting in
-   both sexes and degraded the ecosystem, so test whether a weaker one keeps the female avoidance
-   without the collapse.
-2. **More seeds** for the FORAGING configuration (seed 42 only so far): needed to know how much of the
-   FORAGING-versus-FORAGING_PENALTY difference is seed luck, and before trusting any sex difference.
-   A sex-specific penalty (females only) is a less clean alternative to a smaller symmetric one.
-3. **Fruit-only shaping** (no catch reward) to separate "learns to gather" from "learns to hunt".
-4. **Female survival:** females are near-extinct in the sparse run and 6 vs 16 in the foraging
-   run. Check whether birth cost, gift rate, or starting population is the limiting factor.
-5. Longer runs if the fruit-approach trend continues past 300 iterations.
+1. **More seeds, cheaply.** With `--minibatch-size 1024` a 300-iteration run takes about 1.5 hours.
+   Run several seeds each of plain FORAGING and of the 0.2 penalty to learn how much of the
+   FORAGING versus penalty difference is seed luck, and whether the sex pattern in Iteration 4 is
+   real. Decide first whether 1024 becomes the default; if so, re-run the key configurations on it
+   for a like-for-like comparison.
+2. **Test the epoch hypothesis** (excess predator epochs hurt learning): compare 128 and 1024 over
+   300 iterations and several seeds, not just 50 iterations of one seed.
+3. **Other penalty values** (0.1, 0.4) around the 0.2 that worked, and a sex-specific penalty
+   (females only) as a less clean alternative.
+4. **Fruit-only shaping** (no catch reward) to separate learning to gather from learning to hunt.
+5. **Female survival:** females stay a small population (about 5 against 19 males at iteration
+   300 in Iteration 4); check birth cost, gift rate and starting population.
 6. Unexplained: the early rise in births and episode length in Iteration 1 cannot come from
    predator learning; the prey policy changing behavior is the untested guess.
