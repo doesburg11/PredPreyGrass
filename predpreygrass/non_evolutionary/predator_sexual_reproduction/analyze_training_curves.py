@@ -21,6 +21,11 @@ RUNS = {
     "FORAGING_PENALTY (+ combat-death penalty 1.0)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42",
     "FORAGING_PENALTY02 (+ combat-death penalty 0.2)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY02_SEED42",
 }
+RUNS_MB1024 = {
+    "REF: flat rewards, penalty 0.2 (MB1024)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_REF_PEN02_MB1024_SEED42",
+    "PROP k=0.2: energy-proportional reward (MB1024)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_REWARD_MB1024_SEED42",
+    "PROP k=0.5: energy-proportional reward (MB1024)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42",
+}
 P = "ray/tune/env_runners/"
 TAGS = {
     "len": P + "episode_len_mean",
@@ -53,8 +58,8 @@ def series(data, key):
     return np.array(steps), np.array([data[key][s] for s in steps])
 
 
-def main():
-    runs = {label: load(run) for label, run in RUNS.items()}
+def make_figure(run_map, out_name):
+    runs = {label: load(run) for label, run in run_map.items()}
     fig, axes = plt.subplots(len(runs), 2, figsize=(13, 4.2 * len(runs)), sharex=True)
     colors = {"male": "tab:red", "female": "tab:purple", "prey": "tab:blue"}
     for row, (label, data) in enumerate(runs.items()):
@@ -80,15 +85,21 @@ def main():
         ax.set_xlabel("training iteration")
     axes[0, 0].set_xlim(0, 300)
     fig.tight_layout()
-    out = os.path.join(os.path.dirname(__file__), "results_figures", "population_over_training.png")
+    out = os.path.join(os.path.dirname(__file__), "results_figures", out_name)
     fig.savefig(out, dpi=110)
     print("saved", out)
+    return runs
+
+
+def main():
+    runs = make_figure(RUNS, "population_over_training.png")
+    runs.update(make_figure(RUNS_MB1024, "population_over_training_mb1024.png"))
 
     for label, data in runs.items():
         print(f"\n== {label}")
         keys = [k for k in TAGS if k in data]
         print("iters      " + " ".join(f"{k:>13}" for k in keys))
-        n = max(data["len"]) 
+        n = max(data["len"])
         edges = [(1, 10), (41, 50), (91, 100)] + ([(141, 150), (191, 200), (241, 250), (291, 300)] if n >= 290 else [])
         for lo, hi in edges:
             vals = []

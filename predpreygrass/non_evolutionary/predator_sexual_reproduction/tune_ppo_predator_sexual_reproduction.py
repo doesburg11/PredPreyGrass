@@ -102,6 +102,12 @@ def parse_args():
         help="Override reward_predator_gather_fruit.",
     )
     parser.add_argument(
+        "--reward-per-energy", type=float, default=None,
+        help="Set reward_predator_per_energy: reward = this * energy gained, for fruit and prey "
+             "alike, added to the flat per-event rewards (set those to 0 for a purely "
+             "energy-proportional reward). Default: config_env.py's shipped value (0.0 = off).",
+    )
+    parser.add_argument(
         "--penalty-combat-death", type=float, default=None,
         help="Magnitude (>= 0) of the penalty a predator receives when it dies in a "
              "failed hunt. Stored as penalty_predator_death_in_combat = -value, since "
@@ -286,6 +292,8 @@ if __name__ == "__main__":
         env_config["reward_predator_catch_prey"] = args.reward_catch_prey
     if args.reward_gather_fruit is not None:
         env_config["reward_predator_gather_fruit"] = args.reward_gather_fruit
+    if args.reward_per_energy is not None:
+        env_config["reward_predator_per_energy"] = args.reward_per_energy
     if args.penalty_combat_death is not None:
         if args.penalty_combat_death < 0:
             raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")

@@ -67,6 +67,12 @@ class PredPreyGrass(MultiAgentEnv):
         # Rewards
         self.reward_predator_catch_prey = config.get("reward_predator_catch_prey", 0.0)
         self.reward_predator_gather_fruit = config.get("reward_predator_gather_fruit", 0.0)
+        # Energy-proportional forage reward (fruit and prey alike); see config_env.py.
+        self.reward_predator_per_energy = config.get("reward_predator_per_energy", 0.0)
+        if not (0.0 <= self.reward_predator_per_energy < float("inf")):
+            raise ValueError(
+                f"reward_predator_per_energy must be finite and >= 0 (got {self.reward_predator_per_energy})"
+            )
         self.reward_prey_eat_grass = config.get("reward_prey_eat_grass", 0.0)
         self.reward_predator_step = config.get("reward_predator_step", 0.0)
         self.reward_prey_step = config.get("reward_prey_step", 0.0)
@@ -556,8 +562,8 @@ class PredPreyGrass(MultiAgentEnv):
                 if caught_fruit:
                     ate_something = True
                     self.agents_just_ate.add(agent)
-                    reward += self.reward_predator_gather_fruit
                     fruit_gain = self.fruit_energies[caught_fruit]
+                    reward += self.reward_predator_gather_fruit + self.reward_predator_per_energy * fruit_gain
                     self.agent_energies[agent] += fruit_gain
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
                     self.grid_world_state[4, *self.fruit_positions[caught_fruit]] = 0
@@ -617,8 +623,8 @@ class PredPreyGrass(MultiAgentEnv):
                         print(f"[ENGAGE] {agent} gathered {caught_fruit} at {predator_position}!")
                     self.agents_just_ate.add(agent)
                     ate_something = True
-                    reward += self.reward_predator_gather_fruit
                     fruit_gain = self.fruit_energies[caught_fruit]
+                    reward += self.reward_predator_gather_fruit + self.reward_predator_per_energy * fruit_gain
                     self.agent_energies[agent] += fruit_gain
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
                     self.grid_world_state[4, *self.fruit_positions[caught_fruit]] = 0
@@ -948,7 +954,10 @@ class PredPreyGrass(MultiAgentEnv):
             if self.verbose_engagement:
                 print(f"[ENGAGE] {agent} caught {caught_prey} at {predator_position}!")
             self.agents_just_ate.add(agent)
-            energy_gained = self.agent_energies[caught_prey]
+            # Clamp at 0: a prey that starved this same step (energy <= 0 after Step 1) can still be
+            # caught if the predator is processed before it in Step 3's loop; it must not take energy
+            # from the predator nor pay a negative energy-proportional reward.
+            energy_gained = max(self.agent_energies[caught_prey], 0.0)
             self.agent_energies[agent] += energy_gained
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
@@ -964,7 +973,11 @@ class PredPreyGrass(MultiAgentEnv):
             del self.prey_positions[caught_prey]
             del self.agent_energies[caught_prey]
             self.hunting_successes[sex] += 1
-            return "success", self.reward_predator_catch_prey, energy_gained
+            return (
+                "success",
+                self.reward_predator_catch_prey + self.reward_predator_per_energy * energy_gained,
+                energy_gained,
+            )
 
         if roll < success_prob + death_prob:
             if self.verbose_engagement:

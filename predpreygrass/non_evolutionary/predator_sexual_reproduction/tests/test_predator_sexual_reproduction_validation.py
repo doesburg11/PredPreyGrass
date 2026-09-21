@@ -1175,3 +1175,195 @@ def test_training_metrics_track_hunting_and_provisioning():
     assert metrics["mate_gift_energy_total"] > 0.0
     assert metrics["parental_care_events"] == 1
     assert metrics["parental_care_energy_total"] > 0.0
+
+
+# ---------------------------------------------------------------------------
+# Energy-proportional forage reward (reward_predator_per_energy)
+# ---------------------------------------------------------------------------
+
+
+def _isolate_predator_on_cell(env, predator, pos, prey=None, fruit=None):
+    """Place `predator` (and optionally one prey and/or one fruit) on `pos`, and move every
+    other prey and fruit far away so nothing else can engage the predator this step."""
+    env.agent_positions[predator] = pos
+    env.predator_positions[predator] = pos
+    far = 0
+    for other in [a for a in env.agents if a.startswith("prey")]:
+        target = pos if other == prey else (9, far % 3)
+        far += 1
+        env.agent_positions[other] = target
+        env.prey_positions[other] = target
+    far = 0
+    for f in list(env.fruit_positions):
+        target = pos if f == fruit else (0, 5 + far % 4)
+        far += 1
+        env.fruit_positions[f] = target
+    assert sum(1 for p in env.fruit_positions.values() if p == pos) == (1 if fruit else 0)
+
+
+def _per_energy_env(k, **overrides):
+    cfg = {
+        "reward_predator_per_energy": k,
+        "reward_predator_catch_prey": 0.0,
+        "reward_predator_gather_fruit": 0.0,
+        "male_gift_donation_rate": 0.0,
+        "parent_offspring_share_rate": 0.0,
+    }
+    cfg.update(overrides)
+    return _make_test_env(overrides=cfg)
+
+
+def test_per_energy_reward_defaults_to_off():
+    env = _make_test_env()
+    assert env.reward_predator_per_energy == 0.0
+
+
+def test_per_energy_reward_paid_for_fruit_in_proportion_to_energy_gained():
+    env = _per_energy_env(0.2)
+    male = next(a for a in env.agents if "predator_male" in a)
+    fruit = next(iter(env.fruit_positions))
+    _isolate_predator_on_cell(env, male, (5, 5), fruit=fruit)
+    env.fruit_energies[fruit] = 2.0
+    energy_before = env.agent_energies[male]
+
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    gain = env.agent_energies[male] - (energy_before - env.homeostatic_energy_cost_per_step_predator)
+    assert gain == pytest.approx(2.0)
+    assert rewards[male] == pytest.approx(0.2 * 2.0)
+
+
+def test_per_energy_reward_pays_little_for_a_nearly_empty_fruit():
+    """The point of the change: a barely regrown fruit pays far less than a full one."""
+    env = _per_energy_env(0.2)
+    male = next(a for a in env.agents if "predator_male" in a)
+    fruit = next(iter(env.fruit_positions))
+    _isolate_predator_on_cell(env, male, (5, 5), fruit=fruit)
+    env.fruit_energies[fruit] = 0.0  # just eaten; regrows by energy_gain_per_step_fruit before the check
+
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    assert rewards[male] == pytest.approx(0.2 * env.energy_gain_per_step_fruit)
+    assert rewards[male] < 0.05
+
+
+@pytest.mark.parametrize("sex", ["predator_male", "predator_female"])
+def test_per_energy_reward_paid_for_prey_in_proportion_to_energy_gained(sex):
+    env = _per_energy_env(0.2)
+    predator = next(a for a in env.agents if sex in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    _isolate_predator_on_cell(env, predator, (5, 5), prey=prey)
+    energy_before = env.agent_energies[predator]
+
+    _force_next_random(env, 0.0)  # success band
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    assert prey not in env.agent_positions
+    gain = env.agent_energies[predator] - (energy_before - env.homeostatic_energy_cost_per_step_predator)
+    assert gain > 0.0
+    assert rewards[predator] == pytest.approx(0.2 * gain)
+
+
+def test_per_energy_reward_is_added_to_the_flat_per_event_rewards():
+    env = _per_energy_env(0.2, reward_predator_catch_prey=1.0, reward_predator_gather_fruit=0.5)
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    fruit = next(iter(env.fruit_positions))
+    _isolate_predator_on_cell(env, male, (5, 5), prey=prey, fruit=fruit)
+    env.fruit_energies[fruit] = 2.0
+    energy_before = env.agent_energies[male]
+
+    _force_next_random(env, 0.0)
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    total_gain = env.agent_energies[male] - (energy_before - env.homeostatic_energy_cost_per_step_predator)
+    assert rewards[male] == pytest.approx(1.0 + 0.5 + 0.2 * total_gain)
+
+
+def test_flat_rewards_unchanged_when_per_energy_is_zero():
+    env = _per_energy_env(0.0, reward_predator_catch_prey=1.0, reward_predator_gather_fruit=0.5)
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    fruit = next(iter(env.fruit_positions))
+    _isolate_predator_on_cell(env, male, (5, 5), prey=prey, fruit=fruit)
+    env.fruit_energies[fruit] = 2.0
+
+    _force_next_random(env, 0.0)
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    assert rewards[male] == pytest.approx(1.5)
+
+
+@pytest.mark.parametrize("bad", [-0.1, float("nan"), float("inf")])
+def test_per_energy_reward_rejects_invalid_values(bad):
+    with pytest.raises(ValueError, match="reward_predator_per_energy"):
+        _make_test_env(overrides={"reward_predator_per_energy": bad})
+
+
+def test_hunting_a_prey_that_starved_this_step_gives_no_negative_energy_or_reward():
+    """A prey at energy <= 0 after Step 1 can still be caught by a predator processed before it in
+    Step 3; the catch must be worth 0 energy and 0 proportional reward, never negative."""
+    env = _per_energy_env(0.2)
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    _isolate_predator_on_cell(env, male, (5, 5), prey=prey)
+    env.agent_energies[prey] = 0.0  # goes negative after the homeostatic deduction
+    energy_before = env.agent_energies[male]
+
+    _force_next_random(env, 0.0)
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    assert env.hunting_successes["predator_male"] == 1  # the catch really happened
+    assert env.agent_energies[male] == pytest.approx(energy_before - env.homeostatic_energy_cost_per_step_predator)
+    assert rewards[male] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("sex", ["predator_male", "predator_female"])
+def test_per_energy_reward_fruit_by_sex_and_cumulative_rewards(sex):
+    env = _per_energy_env(0.2)
+    predator = next(a for a in env.agents if sex in a)
+    fruit = next(iter(env.fruit_positions))
+    _isolate_predator_on_cell(env, predator, (5, 5), fruit=fruit)
+    env.fruit_energies[fruit] = 2.0
+
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    assert rewards[predator] == pytest.approx(0.4)
+    assert env.cumulative_rewards[predator] == pytest.approx(0.4)  # paid exactly once
+
+
+def test_per_energy_reward_cumulative_after_successful_hunt():
+    env = _per_energy_env(0.2)
+    male = next(a for a in env.agents if "predator_male" in a)
+    prey = next(a for a in env.agents if a.startswith("prey"))
+    _isolate_predator_on_cell(env, male, (5, 5), prey=prey)
+    energy_before = env.agent_energies[male]
+
+    _force_next_random(env, 0.0)
+    _, rewards, _, _, _ = env.step(_noop_actions(env))
+
+    gain = env.agent_energies[male] - (energy_before - env.homeostatic_energy_cost_per_step_predator)
+    assert env.cumulative_rewards[male] == pytest.approx(0.2 * gain)
+
+
+def test_per_energy_reward_not_paid_on_failed_hunt_or_combat_death():
+    # failure band: success_prob <= roll < success_prob + death_prob is death; above that is failure
+    for roll_offset, expect_dead in ((0.5, False), (None, True)):
+        env = _per_energy_env(0.2, penalty_predator_death_in_combat=-0.3)
+        female = next(a for a in env.agents if "predator_female" in a)
+        prey = next(a for a in env.agents if a.startswith("prey"))
+        _isolate_predator_on_cell(env, female, (5, 5), prey=prey)
+        if expect_dead:
+            _force_next_random(env, env.prey_vs_predator_female_success_prob + 1e-6)  # death band
+        else:
+            _force_next_random(env, env.prey_vs_predator_female_success_prob + env.prey_vs_predator_female_death_prob + roll_offset * 0.1)  # failure band
+        _, rewards, terms, _, _ = env.step(_noop_actions(env))
+
+        assert prey in env.agent_positions  # prey untouched in both cases
+        if expect_dead:
+            assert terms.get(female) is True
+            assert rewards[female] == pytest.approx(-0.3)
+            assert env.cumulative_rewards[female] == pytest.approx(-0.3)
+        else:
+            assert rewards[female] == pytest.approx(0.0)
+            assert env.cumulative_rewards[female] == pytest.approx(0.0)

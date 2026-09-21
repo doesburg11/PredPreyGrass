@@ -8,6 +8,13 @@ config_env = {
     # Rewards
     "reward_predator_catch_prey": 0.0,
     "reward_predator_gather_fruit": 0.0,
+    # Energy-proportional forage reward, applied to BOTH fruit and prey at the same rate:
+    # reward += reward_predator_per_energy * (gross energy gained from that fruit / catch),
+    # ADDED to the flat per-event rewards above. Default 0.0 = off (old behaviour). Motivation:
+    # a flat per-event reward pays a nearly empty regrowing fruit as much as a full one and
+    # (measured) made fruit ~4.6x more rewarding per unit of energy than prey. Set the two flat
+    # rewards to 0.0 and this to e.g. 0.2 for a purely energy-proportional reward.
+    "reward_predator_per_energy": 0.0,
     "reward_prey_eat_grass": 0.0,
     "reward_predator_step": 0.0,
     "reward_prey_step": 0.0,

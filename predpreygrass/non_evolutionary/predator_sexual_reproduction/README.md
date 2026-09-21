@@ -171,6 +171,12 @@ don't sum to exactly 1.0, or if `male_gift_donation_rate`/
 gain, not sequentially off a shrinking remainder, so an unchecked sum above
 1.0 could deduct more energy than the hunt actually gained).
 
+`reward_predator_per_energy` (default `0.0` = off) pays a forage reward proportional to the energy gained
+(k x energy, for fruit and prey alike), added to the flat per-event rewards
+`reward_predator_catch_prey` / `reward_predator_gather_fruit`; set those two to 0 for a purely energy-proportional
+reward. Command-line flags for the tune script: `--reward-per-energy`, `--reward-catch-prey`, `--reward-gather-fruit`,
+`--penalty-combat-death` (a magnitude, stored negative), `--minibatch-size`, `--num-epochs`, `--male-*`/`--female-*` hunting odds.
+
 ## Running
 
 Train:
@@ -201,55 +207,62 @@ Built 2026-09-17 to 09-18 (sexual reproduction, stochastic hunting, exclusive ma
 provisioning, parental care, observability metrics). Trained 2026-09-19 to 09-21; full log,
 tables and the reasoning behind each step in [`RESULTS.md`](RESULTS.md).
 
-**Key message: predators can learn to steer here, but only fruit-gathering emerged strongly. A
-small combat-death penalty (0.2) gives the first hint of the male-hunts / female-gathers pattern
-without hurting the ecosystem, while a large one (1.0) collapses the predator population. All of
-this is from one seed.**
+**Key message: with a flat reward per fruit and per catch, predators learn to steer toward fruit but
+not toward prey, and men eat no more prey than a random walker does. Replacing the flat rewards with
+one energy-proportional reward (`reward_predator_per_energy` = 0.5) gave the first clear
+male-hunts / female-gathers pattern (men 47% of their energy from prey and approach prey strongly;
+women 11% prey and approach fruit the most) with a healthy ecosystem. So far this is one seed; two
+replications are running.**
 
 **The runs compared** (all seed 42, all at the shipped-default hunting odds):
 
-| Name | Run directory | Reward | Iterations |
+| Name | Reward | Iterations | Minibatch |
 |---|---|---|---|
-| **REALISTIC** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42` | Sparse: only reproduction pays (10.0); catching prey and gathering fruit pay 0 | 100 |
-| **FORAGING** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42` | REALISTIC plus catch prey +1.0 and gather fruit +0.5, paid to both sexes | 300 |
-| **FORAGING_PENALTY** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY_SEED42` | FORAGING plus -1.0 when a predator dies in a failed hunt (both sexes) | 300 |
-| **FORAGING_PENALTY02** | `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_PENALTY02_SEED42` | FORAGING plus -0.2 when a predator dies in a failed hunt (both sexes) | 300 |
+| **REALISTIC** | Sparse: only reproduction pays (10.0) | 100 | 128 |
+| **FORAGING** | REALISTIC plus catch prey +1.0 and gather fruit +0.5 (flat, per event) | 300 | 128 |
+| **FORAGING_PENALTY** | FORAGING plus -1.0 when a predator dies in a failed hunt | 300 | 128 |
+| **FORAGING_PENALTY02** | FORAGING plus -0.2 when a predator dies in a failed hunt | 300 | 128 |
+| **REF** | FORAGING_PENALTY02 rewards, re-run at the faster minibatch | 300 | 1024 |
+| **PROP k=0.2** | Energy-proportional: reward = 0.2 x energy gained (fruit and prey alike), flat rewards 0, penalty 0.2 | 300 | 1024 |
+| **PROP k=0.5** | As PROP k=0.2 with k = 0.5 | 300 | 1024 |
 
-All four use PPO `minibatch_size=128`, `num_epochs=30`. FORAGING and the penalty runs are diagnostics,
-not proposed final rewards.
+Run directories are `PPO_PREDATOR_SEXUAL_REPRODUCTION_<...>_SEED42` under `~/simulation_results/ray_results/` (see `RESULTS.md`
+for the exact names). The penalty and proportional runs are diagnostics on the reward design, not proposed final rewards.
 
 ![Population over training](results_figures/population_over_training.png)
 
-*Rows: REALISTIC (100 iterations), FORAGING, FORAGING_PENALTY (-1.0), FORAGING_PENALTY02 (-0.2).
+*Minibatch-128 runs. Rows: REALISTIC (100 iterations), FORAGING, FORAGING_PENALTY (-1.0), FORAGING_PENALTY02 (-0.2).
 Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 42.*
+
+![Population over training, minibatch 1024](results_figures/population_over_training_mb1024.png)
+
+*Minibatch-1024 runs. Rows: REF (flat rewards), PROP k=0.2 (declines: women almost extinct), PROP k=0.5 (healthy).*
 
 ![Evaluation episode population](results_figures/evaluation_population_foraging_iter300_seed42.png)
 
 *One evaluation episode of the FORAGING run's final checkpoint (iteration 300, seed 42, deterministic
 argmax actions, `evaluate_ppo_from_checkpoint_debug.py`). All three populations coexist for the full
-1000 steps. Prey oscillate between about 24 and 47. Females rise from 10 to about 19 (step 350),
-then decline to 3 by step 1000, while males rise from 6 to about 17-21: the female population is
-the fragile one. A single episode, so illustrative rather than statistical.*
+1000 steps; the female population is the fragile one. A single episode, so illustrative rather than statistical.*
 
-- **REALISTIC (sparse reward, only reproduction pays):** predator policies stayed near random, and females
-  are almost extinct by the end of each episode. Episodes plateau at about 450 steps.
-- **FORAGING (small foraging reward added):** episodes reach the 1000-step cap, births rise about 10x, and
-  both sexes learn to approach fruit (P(step onto fruit) x1.54 male, x1.65 female against a
-  random mover). Prey approach stays near random (male x1.07, female x0.99), and hunting attempts by
-  sex stay close.
-- **FORAGING_PENALTY (-1.0):** too strong. Females lean away from prey (-0.056 against -0.008 cells),
-  but males also stop stepping onto prey (x0.87 against x1.07), hunting falls about 70% in both
-  sexes, and the predator population shrinks (episode length 607 against 1001, births about 10x
-  lower, 0.35 females alive at the end).
-- **FORAGING_PENALTY02 (-0.2):** the best result so far. The ecosystem is as healthy as FORAGING
-  (episode length 990, births 37 / 39), males approach prey and step onto it (x1.08), females lean
-  away from prey (x0.96, about 3x FORAGING's avoidance) and approach fruit more than males do
-  (x1.74 against x1.52). The effect is small, though (about 12 percentage points between the sexes
-  in stepping onto prey), so it is a promising lead, not an established division of labor.
-- **Caveat:** single seed per run; the earlier trials showed founder-effect luck.
+- **REALISTIC (sparse):** predator policies stayed near random, and females are almost extinct by the end of each episode.
+- **FORAGING (flat foraging rewards):** episodes reach the 1000-step cap and both sexes learn to approach fruit (x1.54 male,
+  x1.65 female against a random mover), but prey approach stays near random.
+- **Penalties (-1.0, -0.2):** -1.0 collapses the predator population. The -0.2 run looked like a first hint of male-hunts /
+  female-gathers, but that did not reproduce when the same rewards were re-run at minibatch 1024 (REF), so it is unconfirmed.
+- **Where a predator's energy comes from** (`analyze_energy_sources.py`): men eat 120-160 fruits per life at only 0.4-0.5
+  energy each (full is 2.0) and about 9 prey at 4.7 each; their prey share (about 37-40%) equals a random walker's. Gifts are
+  negligible (about 3% of a woman's intake). The flat fruit reward is being farmed: it pays per fruit regardless of energy, so
+  per unit of energy fruit pays about 4.6 times more than prey.
+- **PROP k=0.2:** closes the loophole (0.99 energy per fruit, net intake +60%) but women's incentive to gather drops and the
+  female population collapses (0.6 alive, births 8 against 32 in REF).
+- **PROP k=0.5:** men step onto adjacent prey x1.44 (REF x0.85; run-to-run noise about +-0.04 cells in approach bias) and
+  draw 46.9% of their energy from prey; women draw 11.1% from prey (less than a random walker) and approach fruit x1.91.
+  Ecosystem healthy (births 37 / 39, 20 men and 5 women alive at the end), though prey are depleted to about 19.
+- **Caveat:** one seed per run so far (k = 0.5 chosen after k = 0.2 failed; seeds 43 and 44 running). Earlier trials in this
+  project showed founder-effect luck.
 
-Reproduce the chart with `python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_training_curves`
-and the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`.
+Reproduce the charts with `python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_training_curves`,
+the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`, and the energy split with `analyze_energy_sources`.
 
 ### Training speed and the minibatch size
 
@@ -259,17 +272,17 @@ the environment runners are nearly idle. In a 50-iteration test (FORAGING config
 `--minibatch-size 1024` was **5.8x faster** (14.7 against 84.7 minutes) and reached a healthier
 ecosystem and stronger fruit approach at the same iteration; `--num-epochs 10` was 2.8x faster.
 One seed, and any change of these settings makes runs not directly comparable, so the defaults stay
-at 128 and 30 for now (all documented runs used them). Two practical limits: only one GPU run fits at a
+at 128 and 30 for now (the runs up to FORAGING_PENALTY02 used them; the later REF and PROP runs pass `--minibatch-size 1024`). Two practical limits: only one GPU run fits at a
 time (the learner grows to about 10 of 16 GB), and a CPU-only learner (`--gpu-fraction 0`) is about 5x
 slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 
 ## TODO next
 
-1. Run several seeds each of plain FORAGING and the 0.2 penalty, using `--minibatch-size 1024` (about
-   1.5 hours per 300-iteration run), to learn how much of the difference is seed luck. Decide first
-   whether 1024 becomes the default, and if so re-run the key configurations on it for comparability.
-2. Test whether the excess epochs the small predator policies receive really hurt their learning, over
-   300 iterations and several seeds.
-3. Try other penalty values (0.1, 0.4) and, if needed, a sex-specific penalty.
-4. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
-5. Find out what limits female survival (birth cost, gift rate, or starting population).
+1. Confirm k = 0.5 on seeds 43 and 44 (running since 2026-09-21 16:55, about 1.5 hours each). If both reproduce the pattern,
+   the energy-proportional reward is the way forward.
+2. Try other k (0.3, 0.7), re-tune the combat-death penalty on top of it, and watch whether prey depletion (about 19 alive) limits
+   predators over longer runs.
+3. Decide whether `--minibatch-size 1024` becomes the default (5.8x faster; recommended). The defaults stay 128 / 30 so
+   earlier runs remain reproducible; the newer runs pass the flag explicitly.
+4. Try a higher female death chance (`--female-death-prob`, now 10%) on top of k = 0.5, watching the first 20 iterations.
+5. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
