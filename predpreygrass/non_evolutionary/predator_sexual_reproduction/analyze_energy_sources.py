@@ -210,7 +210,7 @@ def main():
             records = run_episodes(config, None, args.episodes, args.seed, random_policy=True)
             tag = f"{label} random"
         else:
-            trial = sorted(glob.glob(os.path.join(path, "PPO_PredPreyGrass_*/")))[0]
+            trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
             modules = load_modules(os.path.join(trial, f"checkpoint_{args.checkpoint:06d}"))
             records = run_episodes(config, modules, args.episodes, args.seed)
             tag = f"{label} ckpt{args.checkpoint}"

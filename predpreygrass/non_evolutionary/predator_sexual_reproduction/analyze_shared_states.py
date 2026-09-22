@@ -180,7 +180,7 @@ def main():
         output.append(line)
 
     for label, path in runs:
-        trial = sorted(glob.glob(os.path.join(path, "PPO_PredPreyGrass_*/")))[0]
+        trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
         for k in args.checkpoints:
             modules = load_modules(os.path.join(trial, f"checkpoint_{k:06d}"))
             pm = policy_probs(modules["predator_male_policy"], bank["obs"])

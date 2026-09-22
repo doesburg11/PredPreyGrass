@@ -216,10 +216,14 @@ differentiation in foraging: men take about 48% of their energy from prey (a ran
 onto adjacent prey about 1.4 times as often as chance; women take about 12% (random: 15%) and approach
 fruit the most; the ecosystem stays healthy. This survives a same-observation (shared-state) policy
 comparison and dropping the explicit combat-death penalty entirely. Ablations show women's hunting
-success is the more influential factor (three seeds each for both single-factor ablations now), responding
-as a fairly sharp threshold around 40-60% success rather than a smooth gradient; a lower death chance alone
-gives a smaller, also-replicated shift. The higher-success ablations collapse the prey population, so
-necessity is not yet shown under matched ecological conditions. Only k = 0.5 is replicated.**
+success is the more influential factor, responding as a fairly sharp threshold around 40-60% success
+rather than a smooth gradient; a lower death chance alone gives a smaller, also-replicated shift, and
+pushing death chance to 30% produces real avoidance too. A new environment (`FixedPreyDensityEnv`) holds
+prey density near a floor instead of letting it collapse, giving a cleaner (though still single-seed,
+unequal-maturity, no-original-odds-control) look at necessity: raising women's success alone removes the
+large male lean, and fully equalizing the odds reverses it. This is more directly supportive of necessity
+than the earlier collapsing ablations, not a settled result. Only k = 0.5 is replicated across multiple
+seeds.**
 
 **The runs compared** (all seed 42 unless noted, all at the shipped-default hunting odds):
 
@@ -235,6 +239,8 @@ necessity is not yet shown under matched ecological conditions. Only k = 0.5 is 
 | **NOPEN** | As PROP k=0.5 with the combat-death penalty at 0 (two seeds: 42, 43) | 300 | 1024 |
 | **Response surface** | As PROP k=0.5 with women's success at 40% or 60% (death kept at 10%) | 300 | 1024 |
 | **ABL_SUCCESS_ONLY / ABL_DEATH_ONLY** | As PROP k=0.5 with only women's success (90%) or only their death chance (5%) changed (three seeds each: 42, 43, 44) | 300 | 1024 |
+| **ABL_FDEATH20 / ABL_FDEATH30** | As ABL_DEATH_ONLY with women's death chance 20% / 30% instead of 5% (two seeds each: 42, 43) | 300 | 1024 |
+| **SUCCESS_ONLY_MATCHED / EQUAL_ODDS_MATCHED** | As ABL_SUCCESS_ONLY / ABL_EQUAL_ODDS, but trained in `FixedPreyDensityEnv` (prey held near a floor of 20) instead of the base environment | 300 | 1024 |
 
 Run directories are `PPO_PREDATOR_SEXUAL_REPRODUCTION_<...>_SEED42` under `~/simulation_results/ray_results/` (see `RESULTS.md`
 for the exact names). The penalty and proportional runs are diagnostics on the reward design, not proposed final rewards.
@@ -307,18 +313,35 @@ death risk itself is irrelevant, since dying still ends a predator's future rewa
 
   | Women's odds (success / death) | Men: prey share | Women: prey share | Prey alive | Split? |
   |---|---|---|---|---|
+  | 20% / 5% (three seeds) | 44.9-52.7% | 14.7-15.4% | 19-23 | yes, slightly narrower than baseline |
   | 20% / 10% (baseline, three seeds) | 47-50% | 11-12% | 18-21 | yes |
-  | 20% / 5% (death chance only, three seeds) | 44.9-52.7% | 14.7-15.4% | 19-23 | yes, slightly narrower on all three |
+  | 20% / 20% (two seeds) | 42.1-42.6% | 11.1-12.4% | 27.5-30.2 | yes, similar to baseline |
+  | 20% / 30% (two seeds) | 39.3-44.8% | **9.2-9.4%** | 24.9-31.7 | yes, women show real avoidance |
   | 40% success / 10% death (one seed) | 41.7-41.8% | 26.4-27.2% | 21.4 | yes, ecosystem still healthy |
   | 60% success / 10% death (one seed) | 40.9-41.4% | 37.7-38.5% | **5.1** | breaking down, ecosystem collapsing |
-  | 90% / 10% (success only, three seeds) | 29-34% | 40-48% | 0.4-2.9 | no, reversed on all three |
-  | 90% / 5% (equal odds, two seeds) | 34-38% | 37-38% | 0-1.6 | no |
+  | 90% / 10% (success only, three seeds, unmatched) | 29-34% | 40-48% | 0.4-2.9 | no, reversed on all three |
+  | 90% / 5% (equal odds, two seeds, unmatched) | 34-38% | 37-38% | 0-1.6 | no |
 
   Success is the more influential factor and replicates on three seeds each way; a lower death chance alone gives a smaller, also-replicated
-  shift toward more hunting. The response to success looks like a fairly sharp threshold in the 40-60% band, not a smooth gradient: the split
-  and the ecosystem are essentially unchanged at 40% and both break down between 40% and 60%. The interventions are not perfectly single-factor
-  (success, death and failure share one random draw), and every run at 60% success or above collapses the prey population, so necessity of the
-  unequal odds is not demonstrated under matched ecological conditions.
+  shift toward more hunting, and the death-chance axis extends further than first thought: pushed to 30% (two seeds), women's prey approach
+  turns clearly negative (real avoidance), where the 5-10% range only showed reduced pursuit. The response to success looks like a fairly
+  sharp threshold in the 40-60% band, not a smooth gradient: the split and the ecosystem are essentially unchanged at 40% and both break
+  down between 40% and 60%. The interventions are not perfectly single-factor (success, death and failure share one random draw), and every
+  *unmatched* run at 60% success or above collapses the prey population.
+- **Tested with a prey-density floor instead of the ecological collapse; more directly supportive of necessity, not a settled result.** A
+  new `FixedPreyDensityEnv` (`fixed_prey_density_env.py`) replenishes prey to a floor (20) after every step, so a high-success run does not
+  have to collapse the prey population -- though it holds only the prey COUNT fixed, not predator abundance, total catch throughput, or the
+  energy each replacement injects, so "fixed prey-density" is the accurate name, not "matched ecology". Under this intervention (single seed
+  each, unequal checkpoint maturity between the two conditions): raising success alone to 90% removes the large male lean seen in every
+  unmatched k = 0.5 run; two of three checkpoints are consistent with zero, and the third (iteration 200) shows a small female lean whose
+  interval excludes zero (-0.016 [-0.029,-0.002]). Fully equalizing the odds (90%/5%) reverses the split on every checkpoint tested, from
+  -0.056 at iteration 50 to -0.102 at iteration 300. So removing the asymmetry still removes (or reverses) the split even without a collapse
+  -- weakening the "it was just the collapse" hypothesis, though not settling it: each condition is one seed, the two conditions' clean
+  checkpoints come from different training maturities, and no run at the *original* 20%/10% odds has been trained in this same environment
+  to confirm the split would still appear there. A real limitation surfaced building this: the replenishment mechanism's own per-episode ID
+  budget can be exhausted under heavy enough hunting pressure, so both runs degrade late in training; the clean and degraded checkpoints
+  agree in sign within each run, but that does not establish the result is robust to the bug, since maturity and ecology quality change
+  together and the equal-odds effect size nearly doubles across checkpoints.
 - **The reward design matters.** The same unequal odds gave no split under flat per-event rewards and under k = 0.2 (women's population
   collapsed), and a split at k = 0.5. Flat rewards strongly reward repeatedly eating nearly empty fruit (a man collected about 60-80
   reward per life from fruit against about 9 from prey), a plausible reason for the absence of the male prey preference; this has not been
@@ -328,10 +351,11 @@ death risk itself is irrelevant, since dying still ends a predator's future rewa
 **Not established, or limits:**
 - **It is partial, not exclusive specialization, and no coordination is shown.** Men still get about half their energy from fruit; a
   woman catches about one prey per life (0.8-1.0) against about 10 for a man.
-- **Few independent training runs at most settings.** Three seeds for k = 0.5 and for both single-factor ablations; one or two each for REF,
-  k = 0.2, no-penalty and each response-surface point. The bootstrap intervals in the rollout analysis cover episodes of one trained
-  checkpoint, not training-seed variation (the shared-state comparison is a partial exception: it is a policy-only comparison, but its
-  interval still covers states of one checkpoint). k = 0.5 was chosen after k = 0.2 failed, and mostly only iteration 300 is analysed.
+- **Few independent training runs at most settings.** Three seeds for k = 0.5 and for both unmatched single-factor ablations; one seed for
+  each matched-ecology run; one or two each for REF, k = 0.2, no-penalty and each response-surface point. The bootstrap intervals in the
+  rollout analysis cover episodes of one trained checkpoint, not training-seed variation (the shared-state comparison is a partial
+  exception: it is a policy-only comparison, but its interval still covers states of one checkpoint). k = 0.5 was chosen after k = 0.2
+  failed, and mostly only iteration 300 is analysed.
 - **Settings are mixed across older runs.** The minibatch-128 runs (FORAGING, penalty runs) are not like-for-like controls for the
   minibatch-1024 runs; REF is the matched flat control. On the shared-state comparison, the minibatch-128 penalty-0.2 run shows about half the
   effect size of the matched minibatch-1024 runs, consistent with treating it as real but not robust.
@@ -339,17 +363,20 @@ death risk itself is irrelevant, since dying still ends a predator's future rewa
   action preference with the states each policy creates; "step onto" is the probability of an action whose nominal destination is the
   target's cell. Energy figures are gross own-forage energy, means over lives that include lives cut off at the end of the episode, and
   prey share is a ratio of means.
-- **The higher-success and equal-odds ablations collapse the prey population**, so their numbers describe short, prey-poor lives, not a
-  matched comparison with the healthy baseline. The birth-cost asymmetry remained throughout and produced no split on its own.
+- **The *unmatched* higher-success and equal-odds ablations collapse the prey population**, so their numbers describe short, prey-poor
+  lives; the matched-ecology runs above are the fix, but are single-seed and degrade themselves late in training. The birth-cost asymmetry
+  remained throughout and produced no split on its own.
 
 **Current best statement of the result:** under energy-proportional forage reward with k = 0.5, the male-prey / female-fruit differentiation
 replicates across three training seeds, with or without the explicit combat-death penalty, and survives a same-observation comparison that
 removes the self-created-states confound. Men obtain roughly 47-50% of their gross own-forage energy from prey against roughly 11-13% for
 women. Flat-reward runs do not show the same pattern and strongly reward repeated consumption of depleted fruit. The split responds to
-women's hunting success as a threshold around 40-60%, not a smooth gradient; both single-factor ablations (success, death chance) have
-three-seed support, with success the more influential factor. The results still suggest, rather than fully isolate, a productivity-based
-mechanism modulated by reward design, since the higher-success and equal-odds interventions collapse the prey population rather than holding
-the ecology fixed.
+women's hunting success as a threshold around 40-60%, not a smooth gradient, and to death chance as a broadly declining trend that turns to
+real avoidance by 30%. Removing the odds asymmetry removes (or, at equal odds, reverses) the split under a prey-density-floor intervention
+that avoids the earlier ablations' ecological collapse (single seed each, unequal checkpoint maturity, no original-odds control run yet) --
+this is more directly supportive of necessity than before, but does not settle it. Per an independent review, the single most valuable next
+step is fixing the pool-exhaustion bug and then running a full success x death factorial (including the missing original-odds control)
+inside the same environment, at several seeds and synchronized checkpoints.
 
 ### Training speed and the minibatch size
 
@@ -365,14 +392,15 @@ slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 
 ## TODO next
 
-1. **Death-chance response surface** (5/10/20/30% at fixed 20% success, several seeds) to complement the success-rate surface (done,
-   Iteration 9) and settle how much of a role risk plays.
-2. **Matched-ecology ablation** (Codex's suggestion, open): more prey replenishment or starting prey, or fixed finite cohorts, so a
-   high-success/equal-odds run does not collapse the prey population, for a cleaner necessity test.
-3. Try other k (0.3, 0.7) and re-tune the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
+1. **Fix the replenishment pool exhaustion** in `FixedPreyDensityEnv` (larger `n_possible_prey`, batched replenishment, or capping
+   predator reproduction) so a full 300-iteration matched-ecology run stays clean throughout, not just in its early window.
+2. **Replicate the matched-ecology runs** (SUCCESS_ONLY_MATCHED, EQUAL_ODDS_MATCHED) with more seeds -- the biggest gap now that the
+   mechanism itself is validated.
+3. **Death-chance response surface with more seeds** at 20%/30% (currently two each), and intermediate points between 10% and 20%.
+4. Try other k (0.3, 0.7) and re-tune the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
    Iteration 9); watch whether prey depletion (about 18-21 alive) limits predators over longer runs.
-4. More seeds where only one or two exist: REF, PROP k=0.2, the response-surface points (40%, 60%), and the no-penalty runs.
-5. Decide whether `--minibatch-size 1024` becomes the default (5.8x faster; recommended). The defaults stay 128 / 30 so
+5. More seeds where only one or two exist: REF, PROP k=0.2, the response-surface points (40%, 60%).
+6. Decide whether `--minibatch-size 1024` becomes the default (5.8x faster; recommended). The defaults stay 128 / 30 so
    earlier runs remain reproducible; the newer runs pass the flag explicitly.
-6. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
-7. Longer training and multiple late checkpoints, not only iteration 300, to check the effect is stable rather than a snapshot.
+7. Fruit-only shaping (no catch reward) to separate learning to gather from learning to hunt.
+8. Longer training and multiple late checkpoints, not only iteration 300, to check the effect is stable rather than a snapshot.

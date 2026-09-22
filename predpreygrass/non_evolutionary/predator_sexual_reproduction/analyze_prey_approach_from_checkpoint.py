@@ -205,7 +205,7 @@ def main():
 
     for label, path in runs:
         config = json.load(open(os.path.join(path, "run_config.json")))["config_env"]
-        trial = sorted(glob.glob(os.path.join(path, "PPO_PredPreyGrass_*/")))[0]
+        trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
         for k in args.checkpoints:
             checkpoint = os.path.join(trial, f"checkpoint_{k:06d}")
             modules = load_modules(checkpoint)
