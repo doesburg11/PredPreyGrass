@@ -108,6 +108,22 @@ def parse_args():
              "energy-proportional reward). Default: config_env.py's shipped value (0.0 = off).",
     )
     parser.add_argument(
+        "--n-initial-active-prey", type=int, default=None,
+        help="Override n_initial_active_prey (matched-ecology lever: more starting prey so a high "
+             "predator hunting-success setting does not collapse the prey population). Default: "
+             "config_env.py's shipped value (8).",
+    )
+    parser.add_argument(
+        "--initial-num-grass", type=int, default=None,
+        help="Override initial_num_grass (matched-ecology lever: more grass patches so prey "
+             "reproduce faster, offsetting heavier predation). Default: shipped value (100).",
+    )
+    parser.add_argument(
+        "--energy-gain-per-step-grass", type=float, default=None,
+        help="Override energy_gain_per_step_grass (matched-ecology lever: faster grass regrowth, "
+             "same purpose as --initial-num-grass). Default: shipped value (0.04).",
+    )
+    parser.add_argument(
         "--penalty-combat-death", type=float, default=None,
         help="Magnitude (>= 0) of the penalty a predator receives when it dies in a "
              "failed hunt. Stored as penalty_predator_death_in_combat = -value, since "
@@ -294,6 +310,12 @@ if __name__ == "__main__":
         env_config["reward_predator_gather_fruit"] = args.reward_gather_fruit
     if args.reward_per_energy is not None:
         env_config["reward_predator_per_energy"] = args.reward_per_energy
+    if args.n_initial_active_prey is not None:
+        env_config["n_initial_active_prey"] = args.n_initial_active_prey
+    if args.initial_num_grass is not None:
+        env_config["initial_num_grass"] = args.initial_num_grass
+    if args.energy_gain_per_step_grass is not None:
+        env_config["energy_gain_per_step_grass"] = args.energy_gain_per_step_grass
     if args.penalty_combat_death is not None:
         if args.penalty_combat_death < 0:
             raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")
