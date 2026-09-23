@@ -103,6 +103,18 @@ def parse_args():
              "agent, not per-agent copies (predpreygrass_rllib_env.py:257-274).",
     )
     parser.add_argument(
+        "--predator-population-cap", type=int, default=None,
+        help="Set predator_population_cap: blocks predator reproduction for the rest of a step once "
+             "current_num_predator_male + current_num_predator_female is already at or above this "
+             "value (a birth that brings it up TO the value is still allowed; see "
+             "predpreygrass_rllib_env.py's Step 5b and config_env.py). Default: config_env.py's "
+             "shipped value (None = uncapped). Added to test whether Iteration 12's odds-factorial "
+             "behavioral effects survive when predator population size is also held closer to constant "
+             "across conditions, instead of tripling between the lowest- and highest-success cells -- "
+             "caps growth, does not force an exact match (condition-dependent death rates can still "
+             "differ below the cap).",
+    )
+    parser.add_argument(
         "--minibatch-size", type=int, default=1024,
         help="PPO minibatch_size. Default 1024 (this script has no minibatch-128 legacy runs to "
              "stay comparable with, so it defaults to the faster setting).",
@@ -142,6 +154,8 @@ if __name__ == "__main__":
     env_config["prey_density_floor"] = args.prey_density_floor
     if args.n_possible_prey is not None:
         env_config["n_possible_prey"] = args.n_possible_prey
+    if args.predator_population_cap is not None:
+        env_config["predator_population_cap"] = args.predator_population_cap
 
     register_env("FixedPreyDensityPredPreyGrass", env_creator)
     ray.shutdown()

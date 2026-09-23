@@ -228,6 +228,120 @@ def test_a_male_cannot_be_paired_twice_in_one_step():
     assert paid_count == 1
 
 
+def test_predator_population_cap_blocks_reproduction_at_cap():
+    """predator_population_cap set equal to the current population blocks an
+    otherwise-eligible, in-range pair from reproducing at all."""
+    env = _make_test_env(
+        overrides={
+            "mate_search_radius": 2,
+            "n_initial_active_predator_male": 1,
+            "n_initial_active_predator_female": 1,
+            "predator_population_cap": 2,  # equals current population (1 male + 1 female)
+        }
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    initial_agent_ids = set(env.agents)
+
+    env.agent_energies[male] = env.predator_creation_energy_threshold + 1.0
+    env.agent_energies[female] = env.predator_creation_energy_threshold + 1.0
+    env.agent_positions[male] = (5, 5)
+    env.predator_positions[male] = (5, 5)
+    env.agent_positions[female] = (6, 6)
+    env.predator_positions[female] = (6, 6)
+
+    male_energy_before = env.agent_energies[male]
+    female_energy_before = env.agent_energies[female]
+
+    env.step(_noop_actions(env))
+
+    new_predators = [a for a in env.agents if "predator" in a and a not in initial_agent_ids]
+    assert new_predators == []
+    # Neither parent paid a birth cost -- only the ordinary homeostatic upkeep.
+    assert env.agent_energies[male] == male_energy_before - env.homeostatic_energy_cost_per_step_predator
+    assert env.agent_energies[female] == female_energy_before - env.homeostatic_energy_cost_per_step_predator
+
+
+def test_predator_population_cap_allows_reproduction_below_cap():
+    """A cap set one above the current population still permits the single
+    birth that would reach it -- the cap blocks at/over, not one below."""
+    env = _make_test_env(
+        overrides={
+            "mate_search_radius": 2,
+            "n_initial_active_predator_male": 1,
+            "n_initial_active_predator_female": 1,
+            "predator_population_cap": 3,  # current population (2) + 1
+        }
+    )
+    male = next(a for a in env.agents if "predator_male" in a)
+    female = next(a for a in env.agents if "predator_female" in a)
+    initial_agent_ids = set(env.agents)
+
+    env.agent_energies[male] = env.predator_creation_energy_threshold + 1.0
+    env.agent_energies[female] = env.predator_creation_energy_threshold + 1.0
+    env.agent_positions[male] = (5, 5)
+    env.predator_positions[male] = (5, 5)
+    env.agent_positions[female] = (6, 6)
+    env.predator_positions[female] = (6, 6)
+
+    env.step(_noop_actions(env))
+
+    new_predators = [a for a in env.agents if "predator" in a and a not in initial_agent_ids]
+    assert len(new_predators) == 1
+
+
+def test_predator_population_cap_stops_a_later_pair_reached_mid_step():
+    """Two independent, eligible, in-range pairs; the cap is set so the first
+    birth (in agent-sorted order) reaches it, and the second pair -- checked
+    fresh on its own loop iteration, not only once before the loop -- must be
+    blocked in the same step."""
+    env = _make_test_env(
+        overrides={
+            "mate_search_radius": 2,
+            "n_initial_active_predator_male": 2,
+            "n_initial_active_predator_female": 2,
+            "predator_population_cap": 5,  # current population (4) + 1: room for exactly one birth
+        }
+    )
+    males = sorted(a for a in env.agents if "predator_male" in a)
+    females = sorted(a for a in env.agents if "predator_female" in a)
+    assert males == ["predator_male_0", "predator_male_1"]
+    assert females == ["predator_female_0", "predator_female_1"]
+    initial_agent_ids = set(env.agents)
+
+    # Two separate, non-overlapping pairs (grid_size=10, so both stay in bounds), each mutually
+    # in radius of its own partner and well outside radius of the other pair.
+    pair_positions = [((2, 2), (3, 3)), ((7, 7), (8, 8))]
+    for (male, female), (male_pos, female_pos) in zip(zip(males, females), pair_positions):
+        env.agent_energies[male] = env.predator_creation_energy_threshold + 1.0
+        env.agent_energies[female] = env.predator_creation_energy_threshold + 1.0
+        env.agent_positions[male] = male_pos
+        env.predator_positions[male] = male_pos
+        env.agent_positions[female] = female_pos
+        env.predator_positions[female] = female_pos
+
+    env.step(_noop_actions(env))
+
+    new_predators = [a for a in env.agents if "predator" in a and a not in initial_agent_ids]
+    assert len(new_predators) == 1  # not 2: the cap stopped the second pair
+    # Stronger than just the population count (Codex review): exactly one birth was recorded, and
+    # exactly one pair actually paid a birth cost -- not, say, two births that happened to leave the
+    # same net agent count some other way.
+    assert env.episode_births["predator_male"] + env.episode_births["predator_female"] == 1
+    paid_pairs = sum(
+        1
+        for male, female in zip(males, females)
+        if env.agent_energies[female] < env.predator_creation_energy_threshold + 1.0 - env.homeostatic_energy_cost_per_step_predator
+    )
+    assert paid_pairs == 1
+
+
+@pytest.mark.parametrize("bad", [-1, 3.9, True, "5"])
+def test_predator_population_cap_rejects_invalid_values(bad):
+    with pytest.raises(ValueError, match="predator_population_cap"):
+        _make_test_env(overrides={"predator_population_cap": bad})
+
+
 def test_full_grid_declines_birth_instead_of_crashing():
     """When every cell is occupied, _find_available_spawn_position returns
     None. Both the prey (Step 5a) and predator (Step 5b) reproduction paths

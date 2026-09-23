@@ -44,6 +44,9 @@ and RESULTS.md (once populated) for empirical findings.
 """
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.config_env import config_env
 
+# standard library
+import numbers
+
 # external libraries
 import numpy as np
 
@@ -94,6 +97,25 @@ class PredPreyGrass(MultiAgentEnv):
         # Sexual reproduction: Chebyshev-distance radius for mate-finding
         # (see config_env.py for why this can't be an exact-cell match).
         self.mate_search_radius = int(config.get("mate_search_radius", 3))
+
+        # Predator population cap: None (default) leaves reproduction unbounded, unchanged from
+        # every existing run. When set, Step 5b below stops producing predator offspring for the
+        # rest of a step once the population is already at or above this ceiling -- a birth that
+        # brings the population up TO the cap is still allowed, one that would push past it is not
+        # (see config_env.py for the full rationale).
+        self.predator_population_cap = config.get("predator_population_cap", None)
+        if self.predator_population_cap is not None:
+            # Codex review: int(...) before validating would silently accept 3.9 (truncated to 3),
+            # True/False (bool is an int subclass), or "5" (numeric strings) despite the documented
+            # "an int" contract. Reject anything that isn't already a plain int (or a numbers.Integral
+            # that isn't a bool) up front instead.
+            if isinstance(self.predator_population_cap, bool) or not isinstance(self.predator_population_cap, numbers.Integral):
+                raise ValueError(
+                    f"predator_population_cap must be an int (got {self.predator_population_cap!r})"
+                )
+            self.predator_population_cap = int(self.predator_population_cap)
+            if self.predator_population_cap < 0:
+                raise ValueError(f"predator_population_cap must be >= 0 (got {self.predator_population_cap})")
 
         # Male provisioning: unidirectional energy transfer from
         # predator_male to nearby predator_female neighbors on a successful
@@ -737,6 +759,23 @@ class PredPreyGrass(MultiAgentEnv):
             and self.agent_energies[female] >= self.predator_creation_energy_threshold
         }
         for male in eligible_males:
+            if (
+                self.predator_population_cap is not None
+                and self.current_num_predator_male + self.current_num_predator_female >= self.predator_population_cap
+            ):
+                # Population already at or above the cap (checked before this birth, not after --
+                # a birth that brings the population up TO the cap is still allowed, one that would
+                # push it past is not): no further predators reproduce this step. Checked fresh on
+                # every iteration (not just once before the loop) so a birth earlier in this same
+                # step that reaches the cap stops any later pair too. break, not continue: once the
+                # cap is hit nothing later in this loop can reproduce either, so this also skips the
+                # mate-search/spawn-position work for them. Whichever pairs are processed first get
+                # priority for the remaining slots in a step where the cap is reached mid-loop -- a
+                # documented tie-break, not an attempt at fairness. Note eligible_males is in
+                # self.agents' sort order, which is lexicographic, not numeric (predator_male_10
+                # sorts before predator_male_2), so "processed first" is deterministic but not the
+                # same as "created first" once indices reach double digits.
+                break
             if male in paired_this_step:
                 continue
             male_position = self.agent_positions[male]

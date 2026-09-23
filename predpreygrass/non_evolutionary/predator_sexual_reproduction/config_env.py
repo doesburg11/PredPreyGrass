@@ -47,6 +47,22 @@ config_env = {
     # eco_evolutionary_nuptial_gift's cooperation_range, which faces the
     # identical constraint for its male-female proximity check.
     "mate_search_radius": 3,
+    # Predator population cap: when set (an int), blocks predator reproduction for the rest of a
+    # step once current_num_predator_male + current_num_predator_female is already at or above this
+    # ceiling (a birth that brings the population up TO the cap is still allowed) -- the mirror
+    # image of FixedPreyDensityEnv's prey floor (fixed_prey_density_env.py), which replenishes prey
+    # losses instead of blocking predator gains. Added to test whether the fixed-density odds
+    # factorial's behavioral effects (RESULTS.md, Iteration 12) survive when predator population
+    # size is also held closer to constant across odds conditions -- that iteration found predator
+    # population size is NOT held fixed by the prey floor alone and roughly triples between the
+    # lowest- and highest-success conditions, confounding the odds comparison with a
+    # population-size/crowding comparison. Note this caps growth, it does not hold population size
+    # exactly matched: condition-dependent death rates can still keep different conditions at
+    # different levels below the cap, so call this "capped," not "fixed/matched," predator
+    # population unless per-run measurements confirm they land close to the cap in practice. None
+    # (default) disables the cap entirely; all existing runs are unaffected. __init__ validates it
+    # is a non-negative int (bool and non-integral values, e.g. 3.9, are rejected) when set.
+    "predator_population_cap": None,
     # Male provisioning (unidirectional male -> female energy gift on a
     # successful hunt, exclusive to his recorded mate -- see self.agent_mate,
     # not broadcast to any nearby female): offsets predator_female's
