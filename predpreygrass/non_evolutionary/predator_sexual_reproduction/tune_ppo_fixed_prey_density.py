@@ -1,11 +1,13 @@
 """
-Fixed-cohort matched-ecology variant of tune_ppo_predator_sexual_reproduction.py: trains
-FixedPreyDensityEnv (see fixed_prey_density_env.py) instead of the base PredPreyGrass, so a high
-female hunting-success setting can be tested without the prey population collapsing -- the
-confound Codex's second opinion flagged in ABL_SUCCESS_ONLY / ABL_EQUAL_ODDS (see RESULTS.md,
-Iterations 8-9: those ablations removed the k=0.5 division of labor, but also collapsed the prey
-to 0.4-2.9 alive, so it was unclear whether raising success removes the split or whether the
-collapsing ecology does).
+Fixed prey-density variant of tune_ppo_predator_sexual_reproduction.py: trains FixedPreyDensityEnv
+(see fixed_prey_density_env.py) instead of the base PredPreyGrass, so a high female hunting-success
+setting can be tested without the prey population collapsing -- the confound Codex's second opinion
+flagged in ABL_SUCCESS_ONLY / ABL_EQUAL_ODDS (see RESULTS.md, Iterations 8-9: those ablations
+removed the k=0.5 division of labor, but also collapsed the prey to 0.4-2.9 alive, so it was
+unclear whether raising success removes the split or whether the collapsing ecology does). Only the
+prey COUNT is held near a floor, not predator abundance or catch throughput -- "fixed prey-density"
+is the accurate name; a third Codex review (RESULTS.md, Iteration 11) pointed out that "matched
+ecology" overstates this.
 
 Everything else (policies, PPO config, reward/odds/penalty flags, the EpisodeReturn callback and
 policy_mapping_fn, imported unchanged from tune_ppo_predator_sexual_reproduction.py) is identical;
@@ -91,6 +93,16 @@ def parse_args():
              "to the healthy k=0.5 baseline's typical end-of-episode prey count (18-21).",
     )
     parser.add_argument(
+        "--n-possible-prey", type=int, default=None,
+        help="Override n_possible_prey: the per-episode budget of prey agent IDs, shared by normal "
+             "reproduction and by FixedPreyDensityEnv's replenishment spawns. Default: config_env.py's "
+             "shipped value (2000). RESULTS.md Iteration 11 found this exhausted mid-episode under "
+             "heavy hunting pressure (up to ~1,900 catches/episode by iteration 300), silently "
+             "disabling the floor; pass a larger value (e.g. 50000) to avoid this. Cheap to raise: "
+             "observation_spaces/action_spaces reference a few shared space objects per possible "
+             "agent, not per-agent copies (predpreygrass_rllib_env.py:257-274).",
+    )
+    parser.add_argument(
         "--minibatch-size", type=int, default=1024,
         help="PPO minibatch_size. Default 1024 (this script has no minibatch-128 legacy runs to "
              "stay comparable with, so it defaults to the faster setting).",
@@ -128,6 +140,8 @@ if __name__ == "__main__":
             raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")
         env_config["penalty_predator_death_in_combat"] = -args.penalty_combat_death
     env_config["prey_density_floor"] = args.prey_density_floor
+    if args.n_possible_prey is not None:
+        env_config["n_possible_prey"] = args.n_possible_prey
 
     register_env("FixedPreyDensityPredPreyGrass", env_creator)
     ray.shutdown()

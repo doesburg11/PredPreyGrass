@@ -11,6 +11,42 @@ reconstructing it from conversation history.
 
 ---
 
+## Narrative so far (start here)
+
+The short version: the chain of failure → diagnosis → fix → next question, no data tables. Full
+detail for each step is in the numbered Iteration log below; the shortest way in is to read this,
+then jump to whichever iteration number you need.
+
+1. **Nothing emerged.** Realistic hunting odds + a sparse reward (Iteration 1): predators barely
+   learned to hunt at all, no sex difference visible.
+2. **Diagnosed:** training itself was slow — learner-update-bound, not environment-bound
+   (Iteration 5) — fixed with a larger PPO minibatch size (5.8x speedup). A prerequisite fix, not
+   the main finding.
+3. **Diagnosed:** with foraging rewards added, predators were "farming" fruit instead of hunting —
+   a flat per-event reward paid the same whether a fruit patch was full or nearly empty, so there
+   was no incentive to hunt over scavenging (Iteration 6).
+4. **Fix:** switched to an energy-proportional reward (pay for energy actually gained, not a flat
+   per-event bonus). Under this fix, a real division of labor appeared for the first time — males
+   hunt more, females gather more — replicated across three seeds (Iteration 7).
+5. **Asked why.** The built-in difference between the sexes is hunting odds (males succeed 90%,
+   die 5%; females succeed 20%, die 10%). Ablations giving females the males' odds removed or
+   reversed the split, pointing at success rate — not death risk — as the driver (Iterations 8-9).
+6. **Confound found.** Those same ablations also collapsed the prey population every time (down to
+   0.4-2.9 prey left alive) — so it was unclear whether the *odds change* or the *ecological
+   collapse* removed the split. Not a settled answer.
+7. **Fix:** built a new environment, `FixedPreyDensityEnv`, that tops the prey population back up
+   to a floor whenever it drops, removing the collapse confound so the odds question can be tested
+   on a stable ecology (Iteration 11).
+8. **Bug found in that fix.** The per-episode budget of prey agent IDs (shared between normal
+   births and floor top-ups) could itself run out under heavy hunting, silently disabling the
+   floor. Fixed by raising the budget 25x (2,000 → 50,000), validated with a calibration run before
+   committing further compute.
+9. **Where we are now:** a 12-run factorial (2×2 over success rate × death risk, 3 seeds each,
+   inside the fixed environment) is running to answer the necessity question cleanly for the first
+   time, without the collapse confound. See "Next steps" for the design and current status.
+
+---
+
 ## Run names used in this log
 
 - **REALISTIC** (Iteration 1): `PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42`. Shipped-default
