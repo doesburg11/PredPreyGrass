@@ -10,7 +10,11 @@ mate_search_radius, which only governs *eligibility* to reproduce in the first p
 that has never reproduced has no recorded mate and is excluded from the near/away comparison below
 (counted separately, under "none", for transparency).
 
-At every step, a live predator's state is bucketed by its recorded mate's real-time status:
+At every step, a live predator's state is bucketed by its recorded mate's status as of the START of
+that step (a second Codex review noted "real-time" slightly overstates this: the environment defers
+removing a just-terminated agent from agent_positions until the START of the following step(), so a
+mate that died on the PREVIOUS step can still be classified "near"/"far" for one extra step before
+this bucketing catches up and reclassifies it "dead" -- not a bucket conflation, just a one-step lag):
   near      -- mate alive, within --near-radius (Chebyshev) of the agent
   far       -- mate alive, farther than --near-radius
   dead      -- mate was recorded but is no longer alive
@@ -166,6 +170,23 @@ def bootstrap_diff_of_ratios(num_a, den_a, num_b, den_b, rng, n_boot=2000):
     return point, *np.percentile(boots, [2.5, 97.5])
 
 
+def _diff_contrast(label_prefix, per_episode, sex, tgt, bucket_a, bucket_b, rng):
+    """near-minus-bucket_b diff, with the episode-overlap count Codex asked be reported alongside
+    every such contrast (the bootstrap's real sample size is informative episodes, not decisions)."""
+    rows_a = [ep[(sex, tgt, bucket_a)] for ep in per_episode]
+    rows_b = [ep[(sex, tgt, bucket_b)] for ep in per_episode]
+    n_a, n_b = sum(r["n"] for r in rows_a), sum(r["n"] for r in rows_b)
+    n_both = sum(1 for ra, rb in zip(rows_a, rows_b) if ra["n"] > 0 and rb["n"] > 0)
+    if not (n_a and n_b):
+        return f" | {label_prefix} diff=n/a (one side empty)"
+    diff, lo, hi = bootstrap_diff_of_ratios(
+        [r["bias"] for r in rows_a], [r["n"] for r in rows_a],
+        [r["bias"] for r in rows_b], [r["n"] for r in rows_b],
+        rng,
+    )
+    return f" | {label_prefix} diff={diff:+.3f} [{lo:+.3f},{hi:+.3f}] ({n_both}/{len(per_episode)} episodes have both)"
+
+
 def summarize(label, per_episode, rng):
     lines = []
     for sex in SEXES:
@@ -183,23 +204,12 @@ def summarize(label, per_episode, rng):
                     continue
                 bias, lo, hi = bootstrap_ratio([r["bias"] for r in rows], [r["n"] for r in rows], rng)
                 parts.append(f"{b} n={n:5d} bias={bias:+.3f} [{lo:+.3f},{hi:+.3f}]")
-            near_rows = [ep[(sex, tgt, "near")] for ep in per_episode]
-            away_rows = [ep[(sex, tgt, "away")] for ep in per_episode]
-            n_near, n_away = sum(r["n"] for r in near_rows), sum(r["n"] for r in away_rows)
-            # Codex review: the bootstrap resamples whole episodes, so its effective sample size is
-            # the number of episodes actually informative for BOTH sides, not the printed decision
-            # count -- report that count explicitly rather than let a sparse-overlap CI look as
-            # solid as a well-overlapped one.
-            n_both = sum(1 for nr, ar in zip(near_rows, away_rows) if nr["n"] > 0 and ar["n"] > 0)
-            if n_near and n_away:
-                diff, dlo, dhi = bootstrap_diff_of_ratios(
-                    [r["bias"] for r in near_rows], [r["n"] for r in near_rows],
-                    [r["bias"] for r in away_rows], [r["n"] for r in away_rows],
-                    rng,
-                )
-                contrast = f" | near-away diff={diff:+.3f} [{dlo:+.3f},{dhi:+.3f}] ({n_both}/{len(per_episode)} episodes have both)"
-            else:
-                contrast = " | near-away diff=n/a (one side empty)"
+            contrast = _diff_contrast("near-away", per_episode, sex, tgt, "near", "away", rng)
+            # Compensation test: "away" pools far/dead/abandoned together (Codex flagged this doesn't
+            # isolate bereavement specifically). A dedicated near-vs-dead contrast asks the narrower
+            # question directly -- does she forage more once her mate has actually died, not just
+            # wandered off or been reassigned -- using the same paired-bootstrap machinery.
+            contrast += _diff_contrast("near-dead", per_episode, sex, tgt, "near", "dead", rng)
             lines.append(f"{label:22} {sex[9:]:6} {tgt:5} " + " | ".join(parts) + contrast)
     return lines
 
