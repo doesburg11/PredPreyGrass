@@ -31,7 +31,7 @@ import os
 import numpy as np
 import torch
 
-from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analysis_env import make_env
 
 POLICY_IDS = ("predator_male_policy", "predator_female_policy", "prey_policy")
 SEXES = ("predator_male", "predator_female")
@@ -99,7 +99,7 @@ def record(stats, geometry, probs):
 
 
 def run_episodes(env_config, modules, mode, n_episodes, seed0):
-    env = PredPreyGrass(env_config)
+    env = make_env(env_config)
     moves = np.array([env.action_to_move_tuple[a] for a in range(env.num_actions)])
     offset = (env.predator_obs_range - 1) // 2
     sample_rng = np.random.default_rng(seed0)

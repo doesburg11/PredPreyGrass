@@ -69,7 +69,7 @@ from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_prey_ap
     policy_of,
     record,
 )
-from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analysis_env import make_env
 
 SEXES = ("predator_male", "predator_female")
 TARGETS = ("prey", "fruit")
@@ -95,7 +95,7 @@ def mate_bucket(env, agent, near_radius):
 
 
 def run_episodes(env_config, modules, n_episodes, seed0, near_radius):
-    env = PredPreyGrass(env_config)
+    env = make_env(env_config)
     moves = np.array([env.action_to_move_tuple[a] for a in range(env.num_actions)])
     offset = (env.predator_obs_range - 1) // 2
     sample_rng = np.random.default_rng(seed0)

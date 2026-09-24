@@ -14,6 +14,13 @@ Metrics, per policy (male / female), over the bank states that have a visible ta
 and the paired male-minus-female difference with an episode-level bootstrap interval (states of one episode are
 resampled together). Intervals cover the states of the bank for ONE checkpoint, not training-seed variation.
 
+Environment note: the state bank is DELIBERATELY built on the plain base env (`PredPreyGrass`) from --bank-config's
+`config_env`, with a uniform-random policy, even for runs trained with a prey floor or a predator density target. The
+bank is meant to be one fixed, run-independent set of counterfactual states that every policy is queried on, not the
+on-policy ecology of any run; building it with each run's own env would give each run a different bank and change what
+is being compared. (The other analysis scripts, which roll policies out, use the env each run was trained in; see
+analysis_env.py.) All runs in one invocation share the bank, so their comparison is like-for-like.
+
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_shared_states \
       --run K05_s42=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42 \

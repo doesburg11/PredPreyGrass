@@ -12,6 +12,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
 # --- Project imports (predator_sexual_reproduction env + PyGame renderer) ---
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analysis_env import make_env
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
@@ -21,6 +22,7 @@ from predpreygrass.non_evolutionary.predator_sexual_reproduction.utils.pygame_gr
 
 # --- External libs ---
 import glob
+import json
 import os
 import sys
 import types
@@ -53,6 +55,17 @@ except Exception:
 
 def env_creator(config):
     return PredPreyGrass(config)
+
+
+def _find_run_config(checkpoint_path):
+    """run_config.json of the run that owns this checkpoint (up to 3 directories above it), or None."""
+    d = os.path.abspath(checkpoint_path)
+    for _ in range(4):
+        candidate = os.path.join(d, "run_config.json")
+        if os.path.isfile(candidate):
+            return json.load(open(candidate)).get("config_env")
+        d = os.path.dirname(d)
+    return None
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
@@ -123,7 +136,11 @@ if __name__ == "__main__":
     print("Loaded RLModules:", list(rl_modules.keys()))
 
     seed = 42
-    env = env_creator({})
+    # Evaluate in the env the run was TRAINED in (prey floor / density target), not the plain base env, when
+    # the run's run_config.json can be found (analysis_env.py explains the mismatch this avoids).
+    _run_cfg = _find_run_config(checkpoint_path)
+    env = make_env(_run_cfg) if _run_cfg is not None else env_creator({})
+    print("Evaluating in:", type(env).__name__, "(from run_config.json)" if _run_cfg is not None else "(no run_config.json found; base env defaults)")
     observations, _ = env.reset(seed=seed)
     active_agents = list(observations.keys())
 

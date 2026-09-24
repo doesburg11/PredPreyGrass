@@ -34,13 +34,15 @@ from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_prey_ap
     module_probs,
     policy_of,
 )
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analysis_env import env_class_for
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 
 SEXES = ("predator_male", "predator_female")
 
 
-class InstrumentedEnv(PredPreyGrass):
-    """Adds per-agent gross energy-by-source bookkeeping; does not change any dynamics."""
+class InstrumentedMixin:
+    """Adds per-agent gross energy-by-source bookkeeping; does not change any dynamics. A mixin so the same
+    instrumentation can sit on whichever env class a run was trained in (see analysis_env.py)."""
 
     def _init_energy_log(self):
         self.energy_from_prey = defaultdict(float)
@@ -99,8 +101,23 @@ class InstrumentedEnv(PredPreyGrass):
         return result
 
 
+class InstrumentedEnv(InstrumentedMixin, PredPreyGrass):
+    """Instrumented base env (kept for callers that want exactly the base env)."""
+
+
+_INSTRUMENTED_CLASSES = {}
+
+
+def make_instrumented_env(config):
+    """Instrumented version of the env class this run was trained in (see analysis_env.env_class_for)."""
+    base = env_class_for(config)
+    if base not in _INSTRUMENTED_CLASSES:
+        _INSTRUMENTED_CLASSES[base] = type(f"Instrumented{base.__name__}", (InstrumentedMixin, base), {})
+    return _INSTRUMENTED_CLASSES[base](config)
+
+
 def run_episodes(env_config, modules, n_episodes, seed0, random_policy=False):
-    env = InstrumentedEnv(env_config)
+    env = make_instrumented_env(env_config)
     rng = np.random.default_rng(seed0)
     records = []  # one dict per predator agent life
     for ep in range(n_episodes):

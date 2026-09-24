@@ -46,7 +46,7 @@ import numpy as np
 import torch
 from scipy.stats import spearmanr
 
-from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_energy_sources import InstrumentedEnv
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_energy_sources import make_instrumented_env
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_prey_approach_from_checkpoint import (
     POLICY_IDS,
     load_modules,
@@ -65,7 +65,7 @@ def _prey_share(env, agent):
 
 
 def run_episodes(env_config, modules, n_episodes, seed0):
-    env = InstrumentedEnv(env_config)
+    env = make_instrumented_env(env_config)
     rng = np.random.default_rng(seed0)
     pairs = []  # one dict per (reproducing pair, episode) -- NOT one per episode
     for ep in range(n_episodes):
