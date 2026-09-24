@@ -402,6 +402,40 @@ specifically as the cause, since the cap also introduces its own reproductive-se
 Not fully settled: the cap constrains growth rather than forcing an exact population match (CONTROL's capped population sits meaningfully below
 the other three), and separating the cap's own selection effect from the population-size effect it targets remains open.
 
+### Is foraging behavior coordinated, or parallel individual specialization? A mate-proximity test
+
+*See `RESULTS.md`, Iteration 14.* Everything above only shows an *average* difference between the sexes -- it says nothing about whether an
+individual's behavior is associated with its own specific partner's real-time proximity/status (not the same thing as what the partner is
+actively *doing*, e.g. mid-hunt -- this test can't and doesn't measure that). `analyze_mate_contingency.py` (new) buckets every live predator
+with a recorded mate (`env.agent_mate`, the reproductive-partner bond, not the same thing as `mate_search_radius`'s eligibility radius) by
+that mate's real-time status -- near, far, dead, or abandoned (reproduced before, but the partner has since re-mated elsewhere) -- and tests
+a paired, per-episode near-vs-away difference in approach behavior, on CONTROL, three seeds, checkpoint 29. It is a marginal, observational
+test, not a causal or interventional one.
+
+**Result: females show a small contingency association on both targets, detectable in every seed tested.** Every one of six female cells
+(prey and fruit, three seeds) has a negative near-minus-away difference with a CI excluding zero: females approach both prey (-0.010 to
+-0.017) and, much more strongly, fruit (-0.055 to -0.081) less when their mate is nearby than when he is far, dead, or reassigned. Males show
+an association that is weaker overall and less consistent, though not uniformly weaker cell-for-cell (a positive prey shift near the mate on
+two of three seeds, comparable in size to the female prey effect; fruit near zero on two seeds but not the third).
+
+**A plausible mechanism, not yet tested:** this module already has a male-to-female energy-provisioning mechanic (a nearby male donates a
+share of a successful hunt's energy to his recorded mate). If donation correlates with the same "near" bucket, that would support (not
+establish) a straightforward economic explanation -- a provisioned female needing to forage less urgently -- since a bare correlation
+wouldn't isolate this from other things that also correlate with time spent near a mate (survival duration, energy, location, the mate's own
+hunting success). Checking this (via `analyze_energy_sources.py`'s existing per-life "received: from mate" figure) is a cheap first pass, not
+done yet.
+
+**What this does and doesn't show:** a marginal, observational association between approach behavior and a specific partner's recorded
+proximity/status -- inconsistent with describing the split as a purely unconditional, partner-indifferent per-sex average, but **not by
+itself evidence that behavior is caused by or responsive to the partner's state**: a fixed policy reacting only to ordinary state it already
+observes (own energy, local density, location) could produce the same association simply because mate proximity correlates with those
+variables, without the policy responding to the partner as such. Not evidence of mate recognition, causality, or communication (this
+environment has no signaling channel at all). The "away" bucket also pools far, dead, and abandoned together, so the result may partly reflect
+history/reassignment differences rather than proximity alone. A real bug was caught and fixed before trusting this (Codex review): an early
+version conflated "never reproduced" with "reproduced before, partner re-mated elsewhere" under one bucket, silently excluding about 20% of
+decisions from the contrast and mislabeling them; now split into distinct "virgin" and "abandoned" buckets. Only CONTROL has been tested this
+way.
+
 ### Training speed and the minibatch size
 
 About 97% of each iteration is the PPO learner update, which is limited by one CPU core doing about
@@ -428,7 +462,13 @@ slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
    - **Only one cap value (26) tested;** untested whether the narrows-not-reverses result holds at a much smaller or larger ceiling.
    - **Backfill EQUALODDS seed 42's energy-source analysis from Iteration 12** (skipped because it reused the calibration run rather
      than being trained by the automatic pipeline).
-2. **Death-chance response surface with more seeds** at 20%/30% (currently two each), and intermediate points between 10% and 20%.
+2. ~~Coordination or parallel specialization?~~ **Done, first pass (Iteration 14):** `analyze_mate_contingency.py`, a mate-proximity
+   contingency test on CONTROL, found females show a small, three-seed-replicated approach-behavior association with their recorded mate's
+   real-time proximity -- inconsistent with a purely unconditional per-sex average, though this observational association doesn't by
+   itself show the behavior is caused by or responsive to the partner's state. Threads open: test whether it's explained by the existing
+   male-provisioning mechanic (correlation with actual energy received from mate would support, not establish, this); extend beyond
+   CONTROL to the other odds conditions and the capped-population runs.
+3. **Death-chance response surface with more seeds** at 20%/30% (currently two each), and intermediate points between 10% and 20%.
 4. Try other k (0.3, 0.7) and re-tune the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
    Iteration 9); watch whether prey depletion (about 18-21 alive) limits predators over longer runs.
 5. More seeds where only one or two exist: REF, PROP k=0.2, the response-surface points (40%, 60%).

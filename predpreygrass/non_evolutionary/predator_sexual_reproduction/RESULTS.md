@@ -1161,6 +1161,105 @@ regenerated again, so a reader doesn't have to work that out themselves.
   not a formal capped-vs-uncapped or cross-seed significance test; the "all three seeds agree" pattern is the actual
   cross-seed evidence.
 
+### Iteration 14 — Coordination or parallel specialization? A mate-proximity contingency test
+
+**Purpose:** every result so far (Iterations 7-13) only shows an *average* difference between the sexes -- males hunt
+more than females across the whole population. None of it says whether any individual predator's behavior is
+associated with its own specific partner's real-time proximity, or whether the split is two fixed per-sex
+tendencies running in parallel, indifferent to the partner's state. This iteration (`analyze_mate_contingency.py`,
+new this iteration) asks that narrower question directly: is a predator's prey/fruit approach behavior associated
+with its recorded mate's real-time proximity? (Proximity/status only -- this cannot and does not test whether
+behavior responds to what the partner is actively *doing*, e.g. mid-hunt; see the caveats below.)
+
+**Method.** `env.agent_mate` records the reproductive-partner bond formed the first time two specific predators
+successfully reproduce (serial monogamy: a later re-mating overwrites it). At every step, a live predator with a
+recorded mate is bucketed by that mate's status: **near** (mate alive, within Chebyshev distance 3), **far** (mate
+alive, farther away), **dead** (mate recorded but no longer alive), or **abandoned** (has reproduced before but has
+no current mate entry because its former partner re-mated elsewhere -- distinguished from **virgin**, never
+reproduced at all, which is excluded from the contrast). far + dead + abandoned are combined into **away**, the
+primary contrast against **near**, tested with a paired per-episode bootstrap of the near-minus-away difference in
+approach_bias (the same metric `analyze_prey_approach_from_checkpoint.py` uses). Run against all three CONTROL
+seeds (the best-established, most consistently replicated condition), checkpoint 29, 30 episodes each.
+
+**Results (near-minus-away approach-bias difference, 95% bootstrap CI, "both" = episodes containing both near and
+away decisions):**
+
+| Sex | Target | seed 42 | seed 43 | seed 44 |
+|---|---|---|---|---|
+| male | prey | -0.000 [-.010,+.010] (30/30) | +0.018 [+.008,+.028] (30/30) | +0.019 [+.008,+.029] (30/30) |
+| male | fruit | -0.016 [-.023,-.009] (30/30) | -0.004 [-.010,+.001] (30/30) | +0.000 [-.007,+.009] (30/30) |
+| female | prey | -0.010 [-.019,-.002] (30/30) | -0.017 [-.024,-.008] (30/30) | -0.014 [-.025,-.004] (30/30) |
+| female | fruit | -0.055 [-.062,-.048] (30/30) | -0.073 [-.080,-.066] (30/30) | -0.081 [-.090,-.074] (30/30) |
+
+For context: 42.6-43.5% of all prey-decisions across the three seeds came from agents that had never reproduced
+(bucket "virgin", excluded from the contrast above); 18.5-19.8% came from agents whose former mate had since re-mated
+elsewhere (bucket "abandoned", included in "away" -- a Codex review caught an early version of this script
+mislabeling these as "never-mated" and silently excluding them, discussed below).
+
+**What this shows:**
+
+1. **Females show a small contingency effect on both targets, statistically detectable in these evaluation episodes
+   on every seed.** Every one of the six female cells above has a negative near-minus-away difference with a CI
+   excluding zero: females approach both prey and fruit *less* when their recorded mate is nearby than when he is
+   far, dead, or reassigned elsewhere. The fruit effect (-0.055 to -0.081) is much larger than the prey effect
+   (-0.010 to -0.017) but both point the same direction on every seed. ("Statistically detectable" rather than
+   "real": these CIs quantify evaluation-episode variability for one fixed trained checkpoint per seed, not
+   uncertainty across training runs -- three seeds are three separate replications, not a formal population-level
+   estimate.)
+2. **Males show a pattern that is weaker overall and less consistent, but not uniformly weaker cell-for-cell.**
+   Prey-approach is slightly *higher* near the mate on two of three seeds (+0.018, +0.019, both CIs excluding zero,
+   comparable in magnitude to the corresponding female prey effects) and flat on the third (-0.000, CI includes
+   zero) -- the opposite sign from the female prey effect on those two seeds, and not replicated on all three.
+   Fruit-approach is close to zero on two seeds (CIs include zero) but seed 42's -0.016 CI excludes zero and is
+   comparable in magnitude to the prey effects -- "close to zero on all three" would overstate the consistency here.
+3. **A plausible, testable mechanism, not yet checked:** this module already has a unidirectional male-to-female
+   energy-provisioning mechanic (`_apply_male_gift`) -- on a successful hunt, a male donates a share of the energy
+   gained to his recorded mate if she is within `predator_gift_range`. If that donation correlates with the same
+   "near" bucket used here, that would be *consistent with* (not proof of) a straightforward economic explanation for
+   the female effect -- a provisioned female needing to forage less urgently -- that would not require anything
+   resembling "coordination" in a richer sense. A bare correlation wouldn't isolate this from other things that also
+   correlate with time spent near a mate (survival duration, energy, location, the mate's own hunting success), so
+   it would need to be time-aligned or otherwise conditioned to really test the mechanism. `analyze_energy_sources.py`
+   already logs per-life energy "received: from mate," making a first pass cheap, but not done in this iteration.
+
+**A real bug found and fixed before trusting this result (Codex review):** the first version of `mate_bucket()`
+lumped two very different populations into one "none" bucket -- agents that had never reproduced (true "virgins")
+and agents that had reproduced before but whose partner had since re-mated with someone else (correctly "abandoned,"
+not "never-mated"). In the initial smoke test this silently excluded about 20% of all decisions from the near-vs-away
+contrast and mislabeled them. Fixed by splitting into distinct "virgin" and "abandoned" buckets, with "abandoned"
+now correctly counted in "away" (no partner currently present, same as far/dead). The numbers reported above are
+post-fix.
+
+**What this does and does not establish.** A near-vs-away difference here is a marginal, observational association
+between approach behavior and a specific partner's recorded proximity/status -- not proof that the policy
+"recognizes" that individual as its mate (this environment's observations expose nearby predator occupancy and
+energy, but nothing that identifies *which* nearby predator is the recorded mate specifically), not evidence of
+communication (there is no signaling channel in this environment's action/observation space at all), and **not by
+itself evidence that behavior is caused by or contingent on the partner's state**: a fixed policy reacting only to
+ordinary state it already observes (own energy, local predator density, location, target configuration) could
+produce the same association purely because mate proximity happens to correlate with those variables, without the
+policy responding to the partner as such at all. The honest description of what was found: **approach behavior is
+associated with the recorded mate's proximity/status, detectably for females on both targets and more weakly and
+less consistently for males, especially on prey** -- inconsistent with the simplest description of the split as an
+unconditional, partner-indifferent per-sex average, but not itself a demonstration of partner-contingent behavior,
+mate recognition, causality, or coordination in the fuller sense.
+
+**Caveats:**
+- Only CONTROL (original odds) has been tested this way; whether the same pattern holds under DEATHONLY/SUCCESSONLY/
+  EQUALODDS, or under the capped-population runs (Iteration 13), is untested.
+- The "away" bucket pools far, dead, and abandoned together -- a heterogeneous population, not "distant but otherwise
+  identical to near." The result may partly reflect differences associated with bereavement, partner reassignment,
+  or the individual's history rather than proximity alone; it does not isolate proximity among currently-bonded,
+  living pairs specifically.
+- The bootstrap resamples whole episodes (an appropriate cluster-bootstrap treatment of the within-episode
+  dependence of steps, if episodes are independent and reasonably representative sampling clusters), estimating a
+  decision-weighted pooled ratio difference, not an equally-weighted per-episode mean. With only 30 episodes per
+  seed and a simple percentile interval, coverage is approximate rather than exact, and none of the 12 reported
+  sex/target/seed contrasts are adjusted for multiplicity -- CI exclusion here should be read as suggestive, not as
+  a formal hypothesis test. "30/30 episodes have both" reports cluster availability, not a literal effective-sample-
+  size calculation; episodes with very few qualifying decisions contribute less information than this count implies.
+- The provisioning-mechanism hypothesis above is a plausible explanation, not a tested one in this iteration.
+
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 
 **Working definition:** a difference between the sexes, emerging from training rather than hard-coded, in (a) what they do (approach toward
@@ -1261,6 +1360,28 @@ Codex's suggested experiments, adopted as next steps: shared-state policy compar
 results, intermediate success rates for both sexes, replication of the ablations, and a reward-scale control. I judged its 8-10 seeds per cell too
 expensive (days of compute at about an hour per run) and would use 2-3 seeds per key cell.
 
+## Summary: is foraging behavior coordinated, or parallel individual specialization?
+
+**Working definition:** whether a predator's own approach behavior is *associated with* its specific recorded mate's real-time
+proximity/status, as opposed to being a fixed per-sex tendency indifferent to the partner's state. This is a different question from
+"is there a sex differentiation" above -- it asks what kind of thing the differentiation is, not why it exists. It is a marginal,
+observational test, not a causal or interventional one.
+
+**Evidence (Iteration 14, CONTROL, three seeds, checkpoint 29):** females show a small contingency association on both prey (-0.010 to
+-0.017, all CIs excluding zero) and fruit (-0.055 to -0.081, all CIs excluding zero) approach, detectable in every seed tested -- less
+foraging when the recorded mate is nearby than when he is far, dead, or reassigned elsewhere. Males show an association that is weaker
+overall and less consistent, though not uniformly weaker cell-for-cell (a positive prey-approach shift near the mate on two of three
+seeds, comparable in size to the female prey effect; fruit near zero on two seeds but not the third).
+
+**Current best statement:** the division of labor cannot be fully described as an unconditional, partner-indifferent per-sex average --
+female foraging behavior is statistically associated with a specific partner's recorded proximity/status, detectable on every seed
+tested. This is a marginal observational association, not proof of mate recognition, causal partner-responsiveness, or communication
+(this environment has no signaling channel), and it is confoundable by anything else correlated with proximity (own energy, local
+density, location, survival/reassignment history) -- a fixed policy reacting only to ordinary observed state could produce the same
+pattern without responding to the partner as such. A plausible mechanism -- the existing male-to-female energy-provisioning mechanic --
+has not yet been ruled in or out. Only CONTROL has been tested this way, and only proximity/status, not what the partner is actively
+doing (e.g. mid-hunt).
+
 ---
 
 ## Next steps
@@ -1281,15 +1402,24 @@ expensive (days of compute at about an hour per run) and would use 2-3 seeds per
    - **Backfill EQUALODDS seed 42's energy-source analysis from Iteration 12** (missing because it reused the
      calibration run, which the automatic pipeline didn't queue for post-hoc analysis) by running
      `analyze_energy_sources.py` against that checkpoint directly.
-2. **Death-chance response surface with more seeds** at 20% and 30% (currently two each), and consider intermediate points
+2. **Test the provisioning-mechanism hypothesis from Iteration 14.** `analyze_energy_sources.py` already logs
+   per-life energy "received: from mate" -- check whether it correlates with the near-bucket approach-bias
+   reduction found there. A correlation would support (not establish) an economic explanation of the contingency
+   effect (less need to forage when a nearby mate is provisioning); isolating it from other things that also
+   correlate with time spent near a mate (survival duration, energy, location, the mate's own hunting success)
+   would need a time-aligned analysis or a direct intervention on the gift, not a bare correlation.
+3. **Extend the mate-contingency test (Iteration 14) beyond CONTROL** -- to DEATHONLY/SUCCESSONLY/EQUALODDS, and to
+   the capped-population runs (Iteration 13), to see whether the female contingency effect (and the weaker,
+   inconsistent male one) survives changes to the odds or the population size that produced it.
+4. **Death-chance response surface with more seeds** at 20% and 30% (currently two each), and consider intermediate points
    between 10% and 20%, given the trend has turned out to be consistent rather than negligible.
-3. **Other k** (0.3, 0.7) and re-tuning the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
+5. **Other k** (0.3, 0.7) and re-tuning the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
    Iteration 9); a reward-scale control (for example flat rewards calibrated to the same expected total forage reward as k = 0.5) to
    separate closing the fruit loophole from raising the reward scale.
-4. **More seeds where only one or two exist:** REF, PROP k=0.2, the response-surface points (40%, 60%).
-5. **Decide the default minibatch.** Recommended, not yet adopted: `--minibatch-size 1024` (5.8x faster); the defaults stay at
+6. **More seeds where only one or two exist:** REF, PROP k=0.2, the response-surface points (40%, 60%).
+7. **Decide the default minibatch.** Recommended, not yet adopted: `--minibatch-size 1024` (5.8x faster); the defaults stay at
    128 / 30 so all earlier runs remain reproducible. Runs since Iteration 7 pass the flag explicitly.
-6. **Fruit-only shaping** (no catch reward) to separate learning to gather from learning to hunt.
-7. **Longer training and multiple late checkpoints**, not only iteration 300, to check the effect is stable rather than a snapshot.
-8. Unexplained: the early rise in births and episode length in Iteration 1 cannot come from predator learning; the prey
-   policy changing behavior is the untested guess.
+8. **Fruit-only shaping** (no catch reward) to separate learning to gather from learning to hunt.
+9. **Longer training and multiple late checkpoints**, not only iteration 300, to check the effect is stable rather than a snapshot.
+10. Unexplained: the early rise in births and episode length in Iteration 1 cannot come from predator learning; the prey
+    policy changing behavior is the untested guess.
