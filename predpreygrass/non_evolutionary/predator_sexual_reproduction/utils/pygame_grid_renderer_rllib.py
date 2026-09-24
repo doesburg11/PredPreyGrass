@@ -1,5 +1,8 @@
+import os
 import pygame
 from dataclasses import dataclass
+
+ICON_DIR = os.path.join(os.path.dirname(__file__), *[os.pardir] * 4, "assets", "images", "icons")
 
 
 @dataclass
@@ -15,17 +18,13 @@ class GuiStyle:
     tooltip_font_size: int = 28
     tooltip_padding: int = 4
 
-    predator_male_color: tuple = (255, 0, 0)  # red
-    predator_female_color: tuple = (255, 0, 255)  # magenta
-    prey_color: tuple = (0, 0, 255)
+    predator_male_color: tuple = (0, 90, 255)  # blue
+    predator_female_color: tuple = (255, 105, 180)  # pink
+    prey_color: tuple = (139, 90, 43)  # mammoth brown (chart line; keeps blue free for males)
     grass_color: tuple = (0, 128, 0)
     fruit_color: tuple = (255, 165, 0)  # orange
     grid_color: tuple = (200, 200, 200)
     background_color: tuple = (255, 255, 255)
-    halo_reproduction_color: tuple = (255, 0, 0)  # Gold
-    halo_eating_color: tuple = (0, 128, 0)  # Bright green
-    halo_reproduction_thickness: int = 3
-    halo_eating_thickness: int = 3
 
 
 class PyGameRenderer:
@@ -51,9 +50,6 @@ class PyGameRenderer:
         self.reference_energy_grass = 2.0
         self.reference_energy_fruit = 2.0
 
-        self.halo_trigger_fraction = 0.9
-        self.predator_creation_energy_threshold = 12.0
-        self.prey_creation_energy_threshold = 8.0
 
         self.previous_agent_energies = {}
         self.population_history_steps = []
@@ -62,9 +58,38 @@ class PyGameRenderer:
         self.population_history_prey = []
         self.population_history_max_length = 1000
 
+        self._icon_source = {
+            "male": self._load_icon("male_symbol.png", self.gui_style.predator_male_color),
+            "female": self._load_icon("female_symbol.png", self.gui_style.predator_female_color),
+            "prey": self._load_icon("mammoth_prey.png"),
+        }
+        self._icon_cache = {}
+
         self.target_fps = 10
         self.slider_rect = None
         self.slider_max_fps = 60
+
+    @staticmethod
+    def _load_icon(filename, color=None):
+        """Load an icon PNG; if `color` is given, recolor it, keeping its alpha shape."""
+        icon = pygame.image.load(os.path.join(ICON_DIR, filename)).convert_alpha()
+        if color is None:
+            return icon
+        return pygame.mask.from_surface(icon).to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
+
+    def _get_icon(self, sex, height):
+        """Icon scaled (aspect preserved) to fit a box of `height` pixels."""
+        key = (sex, height)
+        if key not in self._icon_cache:
+            src = self._icon_source[sex]
+            scale = height / max(src.get_width(), src.get_height())
+            size = (max(int(src.get_width() * scale), 1), max(int(src.get_height() * scale), 1))
+            self._icon_cache[key] = pygame.transform.smoothscale(src, size)
+        return self._icon_cache[key]
+
+    def _blit_icon_centered(self, sex, height, x, y):
+        icon = self._get_icon(sex, height)
+        self.screen.blit(icon, icon.get_rect(center=(x, y)))
 
     def update(
         self,
@@ -140,43 +165,28 @@ class PyGameRenderer:
             if "predator_male" in agent_id:
                 color = self.gui_style.predator_male_color
                 reference_energy = self.reference_energy_predator
-                threshold = self.predator_creation_energy_threshold
             elif "predator_female" in agent_id:
                 color = self.gui_style.predator_female_color
                 reference_energy = self.reference_energy_predator
-                threshold = self.predator_creation_energy_threshold
             elif "prey" in agent_id:
                 color = self.gui_style.prey_color
                 reference_energy = self.reference_energy_prey
-                threshold = self.prey_creation_energy_threshold
             else:
                 color = (0, 0, 0)
                 reference_energy = 1.0
-                threshold = None
 
             size_factor = min(energy / reference_energy, 1.0)
             base_radius = self.cell_size // 2 - 2
             radius = int(base_radius * size_factor)
 
-            pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
-
-            if agent_id in agents_just_ate:
-                pygame.draw.circle(
-                    self.screen,
-                    self.gui_style.halo_eating_color,
-                    (x_pix, y_pix),
-                    max(radius + 5, 6),
-                    width=self.gui_style.halo_eating_thickness,
-                )
-
-            if threshold and energy >= threshold * self.halo_trigger_fraction:
-                pygame.draw.circle(
-                    self.screen,
-                    self.gui_style.halo_reproduction_color,
-                    (x_pix, y_pix),
-                    max(radius + 5, 6),
-                    width=self.gui_style.halo_reproduction_thickness,
-                )
+            if "predator_male" in agent_id:
+                self._blit_icon_centered("male", max(2 * radius, 4), x_pix, y_pix)
+            elif "predator_female" in agent_id:
+                self._blit_icon_centered("female", max(2 * radius, 4), x_pix, y_pix)
+            elif "prey" in agent_id:
+                self._blit_icon_centered("prey", max(2 * radius, 4), x_pix, y_pix)
+            else:
+                pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
     def _draw_legend(self, step):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
@@ -211,32 +221,16 @@ class PyGameRenderer:
         self.screen.blit(title_surface, (x, y))
         y += spacing
 
-        pygame.draw.circle(self.screen, self.gui_style.predator_male_color, (x + r, y + r), r)
+        self._blit_icon_centered("male", 2 * r, x + r, y + r)
         self.screen.blit(font.render("Predator (male, hunts + gathers)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
-        pygame.draw.circle(self.screen, self.gui_style.predator_female_color, (x + r, y + r), r)
+        self._blit_icon_centered("female", 2 * r, x + r, y + r)
         self.screen.blit(font.render("Predator (female, gathers only)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
-        pygame.draw.circle(self.screen, self.gui_style.prey_color, (x + r, y + r), r)
-        self.screen.blit(font.render("Prey", True, (0, 0, 0)), (x + 30, y))
-        y += spacing
-
-        pygame.draw.circle(
-            self.screen,
-            self.gui_style.halo_reproduction_color,
-            (x + r, y + r),
-            r + 2,
-            width=self.gui_style.halo_reproduction_thickness,
-        )
-        self.screen.blit(font.render("Close to reproduction halo", True, (0, 0, 0)), (x + 30, y))
-        y += spacing
-
-        pygame.draw.circle(
-            self.screen, self.gui_style.halo_eating_color, (x + r, y + r), r + 2, width=self.gui_style.halo_eating_thickness
-        )
-        self.screen.blit(font.render("Eating halo", True, (0, 0, 0)), (x + 30, y))
+        self._blit_icon_centered("prey", 2 * r, x + r, y + r)
+        self.screen.blit(font.render("Prey (mammoth)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         return y
