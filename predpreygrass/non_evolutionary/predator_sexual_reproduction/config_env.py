@@ -63,6 +63,20 @@ config_env = {
     # (default) disables the cap entirely; all existing runs are unaffected. __init__ validates it
     # is a non-negative int (bool and non-integral values, e.g. 3.9, are rejected) when set.
     "predator_population_cap": None,
+    # Predator density target (FixedPredatorDensityEnv only, fixed_predator_density_env.py): a
+    # cleaner alternative to predator_population_cap that never blocks reproduction (removing the
+    # cap's own reproductive-selection confound -- who gets to reproduce near the ceiling was decided
+    # by an arbitrary agent-ID tie-break). Instead, population is pushed back toward this target after
+    # every step: overflow is corrected by culling predators chosen UNIFORMLY AT RANDOM across both
+    # sexes (not by reproductive eligibility or fitness), and shortfall by spawning random-sex
+    # replacements, mirroring FixedPreyDensityEnv's own prey-floor pattern. Trades the reproduction-
+    # blocking confound for a different, smaller one (an exogenous, policy-independent random death
+    # risk) -- not confound-free, just cleaner on the specific axis (reproduction) these experiments
+    # care about. None (default) disables it entirely. __init__ validates it is a non-negative int
+    # (bool and non-integral values rejected) when set, and raises ValueError if
+    # predator_population_cap is ALSO set, since the cap would otherwise silently still block
+    # reproduction here too (it lives in the shared base class, not overridden by this class).
+    "predator_density_target": None,
     # Male provisioning (unidirectional male -> female energy gift on a
     # successful hunt, exclusive to his recorded mate -- see self.agent_mate,
     # not broadcast to any nearby female): offsets predator_female's

@@ -19,6 +19,9 @@ Checkpoints and a run_config.json snapshot of the env/PPO config are saved
 under ~/simulation_results/ray_results/<experiment_name>/ for provenance.
 """
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.fixed_prey_density_env import FixedPreyDensityEnv
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.fixed_predator_density_env import (
+    FixedPredatorDensityEnv,
+)
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.config_env import config_env
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.tune_ppo_predator_sexual_reproduction import (
     EpisodeReturn,
@@ -115,6 +118,19 @@ def parse_args():
              "differ below the cap).",
     )
     parser.add_argument(
+        "--predator-density-target", type=int, default=None,
+        help="Set predator_density_target and switch the trained env to FixedPredatorDensityEnv "
+             "(fixed_predator_density_env.py) instead of FixedPreyDensityEnv. Unlike "
+             "--predator-population-cap, reproduction is never blocked -- population is instead "
+             "pushed back toward this target after every step by culling predators chosen uniformly "
+             "at random across both sexes (overflow) or spawning random-sex replacements (shortfall). "
+             "A cleaner alternative to the cap for the same purpose (RESULTS.md, Iteration 13's "
+             "'Next steps'): removes the cap's own reproductive-selection confound, at the cost of a "
+             "different one (exogenous random death risk). Mutually exclusive with "
+             "--predator-population-cap: FixedPredatorDensityEnv's __init__ raises ValueError if both "
+             "are set, since the cap would otherwise still silently block reproduction here too.",
+    )
+    parser.add_argument(
         "--minibatch-size", type=int, default=1024,
         help="PPO minibatch_size. Default 1024 (this script has no minibatch-128 legacy runs to "
              "stay comparable with, so it defaults to the faster setting).",
@@ -124,7 +140,10 @@ def parse_args():
 
 
 def env_creator(config):
-    return FixedPreyDensityEnv({**config_env, **(config or {})})
+    merged = {**config_env, **(config or {})}
+    if merged.get("predator_density_target") is not None:
+        return FixedPredatorDensityEnv(merged)
+    return FixedPreyDensityEnv(merged)
 
 
 if __name__ == "__main__":
@@ -156,6 +175,8 @@ if __name__ == "__main__":
         env_config["n_possible_prey"] = args.n_possible_prey
     if args.predator_population_cap is not None:
         env_config["predator_population_cap"] = args.predator_population_cap
+    if args.predator_density_target is not None:
+        env_config["predator_density_target"] = args.predator_density_target
 
     register_env("FixedPreyDensityPredPreyGrass", env_creator)
     ray.shutdown()
