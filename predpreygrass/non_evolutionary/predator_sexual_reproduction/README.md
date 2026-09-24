@@ -221,17 +221,15 @@ collapse) showed the split is not an artifact of ecological collapse: the origin
 a stable prey population, and equalizing death risk alone did not remove it. That factorial also reported
 that equalizing success rate alone *reversed* the split on realized prey-energy share -- but flagged that
 predator population size roughly triples between the lowest- and highest-success conditions, an
-uncontrolled confound. **A follow-up factorial added a population cap and re-ran all four conditions with
-population held closer to a shared ceiling (26; one condition, CONTROL, still sits noticeably lower): the
-reversal did not reproduce.** Raising success still narrows the gap a great deal, but the two sexes move
-close to parity rather than one flipping past the other (a small reversal signal persists on
-fruit-approach in two of three SUCCESSONLY seeds). The corrected reading: success rate is still the
-dominant lever on how much of the split remains, but removing the odds asymmetry closes most of the gap --
-it does not reliably reverse it. This is consistent with population growth having contributed to the
-earlier reversal, but doesn't prove population size alone was the cause, since the cap also introduces its
-own reproductive-selection effect that this design can't isolate from population size. Only k = 0.5 is
-replicated across multiple seeds at every
-odds setting tested this way.**
+uncontrolled confound. **Two follow-ups controlled it.** A reproduction-blocking population cap (Iteration 13)
+made the reversal shrink to about parity, but that design also changes who gets to reproduce, so it could not isolate
+population size. Exact density that never blocks reproduction (`FixedPredatorDensityEnv`, Iteration 15: population held at
+exactly 26 in every cell by a uniform random cull or replacement) brought the female lead in realized prey-energy share
+back, at about 60% of its uncapped size. So raising female success attenuates the split a great deal in every design
+tried, and how far it overshoots into a female lead depends on how population is controlled (about +12.6 points
+uncapped, about -1 capped, about +7.5 exact density for SUCCESSONLY); the fruit-approach difference stays in the original
+direction, attenuated, under exact density. Necessity of the odds asymmetry is narrowed, not settled. Only k = 0.5 is
+replicated across multiple seeds at every odds setting tested this way.**
 
 **The runs compared** (all seed 42 unless noted, all at the shipped-default hunting odds):
 
@@ -342,19 +340,16 @@ death risk itself is irrelevant, since dying still ends a predator's future rewa
   (Iteration 12) found: CONTROL reproduces the split cleanly; DEATHONLY leaves it intact, attenuated; SUCCESSONLY neutralizes it on approach
   behavior and *reverses* it on realized prey-energy share; EQUALODDS gives no consistent sign across seeds -- but also found predator
   population size roughly triples between CONTROL (~26) and EQUALODDS (~85), an uncontrolled confound.
-  **Iteration 13 added a `predator_population_cap` (blocks reproduction once population reaches a ceiling, the mirror image of the prey
-  floor) and re-ran all four conditions with population held closer to a shared ceiling (26; CONTROL sits noticeably lower, ~21-22, since
-  its natural population needs little constraining).** CONTROL and DEATHONLY keep the same qualitative pattern under the cap, though some
-  seed-level effect sizes shift considerably. SUCCESSONLY and EQUALODDS change more: the split narrows substantially and **moves close to
-  parity rather than the outright reversal Iteration 12 reported** -- SUCCESSONLY's energy share becomes roughly equal (38-41% vs 38-40%)
-  instead of flipping (28-30% vs 40-42% uncapped), though a small reversal signal persists on fruit-approach in two of three seeds; EQUALODDS's
-  earlier cross-seed inconsistency is much smaller capped, though not perfectly resolved. **The corrected reading: the reversal does not
-  reproduce once population growth is capped -- consistent with population size or crowding having contributed to it, but not proof that
-  population size specifically was the cause**, since the cap simultaneously introduces its own reproductive-selection mechanism that this
-  design can't separate from the population-size effect it targets. Removing the odds asymmetry closes most of the gap toward parity under
-  this intervention; it does not reliably reverse it. Not fully settled: the cap constrains growth rather than forcing an exact population
-  match (CONTROL's capped population sits meaningfully below the other three), and a cleaner test would need to separate the cap's own
-  selection effect from the population-size effect it is meant to isolate.
+  **Iteration 13 added a `predator_population_cap`** (blocks reproduction once population reaches a ceiling of 26) and re-ran all four
+  conditions: CONTROL and DEATHONLY kept their pattern, and SUCCESSONLY and EQUALODDS moved close to parity (SUCCESSONLY's energy share 38-41%
+  vs 38-40%) instead of flipping. That design also changes which pairs get to reproduce, so it could not isolate population size.
+  **Iteration 15 (`FixedPredatorDensityEnv`) holds population at exactly 26 in all 12 runs without blocking reproduction** (uniform random
+  cull, or replacement when below target). CONTROL and DEATHONLY are unchanged again; SUCCESSONLY and EQUALODDS again show a strongly attenuated
+  split, but a female lead in realized prey-energy share returns (SUCCESSONLY +5.6 to +9.5 points on all three seeds against about +12.6
+  uncapped and -3.4 to +1.4 capped; EQUALODDS +0.2 to +3.9), while the fruit-approach difference stays in the CONTROL direction, attenuated.
+  **Reading across the three designs: the attenuation is robust; the overshoot into a female lead is real in direction but its size depends on
+  how population is controlled, and the cap's "close to parity" was specific to the reproduction-blocking cap.** Each mechanism is itself an
+  intervention (the density target adds an exogenous random death and free replacements), so necessity is narrowed, not settled.
 - **The reward design matters.** The same unequal odds gave no split under flat per-event rewards and under k = 0.2 (women's population
   collapsed), and a split at k = 0.5. Flat rewards strongly reward repeatedly eating nearly empty fruit (a man collected about 60-80
   reward per life from fruit against about 9 from prey), a plausible reason for the absence of the male prey preference; this has not been
@@ -393,14 +388,14 @@ factorial inside a prey-density-floor environment (`RESULTS.md`, Iteration 12) s
 original odds reproduce it under a stable prey population, and equalizing death risk alone (10% to 5%) leaves it intact but attenuated in these
 three seeds. That factorial also reported that equalizing success rate alone (20% to 90%) *reversed* the split on realized prey-energy share --
 but flagged predator population size as an uncontrolled confound (it roughly triples between the lowest- and highest-success conditions).
-**A follow-up factorial (Iteration 13) capped population size closer to a shared ceiling across all four conditions, and the reversal did not
-reproduce:** raising success still narrows the gap substantially, but the sexes move close to parity rather than one flipping past the other (a
-small reversal signal persists on fruit-approach in two of three SUCCESSONLY seeds). The corrected statement: **success rate is still the
-dominant lever on how much of the split remains, but removing the odds asymmetry closes most of the gap toward parity -- it does not reliably
-reverse it.** This is consistent with population growth having contributed to the earlier reversal, but doesn't establish population size
-specifically as the cause, since the cap also introduces its own reproductive-selection effect this design can't isolate from population size.
-Not fully settled: the cap constrains growth rather than forcing an exact population match (CONTROL's capped population sits meaningfully below
-the other three), and separating the cap's own selection effect from the population-size effect it targets remains open.
+**Follow-ups controlling population (Iterations 13 and 15).** A reproduction-blocking cap made the reversal shrink to about parity, but
+could not separate population size from its own selection effect. Exact density that never blocks reproduction (population at exactly 26 in
+every cell) brought a female lead in realized prey-energy share back (SUCCESSONLY +5.6 to +9.5 points on all three seeds; EQUALODDS +0.2 to
++3.9), about 40% smaller than uncapped, with the fruit-approach difference staying in the CONTROL direction, attenuated. The current
+statement, resting on three designs: **success rate, not death risk, is the dominant lever on how much of the split remains; raising female
+success to the male level attenuates it a great deal on every measure in every design; whether realized prey-energy share overshoots into a
+female lead depends on how population is controlled, so the overshoot is real in direction but not a stable size.** Iteration 13's reading that
+population growth caused the reversal is superseded. Necessity of the odds asymmetry is narrowed, not settled.
 
 ### Is foraging behavior coordinated, or parallel individual specialization? A mate-proximity test
 
@@ -436,6 +431,17 @@ version conflated "never reproduced" with "reproduced before, partner re-mated e
 decisions from the contrast and mislabeling them; now split into distinct "virgin" and "abandoned" buckets. Only CONTROL has been tested this
 way.
 
+**Follow-up (three CONTROL seeds): a compensation contrast and a pair-fitness test.** Splitting "mate specifically dead" out of the
+pooled "away" bucket, females approach fruit more when their mate is dead than when he is near on all three seeds (near-minus-dead -0.047,
+-0.074, -0.090, CIs excluding zero), about the size of the pooled effect; the female prey difference has the same sign but its CIs include
+zero, and males approach prey somewhat more with a living nearby mate (+0.012 to +0.032). A dead mate cannot provision, so this fits the
+untested provisioning hypothesis without establishing it. `analyze_pair_fitness.py` (new) asks whether, among pairs that reproduced at least
+once (~1,700 per seed), a bigger difference between the two parents' own prey-share goes with more offspring from that pair: **no detectable
+association on any seed** (all six intervals include zero; episode-cluster bootstrap, tie-aware Spearman; not causal, and blind to whether
+differentiation affects the chance of reproducing at all). Two statistical bugs in the first draft (pair-level bootstrap ignoring episode
+clustering; tie-incorrect Spearman) were caught by a Codex review before these numbers were produced. See `RESULTS.md`, Iteration 14
+follow-up.
+
 ### Training speed and the minibatch size
 
 About 97% of each iteration is the PPO learner update, which is limited by one CPU core doing about
@@ -451,23 +457,19 @@ slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 ## TODO next
 
 1. ~~Fix the replenishment pool exhaustion~~ / ~~replicate the odds ablations with more seeds~~ **Done (Iteration 12).**
-   ~~Control for the population-boom confound~~ **Done, partially (Iteration 13):** `predator_population_cap` holds population
-   closer to a shared ceiling (26, CONTROL sits noticeably lower); all four cells re-trained, three seeds each. The reported
-   reversal did not reproduce under the cap -- narrows toward parity instead -- but the cap's own reproductive-selection effect
-   means this isn't proof population size alone was the cause. Threads still open:
-   - **The cap constrains growth, not an exact match** (CONTROL still sits a little under the other three), and is itself a new
-     selection mechanism (who gets the limited remaining reproduction slots). A true exact-density intervention -- replenishing
-     predator losses one at a time, the way `FixedPreyDensityEnv` does for prey -- would be cleaner if that selection effect ever
-     needs ruling out.
-   - **Only one cap value (26) tested;** untested whether the narrows-not-reverses result holds at a much smaller or larger ceiling.
+   ~~Control for the population-boom confound~~ **Done (Iterations 13 and 15):** first a reproduction-blocking cap
+   (`predator_population_cap`), then exact density that never blocks reproduction (`FixedPredatorDensityEnv`, target 26, all 12
+   cells). The designs agree the split is strongly attenuated when female success is raised and disagree on the size of the overshoot into
+   a female lead in realized prey-energy share. Threads still open:
+   - **Only one population target (26) tested** in both designs; untested at a much smaller or larger shared population.
+   - **The density target is itself an intervention** (exogenous random death, free replacements when below target).
    - **Backfill EQUALODDS seed 42's energy-source analysis from Iteration 12** (skipped because it reused the calibration run rather
      than being trained by the automatic pipeline).
-2. ~~Coordination or parallel specialization?~~ **Done, first pass (Iteration 14):** `analyze_mate_contingency.py`, a mate-proximity
-   contingency test on CONTROL, found females show a small, three-seed-replicated approach-behavior association with their recorded mate's
-   real-time proximity -- inconsistent with a purely unconditional per-sex average, though this observational association doesn't by
-   itself show the behavior is caused by or responsive to the partner's state. Threads open: test whether it's explained by the existing
-   male-provisioning mechanic (correlation with actual energy received from mate would support, not establish, this); extend beyond
-   CONTROL to the other odds conditions and the capped-population runs.
+2. ~~Coordination or parallel specialization?~~ **Done, first pass (Iteration 14 and follow-up):** female approach behavior is
+   associated with the recorded mate's proximity and with the mate being dead, on all three CONTROL seeds; pairs that forage more
+   differently do not produce detectably more offspring. Association only. Threads open: test whether the female association is explained
+   by the male-provisioning mechanic (a correlation with energy received from the mate would support, not establish, this); extend both
+   tests beyond CONTROL to the other odds conditions and to the capped and density-target runs.
 3. **Death-chance response surface with more seeds** at 20%/30% (currently two each), and intermediate points between 10% and 20%.
 4. Try other k (0.3, 0.7) and re-tune the combat-death penalty on top of the energy-proportional reward (now looks droppable, see
    Iteration 9); watch whether prey depletion (about 18-21 alive) limits predators over longer runs.
