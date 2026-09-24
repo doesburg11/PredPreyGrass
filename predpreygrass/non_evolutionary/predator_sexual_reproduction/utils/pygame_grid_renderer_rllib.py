@@ -62,6 +62,8 @@ class PyGameRenderer:
             "male": self._load_icon("male_symbol.png", self.gui_style.predator_male_color),
             "female": self._load_icon("female_symbol.png", self.gui_style.predator_female_color),
             "prey": self._load_icon("mammoth_prey.png"),
+            "grass": self._load_icon("grass_patch.png"),
+            "fruit": self._load_icon("fuit.png"),
         }
         self._icon_cache = {}
 
@@ -125,8 +127,12 @@ class PyGameRenderer:
             self.population_history_prey.pop(0)
 
         self._draw_grid()
-        self._draw_patches(grass_positions, grass_energies, self.gui_style.grass_color, self.reference_energy_grass)
-        self._draw_patches(fruit_positions, fruit_energies, self.gui_style.fruit_color, self.reference_energy_fruit)
+        self._draw_patches(
+            grass_positions, grass_energies, self.gui_style.grass_color, self.reference_energy_grass, icon="grass"
+        )
+        self._draw_patches(
+            fruit_positions, fruit_energies, self.gui_style.fruit_color, self.reference_energy_fruit, icon="fruit"
+        )
         self._draw_agents(agent_positions, agent_energies, agents_just_ate)
         self._draw_tooltip(agent_positions, grass_positions, fruit_positions, agent_energies, grass_energies, fruit_energies)
         self._draw_legend(step)
@@ -145,7 +151,7 @@ class PyGameRenderer:
                 )
                 pygame.draw.rect(self.screen, self.gui_style.grid_color, rect, 1)
 
-    def _draw_patches(self, positions, energies, color, reference_energy):
+    def _draw_patches(self, positions, energies, color, reference_energy, icon=None):
         for patch_id, pos in positions.items():
             x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
             y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
@@ -154,7 +160,10 @@ class PyGameRenderer:
             base_rect_size = self.cell_size * 0.8
             rect_size = base_rect_size * size_factor
             rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
-            pygame.draw.rect(self.screen, color, rect)
+            if icon is not None:
+                self._blit_icon_centered(icon, max(int(rect_size), 2), x_pix, y_pix)
+            else:
+                pygame.draw.rect(self.screen, color, rect)
 
     def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
         for agent_id, pos in agent_positions.items():
@@ -241,11 +250,11 @@ class PyGameRenderer:
         s = self.gui_style.legend_square_size
         font = self.tooltip_font
 
-        pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
+        self._blit_icon_centered("grass", s, x + r, y + r)
         self.screen.blit(font.render("Grass (prey food)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
-        pygame.draw.rect(self.screen, self.gui_style.fruit_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
+        self._blit_icon_centered("fruit", s, x + r, y + r)
         self.screen.blit(font.render("Fruit (predator food)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
