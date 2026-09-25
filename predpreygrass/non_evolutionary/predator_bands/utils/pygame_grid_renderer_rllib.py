@@ -30,7 +30,7 @@ class GuiStyle:
 
 class PyGameRenderer:
     # ring colours for the bands (cycled if there are more bands than colours)
-    BAND_COLORS = [(230, 25, 75), (60, 180, 75), (255, 225, 25), (145, 30, 180), (70, 240, 240), (245, 130, 48), (0, 0, 0), (128, 128, 0)]
+    BAND_COLORS = [(200, 30, 50), (30, 150, 60), (30, 90, 220), (145, 30, 180), (230, 120, 20), (0, 150, 150), (140, 90, 40), (200, 30, 150)]
 
     def __init__(self, grid_size, cell_size=32, ennable_speed_slider=True):
         self.grid_size = grid_size
@@ -70,6 +70,12 @@ class PyGameRenderer:
             "fruit": self._load_icon("fuit.png"),
         }
         self._icon_cache = {}
+        # untinted symbol shapes, tinted per band colour on demand (symbol colour = band, shape = sex)
+        self._icon_shape = {
+            "male": pygame.image.load(os.path.join(ICON_DIR, "male_symbol.png")).convert_alpha(),
+            "female": pygame.image.load(os.path.join(ICON_DIR, "female_symbol.png")).convert_alpha(),
+        }
+        self._band_icon_cache = {}
 
         self.target_fps = 10
         self.slider_rect = None
@@ -92,6 +98,17 @@ class PyGameRenderer:
             size = (max(int(src.get_width() * scale), 1), max(int(src.get_height() * scale), 1))
             self._icon_cache[key] = pygame.transform.smoothscale(src, size)
         return self._icon_cache[key]
+
+    def _band_icon(self, sex, band, height):
+        """The sex symbol tinted with the band's colour, scaled to fit `height` pixels."""
+        color = self.BAND_COLORS[band % len(self.BAND_COLORS)]
+        key = (sex, color, height)
+        if key not in self._band_icon_cache:
+            src = pygame.mask.from_surface(self._icon_shape[sex]).to_surface(setcolor=color, unsetcolor=(0, 0, 0, 0))
+            scale = height / max(src.get_width(), src.get_height())
+            size = (max(int(src.get_width() * scale), 1), max(int(src.get_height() * scale), 1))
+            self._band_icon_cache[key] = pygame.transform.smoothscale(src, size)
+        return self._band_icon_cache[key]
 
     def _blit_icon_centered(self, sex, height, x, y):
         icon = self._get_icon(sex, height)
@@ -199,14 +216,13 @@ class PyGameRenderer:
             radius = int(base_radius * size_factor)
 
             band = getattr(self, "agent_bands", {}).get(agent_id)
-            if band is not None and "predator" in agent_id:  # ring colour = band
-                pygame.draw.circle(
-                    self.screen, self.BAND_COLORS[band % len(self.BAND_COLORS)], (x_pix, y_pix), self.cell_size // 2 - 1, 3
-                )
-            if "predator_male" in agent_id:
-                self._blit_icon_centered("male", max(2 * radius, 4), x_pix, y_pix)
-            elif "predator_female" in agent_id:
-                self._blit_icon_centered("female", max(2 * radius, 4), x_pix, y_pix)
+            if "predator_male" in agent_id or "predator_female" in agent_id:
+                sex = "male" if "predator_male" in agent_id else "female"
+                if band is not None:  # symbol colour = band
+                    icon = self._band_icon(sex, band, max(2 * radius, 4))
+                    self.screen.blit(icon, icon.get_rect(center=(x_pix, y_pix)))
+                else:
+                    self._blit_icon_centered(sex, max(2 * radius, 4), x_pix, y_pix)
             elif "prey" in agent_id:
                 self._blit_icon_centered("prey", max(2 * radius, 4), x_pix, y_pix)
             else:
@@ -221,7 +237,7 @@ class PyGameRenderer:
         y = self._draw_legend_environment_elements(x, y)
         if getattr(self, "agent_bands", None):
             note = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8)).render(
-                "Ring colour = band", True, (0, 0, 0)
+                "Symbol colour = band, shape = sex", True, (0, 0, 0)
             )
             self.screen.blit(note, (x + 30, y - 4))
             y += note.get_height() + 2
