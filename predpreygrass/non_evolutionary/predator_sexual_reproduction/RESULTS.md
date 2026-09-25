@@ -9,6 +9,9 @@ This is a running research log, not just a final write-up — it records the tri
 trail (what was tried, why, what was found) so the search can be re-evaluated later without
 reconstructing it from conversation history.
 
+> **Module CLOSED 2026-09-25.** Stopped, not finished: a replicated sex differentiation and a narrowed (not settled) answer on necessity; coordination
+> not shown. See the status box at the top of `README.md` for achievements and loose ends; item 13 of the narrative covers the last findings.
+
 ---
 
 ## Narrative so far (start here)
@@ -53,6 +56,11 @@ then jump to whichever iteration number you need.
     prey-floor / density-target environment the runs were trained in, which distorted the energy-share and coordination numbers of Iterations
     12-15. Re-run in the trained environment: fixing population by either method brings the sexes to about parity in the high-success cells, while
     the uncapped runs keep a female lead, and a one-seed sweep suggests the gap rises with population. Shared-state results were never affected.
+13. **Closed.** Predators observe one predator layer shared by both sexes (`_get_observation`), so they cannot tell a mate from any other
+    predator: the mate-proximity association can only reflect a response to nearby predators in general or something correlated with them, not
+    partner recognition. A counterfactual observation-edit script (`analyze_counterfactual_crowding.py`) was written to test this; it was only
+    smoke-tested (2 episodes, one CONTROL run, where adding one anonymous predator lowered fruit approach by roughly the size of the observed
+    mate-near effect) and its full run was not reviewed, so no conclusion is drawn. Necessity and coordination stay open.
 
 ---
 
@@ -1482,7 +1490,7 @@ from prey in the uncapped high-success cells). Completed lives are shorter under
   (population about 52-56). EQUALODDS: 26 **+0.5**, 52 **+1.3**, uncapped **+2.9**. CONTROL stays strongly male-leaning
   at every population (-34 at 13, -40 at 26, -53 at 52, -42 uncapped). The gap rises with population in this one seed.
   Caveats: target 13 failed its pilot gate because about 15% of its episodes end early when a sex goes extinct under the
-  random cull (episode length 846-949 against 1001); target-52 seeds 43/44 and target-13 seeds 43/44 are still running.
+  random cull (episode length 846-949 against 1001); the sweep was stopped early when the module was closed (target 52 seed 43 partial, seed 44 and target-13 seeds 43/44 never run).
   This is a single-seed trend, not an established relationship.
 
 **Provisioning test (`analyze_provisioning.py`, new; CONTROL uncapped and density-26, SUCCESSONLY density-26, three seeds
@@ -1561,7 +1569,7 @@ effect from the population-size effect it is meant to isolate. See Iterations 12
 -34 to -44 points). In SUCCESSONLY and EQUALODDS the split shrinks a great deal, to a small female lead uncapped (+10.2 and +4.5 points) and to about
 parity when population is held at 26 by the reproduction-blocking cap (-0.8, -2.9) or by exact density (+3.3, -0.7). A single-seed sweep of the
 density target suggests the gap rises with population (SUCCESSONLY -4.8 at 13, +4.5 at 26, +9.2 at 52, +12.6 uncapped), which fits population size
-or crowding contributing to the female lead, but this is one seed at 13 and 52 with the other seeds still running, and both fixed-population designs
+or crowding contributing to the female lead, but this is one seed at 13 and 52 with the other seeds never finished (the sweep was stopped), and both fixed-population designs
 are interventions themselves, so population size is not established as the cause. Necessity of the odds asymmetry is narrowed, not settled. See
 Iteration 16 (Iteration 15's claim that the cap was the outlier is withdrawn).
 

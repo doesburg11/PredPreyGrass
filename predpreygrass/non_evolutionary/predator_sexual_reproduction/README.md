@@ -271,7 +271,7 @@ episodes collapsed to zero prey in the wrong env against 1000 full steps in the 
 female-minus-male prey-share gap in SUCCESSONLY is +10.2 points uncapped, -0.8 with the cap and +3.3 with exact density, and in EQUALODDS +4.5, -2.9 and
 -0.7. So fixing population by either method brings the sexes to about parity while the uncapped runs keep a female lead; a one-seed density-target
 sweep suggests the gap rises with population (SUCCESSONLY -4.8 at 13, +4.5 at 26, +9.2 at 52, +12.6 uncapped), which is consistent with population size
-or crowding contributing but is not proof (both fixed-population designs are interventions, and the sweep's other seeds are still running). An
+or crowding contributing but is not proof (both fixed-population designs are interventions, and the sweep's other seeds were never finished: it was stopped when the module was closed). An
 intermediate conclusion in the docs that the cap was the outlier came from the wrong-environment numbers and is withdrawn. CONTROL and DEATHONLY keep
 the male-prey/female-fruit split in every design. Necessity of the odds asymmetry is narrowed, not settled. Only k = 0.5 is replicated across multiple
 seeds at every odds setting tested this way.**
