@@ -66,6 +66,12 @@ What the runs show:
 - **`male_joins_female` merges the population into fewer bands:** later in episodes the nearest same-band member is ~2.4-2.9 cells away (against ~3.5-4.6)
   and 90-96% of decisions have a band-mate in range (against 71-86%), consistent with the ~2.4 surviving bands reported above.
 
+- **Minimum meat a female needs** (`analyze_female_meat_intake.py`, same runs): the rules put the meat drain at 0.010 (always idle) to 0.018 (always
+  moving) energy per step at meat share 0.10, from a 2.5 starting store. Females that lived at least 800 steps had a net meat intake (own hunting +
+  received - given) of at least 0.016-0.017 per step (median about 0.021), i.e. at the upper end of that floor, with the starting store covering the
+  rest; among females that lived at least 300 steps the lowest was about 0.009 (5th percentile about 0.010). Intake is not consumption, and the
+  samples of 800-step lives are small (11, 26 and 24 females).
+
 Limits: a state-dependent policy comparison would need the shared-state method used in `predator_sexual_reproduction`; the counts of founder roles are
 small (100 lives each); lives cut off at the episode end are included (many males, few females). See the Codex-reviewed docstring of
 `analyze_band_behavior.py` for the exact definitions.
