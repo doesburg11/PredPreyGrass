@@ -29,6 +29,9 @@ class GuiStyle:
 
 
 class PyGameRenderer:
+    # ring colours for the bands (cycled if there are more bands than colours)
+    BAND_COLORS = [(230, 25, 75), (60, 180, 75), (255, 225, 25), (145, 30, 180), (70, 240, 240), (245, 130, 48), (0, 0, 0), (128, 128, 0)]
+
     def __init__(self, grid_size, cell_size=32, ennable_speed_slider=True):
         self.grid_size = grid_size
         self.cell_size = cell_size
@@ -105,8 +108,10 @@ class PyGameRenderer:
         step=0,
         agents_just_ate=None,
         food_scores=None,
+        agent_bands=None,
     ):
         self.food_scores = food_scores
+        self.agent_bands = agent_bands or {}
         if agents_just_ate is None:
             agents_just_ate = set()
         if fruit_positions is None:
@@ -191,6 +196,11 @@ class PyGameRenderer:
             base_radius = self.cell_size // 2 - 2
             radius = int(base_radius * size_factor)
 
+            band = getattr(self, "agent_bands", {}).get(agent_id)
+            if band is not None and "predator" in agent_id:  # ring colour = band
+                pygame.draw.circle(
+                    self.screen, self.BAND_COLORS[band % len(self.BAND_COLORS)], (x_pix, y_pix), self.cell_size // 2 - 1, 3
+                )
             if "predator_male" in agent_id:
                 self._blit_icon_centered("male", max(2 * radius, 4), x_pix, y_pix)
             elif "predator_female" in agent_id:
@@ -207,6 +217,12 @@ class PyGameRenderer:
         y = self._draw_legend_step_counter(x, y, step)
         y = self._draw_legend_agents(x, y)
         y = self._draw_legend_environment_elements(x, y)
+        if getattr(self, "agent_bands", None):
+            note = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8)).render(
+                "Ring colour = band", True, (0, 0, 0)
+            )
+            self.screen.blit(note, (x + 30, y - 4))
+            y += note.get_height() + 2
         if self.enable_speed_slider:
             y = self._draw_legend_speed_slider(x, y)
         y = self._draw_legend_population_chart(x, y)
