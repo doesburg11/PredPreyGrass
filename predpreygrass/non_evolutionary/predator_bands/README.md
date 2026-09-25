@@ -29,6 +29,47 @@ splits the sharing rate by food type (meat shared more widely, as real bands do)
 **This worked:** with meat sharing 0.6, females are sustained at meat share 0.10 (see the last row). Seed 43 replicates it (female extinction 2-7% late). The `male_joins_female`
 marriage rule is also viable, with more surviving females but far fewer bands (one seed; see the last row).
 
+## Behaviour analysis (2026-09-25, descriptive)
+
+`analyze_band_behavior.py` rolls out the final checkpoint (19) of the three viable runs (meat share 0.10, fruit regrowth 0.08, meat sharing 0.6 / fruit
+0.3): seed 42, seed 43 and the `male_joins_female` variant (seed 42), 20 episodes each. Rollout-based and descriptive: one checkpoint per run, two
+seeds plus one variant, no causal claims. A Codex review of the script led to fixes before these numbers: parental care and gifts are now counted
+next to band sharing, moves onto occupied cells are treated as blocked, and the random baseline is used for the first 100 steps only.
+Full logs: `~/simulation_results/band_behavior/behavior_{s42,s43,mjf}.log`.
+
+| Per life (pooled over lives) | seed 42 | seed 43 | `male_joins_female` |
+|---|---|---|---|
+| Life length, male / female (steps, all lives) | 508 / 230 | 469 / 245 | 472 / 258 |
+| Prey share of own foraging, male / female | 16% / 2.7% | 18% / 2.7% | 20% / 2.4% |
+| Own meat per life, male / female | 23.3 / 1.2 | 23.8 / 1.3 | 24.5 / 1.2 |
+| Meat that came from others, male / female | 22% / 76% | 21% / 78% | 26% / 80% |
+| Single females: life, meat from others | 294 steps, 79% | 282 steps, 73% | 234 steps, 75% |
+| Founding-couple females: life, meat from others | 246 steps, 75% | 295 steps, 74% | 252 steps, 74% |
+| Approach bias toward prey, male / female | +0.17 / +0.04 | +0.19 / +0.03 | +0.22 / +0.02 |
+| Approach bias toward fruit, male / female | +0.21 / +0.21 | +0.22 / +0.21 | +0.19 / +0.22 |
+| Approach bias toward same-band / other-band members (males; females) | -0.09 / -0.08; -0.08 / -0.08 | -0.08 / -0.06; -0.06 / -0.05 | -0.07 / -0.07; -0.09 / -0.09 |
+
+(Approach bias: positive means the policy's intended move ends closer to the target than a uniform random mover's would; every interval above excludes
+zero; the 95% episode-cluster intervals are in the logs.)
+
+What the runs show:
+- **A sex differentiation in foraging emerges.** Males approach and take prey; females approach fruit like males do but barely approach prey, so
+  females live almost entirely on fruit they gather themselves and on meat that reaches them through the band (75-80% of their meat, against ~22% for males).
+  Band sharing moves meat from the hunters to everyone in range, and females pass on a similar amount of fruit (~12-14 energy given per life).
+- **Single females are not worse off than paired ones** in these runs: the same reliance on band meat (73-79%) and similar life lengths (234-295 against
+  246-295 steps for founding-couple females). Females of every kind live about half as long as males (~230-260 against ~470-510 steps), which
+  matches the high female turnover seen in training.
+- **No sign of active cohesion beyond the starting layout.** In the first 100 steps the share of decisions with a same-band member in range is
+  0.78 (male) and 0.85 (female) for the trained policies against 0.77 for random movers (a small edge for females only). Both sexes move *away* from any
+  nearby predator, same band or other (-0.05 to -0.09), i.e. they avoid crowding while staying within sharing range (about 3.5-4.6 cells from the nearest
+  band-mate). There is no valid random comparison after step 100, because random-policy populations die out.
+- **`male_joins_female` merges the population into fewer bands:** later in episodes the nearest same-band member is ~2.4-2.9 cells away (against ~3.5-4.6)
+  and 90-96% of decisions have a band-mate in range (against 71-86%), consistent with the ~2.4 surviving bands reported above.
+
+Limits: a state-dependent policy comparison would need the shared-state method used in `predator_sexual_reproduction`; the counts of founder roles are
+small (100 lives each); lives cut off at the episode end are included (many males, few females). See the Codex-reviewed docstring of
+`analyze_band_behavior.py` for the exact definitions.
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (5) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
