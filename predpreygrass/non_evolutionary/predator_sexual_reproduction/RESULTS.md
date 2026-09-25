@@ -1651,9 +1651,8 @@ that partner-associated behavior, or being more differentiated as a pair, pays o
 1. ~~Fix the replenishment pool exhaustion, run the full odds factorial, control for the population-boom confound~~ **Done as far as
    the design allows (Iterations 12, 13, 15, 16).** Population-matched follow-ups were run two ways; neither isolates population size,
    since each is an intervention. Threads still open:
-   - **Finish the population-target sweep** (running): target 52 seeds 43/44 (all three cells) and target 13 seeds 43/44 (CONTROL,
-     SUCCESSONLY; queued after the sweep). The one-seed dose-response (gap rises with population) needs three seeds per target before it
-     is quoted. Target 13 loses about 15% of episodes early to sex extinction under the random cull, which limits its comparability.
+   - **Population-target sweep: stopped early on 2026-09-25 when the module was closed** (target 52 has seed 42 plus a partial seed 43; target
+     13 has seed 42 only). The one-seed dose-response (gap rises with population) needs three seeds per target before it is quoted. Target 13 loses about 15% of episodes early to sex extinction under the random cull, which limits its comparability.
    - **The density target and the cap are both interventions** (random death plus free replacements; blocked reproduction). No design tried
      equalizes population without either, so this may be a limit of the approach.
    - ~~Backfill EQUALODDS seed 42's energy-source analysis~~ **Done (Iteration 16).**

@@ -1,5 +1,41 @@
 # predator_sexual_reproduction
 
+> ## STATUS: CLOSED (2026-09-25). Read this before anything else.
+>
+> **This module is stopped, not finished.** It produced one solid descriptive result and two questions it could not answer. Details and
+> numbers are in [`RESULTS.md`](RESULTS.md) (Iterations 0-16); this box is the short version.
+>
+> **What was achieved**
+> - A working sexed-predator environment (two-parent reproduction, asymmetric birth cost, sex-specific hunting odds, male-to-mate gift,
+>   parental care, fixed prey density, fixed predator density) with 88 passing tests and an analysis toolkit (shared-state approach bias,
+>   energy sources, mate contingency, provisioning, pair fitness), all run in the environment each run was trained in.
+> - **A replicated sex differentiation.** With the energy-proportional reward (k = 0.5) and the default odds (males 90% hunting success,
+>   females 20%), males come to approach and take prey and females to approach fruit. It holds across three seeds, with or without the combat-death
+>   penalty, on a same-observation comparison, and in every population design tried (female minus male prey share -34 to -44 points).
+> - **A narrowed answer on necessity.** Equalizing female hunting *success* shrinks the split a great deal (to a small female lead uncapped, to about
+>   parity when population is held at 26); equalizing only *death risk* does not. Success rate, not death risk, is the main lever.
+> - **A partner-associated component, measured but not explained.** In all 36 runs females approach fruit less when their recorded mate is alive and
+>   nearby. The provisioning explanation was tested and not supported.
+> - **Method lessons.** Analyses had been run in the wrong environment (Iterations 12-15's energy shares and the "cap was the outlier" claim are
+>   withdrawn; Iteration 16 corrects them). Independent review caught association-to-causation overclaims in every write-up.
+>
+> **What was NOT settled (the loose ends)**
+> 1. **Necessity of the odds asymmetry.** Not settled. Both population controls (blocked reproduction, random cull with replacement) are
+>    interventions, so the effect of equalizing odds is confounded with population size and reproductive selection. The one-seed dose-response
+>    (female lead rises with population) is preliminary; the three-seed sweep was **stopped early**: target 52 has seeds 42 (all cells) and partial 43,
+>    target 13 has seed 42 only. Do not quote the dose-response.
+> 2. **Coordination.** Not shown. Predators observe one predator layer shared by both sexes, so they cannot tell a mate from any other predator.
+>    The mate-proximity association can therefore only be a response to nearby predators in general (or something correlated with them), not to a
+>    partner as such. A real coordination test needs an identity/communication channel and retraining with vs without it. Not built.
+> 3. **Counterfactual observation-edit test** ([`analyze_counterfactual_crowding.py`](analyze_counterfactual_crowding.py)): written and
+>    smoke-tested on 2 episodes of one run only (adding one anonymous predator lowered fruit approach by about the same order as the observed mate-near
+>    effect). No full run has been reviewed and it has had no Codex review or tests. Treat as an unfinished lead.
+> 4. **Matched-ecology necessity runs** (graded, swapped, or lowered odds at fixed density 26, 3 seeds, about 13 h): proposed, never started.
+> 5. Smaller open items: pair-fitness measure confounded with lifespan; death-chance surface has 2 seeds at 20%/30%; other k values; minibatch
+>    default undecided; longer training and later checkpoints; single-seed points (REF, 40%/60% success). See "TODO next" at the bottom.
+>
+> If reopened, start with loose ends 3 then 4: the first is cheap and needs no training, the second is the cleanest route to necessity.
+
 ![Trained predator_sexual_reproduction policies](results_figures/trained_policies.gif)
 
 *Trained policies, first 400 steps (every 5th step shown): the energy-proportional-reward run `PROP_K05_MB1024_SEED42` (k = 0.5, default hunting
@@ -459,8 +495,8 @@ slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 
 ## TODO next
 
-1. **Finish the population-target sweep** (running): target 52 seeds 43/44 and target 13 seeds 43/44 (CONTROL, SUCCESSONLY, queued behind it), then quote
-   the population dose-response only with three seeds per target. Target 13 loses about 15% of episodes early to sex extinction under the random cull.
+1. **Population-target sweep: stopped early on 2026-09-25** (module closed). Target 52 has seed 42 plus a partial seed 43; target 13 has seed 42 only. To
+   quote the dose-response, finish three seeds per target. Target 13 loses about 15% of episodes early to sex extinction under the random cull.
 2. ~~Provisioning test~~ **Done, not supported.** Open: what does explain the female mate-proximity association (local density, the mate's foraging state,
    location, or a policy responding to a partner it cannot identify).
 3. ~~Extend the coordination tests beyond CONTROL~~ **Done.** Open: a cleaner fitness measure (e.g. offspring survival to reproduction).
