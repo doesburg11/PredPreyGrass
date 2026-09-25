@@ -2,7 +2,7 @@ config_env = {
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
-    "num_obs_channels": None,  # auto: 8 (Border, Predator energy, Prey, Grass, Fruit, Fruit store, Same-band, Other-band), or 12 with band_compass
+    "num_obs_channels": None,  # auto: 8 (Border, Predator energy, Prey, Grass, Fruit, Fruit store, Same-band, Other-band), +4 with band_compass, +1 with threats
     "predator_obs_range": 7,
     "prey_obs_range": 9,
     # Rewards
@@ -240,6 +240,20 @@ config_env.update(
         # same-band predator even outside the 7x7 window, so a predator that has drifted away can find its band again. Needs
         # num_obs_channels 12 (set automatically). No reward and no scripted movement.
         "band_compass": False,
+        # Threats (default off, num_threats = 0): roaming non-learning animals that make wandering alone dangerous. Each step a
+        # threat attacks an adjacent predator, else chases the nearest predator within threat_sense_radius, else wanders. An
+        # attack on a target with n defenders (its living band-mates within threat_defense_radius; threat_defense_by "any"
+        # counts any predator) drives the threat off if n >= threat_defenders_to_repel (it is moved at least threat_flee_distance
+        # away), else kills the target with probability threat_kill_prob * (1 - n / threat_defenders_to_repel). The danger is the
+        # same for everyone; only the outcome depends on company. No reward terms; a threat channel is added to the
+        # observation (num_obs_channels auto +1) so policies can see them.
+        "num_threats": 0,
+        "threat_sense_radius": 4,
+        "threat_kill_prob": 0.5,
+        "threat_defense_radius": 2,
+        "threat_defenders_to_repel": 3,
+        "threat_defense_by": "band",
+        "threat_flee_distance": 8,
         "n_initial_active_prey": 40,
     }
 )

@@ -252,6 +252,34 @@ class PredPreyGrass(MultiAgentEnv):
         self.band_share_range = int(config.get("band_share_range", 5))
         self.kin_exclusion = bool(config.get("kin_exclusion", True))
         self.band_compass = bool(config.get("band_compass", False))  # see the observation settings below
+        # Threats (roaming non-learning animals that kill predators; group defense makes lone wandering dangerous). num_threats = 0
+        # turns the whole feature off. See config_env.py.
+        self.num_threats = int(config.get("num_threats", 0))
+        self.threat_sense_radius = int(config.get("threat_sense_radius", 4))
+        self.threat_kill_prob = config.get("threat_kill_prob", 0.5)
+        self.threat_defense_radius = int(config.get("threat_defense_radius", 2))
+        self.threat_defenders_to_repel = int(config.get("threat_defenders_to_repel", 3))
+        self.threat_defense_by = config.get("threat_defense_by", "band")
+        self.threat_flee_distance = int(config.get("threat_flee_distance", 8))
+        if self.num_threats < 0:
+            raise ValueError(f"num_threats must be >= 0 (got {self.num_threats})")
+        if not (0.0 <= self.threat_kill_prob <= 1.0):
+            raise ValueError(f"threat_kill_prob must be in [0, 1] (got {self.threat_kill_prob})")
+        if self.threat_defenders_to_repel < 1:
+            raise ValueError("threat_defenders_to_repel must be >= 1")
+        if min(self.threat_sense_radius, self.threat_defense_radius, self.threat_flee_distance) < 0:
+            raise ValueError("threat radii and distances must be non-negative")
+        if self.num_threats > 0 and self.threat_flee_distance > config.get("grid_size", 25) - 1:
+            raise ValueError("threat_flee_distance cannot exceed grid_size - 1")
+        if self.threat_defense_by not in ("band", "any"):
+            raise ValueError(f"threat_defense_by must be 'band' or 'any' (got {self.threat_defense_by!r})")
+        self.threat_positions: Dict[str, Tuple[int, int]] = {}
+        # Channels: 8 base, +4 with band_compass, +1 with threats (the threat channel comes last).
+        required_channels = 8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0)
+        if config.get("num_obs_channels") is not None and config["num_obs_channels"] < required_channels:
+            raise ValueError(
+                f"num_obs_channels must be >= {required_channels} for this configuration (8, +4 with band_compass, +1 with threats)"
+            )
         self.marriage_rule = config.get("marriage_rule", "female_joins_male")
         if self.num_bands < 0:
             raise ValueError(f"num_bands must be >= 0 (got {self.num_bands})")
@@ -278,10 +306,6 @@ class PredPreyGrass(MultiAgentEnv):
                 self.n_initial_active_predator_female > config.get("n_possible_predator_female", 1000)
             ):
                 raise ValueError("band-derived initial predator counts exceed n_possible_predator_male/female")
-            if (config.get("num_obs_channels") or 8 + (4 if self.band_compass else 0)) < 8 + (4 if self.band_compass else 0):
-                raise ValueError(
-                    "bands need num_obs_channels >= 8 (the store and band channels are channels 5, 6 and 7), and >= 12 with band_compass"
-                )
             cells_needed = (
                 self.n_initial_active_predator_male
                 + self.n_initial_active_predator_female
@@ -311,7 +335,9 @@ class PredPreyGrass(MultiAgentEnv):
         # nearest band-mate is even when that band-mate is outside the observation window: [has band-mate, (dx + 1) / 2, (dy + 1) / 2,
         # Chebyshev distance / grid_size], dx/dy being the unit vector toward the nearest same-band predator (zeros if there is none).
         self.band_compass = bool(config.get("band_compass", False))
-        self.num_obs_channels = config.get("num_obs_channels") or 8 + (4 if self.band_compass else 0)  # None/absent = auto
+        self.num_obs_channels = config.get("num_obs_channels")  # None/absent = auto
+        if self.num_obs_channels is None:
+            self.num_obs_channels = 8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0)
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 9)
 
@@ -495,6 +521,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.marriages = 0
         self.within_band_pairings = 0
         self.kin_blocked_checks = 0
+        # Threat mechanics: encounters (a threat adjacent to a predator), kills by sex, kills of a predator with no defender, repelled.
+        self.threat_encounters = 0
+        self.threat_kills = {"predator_male": 0, "predator_female": 0}
+        self.threat_kills_alone = 0
+        self.threat_repelled = 0
         # Deaths from a diet deficiency (a store hit zero while total energy was still positive), by sex and store.
         self.diet_deaths = {
             "predator_male": {"fruit": 0, "meat": 0},
@@ -584,6 +615,17 @@ class PredPreyGrass(MultiAgentEnv):
             self.fruit_energies[fruit] = self.initial_energy_fruit
             self.grid_world_state[4, *fruit_positions[i]] = self.initial_energy_fruit
 
+        self.threat_positions = {}
+        if self.num_threats > 0:
+            taken = set(self.agent_positions.values())
+            for i in range(self.num_threats):
+                while True:
+                    pos = tuple(int(v) for v in self.rng.integers(0, self.grid_size, size=2))
+                    if pos not in taken:
+                        break
+                taken.add(pos)
+                self.threat_positions[f"threat_{i}"] = pos
+
         self.current_num_prey = self.n_initial_active_prey
         self.current_num_predator_male = self.n_initial_active_predator_male
         self.current_num_predator_female = self.n_initial_active_predator_female
@@ -669,6 +711,10 @@ class PredPreyGrass(MultiAgentEnv):
 
                 if self.verbose_movement:
                     print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}.")
+
+        # Step 2b: threats move and attack (a killed predator is removed in Step 3 below, like a starved one)
+        if self.num_threats > 0:
+            self._threats_act()
 
         # Step 3: removals (starvation) and engagements (hunting/foraging/grazing)
         for agent in self._engagement_order():
@@ -1136,6 +1182,11 @@ class PredPreyGrass(MultiAgentEnv):
             "marriages": float(self.marriages),
             "within_band_pairings": float(self.within_band_pairings),
             "kin_blocked_checks": float(self.kin_blocked_checks),
+            "threat_encounters": float(self.threat_encounters),
+            "threat_kills_male": float(self.threat_kills["predator_male"]),
+            "threat_kills_female": float(self.threat_kills["predator_female"]),
+            "threat_kills_alone": float(self.threat_kills_alone),
+            "threat_repelled": float(self.threat_repelled),
             "bands_alive": float(len({self.agent_band[a] for a in self.predator_positions if a in self.agent_band})),
             "female_gift_events": float(self.female_gift_events),
             "female_gift_energy_total": float(self.female_gift_energy_total),
@@ -1447,11 +1498,99 @@ class PredPreyGrass(MultiAgentEnv):
                 occupied.add(cell)
         return {"positions": positions, "band": band, "mates": mates, "parents": parents}
 
+    # ---------------------------------------------------------------------------------------------- threats
+    def _viable_predators(self):
+        """Predators a threat can target or that can defend: alive, positive energy, and not already doomed by an empty store."""
+        return {
+            a for a in self.predator_positions if self.agent_energies[a] > 0.0 and self._diet_death_cause(a) is None
+        }
+
+    def _threat_defenders(self, target, viable=None):
+        """Number of viable predators (not the target) within threat_defense_radius of the target that defend it: its band-mates
+        (threat_defense_by == 'band') or any predator ('any')."""
+        viable = self._viable_predators() if viable is None else viable
+        tx, ty = self.agent_positions[target]
+        band = self.agent_band.get(target)
+        count = 0
+        for other in viable:
+            if other == target:
+                continue
+            if self.threat_defense_by == "band" and (band is None or self.agent_band.get(other) != band):
+                continue
+            ox, oy = self.predator_positions[other]
+            if max(abs(ox - tx), abs(oy - ty)) <= self.threat_defense_radius:
+                count += 1
+        return count
+
+    def _threats_act(self):
+        """Threats act in numeric id order but all attack decisions use the state at the START of the phase, so a kill by one threat
+        does not change who defends or is targeted for the next (no order dependence): each threat attacks the nearest adjacent
+        viable predator (ties: lowest agent id), else chases the nearest sensed viable predator, else wanders. An attack on a
+        target with n defenders: n >= threat_defenders_to_repel drives the threat off (moved to a free cell at least
+        threat_flee_distance away, else the farthest free cell; counted as repelled only if it moved); otherwise the target dies
+        with probability threat_kill_prob * (1 - n / threat_defenders_to_repel). Kills are applied after all threats have acted
+        (the target's energy is set to -1 so that Step 3 removes it; a target killed by several threats counts once). Threats may
+        share a cell with prey, grass or fruit (they do not interact with them) but never with a predator or another threat."""
+        n = self.grid_size
+        moves = [m for m in self.action_to_move_tuple.values() if m != (0, 0)]
+        viable = self._viable_predators()
+        kills = {}
+        for tid in sorted(self.threat_positions, key=lambda t: int(t.split("_")[1])):
+            tx, ty = self.threat_positions[tid]
+            alive = sorted(
+                (max(abs(px - tx), abs(py - ty)), a) for a, (px, py) in self.predator_positions.items() if a in viable
+            )
+            nearest = alive[0] if alive else None
+            if nearest is not None and nearest[0] <= 1:
+                target = nearest[1]
+                self.threat_encounters += 1
+                defenders = self._threat_defenders(target, viable)
+                if defenders >= self.threat_defenders_to_repel:
+                    blocked = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
+                    px, py = self.agent_positions[target]
+                    cells = [
+                        (max(abs(x - px), abs(y - py)), (x, y)) for x in range(n) for y in range(n) if (x, y) not in blocked
+                    ]
+                    far = [c for d, c in cells if d >= self.threat_flee_distance]
+                    if not far and cells:
+                        best = max(d for d, _ in cells)
+                        far = [c for d, c in cells if d == best]
+                    if far:
+                        self.threat_positions[tid] = far[int(self.rng.integers(len(far)))]
+                        self.threat_repelled += 1
+                    continue
+                if self.rng.random() < self.threat_kill_prob * (1.0 - defenders / self.threat_defenders_to_repel):
+                    kills[target] = min(kills.get(target, defenders), defenders)
+                continue
+            occupied = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
+            candidates = []
+            for dx, dy in moves:
+                cell = (min(max(tx + dx, 0), n - 1), min(max(ty + dy, 0), n - 1))
+                if cell != (tx, ty) and cell not in occupied:
+                    candidates.append(cell)
+            if not candidates:
+                continue
+            if nearest is not None and nearest[0] <= self.threat_sense_radius:
+                px, py = self.predator_positions[nearest[1]]
+                best = min((px - c[0]) ** 2 + (py - c[1]) ** 2 for c in candidates)
+                candidates = [c for c in candidates if (px - c[0]) ** 2 + (py - c[1]) ** 2 == best]
+            self.threat_positions[tid] = candidates[int(self.rng.integers(len(candidates)))]
+        for target, defenders in kills.items():
+            self.agent_energies[target] = -1.0
+            self.threat_kills["predator_male" if "predator_male" in target else "predator_female"] += 1
+            if defenders == 0:
+                self.threat_kills_alone += 1
+
     def _fill_band_compass(self, observation, agent, band, xp, yp):
         """Channels 8-11: constant planes pointing to the nearest same-band predator anywhere on the grid (see __init__)."""
         best = None
-        for other, (ox, oy) in self.predator_positions.items():
-            if other == agent or self.agent_band.get(other) != band:
+        for other, (ox, oy) in sorted(self.predator_positions.items()):  # sorted: ties go to the lowest agent id
+            if (
+                other == agent
+                or self.agent_band.get(other) != band
+                or self.agent_energies[other] <= 0.0
+                or self._diet_death_cause(other) is not None  # not a dead or doomed member
+            ):
                 continue
             d = max(abs(ox - xp), abs(oy - yp))
             if best is None or d < best[0]:
@@ -1636,6 +1775,12 @@ class PredPreyGrass(MultiAgentEnv):
                     observation[same_channel if self.agent_band[other] == my_band else other_channel, rx, ry] = 1.0
         if self.band_compass and my_band is not None:
             self._fill_band_compass(observation, agent, my_band, xp, yp)
+        if self.num_threats > 0 and "predator" in agent:
+            threat_channel = 8 + (4 if self.band_compass else 0)
+            for tx, ty in self.threat_positions.values():
+                rx, ry = tx - xp + observation_range // 2, ty - yp + observation_range // 2
+                if 0 <= rx < observation_range and 0 <= ry < observation_range:
+                    observation[threat_channel, rx, ry] = 1.0
 
         return observation
 
@@ -1712,6 +1857,11 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_fruit_store": self.agent_fruit_store.copy(),
             "scripted_prey_ids": self._scripted_prey_ids.copy(),
             "agent_band": self.agent_band.copy(),
+            "rng_state": self.rng.bit_generator.state,
+            "threat_positions": dict(self.threat_positions),
+            "threat_counters": (
+                self.threat_encounters, dict(self.threat_kills), self.threat_kills_alone, self.threat_repelled,
+            ),
             "band_counters": (
                 self.band_share_events, self.band_share_meat_total, self.band_share_fruit_total,
                 self.marriages, self.within_band_pairings, self.kin_blocked_checks,
@@ -1748,6 +1898,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_fruit_store = snapshot["agent_fruit_store"].copy()
         self._scripted_prey_ids = snapshot["scripted_prey_ids"].copy()
         self.agent_band = snapshot["agent_band"].copy()
+        self.rng.bit_generator.state = snapshot["rng_state"]
+        self.threat_positions = dict(snapshot["threat_positions"])
+        (self.threat_encounters, kills, self.threat_kills_alone, self.threat_repelled) = snapshot["threat_counters"]
+        self.threat_kills = dict(kills)
         (
             self.band_share_events, self.band_share_meat_total, self.band_share_fruit_total,
             self.marriages, self.within_band_pairings, self.kin_blocked_checks,

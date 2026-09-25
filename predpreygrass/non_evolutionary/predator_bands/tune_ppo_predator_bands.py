@@ -144,6 +144,10 @@ def parse_args():
     )
     parser.add_argument("--band-compass", type=int, choices=[0, 1], default=None,
                         help="1: add the band-compass observation planes (direction/distance to the nearest band-mate). Default: config (0).")
+    parser.add_argument("--num-threats", type=int, default=None, help="Number of roaming threats (0 = none). Default: config (0).")
+    parser.add_argument("--threat-kill-prob", type=float, default=None, help="Kill probability of a lone predator. Default: config (0.5).")
+    parser.add_argument("--threat-defense-by", type=str, choices=["band", "any"], default=None,
+                        help="Whose company defends against a threat. Default: config (band).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
     parser.add_argument(
         "--band-share-rate", type=float, default=None,
@@ -364,6 +368,12 @@ if __name__ == "__main__":
         env_config["energy_gain_per_step_fruit"] = args.energy_gain_per_step_fruit
     if args.band_compass is not None:
         env_config["band_compass"] = bool(args.band_compass)
+    if args.num_threats is not None:
+        env_config["num_threats"] = args.num_threats
+    if args.threat_kill_prob is not None:
+        env_config["threat_kill_prob"] = args.threat_kill_prob
+    if args.threat_defense_by is not None:
+        env_config["threat_defense_by"] = args.threat_defense_by
     if args.num_bands is not None:
         env_config["num_bands"] = args.num_bands
     if args.band_share_rate is not None:
