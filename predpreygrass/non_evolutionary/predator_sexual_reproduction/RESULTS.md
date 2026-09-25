@@ -9,7 +9,7 @@ This is a running research log, not just a final write-up — it records the tri
 trail (what was tried, why, what was found) so the search can be re-evaluated later without
 reconstructing it from conversation history.
 
-> **Module CLOSED 2026-09-25.** Stopped, not finished: a replicated sex differentiation and a narrowed (not settled) answer on necessity; coordination
+> **Module CLOSED 2026-09-25** (Iteration 17 added the same day). Stopped, not finished: a replicated sex differentiation and a narrowed (not settled) answer on necessity; coordination
 > not shown. See the status box at the top of `README.md` for achievements and loose ends; item 13 of the narrative covers the last findings.
 
 ---
@@ -56,11 +56,11 @@ then jump to whichever iteration number you need.
     prey-floor / density-target environment the runs were trained in, which distorted the energy-share and coordination numbers of Iterations
     12-15. Re-run in the trained environment: fixing population by either method brings the sexes to about parity in the high-success cells, while
     the uncapped runs keep a female lead, and a one-seed sweep suggests the gap rises with population. Shared-state results were never affected.
-13. **Closed.** Predators observe one predator layer shared by both sexes (`_get_observation`), so they cannot tell a mate from any other
-    predator: the mate-proximity association can only reflect a response to nearby predators in general or something correlated with them, not
-    partner recognition. A counterfactual observation-edit script (`analyze_counterfactual_crowding.py`) was written to test this; it was only
-    smoke-tested (2 episodes, one CONTROL run, where adding one anonymous predator lowered fruit approach by roughly the size of the observed
-    mate-near effect) and its full run was not reviewed, so no conclusion is drawn. Necessity and coordination stay open.
+13. **Closed, with a last exploratory result (Iteration 17).** Predators observe one predator layer shared by both sexes (`_get_observation`), so they
+    cannot tell a mate from any other predator. A counterfactual observation-edit test (no training, 17 runs) found that inserting one anonymous predator
+    lowers approach in both sexes; for females the effect is of the same sign and roughly comparable size to the observational mate-near effect, but males
+    respond as much and show almost no mate-near effect, so anonymous sensitivity does not by itself explain the female pattern (comparable size holds for female fruit and high-success prey, not CONTROL prey). Necessity and coordination
+    stay open.
 
 ---
 
@@ -1526,6 +1526,81 @@ is adjusted for multiplicity. Only checkpoint 29 was analysed. The cross-design 
 interval. The population-target sweep is incomplete (see above), and the target-13 pilot's early-ending episodes make its
 seed-42 result less comparable.
 
+### Iteration 17 — Counterfactual test: is the mate-proximity association a response to anonymous neighbors? (complete, exploratory)
+
+**Why.** Iteration 14/16 found that females approach fruit less with a living mate nearby. But a predator's observation has one predator
+layer shared by both sexes (it holds only an energy value), so a policy cannot tell a mate from any other predator. Whatever it does differently
+"with the mate nearby" can only be a response to that layer (presence and energy of neighbors) or to something correlated with it. This iteration
+edits that layer directly (`analyze_counterfactual_crowding.py`, no training): for the same on-policy state it queries the policy on (base) the real
+observation, (alone) all other predators removed, and (+d1/+d2/+d3) `alone` plus one anonymous predator (energy 8; energy 3 and 12 at d=2) at every
+legal cell at that Chebyshev distance, averaged over the placements. "Crowding effect" = approach bias with the inserted predator minus `alone`
+(negative = less approach). It is reported two ways: **policy** (action probabilities only, unblocked distances, as in the other scripts) and
+**total** (also lets the inserted predator block moves onto its cell, using a frozen snapshot of the neighbors; the real environment moves agents
+sequentially). Total minus policy is mechanical. Sampling: checkpoint 29, 12 episodes per run, every 5th step, at most 6000 states, restricted to
+agents with a mate history (not virgins) that see a target, so all numbers are conditional on having reproduced and being alive. The same states are
+used for every condition; intervals are 95% episode-cluster bootstrap percentiles (whole episodes resampled); the observational near-minus-away
+difference (mate within 3 cells versus not, unblocked bias) needs at least 5 episodes in each group. 17 runs: CONTROL, SUCCESSONLY (uncapped and
+density 26, three seeds each) and EQUALODDS (density 26 three seeds, uncapped two seeds; seed 42 uncapped is a different run type and was not
+included). Two Codex reviews of the script found 10 and then 4 issues (blocked moves ignored, independently drawn placements, one-draw placement noise,
+bootstrap of only one arm, total-versus-policy confound, overstated docstring); all were fixed before these runs and 100 module tests pass.
+
+**Results, per cell and design, the two extreme seeds (listed in order of first to last extreme, not sorted; a plus/minus sign change shows spread)** (observational near-away, then the policy crowding effect for one inserted predator at distance 2):
+
+| Sex, target | Cell / design | Observational near-away | Policy crowding, +d2 |
+|---|---|---|---|
+| **Female, fruit** | CONTROL uncapped | -0.058 to -0.090 | -0.035 to -0.048 |
+| | CONTROL density 26 | -0.039 to -0.080 | -0.021 to -0.026 |
+| | SUCCESSONLY uncapped | -0.008 to -0.049 | -0.017 to -0.023 |
+| | SUCCESSONLY density 26 | -0.022 to -0.066 | -0.031 to -0.036 |
+| | EQUALODDS uncapped (2 seeds) | -0.003 to -0.017 | -0.010 to -0.012 |
+| | EQUALODDS density 26 | -0.029 to -0.046 | -0.021 to -0.030 |
+| **Female, prey** | CONTROL uncapped | -0.008 to +0.053 | -0.011 to +0.013 |
+| | CONTROL density 26 | -0.002 to +0.012 | -0.032 to -0.002 |
+| | SUCCESSONLY uncapped | -0.044 to -0.069 | -0.084 to -0.088 |
+| | SUCCESSONLY density 26 | -0.066 to -0.069 | -0.052 to -0.092 |
+| | EQUALODDS uncapped (2 seeds) | -0.032 to -0.044 | -0.048 to -0.083 |
+| | EQUALODDS density 26 | -0.061 to -0.107 | -0.050 to -0.071 |
+| **Male, fruit** | CONTROL uncapped | -0.024 to +0.007 | -0.011 to -0.021 |
+| | CONTROL density 26 | -0.008 to +0.001 | -0.021 to +0.004 |
+| | SUCCESSONLY uncapped | -0.013 to +0.015 | -0.011 to -0.030 |
+| | SUCCESSONLY density 26 | -0.051 to -0.012 | -0.021 to -0.037 |
+| | EQUALODDS uncapped (2 seeds) | -0.011 to -0.009 | -0.008 to -0.015 |
+| | EQUALODDS density 26 | -0.030 to -0.002 | -0.007 to -0.025 |
+| **Male, prey** | CONTROL uncapped | +0.019 to +0.072 | -0.020 to -0.051 |
+| | CONTROL density 26 | -0.055 to +0.029 | -0.025 to -0.070 |
+| | SUCCESSONLY uncapped | -0.025 to +0.043 | -0.078 to -0.081 |
+| | SUCCESSONLY density 26 | -0.073 to -0.039 | -0.075 to -0.084 |
+| | EQUALODDS uncapped (2 seeds) | -0.006 to +0.024 | -0.071 to -0.080 |
+| | EQUALODDS density 26 | -0.038 to -0.014 | -0.051 to -0.072 |
+
+Across all 17 runs (median over runs): female fruit observational -0.046, policy crowding -0.024; female prey -0.044 and -0.052; male fruit -0.009
+and -0.021; male prey -0.006 and -0.071. The observational interval excludes zero in 11 of 17 runs for female fruit, 10 of 17 for female prey, 2 of
+17 for male fruit and 3 of 17 for male prey. (This is fewer than the "all 36 intervals" of Iteration 16, which used all decisions of 20 episodes and a
+near-versus-away definition on a different sampling; here states are subsampled, restricted to a visible target and a mate history, and 12 episodes give
+wider intervals. The two are consistent in sign, not in power.)
+
+**What the data show.**
+1. **The policies respond to anonymous neighbors.** Adding one generic predator lowers approach in almost every run and both sexes: policy effect at
+   d=2 is negative in 17 of 17 runs for female fruit, 15 of 17 for female prey, 16 of 17 for male fruit and 17 of 17 for male prey. A higher-energy
+   inserted neighbor (12) lowers approach more than a low-energy one (3) in 17 of 17 female-fruit runs. The effect is not monotone in distance in most runs.
+2. **For females the size and sign are in the range of the observational mate-near effect.** On fruit the policy crowding effect is about 30 to 60% of the
+   observational near-away difference in CONTROL, and similar in magnitude in the high-success cells; on prey in the high-success cells the two are of
+   similar size (both -0.03 to -0.10). In CONTROL prey (near-away about zero) the crowding effect is also near zero.
+3. **Males respond to inserted neighbors about as much (fruit) or more (prey), but show almost no observational near-away.** So sensitivity to anonymous
+   predator-layer edits is not sufficient to explain why the observational association is mostly a female fruit phenomenon. Whatever else differs (what
+   real mates do, where they are, how their presence correlates with the local food layout, survival and reproductive history) is not identified here.
+4. **The total effect is sometimes larger than the policy effect** (mainly at d=1, where the inserted predator blocks a move), so part of a naive
+   crowding effect is collision mechanics rather than policy.
+
+**Caveats and what this does not show.** It shows policy-level sensitivity to anonymous predator-layer edits, not that crowding explains the
+observational association: the observed near/away groups also differ in the number and energy of neighbors, location, history and survival; an inserted
+predator on a uniformly random legal cell is not how real neighbors are distributed; edits are made in a state where the other layers were generated
+with the original neighbor, and the policy may face off-distribution observations. The blocking model is a frozen-neighbor snapshot. Estimates are
+conditional on mate history, on seeing a target, and on 12 episodes per run; there is no training-time coordination test here, and none of it
+establishes coordination or mate recognition. It makes generic-neighbor sensitivity a plausible contributor to the observed pattern (the policies are sensitive to inserted anonymous predators),
+but does not show it produces that pattern or that a partner-specific component is absent. Whether a partner-specific component exists
+on top would need a design in which sex or mate bond is observable (an identity channel), retrained with and without it.
+
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 
 **Working definition:** a difference between the sexes, emerging from training rather than hard-coded, in (a) what they do (approach toward
@@ -1650,7 +1725,9 @@ test of the provisioning explanation did not support it:** near-mate females who
 mate nearby, and adjusting for the female's own energy leaves the association unchanged (nine runs). So the test does not support gifts or own energy as the
 explanation (it does not rule them out); what does account for it is not known. Pair differentiation shows no consistent relationship with offspring count: small associations (|Spearman rho| <= 0.09) whose sign
 depends on how population is controlled (slightly positive uncapped, slightly negative under density-26), confounded with lifespan. Nothing here shows
-that partner-associated behavior, or being more differentiated as a pair, pays off in offspring.
+that partner-associated behavior, or being more differentiated as a pair, pays off in offspring. **Iteration 17** (counterfactual edits of the predator layer, no training) shows the policies are sensitive to inserted anonymous predators in both sexes; for female fruit (and prey in the high-success cells) the effect has the
+same sign and a comparable size to the mate-near effect, which makes generic-neighbor sensitivity a plausible contributor, not an established explanation;
+males show similar sensitivity without the observational association, so this alone does not explain the female fruit pattern. In CONTROL female prey the observational effect is near zero.
 
 ---
 

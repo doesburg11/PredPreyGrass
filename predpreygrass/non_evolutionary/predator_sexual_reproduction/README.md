@@ -27,14 +27,15 @@
 > 2. **Coordination.** Not shown. Predators observe one predator layer shared by both sexes, so they cannot tell a mate from any other predator.
 >    The mate-proximity association can therefore only be a response to nearby predators in general (or something correlated with them), not to a
 >    partner as such. A real coordination test needs an identity/communication channel and retraining with vs without it. Not built.
-> 3. **Counterfactual observation-edit test** ([`analyze_counterfactual_crowding.py`](analyze_counterfactual_crowding.py)): written and
->    smoke-tested on 2 episodes of one run only (adding one anonymous predator lowered fruit approach by about the same order as the observed mate-near
->    effect). No full run has been reviewed and it has had no Codex review or tests. Treat as an unfinished lead.
+> 3. **Counterfactual observation-edit test** ([`analyze_counterfactual_crowding.py`](analyze_counterfactual_crowding.py), RESULTS.md Iteration 17,
+>    done, exploratory, 17 runs, Codex-reviewed twice): policies of both sexes respond to one inserted anonymous predator (less approach). For females the
+>    effect is of the same sign and comparable size to the observed mate-near effect, which makes generic-neighbor sensitivity a plausible contributor (not an established explanation); males
+>    respond as much and show almost no mate-near effect, so it does not fully explain the female fruit association either. Not proof of anything causal.
 > 4. **Matched-ecology necessity runs** (graded, swapped, or lowered odds at fixed density 26, 3 seeds, about 13 h): proposed, never started.
 > 5. Smaller open items: pair-fitness measure confounded with lifespan; death-chance surface has 2 seeds at 20%/30%; other k values; minibatch
 >    default undecided; longer training and later checkpoints; single-seed points (REF, 40%/60% success). See "TODO next" at the bottom.
 >
-> If reopened, start with loose ends 3 then 4: the first is cheap and needs no training, the second is the cleanest route to necessity.
+> If reopened, start with loose end 4 (matched-ecology necessity runs) and, for coordination, an observable identity channel retrained with vs without it.
 
 ![Trained predator_sexual_reproduction policies](results_figures/trained_policies.gif)
 
