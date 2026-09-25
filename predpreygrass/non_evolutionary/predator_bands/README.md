@@ -72,6 +72,13 @@ What the runs show:
   rest; among females that lived at least 300 steps the lowest was about 0.009 (5th percentile about 0.010). Intake is not consumption, and the
   samples of 800-step lives are small (11, 26 and 24 females).
 
+- **Who is scattered** (`analyze_band_scatter.py`, same runs, sampled every 10 steps): the share of observations in which a predator has
+  no band-mate within sharing range is about 31-37% for founders (never changed band), 5-19% for members born into a band, and
+  8-12% for members that changed band less than 25 steps ago, rising to 12-25% more than 100 steps after the move. So marriage is not the
+  main source of scatter (a marriage needs a mate within 3 cells, so the mover arrives next to its new band); scatter grows with time in a
+  band, and the policies themselves do not hold bands together. Distance to the band centroid (about 8 cells for every group) is
+  uninformative because bands are spread over several clusters. Descriptive, one checkpoint per run; age and sex effects not separated.
+
 Limits: a state-dependent policy comparison would need the shared-state method used in `predator_sexual_reproduction`; the counts of founder roles are
 small (100 lives each); lives cut off at the episode end are included (many males, few females). See the Codex-reviewed docstring of
 `analyze_band_behavior.py` for the exact definitions.
