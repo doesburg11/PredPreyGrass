@@ -204,6 +204,7 @@ if __name__ == "__main__":
             food_scores=food_scores(),
             agent_bands=env.agent_band,
             agent_fruit_stores=env.agent_fruit_store,
+            threat_positions=env.threat_positions,
         )
 
     while not loop_helper.simulation_terminated:

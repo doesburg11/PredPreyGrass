@@ -12,8 +12,18 @@ def random_policy_pi(agent_id, env):
 
 
 if __name__ == "__main__":
-    seed = 3
-    env = env_creator({})
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Random-policy viewer for predator_bands.")
+    parser.add_argument("--threats", type=int, default=0, help="number of roaming threats (default 0 = none)")
+    parser.add_argument("--bands", type=int, default=None, help="number of bands (default: config, 3)")
+    parser.add_argument("--seed", type=int, default=3)
+    args = parser.parse_args()
+    seed = args.seed
+    env_config = {"num_threats": args.threats}
+    if args.bands is not None:
+        env_config["num_bands"] = args.bands
+    env = env_creator(env_config)
     observations, _ = env.reset(seed=seed)
     active_agents = list(observations.keys())
 
@@ -43,6 +53,9 @@ if __name__ == "__main__":
             fruit_energies=env.fruit_energies,
             agents_just_ate=env.agents_just_ate,
             step=env.current_step,
+            agent_bands=env.agent_band,
+            agent_fruit_stores=env.agent_fruit_store,
+            threat_positions=env.threat_positions,
         )
 
         terminated = terminations.get("__all__", False)

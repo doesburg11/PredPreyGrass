@@ -127,7 +127,9 @@ class PyGameRenderer:
         food_scores=None,
         agent_bands=None,
         agent_fruit_stores=None,
+        threat_positions=None,
     ):
+        self.threat_positions = threat_positions or {}
         self.food_scores = food_scores
         self.agent_bands = agent_bands or {}
         self.agent_fruit_stores = agent_fruit_stores or {}
@@ -161,6 +163,7 @@ class PyGameRenderer:
             fruit_positions, fruit_energies, self.gui_style.fruit_color, self.reference_energy_fruit, icon="fruit"
         )
         self._draw_agents(agent_positions, agent_energies, agents_just_ate)
+        self._draw_threats()
         self._draw_tooltip(agent_positions, grass_positions, fruit_positions, agent_energies, grass_energies, fruit_energies)
         self._draw_legend(step)
 
@@ -231,6 +234,16 @@ class PyGameRenderer:
             else:
                 pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
 
+    def _draw_threats(self):
+        """Roaming threats: a dark red disc with a white exclamation mark, drawn over the agents."""
+        for pos in getattr(self, "threat_positions", {}).values():
+            x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
+            y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
+            pygame.draw.circle(self.screen, (120, 0, 0), (x_pix, y_pix), self.cell_size // 2 - 3)
+            pygame.draw.circle(self.screen, (0, 0, 0), (x_pix, y_pix), self.cell_size // 2 - 3, 2)
+            mark = self.font.render("!", True, (255, 255, 255))
+            self.screen.blit(mark, mark.get_rect(center=(x_pix, y_pix)))
+
     def _draw_legend(self, step):
         x = self.gui_style.margin_left + self.grid_size[0] * self.cell_size + 20
         y = self.gui_style.margin_top + 10
@@ -300,6 +313,11 @@ class PyGameRenderer:
         self._blit_icon_centered("fruit", s, x + r, y + r)
         self.screen.blit(font.render("Fruit (predator food)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
+
+        if getattr(self, "threat_positions", None):
+            pygame.draw.circle(self.screen, (120, 0, 0), (x + r, y + r), r)
+            self.screen.blit(font.render("Threat (kills lone predators)", True, (0, 0, 0)), (x + 30, y))
+            y += spacing
 
         return y
 
