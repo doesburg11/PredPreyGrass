@@ -215,7 +215,8 @@ config_env = {
 # Initial structure: num_bands bands, each with `band_couples` founding couples (recorded mates) each with
 # `band_children_per_couple` dependent children (alternating male, female), plus band_singles_male / _female unpaired
 # adults; members start on the free cells nearest a band centre (centres spread out by farthest-point sampling).
-# The default 5 x (1 couple + 2 children + 1 single male + 1 single female) = 30 predators. num_bands = 0 turns every
+# The default 3 x (1 couple + 2 children + 1 single male + 1 single female) = 18 predators (the calibration runs up to
+# 2026-09-25 used 5 bands = 30 predators). num_bands = 0 turns every
 # band feature off (random initial layout, n_initial_active_* as configured), i.e. predator_complementary_diet.
 # Sharing (mechanical, like the gifts; no reward term): a fraction band_share_rate of ANY forage (prey or fruit) is split
 # equally among the forager's living band members within band_share_range; meat stays meat and fruit stays fruit.
@@ -225,7 +226,7 @@ config_env = {
 # __init__ raises ValueError unless male_gift + care + band_share <= 1 and female_gift + care + band_share <= 1.
 config_env.update(
     {
-        "num_bands": 5,
+        "num_bands": 3,
         "band_couples": 1,
         "band_children_per_couple": 2,
         "band_singles_male": 1,

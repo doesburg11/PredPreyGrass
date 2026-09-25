@@ -78,9 +78,9 @@ small (100 lives each); lives cut off at the episode end are included (many male
 
 ## What is new (on top of the diet module)
 
-- **Initial bands:** `num_bands` (5) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
+- **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
   children (alternating male, female), and one unpaired male and female each; members start on the free cells nearest a band
-  centre (`band_spawn_radius`, enforced), centres spread by farthest-point sampling. 30 predators by default.
+  centre (`band_spawn_radius`, enforced), centres spread by farthest-point sampling. 18 predators by default (30 with 5 bands). The food settings (fruit regrowth 0.04 by default; the viable 5-band runs used 0.08) have not been re-calibrated for 3 bands.
 - **Band sharing:** `band_share_rate` (0.3) of any forage, prey or fruit, is split equally among the forager's living band
   members within `band_share_range` (5); meat stays meat and fruit stays fruit; doomed members are not rescued. Mechanical, no
   reward for grouping. The old mate gifts are set to 0 here; parental care stays at 0.2.

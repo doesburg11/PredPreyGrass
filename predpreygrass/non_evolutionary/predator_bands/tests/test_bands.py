@@ -10,6 +10,9 @@ from predpreygrass.non_evolutionary.predator_bands.config_env import config_env 
 from predpreygrass.non_evolutionary.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 
 
+N_BANDS = _base["num_bands"]  # the default layout is N_BANDS bands of 6 (couple + 2 children + 2 singles)
+
+
 def _env(**overrides):
     config = copy.deepcopy(_base)
     config.update({"max_steps": 100})
@@ -44,16 +47,16 @@ def _quiet(**kw):
 # ---- initial layout -------------------------------------------------------------------------------------------
 def test_default_layout_five_bands_of_six_balanced_and_unique_cells():
     env = _env()
-    assert len(env.predator_positions) == 30
-    assert env.n_initial_active_predator_male == 15 and env.n_initial_active_predator_female == 15
-    assert len(set(env.predator_positions.values())) == 30
-    assert sorted(len(_members(env, b)) for b in range(5)) == [6] * 5
+    assert len(env.predator_positions) == 6 * N_BANDS
+    assert env.n_initial_active_predator_male == 3 * N_BANDS and env.n_initial_active_predator_female == 3 * N_BANDS
+    assert len(set(env.predator_positions.values())) == 6 * N_BANDS
+    assert sorted(len(_members(env, b)) for b in range(N_BANDS)) == [6] * N_BANDS
     assert len(env._scripted_prey_ids) == 40
 
 
 def test_band_composition_couples_children_singles():
     env = _env()
-    for b in range(5):
+    for b in range(N_BANDS):
         members = _members(env, b)
         couples = [(m, env.agent_mate[m]) for m in members if "male" in m and "female" not in m and m in env.agent_mate]
         assert len(couples) == 1
@@ -69,13 +72,13 @@ def test_band_composition_couples_children_singles():
 def test_bands_are_spatially_clustered_and_separated():
     env = _env()
     spread, centroids = [], []
-    for b in range(5):
+    for b in range(N_BANDS):
         pts = np.array([env.predator_positions[a] for a in _members(env, b)])
         c = pts.mean(0)
         centroids.append(c)
         spread.append(np.abs(pts - c).max())
     assert max(spread) <= 3.0
-    d = [np.abs(centroids[i] - centroids[j]).max() for i in range(5) for j in range(i + 1, 5)]
+    d = [np.abs(centroids[i] - centroids[j]).max() for i in range(N_BANDS) for j in range(i + 1, N_BANDS)]
     assert min(d) >= 4.0
 
 
@@ -168,9 +171,17 @@ def test_a_step_with_fruit_shares_it_with_the_band():
     env.fruit_positions[fruit] = (10, 10)
     env.fruit_energies[fruit] = 2.0
     env.grid_world_state[4, 10, 10] = 2.0
+    # keep every other fruit away from every predator so that only the forager eats this step
+    taken = set(env.predator_positions.values())
+    free = next((x, y) for x in range(env.grid_size) for y in range(env.grid_size) if (x, y) not in taken)
+    for other_fruit in env.fruit_positions:
+        if other_fruit != fruit:
+            env.grid_world_state[4, *env.fruit_positions[other_fruit]] = 0
+            env.fruit_positions[other_fruit] = free
+            env.fruit_energies[other_fruit] = 0.0
     env.rng = np.random.default_rng(0)
     env.step(_noop(env))
-    assert env.band_share_events >= 1 and env.band_share_fruit_total == pytest.approx(0.6)
+    assert env.band_share_events == 1 and env.band_share_fruit_total == pytest.approx(0.6)
 
 
 # ---- kin exclusion and marriage -------------------------------------------------------------------------------
@@ -214,7 +225,7 @@ def test_a_blocked_kin_pair_does_not_breed_but_a_stranger_does():
 
 def _marriage_setup(rule="female_joins_male"):
     env = _quiet(marriage_rule=rule, mate_search_radius=3)
-    bands = {b: _members(env, b) for b in range(5)}
+    bands = {b: _members(env, b) for b in range(N_BANDS)}
     male = next(a for a in bands[0] if "female" not in a and a not in env.agent_mate)         # single male, band 0
     female = next(a for a in bands[1] if "female" in a and a not in env.agent_mate)           # single female, band 1
     for a in env.predator_positions:
@@ -340,7 +351,7 @@ def test_full_random_episode_with_default_bands_runs_and_reports_band_metrics():
 # ---- fixes from the Codex review ---------------------------------------------------------------------------------
 def test_band_members_start_within_the_spawn_radius_of_a_common_centre():
     env = _env(band_spawn_radius=2)
-    for b in range(5):
+    for b in range(N_BANDS):
         pts = np.array([env.predator_positions[a] for a in _members(env, b)])
         assert np.abs(pts.max(0) - pts.min(0)).max() <= 4  # all within radius 2 of one centre (diameter 4)
 
@@ -352,7 +363,7 @@ def test_layout_that_cannot_fit_the_spawn_radius_is_rejected():
 
 def test_oversized_layout_and_bad_channel_count_are_rejected():
     with pytest.raises(ValueError):
-        _env(grid_size=10)  # 30 predators + 40 prey + 200 food items do not fit
+        _env(grid_size=10)  # the predators + 40 prey + 200 food items do not fit
     with pytest.raises(ValueError):
         _env(num_obs_channels=6)
     with pytest.raises(ValueError):

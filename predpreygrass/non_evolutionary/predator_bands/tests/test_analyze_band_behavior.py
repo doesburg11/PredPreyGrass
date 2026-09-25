@@ -37,7 +37,8 @@ def test_founder_roles_counts():
     env = _env()
     roles = ab.founder_roles(env)
     counts = {r: sum(1 for v in roles.values() if v == r) for r in ab.ROLES}
-    assert counts == {"couple_male": 5, "couple_female": 5, "child": 10, "single_male": 5, "single_female": 5, "born": 0}
+    n = _base["num_bands"]
+    assert counts == {"couple_male": n, "couple_female": n, "child": 2 * n, "single_male": n, "single_female": n, "born": 0}
 
 
 def test_instrumented_env_records_own_forage_and_conserves_shared_energy():
@@ -116,7 +117,7 @@ def test_short_random_rollout_and_summary_run_end_to_end():
     # every founder appears once per episode with a role other than "born"
     for ep in range(3):
         founders = [l for l in lives if l["episode"] == ep and l["role"] != "born"]
-        assert len(founders) == 30
+        assert len(founders) == 6 * _base["num_bands"]
     lines = ab.summarize("test", episodes, lives, np.random.default_rng(0), episodes)
     text = "\n".join(lines)
     for token in ("A. energy sources", "B. founders by role", "C. approach bias", "D. cohesion", "single_female"):
