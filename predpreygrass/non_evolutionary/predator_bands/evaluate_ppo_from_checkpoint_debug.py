@@ -203,6 +203,7 @@ if __name__ == "__main__":
             step=env.current_step,
             food_scores=food_scores(),
             agent_bands=env.agent_band,
+            agent_fruit_stores=env.agent_fruit_store,
         )
 
     while not loop_helper.simulation_terminated:

@@ -109,9 +109,11 @@ class PyGameRenderer:
         agents_just_ate=None,
         food_scores=None,
         agent_bands=None,
+        agent_fruit_stores=None,
     ):
         self.food_scores = food_scores
         self.agent_bands = agent_bands or {}
+        self.agent_fruit_stores = agent_fruit_stores or {}
         if agents_just_ate is None:
             agents_just_ate = set()
         if fruit_positions is None:
@@ -487,9 +489,19 @@ class PyGameRenderer:
         if hovered_entity:
             tooltip_line1 = self.tooltip_font.render(f"{hovered_entity}", True, (0, 0, 0))
             tooltip_line2 = self.tooltip_font.render(f"Energy: {hovered_energy:.2f}", True, (0, 0, 0))
+            extra_lines = []
+            stores = getattr(self, "agent_fruit_stores", {})
+            if "predator" in hovered_entity and hovered_entity in stores:
+                fruit_store = stores[hovered_entity]
+                extra_lines.append(f"Fruit store: {fruit_store:.2f}")
+                extra_lines.append(f"Meat store: {hovered_energy - fruit_store:.2f}")
+                band = getattr(self, "agent_bands", {}).get(hovered_entity)
+                if band is not None:
+                    extra_lines.append(f"Band: {band}")
+            extra_surfaces = [self.tooltip_font.render(line, True, (0, 0, 0)) for line in extra_lines]
             padding = self.gui_style.tooltip_padding
-            width = max(tooltip_line1.get_width(), tooltip_line2.get_width())
-            height = tooltip_line1.get_height() + tooltip_line2.get_height()
+            width = max([tooltip_line1.get_width(), tooltip_line2.get_width()] + [s.get_width() for s in extra_surfaces])
+            height = tooltip_line1.get_height() + tooltip_line2.get_height() + sum(s.get_height() for s in extra_surfaces)
             tooltip_x = mouse_x + 10
             tooltip_y = mouse_y + 10
             bg_rect = pygame.Rect(tooltip_x - padding, tooltip_y - padding, width + 2 * padding, height + 2 * padding)
@@ -497,6 +509,10 @@ class PyGameRenderer:
             pygame.draw.rect(self.screen, (0, 0, 0), bg_rect, 1)
             self.screen.blit(tooltip_line1, (tooltip_x, tooltip_y))
             self.screen.blit(tooltip_line2, (tooltip_x, tooltip_y + tooltip_line1.get_height()))
+            line_y = tooltip_y + tooltip_line1.get_height() + tooltip_line2.get_height()
+            for surface in extra_surfaces:
+                self.screen.blit(surface, (tooltip_x, line_y))
+                line_y += surface.get_height()
 
     def close(self):
         pygame.quit()
