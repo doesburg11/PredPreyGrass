@@ -1731,7 +1731,7 @@ males show similar sensitivity without the observational association, so this al
 
 ---
 
-## Next steps
+## Open items (module closed; none scheduled)
 
 1. ~~Fix the replenishment pool exhaustion, run the full odds factorial, control for the population-boom confound~~ **Done as far as
    the design allows (Iterations 12, 13, 15, 16).** Population-matched follow-ups were run two ways; neither isolates population size,

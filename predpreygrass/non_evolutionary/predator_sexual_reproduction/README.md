@@ -19,23 +19,22 @@
 > - **Method lessons.** Analyses had been run in the wrong environment (Iterations 12-15's energy shares and the "cap was the outlier" claim are
 >   withdrawn; Iteration 16 corrects them). Independent review caught association-to-causation overclaims in every write-up.
 >
-> **What was NOT settled (the loose ends)**
-> 1. **Necessity of the odds asymmetry.** Not settled. Both population controls (blocked reproduction, random cull with replacement) are
->    interventions, so the effect of equalizing odds is confounded with population size and reproductive selection. The one-seed dose-response
->    (female lead rises with population) is preliminary; the three-seed sweep was **stopped early**: target 52 has seeds 42 (all cells) and partial 43,
->    target 13 has seed 42 only. Do not quote the dose-response.
-> 2. **Coordination.** Not shown. Predators observe one predator layer shared by both sexes, so they cannot tell a mate from any other predator.
->    The mate-proximity association can therefore only be a response to nearby predators in general (or something correlated with them), not to a
->    partner as such. A real coordination test needs an identity/communication channel and retraining with vs without it. Not built.
+> **What was NOT settled, and what was already tried**
+> 1. **Necessity of the odds asymmetry: not settled.** Tried: the unmatched ablations (Iterations 8-9), a fixed prey-density environment and full
+>    2x2 odds factorial with 3 seeds per cell (11-12), a reproduction-blocking population cap (13), exact predator density without blocking (15), and a
+>    population-target sweep (stopped early). Every design that fixes population is itself an intervention (blocked reproduction, or random death with
+>    free replacement), so the effect of equalizing odds stays confounded with population size and reproductive selection. The one-seed dose-response
+>    (female lead rises with population) is preliminary; do not quote it.
+> 2. **Coordination: not shown.** Tried: mate-proximity contingency (14, 16; all 36 runs), pair-fitness (16), the provisioning hypothesis (16, not
+>    supported), and a counterfactual observation-edit test (17, below). Predators observe one predator layer shared by both sexes, so they cannot tell a
+>    mate from any other predator; the mate-proximity association can only be a response to nearby predators in general or something correlated with
+>    them. No available test separates that from partner-specific responsiveness in this design.
 > 3. **Counterfactual observation-edit test** ([`analyze_counterfactual_crowding.py`](analyze_counterfactual_crowding.py), RESULTS.md Iteration 17,
 >    done, exploratory, 17 runs, Codex-reviewed twice): policies of both sexes respond to one inserted anonymous predator (less approach). For females the
->    effect is of the same sign and comparable size to the observed mate-near effect, which makes generic-neighbor sensitivity a plausible contributor (not an established explanation); males
->    respond as much and show almost no mate-near effect, so it does not fully explain the female fruit association either. Not proof of anything causal.
-> 4. **Matched-ecology necessity runs** (graded, swapped, or lowered odds at fixed density 26, 3 seeds, about 13 h): proposed, never started.
-> 5. Smaller open items: pair-fitness measure confounded with lifespan; death-chance surface has 2 seeds at 20%/30%; other k values; minibatch
->    default undecided; longer training and later checkpoints; single-seed points (REF, 40%/60% success). See "TODO next" at the bottom.
->
-> If reopened, start with loose end 4 (matched-ecology necessity runs) and, for coordination, an observable identity channel retrained with vs without it.
+>    effect has the same sign and comparable size to the observed mate-near effect (female fruit, high-success prey), which makes generic-neighbor
+>    sensitivity a plausible contributor, not an established explanation; males respond as much and show almost no mate-near effect, so it does not
+>    fully explain the female fruit association either.
+> 4. Smaller unfinished items are listed under "Open items" at the bottom; none is scheduled.
 
 ![Trained predator_sexual_reproduction policies](results_figures/trained_policies.gif)
 
@@ -494,7 +493,7 @@ at 128 and 30 for now (the runs up to FORAGING_PENALTY02 used them; the later RE
 time (the learner grows to about 10 of 16 GB), and a CPU-only learner (`--gpu-fraction 0`) is about 5x
 slower. The diagnosis, search and full numbers are in `RESULTS.md`, Iteration 5.
 
-## TODO next
+## Open items (module closed; none scheduled)
 
 1. **Population-target sweep: stopped early on 2026-09-25** (module closed). Target 52 has seed 42 plus a partial seed 43; target 13 has seed 42 only. To
    quote the dose-response, finish three seeds per target. Target 13 loses about 15% of episodes early to sex extinction under the random cull.
