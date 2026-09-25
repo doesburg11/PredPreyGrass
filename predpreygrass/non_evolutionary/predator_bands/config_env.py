@@ -2,7 +2,7 @@ config_env = {
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
-    "num_obs_channels": 8,  # Border, Predator (total energy), Prey, Grass, Fruit, Fruit store, Same-band, Other-band
+    "num_obs_channels": None,  # auto: 8 (Border, Predator energy, Prey, Grass, Fruit, Fruit store, Same-band, Other-band), or 12 with band_compass
     "predator_obs_range": 7,
     "prey_obs_range": 9,
     # Rewards
@@ -236,6 +236,10 @@ config_env.update(
         "band_share_range": 5,
         "kin_exclusion": True,
         "marriage_rule": "female_joins_male",
+        # Band compass (observation only, default off): 4 extra constant planes give the direction and distance to the nearest
+        # same-band predator even outside the 7x7 window, so a predator that has drifted away can find its band again. Needs
+        # num_obs_channels 12 (set automatically). No reward and no scripted movement.
+        "band_compass": False,
         "n_initial_active_prey": 40,
     }
 )

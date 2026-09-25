@@ -403,3 +403,69 @@ def test_rates_default_to_band_share_rate_and_validate():
     with pytest.raises(ValueError):
         _env(band_fruit_share_rate=1.2)
     _env(band_meat_share_rate=0.6, band_fruit_share_rate=0.3)  # 0.6 + 0.2 care is fine
+
+
+# ---- band compass ----------------------------------------------------------------------------------------------------
+def _compass_env(**kw):
+    return _quiet(band_compass=True, **kw)
+
+
+def test_compass_is_off_by_default_and_adds_four_channels_when_on():
+    assert _quiet().num_obs_channels == 8
+    env = _compass_env()
+    assert env.num_obs_channels == 12
+    a = _members(env, 0)[0]
+    assert env._get_observation(a).shape == (12, env.predator_obs_range, env.predator_obs_range)
+
+
+def test_compass_points_to_the_nearest_same_band_member_outside_the_window():
+    env = _compass_env()
+    band = _members(env, 0)
+    a, far_mate, farther_mate = band[0], band[1], band[2]
+    other = _members(env, 1)[0]
+    for x in env.predator_positions:
+        if x not in (a, far_mate, farther_mate, other):
+            _place(env, x, (24, 24))
+    _place(env, a, (10, 5))
+    _place(env, far_mate, (10, 15))     # dx = 0, dy = +10: outside the 7x7 window
+    _place(env, farther_mate, (23, 5))  # farther
+    _place(env, other, (10, 6))         # other band, adjacent: must not count
+    obs = env._get_observation(a)
+    assert np.all(obs[8] == 1.0)
+    assert np.allclose(obs[9], 0.5) and np.allclose(obs[10], 1.0)  # unit vector (0, +1) -> encoded (0.5, 1.0)
+    assert np.allclose(obs[11], 10 / env.grid_size)
+    assert obs[8:].min() >= 0.0 and obs.max() <= 100.0
+
+
+def test_compass_is_zero_without_a_band_mate_and_for_other_observers():
+    env = _compass_env()
+    band = _members(env, 0)
+    lone = band[0]
+    for x in list(env.predator_positions):
+        if x != lone:
+            if env.agent_band[x] == 0:
+                env.agent_energies[x] = -1.0
+    for x in band[1:]:
+        del env.predator_positions[x]
+    obs = env._get_observation(lone)
+    assert obs[8:].sum() == 0.0
+    prey_obs = None
+    if env._scripted_prey_ids:
+        prey_obs = env._get_observation(env._scripted_prey_ids[0])
+        assert prey_obs[8:].sum() == 0.0
+
+
+def test_compass_points_diagonally_and_needs_enough_channels():
+    env = _compass_env()
+    band = _members(env, 0)
+    a, mate = band[0], band[1]
+    for x in env.predator_positions:
+        if x not in (a, mate) and env.agent_band[x] == 0:
+            _place(env, x, (24, 24))
+    _place(env, a, (5, 5))
+    _place(env, mate, (12, 12))
+    obs = env._get_observation(a)
+    r = 1 / np.sqrt(2)
+    assert np.allclose(obs[9], (r + 1) / 2) and np.allclose(obs[10], (r + 1) / 2)
+    with pytest.raises(ValueError):
+        _env(band_compass=True, num_obs_channels=10)

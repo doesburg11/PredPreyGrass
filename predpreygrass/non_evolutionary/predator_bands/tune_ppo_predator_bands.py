@@ -142,6 +142,8 @@ def parse_args():
         "--energy-gain-per-step-fruit", type=float, default=None,
         help="Fruit regrowth per step (fruit abundance). Default: config value (0.04).",
     )
+    parser.add_argument("--band-compass", type=int, choices=[0, 1], default=None,
+                        help="1: add the band-compass observation planes (direction/distance to the nearest band-mate). Default: config (0).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
     parser.add_argument(
         "--band-share-rate", type=float, default=None,
@@ -360,6 +362,8 @@ if __name__ == "__main__":
         env_config["energy_gain_per_step_grass"] = args.energy_gain_per_step_grass
     if args.energy_gain_per_step_fruit is not None:
         env_config["energy_gain_per_step_fruit"] = args.energy_gain_per_step_fruit
+    if args.band_compass is not None:
+        env_config["band_compass"] = bool(args.band_compass)
     if args.num_bands is not None:
         env_config["num_bands"] = args.num_bands
     if args.band_share_rate is not None:

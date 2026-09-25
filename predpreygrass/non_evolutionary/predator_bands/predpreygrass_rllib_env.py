@@ -251,6 +251,7 @@ class PredPreyGrass(MultiAgentEnv):
                 raise ValueError(f"{_name} must be in [0, 1] (got {getattr(self, _name)})")
         self.band_share_range = int(config.get("band_share_range", 5))
         self.kin_exclusion = bool(config.get("kin_exclusion", True))
+        self.band_compass = bool(config.get("band_compass", False))  # see the observation settings below
         self.marriage_rule = config.get("marriage_rule", "female_joins_male")
         if self.num_bands < 0:
             raise ValueError(f"num_bands must be >= 0 (got {self.num_bands})")
@@ -277,8 +278,10 @@ class PredPreyGrass(MultiAgentEnv):
                 self.n_initial_active_predator_female > config.get("n_possible_predator_female", 1000)
             ):
                 raise ValueError("band-derived initial predator counts exceed n_possible_predator_male/female")
-            if config.get("num_obs_channels", 8) < 8:
-                raise ValueError("bands need num_obs_channels >= 8 (the store and band channels are channels 5, 6 and 7)")
+            if (config.get("num_obs_channels") or 8 + (4 if self.band_compass else 0)) < 8 + (4 if self.band_compass else 0):
+                raise ValueError(
+                    "bands need num_obs_channels >= 8 (the store and band channels are channels 5, 6 and 7), and >= 12 with band_compass"
+                )
             cells_needed = (
                 self.n_initial_active_predator_male
                 + self.n_initial_active_predator_female
@@ -304,8 +307,11 @@ class PredPreyGrass(MultiAgentEnv):
         # Grid and Observation Settings
         self.grid_size = config.get("grid_size", 25)
         # 8 channels: Border, Predator (total energy), Prey, Grass, Fruit, Fruit store (of predators),
-        # Same-band predators, Other-band predators
-        self.num_obs_channels = config.get("num_obs_channels", 8)
+        # Same-band predators, Other-band predators. With band_compass, 4 more constant planes (channels 8-11) tell a predator where its
+        # nearest band-mate is even when that band-mate is outside the observation window: [has band-mate, (dx + 1) / 2, (dy + 1) / 2,
+        # Chebyshev distance / grid_size], dx/dy being the unit vector toward the nearest same-band predator (zeros if there is none).
+        self.band_compass = bool(config.get("band_compass", False))
+        self.num_obs_channels = config.get("num_obs_channels") or 8 + (4 if self.band_compass else 0)  # None/absent = auto
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 9)
 
@@ -1441,6 +1447,24 @@ class PredPreyGrass(MultiAgentEnv):
                 occupied.add(cell)
         return {"positions": positions, "band": band, "mates": mates, "parents": parents}
 
+    def _fill_band_compass(self, observation, agent, band, xp, yp):
+        """Channels 8-11: constant planes pointing to the nearest same-band predator anywhere on the grid (see __init__)."""
+        best = None
+        for other, (ox, oy) in self.predator_positions.items():
+            if other == agent or self.agent_band.get(other) != band:
+                continue
+            d = max(abs(ox - xp), abs(oy - yp))
+            if best is None or d < best[0]:
+                best = (d, ox - xp, oy - yp)
+        if best is None:
+            return
+        d, dx, dy = best
+        norm = float(np.hypot(dx, dy)) or 1.0
+        observation[8] = 1.0
+        observation[9] = (dx / norm + 1.0) / 2.0
+        observation[10] = (dy / norm + 1.0) / 2.0
+        observation[11] = d / self.grid_size
+
     def _kin_blocked(self, male, female):
         """Kin exclusion: no mating between parent and child, or between siblings (a shared parent)."""
         if not self.kin_exclusion:
@@ -1610,6 +1634,8 @@ class PredPreyGrass(MultiAgentEnv):
                 observation[store_channel, rx, ry] = max(self.agent_fruit_store[other], 0.0)
                 if my_band is not None and other != agent and other in self.agent_band:
                     observation[same_channel if self.agent_band[other] == my_band else other_channel, rx, ry] = 1.0
+        if self.band_compass and my_band is not None:
+            self._fill_band_compass(observation, agent, my_band, xp, yp)
 
         return observation
 
