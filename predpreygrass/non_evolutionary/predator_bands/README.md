@@ -10,16 +10,21 @@ unchanged. Non-evolutionary: PPO learning only. The design and its open question
 Built and tested (113 tests; Codex review found 4 issues, all fixed). First calibration runs (seed 42, 100 iterations,
 5 s per iteration, 30 learning predators):
 
-| Run | Meat share | Band sharing | Result |
-|---|---|---|---|
-| Pilot (stopped at 82 iterations) | 0.25 | 0.3 | Females extinct in every episode from iteration 25; hunters supplied only ~120 energy of meat per episode against ~250 needed |
-| CALIB M010_SHARE030 | 0.10 | 0.3 | Females extinct in 92% of episodes early, 67% late; episode length 362 to 737; ~7 female births and ~7 marriages per episode |
-| CALIB M010_NOSHARE (control) | 0.10 | 0 | Females extinct in ~100% of episodes; episode length ~390; ~3 births per episode |
-| CALIB M005_SHARE030 | 0.05 | 0.3 | (was running when this was written) early: fruit-deficiency deaths dominate |
+| Run (seed 42) | Meat share | Fruit regrowth | Band sharing | Result |
+|---|---|---|---|---|
+| Pilot (stopped at 82 iterations) | 0.25 | 0.04 | 0.3 | Females extinct in every episode from iteration 25; hunters supplied only ~120 energy of meat per episode against ~250 needed |
+| CALIB M010_SHARE030 (100 it.) | 0.10 | 0.04 | 0.3 | Female extinction 92% early, 67% late; episode length 362 to 737; ~7 female births and ~7 marriages per episode |
+| CALIB M010_NOSHARE (100 it., control) | 0.10 | 0.04 | 0 | Females extinct in ~100% of episodes; episode length ~390; ~3 births per episode |
+| CALIB M005_SHARE030 (100 it.) | 0.05 | 0.04 | 0.3 | Female extinction 80% early, 13% late; episodes near the 1000-step cap; ~5 females and ~11 males alive; deaths now mostly fruit deficiency |
+| CALIB F008_SHARE030 (200 it.) | 0.10 | 0.08 | 0.3 | Female extinction 100% at iterations 25-75, then 77-85% (flat); episode length ~750; ~23 female meat-deficiency deaths per episode, ~1-3 from fruit; ~14 marriages per episode |
+| CALIB F008_NOSHARE (200 it., control) | 0.10 | 0.08 | 0 | Female extinction 96-100% throughout; episode length ~410; ~15 female meat-deficiency deaths per episode |
+| CALIB F008_MEAT060 (200 it.) | 0.10 | 0.08 | meat 0.6 / fruit 0.3 | (running when this was written) at iterations 25-42: female extinction 64%, ~2 females alive, ~20 female births per episode |
 
-Band sharing clearly helps (control loses all females), but females are not yet sustained, and 100 iterations is short.
-Fruit supply (100 patches, 0.04 regrowth per step) was sized for 6-10 predators and looks under-scaled for 30. Next planned
-runs: meat share 0.10 with more fruit regrowth, sharing on and off, 200 iterations.
+Band sharing clearly helps (the controls lose all their females), but at meat share 0.10 a 30% share does not sustain them. More fruit
+regrowth removed the fruit-deficiency deaths but not the meat ones, so the limit is how meat is distributed, not the fruit supply:
+males catch ~135 prey (~400 energy) per episode but keep ~70% of it in an uncapped store while females starve. Hence the last run
+splits the sharing rate by food type (meat shared more widely, as real bands do): `--band-meat-share-rate 0.6 --band-fruit-share-rate 0.3`.
+Only meat share 0.05 has sustained females so far, and that requirement is weak.
 
 ## What is new (on top of the diet module)
 
@@ -47,7 +52,8 @@ python -m predpreygrass.non_evolutionary.predator_bands.random_policy
 pytest predpreygrass/non_evolutionary/predator_bands/tests/ -v
 ```
 Flags: `--num-bands`, `--band-share-rate`, `--band-share-range`, `--kin-exclusion 0/1`, `--marriage-rule`,
-`--diet-meat-cost-share`, `--scripted-prey 0/1`, `--initial-num-fruit`.
+`--band-meat-share-rate`, `--band-fruit-share-rate` (each defaults to the single rate), `--diet-meat-cost-share`, `--scripted-prey 0/1`,
+`--initial-num-fruit`, `--energy-gain-per-step-fruit`.
 
 ## Not built
 

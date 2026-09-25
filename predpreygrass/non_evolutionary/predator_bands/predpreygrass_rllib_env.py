@@ -241,6 +241,14 @@ class PredPreyGrass(MultiAgentEnv):
         self.band_singles_female = int(config.get("band_singles_female", 1))
         self.band_spawn_radius = int(config.get("band_spawn_radius", 3))
         self.band_share_rate = config.get("band_share_rate", 0.3)
+        # Separate sharing rates by food type (real bands share meat far more widely than gathered plant food). Each
+        # defaults to band_share_rate when not given, so the single-rate configs behave exactly as before.
+        _meat_rate, _fruit_rate = config.get("band_meat_share_rate"), config.get("band_fruit_share_rate")
+        self.band_meat_share_rate = self.band_share_rate if _meat_rate is None else _meat_rate
+        self.band_fruit_share_rate = self.band_share_rate if _fruit_rate is None else _fruit_rate
+        for _name in ("band_meat_share_rate", "band_fruit_share_rate"):
+            if not (0.0 <= getattr(self, _name) <= 1.0):
+                raise ValueError(f"{_name} must be in [0, 1] (got {getattr(self, _name)})")
         self.band_share_range = int(config.get("band_share_range", 5))
         self.kin_exclusion = bool(config.get("kin_exclusion", True))
         self.marriage_rule = config.get("marriage_rule", "female_joins_male")
@@ -281,7 +289,9 @@ class PredPreyGrass(MultiAgentEnv):
             if cells_needed > config.get("grid_size", 25) ** 2:
                 raise ValueError(f"the initial layout needs {cells_needed} cells but the grid has fewer")
         # Every donation from one gain is a share of that same gross gain, so they must not sum past 1.0.
-        active_band_share = self.band_share_rate if self.num_bands > 0 else 0.0  # inactive when bands are off
+        active_band_share = (
+            max(self.band_meat_share_rate, self.band_fruit_share_rate) if self.num_bands > 0 else 0.0
+        )  # inactive when bands are off; the larger of the two rates bounds the donations from one gain
         if self.male_gift_donation_rate + self.parent_offspring_share_rate + active_band_share > 1.0:
             raise ValueError("male_gift_donation_rate + parent_offspring_share_rate + band_share_rate must be <= 1.0")
         if self.female_gift_donation_rate + self.parent_offspring_share_rate + active_band_share > 1.0:
@@ -1459,7 +1469,8 @@ class PredPreyGrass(MultiAgentEnv):
         """Band sharing (mechanical, like the gifts): a fraction band_share_rate of any forage is split equally among
         the forager's living band members within band_share_range. Meat stays meat and fruit stays fruit (stores are
         preserved). Members already doomed by a store or at <= 0 energy are not rescued (turn-order safe)."""
-        if self.num_bands == 0 or self.band_share_rate <= 0.0 or gained <= 0.0:
+        rate = self.band_fruit_share_rate if is_fruit else self.band_meat_share_rate
+        if self.num_bands == 0 or rate <= 0.0 or gained <= 0.0:
             return
         band = self.agent_band.get(agent)
         if band is None:
@@ -1476,7 +1487,7 @@ class PredPreyGrass(MultiAgentEnv):
         ]
         if not recipients:
             return
-        total = self.band_share_rate * gained
+        total = rate * gained
         share = total / len(recipients)
         self.agent_energies[agent] -= total
         if is_fruit:

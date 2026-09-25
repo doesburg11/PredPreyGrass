@@ -370,3 +370,25 @@ def test_unrelated_cross_band_pair_reproduces_when_kin_pairs_do_not():
     assert not env._kin_blocked(male, female)
     env.step(_noop(env))
     assert _births(env) == 1
+
+
+# ---- separate meat / fruit sharing rates ---------------------------------------------------------------------------
+def test_meat_and_fruit_use_their_own_sharing_rates():
+    env, forager, near, *_ = _sharing_setup()
+    env.band_meat_share_rate, env.band_fruit_share_rate = 0.6, 0.2
+    env._apply_band_share(forager, 2.0, is_fruit=False)
+    assert env.band_share_meat_total == pytest.approx(1.2) and env.band_share_fruit_total == 0.0
+    env._apply_band_share(forager, 2.0, is_fruit=True)
+    assert env.band_share_fruit_total == pytest.approx(0.4)
+
+
+def test_rates_default_to_band_share_rate_and_validate():
+    env = _quiet(band_share_rate=0.35)
+    assert env.band_meat_share_rate == 0.35 and env.band_fruit_share_rate == 0.35
+    env = _quiet(band_meat_share_rate=0.6, band_fruit_share_rate=0.3)
+    assert env.band_meat_share_rate == 0.6 and env.band_fruit_share_rate == 0.3
+    with pytest.raises(ValueError):
+        _env(band_meat_share_rate=0.7, parent_offspring_share_rate=0.4)  # 0.7 + 0.4 > 1 for a meat gain
+    with pytest.raises(ValueError):
+        _env(band_fruit_share_rate=1.2)
+    _env(band_meat_share_rate=0.6, band_fruit_share_rate=0.3)  # 0.6 + 0.2 care is fine

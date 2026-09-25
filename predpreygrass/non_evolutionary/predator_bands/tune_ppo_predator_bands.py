@@ -138,11 +138,19 @@ def parse_args():
         "--num-epochs", type=int, default=30,
         help="PPO num_epochs (default 30, the value all earlier runs used).",
     )
+    parser.add_argument(
+        "--energy-gain-per-step-fruit", type=float, default=None,
+        help="Fruit regrowth per step (fruit abundance). Default: config value (0.04).",
+    )
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
     parser.add_argument(
         "--band-share-rate", type=float, default=None,
         help="Fraction of any forage split among band members in range (0 = no sharing). Default: config (0.3).",
     )
+    parser.add_argument("--band-meat-share-rate", type=float, default=None,
+                        help="Band sharing rate for meat only. Default: --band-share-rate / config.")
+    parser.add_argument("--band-fruit-share-rate", type=float, default=None,
+                        help="Band sharing rate for fruit only. Default: --band-share-rate / config.")
     parser.add_argument("--band-share-range", type=int, default=None, help="Chebyshev range of band sharing. Default: config (5).")
     parser.add_argument("--kin-exclusion", type=int, choices=[0, 1], default=None, help="1/0: block parent-child and sibling mating. Default: config (1).")
     parser.add_argument("--marriage-rule", type=str, choices=["female_joins_male", "male_joins_female"], default=None,
@@ -350,10 +358,16 @@ if __name__ == "__main__":
         env_config["initial_num_grass"] = args.initial_num_grass
     if args.energy_gain_per_step_grass is not None:
         env_config["energy_gain_per_step_grass"] = args.energy_gain_per_step_grass
+    if args.energy_gain_per_step_fruit is not None:
+        env_config["energy_gain_per_step_fruit"] = args.energy_gain_per_step_fruit
     if args.num_bands is not None:
         env_config["num_bands"] = args.num_bands
     if args.band_share_rate is not None:
         env_config["band_share_rate"] = args.band_share_rate
+    if args.band_meat_share_rate is not None:
+        env_config["band_meat_share_rate"] = args.band_meat_share_rate
+    if args.band_fruit_share_rate is not None:
+        env_config["band_fruit_share_rate"] = args.band_fruit_share_rate
     if args.band_share_range is not None:
         env_config["band_share_range"] = args.band_share_range
     if args.kin_exclusion is not None:
