@@ -218,7 +218,10 @@ class PyGameRenderer:
             band = getattr(self, "agent_bands", {}).get(agent_id)
             if "predator_male" in agent_id or "predator_female" in agent_id:
                 sex = "male" if "predator_male" in agent_id else "female"
-                if band is not None:  # symbol colour = band
+                if band is not None:  # ring and symbol colour = band
+                    pygame.draw.circle(
+                        self.screen, self.BAND_COLORS[band % len(self.BAND_COLORS)], (x_pix, y_pix), self.cell_size // 2 - 1, 3
+                    )
                     icon = self._band_icon(sex, band, max(2 * radius, 4))
                     self.screen.blit(icon, icon.get_rect(center=(x_pix, y_pix)))
                 else:
@@ -237,7 +240,7 @@ class PyGameRenderer:
         y = self._draw_legend_environment_elements(x, y)
         if getattr(self, "agent_bands", None):
             note = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8)).render(
-                "Symbol colour = band, shape = sex", True, (0, 0, 0)
+                "Ring + symbol colour = band", True, (0, 0, 0)
             )
             self.screen.blit(note, (x + 30, y - 4))
             y += note.get_height() + 2
