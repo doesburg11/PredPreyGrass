@@ -20,13 +20,14 @@ Built and tested (113 tests; Codex review found 4 issues, all fixed). First cali
 | CALIB F008_NOSHARE (200 it., control) | 0.10 | 0.08 | 0 | Female extinction 96-100% throughout; episode length ~410; ~15 female meat-deficiency deaths per episode |
 | CALIB F008_MEAT060 (200 it., seed 42) | 0.10 | 0.08 | meat 0.6 / fruit 0.3 | **Viable.** Female extinction 61% (iterations 25-50), then 2-12% and stable; episodes ~970-990 steps (cap 1000); 6-9 females and ~28 males alive; ~35-40 births and ~35 marriages per episode; ~470 energy of meat shared per episode. High turnover: ~20 female meat- and ~14 fruit-deficiency deaths per episode. One seed |
 | CALIB F008_MEAT060 seed 43 (200 it.) | 0.10 | 0.08 | meat 0.6 / fruit 0.3 | **Replicates seed 42.** Female extinction 85% (iterations 0-25), 36%, 11%, then 2-7% and stable; episodes ~1000 steps; 6-9 females and ~26-29 males alive; ~36 births and ~37-40 marriages per episode; ~520-550 energy of meat shared per episode; ~14 female fruit- and ~19-21 meat-deficiency deaths per episode |
+| CALIB F008_MEAT060_MJF (200 it., seed 42, `male_joins_female`) | 0.10 | 0.08 | meat 0.6 / fruit 0.3 | **Viable, more so for females than the default rule.** Female extinction 68% (iterations 0-25), 5%, 2%, then 0%; episodes ~1000 steps; 12-14 females and ~30 males alive (default rule: 6-9 and ~28); ~44-46 female births and ~32 marriages per episode; ~55 within-band pairings (default: ~35); ~700 energy of meat shared per episode (default: ~470); **only ~2.4 of 5 bands survive (default: ~4.5)**, i.e. the population merges into a few large bands; ~20 female fruit- and ~17 meat-deficiency deaths per episode. One seed |
 
 Band sharing clearly helps (the controls lose all their females), but at meat share 0.10 a 30% share does not sustain them. More fruit
 regrowth removed the fruit-deficiency deaths but not the meat ones, so the limit is how meat is distributed, not the fruit supply:
 males catch ~135 prey (~400 energy) per episode but keep ~70% of it in an uncapped store while females starve. Hence the last run
 splits the sharing rate by food type (meat shared more widely, as real bands do): `--band-meat-share-rate 0.6 --band-fruit-share-rate 0.3`.
 **This worked:** with meat sharing 0.6, females are sustained at meat share 0.10 (see the last row). Seed 43 replicates it (female extinction 2-7% late). The `male_joins_female`
-marriage-rule run (seed 42) was still running when this was written.
+marriage rule is also viable, with more surviving females but far fewer bands (one seed; see the last row).
 
 ## What is new (on top of the diet module)
 
