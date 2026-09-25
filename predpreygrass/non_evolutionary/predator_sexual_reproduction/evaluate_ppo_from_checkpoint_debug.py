@@ -12,7 +12,7 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
 # --- Project imports (predator_sexual_reproduction env + PyGame renderer) ---
-from predpreygrass.non_evolutionary.predator_sexual_reproduction.analysis_env import make_env
+from predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_energy_sources import make_instrumented_env
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.utils.pygame_grid_renderer_rllib import (
     PyGameRenderer,
@@ -139,7 +139,9 @@ if __name__ == "__main__":
     # Evaluate in the env the run was TRAINED in (prey floor / density target), not the plain base env, when
     # the run's run_config.json can be found (analysis_env.py explains the mismatch this avoids).
     _run_cfg = _find_run_config(checkpoint_path)
-    env = make_env(_run_cfg) if _run_cfg is not None else env_creator({})
+    # Instrumented subclass of the same env class: adds per-agent gross energy-by-source counters (no dynamics change)
+    # for the food-score panel.
+    env = make_instrumented_env(_run_cfg if _run_cfg is not None else {})
     print("Evaluating in:", type(env).__name__, "(from run_config.json)" if _run_cfg is not None else "(no run_config.json found; base env defaults)")
     observations, _ = env.reset(seed=seed)
     active_agents = list(observations.keys())
@@ -167,9 +169,32 @@ if __name__ == "__main__":
     prey_counts = []
     time_steps = []
 
+    def food_scores():
+        """Cumulative gross energy (and item counts) from prey and fruit, summed over every agent of each sex."""
+        out = {}
+        for key in ("male", "female"):
+            tag = f"predator_{key}"
+            out[key] = {
+                "prey": sum(v for a, v in env.energy_from_prey.items() if tag in a),
+                "fruit": sum(v for a, v in env.energy_from_fruit.items() if tag in a),
+                "n_prey": sum(v for a, v in env.n_prey_caught.items() if tag in a),
+                "n_fruit": sum(v for a, v in env.n_fruit_eaten.items() if tag in a),
+            }
+        return out
+
+    def counters_snapshot():
+        return tuple(dict(d) for d in (env.energy_from_prey, env.energy_from_fruit, env.n_prey_caught, env.n_fruit_eaten))
+
+    def counters_restore(saved):
+        for target, src in zip((env.energy_from_prey, env.energy_from_fruit, env.n_prey_caught, env.n_fruit_eaten), saved):
+            target.clear()
+            target.update(src)
+
     snapshots = []
+    counter_snapshots = []  # parallel to snapshots so stepping backward also rewinds the food scores
     max_snapshots = 100
     snapshots.append(env.get_state_snapshot())
+    counter_snapshots.append(counters_snapshot())
 
     def render_current():
         visualizer.update(
@@ -181,6 +206,7 @@ if __name__ == "__main__":
             fruit_energies=env.fruit_energies,
             agents_just_ate=env.agents_just_ate,
             step=env.current_step,
+            food_scores=food_scores(),
         )
 
     while not loop_helper.simulation_terminated:
@@ -188,7 +214,9 @@ if __name__ == "__main__":
         if control.step_backward:
             if len(snapshots) > 1:
                 snapshots.pop()
+                counter_snapshots.pop()
                 env.restore_state_snapshot(snapshots[-1])
+                counters_restore(counter_snapshots[-1])
                 print(f"[ViewerControl] Step Backward → Step {env.current_step}")
 
                 observations = {
@@ -223,8 +251,10 @@ if __name__ == "__main__":
             ]
 
             snapshots.append(env.get_state_snapshot())
+            counter_snapshots.append(counters_snapshot())
             if len(snapshots) > max_snapshots:
                 snapshots.pop(0)
+                counter_snapshots.pop(0)
 
             render_current()
             if video_writer is not None:

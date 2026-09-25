@@ -1,4 +1,5 @@
 import os
+import math
 import pygame
 from dataclasses import dataclass
 
@@ -103,7 +104,9 @@ class PyGameRenderer:
         fruit_energies=None,
         step=0,
         agents_just_ate=None,
+        food_scores=None,
     ):
+        self.food_scores = food_scores
         if agents_just_ate is None:
             agents_just_ate = set()
         if fruit_positions is None:
@@ -206,7 +209,10 @@ class PyGameRenderer:
         y = self._draw_legend_environment_elements(x, y)
         if self.enable_speed_slider:
             y = self._draw_legend_speed_slider(x, y)
-        self._draw_legend_population_chart(x, y)
+        y = self._draw_legend_population_chart(x, y)
+        if getattr(self, "food_scores", None):
+            y = self._draw_legend_food_scores(x, y)
+            self._draw_legend_energy_pies(x, y)
 
     def _draw_legend_step_counter(self, x, y, step):
         spacing = self.gui_style.legend_spacing
@@ -351,7 +357,89 @@ class PyGameRenderer:
                 y2p = chart_y + chart_height - int(self.population_history_prey[i] / max_agents * chart_height)
                 pygame.draw.line(self.screen, self.gui_style.prey_color, (x1, y1p), (x2, y2p), 2)
 
-        return chart_y + chart_height + self.gui_style.legend_spacing
+        # Line legend below the x tick labels: colour swatch + label per series.
+        legend_y = chart_y + chart_height + 32
+        entries = [
+            ("Male", self.gui_style.predator_male_color),
+            ("Female", self.gui_style.predator_female_color),
+            ("Prey", self.gui_style.prey_color),
+        ]
+        entry_x = chart_x
+        for label, color in entries:
+            label_surface = font_small.render(label, True, (0, 0, 0))
+            mid_y = legend_y + label_surface.get_height() // 2
+            pygame.draw.line(self.screen, color, (entry_x, mid_y), (entry_x + 22, mid_y), 3)
+            self.screen.blit(label_surface, (entry_x + 28, legend_y))
+            entry_x += 28 + label_surface.get_width() + 22
+
+        return legend_y + font_small.get_height() + self.gui_style.legend_spacing // 2
+
+    def _draw_legend_food_scores(self, x, y):
+        """Cumulative food score per sex, fruit and prey separately: gross energy eaten (number of items)."""
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        title = font_small.render("Food score by sex: energy (items)", True, (0, 0, 0))
+        self.screen.blit(title, (x + 30, y))
+        y += title.get_height() + 6
+        rows = [("Male", self.gui_style.predator_male_color, "male"), ("Female", self.gui_style.predator_female_color, "female")]
+        for label, color, key in rows:
+            sc = self.food_scores[key]
+            pygame.draw.circle(self.screen, color, (x + 40, y + 8), 6)
+            head = font_small.render(label, True, (0, 0, 0))
+            self.screen.blit(head, (x + 52, y))
+            y += head.get_height() + 2
+            for name, e_key, n_key in (("Prey", "prey", "n_prey"), ("Fruit", "fruit", "n_fruit")):
+                line = font_small.render(f"{name}: {sc[e_key]:.1f} ({sc[n_key]})", True, (0, 0, 0))
+                self.screen.blit(line, (x + 60, y))
+                y += line.get_height() + 1
+            y += 4
+        return y
+
+    def _draw_wedge(self, color, center, radius, start_frac, end_frac):
+        if end_frac - start_frac >= 0.9999:
+            pygame.draw.circle(self.screen, color, center, radius)
+            return
+        n = max(2, int((end_frac - start_frac) * 60))
+        points = [center] + [
+            (
+                center[0] + radius * math.sin(2 * math.pi * (start_frac + (end_frac - start_frac) * i / n)),
+                center[1] - radius * math.cos(2 * math.pi * (start_frac + (end_frac - start_frac) * i / n)),
+            )
+            for i in range(n + 1)
+        ]
+        pygame.draw.polygon(self.screen, color, points)
+
+    def _draw_legend_energy_pies(self, x, y):
+        """One pie per sex: share of gross foraged energy from prey vs fruit (cumulative, same numbers as the food score)."""
+        font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
+        title = font_small.render("Energy sources (prey / fruit share)", True, (0, 0, 0))
+        self.screen.blit(title, (x + 30, y))
+        y += title.get_height() + 8
+        radius = 48
+        prey_color, fruit_color = self.gui_style.prey_color, self.gui_style.fruit_color
+        for i, (label, key) in enumerate((("Male", "male"), ("Female", "female"))):
+            center = (x + 30 + radius + i * (2 * radius + 40), y + radius)
+            sc = self.food_scores[key]
+            total = sc["prey"] + sc["fruit"]
+            if total <= 0:
+                pygame.draw.circle(self.screen, (230, 230, 230), center, radius)
+                share_text = "no food yet"
+            else:
+                prey_share = sc["prey"] / total
+                self._draw_wedge(prey_color, center, radius, 0.0, prey_share)
+                self._draw_wedge(fruit_color, center, radius, prey_share, 1.0)
+                share_text = f"{prey_share * 100:.0f}% prey"
+            pygame.draw.circle(self.screen, (0, 0, 0), center, radius, 1)
+            head = font_small.render(label, True, (0, 0, 0))
+            self.screen.blit(head, (center[0] - head.get_width() // 2, y + 2 * radius + 4))
+            sub = font_small.render(share_text, True, (0, 0, 0))
+            self.screen.blit(sub, (center[0] - sub.get_width() // 2, y + 2 * radius + 4 + head.get_height()))
+        y += 2 * radius + 4 + 2 * font_small.get_height() + 8
+        for name, color in (("Prey", prey_color), ("Fruit", fruit_color)):
+            pygame.draw.rect(self.screen, color, pygame.Rect(x + 30, y + 3, 14, 10))
+            label = font_small.render(name, True, (0, 0, 0))
+            self.screen.blit(label, (x + 50, y))
+            x += 50 + label.get_width() + 16
+        return y + font_small.get_height()
 
     def _draw_tooltip(self, agent_positions, grass_positions, fruit_positions, agent_energies, grass_energies, fruit_energies):
         mouse_x, mouse_y = pygame.mouse.get_pos()
