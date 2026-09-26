@@ -5,6 +5,13 @@ fruit/meat stores with a complementary-diet requirement, scripted prey) with **b
 unchanged. Non-evolutionary: PPO learning only. The design and its open questions are in
 [`../predator_complementary_diet/BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md).
 
+![Trained predator_bands policies](results_figures/trained_policies.gif)
+
+*Trained policies, first 400 steps (every 5th step shown): 5 bands (symbol and ring colour = band, shape = sex), the viable meat-sharing run
+(`F008_MEAT060`, seed 42, checkpoint 19: meat sharing 0.6, fruit sharing 0.3, meat cost share 0.10, fruit regrowth 0.08), deterministic
+actions. Right panel: population, per-sex food score (energy and items eaten) and energy-source pies. Re-create with
+`python -m predpreygrass.non_evolutionary.predator_bands.record_gif <checkpoint dir> --out results_figures/trained_policies.gif`.*
+
 ## STATUS (2026-09-25): built, under calibration
 
 Built and tested (113 tests; Codex review found 4 issues, all fixed). First calibration runs (seed 42, 100 iterations,
