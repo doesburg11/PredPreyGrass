@@ -70,13 +70,14 @@ def main():
         }
         observations, _, terminations, truncations, _ = env.step(actions)
         active = [a for a in observations if not terminations.get(a, False) and not truncations.get(a, False)]
-        if step % args.every == 0:
-            renderer.update(
+        # update() EVERY step (the population chart adds one point per call), but keep only every k-th frame
+        renderer.update(
                 agent_positions=env.agent_positions, grass_positions=env.grass_positions, agent_energies=env.agent_energies,
                 grass_energies=env.grass_energies, fruit_positions=env.fruit_positions, fruit_energies=env.fruit_energies,
                 agents_just_ate=env.agents_just_ate, step=env.current_step, food_scores=food_scores(),
                 agent_bands=env.agent_band, agent_fruit_stores=env.agent_fruit_store, threat_positions=env.threat_positions,
             )
+        if step % args.every == 0:
             raw = pygame.image.tostring(renderer.screen, "RGB")
             img = Image.frombytes("RGB", renderer.screen.get_size(), raw)
             img = img.resize((int(img.width * args.scale), int(img.height * args.scale)), Image.LANCZOS)
