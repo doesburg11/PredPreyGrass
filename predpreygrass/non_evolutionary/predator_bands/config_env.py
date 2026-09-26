@@ -256,6 +256,9 @@ config_env.update(
         "band_fuse_distance": 3,
         "band_fuse_steps": 30,
         "band_drift_steps": 0,
+        # band_drift_join (needs band_drift_steps > 0): a member that drifts out joins the band of its nearest viable predator of another band
+        # within band_share_range, if any (singletons too), instead of always leaving for a one-member band.
+        "band_drift_join": False,
         "band_check_interval": 10,
         # Threats (default off, num_threats = 0): roaming non-learning animals that make wandering alone dangerous. Each step a
         # threat attacks an adjacent predator, else chases the nearest predator within threat_sense_radius, else wanders. An

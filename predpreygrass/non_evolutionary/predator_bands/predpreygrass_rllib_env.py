@@ -266,6 +266,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.band_fuse_distance = int(config.get("band_fuse_distance", 3))
         self.band_fuse_steps = int(config.get("band_fuse_steps", 30))
         self.band_drift_steps = int(config.get("band_drift_steps", 0))
+        self.band_drift_join = bool(config.get("band_drift_join", False))
         self.band_check_interval = int(config.get("band_check_interval", 10))
         if self.band_fission or self.band_fusion or self.band_drift_steps > 0:
             if self.num_bands == 0:
@@ -1607,9 +1608,12 @@ class PredPreyGrass(MultiAgentEnv):
 
     # ---------------------------------------------------------------------------------------------- band dynamics
     def _bands_now(self):
-        """band id -> sorted list of living predators in it."""
+        """band id -> sorted list of viable predators in it (alive, positive energy, not doomed by an empty store)."""
         bands: Dict[int, List[str]] = {}
+        viable = self._viable_predators()
         for a in sorted(self.predator_positions):
+            if a not in viable:
+                continue
             b = self.agent_band.get(a)
             if b is not None:
                 bands.setdefault(b, []).append(a)
@@ -1643,60 +1647,100 @@ class PredPreyGrass(MultiAgentEnv):
         return labels
 
     def _update_bands(self):
-        """Drift-out, then fission by size, then fusion by contact (each optional, all deterministic given positions; ids are never reused).
-        Drift-out: a member with no same-band member within band_share_range for band_drift_steps consecutive steps becomes a one-member
-        band (its dependent children go with it). Fission: a band larger than band_max_size splits into two spatial clusters (each at least
-        band_min_split_size); the cluster with the larger total energy keeps the id, the other gets a new id; dependent children follow their
-        living mother's cluster, else their father's. Fusion: two bands whose centroids stay within band_fuse_distance for band_fuse_steps
-        consecutive checks fuse when the union is at most 0.75 x band_max_size (hysteresis against an immediate re-split); the lower id survives."""
+        """Drift, then fission, then fusion (each optional; deterministic given positions; band ids are never reused). Membership is the
+        start-of-phase snapshot of VIABLE predators, so results do not depend on iteration order.
+        Drift: a member with no same-band member within band_share_range for band_drift_steps consecutive steps (the counter is tied to
+        its current band and resets whenever the band changes or it is alone in it) moves: with band_drift_join it joins the band of the
+        nearest viable predator of another band within band_share_range, if any (a singleton can do this too); otherwise it leaves for a
+        one-member band. A drifting member has no band-mate within range, so its dependent children (if in range of the band) stay.
+        Fission: a band larger than band_max_size splits into two spatial clusters (each at least band_min_split_size; repeated up to 5 passes
+        until no band exceeds the cap); the cluster with the larger total energy keeps the id, the other gets a new id; dependent children
+        follow their living mother's cluster, else their father's.
+        Fusion: two bands whose centroids stay within band_fuse_distance for band_fuse_steps ELAPSED steps (each check adds
+        band_check_interval) fuse when the union is at most 0.75 x band_max_size (hysteresis against an immediate re-split); the lower id
+        survives. Bands created by fission in this call do not fuse in it."""
         interval = self.band_check_interval
-        # -- drift-out
+        viable = self._viable_predators()
+        # -- drift
         if self.band_drift_steps > 0:
-            for band, members in self._bands_now().items():
+            bands = self._bands_now()
+            band_of = {a: b for b, m in bands.items() for a in m}
+            moves = {}
+            for band, members in bands.items():
                 for a in members:
                     ax, ay = self.predator_positions[a]
                     near = any(
                         max(abs(self.predator_positions[o][0] - ax), abs(self.predator_positions[o][1] - ay)) <= self.band_share_range
                         for o in members if o != a
                     )
-                    if near:
-                        self._band_out_steps.pop(a, None)
+                    prev = self._band_out_steps.get(a)
+                    if near or len(members) == 1 and not self.band_drift_join:
+                        self._band_out_steps.pop(a, None)  # in range (or a lone member with nowhere to go): the counter restarts
                         continue
-                    self._band_out_steps[a] = self._band_out_steps.get(a, 0) + interval
-                    if self._band_out_steps[a] >= self.band_drift_steps and len(members) > 1:
-                        new_id = self._next_band_id
-                        self._next_band_id += 1
-                        self.agent_band[a] = new_id
-                        for c in self._dependents_of(a):
-                            self.agent_band[c] = new_id
-                        self._band_out_steps.pop(a, None)
-                        self.band_drift_outs += 1
+                    steps = (prev[1] if prev is not None and prev[0] == band else 0) + interval
+                    self._band_out_steps[a] = (band, steps)
+                    if steps < self.band_drift_steps:
+                        continue
+                    target = None
+                    if self.band_drift_join:
+                        best = None
+                        for o in sorted(viable):
+                            ob = band_of.get(o)
+                            if o == a or ob is None or ob == band:
+                                continue
+                            d = max(abs(self.predator_positions[o][0] - ax), abs(self.predator_positions[o][1] - ay))
+                            if d <= self.band_share_range and (best is None or d < best[0]):
+                                best = (d, ob)
+                        target = None if best is None else best[1]
+                    if target is None and len(members) == 1:
+                        continue  # already alone and nobody to join
+                    moves[a] = target
+            new_ids = {}
+            for a, target in sorted(moves.items()):
+                if target is None:
+                    new_ids[a] = self._next_band_id
+                    self._next_band_id += 1
+                    self.band_drift_outs += 1
+                else:
+                    new_ids[a] = target
+                    self.band_drift_outs += 1
+            for a, new_id in new_ids.items():
+                self.agent_band[a] = new_id
+                self._band_out_steps.pop(a, None)
         for a in [a for a in self._band_out_steps if a not in self.predator_positions]:
             self._band_out_steps.pop(a)
-        # -- fission
+        # -- fission (repeat until no band is above the cap, at most 5 passes)
+        fresh = set()
         if self.band_fission:
-            for band, members in list(self._bands_now().items()):
-                if len(members) <= self.band_max_size:
-                    continue
-                labels = self._two_means(members)
-                parts = {0: [a for a in members if labels[a] == 0], 1: [a for a in members if labels[a] == 1]}
-                if min(len(parts[0]), len(parts[1])) < self.band_min_split_size:
-                    continue
-                keep = max((0, 1), key=lambda k: (sum(self.agent_energies[a] for a in parts[k]), -k))
-                leave = 1 - keep
-                new_id = self._next_band_id
-                self._next_band_id += 1
-                moving = set(parts[leave])
-                for a in members:  # dependent children follow their living mother's part, else their father's
-                    if a in self.agent_parents and a not in self.has_reproduced:
-                        father, mother = self.agent_parents[a]
-                        for parent in (mother, father):
-                            if parent in labels:
-                                (moving.add if labels[parent] == leave else moving.discard)(a)
-                                break
-                for a in moving:
-                    self.agent_band[a] = new_id
-                self.band_fissions += 1
+            for _ in range(5):
+                split_any = False
+                for band, members in list(self._bands_now().items()):
+                    if len(members) <= self.band_max_size:
+                        continue
+                    labels = self._two_means(members)
+                    parts = {0: [a for a in members if labels[a] == 0], 1: [a for a in members if labels[a] == 1]}
+                    if min(len(parts[0]), len(parts[1])) < self.band_min_split_size:
+                        continue
+                    keep = max((0, 1), key=lambda k: (sum(self.agent_energies[a] for a in parts[k]), -k))
+                    leave = 1 - keep
+                    new_id = self._next_band_id
+                    self._next_band_id += 1
+                    moving = set(parts[leave])
+                    for a in members:  # dependent children follow their living mother's part, else their father's
+                        if a in self.agent_parents and a not in self.has_reproduced:
+                            father, mother = self.agent_parents[a]
+                            for parent in (mother, father):
+                                if parent in labels:
+                                    (moving.add if labels[parent] == leave else moving.discard)(a)
+                                    break
+                    for a in moving:
+                        self.agent_band[a] = new_id
+                        self._band_out_steps.pop(a, None)
+                    fresh.add(new_id)
+                    self.band_fissions += 1
+                    split_any = True
+                if not split_any:
+                    break
         # -- fusion
         if self.band_fusion:
             bands = self._bands_now()
@@ -1709,12 +1753,13 @@ class PredPreyGrass(MultiAgentEnv):
                         close.add((b1, b2))
             self._band_contact = {p: self._band_contact.get(p, 0) + interval for p in close}
             for (b1, b2), steps in sorted(self._band_contact.items()):
-                if steps < self.band_fuse_steps or b1 not in bands or b2 not in bands:
+                if steps < self.band_fuse_steps or b1 not in bands or b2 not in bands or b1 in fresh or b2 in fresh:
                     continue
                 if len(bands[b1]) + len(bands[b2]) > 0.75 * self.band_max_size:
                     continue
                 for a in bands[b2]:
                     self.agent_band[a] = b1
+                    self._band_out_steps.pop(a, None)
                 bands[b1] = bands[b1] + bands.pop(b2)
                 self.band_fusions += 1
             self._band_contact = {p: n for p, n in self._band_contact.items() if p[0] in bands and p[1] in bands}
