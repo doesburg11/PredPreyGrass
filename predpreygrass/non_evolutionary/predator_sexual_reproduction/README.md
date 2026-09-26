@@ -1,5 +1,12 @@
 # predator_sexual_reproduction
 
+![Trained predator_sexual_reproduction policies](results_figures/trained_policies.gif)
+
+*Trained policies, first 400 steps (every 5th step shown): the energy-proportional-reward run `PROP_K05_MB1024_SEED42` (k = 0.5, default hunting
+odds, iteration 300 / checkpoint 29), deterministic actions. Males (hunters) take a much larger share of their energy from prey than
+females, visible in the per-sex pies on the right. Re-create with
+`python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.record_gif <checkpoint dir> --out results_figures/trained_policies.gif`.*
+
 A copy of [`base_environment_step_energy`](../base_environment_step_energy/) that
 replaces asexual predator reproduction with **sexual (two-parent) reproduction**,
 and splits predators into two sexed policies with different foraging roles.
