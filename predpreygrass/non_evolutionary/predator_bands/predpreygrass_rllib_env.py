@@ -261,6 +261,14 @@ class PredPreyGrass(MultiAgentEnv):
         self.threat_defenders_to_repel = int(config.get("threat_defenders_to_repel", 3))
         self.threat_defense_by = config.get("threat_defense_by", "band")
         self.threat_flee_distance = int(config.get("threat_flee_distance", 8))
+        # Rest after an attack (0 = off, the old behaviour): a threat that KILLS is sated and does not attack for
+        # threat_satiation_steps; one whose attack does not kill (survived roll, or driven off) does not attack again for
+        # threat_cooldown_steps. Resting threats wander and never chase.
+        self.threat_satiation_steps = int(config.get("threat_satiation_steps", 0))
+        self.threat_cooldown_steps = int(config.get("threat_cooldown_steps", 0))
+        if min(self.threat_satiation_steps, self.threat_cooldown_steps) < 0:
+            raise ValueError("threat_satiation_steps and threat_cooldown_steps must be >= 0")
+        self.threat_rest_until: Dict[str, int] = {}
         if self.num_threats < 0:
             raise ValueError(f"num_threats must be >= 0 (got {self.num_threats})")
         if not (0.0 <= self.threat_kill_prob <= 1.0):
@@ -616,6 +624,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.grid_world_state[4, *fruit_positions[i]] = self.initial_energy_fruit
 
         self.threat_positions = {}
+        self.threat_rest_until = {}
         if self.num_threats > 0:
             taken = set(self.agent_positions.values())
             for i in range(self.num_threats):
@@ -1535,17 +1544,20 @@ class PredPreyGrass(MultiAgentEnv):
         moves = [m for m in self.action_to_move_tuple.values() if m != (0, 0)]
         viable = self._viable_predators()
         kills = {}
+        killers = []
         for tid in sorted(self.threat_positions, key=lambda t: int(t.split("_")[1])):
             tx, ty = self.threat_positions[tid]
+            resting = self.current_step < self.threat_rest_until.get(tid, 0)
             alive = sorted(
                 (max(abs(px - tx), abs(py - ty)), a) for a, (px, py) in self.predator_positions.items() if a in viable
             )
-            nearest = alive[0] if alive else None
+            nearest = alive[0] if alive and not resting else None  # a resting threat neither attacks nor chases
             if nearest is not None and nearest[0] <= 1:
                 target = nearest[1]
                 self.threat_encounters += 1
                 defenders = self._threat_defenders(target, viable)
                 if defenders >= self.threat_defenders_to_repel:
+                    self.threat_rest_until[tid] = self.current_step + self.threat_cooldown_steps
                     blocked = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
                     px, py = self.agent_positions[target]
                     cells = [
@@ -1561,6 +1573,9 @@ class PredPreyGrass(MultiAgentEnv):
                     continue
                 if self.rng.random() < self.threat_kill_prob * (1.0 - defenders / self.threat_defenders_to_repel):
                     kills[target] = min(kills.get(target, defenders), defenders)
+                    killers.append(tid)
+                else:
+                    self.threat_rest_until[tid] = self.current_step + self.threat_cooldown_steps
                 continue
             occupied = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
             candidates = []
@@ -1575,6 +1590,8 @@ class PredPreyGrass(MultiAgentEnv):
                 best = min((px - c[0]) ** 2 + (py - c[1]) ** 2 for c in candidates)
                 candidates = [c for c in candidates if (px - c[0]) ** 2 + (py - c[1]) ** 2 == best]
             self.threat_positions[tid] = candidates[int(self.rng.integers(len(candidates)))]
+        for tid in killers:
+            self.threat_rest_until[tid] = self.current_step + self.threat_satiation_steps
         for target, defenders in kills.items():
             self.agent_energies[target] = -1.0
             self.threat_kills["predator_male" if "predator_male" in target else "predator_female"] += 1
@@ -1859,6 +1876,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_band": self.agent_band.copy(),
             "rng_state": self.rng.bit_generator.state,
             "threat_positions": dict(self.threat_positions),
+            "threat_rest_until": dict(self.threat_rest_until),
             "threat_counters": (
                 self.threat_encounters, dict(self.threat_kills), self.threat_kills_alone, self.threat_repelled,
             ),
@@ -1900,6 +1918,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_band = snapshot["agent_band"].copy()
         self.rng.bit_generator.state = snapshot["rng_state"]
         self.threat_positions = dict(snapshot["threat_positions"])
+        self.threat_rest_until = dict(snapshot["threat_rest_until"])
         (self.threat_encounters, kills, self.threat_kills_alone, self.threat_repelled) = snapshot["threat_counters"]
         self.threat_kills = dict(kills)
         (

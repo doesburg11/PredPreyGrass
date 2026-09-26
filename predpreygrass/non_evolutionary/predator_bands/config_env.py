@@ -254,6 +254,12 @@ config_env.update(
         "threat_defenders_to_repel": 3,
         "threat_defense_by": "band",
         "threat_flee_distance": 8,
+        # Rest after an attack (0 = off): a threat that kills is sated for threat_satiation_steps; one whose attack does not kill
+        # (the roll failed, or it was driven off) cannot attack again for threat_cooldown_steps. Resting threats wander and do
+        # not chase. Without this a chasing threat stays adjacent and re-rolls every step, so the kill rate is set by contact
+        # time, not by threat_kill_prob (pilots: 1 threat at 0.5 and 2 threats at 0.25 both killed ~14 of 18 predators).
+        "threat_satiation_steps": 0,
+        "threat_cooldown_steps": 0,
         "n_initial_active_prey": 40,
     }
 )

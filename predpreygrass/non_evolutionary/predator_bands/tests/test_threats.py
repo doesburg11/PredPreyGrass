@@ -357,3 +357,58 @@ def test_a_threat_killed_predator_gets_no_shares_and_does_not_reproduce_that_ste
     assert target not in env.agent_positions
     assert env.episode_births["predator_male"] + env.episode_births["predator_female"] == births_before
     assert env.threat_kills_alone == 1
+
+
+# ---- satiation and cooldown ----------------------------------------------------------------------------------------------
+def test_rest_options_are_off_by_default():
+    env = _env()
+    assert env.threat_satiation_steps == 0 and env.threat_cooldown_steps == 0
+
+
+def test_a_threat_that_kills_is_sated_and_a_failed_attack_triggers_the_cooldown():
+    env, target = _attack_setup(0, threat_satiation_steps=100, threat_cooldown_steps=10)
+    env.current_step = 50
+    env.rng = _FixedRandom(env.rng, 0.0)  # kill
+    env._threats_act()
+    assert env.agent_energies[target] == -1.0 and env.threat_rest_until["threat_0"] == 150
+    env, target = _attack_setup(0, threat_satiation_steps=100, threat_cooldown_steps=10)
+    env.current_step = 50
+    env.rng = _FixedRandom(env.rng, 0.99)  # survives
+    env._threats_act()
+    assert env.agent_energies[target] == 5.0 and env.threat_rest_until["threat_0"] == 60
+
+
+def test_a_resting_threat_does_not_attack_or_chase_and_resumes_afterwards():
+    env, target = _attack_setup(0, threat_cooldown_steps=10)
+    env.rng = _FixedRandom(env.rng, 0.99)
+    env.current_step = 50
+    env._threats_act()                         # failed attack: rests until step 60
+    enc = env.threat_encounters
+    env.threat_positions["threat_0"] = (9, 10)  # put it back next to the target
+    env.rng = _FixedRandom(env.rng, 0.0)
+    env.current_step = 55
+    env._threats_act()
+    assert env.threat_encounters == enc and env.agent_energies[target] == 5.0      # resting: no attack
+    env.threat_positions["threat_0"] = (9, 10)
+    env.current_step = 60
+    env._threats_act()
+    assert env.threat_encounters == enc + 1 and env.agent_energies[target] == -1.0  # rested: attacks again
+
+
+def test_a_repelled_threat_takes_the_cooldown_and_snapshots_keep_the_rest_state():
+    env, target = _attack_setup(3, threat_cooldown_steps=7)
+    env.current_step = 20
+    env.rng = _FixedRandom(env.rng, 0.0)
+    env._threats_act()
+    assert env.threat_rest_until["threat_0"] == 27
+    snap = env.get_state_snapshot()
+    env.threat_rest_until = {}
+    env.restore_state_snapshot(snap)
+    assert env.threat_rest_until == {"threat_0": 27}
+
+
+def test_invalid_rest_settings_are_rejected():
+    with pytest.raises(ValueError):
+        _env(threat_satiation_steps=-1)
+    with pytest.raises(ValueError):
+        _env(threat_cooldown_steps=-5)

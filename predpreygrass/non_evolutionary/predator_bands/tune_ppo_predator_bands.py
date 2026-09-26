@@ -146,6 +146,9 @@ def parse_args():
                         help="1: add the band-compass observation planes (direction/distance to the nearest band-mate). Default: config (0).")
     parser.add_argument("--num-threats", type=int, default=None, help="Number of roaming threats (0 = none). Default: config (0).")
     parser.add_argument("--threat-kill-prob", type=float, default=None, help="Kill probability of a lone predator. Default: config (0.5).")
+    parser.add_argument("--threat-sense-radius", type=int, default=None, help="How far a threat senses predators. Default: config (4).")
+    parser.add_argument("--threat-satiation-steps", type=int, default=None, help="Steps a threat rests after a kill. Default: config (0).")
+    parser.add_argument("--threat-cooldown-steps", type=int, default=None, help="Steps a threat waits after a non-lethal attack. Default: config (0).")
     parser.add_argument("--threat-defense-by", type=str, choices=["band", "any"], default=None,
                         help="Whose company defends against a threat. Default: config (band).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
@@ -372,6 +375,12 @@ if __name__ == "__main__":
         env_config["num_threats"] = args.num_threats
     if args.threat_kill_prob is not None:
         env_config["threat_kill_prob"] = args.threat_kill_prob
+    if args.threat_sense_radius is not None:
+        env_config["threat_sense_radius"] = args.threat_sense_radius
+    if args.threat_satiation_steps is not None:
+        env_config["threat_satiation_steps"] = args.threat_satiation_steps
+    if args.threat_cooldown_steps is not None:
+        env_config["threat_cooldown_steps"] = args.threat_cooldown_steps
     if args.threat_defense_by is not None:
         env_config["threat_defense_by"] = args.threat_defense_by
     if args.num_bands is not None:
