@@ -118,11 +118,11 @@ def test_party_is_the_attackers_band_mates_within_the_radius_only():
 @pytest.mark.parametrize("n_mates,p", [(0, 0.02), (1, 0.25), (2, 0.6), (3, 0.9), (4, 0.9)])
 def test_success_probability_by_party_size(n_mates, p):
     env, attacker, mates, _ = _setup(band_members=n_mates)
-    env.rng = _Seq(env.rng, [0.0, p - 1e-6])  # move check, success roll just below p
+    env.rng = _Seq(env.rng, [p - 1e-6])  # success roll just below p
     env._mammoths_act()
     assert sum(env.mammoth_kills) == 1 and env.mammoth_kills[min(n_mates + 1, 4) - 1] == 1
     env, attacker, mates, _ = _setup(band_members=n_mates)
-    env.rng = _Seq(env.rng, [0.0, p + 1e-6, *([0.99] * 10)])  # just above p: failure, nobody dies
+    env.rng = _Seq(env.rng, [p + 1e-6, *([0.99] * 10)])  # just above p: failure, nobody dies
     env._mammoths_act()
     assert sum(env.mammoth_kills) == 0 and env.mammoth_attempts[min(n_mates + 1, 4) - 1] == 1
 
@@ -132,7 +132,7 @@ def test_a_kill_splits_the_energy_equally_as_meat_and_credits_rewards_and_respaw
     party = [attacker, *mates]
     e0 = {a: env.agent_energies[a] for a in env.predator_positions}
     f0 = {a: env.agent_fruit_store[a] for a in env.predator_positions}
-    env.rng = _Seq(env.rng, [0.0, 0.0])
+    env.rng = _Seq(env.rng, [0.0])
     env._mammoths_act()
     share = env.mammoth_energy / 3
     for a in party:
@@ -147,7 +147,7 @@ def test_a_kill_splits_the_energy_equally_as_meat_and_credits_rewards_and_respaw
 
 def test_the_mammoth_respawns_at_a_free_cell_after_the_delay():
     env, attacker, mates, _ = _setup(band_members=2, mammoth_respawn_steps=5)
-    env.rng = _Seq(env.rng, [0.0, 0.0])
+    env.rng = _Seq(env.rng, [0.0])
     env._mammoths_act()
     env.current_step += 4
     env._mammoths_act()
@@ -161,7 +161,7 @@ def test_the_mammoth_respawns_at_a_free_cell_after_the_delay():
 def test_failure_kills_party_members_with_the_size_specific_probability_and_spares_other_bands():
     env, attacker, mates, strangers = _setup(band_members=1, other_members=1)  # party of 2: death chance 0.15 each
     party = [attacker, *mates]
-    env.rng = _Seq(env.rng, [0.0, 0.99, 0.10, 0.20])  # move, failed roll, member 1 dies (< 0.15), member 2 survives (>= 0.15)
+    env.rng = _Seq(env.rng, [0.99, 0.10, 0.20])  # failed roll, member 1 dies (< 0.15), member 2 survives (>= 0.15)
     env._mammoths_act()
     dead = [a for a in party if env.agent_energies[a] == -1.0]
     assert len(dead) == 1 and env.mammoth_party_deaths[1] == 1
@@ -197,13 +197,13 @@ def test_mammoths_wander_but_never_onto_predators_or_each_other():
 
 def test_step_returns_the_share_as_reward_and_removes_killed_party_members():
     env, attacker, mates, _ = _setup(band_members=2)
-    env.rng = _Seq(env.rng, [0.0, 0.0])
+    env.rng = _Seq(env.rng, [0.0])
     obs, rewards, terms, truncs, _ = env.step(_noop(env))
     share = env.mammoth_energy / 3
     for a in [attacker, *mates]:
         assert rewards[a] >= 0.5 * share - 1e-9
     env, attacker, mates, _ = _setup(band_members=0)
-    env.rng = _Seq(env.rng, [0.0, 0.99, 0.0])  # lone hunter fails and dies (death chance 0.30)
+    env.rng = _Seq(env.rng, [0.99, 0.0])  # lone hunter fails and dies (death chance 0.30)
     obs, rewards, terms, truncs, _ = env.step(_noop(env))
     assert attacker not in env.agent_positions and terms.get(attacker) is True
     assert env.mammoth_party_deaths[0] == 1
@@ -212,7 +212,7 @@ def test_step_returns_the_share_as_reward_and_removes_killed_party_members():
 def test_snapshot_round_trip_of_mammoths():
     env, attacker, mates, _ = _setup(band_members=2)
     snap = env.get_state_snapshot()
-    env.rng = _Seq(env.rng, [0.0, 0.0])
+    env.rng = _Seq(env.rng, [0.0])
     env._mammoths_act()
     assert sum(env.mammoth_kills) == 1
     env.restore_state_snapshot(snap)
@@ -239,3 +239,52 @@ def test_full_random_episode_with_mammoths_runs_and_reports_metrics():
     m = env._build_episode_training_metrics()
     for k in ("mammoth_attempts_n1", "mammoth_kills_n4", "mammoth_party_deaths_n2", "mammoth_blocked", "mammoth_energy_distributed"):
         assert k in m
+
+
+# ---- fixes from the Codex review of the mammoths ---------------------------------------------------------------------------------
+def test_a_member_killed_at_one_mammoth_is_not_revived_or_recounted_at_another():
+    env = _env(num_mammoths=2, mammoth_death_by_party=[0.30, 1.0, 0.05, 0.02])
+    band0 = _members(env, 0)
+    a1, a2, shared = band0[0], band0[1], band0[2]
+    _park(env, {a1, a2, shared})
+    env.mammoth_positions = {"mammoth_0": (10, 10), "mammoth_1": (10, 12)}
+    _place(env, a1, (10, 10))
+    _place(env, a2, (10, 12))
+    _place(env, shared, (11, 11))  # adjacent to both mammoths
+    for a in env.predator_positions:
+        env.agent_energies[a] = 5.0
+    # mammoth_0: party {a1, shared} (a2 is 2 cells away), fails, both die (death chance 1.0). mammoth_1: a2 hunts; `shared` is dead.
+    env.rng = _Seq(env.rng, [0.99, 0.5, 0.5, 0.99, 0.0])  # fail, two death rolls, m0 wander check, m1 success
+    env._mammoths_act()
+    assert env.agent_energies[a1] == -1.0 and env.agent_energies[shared] == -1.0  # `shared` was not revived by the second success
+    assert env.mammoth_party_deaths[1] == 2 and env.mammoth_kills[0] == 1
+    assert env.agent_energies[a2] == pytest.approx(5.0 + env.mammoth_energy)  # a party of one at mammoth_1 (dead members excluded)
+
+
+def test_terminal_agents_keep_the_share_they_earned_and_pending_rewards_do_not_leak():
+    env, attacker, mates, _ = _setup(band_members=2)
+    env.rng = _Seq(env.rng, [0.0])
+    env._mammoths_act()  # success: a share is pending for each member
+    env.agent_energies[mates[0]] = -1.0  # ... and one member dies in the same step (e.g. at another mammoth)
+    obs, rewards, terms, truncs, _ = env.step(_noop(env))
+    assert terms.get(mates[0]) is True and rewards[mates[0]] == pytest.approx(0.5 * env.mammoth_energy / 3)
+    assert env._pending_rewards == {}
+
+
+def test_a_hunt_is_resolved_before_the_mammoth_wanders_and_a_share_counts_as_eating():
+    env, attacker, mates, _ = _setup(band_members=2, mammoth_move_prob=1.0, reward_predator_step=-0.1)
+    env.rng = _Seq(env.rng, [0.0])  # success first: the hunt comes before any wandering
+    env._mammoths_act()
+    assert sum(env.mammoth_kills) == 1  # the mammoth had not moved away
+    env, attacker, mates, _ = _setup(band_members=2, reward_predator_step=-0.1)
+    env.rng = _Seq(env.rng, [0.0])
+    obs, rewards, terms, truncs, _ = env.step(_noop(env))
+    share = env.mammoth_energy / 3
+    assert rewards[attacker] == pytest.approx(0.5 * share)  # no -0.1 no-forage step reward on top of the share
+
+
+def test_mammoths_need_bands_and_the_grid_must_have_room():
+    with pytest.raises(ValueError):
+        _env(num_bands=0, n_initial_active_predator_male=2, n_initial_active_predator_female=2, scripted_prey=False)
+    with pytest.raises(ValueError):
+        _env(grid_size=16, num_mammoths=20)  # the layout (with the mammoths) does not fit

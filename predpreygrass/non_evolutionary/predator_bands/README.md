@@ -83,6 +83,16 @@ Limits: a state-dependent policy comparison would need the shared-state method u
 small (100 lives each); lives cut off at the episode end are included (many males, few females). See the Codex-reviewed docstring of
 `analyze_band_behavior.py` for the exact definitions.
 
+## Mammoth pilot (2026-09-26, one seed): joint hunts were not learned
+
+3 bands, 2 mammoths (energy 20, respawn 80, single-band parties, success 0.02 / 0.25 / 0.6 / 0.9 and death on failure 0.30 / 0.15 / 0.05 /
+0.02 for parties of 1 / 2 / 3 / 4+), no threats, sharing 0.6 / 0.3, meat cost share 0.10, fruit regrowth 0.05, 150 iterations. The
+population is viable (episodes ~970 steps late, female extinction 16%, ~5 females and ~16 males alive). But predators almost never hunt
+together: per episode ~8 attempts are solo (party of 1) and cost ~2.8 predator deaths, ~0.8 attempts have a party of 2, and parties of 3 or
+more are essentially absent. Mammoth kills are ~0.3 per episode (~6 energy distributed, negligible). So the group hunt was not discovered
+at this training scale, and the solo attempts are a net cost. Untested next steps: a smoother success curve (0.1 at party size 1), lower
+solo death chance, the band compass, more or richer mammoths, longer training.
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent

@@ -1,7 +1,9 @@
 # Mammoths (big game that needs a group): design draft (not built; 2026-09-26)
 
-Status: draft for approval. Nothing here is implemented. It would be a default-off option of `predator_bands` (like the compass,
-threats and distance decay), so existing runs stay reproducible.
+Status (2026-09-26): BUILT as a default-off option of `predator_bands` (like the compass, threats and distance decay), Codex-reviewed, 194
+module tests. Differences from this draft: a tie between parties favours the attacker (not random); a hunt is resolved where the mammoth
+stands before it wanders; mammoths require bands (`num_bands > 0`); a mammoth share counts as eating for `reward_predator_step`.
+First pilot (3 bands, 2 mammoths, seed 42, 150 iterations): the population is viable but NO joint hunt was learned; see the README.
 
 ## Why
 

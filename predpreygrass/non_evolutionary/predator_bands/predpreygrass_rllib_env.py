@@ -304,6 +304,8 @@ class PredPreyGrass(MultiAgentEnv):
             values = getattr(self, name)
             if len(values) != 4 or not all(0.0 <= v <= 1.0 for v in values):
                 raise ValueError(f"{name} must be 4 probabilities in [0, 1] (party sizes 1, 2, 3, 4+)")
+        if self.num_mammoths > 0 and self.num_bands == 0:
+            raise ValueError("mammoth hunts are band hunts: num_mammoths > 0 needs num_bands > 0")
         self.mammoth_positions: Dict[str, Tuple[int, int]] = {}
         self.mammoth_respawn_at: Dict[str, int] = {}
         self._pending_rewards: Dict[str, float] = {}
@@ -345,6 +347,8 @@ class PredPreyGrass(MultiAgentEnv):
                 + self.n_initial_active_prey
                 + config.get("initial_num_grass", 100)
                 + config.get("initial_num_fruit", 100)
+                + self.num_threats
+                + self.num_mammoths
             )
             if cells_needed > config.get("grid_size", 25) ** 2:
                 raise ValueError(f"the initial layout needs {cells_needed} cells but the grid has fewer")
@@ -786,7 +790,7 @@ class PredPreyGrass(MultiAgentEnv):
                 if self.verbose_movement:
                     print(f"[MOVE] {agent} at {self.agent_positions[agent]} ran out of energy and is removed.")
                 observations[agent] = self._get_observation(agent)
-                rewards[agent] = 0
+                rewards[agent] = self._pending_rewards.pop(agent, 0)  # a share earned earlier this step is still credited
                 terminations[agent] = True
                 truncations[agent] = False
                 if "predator_male" in agent:
@@ -813,7 +817,7 @@ class PredPreyGrass(MultiAgentEnv):
                 predator_position = self.agent_positions[agent]
                 reward = 0.0
                 pending_reward = self._pending_rewards.pop(agent, 0.0)  # e.g. a share of a mammoth kill this step
-                ate_something = False
+                ate_something = pending_reward > 0.0  # a mammoth share counts as eating for reward_predator_step
 
                 caught_prey = next(
                     (
@@ -878,7 +882,7 @@ class PredPreyGrass(MultiAgentEnv):
                 predator_position = self.agent_positions[agent]
                 reward = 0.0
                 pending_reward = self._pending_rewards.pop(agent, 0.0)  # e.g. a share of a mammoth kill this step
-                ate_something = False
+                ate_something = pending_reward > 0.0  # a mammoth share counts as eating for reward_predator_step
 
                 caught_prey = next(
                     (
@@ -1188,6 +1192,7 @@ class PredPreyGrass(MultiAgentEnv):
             self.current_num_prey <= 0 or self.current_num_predator_male <= 0 or self.current_num_predator_female <= 0
         )
 
+        self._pending_rewards.clear()  # nothing earned this step is carried over
         self.agents.sort()
 
         self.current_step += 1
@@ -1598,7 +1603,7 @@ class PredPreyGrass(MultiAgentEnv):
     def _mammoths_act(self):
         """Respawn, wander and resolve hunts. A mammoth hunt is a BAND hunt: the predator standing on the mammoth's cell is the attacker;
         its party is that predator plus its band-mates within mammoth_party_radius (other bands do not count, share or die). One attempt per
-        mammoth per step; it is blocked if a strictly larger party of another band is present. Success probability and the per-member death
+        mammoth per step, resolved where the mammoth stands before it wanders; it is blocked if a strictly larger party of another band is present. Success probability and the per-member death
         probability on failure depend on the party size (1, 2, 3, 4+). On success the mammoth's energy is split equally among the party as
         meat (energy only, not the fruit store), each member is credited reward_predator_per_energy x its share, and the mammoth respawns
         after mammoth_respawn_steps at a random free cell. A member that dies has its energy set to -1 (removed in Step 3)."""
@@ -1612,47 +1617,50 @@ class PredPreyGrass(MultiAgentEnv):
                 if free:
                     self.mammoth_positions[mid] = free[int(self.rng.integers(len(free)))]
                     del self.mammoth_respawn_at[mid]
-        viable = self._viable_predators()
         for mid in sorted(self.mammoth_positions, key=lambda m: int(m.split("_")[1])):
+            viable = self._viable_predators()  # recomputed per mammoth: a member killed at an earlier mammoth is out
+            pos = self.mammoth_positions[mid]
+            attackers = [a for a in sorted(viable) if self.predator_positions[a] == pos]
+            killed = False
+            if attackers:  # a hunt is resolved where the mammoth stands NOW, before it can wander off
+                attacker = attackers[0]
+                party = self._mammoth_party(attacker, viable)
+                size_idx = min(len(party), 4) - 1
+                if self.num_bands > 0 and self._other_band_party_size(pos, self.agent_band.get(attacker), viable) > len(party):
+                    self.mammoth_blocked += 1
+                else:
+                    self.mammoth_attempts[size_idx] += 1
+                    if self.rng.random() < self.mammoth_success_by_party[size_idx]:
+                        share = self.mammoth_energy / len(party)
+                        for member in party:
+                            self.agent_energies[member] += share
+                            self.grid_world_state[1, *self.agent_positions[member]] = self.agent_energies[member]
+                            self._pending_rewards[member] = (
+                                self._pending_rewards.get(member, 0.0) + self.reward_predator_per_energy * share
+                            )
+                        self.mammoth_kills[size_idx] += 1
+                        self.mammoth_energy_distributed += self.mammoth_energy
+                        del self.mammoth_positions[mid]
+                        self.mammoth_respawn_at[mid] = self.current_step + self.mammoth_respawn_steps
+                        killed = True
+                    else:
+                        for member in party:
+                            if self.rng.random() < self.mammoth_death_by_party[size_idx]:
+                                self.agent_energies[member] = -1.0
+                                self.mammoth_party_deaths[size_idx] += 1
+            if killed:
+                continue
             # wander (never onto a predator or another mammoth)
             if self.rng.random() < self.mammoth_move_prob:
                 mx, my = self.mammoth_positions[mid]
                 occupied = set(self.predator_positions.values()) | {p for t, p in self.mammoth_positions.items() if t != mid}
                 cands = [
                     c
-                    for c in (
-                        (min(max(mx + dx, 0), n - 1), min(max(my + dy, 0), n - 1)) for dx, dy in moves
-                    )
+                    for c in ((min(max(mx + dx, 0), n - 1), min(max(my + dy, 0), n - 1)) for dx, dy in moves)
                     if c != (mx, my) and c not in occupied
                 ]
                 if cands:
                     self.mammoth_positions[mid] = cands[int(self.rng.integers(len(cands)))]
-            pos = self.mammoth_positions[mid]
-            attackers = [a for a in sorted(viable) if self.predator_positions[a] == pos]
-            if not attackers:
-                continue
-            attacker = attackers[0]
-            party = self._mammoth_party(attacker, viable)
-            size_idx = min(len(party), 4) - 1
-            if self.num_bands > 0 and self._other_band_party_size(pos, self.agent_band.get(attacker), viable) > len(party):
-                self.mammoth_blocked += 1
-                continue
-            self.mammoth_attempts[size_idx] += 1
-            if self.rng.random() < self.mammoth_success_by_party[size_idx]:
-                share = self.mammoth_energy / len(party)
-                for member in party:
-                    self.agent_energies[member] += share
-                    self.grid_world_state[1, *self.agent_positions[member]] = self.agent_energies[member]
-                    self._pending_rewards[member] = self._pending_rewards.get(member, 0.0) + self.reward_predator_per_energy * share
-                self.mammoth_kills[size_idx] += 1
-                self.mammoth_energy_distributed += self.mammoth_energy
-                del self.mammoth_positions[mid]
-                self.mammoth_respawn_at[mid] = self.current_step + self.mammoth_respawn_steps
-            else:
-                for member in party:
-                    if self.rng.random() < self.mammoth_death_by_party[size_idx]:
-                        self.agent_energies[member] = -1.0
-                        self.mammoth_party_deaths[size_idx] += 1
 
     # ---------------------------------------------------------------------------------------------- threats
     def _viable_predators(self):
