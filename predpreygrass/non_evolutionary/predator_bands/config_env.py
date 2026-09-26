@@ -263,6 +263,19 @@ config_env.update(
         # time, not by threat_kill_prob (pilots: 1 threat at 0.5 and 2 threats at 0.25 both killed ~14 of 18 predators).
         "threat_satiation_steps": 0,
         "threat_cooldown_steps": 0,
+        # Mammoths (default off, num_mammoths = 0): renewable group big game, see MAMMOTH_DESIGN.md. A mammoth hunt is a BAND hunt: the
+        # predator standing on the mammoth's cell is the attacker, its party is itself plus its band-mates within mammoth_party_radius
+        # (other bands neither count, share nor die; an attempt is blocked if a strictly larger party of another band is present). Success
+        # and the per-member death chance on failure depend on the party size (1, 2, 3, 4+). On success mammoth_energy is split equally
+        # among the party as meat, each member is credited reward_predator_per_energy x its share, and the mammoth respawns after
+        # mammoth_respawn_steps. Mammoths wander with probability mammoth_move_prob per step and never step onto a predator.
+        "num_mammoths": 0,
+        "mammoth_energy": 20.0,
+        "mammoth_move_prob": 0.3,
+        "mammoth_respawn_steps": 80,
+        "mammoth_party_radius": 1,
+        "mammoth_success_by_party": [0.02, 0.25, 0.6, 0.9],
+        "mammoth_death_by_party": [0.30, 0.15, 0.05, 0.02],
         "n_initial_active_prey": 40,
     }
 )
