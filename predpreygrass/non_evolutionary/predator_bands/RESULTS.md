@@ -68,6 +68,8 @@ late nearest same-band distance and within-range share. Control: 36% / 21% / 28%
 | Mammoths, solo useless and harmless (party of 1: 0), compass off | Viable; pairs ~3 attempts per episode, flat | Not better (founders 40%; 4.8 / 3.8; 0.69 / 0.82) |
 | Same with compass on (300 iterations) | Viable; **pair-sized hunts increase** (9 attempts, 3.6 kills per episode; mammoth energy 4.6 to 80) | Not better (38% / 21% / 28%; 4.6 / 4.0; 0.70 / 0.79) |
 | 4 mammoths of 40 energy, compass on | Viable; pair hunts keep growing (20 attempts, 6.4 kills; ~290 energy per episode, about as much as band sharing) | Not better (42% / 20% / 30%; 4.8 / 3.9; 0.69 / 0.81) |
+| **Membership rule** (not learned): fission above 8, fusion, drift-*out* after 50 steps (v1; had bugs found by a Codex review) | **Fragmented**: ~10 bands of mean size 1.3, extinction 74% | Worse (movers 59-74% out of range; late within-range 0.29 males) |
+| **Membership rule** (not learned): fission above 8, fusion, drift-*join* after 100 steps (v2, bugs fixed) | Viable (extinction 22-36%); ~5 bands of mean size ~3.6 with ~50 fissions per episode | Worse (founders 40%, born 33%, moved 30-51%; nearest band-mate 6.0 / 4.9; within-range 0.54 / 0.67) |
 
 ## 4. What can and cannot be concluded
 
@@ -83,8 +85,10 @@ late nearest same-band distance and within-range share. Control: 36% / 21% / 28%
   were adjusted after seeing results. Rollout measures mix action preference with the states the policy creates and with selection (predators that stray may die
   before they are measured). Sharing, marriage, kin exclusion, threats and mammoths are designed rules, so results describe what these payoffs produce, not
   that the behaviors would emerge without them. Deaths carry no direct penalty in the reward, so avoidance must be learned from survival alone.
-- **Untested:** memory or communication in the policy, several seeds, longer training (500+ iterations), requiring parties of three or more, and defining band
-  membership by proximity (see `BANDS_DESIGN.md`, section 9).
+- **Tried, no gain:** defining band membership by proximity with fission, fusion and drift rules (two versions; the second, after fixing bugs, was viable but
+  produced smaller, churning bands and worse cohesion measures). These are designed membership rules, not learned behaviour.
+- **Untested:** memory or communication in the policy, several seeds, longer training (500+ iterations), requiring parties of three or more, and other
+  proximity definitions (for example connected components of the within-range graph, which would remove scatter by construction).
 
 ## Sources of the numbers
 

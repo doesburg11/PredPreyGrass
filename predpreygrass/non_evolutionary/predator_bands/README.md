@@ -138,6 +138,21 @@ produce a learned pull toward band-mates. The mammoth hunts show that pairs can 
 compass is on, but that does not keep bands together. Untested: memory or communication in the policy, longer training, several seeds, requiring
 parties of three or more, and defining band membership by proximity (see `BANDS_DESIGN.md`, section 9).
 
+## Proximity-defined bands (2026-09-26, one seed, 150 iterations): membership rules did not reduce scatter
+
+Band membership that follows co-residence (options `band_fission`, `band_fusion`, `band_drift_steps`, `band_drift_join`; designed rules, not learned
+behaviour; 3 bands to start, sharing 0.6 / 0.3, meat cost share 0.10, fruit regrowth 0.05). **Version 1** (fission above 8, fusion, drift-out after 50 steps
+leaving for a one-member band) fragmented the population: ~10 bands of mean size 1.3 with ~40 drift-outs per episode, female extinction 74%, movers out of
+sharing range 59-74%, late within-range share 0.29 (males). A Codex review found bugs: drift counters that carried over when a member changed band (so
+members drifted out again at once), drift decisions that depended on iteration order, dead or doomed predators counted as members, a band split only once per
+check, and freshly split bands fusing in the same call. **Version 2** (bugs fixed; drift-*join* after 100 steps: join the nearest other band within 5 cells,
+else leave alone; fission above 8; fusion) is viable (episodes ~860-940 steps late, female extinction 22-36%, ~5 bands alive, mean band size ~3.6, ~42-54 fissions,
+~16-20 drift-outs and ~2 fusions per episode) but its cohesion is **worse** than the flat-band control: share of observations out of sharing range 40% / 33% / 30-51%
+(founders / born / moved) against 36% / 21% / 28%; late nearest same-band distance 6.0 (males) and 4.9 (females) against 4.5 and 4.0; within-range share 0.54 / 0.67
+against 0.72 / 0.81. Reading (not tested): splitting a band of nine into two spatial clusters does not make either cluster tight (they can span more than the
+5-cell sharing range), bands keep splitting as births refill them, and smaller bands leave fewer members within reach of a hunter's share. One seed, one
+checkpoint; the control is a shorter no-membership-rule run.
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
