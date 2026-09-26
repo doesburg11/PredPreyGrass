@@ -163,6 +163,7 @@ def parse_args():
     parser.add_argument("--band-max-size", type=int, default=None, help="Band size that triggers fission. Default: config (12).")
     parser.add_argument("--band-drift-steps", type=int, default=None, help="Steps out of range before a member leaves its band (0 = off).")
     parser.add_argument("--band-drift-join", type=int, choices=[0, 1], default=None, help="1: a member that drifts out joins the nearest other band in range. Default: config (0).")
+    parser.add_argument("--prey-energy-yield", type=float, default=None, help="Multiplier on the energy a predator gains from a catch. Default: config (1.0).")
     parser.add_argument("--threat-defense-by", type=str, choices=["band", "any"], default=None,
                         help="Whose company defends against a threat. Default: config (band).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
@@ -421,6 +422,8 @@ if __name__ == "__main__":
         env_config["band_drift_steps"] = args.band_drift_steps
     if args.band_drift_join is not None:
         env_config["band_drift_join"] = bool(args.band_drift_join)
+    if args.prey_energy_yield is not None:
+        env_config["prey_energy_yield"] = args.prey_energy_yield
     if args.threat_defense_by is not None:
         env_config["threat_defense_by"] = args.threat_defense_by
     if args.num_bands is not None:

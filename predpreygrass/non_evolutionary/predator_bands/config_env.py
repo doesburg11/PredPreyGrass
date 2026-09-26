@@ -121,6 +121,9 @@ config_env = {
     # which removes most of the learner's data (prey are ~80% of sampled agent steps). Default False = learned prey.
     "scripted_prey": True,
     "prey_flee_radius": 2,
+    # Richer prey: a catch gives prey_energy_yield x the prey's energy (1.0 = unchanged); prey ecology is untouched. Used to make prey a larger
+    # share of predator food without raising diet_meat_cost_share.
+    "prey_energy_yield": 1.0,
     "diet_required": True,
     "diet_meat_cost_share": 0.25,
     "diet_initial_fruit_share": 0.5,

@@ -161,6 +161,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.scripted_prey = bool(config.get("scripted_prey", False))
         self.prey_flee_radius = int(config.get("prey_flee_radius", 2))
         self._scripted_prey_ids: List[AgentID] = []
+        # Richer prey (default 1.0 = the old behaviour): a predator that catches prey gains prey_energy_yield x the prey's energy. It changes only what
+        # a catch is worth (energy, reward and shared meat), not the prey's own ecology, so prey can be made a larger share of predator food
+        # without raising the meat cost share of the diet.
+        self.prey_energy_yield = float(config.get("prey_energy_yield", 1.0))
+        if self.prey_energy_yield < 0:
+            raise ValueError(f"prey_energy_yield must be >= 0 (got {self.prey_energy_yield})")
         self.diet_required = bool(config.get("diet_required", True))
         self.diet_meat_cost_share = config.get("diet_meat_cost_share", 0.25)
         self.diet_initial_fruit_share = config.get("diet_initial_fruit_share", 0.5)
@@ -1348,7 +1354,7 @@ class PredPreyGrass(MultiAgentEnv):
             # Clamp at 0: a prey that starved this same step (energy <= 0 after Step 1) can still be
             # caught if the predator is processed before it in Step 3's loop; it must not take energy
             # from the predator nor pay a negative energy-proportional reward.
-            energy_gained = max(self.agent_energies[caught_prey], 0.0)
+            energy_gained = max(self.agent_energies[caught_prey], 0.0) * self.prey_energy_yield
             self.agent_energies[agent] += energy_gained
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
