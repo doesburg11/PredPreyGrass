@@ -154,6 +154,10 @@ def parse_args():
     parser.add_argument("--num-mammoths", type=int, default=None, help="Number of mammoths (0 = none). Default: config (0).")
     parser.add_argument("--mammoth-energy", type=float, default=None, help="Energy of a mammoth. Default: config (20).")
     parser.add_argument("--mammoth-respawn-steps", type=int, default=None, help="Steps until a killed mammoth respawns. Default: config (80).")
+    parser.add_argument("--mammoth-success-by-party", type=float, nargs=4, default=None,
+                        help="Success probability for party sizes 1 2 3 4+. Default: config (0.02 0.25 0.6 0.9).")
+    parser.add_argument("--mammoth-death-by-party", type=float, nargs=4, default=None,
+                        help="Per-member death probability on failure for party sizes 1 2 3 4+. Default: config (0.30 0.15 0.05 0.02).")
     parser.add_argument("--threat-defense-by", type=str, choices=["band", "any"], default=None,
                         help="Whose company defends against a threat. Default: config (band).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
@@ -398,6 +402,10 @@ if __name__ == "__main__":
         env_config["mammoth_energy"] = args.mammoth_energy
     if args.mammoth_respawn_steps is not None:
         env_config["mammoth_respawn_steps"] = args.mammoth_respawn_steps
+    if args.mammoth_success_by_party is not None:
+        env_config["mammoth_success_by_party"] = list(args.mammoth_success_by_party)
+    if args.mammoth_death_by_party is not None:
+        env_config["mammoth_death_by_party"] = list(args.mammoth_death_by_party)
     if args.threat_defense_by is not None:
         env_config["threat_defense_by"] = args.threat_defense_by
     if args.num_bands is not None:
