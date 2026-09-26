@@ -234,6 +234,9 @@ config_env.update(
         "band_spawn_radius": 3,
         "band_share_rate": 0.3,
         "band_share_range": 5,
+        # Distance decay of sharing (0 = off, flat equal split): each recipient's share is scaled by 1 - decay * d / (range + 1), and the
+        # donor pays only what is delivered. 1.0 = linear to nearly zero at the edge of the range.
+        "band_share_distance_decay": 0.0,
         "kin_exclusion": True,
         "marriage_rule": "female_joins_male",
         # Band compass (observation only, default off): 4 extra constant planes give the direction and distance to the nearest

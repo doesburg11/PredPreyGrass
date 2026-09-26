@@ -250,6 +250,12 @@ class PredPreyGrass(MultiAgentEnv):
             if not (0.0 <= getattr(self, _name) <= 1.0):
                 raise ValueError(f"{_name} must be in [0, 1] (got {getattr(self, _name)})")
         self.band_share_range = int(config.get("band_share_range", 5))
+        # Distance decay of band sharing (0 = off, the flat equal split). Each in-range recipient's equal share is scaled by
+        # 1 - band_share_distance_decay * d / (band_share_range + 1) (d = Chebyshev distance to the forager), and the donor pays
+        # only what is delivered, so being far from a forager costs energy without any hard cutoff being crossed.
+        self.band_share_distance_decay = config.get("band_share_distance_decay", 0.0)
+        if not (0.0 <= self.band_share_distance_decay <= 1.0):
+            raise ValueError(f"band_share_distance_decay must be in [0, 1] (got {self.band_share_distance_decay})")
         self.kin_exclusion = bool(config.get("kin_exclusion", True))
         self.band_compass = bool(config.get("band_compass", False))  # see the observation settings below
         # Threats (roaming non-learning animals that kill predators; group defense makes lone wandering dangerous). num_threats = 0
@@ -1667,16 +1673,22 @@ class PredPreyGrass(MultiAgentEnv):
         ]
         if not recipients:
             return
-        total = rate * gained
-        share = total / len(recipients)
+        share = rate * gained / len(recipients)
+        decay = self.band_share_distance_decay
+        amounts = {}
+        for other in recipients:
+            ox, oy = self.predator_positions[other]
+            d = max(abs(ox - x), abs(oy - y))
+            amounts[other] = share * (1.0 - decay * d / (self.band_share_range + 1.0))
+        total = sum(amounts.values())  # what is actually delivered (== rate * gained when decay is 0)
         self.agent_energies[agent] -= total
         if is_fruit:
             self.agent_fruit_store[agent] -= total
         self.grid_world_state[1, x, y] = self.agent_energies[agent]
-        for other in recipients:
-            self.agent_energies[other] += share
+        for other, amount in amounts.items():
+            self.agent_energies[other] += amount
             if is_fruit:
-                self.agent_fruit_store[other] += share
+                self.agent_fruit_store[other] += amount
             self.grid_world_state[1, *self.agent_positions[other]] = self.agent_energies[other]
         self.band_share_events += 1
         if is_fruit:

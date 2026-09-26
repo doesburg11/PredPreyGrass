@@ -469,3 +469,33 @@ def test_compass_points_diagonally_and_needs_enough_channels():
     assert np.allclose(obs[9], (r + 1) / 2) and np.allclose(obs[10], (r + 1) / 2)
     with pytest.raises(ValueError):
         _env(band_compass=True, num_obs_channels=10)
+
+
+# ---- distance decay of band sharing ----------------------------------------------------------------------------------------
+def test_distance_decay_scales_each_share_and_the_donor_pays_only_what_is_delivered():
+    env, forager, near, far, stranger = _sharing_setup(band_share_distance_decay=1.0)
+    _place(env, far, (10, 15))  # 5 cells away, inside the range of 5
+    _place(env, near, (10, 11))  # 1 cell away
+    others = [a for a in _members(env, 0) if a != forager]
+    inside = [a for a in others if max(abs(env.predator_positions[a][0] - 10), abs(env.predator_positions[a][1] - 10)) <= 5]
+    before = {a: env.agent_energies[a] for a in env.predator_positions}
+    env._apply_band_share(forager, 2.0, is_fruit=False)
+    gains = {a: env.agent_energies[a] - before[a] for a in inside}
+    share = 0.3 * 2.0 / len(inside)
+    assert gains[near] == pytest.approx(share * (1 - 1 / 6))
+    assert gains[far] == pytest.approx(share * (1 - 5 / 6))
+    assert gains[near] > gains[far] > 0
+    paid = before[forager] - env.agent_energies[forager]
+    assert paid == pytest.approx(sum(gains.values())) and paid < 0.6
+    assert env.band_share_meat_total == pytest.approx(paid)
+
+
+def test_distance_decay_zero_is_the_flat_split_and_bad_values_are_rejected():
+    env, forager, near, far, stranger = _sharing_setup()
+    before = env.agent_energies[forager]
+    env._apply_band_share(forager, 2.0, is_fruit=False)
+    assert before - env.agent_energies[forager] == pytest.approx(0.6)
+    with pytest.raises(ValueError):
+        _env(band_share_distance_decay=1.5)
+    with pytest.raises(ValueError):
+        _env(band_share_distance_decay=-0.1)

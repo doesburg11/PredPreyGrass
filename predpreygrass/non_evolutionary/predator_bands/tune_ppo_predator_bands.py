@@ -162,6 +162,8 @@ def parse_args():
                         help="Band sharing rate for meat only. Default: --band-share-rate / config.")
     parser.add_argument("--band-fruit-share-rate", type=float, default=None,
                         help="Band sharing rate for fruit only. Default: --band-share-rate / config.")
+    parser.add_argument("--band-share-distance-decay", type=float, default=None,
+                        help="0-1: scale each recipient's share by 1 - decay * d / (range + 1). Default: config (0).")
     parser.add_argument("--band-share-range", type=int, default=None, help="Chebyshev range of band sharing. Default: config (5).")
     parser.add_argument("--kin-exclusion", type=int, choices=[0, 1], default=None, help="1/0: block parent-child and sibling mating. Default: config (1).")
     parser.add_argument("--marriage-rule", type=str, choices=["female_joins_male", "male_joins_female"], default=None,
@@ -397,6 +399,8 @@ if __name__ == "__main__":
         env_config["band_meat_share_rate"] = args.band_meat_share_rate
     if args.band_fruit_share_rate is not None:
         env_config["band_fruit_share_rate"] = args.band_fruit_share_rate
+    if args.band_share_distance_decay is not None:
+        env_config["band_share_distance_decay"] = args.band_share_distance_decay
     if args.band_share_range is not None:
         env_config["band_share_range"] = args.band_share_range
     if args.kin_exclusion is not None:
