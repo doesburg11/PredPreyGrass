@@ -153,6 +153,18 @@ against 0.72 / 0.81. Reading (not tested): splitting a band of nine into two spa
 5-cell sharing range), bands keep splitting as births refill them, and smaller bands leave fewer members within reach of a hunter's share. One seed, one
 checkpoint; the control is a shorter no-membership-rule run.
 
+## Prey-dependent calibration (2026-09-27, one seed, 150 iterations each): no viable regime with more prey dependence yet
+
+Motivation: predator and prey numbers were roughly stable with no Lotka-Volterra pattern; predators appear fruit-limited (prey is about 15% of their foraging energy). Three runs lowered fruit income and raised the meat share of the cost (3 bands, sharing 0.6/0.3, no threats/mammoths):
+
+| run | fruit gain | meat cost share | female extinction (from the training log) | episode length (rollouts) | prey share of foraging energy |
+|---|---|---|---|---|---|
+| A | 0.03 | 0.30 | 100% | about 209 | 24% |
+| B | 0.03 | 0.50 | 97% | about 81 | 19.5% |
+| C | 0.05 | 0.40 | not read out | 73-156 (mean about 124) | 16.1% |
+
+None is viable, so `analyze_population_dynamics.py` (needs episodes of at least about 300 steps) could not be applied. Prey energy share rose only in the runs that collapsed. Untested here: a richer catch (`prey_energy_yield`, runs D/E, in progress) rather than a larger meat requirement.
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
