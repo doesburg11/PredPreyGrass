@@ -5,6 +5,8 @@ fruit/meat stores with a complementary-diet requirement, scripted prey) with **b
 unchanged. Non-evolutionary: PPO learning only. The design and its open questions are in
 [`../predator_complementary_diet/BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md).
 
+**Consolidated results: [`RESULTS.md`](RESULTS.md).**
+
 ![Trained predator_bands policies](results_figures/trained_policies.gif)
 
 *Trained policies, first 400 steps (every 5th step shown): 5 bands (symbol and ring colour = band, shape = sex), the viable meat-sharing run

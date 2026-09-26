@@ -258,6 +258,24 @@ class PredPreyGrass(MultiAgentEnv):
             raise ValueError(f"band_share_distance_decay must be in [0, 1] (got {self.band_share_distance_decay})")
         self.kin_exclusion = bool(config.get("kin_exclusion", True))
         self.band_compass = bool(config.get("band_compass", False))  # see the observation settings below
+        # Band fission / fusion / drift-out (all default off): membership follows co-residence. See config_env.py and BANDS_DESIGN.md s.9.
+        self.band_fission = bool(config.get("band_fission", False))
+        self.band_fusion = bool(config.get("band_fusion", False))
+        self.band_max_size = int(config.get("band_max_size", 12))
+        self.band_min_split_size = int(config.get("band_min_split_size", 3))
+        self.band_fuse_distance = int(config.get("band_fuse_distance", 3))
+        self.band_fuse_steps = int(config.get("band_fuse_steps", 30))
+        self.band_drift_steps = int(config.get("band_drift_steps", 0))
+        self.band_check_interval = int(config.get("band_check_interval", 10))
+        if self.band_fission or self.band_fusion or self.band_drift_steps > 0:
+            if self.num_bands == 0:
+                raise ValueError("band fission / fusion / drift-out need num_bands > 0")
+            if self.band_check_interval < 1 or self.band_max_size < 2 or self.band_min_split_size < 1:
+                raise ValueError("band_check_interval >= 1, band_max_size >= 2 and band_min_split_size >= 1 are required")
+            if self.band_fission and 2 * self.band_min_split_size > self.band_max_size + 1:
+                raise ValueError("band_min_split_size is too large for band_max_size (a split must leave two viable parts)")
+            if min(self.band_fuse_distance, self.band_fuse_steps, self.band_drift_steps) < 0:
+                raise ValueError("band_fuse_distance, band_fuse_steps and band_drift_steps must be >= 0")
         # Threats (roaming non-learning animals that kill predators; group defense makes lone wandering dangerous). num_threats = 0
         # turns the whole feature off. See config_env.py.
         self.num_threats = int(config.get("num_threats", 0))
@@ -654,6 +672,12 @@ class PredPreyGrass(MultiAgentEnv):
             self.fruit_energies[fruit] = self.initial_energy_fruit
             self.grid_world_state[4, *fruit_positions[i]] = self.initial_energy_fruit
 
+        self._next_band_id = self.num_bands
+        self._band_contact: Dict[Tuple[int, int], int] = {}
+        self._band_out_steps: Dict[str, int] = {}
+        self.band_fissions = 0
+        self.band_fusions = 0
+        self.band_drift_outs = 0
         self.threat_positions = {}
         self.threat_rest_until = {}
         self.mammoth_positions = {}
@@ -1173,6 +1197,10 @@ class PredPreyGrass(MultiAgentEnv):
             if self.verbose_spawning:
                 print(f"New {child_sex} {new_agent} spawned at {new_position} (parents: {male}, {mate})")
 
+        # Step 5c: band fission / fusion / drift-out (membership follows co-residence), every band_check_interval steps
+        if (self.band_fission or self.band_fusion or self.band_drift_steps > 0) and (self.current_step + 1) % self.band_check_interval == 0:
+            self._update_bands()
+
         # Step 6: generate observations for all agents AFTER all engagements/spawning
         for agent in self.agents:
             if agent in self.agent_positions:
@@ -1260,6 +1288,12 @@ class PredPreyGrass(MultiAgentEnv):
             "threat_kills_female": float(self.threat_kills["predator_female"]),
             "threat_kills_alone": float(self.threat_kills_alone),
             "threat_repelled": float(self.threat_repelled),
+            "band_fissions": float(self.band_fissions),
+            "band_fusions": float(self.band_fusions),
+            "band_drift_outs": float(self.band_drift_outs),
+            "mean_band_size": float(
+                np.mean([len(m) for m in self._bands_now().values()]) if self.agent_band and self.predator_positions else 0.0
+            ),
             "bands_alive": float(len({self.agent_band[a] for a in self.predator_positions if a in self.agent_band})),
             "female_gift_events": float(self.female_gift_events),
             "female_gift_energy_total": float(self.female_gift_energy_total),
@@ -1570,6 +1604,120 @@ class PredPreyGrass(MultiAgentEnv):
                 band[a] = b
                 occupied.add(cell)
         return {"positions": positions, "band": band, "mates": mates, "parents": parents}
+
+    # ---------------------------------------------------------------------------------------------- band dynamics
+    def _bands_now(self):
+        """band id -> sorted list of living predators in it."""
+        bands: Dict[int, List[str]] = {}
+        for a in sorted(self.predator_positions):
+            b = self.agent_band.get(a)
+            if b is not None:
+                bands.setdefault(b, []).append(a)
+        return bands
+
+    def _dependents_of(self, member):
+        """Living, unreproduced children of `member`."""
+        return [
+            c for c, parents in self.agent_parents.items()
+            if member in parents and c not in self.has_reproduced and c in self.predator_positions
+        ]
+
+    def _two_means(self, members):
+        """Split members into two spatial clusters (2-means on positions, seeded with the two members farthest apart; ties by id)."""
+        pts = {a: np.array(self.predator_positions[a], dtype=float) for a in members}
+        best = None
+        for i, a in enumerate(members):
+            for b in members[i + 1 :]:
+                d = float(np.abs(pts[a] - pts[b]).max())
+                if best is None or d > best[0]:
+                    best = (d, a, b)
+        _, a0, b0 = best
+        centers = [pts[a0].copy(), pts[b0].copy()]
+        labels = {}
+        for _ in range(8):
+            labels = {a: int(np.linalg.norm(pts[a] - centers[1]) < np.linalg.norm(pts[a] - centers[0])) for a in members}
+            for k in (0, 1):
+                grp = [pts[a] for a in members if labels[a] == k]
+                if grp:
+                    centers[k] = np.mean(grp, axis=0)
+        return labels
+
+    def _update_bands(self):
+        """Drift-out, then fission by size, then fusion by contact (each optional, all deterministic given positions; ids are never reused).
+        Drift-out: a member with no same-band member within band_share_range for band_drift_steps consecutive steps becomes a one-member
+        band (its dependent children go with it). Fission: a band larger than band_max_size splits into two spatial clusters (each at least
+        band_min_split_size); the cluster with the larger total energy keeps the id, the other gets a new id; dependent children follow their
+        living mother's cluster, else their father's. Fusion: two bands whose centroids stay within band_fuse_distance for band_fuse_steps
+        consecutive checks fuse when the union is at most 0.75 x band_max_size (hysteresis against an immediate re-split); the lower id survives."""
+        interval = self.band_check_interval
+        # -- drift-out
+        if self.band_drift_steps > 0:
+            for band, members in self._bands_now().items():
+                for a in members:
+                    ax, ay = self.predator_positions[a]
+                    near = any(
+                        max(abs(self.predator_positions[o][0] - ax), abs(self.predator_positions[o][1] - ay)) <= self.band_share_range
+                        for o in members if o != a
+                    )
+                    if near:
+                        self._band_out_steps.pop(a, None)
+                        continue
+                    self._band_out_steps[a] = self._band_out_steps.get(a, 0) + interval
+                    if self._band_out_steps[a] >= self.band_drift_steps and len(members) > 1:
+                        new_id = self._next_band_id
+                        self._next_band_id += 1
+                        self.agent_band[a] = new_id
+                        for c in self._dependents_of(a):
+                            self.agent_band[c] = new_id
+                        self._band_out_steps.pop(a, None)
+                        self.band_drift_outs += 1
+        for a in [a for a in self._band_out_steps if a not in self.predator_positions]:
+            self._band_out_steps.pop(a)
+        # -- fission
+        if self.band_fission:
+            for band, members in list(self._bands_now().items()):
+                if len(members) <= self.band_max_size:
+                    continue
+                labels = self._two_means(members)
+                parts = {0: [a for a in members if labels[a] == 0], 1: [a for a in members if labels[a] == 1]}
+                if min(len(parts[0]), len(parts[1])) < self.band_min_split_size:
+                    continue
+                keep = max((0, 1), key=lambda k: (sum(self.agent_energies[a] for a in parts[k]), -k))
+                leave = 1 - keep
+                new_id = self._next_band_id
+                self._next_band_id += 1
+                moving = set(parts[leave])
+                for a in members:  # dependent children follow their living mother's part, else their father's
+                    if a in self.agent_parents and a not in self.has_reproduced:
+                        father, mother = self.agent_parents[a]
+                        for parent in (mother, father):
+                            if parent in labels:
+                                (moving.add if labels[parent] == leave else moving.discard)(a)
+                                break
+                for a in moving:
+                    self.agent_band[a] = new_id
+                self.band_fissions += 1
+        # -- fusion
+        if self.band_fusion:
+            bands = self._bands_now()
+            cents = {b: np.mean([self.predator_positions[a] for a in m], axis=0) for b, m in bands.items()}
+            ids = sorted(bands)
+            close = set()
+            for i, b1 in enumerate(ids):
+                for b2 in ids[i + 1 :]:
+                    if float(np.abs(cents[b1] - cents[b2]).max()) <= self.band_fuse_distance:
+                        close.add((b1, b2))
+            self._band_contact = {p: self._band_contact.get(p, 0) + interval for p in close}
+            for (b1, b2), steps in sorted(self._band_contact.items()):
+                if steps < self.band_fuse_steps or b1 not in bands or b2 not in bands:
+                    continue
+                if len(bands[b1]) + len(bands[b2]) > 0.75 * self.band_max_size:
+                    continue
+                for a in bands[b2]:
+                    self.agent_band[a] = b1
+                bands[b1] = bands[b1] + bands.pop(b2)
+                self.band_fusions += 1
+            self._band_contact = {p: n for p, n in self._band_contact.items() if p[0] in bands and p[1] in bands}
 
     # ---------------------------------------------------------------------------------------------- mammoths
     def _mammoth_party(self, attacker, viable):
@@ -2054,6 +2202,10 @@ class PredPreyGrass(MultiAgentEnv):
             "threat_counters": (
                 self.threat_encounters, dict(self.threat_kills), self.threat_kills_alone, self.threat_repelled,
             ),
+            "band_dynamics": (
+                self._next_band_id, dict(self._band_contact), dict(self._band_out_steps),
+                self.band_fissions, self.band_fusions, self.band_drift_outs,
+            ),
             "band_counters": (
                 self.band_share_events, self.band_share_meat_total, self.band_share_fruit_total,
                 self.marriages, self.within_band_pairings, self.kin_blocked_checks,
@@ -2090,6 +2242,10 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_fruit_store = snapshot["agent_fruit_store"].copy()
         self._scripted_prey_ids = snapshot["scripted_prey_ids"].copy()
         self.agent_band = snapshot["agent_band"].copy()
+        (
+            self._next_band_id, contact, out_steps, self.band_fissions, self.band_fusions, self.band_drift_outs,
+        ) = snapshot["band_dynamics"]
+        self._band_contact, self._band_out_steps = dict(contact), dict(out_steps)
         self.rng.bit_generator.state = snapshot["rng_state"]
         self.threat_positions = dict(snapshot["threat_positions"])
         self.threat_rest_until = dict(snapshot["threat_rest_until"])

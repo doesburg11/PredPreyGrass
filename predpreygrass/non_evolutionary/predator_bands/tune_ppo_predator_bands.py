@@ -158,6 +158,10 @@ def parse_args():
                         help="Success probability for party sizes 1 2 3 4+. Default: config (0.02 0.25 0.6 0.9).")
     parser.add_argument("--mammoth-death-by-party", type=float, nargs=4, default=None,
                         help="Per-member death probability on failure for party sizes 1 2 3 4+. Default: config (0.30 0.15 0.05 0.02).")
+    parser.add_argument("--band-fission", type=int, choices=[0, 1], default=None, help="1: bands above --band-max-size split. Default: config (0).")
+    parser.add_argument("--band-fusion", type=int, choices=[0, 1], default=None, help="1: nearby small bands fuse. Default: config (0).")
+    parser.add_argument("--band-max-size", type=int, default=None, help="Band size that triggers fission. Default: config (12).")
+    parser.add_argument("--band-drift-steps", type=int, default=None, help="Steps out of range before a member leaves its band (0 = off).")
     parser.add_argument("--threat-defense-by", type=str, choices=["band", "any"], default=None,
                         help="Whose company defends against a threat. Default: config (band).")
     parser.add_argument("--num-bands", type=int, default=None, help="Number of bands (0 = no bands). Default: config (5).")
@@ -406,6 +410,14 @@ if __name__ == "__main__":
         env_config["mammoth_success_by_party"] = list(args.mammoth_success_by_party)
     if args.mammoth_death_by_party is not None:
         env_config["mammoth_death_by_party"] = list(args.mammoth_death_by_party)
+    if args.band_fission is not None:
+        env_config["band_fission"] = bool(args.band_fission)
+    if args.band_fusion is not None:
+        env_config["band_fusion"] = bool(args.band_fusion)
+    if args.band_max_size is not None:
+        env_config["band_max_size"] = args.band_max_size
+    if args.band_drift_steps is not None:
+        env_config["band_drift_steps"] = args.band_drift_steps
     if args.threat_defense_by is not None:
         env_config["threat_defense_by"] = args.threat_defense_by
     if args.num_bands is not None:

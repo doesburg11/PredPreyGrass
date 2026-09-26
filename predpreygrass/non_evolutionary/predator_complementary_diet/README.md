@@ -15,8 +15,13 @@ The diet requirement has been built and tested (81 tests) but two pilot runs did
 
 The male side is fine (89% hunting success, 4-6 alive at the end). Moving the meat share only moves the failure from
 one store to the other. Both pilots are short (the base module needed ~300 iterations for its sex split to settle), so
-they are calibration evidence, not a verdict. A three-value sweep (0.10 / 0.15 / 0.20, 150 iterations, scripted prey)
-is the next step. Run names: `PPO_PREDATOR_COMPLEMENTARY_DIET_*` under `~/simulation_results/ray_results/`.
+they are calibration evidence, not a verdict.
+
+**Scripted-prey sweep (2026-09-25, seed 42, 150 iterations each; `PPO_PREDATOR_COMPLEMENTARY_DIET_SCRIPTED_MEAT{010,015,020}_SEED42`):** female
+extinction in the last blocks was 93% (meat share 0.10), 99% (0.15) and 94% (0.20), with episodes of ~430 / ~196 / ~116 steps and ~10-13 female
+meat-deficiency deaths per episode; the mate gift fired less than once per episode (a recorded mate exists only after a first birth). No meat share
+gave a viable population in this pair-only design, which is why the band-sharing module `predator_bands` was built.
+Run names: `PPO_PREDATOR_COMPLEMENTARY_DIET_*` under `~/simulation_results/ray_results/`.
 
 ## What is new
 

@@ -243,6 +243,20 @@ config_env.update(
         # same-band predator even outside the 7x7 window, so a predator that has drifted away can find its band again. Needs
         # num_obs_channels 12 (set automatically). No reward and no scripted movement.
         "band_compass": False,
+        # Band fission / fusion / drift-out (default off; membership follows co-residence; see BANDS_DESIGN.md section 9). Checked every
+        # band_check_interval steps. band_fission: a band above band_max_size splits into two spatial clusters (each >= band_min_split_size;
+        # the cluster with more total energy keeps the id, the other gets a new id that is never reused; dependent children follow their
+        # mother). band_fusion: two bands whose centroids stay within band_fuse_distance for band_fuse_steps fuse if the union is <=
+        # 0.75 x band_max_size. band_drift_steps > 0: a member with no band-mate within band_share_range for that many steps leaves and
+        # becomes a one-member band. All are designed membership rules, not learned behaviour.
+        "band_fission": False,
+        "band_fusion": False,
+        "band_max_size": 12,
+        "band_min_split_size": 3,
+        "band_fuse_distance": 3,
+        "band_fuse_steps": 30,
+        "band_drift_steps": 0,
+        "band_check_interval": 10,
         # Threats (default off, num_threats = 0): roaming non-learning animals that make wandering alone dangerous. Each step a
         # threat attacks an adjacent predator, else chases the nearest predator within threat_sense_radius, else wanders. An
         # attack on a target with n defenders (its living band-mates within threat_defense_radius; threat_defense_by "any"
