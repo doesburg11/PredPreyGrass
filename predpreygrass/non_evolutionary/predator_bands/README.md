@@ -100,6 +100,26 @@ more are essentially absent. Mammoth kills are ~0.3 per episode (~6 energy distr
 at this training scale, and the solo attempts are a net cost. Untested next steps: a smoother success curve (0.1 at party size 1), lower
 solo death chance, the band compass, more or richer mammoths, longer training.
 
+## No-solo mammoth test (2026-09-26, one seed, 300 iterations each): pair hunts are learned with the compass, cohesion does not change
+
+Solo attempts made harmless and useless (party of 1: success 0, death 0; pairs 0.3 / 0.1, triples 0.6 / 0.05, 4+ 0.9 / 0.02), 2 mammoths,
+3 bands, no threats, sharing 0.6 / 0.3, meat cost share 0.10, fruit regrowth 0.05.
+
+| Per episode | Compass off (iterations 175-217) | Compass on (iterations 200-211) | First pilot (2% solo odds) |
+|---|---|---|---|
+| Attempts by a pair / by a triple | 3.1 / 0.2 | 8.9 / 0.8 | 0.8 / 0 |
+| Kills by a pair / by a triple | 0.9 / 0.2 | 3.6 / 0.5 | 0.2 / 0 |
+| Mammoth energy distributed | 18-27 | 80 | 6 |
+
+With the compass, pair attempts and kills grow through training (energy from mammoths 4.6 to 80 per episode, still rising); without it they
+stay flat from iteration 50 on. Populations are viable in both (episodes ~850-900 steps, female extinction 20-40%). But cohesion is unchanged
+against the no-mammoth control (checkpoint 29 against a 150-iteration run at checkpoint 14, so not perfectly matched): share of observations
+out of sharing range 38% / 21% / 28% (founders / born / moved over 100 steps) with the compass against 36% / 21% / 28% in the control; late nearest
+same-band distance 4.6 (males) and 4.0 (females) against 4.5 and 4.0; the approach bias toward band-mates is still negative (-0.09 to -0.10).
+Reading (not tested): a pair hunt needs only one band-mate next to the attacker, and mammoth meat (~80 energy per episode) is small next to
+band sharing (~250 meat), so it is a payoff too small and too occasional to change where predators stand. Also 211 of 300 iterations were
+logged for the compass-on run's training curves.
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
