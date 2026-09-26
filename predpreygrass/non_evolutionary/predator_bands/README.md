@@ -120,6 +120,22 @@ Reading (not tested): a pair hunt needs only one band-mate next to the attacker,
 band sharing (~250 meat), so it is a payoff too small and too occasional to change where predators stand. Also 211 of 300 iterations were
 logged for the compass-on run's training curves.
 
+## Bigger-mammoth test (2026-09-26, one seed, 300 iterations): mammoth meat as large as band sharing, cohesion still unchanged
+
+4 mammoths of energy 40 (the no-solo curve, band compass on, otherwise as above). Pair hunts keep growing through training (last block: ~20 pair
+attempts and ~6.4 pair kills per episode, ~1.3 triple attempts and ~0.6 triple kills, still rising), and mammoth meat is now a major energy source:
+~290 energy per episode distributed, about as much as band sharing moves (~260-300 meat per episode). Populations are viable (episodes ~865-925
+steps, female extinction 21-50% in the last blocks, ~2.6 of 3 bands alive). Cohesion at checkpoint 29 (20 episodes) is not better than the
+no-mammoth control: share of observations out of sharing range 42% / 20% / 30% (founders / born / moved over 100 steps) against 36% / 21% / 28%;
+late nearest same-band distance 4.8 (males) and 3.9 (females) against 4.5 and 4.0; within-range share 0.69 / 0.81 against 0.72 / 0.81; approach bias
+toward band-mates still negative (-0.11 males, -0.08 females). One seed and one checkpoint; the control is a shorter no-mammoth run.
+
+**Summary of the cohesion attempts so far (all one seed, 150-300 iterations):** band compass, roaming threats with group defense (tested at several
+strengths), wider defense, distance-scaled and shorter-range sharing, and mammoth hunts (normal, no-solo, no-solo with compass, and bigger) did not
+produce a learned pull toward band-mates. The mammoth hunts show that pairs can learn a coordinated hunt when solo attempts are useless and the
+compass is on, but that does not keep bands together. Untested: memory or communication in the policy, longer training, several seeds, requiring
+parties of three or more, and defining band membership by proximity (see `BANDS_DESIGN.md`, section 9).
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
