@@ -176,6 +176,21 @@ Both are sustained in rollouts and prey is now the main food source. In training
 
 What this does and does not show: predator and prey counts are negatively correlated (best lag), which is the expected sign when predators eat the prey, so predator-prey coupling is present. There is no clean Lotka-Volterra cycle: the dominant period varies from 134 to 470 steps between episodes and explains 21-57% of the variance in episodes of about 1000 steps, i.e. only 2-5 cycles, and predator and prey counts stay near 16 and 42 with coefficients of variation of 0.12-0.26 and 0.07-0.14. One seed and one checkpoint; the regime differs from the earlier runs (less fruit, richer prey), so it is not a like-for-like comparison, and whether cohesion or hunting behaviour changed was not analysed here.
 
+## Threats on the richer-prey regime, and a free-rider problem in the defense rule (2026-09-27, one seed each, 150 iterations)
+
+Two more runs added 6 roaming threats to run E's setup (prey yield 5, fruit 0.03, meat cost share 0.15), with `threat_kill_prob=0.3`, satiation 100, cooldown 10, and a wider `threat_defense_radius=5`, differing only in `threat_defenders_to_repel`:
+
+| run | defenders to repel | episode lengths (steps) | prey share of foraging energy | encounters/iter (end of training) | repelled/iter | killed/iter | killed-alone share |
+|---|---|---|---|---|---|---|---|
+| THREATS6 | 2 | 568-1001 (4 of 6 at cap) | 57.1% | 158.2 | 64.6 (41%) | 23.6 (15%) | 69% |
+| THREATS6_REPEL5 | 5 | 225-1001 (mixed) | 58.8% | 102.5 | 5.7 (6%) | 20.4 (20%) | 47% |
+
+Both stay viable and keep prey as the majority food source; population dynamics still show no clean cycle (negative best-lag correlation in most episodes, dominant period 134-470 steps across both runs). Raising the repel bar to 5 (needing most of a 3-band, ~16-predator population's band together at once) cut repels from 41% to 6% of encounters, as expected, but did not produce visibly tighter clustering in the rendered rollout.
+
+**A free-rider problem in the design, not (only) a credit-assignment one.** `threat_defense_radius` (2-5 across these runs) is larger than `threat_attack_range` (a threat only ever attacks a predator within distance 1 of itself). A predator counts as a defender for anyone within `threat_defense_radius` of it, so a band-mate can sit at distance 2-5 from an attacked target -- safely outside the threat's reach -- and get full credit toward repelling it, at zero personal risk. There is no reward for defending (`config_env.py`'s threat comment: "No reward terms; ... only the outcome depends on company"), so the individually optimal policy is to stay just inside the defense radius but outside the attack radius: full benefit, no exposure. This is a public-goods/volunteer's-dilemma structure, not a two-player prisoner's dilemma, but the same free-rider logic applies, and it does not obviously improve with more threats or a higher repel bar -- both just make the safe defender ring more valuable without making it any riskier to stand in.
+
+Added `threat_attack_all_adjacent` (default off) as a first step: when on, a threat attacks every predator within distance 1 of itself at once, not just the nearest, so predators who *are* mutually adjacent to the threat share real risk and can defend each other in the same step. This narrows the free-rider gap only for the already-adjacent; it does not close it for the radius-2-to-5 "safe ring" band-mates. Untried: shrinking `threat_defense_radius` down near the attack range (removes the safe ring entirely, at the cost of making group defense much harder to trigger), or a direct reward for a successful defense (moves the module away from its "no reward terms, outcome depends only on company" design).
+
 ## What is new (on top of the diet module)
 
 - **Initial bands:** `num_bands` (**3 by default since 2026-09-25; all calibration and behaviour results above used 5**) bands of a founding couple (recorded mates), `band_children_per_couple` (2) dependent
