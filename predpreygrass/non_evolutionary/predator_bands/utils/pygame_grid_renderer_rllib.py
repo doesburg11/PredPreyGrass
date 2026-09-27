@@ -128,11 +128,13 @@ class PyGameRenderer:
         agent_bands=None,
         agent_fruit_stores=None,
         threat_positions=None,
+        agent_reputations=None,
     ):
         self.threat_positions = threat_positions or {}
         self.food_scores = food_scores
         self.agent_bands = agent_bands or {}
         self.agent_fruit_stores = agent_fruit_stores or {}
+        self.agent_reputations = agent_reputations or {}
         if agents_just_ate is None:
             agents_just_ate = set()
         if fruit_positions is None:
@@ -229,6 +231,13 @@ class PyGameRenderer:
                     self.screen.blit(icon, icon.get_rect(center=(x_pix, y_pix)))
                 else:
                     self._blit_icon_centered(sex, max(2 * radius, 4), x_pix, y_pix)
+                reputation = getattr(self, "agent_reputations", {}).get(agent_id)
+                if reputation is not None and reputation < 0.999:
+                    # Amber ring outside the band ring, thicker the lower the reputation (band_reputation): a glanceable
+                    # free-rider cue. Invisible (reputation == 1.0, the default/unseen value) whenever band_reputation
+                    # is off, since the caller then passes no reputations at all.
+                    thickness = max(1, min(5, int(round((1.0 - reputation) * 5)) + 1))
+                    pygame.draw.circle(self.screen, (230, 140, 0), (x_pix, y_pix), self.cell_size // 2 + 2, thickness)
             elif "prey" in agent_id:
                 self._blit_icon_centered("prey", max(2 * radius, 4), x_pix, y_pix)
             else:
@@ -254,6 +263,12 @@ class PyGameRenderer:
         if getattr(self, "agent_bands", None):
             note = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8)).render(
                 "Ring + symbol colour = band", True, (0, 0, 0)
+            )
+            self.screen.blit(note, (x + 30, y - 4))
+            y += note.get_height() + 2
+        if getattr(self, "agent_reputations", None):
+            note = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8)).render(
+                "Amber outer ring = low reputation (thicker = lower)", True, (0, 0, 0)
             )
             self.screen.blit(note, (x + 30, y - 4))
             y += note.get_height() + 2
@@ -535,6 +550,9 @@ class PyGameRenderer:
                 band = getattr(self, "agent_bands", {}).get(hovered_entity)
                 if band is not None:
                     extra_lines.append(f"Band: {band}")
+                reputations = getattr(self, "agent_reputations", {})
+                if hovered_entity in reputations:
+                    extra_lines.append(f"Reputation: {reputations[hovered_entity]:.2f}")
             extra_surfaces = [self.tooltip_font.render(line, True, (0, 0, 0)) for line in extra_lines]
             padding = self.gui_style.tooltip_padding
             width = max([tooltip_line1.get_width(), tooltip_line2.get_width()] + [s.get_width() for s in extra_surfaces])

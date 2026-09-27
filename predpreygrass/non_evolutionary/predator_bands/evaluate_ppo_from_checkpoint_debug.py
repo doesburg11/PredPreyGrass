@@ -205,6 +205,9 @@ if __name__ == "__main__":
             agent_bands=env.agent_band,
             agent_fruit_stores=env.agent_fruit_store,
             threat_positions=env.threat_positions,
+            agent_reputations=(
+                {a: env._reputation_weight(a) for a in env.predator_positions} if env.band_reputation else None
+            ),
         )
 
     while not loop_helper.simulation_terminated:
