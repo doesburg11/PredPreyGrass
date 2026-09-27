@@ -153,11 +153,9 @@ def parse_args():
     parser.add_argument("--threat-defenders-to-repel", type=int, default=None, help="Defenders needed to drive a threat off. Default: config (3).")
     parser.add_argument("--threat-attack-all-adjacent", type=int, choices=[0, 1], default=None,
                         help="1: a threat attacks every predator within distance 1 of it at once, not just the nearest. Default: config (0).")
-    parser.add_argument("--band-ostracism", type=int, choices=[0, 1], default=None,
-                        help="1: a predator that repeatedly free-rides on being a defender (never genuinely exposed) is ostracized. Default: config (0).")
-    parser.add_argument("--ostracism-min-opportunities", type=int, default=None, help="Opportunities before judging a predator. Default: config (5).")
-    parser.add_argument("--ostracism-exposure-threshold", type=float, default=None, help="Exposure ratio below which a predator is ostracized. Default: config (0.34).")
-    parser.add_argument("--ostracism-duration", type=int, default=None, help="Steps a predator stays ostracized. Default: config (200).")
+    parser.add_argument("--band-reputation", type=int, choices=[0, 1], default=None,
+                        help="1: a predator's reputation (in [0,1]) scales down its defense/sharing benefit the more it free-rides (never genuinely exposed). Default: config (0).")
+    parser.add_argument("--reputation-ema-alpha", type=float, default=None, help="EMA step size moving reputation toward 1 (exposed) or 0 (free-riding). Default: config (0.05).")
     parser.add_argument("--num-mammoths", type=int, default=None, help="Number of mammoths (0 = none). Default: config (0).")
     parser.add_argument("--mammoth-energy", type=float, default=None, help="Energy of a mammoth. Default: config (20).")
     parser.add_argument("--mammoth-respawn-steps", type=int, default=None, help="Steps until a killed mammoth respawns. Default: config (80).")
@@ -411,14 +409,10 @@ if __name__ == "__main__":
         env_config["threat_defenders_to_repel"] = args.threat_defenders_to_repel
     if args.threat_attack_all_adjacent is not None:
         env_config["threat_attack_all_adjacent"] = bool(args.threat_attack_all_adjacent)
-    if args.band_ostracism is not None:
-        env_config["band_ostracism"] = bool(args.band_ostracism)
-    if args.ostracism_min_opportunities is not None:
-        env_config["ostracism_min_opportunities"] = args.ostracism_min_opportunities
-    if args.ostracism_exposure_threshold is not None:
-        env_config["ostracism_exposure_threshold"] = args.ostracism_exposure_threshold
-    if args.ostracism_duration is not None:
-        env_config["ostracism_duration"] = args.ostracism_duration
+    if args.band_reputation is not None:
+        env_config["band_reputation"] = bool(args.band_reputation)
+    if args.reputation_ema_alpha is not None:
+        env_config["reputation_ema_alpha"] = args.reputation_ema_alpha
     if args.num_mammoths is not None:
         env_config["num_mammoths"] = args.num_mammoths
     if args.mammoth_energy is not None:

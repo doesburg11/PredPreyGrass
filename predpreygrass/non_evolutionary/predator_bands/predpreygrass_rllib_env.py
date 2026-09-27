@@ -306,30 +306,26 @@ class PredPreyGrass(MultiAgentEnv):
         if min(self.threat_satiation_steps, self.threat_cooldown_steps) < 0:
             raise ValueError("threat_satiation_steps and threat_cooldown_steps must be >= 0")
         self.threat_rest_until: Dict[str, int] = {}
-        # Free-rider punishment (band_ostracism, default off). threat_defense_radius (checked by _defender_ids) is wider than
-        # the distance-1 range a threat actually attacks at, so a predator can sit just inside the defense radius but outside
-        # the attack range and get full credit as a "defender" at zero personal risk (see RESULTS.md's free-rider discussion).
-        # This tracks, per predator, how many times it was counted as a defender in a genuine attack (an "opportunity") versus
-        # how many of those times it was itself within distance 1 of the threat ("exposure"). Once a predator has at least
-        # ostracism_min_opportunities recorded and its exposure ratio is below ostracism_exposure_threshold, it is ostracized
-        # for ostracism_duration steps: excluded from counting as anyone's defender (_defender_ids) and from receiving band
-        # shares (_apply_band_share); its counts then reset so judgment restarts fresh once the ostracism ends. Modeled loosely
-        # on the reputation-based sanctioning (ridicule, exclusion) anthropologists (Boehm) describe enforcing real
-        # hunter-gatherer sharing norms; mechanically executed like every other designed payoff here, not a learned
-        # "ostracize" action, for the same credit-assignment reasons as the male/female gifts.
-        self.band_ostracism = bool(config.get("band_ostracism", False))
-        self.ostracism_min_opportunities = int(config.get("ostracism_min_opportunities", 5))
-        self.ostracism_exposure_threshold = float(config.get("ostracism_exposure_threshold", 0.34))
-        self.ostracism_duration = int(config.get("ostracism_duration", 200))
-        if self.ostracism_min_opportunities < 1:
-            raise ValueError("ostracism_min_opportunities must be >= 1")
-        if not (0.0 <= self.ostracism_exposure_threshold <= 1.0):
-            raise ValueError(f"ostracism_exposure_threshold must be in [0, 1] (got {self.ostracism_exposure_threshold})")
-        if self.ostracism_duration < 0:
-            raise ValueError("ostracism_duration must be >= 0")
-        self.defense_opportunities: Dict[str, int] = {}
-        self.defense_exposures: Dict[str, int] = {}
-        self.ostracized_until: Dict[str, int] = {}
+        # Free-rider punishment via reputation (band_reputation, default off; supersedes an earlier binary "ostracism"
+        # design from the same session, never used in a run). threat_defense_radius (checked by _defender_ids) is wider
+        # than the distance-1 range a threat actually attacks at, so a predator can sit just inside the defense radius but
+        # outside the attack range and get full credit as a "defender" at zero personal risk (see RESULTS.md's free-rider
+        # discussion). This gives every predator a continuous reputation score in [0, 1] (starts at 1.0: benefit of the
+        # doubt), updated by an exponential moving average each time it is counted as a defender in a genuine attack:
+        # reputation_ema_alpha toward 1.0 if it was itself within distance 1 of the threat at that moment (genuinely
+        # exposed), toward 0.0 if not (free-riding on the wider defense radius). The score then scales, rather than
+        # switches, two things: how much a defender's presence counts toward repelling a threat or lowering the kill
+        # probability (_threats_act), and how much of a band-mate's shared forage it actually receives (_apply_band_share)
+        # -- a habitual free-rider gradually becomes less useful to defend with and less worth sharing with, and recovers
+        # gradually with genuine exposure, rather than a hard cutoff. Modeled loosely on image-scoring indirect
+        # reciprocity (Nowak & Sigmund) and the reputation-based sanctioning anthropologists (Boehm) describe enforcing
+        # real hunter-gatherer sharing norms; mechanically executed like every other designed payoff here, not a learned
+        # action, for the same credit-assignment reasons as the male/female gifts.
+        self.band_reputation = bool(config.get("band_reputation", False))
+        self.reputation_ema_alpha = float(config.get("reputation_ema_alpha", 0.05))
+        if not (0.0 < self.reputation_ema_alpha <= 1.0):
+            raise ValueError(f"reputation_ema_alpha must be in (0, 1] (got {self.reputation_ema_alpha})")
+        self.reputation: Dict[str, float] = {}
         if self.num_threats < 0:
             raise ValueError(f"num_threats must be >= 0 (got {self.num_threats})")
         if not (0.0 <= self.threat_kill_prob <= 1.0):
@@ -620,7 +616,6 @@ class PredPreyGrass(MultiAgentEnv):
         self.threat_kills = {"predator_male": 0, "predator_female": 0}
         self.threat_kills_alone = 0
         self.threat_repelled = 0
-        self.ostracism_events = 0
         # Deaths from a diet deficiency (a store hit zero while total energy was still positive), by sex and store.
         self.diet_deaths = {
             "predator_male": {"fruit": 0, "meat": 0},
@@ -718,9 +713,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.band_drift_outs = 0
         self.threat_positions = {}
         self.threat_rest_until = {}
-        self.defense_opportunities = {}
-        self.defense_exposures = {}
-        self.ostracized_until = {}
+        self.reputation = {}
         self.mammoth_positions = {}
         self.mammoth_respawn_at = {}
         self._pending_rewards = {}
@@ -877,9 +870,7 @@ class PredPreyGrass(MultiAgentEnv):
                 del self.agent_energies[agent]
                 self.agent_fruit_store.pop(agent, None)
                 self.agent_band.pop(agent, None)
-                self.defense_opportunities.pop(agent, None)
-                self.defense_exposures.pop(agent, None)
-                self.ostracized_until.pop(agent, None)
+                self.reputation.pop(agent, None)
                 continue
             elif "predator_male" in agent:
                 predator_position = self.agent_positions[agent]
@@ -1332,8 +1323,14 @@ class PredPreyGrass(MultiAgentEnv):
             "threat_kills_female": float(self.threat_kills["predator_female"]),
             "threat_kills_alone": float(self.threat_kills_alone),
             "threat_repelled": float(self.threat_repelled),
-            "ostracism_events": float(self.ostracism_events),
-            "ostracized_now": float(sum(1 for a in self.predator_positions if self._is_ostracized(a))),
+            # Over every living predator, not just ones already in self.reputation: an unseen predator is 1.0 (benefit of
+            # the doubt, see _reputation_weight), and omitting it would understate the population's true mean/min.
+            "mean_reputation": float(
+                np.mean([self._reputation_weight(a) for a in self.predator_positions]) if self.predator_positions else 1.0
+            ),
+            "min_reputation": float(
+                min((self._reputation_weight(a) for a in self.predator_positions), default=1.0)
+            ),
             "band_fissions": float(self.band_fissions),
             "band_fusions": float(self.band_fusions),
             "band_drift_outs": float(self.band_drift_outs),
@@ -1436,9 +1433,7 @@ class PredPreyGrass(MultiAgentEnv):
             del self.agent_energies[agent]
             self.agent_fruit_store.pop(agent, None)
             self.agent_band.pop(agent, None)
-            self.defense_opportunities.pop(agent, None)
-            self.defense_exposures.pop(agent, None)
-            self.ostracized_until.pop(agent, None)
+            self.reputation.pop(agent, None)
             return "predator_dies", 0.0, 0.0
 
         return "failure", 0.0, 0.0
@@ -1910,16 +1905,21 @@ class PredPreyGrass(MultiAgentEnv):
             a for a in self.predator_positions if self.agent_energies[a] > 0.0 and self._diet_death_cause(a) is None
         }
 
-    def _is_ostracized(self, agent):
-        return self.band_ostracism and self.current_step < self.ostracized_until.get(agent, -1)
+    def _reputation_weight(self, agent, reputation=None):
+        """agent's current reputation weight in [0, 1] (band_reputation); always 1.0 when the feature is off, so callers
+        need no separate on/off branch. reputation: an explicit dict to read from (see _threats_act's reputation_at_start,
+        frozen at the start of that phase); None (the default, e.g. for _apply_band_share, a different phase with no such
+        invariant to preserve) reads the live self.reputation dict. An unseen predator defaults to 1.0 (benefit of the
+        doubt)."""
+        if not self.band_reputation:
+            return 1.0
+        source = self.reputation if reputation is None else reputation
+        return source.get(agent, 1.0)
 
-    def _defender_ids(self, target, viable=None, ostracized=None):
+    def _defender_ids(self, target, viable=None):
         """The living, in-range predators that count as target's defenders: its band-mates (threat_defense_by == 'band') or
-        any predator ('any'); a currently-ostracized predator (band_ostracism) never counts, even if otherwise in range.
-        ostracized: an explicit set of ids to treat as ostracized, frozen at the start of the calling phase (see
-        _threats_act, which computes it once alongside viable so a reputation update mid-phase cannot change who defended
-        an already-resolved target -- the same no-order-dependence guarantee _threats_act documents for itself). None (the
-        default, for a direct or test call outside that phase) falls back to a live _is_ostracized check per predator."""
+        any predator ('any'). Membership does not depend on reputation (band_reputation) -- everyone in range is a
+        defender; see _defender_weight for how much each one's presence actually counts."""
         viable = self._viable_predators() if viable is None else viable
         tx, ty = self.agent_positions[target]
         band = self.agent_band.get(target)
@@ -1929,38 +1929,35 @@ class PredPreyGrass(MultiAgentEnv):
                 continue
             if self.threat_defense_by == "band" and (band is None or self.agent_band.get(other) != band):
                 continue
-            if (other in ostracized) if ostracized is not None else self._is_ostracized(other):
-                continue
             ox, oy = self.predator_positions[other]
             if max(abs(ox - tx), abs(oy - ty)) <= self.threat_defense_radius:
                 result.append(other)
         return result
 
+    def _defender_weight(self, defender_ids, reputation=None):
+        """Reputation-weighted size of defender_ids (band_reputation): each defender contributes its own reputation weight
+        (_reputation_weight) instead of a flat 1, so a habitual free-rider counts for less toward repelling a threat or
+        lowering the kill probability. reputation: see _reputation_weight (frozen at the start of the calling phase, or
+        live). With band_reputation off this is exactly len(defender_ids), unweighted."""
+        return sum(self._reputation_weight(a, reputation) for a in defender_ids)
+
     def _threat_defenders(self, target, viable=None):
-        """Number of viable predators (not the target) within threat_defense_radius of the target that defend it (see
-        _defender_ids)."""
+        """Number of viable predators (not the target) within threat_defense_radius of the target that defend it -- a plain
+        headcount, unaffected by reputation (see _defender_ids, _defender_weight)."""
         return len(self._defender_ids(target, viable))
 
     def _update_reputation(self, defender_ids, threat_x, threat_y):
-        """band_ostracism bookkeeping, called once per genuinely resolved attack (see _threats_act): each predator in
-        defender_ids gets one recorded 'opportunity' (it was close enough to a threatened band-mate to be credited as a
-        defender); if it was also within distance 1 of the threat itself -- genuinely at risk, not just close enough for
-        free credit -- it gets one 'exposure' too. Once a predator has ostracism_min_opportunities recorded and its
-        exposure ratio is below ostracism_exposure_threshold, it is ostracized for ostracism_duration steps and its counts
-        reset (see _is_ostracized, _defender_ids, _apply_band_share)."""
+        """band_reputation bookkeeping, called once per genuinely resolved attack (see _threats_act): each predator in
+        defender_ids has its reputation nudged by reputation_ema_alpha toward 1.0 if it was itself within distance 1 of the
+        threat at that moment (genuinely exposed, not just close enough to the target for free credit) or toward 0.0 if
+        not. An unseen predator starts from 1.0 (benefit of the doubt); the score moves gradually and recovers with
+        genuine exposure -- no hard threshold or reset."""
+        alpha = self.reputation_ema_alpha
         for other in defender_ids:
-            self.defense_opportunities[other] = self.defense_opportunities.get(other, 0) + 1
             ox, oy = self.predator_positions[other]
-            if max(abs(ox - threat_x), abs(oy - threat_y)) <= 1:
-                self.defense_exposures[other] = self.defense_exposures.get(other, 0) + 1
-            opportunities = self.defense_opportunities[other]
-            if opportunities >= self.ostracism_min_opportunities:
-                ratio = self.defense_exposures.get(other, 0) / opportunities
-                if ratio < self.ostracism_exposure_threshold:
-                    self.ostracized_until[other] = self.current_step + self.ostracism_duration
-                    self.defense_opportunities[other] = 0
-                    self.defense_exposures[other] = 0
-                    self.ostracism_events += 1
+            exposed = 1.0 if max(abs(ox - threat_x), abs(oy - threat_y)) <= 1 else 0.0
+            prior = self.reputation.get(other, 1.0)
+            self.reputation[other] = (1.0 - alpha) * prior + alpha * exposed
 
     def _threats_act(self):
         """Threats act in numeric id order but all attack decisions use the state at the START of the phase, so a kill by one threat
@@ -1978,13 +1975,19 @@ class PredPreyGrass(MultiAgentEnv):
         failed attack by another: its rest state is resolved once, after its whole target list, and a kill always wins (sated
         for threat_satiation_steps) over a repel or a failed attack (threat_cooldown_steps) that happened in the same turn.
         Threats may share a cell with prey, grass or fruit (they do not interact with them) but never with a predator or
-        another threat. band_ostracism: who is ostracized is likewise frozen at the start of the phase (ostracized_at_start),
-        so a predator newly ostracized partway through this call still defends any other target or threat resolved later in
-        this same call -- it only stops counting as a defender from the next call (step) onward."""
+        another threat. band_reputation: the reputation each defender contributes to a repel/kill decision is frozen at the
+        start of the phase (reputation_at_start), so an update mid-phase cannot change an already-resolved target's
+        effective defender count -- that part matches the no-order-dependence guarantee above. The reputation VALUE ITSELF
+        is still updated live, once per encounter it defends (_update_reputation) -- if the same predator is credited as a
+        defender more than once in one call (multiple threats, or multiple targets under threat_attack_all_adjacent), its
+        end-of-call score reflects those encounters applied in this loop's order, since an EMA of exposed/not-exposed
+        observations is not order-independent. This is a deliberate scope limit (each observation nudges the running score
+        as it happens, as real image-scoring updates do), not a bug: only the ATTACK decisions are guaranteed
+        order-independent, not the exact resulting score when one predator is observed more than once per step."""
         n = self.grid_size
         moves = [m for m in self.action_to_move_tuple.values() if m != (0, 0)]
         viable = self._viable_predators()
-        ostracized_at_start = {a for a in viable if self._is_ostracized(a)} if self.band_ostracism else set()
+        reputation_at_start = dict(self.reputation) if self.band_reputation else {}
         kills = {}
         for tid in sorted(self.threat_positions, key=lambda t: int(t.split("_")[1])):
             tx, ty = self.threat_positions[tid]
@@ -2000,9 +2003,9 @@ class PredPreyGrass(MultiAgentEnv):
                 stopped = False  # repelled, or attacked and failed to kill: eligible for the cooldown rest
                 for target in targets:
                     self.threat_encounters += 1
-                    defender_ids = self._defender_ids(target, viable, ostracized_at_start)
-                    defenders = len(defender_ids)
-                    if self.band_ostracism:
+                    defender_ids = self._defender_ids(target, viable)
+                    defenders = self._defender_weight(defender_ids, reputation_at_start)
+                    if self.band_reputation:
                         self._update_reputation(defender_ids, tx, ty)
                     if defenders >= self.threat_defenders_to_repel:
                         stopped = True
@@ -2020,7 +2023,10 @@ class PredPreyGrass(MultiAgentEnv):
                             self.threat_repelled += 1
                         break  # driven off: leaves before attacking any remaining adjacent targets this step
                     if self.rng.random() < self.threat_kill_prob * (1.0 - defenders / self.threat_defenders_to_repel):
-                        kills[target] = min(kills.get(target, defenders), defenders)
+                        # threat_kills_alone means physically no defender present at all (headcount), not "reputation-
+                        # weighted protection was zero" -- keeps that metric's meaning stable regardless of band_reputation.
+                        headcount = len(defender_ids)
+                        kills[target] = min(kills.get(target, headcount), headcount)
                         killed_any = True
                     else:
                         stopped = True
@@ -2097,9 +2103,10 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _apply_band_share(self, agent, gained, is_fruit):
         """Band sharing (mechanical, like the gifts): a fraction band_share_rate of any forage is split equally among
-        the forager's living band members within band_share_range. Meat stays meat and fruit stays fruit (stores are
-        preserved). Members already doomed by a store or at <= 0 energy are not rescued (turn-order safe). A member
-        currently ostracized (band_ostracism) is excluded from receiving, even if otherwise in range."""
+        the forager's living band members within band_share_range, then scaled by each recipient's reputation weight
+        (band_reputation; 1.0, i.e. no change, when the feature is off) -- a habitual free-rider gets a shrinking cut,
+        not a hard cutoff. Meat stays meat and fruit stays fruit (stores are preserved). Members already doomed by a
+        store or at <= 0 energy are not rescued (turn-order safe)."""
         rate = self.band_fruit_share_rate if is_fruit else self.band_meat_share_rate
         if self.num_bands == 0 or rate <= 0.0 or gained <= 0.0:
             return
@@ -2114,7 +2121,6 @@ class PredPreyGrass(MultiAgentEnv):
             and self.agent_band.get(other) == band
             and self.agent_energies[other] > 0.0
             and self._diet_death_cause(other) is None
-            and not self._is_ostracized(other)
             and max(abs(ox - x), abs(oy - y)) <= self.band_share_range
         ]
         if not recipients:
@@ -2125,7 +2131,7 @@ class PredPreyGrass(MultiAgentEnv):
         for other in recipients:
             ox, oy = self.predator_positions[other]
             d = max(abs(ox - x), abs(oy - y))
-            amounts[other] = share * (1.0 - decay * d / (self.band_share_range + 1.0))
+            amounts[other] = share * (1.0 - decay * d / (self.band_share_range + 1.0)) * self._reputation_weight(other)
         total = sum(amounts.values())  # what is actually delivered (== rate * gained when decay is 0)
         self.agent_energies[agent] -= total
         if is_fruit:
@@ -2284,9 +2290,7 @@ class PredPreyGrass(MultiAgentEnv):
         del self.agent_energies[agent]
         self.agent_fruit_store.pop(agent, None)
         self.agent_band.pop(agent, None)
-        self.defense_opportunities.pop(agent, None)
-        self.defense_exposures.pop(agent, None)
-        self.ostracized_until.pop(agent, None)
+        self.reputation.pop(agent, None)
 
         if "predator_male" in agent:
             del self.predator_positions[agent]
@@ -2354,10 +2358,7 @@ class PredPreyGrass(MultiAgentEnv):
             "threat_counters": (
                 self.threat_encounters, dict(self.threat_kills), self.threat_kills_alone, self.threat_repelled,
             ),
-            "ostracism_state": (
-                dict(self.defense_opportunities), dict(self.defense_exposures), dict(self.ostracized_until),
-                self.ostracism_events,
-            ),
+            "reputation": dict(self.reputation),
             "band_dynamics": (
                 self._next_band_id, dict(self._band_contact), dict(self._band_out_steps),
                 self.band_fissions, self.band_fusions, self.band_drift_outs,
@@ -2414,10 +2415,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.mammoth_attempts, self.mammoth_kills, self.mammoth_party_deaths = list(attempts), list(kills), list(deaths)
         (self.threat_encounters, kills, self.threat_kills_alone, self.threat_repelled) = snapshot["threat_counters"]
         self.threat_kills = dict(kills)
-        (opportunities, exposures, ostracized, self.ostracism_events) = snapshot["ostracism_state"]
-        self.defense_opportunities, self.defense_exposures, self.ostracized_until = (
-            dict(opportunities), dict(exposures), dict(ostracized),
-        )
+        self.reputation = dict(snapshot["reputation"])
         (
             self.band_share_events, self.band_share_meat_total, self.band_share_fruit_total,
             self.marriages, self.within_band_pairings, self.kin_blocked_checks,

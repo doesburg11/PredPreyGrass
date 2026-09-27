@@ -282,16 +282,15 @@ config_env.update(
         # a repel ends its turn before any remaining adjacent targets are resolved. Tests whether a threat that menaces
         # several band-mates at once, rather than one at a time, is what a learned pull toward band-mates needs.
         "threat_attack_all_adjacent": False,
-        # Free-rider punishment (default off): threat_defense_radius is wider than the distance-1 range a threat actually
-        # attacks at, so a predator can get full "defender" credit for a band-mate from safely outside attack range. This
-        # tracks each predator's opportunities (counted as a defender) versus exposures (also within distance 1 of the
-        # threat); once it has ostracism_min_opportunities recorded and its exposure ratio is below
-        # ostracism_exposure_threshold, it is ostracized for ostracism_duration steps: excluded from counting as anyone's
-        # defender and from receiving band shares. See predpreygrass_rllib_env.py's __init__ for the full rationale.
-        "band_ostracism": False,
-        "ostracism_min_opportunities": 5,
-        "ostracism_exposure_threshold": 0.34,
-        "ostracism_duration": 200,
+        # Free-rider punishment via reputation (default off): threat_defense_radius is wider than the distance-1 range a
+        # threat actually attacks at, so a predator can get full "defender" credit for a band-mate from safely outside
+        # attack range. This gives each predator a continuous reputation score in [0, 1] (starts at 1.0), nudged by
+        # reputation_ema_alpha each time it is counted as a defender: toward 1.0 if it was itself within distance 1 of the
+        # threat (genuinely exposed), toward 0.0 if not. The score scales (not switches) how much it counts toward
+        # repelling a threat/lowering the kill probability, and how much of a band-mate's shared forage it receives. See
+        # predpreygrass_rllib_env.py's __init__ for the full rationale.
+        "band_reputation": False,
+        "reputation_ema_alpha": 0.05,
         # Rest after an attack (0 = off): a threat that kills is sated for threat_satiation_steps; one whose attack does not kill
         # (the roll failed, or it was driven off) cannot attack again for threat_cooldown_steps. Resting threats wander and do
         # not chase. Without this a chasing threat stays adjacent and re-rolls every step, so the kill rate is set by contact
