@@ -163,7 +163,18 @@ Motivation: predator and prey numbers were roughly stable with no Lotka-Volterra
 | B | 0.03 | 0.50 | 97% | about 81 | 19.5% |
 | C | 0.05 | 0.40 | not read out | 73-156 (mean about 124) | 16.1% |
 
-None is viable, so `analyze_population_dynamics.py` (needs episodes of at least about 300 steps) could not be applied. Prey energy share rose only in the runs that collapsed. Untested here: a richer catch (`prey_energy_yield`, runs D/E, in progress) rather than a larger meat requirement.
+None is viable, so `analyze_population_dynamics.py` (needs episodes of at least about 300 steps) could not be applied to A-C.
+
+Then a richer catch instead: new option `prey_energy_yield` (default 1.0 = unchanged) multiplies the energy a predator gains from a catch, leaving the prey's own ecology alone. Both runs use fruit 0.03, meat cost share 0.15, sharing 0.6/0.3, one seed, 150 iterations, and the analysis on checkpoint 14 (6 rollout episodes, max 1001 steps):
+
+| run | prey energy yield | episode lengths (steps) | prey share of foraging energy | predators / prey (mean per episode) | best-lag corr(prey, predators) |
+|---|---|---|---|---|---|
+| D | 3 | 568, 1001, 1001, 670, 1001, 1001 | 52.1% | 12.7-17.7 / 38.5-45.3 | -0.81 to +0.69 (mostly negative) |
+| E | 5 | 1001 in all six | 62.4% | 15.4-17.7 / 39.7-44.2 | -0.71 to -0.40 (all negative) |
+
+Both are sustained in rollouts and prey is now the main food source. In training, female extinction was still common in D (about 0.7 of episodes) and lower in E (0.18-0.40 after the first 25 iterations); counts are from the TensorBoard scalars over the logged iterations.
+
+What this does and does not show: predator and prey counts are negatively correlated (best lag), which is the expected sign when predators eat the prey, so predator-prey coupling is present. There is no clean Lotka-Volterra cycle: the dominant period varies from 134 to 470 steps between episodes and explains 21-57% of the variance in episodes of about 1000 steps, i.e. only 2-5 cycles, and predator and prey counts stay near 16 and 42 with coefficients of variation of 0.12-0.26 and 0.07-0.14. One seed and one checkpoint; the regime differs from the earlier runs (less fruit, richer prey), so it is not a like-for-like comparison, and whether cohesion or hunting behaviour changed was not analysed here.
 
 ## What is new (on top of the diet module)
 
