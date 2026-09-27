@@ -17,17 +17,17 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 * **[Eco-evolutionary](predpreygrass/evolutionary/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
 
-* **[Eco-evolutionary cadence](predpreygrass/evolutionary/eco_evolutionary_cadence)**: evolves the same `speed` trait, expressed as a graded movement cooldown instead of a discrete distance threshold.
+* **[Eco-evolutionary cadence](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cadence)** *(archived — rejected)*: evolves the same `speed` trait, expressed as a graded movement cooldown instead of a discrete distance threshold.
 
-* **[Eco-evolutionary cooperation](predpreygrass/evolutionary/eco_evolutionary_cooperation)**: evolves a `cooperation_rate` trait — the fraction of an agent's net energy gain donated to nearby same-species agents, relying on spatial viscosity (offspring spawn near parents) for implicit kin selection.
+* **[Eco-evolutionary cooperation](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cooperation)** *(archived — likely null, paused)*: evolves a `cooperation_rate` trait — the fraction of an agent's net energy gain donated to nearby same-species agents, relying on spatial viscosity (offspring spawn near parents) for implicit kin selection.
 
 * **[Eco-evolutionary investment](predpreygrass/evolutionary/eco_evolutionary_investment)**: evolves an `offspring_investment_fraction` trait — how much energy a parent hands each offspring at birth.
 
-* **[Eco-evolutionary metabolic rate](predpreygrass/evolutionary/eco_evolutionary_metabolic_rate)**: evolves a `metabolic_rate` trait that symmetrically scales both energy gain and basal energy cost.
+* **[Eco-evolutionary metabolic rate](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_metabolic_rate)** *(archived — null)*: evolves a `metabolic_rate` trait that symmetrically scales both energy gain and basal energy cost.
 
 * **["Stag hunt" nature + nurture](predpreygrass/evolutionary/stag_hunt_forward_view_nature_nurture)**: a hybrid case — predators carry a heritable cooperation trait (nature) alongside the learned voluntary `join_hunt` action (nurture); team-capture success depends on both.
 
-* **[Eco-evolutionary metabolic code](predpreygrass/evolutionary/eco_evolutionary_metabolic_code)**: replaces the earlier single continuous-scalar traits with a combinatorial, needle-in-haystack metabolic code, testing whether selection can find a rare high-fitness combination that smooth-scalar traits couldn't drift toward.
+* **[Eco-evolutionary metabolic code](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_metabolic_code)** *(archived — null, reversed on the headline metric)*: replaces the earlier single continuous-scalar traits with a combinatorial, needle-in-haystack metabolic code, testing whether selection can find a rare high-fitness combination that smooth-scalar traits couldn't drift toward.
 
 * **[Eco-evolutionary metabolic rate — positive control](predpreygrass/evolutionary/eco_evolutionary_metabolic_rate_positive_control)**: a deliberate positive control — clones `eco_evolutionary_metabolic_rate` with a sharpened, super-linear fitness gradient, to check whether the pipeline can detect selection-driven drift at all when the advantage is overwhelming.
 

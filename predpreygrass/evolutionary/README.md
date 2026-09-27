@@ -37,29 +37,19 @@ sustainability numbers.
 
 * **[eco_evolutionary](eco_evolutionary)** — baseline of the family. Evolves a `speed`
   trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
-* **[eco_evolutionary_cadence](eco_evolutionary_cadence)** — evolves the same `speed`
-  trait, expressed as a graded movement cooldown instead of a discrete distance
-  threshold. *Rejected* — the cadence mechanic itself structurally prevents predators
-  from sustaining a population.
-* **[eco_evolutionary_metabolic_rate](eco_evolutionary_metabolic_rate)** — evolves a
-  `metabolic_rate` trait that symmetrically scales both energy gain and basal energy
-  cost. Sustainability/coexistence solved; selection-driven drift **null** after
-  replication.
+* **Moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive)** —
+  `eco_evolutionary_cadence` (Trial 1, rejected — the movement-cadence mechanic itself
+  structurally prevents a sustainable predator population), `eco_evolutionary_cooperation`
+  (Trial 5, likely null, paused after Pilot 1), `eco_evolutionary_metabolic_code` (Trial 7,
+  complete, null and reversed on the headline metric), and `eco_evolutionary_metabolic_rate`
+  (Trial 3, null after proper 3-seed replication — this is also where the project's
+  drift-vs-control replication methodology was built). All four reached a real, concluded
+  null result with nothing to build on and were archived to keep this repo uncluttered. Full
+  code, tests and commit history preserved there; see that repo's README for what each found.
 * **[eco_evolutionary_investment](eco_evolutionary_investment)** — evolves an
   `offspring_investment_fraction` trait — how much energy a parent hands each offspring
   at birth. Sustainability/coexistence solved; selection-driven drift **null** after
   replication.
-* **[eco_evolutionary_cooperation](eco_evolutionary_cooperation)** — evolves a
-  `cooperation_rate` trait — the fraction of an agent's net energy gain donated to
-  nearby same-species agents, relying on spatial viscosity (offspring spawn near
-  parents) for implicit kin selection. Pilot result: likely null; *paused* rather than
-  replicated further — see `RESULTS.md`.
-* **[eco_evolutionary_metabolic_code](eco_evolutionary_metabolic_code)** — evolves a
-  combinatorial `loci` genome (CORRECT/WRONG/PLASTIC per locus, Hinton & Nowlan 1987
-  needle-in-haystack design) instead of a smooth scalar, resolved each lifetime by a
-  genuine per-individual search decoupled from the shared PPO policy.
-  Sustainability/coexistence solved; selection-driven drift **null (reversed on the
-  headline metric)** after replication — see `RESULTS.md`.
 * **Moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive)** —
   `eco_evolutionary_cultural_plasticity` (Trial 8, gene-culture coevolution/dual
   inheritance), `eco_evolutionary_cultural_plasticity_seasonal` (Trial 9, the same
