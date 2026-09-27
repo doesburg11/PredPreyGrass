@@ -31,13 +31,13 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 * **[Eco-evolutionary metabolic rate — positive control](predpreygrass/evolutionary/eco_evolutionary_metabolic_rate_positive_control)**: a deliberate positive control — clones `eco_evolutionary_metabolic_rate` with a sharpened, super-linear fitness gradient, to check whether the pipeline can detect selection-driven drift at all when the advantage is overwhelming.
 
-* **[Eco-evolutionary cultural plasticity](predpreygrass/evolutionary/eco_evolutionary_cultural_plasticity)**: gene-culture (dual-inheritance) coevolution — a heritable `plasticity` trait gates how readily an agent adopts a locally-shared, non-genetic `dialect`.
+* **[Eco-evolutionary cultural plasticity](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cultural_plasticity)** *(archived — null result)*: gene-culture (dual-inheritance) coevolution — a heritable `plasticity` trait gates how readily an agent adopts a locally-shared, non-genetic `dialect`.
 
-* **[Eco-evolutionary cultural plasticity, seasonal](predpreygrass/evolutionary/eco_evolutionary_cultural_plasticity_seasonal)**: the cultural-plasticity trait under a dialect that periodically flips target, testing whether an external, time-varying "correct answer" (rather than a self-referential local majority) gives `plasticity` something to win by tracking.
+* **[Eco-evolutionary cultural plasticity, seasonal](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cultural_plasticity_seasonal)** *(archived — null result)*: the cultural-plasticity trait under a dialect that periodically flips target, testing whether an external, time-varying "correct answer" (rather than a self-referential local majority) gives `plasticity` something to win by tracking.
 
 * **[ERL Baldwin](predpreygrass/evolutionary/eco_evolutionary_erl_baldwin)**: a structurally different architecture — each agent gets its own genome-conditioned policy network, rather than a single shared-policy scalar side-channel. The project's strongest confirmed result: ERL significantly outperforms the prior shared-policy trials (p < 0.00001).
 
-* **[Nuptial-gift giving](predpreygrass/evolutionary/eco_evolutionary_nuptial_gift)**: sexed predators with obligate male provisioning — males hunt but never reproduce directly, females can never sustain themselves on grazing alone and depend on a male-to-female energy gift to reproduce.
+* **[Nuptial-gift giving](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_nuptial_gift)** *(archived — stopped early, insufficient signal)*: sexed predators with obligate male provisioning — males hunt but never reproduce directly, females can never sustain themselves on grazing alone and depend on a male-to-female energy gift to reproduce.
 
 ## Fixed-trait behavioral & game-theoretic environments
 

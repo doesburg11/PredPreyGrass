@@ -60,13 +60,14 @@ sustainability numbers.
   genuine per-individual search decoupled from the shared PPO policy.
   Sustainability/coexistence solved; selection-driven drift **null (reversed on the
   headline metric)** after replication — see `RESULTS.md`.
-* **[eco_evolutionary_cultural_plasticity](eco_evolutionary_cultural_plasticity)** —
-  a structurally different mechanism, not another single-scalar trait: gene-culture
-  coevolution (dual inheritance). A heritable `plasticity` gene sets how readily an
-  agent's live, socially-transmitted `dialect` tracks the local same-species
-  majority; dialect-matching at a catch/graze event earns a coordination-game energy
-  bonus. Implemented and unit-tested; no training pilot or replication run launched
-  yet — see `RESULTS.md`.
+* **Moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive)** —
+  `eco_evolutionary_cultural_plasticity` (Trial 8, gene-culture coevolution/dual
+  inheritance), `eco_evolutionary_cultural_plasticity_seasonal` (Trial 9, the same
+  mechanism with a flipping target dialect, testing Rogers' Paradox), and
+  `eco_evolutionary_nuptial_gift` (obligate male provisioning) all reached a real,
+  concluded null result and were archived out of this repo to keep it uncluttered.
+  Full code, tests and commit history preserved there; see that repo's README for
+  what each found. `RESULTS.md` here still has the cross-module trial narrative.
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
