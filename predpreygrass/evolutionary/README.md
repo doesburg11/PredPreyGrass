@@ -35,8 +35,13 @@ sustainability numbers.
 
 ## Modules
 
-* **[eco_evolutionary](eco_evolutionary)** — baseline of the family. Evolves a `speed`
-  trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
+* **[eco_evolutionary](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary)**
+  *(archived)* — baseline of the family; a `speed` trait that sets a movement-distance
+  threshold (1 vs. 2 tiles per move). A real but messy, unconfirmed signal (tentative
+  Red Queen-style alternation between predator/prey speed selection, not replicated).
+  Its own writeup's recommended follow-up, `eco_evolutionary_cadence`, was rejected
+  outright — the entire documented lineage from this module is now archived, and nothing
+  still active in the main repo depends on it or clones it directly.
 * **Moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive)** —
   `eco_evolutionary_cadence` (Trial 1, rejected — the movement-cadence mechanic itself
   structurally prevents a sustainable predator population), `eco_evolutionary_cooperation`

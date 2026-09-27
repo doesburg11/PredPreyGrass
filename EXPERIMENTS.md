@@ -15,7 +15,7 @@ This repo splits into two structurally different families of experiment, matchin
 
 These environments layer a genuine evolutionary algorithm — founder genome, mutation, inheritance — on top of shared-policy PPO. Learned behavior (Baldwinian) determines which trait values survive to reproduce, closing a genome → phenotype → learned behavior → fitness → genome-frequency loop across generations. See **[predpreygrass/evolutionary/README.md](predpreygrass/evolutionary)** for the shared goal, success criteria, and cross-module trial log — start there before any individual module below.
 
-* **[Eco-evolutionary](predpreygrass/evolutionary/eco_evolutionary)**: baseline of the family. Evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
+* **[Eco-evolutionary](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary)** *(archived — the family's baseline, real but unconfirmed signal, its recommended follow-up was rejected)*: evolves a `speed` trait that sets a movement-distance threshold (1 vs. 2 tiles per move).
 
 * **[Eco-evolutionary cadence](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cadence)** *(archived — rejected)*: evolves the same `speed` trait, expressed as a graded movement cooldown instead of a discrete distance threshold.
 
