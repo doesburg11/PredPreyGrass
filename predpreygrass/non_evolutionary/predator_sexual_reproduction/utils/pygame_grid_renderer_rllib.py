@@ -8,6 +8,8 @@ ICON_DIR = os.path.join(os.path.dirname(__file__), *[os.pardir] * 4, "assets", "
 
 @dataclass
 class GuiStyle:
+    birth_heart_color: tuple = (255, 0, 0)
+    birth_heart_steps: int = 7
     margin_left: int = 10
     margin_top: int = 10
     margin_right: int = 340
@@ -67,6 +69,13 @@ class PyGameRenderer:
             "fruit": self._load_icon("fuit.png"),
         }
         self._icon_cache = {}
+
+        # Birth hearts: agent IDs are never reused within an episode, so an ID not seen on the
+        # previous frame is a newborn. The first frame (and the first after a step counter reset,
+        # i.e. a new episode) only seeds the set, so the starting population gets no hearts.
+        self._seen_agent_ids = None
+        self._last_step = None
+        self._birth_hearts = []  # (grid_pos, birth_step)
 
         self.target_fps = 10
         self.slider_rect = None
@@ -137,6 +146,8 @@ class PyGameRenderer:
             fruit_positions, fruit_energies, self.gui_style.fruit_color, self.reference_energy_fruit, icon="fruit"
         )
         self._draw_agents(agent_positions, agent_energies, agents_just_ate)
+        self._update_birth_hearts(agent_positions, step)
+        self._draw_birth_hearts(step)
         self._draw_tooltip(agent_positions, grass_positions, fruit_positions, agent_energies, grass_energies, fruit_energies)
         self._draw_legend(step)
 
@@ -167,6 +178,37 @@ class PyGameRenderer:
                 self._blit_icon_centered(icon, max(int(rect_size), 2), x_pix, y_pix)
             else:
                 pygame.draw.rect(self.screen, color, rect)
+
+    def _update_birth_hearts(self, agent_positions, step):
+        if self._seen_agent_ids is None or (self._last_step is not None and step <= self._last_step):
+            self._seen_agent_ids = set(agent_positions)
+            self._birth_hearts = []
+        else:
+            for agent_id, pos in agent_positions.items():
+                if agent_id not in self._seen_agent_ids:
+                    self._birth_hearts.append((tuple(pos), step))
+            self._seen_agent_ids.update(agent_positions)
+        self._last_step = step
+
+    def _draw_birth_hearts(self, step):
+        self._birth_hearts = [
+            (pos, born) for pos, born in self._birth_hearts if step - born < self.gui_style.birth_heart_steps
+        ]
+        for pos, _ in self._birth_hearts:
+            x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
+            y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
+            self._draw_heart(x_pix, y_pix, self.cell_size * 1.1)
+
+    def _draw_heart(self, cx, cy, size):
+        """Filled heart from the classic parametric curve, centered on (cx, cy)."""
+        scale = size / 34.0  # the curve spans about 32 wide x 30 tall
+        points = []
+        for i in range(60):
+            t = 2 * math.pi * i / 60
+            hx = 16 * math.sin(t) ** 3
+            hy = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
+            points.append((cx + hx * scale, cy - (hy - 2) * scale))
+        pygame.draw.polygon(self.screen, self.gui_style.birth_heart_color, points)
 
     def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
         for agent_id, pos in agent_positions.items():
@@ -237,11 +279,11 @@ class PyGameRenderer:
         y += spacing
 
         self._blit_icon_centered("male", 2 * r, x + r, y + r)
-        self.screen.blit(font.render("Predator (male, hunts + gathers)", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Predator (male, skilled hunter)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         self._blit_icon_centered("female", 2 * r, x + r, y + r)
-        self.screen.blit(font.render("Predator (female, gathers only)", True, (0, 0, 0)), (x + 30, y))
+        self.screen.blit(font.render("Predator (female, weak hunter)", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         self._blit_icon_centered("prey", 2 * r, x + r, y + r)
@@ -262,6 +304,10 @@ class PyGameRenderer:
 
         self._blit_icon_centered("fruit", s, x + r, y + r)
         self.screen.blit(font.render("Fruit (predator food)", True, (0, 0, 0)), (x + 30, y))
+        y += spacing
+
+        self._draw_heart(x + r, y + r, s)
+        self.screen.blit(font.render("Birth", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
         return y
