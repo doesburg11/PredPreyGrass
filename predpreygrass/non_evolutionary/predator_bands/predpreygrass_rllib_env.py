@@ -292,6 +292,12 @@ class PredPreyGrass(MultiAgentEnv):
         self.threat_defenders_to_repel = int(config.get("threat_defenders_to_repel", 3))
         self.threat_defense_by = config.get("threat_defense_by", "band")
         self.threat_flee_distance = int(config.get("threat_flee_distance", 8))
+        # False (default, the old behaviour): a threat attacks only the single nearest adjacent predator. True: it attacks every
+        # viable predator within distance 1 of it at once (see _threats_act) -- several band-mates standing together next to a
+        # threat all face the kill roll in the same step and can be each other's defenders, instead of only the nearest one
+        # being at risk. Tests whether a threat that menaces the whole group at once (not one member at a time) is what a
+        # learned pull toward band-mates needs (see RESULTS.md's common-enemy-effect discussion).
+        self.threat_attack_all_adjacent = bool(config.get("threat_attack_all_adjacent", False))
         # Rest after an attack (0 = off, the old behaviour): a threat that KILLS is sated and does not attack for
         # threat_satiation_steps; one whose attack does not kill (survived roll, or driven off) does not attack again for
         # threat_cooldown_steps. Resting threats wander and never chase.
@@ -1888,17 +1894,24 @@ class PredPreyGrass(MultiAgentEnv):
     def _threats_act(self):
         """Threats act in numeric id order but all attack decisions use the state at the START of the phase, so a kill by one threat
         does not change who defends or is targeted for the next (no order dependence): each threat attacks the nearest adjacent
-        viable predator (ties: lowest agent id), else chases the nearest sensed viable predator, else wanders. An attack on a
-        target with n defenders: n >= threat_defenders_to_repel drives the threat off (moved to a free cell at least
-        threat_flee_distance away, else the farthest free cell; counted as repelled only if it moved); otherwise the target dies
-        with probability threat_kill_prob * (1 - n / threat_defenders_to_repel). Kills are applied after all threats have acted
-        (the target's energy is set to -1 so that Step 3 removes it; a target killed by several threats counts once). Threats may
-        share a cell with prey, grass or fruit (they do not interact with them) but never with a predator or another threat."""
+        viable predator (ties: lowest agent id), else chases the nearest sensed viable predator, else wanders. With
+        threat_attack_all_adjacent (default False), a threat instead attacks every viable predator within distance 1 at once
+        (same ordering), each resolved independently below -- so several band-mates standing next to one threat face the kill
+        roll together and can be each other's defenders in that same step, rather than only the single nearest one being at
+        risk. An attack on a target with n defenders: n >= threat_defenders_to_repel drives the threat off (moved to a free cell
+        at least threat_flee_distance away, else the farthest free cell; counted as repelled only if it moved) and ends its
+        turn -- it does not go on to attack any remaining adjacent targets this step, since it has left the cell; otherwise the
+        target dies with probability threat_kill_prob * (1 - n / threat_defenders_to_repel). Kills are applied after all threats
+        have acted (the target's energy is set to -1 so that Step 3 removes it; a target killed by several threats counts once).
+        With threat_attack_all_adjacent, a single threat's turn can now both kill one target and then be repelled or survive a
+        failed attack by another: its rest state is resolved once, after its whole target list, and a kill always wins (sated
+        for threat_satiation_steps) over a repel or a failed attack (threat_cooldown_steps) that happened in the same turn.
+        Threats may share a cell with prey, grass or fruit (they do not interact with them) but never with a predator or
+        another threat."""
         n = self.grid_size
         moves = [m for m in self.action_to_move_tuple.values() if m != (0, 0)]
         viable = self._viable_predators()
         kills = {}
-        killers = []
         for tid in sorted(self.threat_positions, key=lambda t: int(t.split("_")[1])):
             tx, ty = self.threat_positions[tid]
             resting = self.current_step < self.threat_rest_until.get(tid, 0)
@@ -1906,29 +1919,37 @@ class PredPreyGrass(MultiAgentEnv):
                 (max(abs(px - tx), abs(py - ty)), a) for a, (px, py) in self.predator_positions.items() if a in viable
             )
             nearest = alive[0] if alive and not resting else None  # a resting threat neither attacks nor chases
-            if nearest is not None and nearest[0] <= 1:
-                target = nearest[1]
-                self.threat_encounters += 1
-                defenders = self._threat_defenders(target, viable)
-                if defenders >= self.threat_defenders_to_repel:
-                    self.threat_rest_until[tid] = self.current_step + self.threat_cooldown_steps
-                    blocked = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
-                    px, py = self.agent_positions[target]
-                    cells = [
-                        (max(abs(x - px), abs(y - py)), (x, y)) for x in range(n) for y in range(n) if (x, y) not in blocked
-                    ]
-                    far = [c for d, c in cells if d >= self.threat_flee_distance]
-                    if not far and cells:
-                        best = max(d for d, _ in cells)
-                        far = [c for d, c in cells if d == best]
-                    if far:
-                        self.threat_positions[tid] = far[int(self.rng.integers(len(far)))]
-                        self.threat_repelled += 1
-                    continue
-                if self.rng.random() < self.threat_kill_prob * (1.0 - defenders / self.threat_defenders_to_repel):
-                    kills[target] = min(kills.get(target, defenders), defenders)
-                    killers.append(tid)
-                else:
+            adjacent = [a for d, a in alive if d <= 1] if nearest is not None and nearest[0] <= 1 else []
+            if adjacent:
+                targets = adjacent if self.threat_attack_all_adjacent else adjacent[:1]
+                killed_any = False
+                stopped = False  # repelled, or attacked and failed to kill: eligible for the cooldown rest
+                for target in targets:
+                    self.threat_encounters += 1
+                    defenders = self._threat_defenders(target, viable)
+                    if defenders >= self.threat_defenders_to_repel:
+                        stopped = True
+                        blocked = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
+                        px, py = self.agent_positions[target]
+                        cells = [
+                            (max(abs(x - px), abs(y - py)), (x, y)) for x in range(n) for y in range(n) if (x, y) not in blocked
+                        ]
+                        far = [c for d, c in cells if d >= self.threat_flee_distance]
+                        if not far and cells:
+                            best = max(d for d, _ in cells)
+                            far = [c for d, c in cells if d == best]
+                        if far:
+                            self.threat_positions[tid] = far[int(self.rng.integers(len(far)))]
+                            self.threat_repelled += 1
+                        break  # driven off: leaves before attacking any remaining adjacent targets this step
+                    if self.rng.random() < self.threat_kill_prob * (1.0 - defenders / self.threat_defenders_to_repel):
+                        kills[target] = min(kills.get(target, defenders), defenders)
+                        killed_any = True
+                    else:
+                        stopped = True
+                if killed_any:
+                    self.threat_rest_until[tid] = self.current_step + self.threat_satiation_steps
+                elif stopped:
                     self.threat_rest_until[tid] = self.current_step + self.threat_cooldown_steps
                 continue
             occupied = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}
@@ -1944,8 +1965,6 @@ class PredPreyGrass(MultiAgentEnv):
                 best = min((px - c[0]) ** 2 + (py - c[1]) ** 2 for c in candidates)
                 candidates = [c for c in candidates if (px - c[0]) ** 2 + (py - c[1]) ** 2 == best]
             self.threat_positions[tid] = candidates[int(self.rng.integers(len(candidates)))]
-        for tid in killers:
-            self.threat_rest_until[tid] = self.current_step + self.threat_satiation_steps
         for target, defenders in kills.items():
             self.agent_energies[target] = -1.0
             self.threat_kills["predator_male" if "predator_male" in target else "predator_female"] += 1

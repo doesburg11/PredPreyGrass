@@ -277,6 +277,11 @@ config_env.update(
         "threat_defenders_to_repel": 3,
         "threat_defense_by": "band",
         "threat_flee_distance": 8,
+        # False (default, the old behaviour): a threat attacks only the single nearest adjacent predator. True: it attacks
+        # every viable predator within distance 1 of it at once, each resolved independently (own defenders, own kill roll);
+        # a repel ends its turn before any remaining adjacent targets are resolved. Tests whether a threat that menaces
+        # several band-mates at once, rather than one at a time, is what a learned pull toward band-mates needs.
+        "threat_attack_all_adjacent": False,
         # Rest after an attack (0 = off): a threat that kills is sated for threat_satiation_steps; one whose attack does not kill
         # (the roll failed, or it was driven off) cannot attack again for threat_cooldown_steps. Resting threats wander and do
         # not chase. Without this a chasing threat stays adjacent and re-rolls every step, so the kill rate is set by contact

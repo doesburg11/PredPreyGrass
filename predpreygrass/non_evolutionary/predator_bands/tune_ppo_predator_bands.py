@@ -151,6 +151,8 @@ def parse_args():
     parser.add_argument("--threat-cooldown-steps", type=int, default=None, help="Steps a threat waits after a non-lethal attack. Default: config (0).")
     parser.add_argument("--threat-defense-radius", type=int, default=None, help="Cells within which band-mates defend a target. Default: config (2).")
     parser.add_argument("--threat-defenders-to-repel", type=int, default=None, help="Defenders needed to drive a threat off. Default: config (3).")
+    parser.add_argument("--threat-attack-all-adjacent", type=int, choices=[0, 1], default=None,
+                        help="1: a threat attacks every predator within distance 1 of it at once, not just the nearest. Default: config (0).")
     parser.add_argument("--num-mammoths", type=int, default=None, help="Number of mammoths (0 = none). Default: config (0).")
     parser.add_argument("--mammoth-energy", type=float, default=None, help="Energy of a mammoth. Default: config (20).")
     parser.add_argument("--mammoth-respawn-steps", type=int, default=None, help="Steps until a killed mammoth respawns. Default: config (80).")
@@ -402,6 +404,8 @@ if __name__ == "__main__":
         env_config["threat_defense_radius"] = args.threat_defense_radius
     if args.threat_defenders_to_repel is not None:
         env_config["threat_defenders_to_repel"] = args.threat_defenders_to_repel
+    if args.threat_attack_all_adjacent is not None:
+        env_config["threat_attack_all_adjacent"] = bool(args.threat_attack_all_adjacent)
     if args.num_mammoths is not None:
         env_config["num_mammoths"] = args.num_mammoths
     if args.mammoth_energy is not None:

@@ -412,3 +412,123 @@ def test_invalid_rest_settings_are_rejected():
         _env(threat_satiation_steps=-1)
     with pytest.raises(ValueError):
         _env(threat_cooldown_steps=-5)
+
+
+# ---- threat_attack_all_adjacent (default False): a threat attacks every adjacent predator, not just the nearest one --------
+def _fattest_band(env):
+    return max(range(env.num_bands), key=lambda b: len(_members(env, b)))
+
+
+def _multi_target_setup(n_targetA_defenders=0, n_targetB_defenders=0, **kw):
+    """target_a at (10, 10), target_b at (10, 11): both adjacent to a threat at (9, 10), and (being within
+    threat_defense_radius (default 2) of each other) already each other's defender. Extra defenders for target_a sit at
+    y=8 (within radius 2 of target_a, 3+ of target_b); extra defenders for target_b sit at y=13 (within radius 2 of
+    target_b, 3+ of target_a). Both rows are distance 2+ from the threat itself."""
+    env = _env(num_threats=1, **kw)
+    band = sorted(_members(env, _fattest_band(env)))
+    target_a, target_b, *rest = band
+    defenders_a = rest[:n_targetA_defenders]
+    defenders_b = rest[n_targetA_defenders : n_targetA_defenders + n_targetB_defenders]
+    _park_others(env, {target_a, target_b} | set(defenders_a) | set(defenders_b))
+    _place(env, target_a, (10, 10))
+    _place(env, target_b, (10, 11))
+    for i, d in enumerate(defenders_a):
+        _place(env, d, (8 + i, 8))
+    for i, d in enumerate(defenders_b):
+        _place(env, d, (8 + i, 13))
+    env.threat_positions = {"threat_0": (9, 10)}
+    for a in env.predator_positions:
+        env.agent_energies[a] = 5.0
+    return env, target_a, target_b
+
+
+class _CountingRandom:
+    """Real generator with .random() counted and forced to a fixed value; every other method stays real."""
+
+    def __init__(self, real, value):
+        self._real, self._value, self.calls = real, value, 0
+
+    def random(self, *a, **k):
+        self.calls += 1
+        return self._value
+
+    def __getattr__(self, name):
+        return getattr(self._real, name)
+
+
+def test_default_attacks_only_the_nearest_of_several_adjacent_targets():
+    env, target_a, target_b = _multi_target_setup()
+    assert env.threat_attack_all_adjacent is False
+    env.rng = _FixedRandom(env.rng, 0.0)  # would kill either target if rolled
+    env._threats_act()
+    assert env.threat_encounters == 1
+    assert env.agent_energies[target_a] == -1.0  # lowest id: attacked
+    assert env.agent_energies[target_b] == 5.0  # never attacked
+
+
+def test_attack_all_adjacent_resolves_every_target_independently():
+    # target_a and target_b are within threat_defense_radius (2) of each other, so each is already the other's defender
+    # (defenders_b=1) before any extra defender is placed; 1 extra for target_a makes defenders_a=2. Kill probabilities:
+    # target_a 0.5 * (1 - 2/3) = 0.1667, target_b 0.5 * (1 - 1/3) = 0.3333.
+    env, target_a, target_b = _multi_target_setup(n_targetA_defenders=1, threat_attack_all_adjacent=True)
+    assert env._threat_defenders(target_a) == 2 and env._threat_defenders(target_b) == 1
+    env.rng = _FixedRandom(env.rng, 0.2)  # not < 0.1667, but < 0.3333
+    env._threats_act()
+    assert env.threat_encounters == 2
+    assert env.agent_energies[target_a] == 5.0  # 2 defenders: survives at this roll
+    assert env.agent_energies[target_b] == -1.0  # 1 defender: killed at this roll
+
+
+def test_a_repel_ends_the_turn_before_any_further_adjacent_targets_are_attacked():
+    env, target_a, target_b = _multi_target_setup(n_targetA_defenders=3, threat_attack_all_adjacent=True)
+    env.rng = _FixedRandom(env.rng, 0.0)  # would kill target_b if it were ever attacked
+    env._threats_act()
+    assert env.threat_encounters == 1  # target_b's attack never happens
+    assert env.threat_repelled == 1
+    assert env.agent_energies[target_a] == 5.0 and env.agent_energies[target_b] == 5.0
+    tx, ty = env.threat_positions["threat_0"]
+    assert max(abs(tx - 10), abs(ty - 10)) >= env.threat_flee_distance
+
+
+def test_attack_all_adjacent_default_is_off():
+    assert _env().threat_attack_all_adjacent is False
+
+
+def test_attack_all_adjacent_records_a_kill_for_every_killed_target():
+    # Both targets have only their mutual defense (1 each): kill prob 0.5 * (1 - 1/3) = 0.3333 for both.
+    env, target_a, target_b = _multi_target_setup(threat_attack_all_adjacent=True)
+    env.rng = _FixedRandom(env.rng, 0.0)  # < 0.3333: both killed
+    env._threats_act()
+    assert env.threat_encounters == 2
+    assert env.agent_energies[target_a] == -1.0 and env.agent_energies[target_b] == -1.0
+    assert sum(env.threat_kills.values()) == 2
+    assert env.threat_kills_alone == 0  # neither was defenderless
+
+
+def test_kill_wins_over_a_later_repel_for_the_same_threats_rest_state():
+    # target_a (processed first: lower id): only its mutual defender (1), kill prob 0.3333 -- killed at this roll.
+    # target_b (processed second): 2 extra defenders + the mutual one from target_a = 3, reaching the repel threshold.
+    env, target_a, target_b = _multi_target_setup(
+        n_targetB_defenders=2, threat_attack_all_adjacent=True, threat_satiation_steps=100, threat_cooldown_steps=5
+    )
+    assert env._threat_defenders(target_a) == 1 and env._threat_defenders(target_b) == 3
+    env.current_step = 20
+    env.rng = _FixedRandom(env.rng, 0.2)  # < 0.3333: kills target_a
+    env._threats_act()
+    assert env.threat_encounters == 2
+    assert env.agent_energies[target_a] == -1.0
+    assert env.threat_repelled == 1
+    # A kill this turn wins over the later repel: sated (100 steps), not merely cooling down (5).
+    assert env.threat_rest_until["threat_0"] == 20 + 100
+
+
+def test_no_kill_roll_is_consumed_after_a_repel():
+    env, target_a, target_b = _multi_target_setup(n_targetA_defenders=2, threat_attack_all_adjacent=True)
+    # target_a (processed first): 2 extra + 1 mutual = 3 defenders, reaching the repel threshold immediately.
+    assert env._threat_defenders(target_a) == 3
+    counting = _CountingRandom(env.rng, 0.0)
+    env.rng = counting
+    env._threats_act()
+    assert env.threat_encounters == 1  # target_b never attacked
+    assert counting.calls == 0  # the repel branch never calls .random() -- it only rolls on a non-repelled attack
+    assert env.agent_energies[target_b] == 5.0
