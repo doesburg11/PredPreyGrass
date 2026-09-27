@@ -168,6 +168,14 @@ plausibly explaining the matrix's original early-training asymmetry
 transient effect. Caveat: 5 episodes/condition, one seed — suggestive, not a
 rigorous statistical test.
 
+**Overall conclusion.** Taken together, these experiments show that the base PPG
+system exhibits genuine predator–prey co-adaptation during early training, but
+this arms race is not sustained indefinitely. Predator learning converges to a
+robust attractor, while prey learning retains additional adaptive potential
+that simultaneous co-training fails to realize. The present configuration
+therefore demonstrates **transient Red Queen dynamics rather than sustained
+open-ended co-evolution**.
+
 ## Centralized versus decentralized training
 The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo).
 
