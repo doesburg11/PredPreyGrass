@@ -317,10 +317,13 @@ class PredPreyGrass(MultiAgentEnv):
         # switches, two things: how much a defender's presence counts toward repelling a threat or lowering the kill
         # probability (_threats_act), and how much of a band-mate's shared forage it actually receives (_apply_band_share)
         # -- a habitual free-rider gradually becomes less useful to defend with and less worth sharing with, and recovers
-        # gradually with genuine exposure, rather than a hard cutoff. Modeled loosely on image-scoring indirect
-        # reciprocity (Nowak & Sigmund) and the reputation-based sanctioning anthropologists (Boehm) describe enforcing
-        # real hunter-gatherer sharing norms; mechanically executed like every other designed payoff here, not a learned
-        # action, for the same credit-assignment reasons as the male/female gifts.
+        # gradually with genuine exposure, rather than a hard cutoff. The score itself (the sharing/defense math it drives)
+        # is mechanically executed like every other designed payoff here, not a learned action, for the same
+        # credit-assignment reasons as the male/female gifts -- but unlike those, it IS exposed to policies as a new
+        # observation channel (_get_observation), so a predator can actually perceive nearby band-mates' reputation and
+        # learn to approach or avoid them, rather than the score only ever acting invisibly behind the scenes. Modeled
+        # loosely on image-scoring indirect reciprocity (Nowak & Sigmund) and the reputation-based sanctioning
+        # anthropologists (Boehm) describe enforcing real hunter-gatherer sharing norms.
         self.band_reputation = bool(config.get("band_reputation", False))
         self.reputation_ema_alpha = float(config.get("reputation_ema_alpha", 0.05))
         if not (0.0 < self.reputation_ema_alpha <= 1.0):
@@ -360,11 +363,15 @@ class PredPreyGrass(MultiAgentEnv):
         self.mammoth_positions: Dict[str, Tuple[int, int]] = {}
         self.mammoth_respawn_at: Dict[str, int] = {}
         self._pending_rewards: Dict[str, float] = {}
-        # Channels: 8 base, +4 with band_compass, +1 with threats (the threat channel comes last).
-        required_channels = 8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0) + (1 if self.num_mammoths > 0 else 0)
+        # Channels: 8 base, +4 with band_compass, +1 with threats, +1 with mammoths, +1 with band_reputation (last).
+        required_channels = (
+            8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0) + (1 if self.num_mammoths > 0 else 0)
+            + (1 if self.band_reputation else 0)
+        )
         if config.get("num_obs_channels") is not None and config["num_obs_channels"] < required_channels:
             raise ValueError(
-                f"num_obs_channels must be >= {required_channels} for this configuration (8, +4 with band_compass, +1 with threats, +1 with mammoths)"
+                f"num_obs_channels must be >= {required_channels} for this configuration "
+                "(8, +4 with band_compass, +1 with threats, +1 with mammoths, +1 with band_reputation)"
             )
         self.marriage_rule = config.get("marriage_rule", "female_joins_male")
         if self.num_bands < 0:
@@ -427,6 +434,7 @@ class PredPreyGrass(MultiAgentEnv):
         if self.num_obs_channels is None:
             self.num_obs_channels = (
                 8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0) + (1 if self.num_mammoths > 0 else 0)
+                + (1 if self.band_reputation else 0)
             )
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 9)
@@ -2268,6 +2276,18 @@ class PredPreyGrass(MultiAgentEnv):
                 rx, ry = mx - xp + observation_range // 2, my - yp + observation_range // 2
                 if 0 <= rx < observation_range and 0 <= ry < observation_range:
                     observation[mammoth_channel, rx, ry] = self.mammoth_energy
+        if self.band_reputation and "predator" in agent:
+            # Every predator's current reputation weight (_reputation_weight; [0, 1], own included) drawn at its cell in
+            # the window, band or no band -- the one thing the mechanical-only version of this mechanic never exposed:
+            # lets a policy actually perceive who is free-riding and learn to approach or avoid them, rather than the
+            # reputation score only ever affecting the environment's automatic sharing/defense math behind the scenes.
+            reputation_channel = (
+                8 + (4 if self.band_compass else 0) + (1 if self.num_threats > 0 else 0) + (1 if self.num_mammoths > 0 else 0)
+            )
+            for other, (ox, oy) in self.predator_positions.items():
+                rx, ry = ox - xp + observation_range // 2, oy - yp + observation_range // 2
+                if 0 <= rx < observation_range and 0 <= ry < observation_range:
+                    observation[reputation_channel, rx, ry] = self._reputation_weight(other)
 
         return observation
 

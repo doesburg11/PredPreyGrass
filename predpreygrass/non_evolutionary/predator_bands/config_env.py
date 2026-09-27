@@ -2,7 +2,7 @@ config_env = {
     "max_steps": 1000,
     # Grid and Observation Settings
     "grid_size": 25,
-    "num_obs_channels": None,  # auto: 8 (Border, Predator energy, Prey, Grass, Fruit, Fruit store, Same-band, Other-band), +4 with band_compass, +1 with threats
+    "num_obs_channels": None,  # auto: 8 (Border, Predator energy, Prey, Grass, Fruit, Fruit store, Same-band, Other-band), +4 with band_compass, +1 with threats, +1 with mammoths, +1 with band_reputation
     "predator_obs_range": 7,
     "prey_obs_range": 9,
     # Rewards
@@ -287,8 +287,9 @@ config_env.update(
         # attack range. This gives each predator a continuous reputation score in [0, 1] (starts at 1.0), nudged by
         # reputation_ema_alpha each time it is counted as a defender: toward 1.0 if it was itself within distance 1 of the
         # threat (genuinely exposed), toward 0.0 if not. The score scales (not switches) how much it counts toward
-        # repelling a threat/lowering the kill probability, and how much of a band-mate's shared forage it receives. See
-        # predpreygrass_rllib_env.py's __init__ for the full rationale.
+        # repelling a threat/lowering the kill probability, and how much of a band-mate's shared forage it receives. Also
+        # adds an observation channel (num_obs_channels auto +1) showing every visible predator's reputation, so a policy
+        # can actually perceive and learn to act on it. See predpreygrass_rllib_env.py's __init__ for the full rationale.
         "band_reputation": False,
         "reputation_ema_alpha": 0.05,
         # Rest after an attack (0 = off): a threat that kills is sated for threat_satiation_steps; one whose attack does not kill

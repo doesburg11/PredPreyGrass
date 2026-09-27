@@ -5,6 +5,7 @@ band-mate's shared forage it receives -- an image-scoring-style free-rider punis
 and _defender_weight for the full rationale."""
 import copy
 
+import numpy as np
 import pytest
 
 from predpreygrass.non_evolutionary.predator_bands.config_env import config_env as _base
@@ -210,3 +211,51 @@ def test_invalid_reputation_ema_alpha_is_rejected():
         _env(reputation_ema_alpha=1.5)
     with pytest.raises(ValueError):
         _env(reputation_ema_alpha=-0.1)
+
+
+# ---- observation channel: reputation is now perceivable, not just mechanical --------------------------------------------
+def test_band_reputation_is_off_by_default_and_adds_one_channel_when_on():
+    c = copy.deepcopy(_base)
+    env = PredPreyGrass(c)
+    env.reset(seed=1)
+    assert env.band_reputation is False and env.num_obs_channels == 8
+    assert _env(num_threats=0).num_obs_channels == 9  # band_reputation=True via _env(); no threats/mammoths/compass
+    assert _env().num_obs_channels == 10  # _env()'s own default num_threats=1: +1 threat, +1 reputation
+    assert _env(band_compass=True).num_obs_channels == 8 + 4 + 1 + 1  # compass + threat (num_threats=1) + reputation
+
+
+def test_reputation_channel_shows_every_visible_predators_own_weight_including_the_observer():
+    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
+    for _ in range(10):
+        env._threats_act()
+    rep = env.reputation[free_rider]
+    assert 0.0 < rep < 1.0
+    obs = env._get_observation(target)
+    off = (env.predator_obs_range - 1) // 2
+    ch = env.num_obs_channels - 1  # last channel: _free_rider_setup uses num_threats=1 and no compass/mammoths, so
+    # this is 8 (base) + 0 (compass) + 1 (threat) + 0 (mammoths) = channel 9, the reputation channel
+    tx, ty = env.agent_positions[target]
+    fx, fy = env.agent_positions[free_rider]
+    assert obs[ch, off, off] == pytest.approx(1.0)  # the observer itself: never touched, still at 1.0
+    assert obs[ch, off + (fx - tx), off + (fy - ty)] == pytest.approx(rep)
+
+
+def test_reputation_channel_is_all_zero_when_band_reputation_is_off():
+    env_off = _env(band_reputation=False)
+    env_on = _env(band_reputation=True)
+    assert env_on.num_obs_channels == env_off.num_obs_channels + 1  # exactly one extra channel, nothing else changes
+    a = _members(env_off, _fattest_band(env_off))[0]
+    obs_off = env_off._get_observation(a)
+    assert obs_off.shape[0] == env_off.num_obs_channels
+    obs_on = env_on._get_observation(a)  # same seed/layout (both from _env(), same reset(seed=1)): only channel 9 differs
+    assert np.array_equal(obs_off, obs_on[: env_off.num_obs_channels])
+    assert not (obs_on[env_off.num_obs_channels] == 0.0).all()  # the extra channel is genuinely populated (own weight, >=1 predator)
+
+
+def test_reputation_channel_is_never_populated_for_prey():
+    env = _env()
+    prey = next(iter(env.prey_positions))  # scripted prey: not in env.agents (not policy-controlled)
+    obs = env._get_observation(prey)
+    assert obs.shape[0] == env.num_obs_channels
+    ch = env.num_obs_channels - 1
+    assert (obs[ch] == 0.0).all()
