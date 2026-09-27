@@ -312,8 +312,10 @@ class PredPreyGrass(MultiAgentEnv):
         # outside the attack range and get full credit as a "defender" at zero personal risk (see RESULTS.md's free-rider
         # discussion). This gives every predator a continuous reputation score in [0, 1] (starts at 1.0: benefit of the
         # doubt), updated by an exponential moving average each time it is counted as a defender in a genuine attack:
-        # reputation_ema_alpha toward 1.0 if it was itself within distance 1 of the threat at that moment (genuinely
-        # exposed), toward 0.0 if not (free-riding on the wider defense radius). The score then scales, rather than
+        # reputation_ema_alpha toward 1.0 if it is part of an unbroken cluster of mutually touching predators reaching
+        # back to the one under direct attack (_cluster_exposed; any shape -- a line, a blob, a ring -- not just whoever
+        # is literally nearest the threat), toward 0.0 if not (in range for credit but not part of the cluster). The
+        # score then scales, rather than
         # switches, two things: how much a defender's presence counts toward repelling a threat or lowering the kill
         # probability (_threats_act), and how much of a band-mate's shared forage it actually receives (_apply_band_share)
         # -- a habitual free-rider gradually becomes less useful to defend with and less worth sharing with, and recovers
@@ -1954,16 +1956,41 @@ class PredPreyGrass(MultiAgentEnv):
         headcount, unaffected by reputation (see _defender_ids, _defender_weight)."""
         return len(self._defender_ids(target, viable))
 
-    def _update_reputation(self, defender_ids, threat_x, threat_y):
+    def _cluster_exposed(self, defender_ids, target):
+        """Which of defender_ids are 'exposed' to an attack on target: part of an unbroken cluster of mutually touching
+        (Chebyshev distance <= 1) predators connected to the threat, not just whichever one happens to be literally
+        nearest it -- any shape (a line, a blob, a ring), the only requirement is no gaps. target is always touching the
+        threat (that is what makes this an attack -- so the threat's own position never needs to be passed in here), so
+        the cluster starts there: a defender touching target is exposed; a defender touching THAT defender is exposed
+        too, and so on outward in every direction, not just along a single path. The cluster may only route through
+        target and defender_ids (the same pool already being evaluated for this attack), not through predators outside
+        threat_defense_radius of target."""
+        positions = {target: self.agent_positions[target]}
+        positions.update((a, self.predator_positions[a]) for a in defender_ids)
+
+        def touching(p, q):
+            return max(abs(p[0] - q[0]), abs(p[1] - q[1])) <= 1
+
+        exposed = {target}  # target always touches the threat by definition; the chain grows outward from it
+        frontier = [target]
+        while frontier:
+            cur_pos = positions[frontier.pop()]
+            for node, pos in positions.items():
+                if node not in exposed and touching(cur_pos, pos):
+                    exposed.add(node)
+                    frontier.append(node)
+        return {a for a in defender_ids if a in exposed}
+
+    def _update_reputation(self, defender_ids, target):
         """band_reputation bookkeeping, called once per genuinely resolved attack (see _threats_act): each predator in
-        defender_ids has its reputation nudged by reputation_ema_alpha toward 1.0 if it was itself within distance 1 of the
-        threat at that moment (genuinely exposed, not just close enough to the target for free credit) or toward 0.0 if
-        not. An unseen predator starts from 1.0 (benefit of the doubt); the score moves gradually and recovers with
-        genuine exposure -- no hard threshold or reset."""
+        defender_ids has its reputation nudged by reputation_ema_alpha toward 1.0 if it is cluster-exposed (_cluster_exposed)
+        to this attack -- part of an unbroken touching cluster reaching back to the one under direct attack, not just
+        close enough to the target for free credit -- or toward 0.0 if not. An unseen predator starts from 1.0 (benefit
+        of the doubt); the score moves gradually and recovers with genuine exposure -- no hard threshold or reset."""
+        exposed_ids = self._cluster_exposed(defender_ids, target)
         alpha = self.reputation_ema_alpha
         for other in defender_ids:
-            ox, oy = self.predator_positions[other]
-            exposed = 1.0 if max(abs(ox - threat_x), abs(oy - threat_y)) <= 1 else 0.0
+            exposed = 1.0 if other in exposed_ids else 0.0
             prior = self.reputation.get(other, 1.0)
             self.reputation[other] = (1.0 - alpha) * prior + alpha * exposed
 
@@ -2014,7 +2041,7 @@ class PredPreyGrass(MultiAgentEnv):
                     defender_ids = self._defender_ids(target, viable)
                     defenders = self._defender_weight(defender_ids, reputation_at_start)
                     if self.band_reputation:
-                        self._update_reputation(defender_ids, tx, ty)
+                        self._update_reputation(defender_ids, target)
                     if defenders >= self.threat_defenders_to_repel:
                         stopped = True
                         blocked = set(self.predator_positions.values()) | {p for t, p in self.threat_positions.items() if t != tid}

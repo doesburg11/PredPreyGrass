@@ -75,6 +75,73 @@ def _free_rider_setup(**kw):
     return env, target, free_rider
 
 
+def _relay_setup(*positions, threat_defense_radius=3, reputation_ema_alpha=1.0, **kw):
+    """target at (10, 10), adjacent to a threat at (9, 10). One relay predator per extra position given (e.g. D1, D2,
+    D3), placed in band order. threat_defense_radius defaults to 3 so a chain of 3 relays (distance 1 apart) all fall
+    within range of target. reputation_ema_alpha defaults to 1.0 so a single _update_reputation call moves a fresh
+    (unseen, 1.0) predator straight to 0.0 or keeps it at 1.0 -- no partial-step arithmetic needed in assertions."""
+    env = _env(threat_defense_radius=threat_defense_radius, reputation_ema_alpha=reputation_ema_alpha, **kw)
+    band = sorted(_members(env, _fattest_band(env)))
+    target, *relays = band[: 1 + len(positions)]
+    _park_others(env, {target, *relays})
+    _place(env, target, (10, 10))
+    for r, pos in zip(relays, positions):
+        _place(env, r, pos)
+    env.threat_positions = {"threat_0": (9, 10)}
+    for a in env.predator_positions:
+        env.agent_energies[a] = 5.0
+    return env, target, relays
+
+
+# ---- cluster exposure: propagates through any unbroken shape of touching predators, not just direct threat adjacency ----
+def test_exposure_propagates_through_an_unbroken_relay_far_from_the_threat_itself():
+    # D1 touches target (distance 1); D2 touches D1; D3 touches D2. None of them is anywhere near the threat -- D3 is
+    # 4 cells from it -- but all three are part of one unbroken cluster reaching back to target, so all three count as
+    # exposed.
+    env, target, (d1, d2, d3) = _relay_setup((11, 10), (12, 10), (13, 10))
+    exposed = env._cluster_exposed(env._defender_ids(target), target)
+    assert {d1, d2, d3} <= exposed
+    env._update_reputation(env._defender_ids(target), target)
+    assert env.reputation[d1] == env.reputation[d2] == env.reputation[d3] == pytest.approx(1.0)
+
+
+def test_a_gap_breaks_the_cluster_and_stops_exposure_from_propagating_past_it():
+    # D1 still touches target. D2 is 2 cells from D1 -- a gap -- so D2 (and D3, which only touches D2) are not part of
+    # the connected cluster, even though both are within threat_defense_radius (3) of target and get an "opportunity".
+    env, target, (d1, d2, d3) = _relay_setup((11, 10), (13, 10), (13, 11))
+    exposed = env._cluster_exposed(env._defender_ids(target), target)
+    assert d1 in exposed
+    assert d2 not in exposed and d3 not in exposed
+    env._update_reputation(env._defender_ids(target), target)
+    assert env.reputation[d1] == pytest.approx(1.0)
+    assert env.reputation[d2] == pytest.approx(0.0) and env.reputation[d3] == pytest.approx(0.0)
+
+
+def test_cluster_exposure_works_in_any_shape_not_only_a_straight_line():
+    # D1 touches target from directly below; D2 touches only D1 (distance 2 from target itself, so it relies entirely
+    # on the perpendicular link through D1, not on any direct reach toward target or the threat).
+    env, target, (d1, d2) = _relay_setup((10, 11), (11, 12))
+    exposed = env._cluster_exposed(env._defender_ids(target), target)
+    assert d1 in exposed and d2 in exposed
+
+
+def test_cluster_exposure_target_is_never_in_the_returned_set_or_credited_itself():
+    env, target, (d1,) = _relay_setup((11, 10))
+    exposed = env._cluster_exposed(env._defender_ids(target), target)
+    assert target not in exposed  # only defender_ids are ever returned, by construction
+    env._update_reputation(env._defender_ids(target), target)
+    assert target not in env.reputation  # target is never credited for its own defense (see _defender_ids)
+
+
+def test_cluster_exposure_handles_empty_and_single_defender_lists():
+    env, target, () = _relay_setup()  # nobody else nearby at all
+    assert env._cluster_exposed([], target) == set()
+    env, target, (d1,) = _relay_setup((11, 10))  # one defender, touching target
+    assert env._cluster_exposed(env._defender_ids(target), target) == {d1}
+    env, target, (d1,) = _relay_setup((13, 10))  # one defender, NOT touching target (distance 3, still in radius 3)
+    assert env._cluster_exposed(env._defender_ids(target), target) == set()
+
+
 def test_default_reputation_is_full_and_off_is_a_true_no_op():
     env, target, free_rider = _free_rider_setup(band_reputation=False)
     assert env._reputation_weight(free_rider) == 1.0

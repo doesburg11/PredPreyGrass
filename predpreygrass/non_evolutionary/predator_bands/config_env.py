@@ -285,8 +285,9 @@ config_env.update(
         # Free-rider punishment via reputation (default off): threat_defense_radius is wider than the distance-1 range a
         # threat actually attacks at, so a predator can get full "defender" credit for a band-mate from safely outside
         # attack range. This gives each predator a continuous reputation score in [0, 1] (starts at 1.0), nudged by
-        # reputation_ema_alpha each time it is counted as a defender: toward 1.0 if it was itself within distance 1 of the
-        # threat (genuinely exposed), toward 0.0 if not. The score scales (not switches) how much it counts toward
+        # reputation_ema_alpha each time it is counted as a defender: toward 1.0 if it is part of an unbroken touching
+        # cluster reaching back to the one under direct attack (_cluster_exposed; any shape -- a line, a blob, a ring --
+        # not just whoever is nearest the threat), toward 0.0 if not. The score scales (not switches) how much it counts toward
         # repelling a threat/lowering the kill probability, and how much of a band-mate's shared forage it receives. Also
         # adds an observation channel (num_obs_channels auto +1) showing every visible predator's reputation, so a policy
         # can actually perceive and learn to act on it. See predpreygrass_rllib_env.py's __init__ for the full rationale.
