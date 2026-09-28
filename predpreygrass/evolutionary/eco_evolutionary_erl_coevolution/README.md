@@ -188,3 +188,38 @@ become a stronger selective force (20% of agent deaths vs. 13%).
 5-strategy comparison at 150×150 is next.
 Runtime is ~45 min per surviving 60k-step run (~22 steps/sec).
 
+### 5-strategy comparison at 150×150 (2026-09-29): step 1 passes; ERL beats E/F/B, not L
+
+`config_step1` (commit 3bea7de): 20 seeds × 5 strategies × 60k steps, results in
+`~/simulation_results/erl_results/coevo_step1_compare150`. ERL's runs are
+identical to the validated 150×150 runs.
+
+| strategy | prey extinct (of 20) | alive at the switch | coexist to 60k | carnivores died out |
+|---|---|---|---|---|
+| ERL | 1 | 19 | 19 | 0 |
+| E | 10 | 10 | 10 | 0 |
+| L | 3 | 17 | 15 | 2 |
+| F | 12 | 8 | 7 | 1 |
+| B | 11 | 9 | 9 | 0 |
+
+**Coexistence: step 1's criterion is met across strategies.** Of the 63 prey
+populations alive when immigration stopped, 60 kept their carnivores to 60k.
+
+**Prey survival:** ERL beats E (Fisher p=0.003), F (p=0.0004) and B
+(p=0.001). ERL vs. L is **not** significant (p=0.6; the coexistence-time
+Mann-Whitney gives p=0.11). Compared with 100×100 (same seeds), the decisive
+comparison moved. There, ERL vs. E was p=0.08 and ERL vs. L p=0.003. L's prey
+extinctions dropped from 13/20 to 3/20.
+
+Candidate explanation for L, **not tested**: L clones genomes, but clonal
+lineages still compete, so L is selection among founders plus learning.
+With 135 founders instead of 60, the pool more often contains a good innate
+evaluation function. If that's right, the L result reflects founder-pool size
+as much as the new ecology. The bigger world changes the founder count and
+the carnivore regime at the same time, so these two effects are confounded
+here. A direct test would be L on 150×150 with 60 founders, or on 100×100
+with 135 founders.
+
+Predation share of agent deaths is 17–20% for every strategy (13% on
+100×100).
+
