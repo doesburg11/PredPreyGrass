@@ -160,3 +160,30 @@ Death causes are unchanged from step 0. Predation is only ~12–15% of agent
 deaths; ~85% are wounds, mainly from walking into walls. Carnivores are a
 weak selective force on the prey, which matters for the arms-race steps.
 
+### Bigger world (2026-09-28): coexistence becomes robust
+
+Same `config_step1` (20k warm-up, then no immigration, 60k budget), ERL only,
+20 seeds, on a 150×150 grid with **every density held fixed**. Per-cell
+rates scale on their own; absolute counts are scaled by the area ratio 2.25:
+`n_initial_agents` 135, `n_initial_carnivores` 11, `min_plants` 112,
+`min_trees` 225, `max_population_cap` 4500, `carnivore_spawn_interval` 89 (same
+immigrants per area). Results in `~/simulation_results/erl_results/coevo_step1_g150`.
+
+| | 150×150 | 100×100 (same seeds) |
+|---|---|---|
+| prey alive at the switch (20k) | 19/20 | 17/20 |
+| ...of which keep carnivores to 60k | **19/19** | 8/17 |
+| lowest carnivore count after the switch, coexisting runs | **18–54** | 2–14 |
+| carnivores at 60k | 52–238 | ~20–60 |
+| predation share of agent deaths | 20% | 13% |
+
+The one prey extinction (seed 20, step 1,233) happened during the warm-up.
+Mechanism: in 100×100, carnivores repeatedly dip to a handful of individuals
+at cycle lows and die out by chance (demographic stochasticity). In 150×150
+the low point never goes below 18, and prey never below ~320. Carnivores also
+become a stronger selective force (20% of agent deaths vs. 13%).
+
+Not yet done: E/L/F/B at 150×150, so whether ERL's prey advantage holds in the
+bigger world is untested. This setting is not yet the `config_step1` preset.
+Runtime is ~45 min per surviving 60k-step run (~22 steps/sec).
+
