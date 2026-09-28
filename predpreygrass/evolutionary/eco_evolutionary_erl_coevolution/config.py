@@ -151,6 +151,25 @@ config_erl = config_step0
 # carnivore breeding only looked better through a free-energy birth artifact.
 # This setting uses §9's own carnivore parameters (energy-lossy births) and
 # coexisted in 6/6 ERL seeds over the 40k steps after immigration stopped.
+AREA_SCALED_KEYS = (
+    "n_initial_agents", "n_initial_carnivores", "min_plants", "min_trees", "max_population_cap",
+)
+
+
+def scale_world_area(cfg: dict, grid_size: int) -> dict:
+    """Resize the world while holding every density fixed. Per-cell rates
+    (plant growth, crowding limit, wall density, tree birth/death) scale on
+    their own; the absolute counts in AREA_SCALED_KEYS scale with area, and
+    the immigration interval shrinks so immigrants per area stay the same."""
+    ratio = (grid_size / cfg["grid_size"]) ** 2
+    out = dict(cfg, grid_size=grid_size)
+    for key in AREA_SCALED_KEYS:
+        out[key] = round(cfg[key] * ratio)
+    if cfg["carnivore_spawn_interval"] > 0:
+        out["carnivore_spawn_interval"] = round(cfg["carnivore_spawn_interval"] / ratio)
+    return out
+
+
 STEP1_OVERRIDES = {
     "carnivore_immigration_until": 20_000,  # step 0: None (immigration forever)
     # With no immigration left, carnivore extinction is permanent: the rest of
@@ -159,7 +178,12 @@ STEP1_OVERRIDES = {
     "end_on_carnivore_extinction": True,
 }
 
-config_step1 = {**config_step0, **STEP1_OVERRIDES}
+# 150x150 at step-0 densities (decided 2026-09-28): on 100x100, carnivores dip
+# to 2-14 at cycle lows and die out by chance in ~half the runs; at 150x150
+# the lows stay at 18-54 and 19/19 ERL runs coexisted (README.md).
+STEP1_GRID_SIZE = 150
+
+config_step1 = scale_world_area({**config_step0, **STEP1_OVERRIDES}, STEP1_GRID_SIZE)
 
 PRESETS = {"step0": config_step0, "step1": config_step1}
 

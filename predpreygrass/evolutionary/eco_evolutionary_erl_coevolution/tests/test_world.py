@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import (
+    AREA_SCALED_KEYS,
     STEP1_OVERRIDES,
     config_step0,
     config_step1,
@@ -95,9 +96,16 @@ def test_strategy_L_learns(rng):
 
 def test_step1_preset_only_changes_the_documented_keys():
     changed = {k for k in config_step1 if config_step1[k] != config_step0.get(k)}
-    assert changed <= set(STEP1_OVERRIDES)
+    assert changed <= set(STEP1_OVERRIDES) | set(AREA_SCALED_KEYS) | {"grid_size", "carnivore_spawn_interval"}
     assert config_step1["carnivore_immigration_until"] == 20_000
-    assert config_step1["carnivore_spawn_interval"] == config_step0["carnivore_spawn_interval"]
+
+
+def test_step1_preset_matches_the_validated_150_grid_values():
+    """The exact values the 19/19 coexistence test ran with (README.md)."""
+    expected = dict(grid_size=150, n_initial_agents=135, n_initial_carnivores=11, min_plants=112,
+                    min_trees=225, max_population_cap=4500, carnivore_spawn_interval=89)
+    got = {k: config_step1[k] for k in expected}
+    assert got == expected
 
 
 def test_immigration_off_spawns_no_carnivores(rng):

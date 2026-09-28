@@ -183,7 +183,8 @@ at cycle lows and die out by chance (demographic stochasticity). In 150×150
 the low point never goes below 18, and prey never below ~320. Carnivores also
 become a stronger selective force (20% of agent deaths vs. 13%).
 
-Not yet done: E/L/F/B at 150×150, so whether ERL's prey advantage holds in the
-bigger world is untested. This setting is not yet the `config_step1` preset.
+**`config_step1` now uses this 150×150 world** (decided 2026-09-28), via
+`config.scale_world_area()`. It replays the validated runs exactly. The
+5-strategy comparison at 150×150 is next.
 Runtime is ~45 min per surviving 60k-step run (~22 steps/sec).
 
