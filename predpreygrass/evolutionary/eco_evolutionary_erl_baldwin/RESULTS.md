@@ -20,6 +20,19 @@
   despite every channel's raw correlation with realized `offspring_count` staying under 0.007.
   Directionally matches the paper's own Hungry-Thirsty result -- a real, replicated divergence,
   not a single seed's fluke.
+- **Reproducibility note (2026-09-28)**: the current code does **not** replay §9 seed-for-seed.
+  The logic is unchanged, but the random-number stream is not. Commits `be6c2c2` (kin
+  selection, 2026-08-24) and `76c623f` (alarm calls, 2026-08-25) added two genes
+  (`kinship_sensitivity`, `alarm_call_propensity`), which cost two extra RNG draws per founder
+  genome, mutation and crossover. Those draws happen under **every** strategy, including
+  ERL/E/L/F/B, where the genes are never used. So a given seed now plays out a different, equally
+  valid run. Checked: 0/20 early-extinct §9 seeds match their §9 extinction step on HEAD, while
+  20/20 match on `47534a0` (the commit §9 actually ran on). §9's data and conclusion are
+  unaffected, and so are later sections' seed-pooled results. What's lost is exact replay of §9
+  runs on the current code. Earlier docstrings calling ERL/E/L/F/B "byte-identical" after C/K/S
+  were added are right about the logic but wrong about the RNG stream. To replay §9, check out
+  `47534a0`, or use `eco_evolutionary_erl_coevolution` (`config_step0`), which uses the §9-era
+  genome and matches §9 on 100/100 runs (20 seeds × 5 strategies, 50k steps).
 
 Detailed, dated log follows below.
 
