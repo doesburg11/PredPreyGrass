@@ -438,7 +438,7 @@ real-seed numbers, the stop rationale, and candidate next steps.
 
 ---
 
-## Trial 9 — `eco_evolutionary_cultural_plasticity_seasonal` — replication in progress
+## Trial 9 — `eco_evolutionary_cultural_plasticity_seasonal` — closed, null (archived)
 
 **Targets the actual diagnosis behind Trial 8's null result, not just the trait shape again.**
 Trial 8's postmortem pointed to Rogers' Paradox (Rogers, 1988): a gene for social-vs-individual
@@ -470,6 +470,11 @@ started), but discouraging on this one seed. (Earlier progress notes here cited 
 iterations" — that number came from a CSV-parsing bug on the reporting side, not an actual
 pause; corrected.) See `eco_evolutionary_cultural_plasticity_seasonal/RESULTS.md` for full run
 inventory.
+
+**Verdict:** closed as null after the completed seed; seeds 43/44 and the neutral-control
+replication were not run. The flat result matches Trial 8's, consistent with Rogers' Paradox
+explaining both. The module now lives in
+[PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cultural_plasticity_seasonal).
 
 ---
 
