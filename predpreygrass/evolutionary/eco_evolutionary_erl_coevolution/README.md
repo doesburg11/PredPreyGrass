@@ -104,9 +104,10 @@ Calibration so far (ERL only), with results in
   opening boom-bust on naive prey). Of the 14 that get past 3,000, 9 still
   lose them between 6k and 16k steps at a cycle low, when only ~10–20
   carnivores are alive (demographic-stochasticity extinction).
-- **Sweep 3 result: 20k warm-up with §9's own carnivore parameters
-  (threshold 18, cost 10: energy-lossy births), then immigration off.
-  6/6 seeds coexisted for the full 40k steps after immigration stopped**
+- **Sweep 3 result: 20k warm-up with §9's carnivore reproduction parameters
+  (threshold 18, cost 10: energy-lossy births) but *10* initial carnivores
+  (inherited from the old step-1 preset, not §9's 5 -- see the correction
+  below), then immigration off. 6/6 seeds coexisted for the full 40k steps after immigration stopped**
   (60k budget). Carnivore births were 7,500–8,900 per run against 100
   immigrants, so carnivore numbers were regulated by prey. Seed 5 ended with
   a single carnivore, a near-extinction. With threshold 14 (cost 7), the
@@ -120,4 +121,42 @@ die out. Rationale: an established prey population meets a carnivore
 population that must live off it alone. Starting both species cold fails in
 ~90% of runs. It is still only 6 seeds and ERL only, so the confirming
 comparison (20 seeds × 5 strategies × 60k steps) is next.
+
+### Confirming comparison (2026-09-28): coexistence is NOT robust yet; ERL's prey advantage holds
+
+`config_step1` (commit ed7aedb): 20 seeds × 5 strategies × 60k steps, results in
+`~/simulation_results/erl_results/coevo_step1_compare`.
+
+**Correction first.** Sweep 3's 6/6 does not carry over to this preset. Sweep 3
+also inherited `n_initial_carnivores=10` from the old step-1 preset, while
+`config_step1` uses §9's 5. Both runs replay exactly, so this is deterministic,
+not noise. A 5-carnivore difference at step 0 changes the whole trajectory.
+On seeds 1–6, 3/6 now coexist.
+
+**Coexistence after immigration stops (step 20k):**
+
+| strategy | prey alive at 20k | then coexist to 60k | carnivores die out | prey die out |
+|---|---|---|---|---|
+| ERL | 17/20 | 8 | 9 | 3 (all before 20k) |
+| E | 11/20 | 3 | 8 | 9 |
+| L | 7/20 | 0 | 7 | 13 |
+| F | 1/20 | 0 | 1 | 19 |
+| B | 9/20 | 2 | 7 | 11 |
+
+Even for ERL, only about half the populations that reach the switch keep
+their carnivores. 5 of ERL's 9 carnivore extinctions come within ~1,500 steps
+of the switch (seeds 1, 8, 10, 16, 20), and several of those had only 1–9
+carnivores left at step 20k. Stopping immigration abruptly often lands on a
+cycle low. Step 1's pass criterion, robust coexistence, is **not met**.
+
+**Prey survival: the §9 ranking holds with prey-regulated carnivores.** Agent
+extinctions out of 20 were ERL 3, E 9, L 13, F 19, B 11. ERL beats L
+(Fisher p=0.003), F (p=4e-7) and B (p=0.02). ERL vs. E is p=0.08 at n=20,
+the same as step 0 at this sample size (p=0.1); §9 needed n=100 and 1M
+steps to separate them. The coexistence-time Mann-Whitney tests say the same
+(ERL vs. E/L/F/B: p=0.08/0.004/5e-6/0.009).
+
+Death causes are unchanged from step 0. Predation is only ~12–15% of agent
+deaths; ~85% are wounds, mainly from walking into walls. Carnivores are a
+weak selective force on the prey, which matters for the arms-race steps.
 
