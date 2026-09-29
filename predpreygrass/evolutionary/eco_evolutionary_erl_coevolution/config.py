@@ -129,6 +129,10 @@ config_step0 = {
     "mixed_mutant_living_weight": 10.0,  # "rich" mutant channels (defaults = identical to the resident)
     "mixed_mutant_sheltered_weight": 10.0,
     "mixed_mutant_corpse_weight": 10.0,
+    "mixed_mutant_strategy": "network",  # or a hand-coded state-dependent variant: persist | sated_scavenger | wounded_scavenger
+    "mixed_persist_prob": 0.9,
+    "mixed_sated_energy_frac": 0.75,
+    "mixed_wounded_health_frac": 0.5,
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,

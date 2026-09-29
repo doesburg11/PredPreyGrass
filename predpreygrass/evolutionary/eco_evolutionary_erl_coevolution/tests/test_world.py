@@ -457,3 +457,39 @@ def test_rich_observation_channels(rng):
     assert obs[0] > 0 and obs[4 + 0] == 0 and obs[8 + 0] == 0  # N: living
     assert obs[4 + 2] > 0 and obs[2] == 0  # E: sheltered
     assert obs[8 + 1] > 0 and obs[1] == 0  # S: corpse
+
+
+def _mixed_rich_world(strategy, **overrides):
+    world = ErlWorld(_small_world_cfg(**{"carnivore_mode": "mixed", "carnivore_obs": "rich", "n_initial_carnivores": 2,
+                                         "mixed_mutant_strategy": strategy, **overrides}), np.random.default_rng(0))
+    return world, world.carnivores[1]  # id 1 = mutant
+
+
+def test_persist_mutant_repeats_last_move_when_nothing_seen():
+    world, mutant = _mixed_rich_world("persist", mixed_persist_prob=1.0)
+    obs = np.zeros(18)
+    world._observe_carnivore = lambda c: obs
+    mutant.last_action = 2
+    assert all(world._state_strategy_action(mutant) == 2 for _ in range(20))
+    obs[12 + 2] = 1.0  # east now blocked -> falls back to the seed network
+    assert world._state_strategy_action(mutant) != 2
+
+
+def test_sated_scavenger_ignores_living_prey_only_when_sated():
+    world, mutant = _mixed_rich_world("sated_scavenger")
+    obs = np.zeros(18)
+    obs[0] = 1.0  # living prey north
+    obs[8 + 1] = 1.0  # carcass south, same distance
+    world._observe_carnivore = lambda c: obs
+    obs[16] = 0.9  # sated
+    assert [world._state_strategy_action(mutant) for _ in range(30)].count(1) >= 29
+    obs[16] = 0.3  # hungry: north and south tie under the seed
+    picks = [world._state_strategy_action(mutant) for _ in range(60)]
+    assert picks.count(0) > 10 and picks.count(1) > 10
+
+
+def test_network_mutant_path_unchanged_by_state_strategies():
+    """Default strategy 'network' must not touch the state-strategy code path."""
+    world, mutant = _mixed_rich_world("network")
+    world._state_strategy_action = lambda c: (_ for _ in ()).throw(AssertionError("must not be called"))
+    world.step()

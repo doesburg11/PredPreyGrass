@@ -69,6 +69,15 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
     by id (exactly 50/50, no RNG); offspring inherit the parent's type. The
     mutant frequency over time measures within-population selection between
     the two behaviors. `self.type_births/type_steps/type_kills` hold per-type totals.
+    `mixed_mutant_strategy` other than "network" makes the mutant a hand-coded
+    STATE-DEPENDENT variant of the resident seed network -- behavior a
+    single-layer network cannot express (headroom test for a hidden layer):
+      "persist": when no prey is visible, repeat the previous move with
+        probability `mixed_persist_prob` if that cell is open (search memory);
+      "sated_scavenger": at energy >= `mixed_sated_energy_frac` of max, ignore
+        living and sheltered prey and go only for carcasses (needs "rich");
+      "wounded_scavenger": at health < `mixed_wounded_health_frac` of max, the
+        same carcass-only behavior (needs "rich").
   Carnivore observation (CARN_OBS_DIM = 10): prey signal N/S/E/W (exactly
   what the hand-coded rule sees: nearest living agent or agent corpse within
   `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
@@ -158,6 +167,7 @@ class Carnivore:
     kills: int = 0
     phenotype: Genome | None = None  # expressed network under "genome_nonheritable" only
     ctype: int = 0  # "mixed" only: 0 = resident, 1 = mutant
+    last_action: int | None = None  # "mixed" only: previous move, for the "persist" strategy
 
 
 @dataclass
@@ -350,6 +360,41 @@ class ErlWorld:
             self._mixed_cache = cached
         return cached
 
+    def _state_strategy_action(self, carnivore: Carnivore) -> int:
+        """Hand-coded state-dependent mutant ("mixed" only) -- see module docstring."""
+        strategy = self.cfg["mixed_mutant_strategy"]
+        obs = self._observe_carnivore(carnivore)
+        seed = self._mixed_type_genomes[0]
+        weights = seed.action_weights
+        layout = self.carn_layout
+        if strategy in ("sated_scavenger", "wounded_scavenger"):
+            assert "corpse" in layout["prey"], f"{strategy} needs carnivore_obs='rich'"
+            triggered = (
+                obs[-2] >= self.cfg["mixed_sated_energy_frac"] if strategy == "sated_scavenger"
+                else obs[-1] < self.cfg["mixed_wounded_health_frac"]
+            )
+            if triggered:
+                weights = self._carcass_only_weights
+        elif strategy == "persist":
+            nothing_seen = obs[: layout["block"]].max() == 0.0
+            last = carnivore.last_action
+            if nothing_seen and last is not None and obs[layout["block"] + last] == 0.0:
+                if self.rng.random() < self.cfg["mixed_persist_prob"]:
+                    return last
+        else:
+            raise ValueError(f"unknown mixed_mutant_strategy {strategy!r}")
+        return sample_action(action_probs(obs, weights, seed.action_bias), self.rng)
+
+    @property
+    def _carcass_only_weights(self) -> np.ndarray:
+        cached = getattr(self, "_carcass_cache", None)
+        if cached is None:
+            cached = self._mixed_type_genomes[0].action_weights.copy()
+            for channel in ("living", "sheltered"):
+                cached[self.carn_layout["prey"][channel]:self.carn_layout["prey"][channel] + N_ACTIONS] = 0.0
+            self._carcass_cache = cached
+        return cached
+
     @property
     def _canonical_carnivore_genome(self) -> Genome:
         """The seed network with no founder variation -- what every carnivore
@@ -537,9 +582,13 @@ class ErlWorld:
                 action = self._carnivore_fsa_action(carnivore)
             elif self.carnivore_mode == "mixed":
                 self.type_steps[carnivore.ctype] += 1
-                net = self._mixed_type_genomes[carnivore.ctype]
-                probs = action_probs(self._observe_carnivore(carnivore), net.action_weights, net.action_bias)
-                action = sample_action(probs, self.rng)
+                if carnivore.ctype == 1 and self.cfg["mixed_mutant_strategy"] != "network":
+                    action = self._state_strategy_action(carnivore)
+                else:
+                    net = self._mixed_type_genomes[carnivore.ctype]
+                    probs = action_probs(self._observe_carnivore(carnivore), net.action_weights, net.action_bias)
+                    action = sample_action(probs, self.rng)
+                carnivore.last_action = action
             else:
                 obs = self._observe_carnivore(carnivore)
                 if self.carnivore_mode == "genome":
