@@ -78,7 +78,7 @@ def run_one(job: dict) -> dict:
     # at the end as censored) -- per-generation trait data for the Hunt
     # selection-vs-drift test. Only written when carnivores carry genomes.
     carn_rows = []
-    if world.carnivore_mode != "fsa":
+    if world.carnivore_mode.startswith("genome"):
         world.on_carnivore_death = lambda c, step: carn_rows.append(_carnivore_record(c, step, censored=False))
     sample_every = job["sample_every"]
 
@@ -113,7 +113,7 @@ def run_one(job: dict) -> dict:
     with open(ts_dir / f"{job['tag']}_{job['strategy']}_seed{job['seed']}.csv", "w") as f:
         f.write(",".join(SAMPLE_FIELDS) + "\n")
         f.writelines(",".join(str(v) for v in row) + "\n" for row in series)
-    if world.carnivore_mode != "fsa":
+    if world.carnivore_mode.startswith("genome"):
         carn_rows.extend(_carnivore_record(c, world.current_step, censored=True) for c in world.carnivores if c.alive)
         carn_dir = Path(job["out_dir"]) / "carnivore_lineage"
         carn_dir.mkdir(parents=True, exist_ok=True)

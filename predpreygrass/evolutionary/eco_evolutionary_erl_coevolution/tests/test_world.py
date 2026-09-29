@@ -366,3 +366,21 @@ def world_carnivores_ever(result):
     # founders + immigrants + births; every one gets exactly one lineage row
     from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import PRESETS
     return PRESETS["step2"]["n_initial_carnivores"] + result["carnivore_immigrants"] + result["carnivore_births"]
+
+
+def test_fsa_skip_sheltered_ignores_agents_in_trees(rng):
+    """The plain rule always heads for a visible sheltered agent (and wastes the
+    move: carnivores can't enter trees); the probe variant treats it as absent."""
+    picks = {}
+    for mode in ("fsa", "fsa_skip_sheltered"):
+        world = ErlWorld(_small_world_cfg(carnivore_mode=mode, n_initial_carnivores=1), np.random.default_rng(0))
+        carnivore, agent = world.carnivores[0], world.agents[0]
+        for cell in [(r, 5) for r in range(2, 10)] + [(6, c) for c in range(2, 10)]:
+            _clear_cell(world, cell)
+        _place(world, carnivore, (6, 5))
+        _place(world, agent, (4, 5))
+        world.terrain[(4, 5)] = 2  # the agent's cell is a tree
+        agent.in_tree = True
+        picks[mode] = [world._carnivore_fsa_action(carnivore) for _ in range(20)]
+    assert set(picks["fsa"]) == {0}
+    assert set(picks["fsa_skip_sheltered"]) != {0}

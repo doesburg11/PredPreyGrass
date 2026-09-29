@@ -92,7 +92,7 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 STRATEGIES = ("ERL", "E", "L", "F", "B")
-CARNIVORE_MODES = ("fsa", "genome", "genome_neutral")
+CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral")
 
 
 @dataclass
@@ -280,7 +280,7 @@ class ErlWorld:
             row=row, col=col,
             energy=self.cfg["initial_energy_carnivore"],
             health=self.cfg["initial_health_carnivore"],
-            genome=self._founder_carnivore_genome() if self.carnivore_mode != "fsa" else None,
+            genome=self._founder_carnivore_genome() if self.carnivore_mode.startswith("genome") else None,
             born_step=self.current_step,
         )
         self._next_carnivore_id += 1
@@ -479,7 +479,7 @@ class ErlWorld:
             if not carnivore.alive:
                 continue
             self.carnivore_steps += 1
-            if self.carnivore_mode == "fsa":
+            if self.carnivore_mode in ("fsa", "fsa_skip_sheltered"):
                 action = self._carnivore_fsa_action(carnivore)
             else:
                 obs = self._observe_carnivore(carnivore)
@@ -500,12 +500,18 @@ class ErlWorld:
         wall or an occupied tree (carnivores "as programmed" don't choose
         those moves -- Figure 5's footnote)."""
         best_dir, best_signal = None, 0.0
+        # "fsa_skip_sheltered" (headroom probe only): ignore agents sheltering
+        # in trees, which carnivores cannot attack -- information the step-2
+        # network's inputs don't contain.
+        skip_sheltered = self.carnivore_mode == "fsa_skip_sheltered"
         for i, (dr, dc) in enumerate(_DIRS):
             for dist in range(1, self.cfg["carnivore_sense_range"] + 1):
                 r, c = carnivore.row + dr * dist, carnivore.col + dc * dist
                 if not (0 <= r < self.grid_size and 0 <= c < self.grid_size):
                     break
                 occ = self.occupant.get((r, c))
+                if skip_sheltered and isinstance(occ, Agent) and occ.in_tree:
+                    break  # headroom probe: an unattackable target is treated as an obstacle
                 if isinstance(occ, Agent) or (r, c) in self.corpses and self.corpses[(r, c)].kind == "agent":
                     signal = 1.0 - 0.5 * (dist - 1) / max(self.cfg["carnivore_sense_range"] - 1, 1)
                     if signal > best_signal:
@@ -661,7 +667,7 @@ class ErlWorld:
             # exactly the parent's payment to the child instead.
             child_energy = cost if self.cfg.get("carnivore_energy_conserving_birth") else self.cfg["initial_energy_carnivore"]
             child_genome = None
-            if self.carnivore_mode != "fsa":
+            if self.carnivore_mode.startswith("genome"):
                 child_genome = self._carnivore_child_genome(carnivore)
             row, col = cell
             child = Carnivore(
