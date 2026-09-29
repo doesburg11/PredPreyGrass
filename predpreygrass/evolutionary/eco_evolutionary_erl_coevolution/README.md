@@ -453,3 +453,30 @@ switch):
   selection, which acted mostly during the warm-up when carnivores breed
   fastest.
 
+### Rich-input competition test (2026-09-29): richer senses give no headroom
+
+`mixed` mode with `carnivore_obs=rich` (commit 85b7f19). The rich seed resident
+(all prey channels +10, identical behavior to the basic seed) competes with one
+informed mutant, 50/50 start, 10 seeds × 40k. Primary readout fixed before the
+run (commit c66aab0): frequency at the switch vs. identical, Bonferroni over 4
+variants (p < 0.0125). Results in `~/simulation_results/erl_results/coevo_rich_invasion`.
+
+| mutant | frequency 500 → 20k | warm-up birth ratio (Wilcoxon) | frequency vs. identical |
+|---|---|---|---|
+| identical | 0.51 → 0.52 | 1.000 (p=0.55) | — |
+| prefers live prey (living 15) | 0.48 → 0.63 | 1.003 (p=0.73) | p=0.28 |
+| prefers carcasses (corpse 15) | 0.45 → 0.45 | 0.975 (p=0.016) | p=0.80 |
+| avoids carcasses (corpse 5) | 0.44 → 0.36 | 0.974 (p=0.078) | p=0.65 |
+| ignores sheltered prey (sheltered 0) | 0.54 → 0.45 | 0.988 (p=0.016) | p=1.0 |
+
+- **No informed variant beats the resident.** Deviations are neutral or tend
+  to be slightly deleterious (carcass preference and ignoring sheltered prey:
+  birth ratio < 1 at p≈0.016 each, not significant after correction).
+- The identical-mutant runs are identical to the basic-input identical runs,
+  confirming the rich seed's behavioral equivalence end to end.
+- Together with the basic competition test: in every direction tested so far,
+  the seed network is at or near a within-population fitness peak. Richer
+  *senses* alone don't open headroom for a single-layer network. What the
+  architecture cannot express (anything state-dependent, e.g. "hunt only when
+  hungry", since energy/health cannot change the chosen direction) is untested.
+
