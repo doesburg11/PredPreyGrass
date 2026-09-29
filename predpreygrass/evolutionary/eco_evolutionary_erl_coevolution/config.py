@@ -133,6 +133,7 @@ config_step0 = {
     "mixed_persist_prob": 0.9,
     "mixed_sated_energy_frac": 0.75,
     "mixed_wounded_health_frac": 0.5,
+    "mixed_assign_step": None,  # None = types from the start; else split 50/50 at this step (after the opening)
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,

@@ -493,3 +493,17 @@ def test_network_mutant_path_unchanged_by_state_strategies():
     world, mutant = _mixed_rich_world("network")
     world._state_strategy_action = lambda c: (_ for _ in ()).throw(AssertionError("must not be called"))
     world.step()
+
+
+def test_mixed_assign_step_splits_living_carnivores_after_warmup():
+    world = ErlWorld(_small_world_cfg(carnivore_mode="mixed", n_initial_carnivores=6, grid_size=20,
+                                      mixed_assign_step=5), np.random.default_rng(0))
+    assert all(c.ctype == 0 for c in world.carnivores)
+    for _ in range(5):
+        world.step()
+    living = sorted((c for c in world.carnivores if c.alive), key=lambda c: c.carnivore_id)
+    assert [c.ctype for c in living] == [i % 2 for i in range(len(living))]
+    before = sum(world.type_deaths)
+    victim = living[0]
+    world._kill_carnivore(victim, "starvation")
+    assert sum(world.type_deaths) == before + 1

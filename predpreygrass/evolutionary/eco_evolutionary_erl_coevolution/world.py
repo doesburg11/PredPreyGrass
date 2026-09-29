@@ -78,6 +78,11 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
         living and sheltered prey and go only for carcasses (needs "rich");
       "wounded_scavenger": at health < `mixed_wounded_health_frac` of max, the
         same carcass-only behavior (needs "rich").
+    `mixed_assign_step` (default None = types from the start): if set, every
+    carnivore is a resident until that step; then, after that step's
+    immigration, every other living carnivore by id becomes a mutant (exact
+    50/50, no RNG). This starts the competition after the opening bottleneck
+    and immigration, which otherwise reset the type frequencies.
   Carnivore observation (CARN_OBS_DIM = 10): prey signal N/S/E/W (exactly
   what the hand-coded rule sees: nearest living agent or agent corpse within
   `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
@@ -230,6 +235,7 @@ class ErlWorld:
         self.type_births = [0, 0]  # "mixed" per-type totals: [resident, mutant]
         self.type_steps = [0, 0]
         self.type_kills = [0, 0]
+        self.type_deaths = [0, 0]
 
         n = self.grid_size
         self.terrain = np.full((n, n), TERRAIN_EMPTY, dtype=np.int8)
@@ -328,7 +334,7 @@ class ErlWorld:
         )
         if self.carnivore_mode == "genome_nonheritable":
             carnivore.phenotype = carnivore.genome  # founders express their own seed+noise, as under "genome"
-        if self.carnivore_mode == "mixed":
+        if self.carnivore_mode == "mixed" and self.cfg.get("mixed_assign_step") is None:
             carnivore.ctype = carnivore.carnivore_id % 2
         self._next_carnivore_id += 1
         self.carnivores.append(carnivore)
@@ -448,6 +454,10 @@ class ErlWorld:
         if self.immigration_active() and self.current_step % self.cfg["carnivore_spawn_interval"] == 0:
             if self._spawn_carnivore():
                 self.carnivore_immigrants += 1
+        if self.carnivore_mode == "mixed" and self.cfg.get("mixed_assign_step") == self.current_step:
+            living = sorted((c for c in self.carnivores if c.alive), key=lambda c: c.carnivore_id)
+            for i, carnivore in enumerate(living):
+                carnivore.ctype = i % 2
         self.agents = [a for a in self.agents if a.alive]
         self.carnivores = [c for c in self.carnivores if c.alive]
 
@@ -720,6 +730,7 @@ class ErlWorld:
             return
         carnivore.alive = False
         self.deaths["carnivore"][cause] += 1
+        self.type_deaths[carnivore.ctype] += 1
         self.occupant.pop((carnivore.row, carnivore.col), None)
         self.corpses[(carnivore.row, carnivore.col)] = Corpse(kind="carnivore", energy=self.cfg["corpse_total_energy"])
         if self.on_carnivore_death is not None:

@@ -170,6 +170,7 @@ SAMPLE_FIELDS = [
     "carn_pursuit", "carn_avoid", "carn_generation",
     # "mixed" competition test (0 otherwise): mutant count, per-type cumulative births/steps
     "carn_mutants", "resident_births", "mutant_births", "resident_steps", "mutant_steps",
+    "resident_deaths", "mutant_deaths",
 ]
 
 
@@ -183,6 +184,7 @@ def _sample(world, counts) -> tuple:
         round(stats["carn_generation"], 2),
         sum(1 for c in world.carnivores if c.alive and c.ctype == 1),
         world.type_births[0], world.type_births[1], world.type_steps[0], world.type_steps[1],
+        world.type_deaths[0], world.type_deaths[1],
     )
 
 
