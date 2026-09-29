@@ -384,3 +384,16 @@ def test_fsa_skip_sheltered_ignores_agents_in_trees(rng):
         picks[mode] = [world._carnivore_fsa_action(carnivore) for _ in range(20)]
     assert set(picks["fsa"]) == {0}
     assert set(picks["fsa_skip_sheltered"]) != {0}
+
+
+def test_nonheritable_control_expresses_fresh_noise_not_the_parents(rng):
+    world = _genome_world(rng, mode="genome_nonheritable", carnivore_mutation_rate=0.0)
+    parent = world.carnivores[0]
+    assert parent.phenotype is parent.genome  # founders express their own genome
+    parent.energy = world.cfg["carnivore_reproduction_energy_threshold"]
+    world._handle_carnivore_reproduction()
+    child = world.carnivores[-1]
+    assert np.array_equal(child.genome.action_weights, parent.genome.action_weights)  # marker inherited
+    assert not np.array_equal(child.phenotype.action_weights, parent.genome.action_weights)  # behavior fresh
+    idx = np.arange(4)
+    assert np.allclose(child.phenotype.action_weights[idx, idx], 10.0, atol=5.0)  # still seed-centered

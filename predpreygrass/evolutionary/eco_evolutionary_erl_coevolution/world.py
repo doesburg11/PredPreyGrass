@@ -56,6 +56,13 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
     demography. (Drawing donor genomes from random living carnivores would not
     be neutral -- better-surviving genomes stay in that pool longer -- which is
     why the genome is decoupled from behavior instead.)
+  - "genome_nonheritable": the matched control (added after the step-2 pilot,
+    whose neutral control started ahead because it expressed the noise-free
+    seed). Founders express their own seed+noise genome exactly as under
+    "genome"; every newborn expresses a FRESH seed+noise network drawn at
+    birth. Same phenotypic variation and starting competence, but behavior is
+    not inherited, so it cannot respond to selection. The genome is still
+    inherited as a passive marker.
   Carnivore observation (CARN_OBS_DIM = 10): prey signal N/S/E/W (exactly
   what the hand-coded rule sees: nearest living agent or agent corpse within
   `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
@@ -92,7 +99,7 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 STRATEGIES = ("ERL", "E", "L", "F", "B")
-CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral")
+CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral", "genome_nonheritable")
 
 
 @dataclass
@@ -130,6 +137,7 @@ class Carnivore:
     born_step: int = 0
     offspring_count: int = 0
     kills: int = 0
+    phenotype: Genome | None = None  # expressed network under "genome_nonheritable" only
 
 
 @dataclass
@@ -283,6 +291,8 @@ class ErlWorld:
             genome=self._founder_carnivore_genome() if self.carnivore_mode.startswith("genome") else None,
             born_step=self.current_step,
         )
+        if self.carnivore_mode == "genome_nonheritable":
+            carnivore.phenotype = carnivore.genome  # founders express their own seed+noise, as under "genome"
         self._next_carnivore_id += 1
         self.carnivores.append(carnivore)
         self.occupant[(row, col)] = carnivore
@@ -483,7 +493,12 @@ class ErlWorld:
                 action = self._carnivore_fsa_action(carnivore)
             else:
                 obs = self._observe_carnivore(carnivore)
-                expressed = carnivore.genome if self.carnivore_mode == "genome" else self._canonical_carnivore_genome
+                if self.carnivore_mode == "genome":
+                    expressed = carnivore.genome
+                elif self.carnivore_mode == "genome_nonheritable":
+                    expressed = carnivore.phenotype
+                else:
+                    expressed = self._canonical_carnivore_genome
                 probs = action_probs(obs, expressed.action_weights, expressed.action_bias)
                 action = sample_action(probs, self.rng)
             self._resolve_carnivore_action(carnivore, action)
@@ -678,6 +693,7 @@ class ErlWorld:
                 genome=child_genome,
                 generation=carnivore.generation + 1,
                 born_step=self.current_step,
+                phenotype=self._founder_carnivore_genome() if self.carnivore_mode == "genome_nonheritable" else None,
             )
             self._next_carnivore_id += 1
             self.carnivore_births += 1

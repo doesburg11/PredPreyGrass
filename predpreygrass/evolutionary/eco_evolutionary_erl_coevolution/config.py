@@ -199,11 +199,15 @@ config_step1 = scale_world_area({**config_step0, **STEP1_OVERRIDES}, STEP1_GRID_
 # act with the canonical seed network), so its genome change is pure drift.
 config_step2 = {**config_step1, "carnivore_mode": "genome"}
 config_step2_neutral = {**config_step1, "carnivore_mode": "genome_neutral"}
+# Matched control (after the pilot): same starting competence and phenotypic
+# variation as step2, but behavior is non-heritable (fresh seed+noise per birth).
+config_step2_nonheritable = {**config_step1, "carnivore_mode": "genome_nonheritable"}
 
 PRESETS = {
     "step0": config_step0,
     "step1": config_step1,
     "step2": config_step2,
     "step2_neutral": config_step2_neutral,
+    "step2_nonheritable": config_step2_nonheritable,
 }
 
