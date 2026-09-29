@@ -245,3 +245,30 @@ separated here. ERL's edge over L shows on coexistence time at 60 founders
 (p=0.013; L populations also lose their carnivores 3 times vs. ERL's 0). On
 prey extinction alone, n=20 doesn't separate ERL from L in the bigger world.
 
+### ERL vs. L at n=60 (2026-09-29): same prey survival, but only L loses its carnivores
+
+Seeds 21–60 added for ERL and L under the same tag as the 150×150 comparison
+(`config_step1`, 135 founders, 60k steps), so there are now 60 seeds each.
+
+| measure | ERL (n=60) | L (n=60) | Fisher p |
+|---|---|---|---|
+| prey extinct | 5 | 8 | 0.56 |
+| prey alive at the switch (20k) | 55 | 52 | |
+| carnivores die out after the switch | **0 of 55** | **7 of 52** | **0.005** |
+| any collapse (either species) | 5 | 15 | 0.026 |
+
+Coexistence time (Mann-Whitney) gives p=0.028. The first 20 and the added 40
+seeds point the same way (carnivores lost: 0 vs. 2, then 0 vs. 5).
+
+**Settled: on prey extinction, ERL and L are not distinguishable in the bigger
+world** (5/60 vs. 8/60). The real difference is ecological. With L prey, the
+carnivore population dies out after immigration stops in 7 of 52 runs,
+between steps 24.9k and 59.0k. With ERL prey this never happens (0 of 55).
+Why is **not** established. One candidate is that L's clonal prey populations
+push carnivores into deeper cycle lows (for example through more synchronized
+behavior, or by eating the corpses carnivores depend on). Another is that ERL
+prey support larger carnivore populations; mean carnivores were 118.5 for
+ERL vs. 91.8 for L. Checking carnivore minima and corpse use per strategy
+would distinguish these. For the project goal (sustainable coevolution),
+ERL gives the more stable predator-prey system, not better-surviving prey.
+
