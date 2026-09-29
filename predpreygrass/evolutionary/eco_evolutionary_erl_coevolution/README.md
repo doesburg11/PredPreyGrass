@@ -416,3 +416,40 @@ step-2 pilot on the same seeds:
   ~4 generations): a few lineages quickly dominate. Whether lower predator
   diversity explains the milder opening is untested.
 
+### Competition test (2026-09-29): real within-population selection, but the seed sits on a peak
+
+`mixed` mode (commit f838ea3). Resident seed network vs. one mutant type,
+50/50 start, type inherited. ERL prey, step-1 world, 10 seeds × 40k steps.
+Results in `~/simulation_results/erl_results/coevo_invasion`.
+
+Pre-registered analysis (`analyze_invasion.py`, after the switch, 20k→40k):
+nothing significant. Birth ratios mutant/resident are 0.98–1.01 (all
+p ≥ 0.15). The "no avoidance" mutant was already nearly gone at the switch.
+
+Exploratory, whole trajectory from the 50/50 start (runs that reached the
+switch):
+
+| mutant | mutant frequency at 500 → 5k → 20k | warm-up birth ratio (Wilcoxon) | frequency at 20k vs. identical |
+|---|---|---|---|
+| identical (neutral) | 0.51 → 0.53 → 0.52 | 1.000 (p=0.55) | — |
+| no obstacle avoidance | 0.40 → 0.16 → 0.09 (0.00 at 40k) | 0.926 (p=0.02) | p=0.0006 |
+| sharp (30) | 0.62 → 0.48 → 0.61 | 0.987 (p=1) | p=0.42 |
+| soft (5) | 0.44 → 0.51 → 0.38 | 0.981 (p=0.055) | p=0.28 |
+
+- **Within-population selection is real.** Carnivores without obstacle
+  avoidance are driven out of mixed populations, although in the monomorphic
+  headroom probe a population made up entirely of them did as well per
+  capita. Selection acts on relative differences, which the probe could not
+  measure.
+- **Nothing tested beats the seed network.** Sharper and softer pursuit are
+  neutral within noise; the only clear effect is against a worse variant.
+- This fits the step-2 pilot. Selection purges bad variants, the rest drifts,
+  and performance recovers to about the seed's level but not beyond. With
+  the current 10 inputs and a single-layer network, the seed appears to sit
+  on or near a fitness peak, which leaves evolution no uphill to climb.
+  This is a candidate explanation, not a proof: only three directions in
+  weight space were tested.
+- Method note: the pre-registered window (after the switch) missed the
+  selection, which acted mostly during the warm-up when carnivores breed
+  fastest.
+
