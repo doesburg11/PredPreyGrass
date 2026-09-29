@@ -314,3 +314,42 @@ Design (decided 2026-09-29), config `step2` / `step2_neutral` = `step1` +
    change and prefer directional (GRW) models in the Hunt test.
    `step2_neutral` seeds show no consistent direction.
 
+### Step 2 pilot (2026-09-29): coexistence holds; hunting "improvement" is recovery; no directional genome change
+
+ERL prey, `step2` vs. `step2_neutral`, 20 seeds each, 60k steps (commit
+4a70edf). Results in `~/simulation_results/erl_results/coevo_step2_pilot`, from
+`analyze_step2.py`:
+
+| criterion | result |
+|---|---|
+| 1. Coexistence | PASS: 20/20 (neutral 19/19) |
+| 2. Kill-rate change, step2 vs. neutral | PASS as written: +2.08 vs. +0.69 per 1,000 carnivore-steps, p=1e-7. **Invalid comparison, see below.** |
+| 3. Direction of `pursuit` / `avoid` change | FAIL: positive in 9/20 and 6/20 seeds (sign p=0.82 / 0.12), like neutral (11/19, 7/19) |
+
+**Criterion 2's pass is a flaw in the control design.** Absolute kill rates
+(kills per 1,000 carnivore-steps):
+
+| | first 5k | 20–30k | 50–60k |
+|---|---|---|---|
+| step2 | 14.7 | 16.6 | 16.7 |
+| step2_neutral | 16.4 | 17.1 | 17.1 |
+
+The neutral control expresses the noise-free seed network, so it starts ahead
+of the noisy step-2 founders. Evolving carnivores recover to about the seed
+network's level but never exceed it. The larger "improvement" is recovery
+from a founder handicap the control never had. Recovery itself implies
+selection, but it is catch-up, not evolution beyond the hand-coded rule. A
+fair control needs matched starting competence. For example, each carnivore
+could express seed + fresh, **non-heritable** N(0, 1) noise, giving the same
+phenotypic variation with no response to selection possible.
+
+Exploratory checks (not pre-registered):
+- Genomes drift *away* from the seed in both conditions (mean distance
+  6.6 → 7.2 step2, 6.6 → 7.3 neutral; difference p=0.36), so no sign of
+  purifying selection toward the seed.
+- No single one of the 44 weights/biases changes direction consistently
+  across step-2 seeds after Bonferroni correction.
+- Performance recovers while weights keep drifting. That fits many equally
+  good weight settings (selection fixes the performance-relevant
+  combinations, drift moves the rest), but this is not tested.
+
