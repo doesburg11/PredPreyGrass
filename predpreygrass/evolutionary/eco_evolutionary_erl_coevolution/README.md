@@ -517,3 +517,34 @@ resident (commit edc2df4), 10 seeds × 40k. Primary readout and threshold
 - `analyze_invasion.py` fix: a type that dies out (no births after the switch)
   now yields an undefined (NaN) birth ratio instead of a crash.
 
+### Confirmatory competition test (2026-09-29): persistent search beats the seed carnivore
+
+Delayed assignment (commit 317e6aa). Carnivores are all residents through the
+20k warm-up. After the last immigrant, every other living carnivore by id
+becomes a persistent-search mutant (exact 50/50), then 30k steps of
+competition without immigration. 20 seeds per tag, rich inputs, ERL prey.
+Pre-registered primary (`analyze_competition.py`, written before the run):
+per-seed net growth rate difference (births − deaths per 1,000
+carnivore-steps, mutant − resident) vs. the identical control. Results in
+`~/simulation_results/erl_results/coevo_competition`.
+
+| mutant | net growth difference (median) | vs. 0 | end frequency | took over / lost |
+|---|---|---|---|---|
+| identical | +0.04 | p=0.52 | 0.60 | 7 / 4 |
+| **persistent search** | **+0.44** | p=6e-5 | **1.00** | **13 / 0** |
+
+**Primary: persistent search vs. identical, p=1.6e-5, mutant better.** It took
+over in all 13 runs that reached 50k. n=15 per tag had both types at the split;
+5 seeds lost their prey during the (identical) warm-up in both tags.
+
+- This is the first behavior found that beats the seed carnivore within a
+  population: real headroom for predator evolution. It is memory-based
+  (repeat the previous move when no prey is visible). A single-layer network
+  over the current inputs cannot express it, but it could approximately if
+  the previous move were an input.
+- **Watch for coexistence:** in 2 persist runs the carnivore population died
+  out after the split (identical: 0). The opening test also had more prey
+  extinctions with persist (5/10 vs. 2/10, n.s.). A more efficient predator
+  may over-exploit its prey. Too few cases to conclude, but relevant for
+  step 2 with evolvable persistence.
+
