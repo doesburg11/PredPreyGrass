@@ -570,3 +570,31 @@ Pass/fail, fixed now:
 Expected risk: ~130 carnivore generations may move the trait only part of the
 way toward +3.3. The pass rule is about direction, not magnitude.
 
+### Step 2b result (2026-09-30): persistence does not evolve from zero
+
+Commit 963c3bf, results in `~/simulation_results/erl_results/coevo_step2b`.
+
+| criterion | result |
+|---|---|
+| 1. Coexistence | PASS: 20/20 (neutral 18/18) |
+| 2. Persistence evolves by selection | **FAIL**: persist net change positive in 10/20 seeds (sign p=1), neutral 9/18; median change 0.25, far from the rule's ~+3.3 |
+
+Pursuit and avoid again show no consistent direction. The kill-rate numbers are
+reported only (dropped as a selection test).
+
+Exploratory, from `carnivore_lineage/` (carnivores born after the switch, dead,
+~14,000 per seed): the standardized selection gradient of offspring count on
+the persist trait is essentially zero. The median is −0.001, positive in 10/20
+seeds, the same as the neutral marker (7/18, difference p=0.46). Standing
+variation in the trait is small (within-population SD 0.24).
+
+Interpretation (hedged): the competition test shows that full persistence
+(~+3.3) clearly beats the seed. Small persistence weights barely change
+behavior and carry no detectable advantage. The fitness landscape along this
+trait looks flat near 0 and rises only at large values, a plateau that small
+mutations (std 0.2) cannot feel. This is the needle-in-a-haystack situation of
+Hinton & Nowlan (1987), where learning is supposed to help evolution (the
+Baldwin effect). Not tested: whether selection acts once variation reaches the
+advantageous region (e.g. wider founder variation on the persist weights), and
+whether learning carnivores find persistence within a lifetime.
+
