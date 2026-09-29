@@ -36,6 +36,30 @@ starvation vs. injury). Agent causes: "carnivore", "agent_attack",
 earlier non-lethal attacks), "tree_fall". Carnivore causes: "agent_attack",
 "starvation", "wounds". `self.carnivore_births` / `self.carnivore_immigrants`
 separate reproduction from immigration.
+
+Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
+  - "genome": each carnivore carries a Genome whose single-layer action
+    network picks its move (evolution only, no learning). Founder weights
+    are SEEDED to approximate the hand-coded rule -- pursue the strongest prey
+    signal, avoid blocked cells -- plus per-founder Gaussian variation, so
+    founders start competent and evolution can improve on or drift from the
+    rule. (Approximate, not identical: actions are sampled from a softmax, so
+    ties and near-ties are resolved stochastically, and trees count as blocked
+    where the rule only avoids walls.) Reproduction is sexual like the prey's:
+    crossover with the nearest carnivore within `mate_search_radius` (else a
+    copy), then mutation.
+  - "genome_neutral": the neutral-MARKER control. Inheritance is exactly the
+    same code as "genome" (same parents, crossover, mutation, offspring
+    credit, RNG draws), but the genome is not expressed: every carnivore acts
+    with the same fixed canonical network (the seed weights, no founder
+    variation). Genome change is therefore pure drift under the same
+    demography. (Drawing donor genomes from random living carnivores would not
+    be neutral -- better-surviving genomes stay in that pool longer -- which is
+    why the genome is decoupled from behavior instead.)
+  Carnivore observation (CARN_OBS_DIM = 10): prey signal N/S/E/W (exactly
+  what the hand-coded rule sees: nearest living agent or agent corpse within
+  `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
+  (wall, tree or edge), energy_norm, health_norm.
 """
 
 from collections import Counter
@@ -59,6 +83,7 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.metrics import 
 
 OBS_DIM = 7  # visual_N, visual_S, visual_E, visual_W, in_tree, health_norm, energy_norm
 N_ACTIONS = 4  # N, S, E, W -- no "stay"; every step targets one adjacent cell
+CARN_OBS_DIM = 10  # prey signal x4, adjacent blocked x4, energy_norm, health_norm (step 2)
 
 TERRAIN_EMPTY = 0
 TERRAIN_WALL = 1
@@ -67,6 +92,7 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 STRATEGIES = ("ERL", "E", "L", "F", "B")
+CARNIVORE_MODES = ("fsa", "genome", "genome_neutral")
 
 
 @dataclass
@@ -98,6 +124,12 @@ class Carnivore:
     energy: float
     health: float
     alive: bool = True
+    # --- step 2 (carnivore_mode "genome"/"genome_neutral"); None/0 under "fsa" ---
+    genome: Genome | None = None
+    generation: int = 0
+    born_step: int = 0
+    offspring_count: int = 0
+    kills: int = 0
 
 
 @dataclass
@@ -123,6 +155,8 @@ class ErlWorld:
         self.rng = rng
         self.strategy = config.get("strategy", "ERL")
         assert self.strategy in STRATEGIES, self.strategy
+        self.carnivore_mode = config.get("carnivore_mode", "fsa")
+        assert self.carnivore_mode in CARNIVORE_MODES, self.carnivore_mode
         self.obs_dim = OBS_DIM
         self.grid_size = config["grid_size"]
         self.current_step = 0
@@ -135,6 +169,7 @@ class ErlWorld:
         # agent is dropped from `self.agents` -- lets a caller log per-agent lineage
         # data without World doing any file IO itself.
         self.on_agent_death = None
+        self.on_carnivore_death = None  # same idea, callback(carnivore, death_step)
         self.reset()
 
     # ---- setup ----
@@ -150,6 +185,8 @@ class ErlWorld:
         self.deaths: dict[str, Counter] = {"agent": Counter(), "carnivore": Counter()}
         self.carnivore_births = 0
         self.carnivore_immigrants = 0
+        self.carnivore_kills = 0  # agents killed by a carnivore attack
+        self.carnivore_steps = 0  # carnivore-steps acted, the denominator for kill rate
 
         n = self.grid_size
         self.terrain = np.full((n, n), TERRAIN_EMPTY, dtype=np.int8)
@@ -243,11 +280,39 @@ class ErlWorld:
             row=row, col=col,
             energy=self.cfg["initial_energy_carnivore"],
             health=self.cfg["initial_health_carnivore"],
+            genome=self._founder_carnivore_genome() if self.carnivore_mode != "fsa" else None,
+            born_step=self.current_step,
         )
         self._next_carnivore_id += 1
         self.carnivores.append(carnivore)
         self.occupant[(row, col)] = carnivore
         return True
+
+    @property
+    def _canonical_carnivore_genome(self) -> Genome:
+        """The seed network with no founder variation -- what every carnivore
+        expresses under "genome_neutral". Built without the RNG, cached."""
+        cached = getattr(self, "_canonical_cache", None)
+        if cached is None:
+            weights = np.zeros((CARN_OBS_DIM, N_ACTIONS))
+            for i in range(N_ACTIONS):
+                weights[i, i] = self.cfg["carnivore_seed_pursuit_weight"]
+                weights[N_ACTIONS + i, i] = self.cfg["carnivore_seed_block_weight"]
+            cached = Genome(np.zeros(CARN_OBS_DIM), 0.0, weights, np.zeros(N_ACTIONS))
+            self._canonical_cache = cached
+        return cached
+
+    def _founder_carnivore_genome(self) -> Genome:
+        """Seeded to reproduce the hand-coded rule: prey signal in direction i
+        -> action i (weight `carnivore_seed_pursuit_weight`), adjacent cell
+        blocked in direction i -> away from action i (`carnivore_seed_block_weight`),
+        plus N(0, carnivore_founder_weight_std) on every weight and bias. The
+        eval network is random and unused until carnivores learn (step 3)."""
+        genome = founder_genome(CARN_OBS_DIM, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
+        for i in range(N_ACTIONS):
+            genome.action_weights[i, i] += self.cfg["carnivore_seed_pursuit_weight"]
+            genome.action_weights[N_ACTIONS + i, i] += self.cfg["carnivore_seed_block_weight"]
+        return genome
 
     # ---- observation (agents only -- carnivores use their own hard-coded sensing) ----
 
@@ -405,7 +470,7 @@ class ErlWorld:
         if self.on_agent_death is not None:
             self.on_agent_death(agent, self.current_step)
 
-    # ---- carnivores: hard-coded FSA, never affected by `strategy` ----
+    # ---- carnivores: hard-coded FSA or (step 2) genome network; never affected by `strategy` ----
 
     def _step_carnivores(self):
         order = list(self.carnivores)
@@ -413,7 +478,14 @@ class ErlWorld:
         for carnivore in order:
             if not carnivore.alive:
                 continue
-            action = self._carnivore_fsa_action(carnivore)
+            self.carnivore_steps += 1
+            if self.carnivore_mode == "fsa":
+                action = self._carnivore_fsa_action(carnivore)
+            else:
+                obs = self._observe_carnivore(carnivore)
+                expressed = carnivore.genome if self.carnivore_mode == "genome" else self._canonical_carnivore_genome
+                probs = action_probs(obs, expressed.action_weights, expressed.action_bias)
+                action = sample_action(probs, self.rng)
             self._resolve_carnivore_action(carnivore, action)
             if carnivore.alive:
                 carnivore.energy -= self.cfg["basal_energy_cost_carnivore"]
@@ -453,6 +525,29 @@ class ErlWorld:
                 return i
         return int(self.rng.integers(0, N_ACTIONS))
 
+    def _observe_carnivore(self, carnivore: Carnivore) -> np.ndarray:
+        """Step 2 carnivore input -- see module docstring. The prey signal uses
+        exactly the hand-coded rule's line of sight (`_carnivore_fsa_action`)."""
+        obs = np.zeros(CARN_OBS_DIM)
+        sense = self.cfg["carnivore_sense_range"]
+        for i, (dr, dc) in enumerate(_DIRS):
+            for dist in range(1, sense + 1):
+                r, c = carnivore.row + dr * dist, carnivore.col + dc * dist
+                if not (0 <= r < self.grid_size and 0 <= c < self.grid_size):
+                    break
+                occ = self.occupant.get((r, c))
+                if isinstance(occ, Agent) or (r, c) in self.corpses and self.corpses[(r, c)].kind == "agent":
+                    obs[i] = 1.0 - 0.5 * (dist - 1) / max(sense - 1, 1)
+                    break
+                if self.terrain[r, c] != TERRAIN_EMPTY:
+                    break
+            r, c = carnivore.row + dr, carnivore.col + dc
+            if not (0 <= r < self.grid_size and 0 <= c < self.grid_size) or self.terrain[r, c] != TERRAIN_EMPTY:
+                obs[N_ACTIONS + i] = 1.0
+        obs[8] = min(carnivore.energy / self.cfg["max_energy_carnivore"], 1.0)
+        obs[9] = min(carnivore.health / self.cfg["max_health_carnivore"], 1.0)
+        return obs
+
     def _resolve_carnivore_action(self, carnivore: Carnivore, action: int):
         dr, dc = _DIRS[action]
         tr, tc = carnivore.row + dr, carnivore.col + dc
@@ -469,6 +564,8 @@ class ErlWorld:
             occupant.health -= self.cfg["carnivore_attack_damage"]
             if occupant.health <= 0:
                 self._kill_agent(occupant, "carnivore")
+                carnivore.kills += 1
+                self.carnivore_kills += 1
             return
         if isinstance(occupant, Carnivore):
             return  # carnivores don't fight each other
@@ -494,6 +591,8 @@ class ErlWorld:
         self.deaths["carnivore"][cause] += 1
         self.occupant.pop((carnivore.row, carnivore.col), None)
         self.corpses[(carnivore.row, carnivore.col)] = Corpse(kind="carnivore", energy=self.cfg["corpse_total_energy"])
+        if self.on_carnivore_death is not None:
+            self.on_carnivore_death(carnivore, self.current_step)
 
     # ---- reproduction ----
 
@@ -561,18 +660,46 @@ class ErlWorld:
             # cost < initial_energy_carnivore. Energy-conserving birth passes
             # exactly the parent's payment to the child instead.
             child_energy = cost if self.cfg.get("carnivore_energy_conserving_birth") else self.cfg["initial_energy_carnivore"]
+            child_genome = None
+            if self.carnivore_mode != "fsa":
+                child_genome = self._carnivore_child_genome(carnivore)
             row, col = cell
             child = Carnivore(
                 carnivore_id=self._next_carnivore_id,
                 row=row, col=col,
                 energy=child_energy,
                 health=self.cfg["initial_health_carnivore"],
+                genome=child_genome,
+                generation=carnivore.generation + 1,
+                born_step=self.current_step,
             )
             self._next_carnivore_id += 1
             self.carnivore_births += 1
             newborns.append(child)
             self.occupant[(row, col)] = child
         self.carnivores.extend(newborns)
+
+    def _carnivore_child_genome(self, parent: Carnivore) -> Genome:
+        """Sexual like the prey: crossover with the nearest carnivore within
+        `mate_search_radius` (else a copy), then mutation. Identical under
+        "genome" and "genome_neutral" -- the control differs only in whether
+        the genome is expressed (see `_step_carnivores`)."""
+        mate = self._nearest_carnivore_mate(parent)
+        parent.offspring_count += 1
+        if mate is not None:
+            mate.offspring_count += 1
+        genome = crossover(parent.genome, mate.genome, self.rng) if mate is not None else parent.genome.copy()
+        return mutate(genome, self.rng, self.cfg["carnivore_mutation_rate"], self.cfg["carnivore_mutation_std"])
+
+    def _nearest_carnivore_mate(self, carnivore: Carnivore) -> Carnivore | None:
+        best, best_dist = None, self.cfg["mate_search_radius"] + 1
+        for other in self.carnivores:
+            if other is carnivore or not other.alive:
+                continue
+            dist = abs(other.row - carnivore.row) + abs(other.col - carnivore.col)
+            if dist <= self.cfg["mate_search_radius"] and dist < best_dist:
+                best, best_dist = other, dist
+        return best
 
     def _nearest_empty_adjacent(self, row: int, col: int) -> tuple[int, int] | None:
         for dr, dc in _DIRS:
@@ -663,6 +790,20 @@ class ErlWorld:
         return {
             "eval_weight_absmean": float(np.mean(np.abs(eval_vals))),
             "action_weight_absmean": float(np.mean(np.abs(action_vals))),
+        }
+
+    def carnivore_genome_stats(self) -> dict[str, float]:
+        """Population means of the two seeded behaviors (step 2): `pursuit` =
+        mean prey-signal->same-direction weight, `avoid` = mean
+        blocked->same-direction weight (seeded negative). NaN under "fsa"."""
+        genomes = [c.genome for c in self.carnivores if c.alive and c.genome is not None]
+        if not genomes:
+            return {"carn_pursuit": float("nan"), "carn_avoid": float("nan"), "carn_generation": float("nan")}
+        idx = np.arange(N_ACTIONS)
+        return {
+            "carn_pursuit": float(np.mean([g.action_weights[idx, idx].mean() for g in genomes])),
+            "carn_avoid": float(np.mean([g.action_weights[N_ACTIONS + idx, idx].mean() for g in genomes])),
+            "carn_generation": float(np.mean([c.generation for c in self.carnivores if c.alive])),
         }
 
     def death_counts(self) -> dict[str, int]:

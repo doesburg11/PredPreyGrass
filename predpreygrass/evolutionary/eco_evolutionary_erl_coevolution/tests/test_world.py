@@ -7,6 +7,7 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import (
     config_step0,
     config_step1,
 )
+from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.networks import action_probs
 from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.study import run_one
 from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import (
     Carnivore,
@@ -53,10 +54,10 @@ def test_offspring_genome_does_not_inherit_parents_learned_weights(rng):
     assert np.array_equal(child.action_weights, child.genome.action_weights)
 
 
-def test_carnivores_have_no_genome_or_learning():
-    fields = set(Carnivore.__dataclass_fields__)
-    assert "genome" not in fields
-    assert "action_weights" not in fields
+def test_fsa_carnivores_have_no_genome_and_never_learn(rng):
+    world = ErlWorld(_small_world_cfg(n_initial_carnivores=2), rng)
+    assert all(c.genome is None for c in world.carnivores)
+    assert "action_weights" not in set(Carnivore.__dataclass_fields__)  # no live, learnable copy
 
 
 def test_strategy_E_never_updates_live_action_network(rng):
@@ -155,6 +156,7 @@ def test_carnivore_kill_is_recorded_as_predation(rng):
 
     assert not agent.alive
     assert world.deaths["agent"] == {"carnivore": 1}
+    assert carnivore.kills == 1 and world.carnivore_kills == 1
 
 
 def test_death_counts_account_for_every_death(rng):
@@ -248,3 +250,119 @@ def test_lethal_wound_takes_precedence_over_starvation(rng):
     world._resolve_agent_action = lambda a, action: None
     world._step_agents()
     assert world.deaths["agent"] == {"wounds": 1}
+
+
+# --- step 2: carnivore genome ---
+
+
+def _genome_world(rng, mode="genome", **overrides):
+    return ErlWorld(_small_world_cfg(**{"carnivore_mode": mode, "n_initial_carnivores": 1, **overrides}), rng)
+
+
+def _clear_cell(world, cell):
+    world.terrain[cell] = 0
+    world.plant[cell] = False
+    world.corpses.pop(cell, None)
+    world.occupant.pop(cell, None)
+
+
+def _place(world, entity, cell):
+    world.occupant.pop((entity.row, entity.col), None)
+    _clear_cell(world, cell)
+    entity.row, entity.col = cell
+    world.occupant[cell] = entity
+
+
+def test_seeded_founder_pursues_visible_prey(rng):
+    world = _genome_world(rng, carnivore_founder_weight_std=0.0)
+    carnivore, agent = world.carnivores[0], world.agents[0]
+    for cell in [(5, c) for c in range(2, 10)] + [(r, 5) for r in range(2, 10)]:
+        _clear_cell(world, cell)
+    _place(world, carnivore, (6, 5))
+    _place(world, agent, (4, 5))  # two cells north
+    obs = world._observe_carnivore(carnivore)
+    assert obs[0] > 0.5 and obs[1:4].max() == 0.0
+    probs = action_probs(obs, carnivore.genome.action_weights, carnivore.genome.action_bias)
+    assert probs[0] > 0.99
+
+
+def test_seeded_founder_avoids_blocked_cells(rng):
+    world = _genome_world(rng, carnivore_founder_weight_std=0.0, n_initial_agents=0)
+    carnivore = world.carnivores[0]
+    _place(world, carnivore, (6, 6))
+    for cell in [(5, 6), (7, 6), (6, 7)]:
+        world.occupant.pop(cell, None)
+        world.terrain[cell] = 1  # walls N, S, E -- only W is open
+    world.terrain[(6, 5)] = 0
+    obs = world._observe_carnivore(carnivore)
+    assert list(obs[4:8]) == [1.0, 1.0, 1.0, 0.0]
+    probs = action_probs(obs, carnivore.genome.action_weights, carnivore.genome.action_bias)
+    assert probs[3] > 0.99
+
+
+def test_genome_carnivore_child_inherits_parent_genome(rng):
+    world = _genome_world(rng, carnivore_mutation_rate=0.0)
+    parent = world.carnivores[0]
+    parent.energy = world.cfg["carnivore_reproduction_energy_threshold"]
+    world._handle_carnivore_reproduction()
+    child = world.carnivores[-1]
+    assert child is not parent
+    assert np.array_equal(child.genome.action_weights, parent.genome.action_weights)
+    assert child.genome is not parent.genome
+    assert child.generation == 1 and parent.offspring_count == 1
+
+
+def test_neutral_control_inherits_like_genome_mode_but_does_not_express_it(rng):
+    """Same seed, same world: "genome" and "genome_neutral" must build identical
+    founder genomes (inheritance/RNG parity); only the neutral mode acts with
+    the canonical seed network instead of the carnivore's own genome."""
+    real = _genome_world(np.random.default_rng(5), mode="genome")
+    neutral = _genome_world(np.random.default_rng(5), mode="genome_neutral")
+    assert np.array_equal(real.carnivores[0].genome.action_weights, neutral.carnivores[0].genome.action_weights)
+
+    carnivore = neutral.carnivores[0]
+    carnivore.genome.action_weights[:] = 0.0
+    carnivore.genome.action_weights[:, 1] = 100.0  # its own genome would always pick action 1
+    canonical = neutral._canonical_carnivore_genome
+    obs = np.zeros(10)
+    obs[0] = 1.0  # prey north
+    probs = action_probs(obs, canonical.action_weights, canonical.action_bias)
+    assert probs[0] > 0.99  # canonical pursues north, ignoring the carnivore's own genome
+    picks = []
+    for _ in range(30):
+        neutral._observe_carnivore = lambda c: obs
+        neutral._resolve_carnivore_action = lambda c, action: picks.append(action)
+        neutral._step_carnivores()
+    assert picks.count(0) >= 29
+
+
+def test_neutral_and_real_child_genomes_are_built_identically(rng):
+    real = _genome_world(np.random.default_rng(9), mode="genome", n_initial_carnivores=2, mate_search_radius=200)
+    neutral = _genome_world(np.random.default_rng(9), mode="genome_neutral", n_initial_carnivores=2, mate_search_radius=200)
+    a = real._carnivore_child_genome(real.carnivores[0])
+    b = neutral._carnivore_child_genome(neutral.carnivores[0])
+    assert np.array_equal(a.action_weights, b.action_weights)
+    assert real.carnivores[1].offspring_count == neutral.carnivores[1].offspring_count == 1
+
+
+def test_step2_run_writes_carnivore_lineage(tmp_path):
+    job = {
+        "tag": "t", "preset": "step2", "strategy": "ERL", "seed": 1, "steps": 300,
+        "sample_every": 100, "out_dir": str(tmp_path), "overrides": {},
+    }
+    result = run_one(job)
+    assert result["carnivore_steps"] > 0
+    lineage = (tmp_path / "carnivore_lineage" / "t_ERL_seed1.csv").read_text().splitlines()
+    header = lineage[0].split(",")
+    assert header[:7] == ["carnivore_id", "generation", "born_step", "death_step", "censored",
+                          "offspring_count", "kills"]
+    ids = [row.split(",")[0] for row in lineage[1:]]
+    assert len(ids) == len(set(ids)) == world_carnivores_ever(result)  # exactly one row per carnivore
+    ts = (tmp_path / "timeseries" / "t_ERL_seed1.csv").read_text().splitlines()
+    assert ts[0].startswith("step,agent_count,carnivore_count,carnivore_kills")
+
+
+def world_carnivores_ever(result):
+    # founders + immigrants + births; every one gets exactly one lineage row
+    from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import PRESETS
+    return PRESETS["step2"]["n_initial_carnivores"] + result["carnivore_immigrants"] + result["carnivore_births"]

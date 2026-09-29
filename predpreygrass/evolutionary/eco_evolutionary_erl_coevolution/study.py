@@ -34,7 +34,7 @@ from pathlib import Path
 
 import numpy as np
 
-from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import STRATEGIES
+from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import CARN_OBS_DIM, N_ACTIONS, STRATEGIES
 
 STUDY_LOGS = Path.home() / "simulation_results" / "erl_results" / "erl_full_study_logs"
 STUDY_BUDGET = 1_000_000
@@ -73,6 +73,13 @@ def run_one(job: dict) -> dict:
             raise KeyError(f"--set {key}: not a config key")
     world = ErlWorld(cfg, np.random.default_rng(cfg["seed"]))
     end_on_carnivore = cfg.get("end_on_carnivore_extinction", False)
+
+    # Step 2: one row per carnivore lifetime (deaths as they happen, survivors
+    # at the end as censored) -- per-generation trait data for the Hunt
+    # selection-vs-drift test. Only written when carnivores carry genomes.
+    carn_rows = []
+    if world.carnivore_mode != "fsa":
+        world.on_carnivore_death = lambda c, step: carn_rows.append(_carnivore_record(c, step, censored=False))
     sample_every = job["sample_every"]
 
     start = time.time()
@@ -85,15 +92,14 @@ def run_one(job: dict) -> dict:
         if carnivore_ext is None and counts["carnivore"] == 0 and not world.immigration_active():
             carnivore_ext = step  # permanent: no immigration left to bring them back
         if step % sample_every == 0:
-            series.append((step, counts["agent"], counts["carnivore"]))
+            series.append(_sample(world, counts))
         if counts["agent"] == 0:
             agent_ext = step
             break
         if carnivore_ext is not None and end_on_carnivore:
             break
     if not series or series[-1][0] != world.current_step:
-        final = world.population_counts()
-        series.append((world.current_step, final["agent"], final["carnivore"]))
+        series.append(_sample(world, world.population_counts()))
 
     if agent_ext is not None:
         end_reason = "agent_extinct"
@@ -105,8 +111,15 @@ def run_one(job: dict) -> dict:
     ts_dir = Path(job["out_dir"]) / "timeseries"
     ts_dir.mkdir(parents=True, exist_ok=True)
     with open(ts_dir / f"{job['tag']}_{job['strategy']}_seed{job['seed']}.csv", "w") as f:
-        f.write("step,agent_count,carnivore_count\n")
-        f.writelines(f"{s},{a},{c}\n" for s, a, c in series)
+        f.write(",".join(SAMPLE_FIELDS) + "\n")
+        f.writelines(",".join(str(v) for v in row) + "\n" for row in series)
+    if world.carnivore_mode != "fsa":
+        carn_rows.extend(_carnivore_record(c, world.current_step, censored=True) for c in world.carnivores if c.alive)
+        carn_dir = Path(job["out_dir"]) / "carnivore_lineage"
+        carn_dir.mkdir(parents=True, exist_ok=True)
+        with open(carn_dir / f"{job['tag']}_{job['strategy']}_seed{job['seed']}.csv", "w") as f:
+            f.write(",".join(CARNIVORE_FIELDS) + "\n")
+            f.writelines(",".join(str(row[k]) for k in CARNIVORE_FIELDS) + "\n" for row in carn_rows)
 
     return {
         "tag": job["tag"],
@@ -122,10 +135,12 @@ def run_one(job: dict) -> dict:
         "final_agents": world.population_counts()["agent"],
         "final_carnivores": world.population_counts()["carnivore"],
         # Over the sampled series including the terminal row (so never empty).
-        "mean_agents": float(np.mean([a for _, a, _ in series])),
-        "mean_carnivores": float(np.mean([c for _, _, c in series])),
+        "mean_agents": float(np.mean([row[1] for row in series])),
+        "mean_carnivores": float(np.mean([row[2] for row in series])),
         "deaths": {species: dict(counter) for species, counter in world.deaths.items()},
         "carnivore_births": world.carnivore_births,
+        "carnivore_kills": world.carnivore_kills,
+        "carnivore_steps": world.carnivore_steps,
         "carnivore_immigrants": world.carnivore_immigrants,
         "wall_seconds": round(time.time() - start, 1),
     }
@@ -147,6 +162,44 @@ def append_result(path: Path, result: dict):
             f.flush()
         finally:
             fcntl.flock(f, fcntl.LOCK_UN)
+
+
+SAMPLE_FIELDS = [
+    "step", "agent_count", "carnivore_count", "carnivore_kills", "carnivore_steps",
+    "carn_pursuit", "carn_avoid", "carn_generation",
+]
+
+
+def _sample(world, counts) -> tuple:
+    """One time-series row; kills/steps are cumulative, so a window's kill rate
+    is d(kills)/d(carnivore_steps). The carn_* traits are NaN under "fsa"."""
+    stats = world.carnivore_genome_stats()
+    return (
+        world.current_step, counts["agent"], counts["carnivore"], world.carnivore_kills,
+        world.carnivore_steps, round(stats["carn_pursuit"], 4), round(stats["carn_avoid"], 4),
+        round(stats["carn_generation"], 2),
+    )
+
+
+CARNIVORE_FIELDS = (
+    ["carnivore_id", "generation", "born_step", "death_step", "censored", "offspring_count", "kills"]
+    + [f"w{i}_{j}" for i in range(CARN_OBS_DIM) for j in range(N_ACTIONS)]
+    + [f"b{j}" for j in range(N_ACTIONS)]
+)
+
+
+def _carnivore_record(c, death_step: int, censored: bool) -> dict:
+    row = {
+        "carnivore_id": c.carnivore_id, "generation": c.generation, "born_step": c.born_step,
+        "death_step": death_step, "censored": int(censored), "offspring_count": c.offspring_count,
+        "kills": c.kills,
+    }
+    for i in range(CARN_OBS_DIM):
+        for j in range(N_ACTIONS):
+            row[f"w{i}_{j}"] = round(float(c.genome.action_weights[i, j]), 5)
+    for j in range(N_ACTIONS):
+        row[f"b{j}"] = round(float(c.genome.action_bias[j]), 5)
+    return row
 
 
 def load_results(out_dir: Path) -> list[dict]:
@@ -280,7 +333,8 @@ def main():
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     run = sub.add_parser("run")
-    run.add_argument("--preset", choices=["step0", "step1"], default="step0")
+    from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import PRESETS
+    run.add_argument("--preset", choices=sorted(PRESETS), default="step0")
     run.add_argument("--strategies", default=",".join(STRATEGIES))
     run.add_argument("--seeds", default="1-20", help="e.g. 1-20 or 1,5,9")
     run.add_argument("--steps", type=int, default=50_000, help="Step budget per run.")

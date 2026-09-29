@@ -272,3 +272,45 @@ ERL vs. 91.8 for L. Checking carnivore minima and corpse use per strategy
 would distinguish these. For the project goal (sustainable coevolution),
 ERL gives the more stable predator-prey system, not better-surviving prey.
 
+## Step 2: carnivores carry a genome (evolution, no learning)
+
+Design (decided 2026-09-29), config `step2` / `step2_neutral` = `step1` +
+`carnivore_mode`:
+
+- **Genome to behavior:** the same single-layer action network as the prey
+  over 10 carnivore inputs: prey signal N/S/E/W (exactly what the hand-coded
+  rule sees), adjacent cell blocked N/S/E/W, energy, health. Founder weights
+  are **seeded to approximate the hand-coded rule** (prey signal *i* → action
+  *i*, weight +10; blocked *i* → action *i*, weight −10), plus N(0, 1) per
+  founder. Founders start competent, since a predator arriving in a
+  territory isn't naive. Seeded founders make ~14 kills per 1,000
+  carnivore-steps early on, vs. ~16 for the rule. The per-founder variation
+  leaves room for selection.
+- **Reproduction:** sexual like the prey. Crossover with the nearest carnivore
+  within `mate_search_radius` (else a copy), then mutation (rate 0.05,
+  std 0.2).
+- **Neutral-marker control (`step2_neutral`):** identical inheritance code,
+  so same parents, same random draws and same offspring credit, but the genome
+  is **not expressed**. Every carnivore acts with the canonical seed network.
+  Genome change is then pure drift under the same demography. A first
+  version that drew donor genomes from random living carnivores was not
+  neutral (Codex review), because better-surviving genomes stay in that pool
+  longer.
+- Carnivore lineage (one row per carnivore, survivors censored, all 44 action
+  weights) goes to `carnivore_lineage/`. Cumulative kills, carnivore-steps and
+  the mean `carn_pursuit` / `carn_avoid` traits go to the time series.
+
+**Pass/fail criteria, fixed before running** (ERL prey, `step2` vs.
+`step2_neutral`, same seeds):
+
+1. **Coexistence:** among runs with prey alive at the switch (20k), ≥90%
+   keep their carnivores to the budget (step 1: 60/63).
+2. **Hunting improves by selection:** the change in kill rate (kills per 1,000
+   carnivore-steps, last 10k steps vs. first 5k) is larger under `step2`
+   than under `step2_neutral` (Mann-Whitney across seeds). The neutral
+   change absorbs prey adaptation and demography.
+3. **Selection, not drift, in the genome:** per-generation `pursuit` /
+   `avoid` trait trajectories. `step2` seeds agree on the direction of
+   change and prefer directional (GRW) models in the Hunt test.
+   `step2_neutral` seeds show no consistent direction.
+

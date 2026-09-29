@@ -113,6 +113,13 @@ config_step0 = {
     "carnivore_reproduction_energy_threshold": 18.0,  # was 14.0
     "carnivore_reproduction_energy_cost": 10.0,  # was 7.0
     "carnivore_energy_conserving_birth": False,  # NEW (not in 47534a0): True = newborn gets exactly the parent's cost, not initial_energy_carnivore
+    # --- Step 2: carnivore genome (NEW, not in 47534a0; "fsa" = the hand-coded rule) ---
+    "carnivore_mode": "fsa",  # "fsa" | "genome" | "genome_neutral" -- see world.py docstring
+    "carnivore_seed_pursuit_weight": 10.0,  # founder weight prey-signal_i -> action_i
+    "carnivore_seed_block_weight": -10.0,  # founder weight blocked_i -> action_i
+    "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
+    "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
+    "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,
@@ -185,5 +192,18 @@ STEP1_GRID_SIZE = 150
 
 config_step1 = scale_world_area({**config_step0, **STEP1_OVERRIDES}, STEP1_GRID_SIZE)
 
-PRESETS = {"step0": config_step0, "step1": config_step1}
+
+# --- Step 2: carnivores carry a genome (evolution, no learning) ---
+# Seeded network + sexual reproduction (decided 2026-09-29); step2_neutral is the
+# neutral-marker control (same inheritance, genome not expressed -- all carnivores
+# act with the canonical seed network), so its genome change is pure drift.
+config_step2 = {**config_step1, "carnivore_mode": "genome"}
+config_step2_neutral = {**config_step1, "carnivore_mode": "genome_neutral"}
+
+PRESETS = {
+    "step0": config_step0,
+    "step1": config_step1,
+    "step2": config_step2,
+    "step2_neutral": config_step2_neutral,
+}
 
