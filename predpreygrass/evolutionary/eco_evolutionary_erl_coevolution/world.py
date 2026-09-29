@@ -73,6 +73,12 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
   what the hand-coded rule sees: nearest living agent or agent corpse within
   `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
   (wall, tree or edge), energy_norm, health_norm.
+  With `carnivore_obs = "rich"` (18 inputs) the prey signal is split into
+  living / sheltered-in-tree / corpse channels -- whichever the line of sight
+  hits first sets its channel -- then blocked x4, energy, health. The rich seed
+  weights all three prey channels equally, so it behaves exactly like the
+  basic seed. Note: in a single-layer network, energy/health add the same
+  amount to every action's logit, so they cannot change the chosen direction.
 """
 
 from collections import Counter
@@ -96,7 +102,14 @@ from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.metrics import 
 
 OBS_DIM = 7  # visual_N, visual_S, visual_E, visual_W, in_tree, health_norm, energy_norm
 N_ACTIONS = 4  # N, S, E, W -- no "stay"; every step targets one adjacent cell
-CARN_OBS_DIM = 10  # prey signal x4, adjacent blocked x4, energy_norm, health_norm (step 2)
+CARN_OBS_DIM = 10  # "basic" layout: prey signal x4, adjacent blocked x4, energy_norm, health_norm (step 2)
+# Carnivore input layouts (`carnivore_obs`). Row offsets of each 4-direction block.
+# "rich" splits the prey signal by kind: living (attackable), sheltered in a tree
+# (visible but unattackable), agent corpse (food without a fight).
+CARN_OBS_LAYOUTS = {
+    "basic": {"dim": 10, "prey": {"pursuit": 0}, "block": 4},
+    "rich": {"dim": 18, "prey": {"living": 0, "sheltered": 4, "corpse": 8}, "block": 12},
+}
 
 TERRAIN_EMPTY = 0
 TERRAIN_WALL = 1
@@ -172,6 +185,8 @@ class ErlWorld:
         assert self.strategy in STRATEGIES, self.strategy
         self.carnivore_mode = config.get("carnivore_mode", "fsa")
         assert self.carnivore_mode in CARNIVORE_MODES, self.carnivore_mode
+        self.carn_layout = CARN_OBS_LAYOUTS[config.get("carnivore_obs", "basic")]
+        self.carn_obs_dim = self.carn_layout["dim"]
         self.obs_dim = OBS_DIM
         self.grid_size = config["grid_size"]
         self.current_step = 0
@@ -310,25 +325,30 @@ class ErlWorld:
         self.occupant[(row, col)] = carnivore
         return True
 
+    def _seed_weights(self, prefix: str) -> np.ndarray:
+        """Seed action weights for the current input layout, read from config keys
+        `{prefix}_<channel>_weight` and `{prefix}_block_weight` (prefix
+        "carnivore_seed" or "mixed_mutant"): prey channel in direction i ->
+        action i, blocked in direction i -> action i."""
+        weights = np.zeros((self.carn_obs_dim, N_ACTIONS))
+        for channel, offset in self.carn_layout["prey"].items():
+            for i in range(N_ACTIONS):
+                weights[offset + i, i] = self.cfg[f"{prefix}_{channel}_weight"]
+        for i in range(N_ACTIONS):
+            weights[self.carn_layout["block"] + i, i] = self.cfg[f"{prefix}_block_weight"]
+        return weights
+
+    def _fixed_network(self, prefix: str) -> Genome:
+        return Genome(np.zeros(self.carn_obs_dim), 0.0, self._seed_weights(prefix), np.zeros(N_ACTIONS))
+
     @property
     def _mixed_type_genomes(self) -> tuple[Genome, Genome]:
         """("mixed") resident = the seed network, mutant = seed with its own weights. Cached, no RNG."""
         cached = getattr(self, "_mixed_cache", None)
         if cached is None:
-            cached = (
-                self._seed_network(self.cfg["carnivore_seed_pursuit_weight"], self.cfg["carnivore_seed_block_weight"]),
-                self._seed_network(self.cfg["mixed_mutant_pursuit_weight"], self.cfg["mixed_mutant_block_weight"]),
-            )
+            cached = (self._fixed_network("carnivore_seed"), self._fixed_network("mixed_mutant"))
             self._mixed_cache = cached
         return cached
-
-    @staticmethod
-    def _seed_network(pursuit: float, block: float) -> Genome:
-        weights = np.zeros((CARN_OBS_DIM, N_ACTIONS))
-        for i in range(N_ACTIONS):
-            weights[i, i] = pursuit
-            weights[N_ACTIONS + i, i] = block
-        return Genome(np.zeros(CARN_OBS_DIM), 0.0, weights, np.zeros(N_ACTIONS))
 
     @property
     def _canonical_carnivore_genome(self) -> Genome:
@@ -336,24 +356,16 @@ class ErlWorld:
         expresses under "genome_neutral". Built without the RNG, cached."""
         cached = getattr(self, "_canonical_cache", None)
         if cached is None:
-            weights = np.zeros((CARN_OBS_DIM, N_ACTIONS))
-            for i in range(N_ACTIONS):
-                weights[i, i] = self.cfg["carnivore_seed_pursuit_weight"]
-                weights[N_ACTIONS + i, i] = self.cfg["carnivore_seed_block_weight"]
-            cached = Genome(np.zeros(CARN_OBS_DIM), 0.0, weights, np.zeros(N_ACTIONS))
+            cached = self._fixed_network("carnivore_seed")
             self._canonical_cache = cached
         return cached
 
     def _founder_carnivore_genome(self) -> Genome:
-        """Seeded to reproduce the hand-coded rule: prey signal in direction i
-        -> action i (weight `carnivore_seed_pursuit_weight`), adjacent cell
-        blocked in direction i -> away from action i (`carnivore_seed_block_weight`),
-        plus N(0, carnivore_founder_weight_std) on every weight and bias. The
-        eval network is random and unused until carnivores learn (step 3)."""
-        genome = founder_genome(CARN_OBS_DIM, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
-        for i in range(N_ACTIONS):
-            genome.action_weights[i, i] += self.cfg["carnivore_seed_pursuit_weight"]
-            genome.action_weights[N_ACTIONS + i, i] += self.cfg["carnivore_seed_block_weight"]
+        """Seeded to approximate the hand-coded rule (see `_seed_weights`), plus
+        N(0, carnivore_founder_weight_std) on every weight and bias. The eval
+        network is random and unused until carnivores learn (step 3)."""
+        genome = founder_genome(self.carn_obs_dim, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
+        genome.action_weights += self._seed_weights("carnivore_seed")
         return genome
 
     # ---- observation (agents only -- carnivores use their own hard-coded sensing) ----
@@ -585,8 +597,11 @@ class ErlWorld:
 
     def _observe_carnivore(self, carnivore: Carnivore) -> np.ndarray:
         """Step 2 carnivore input -- see module docstring. The prey signal uses
-        exactly the hand-coded rule's line of sight (`_carnivore_fsa_action`)."""
-        obs = np.zeros(CARN_OBS_DIM)
+        exactly the hand-coded rule's line of sight (`_carnivore_fsa_action`);
+        under the "rich" layout the first prey object hit sets its own channel."""
+        layout = self.carn_layout
+        rich = "living" in layout["prey"]
+        obs = np.zeros(self.carn_obs_dim)
         sense = self.cfg["carnivore_sense_range"]
         for i, (dr, dc) in enumerate(_DIRS):
             for dist in range(1, sense + 1):
@@ -594,16 +609,24 @@ class ErlWorld:
                 if not (0 <= r < self.grid_size and 0 <= c < self.grid_size):
                     break
                 occ = self.occupant.get((r, c))
-                if isinstance(occ, Agent) or (r, c) in self.corpses and self.corpses[(r, c)].kind == "agent":
-                    obs[i] = 1.0 - 0.5 * (dist - 1) / max(sense - 1, 1)
+                is_agent = isinstance(occ, Agent)
+                if is_agent or (r, c) in self.corpses and self.corpses[(r, c)].kind == "agent":
+                    signal = 1.0 - 0.5 * (dist - 1) / max(sense - 1, 1)
+                    if not rich:
+                        channel = "pursuit"
+                    elif is_agent:
+                        channel = "sheltered" if occ.in_tree else "living"
+                    else:
+                        channel = "corpse"
+                    obs[layout["prey"][channel] + i] = signal
                     break
                 if self.terrain[r, c] != TERRAIN_EMPTY:
                     break
             r, c = carnivore.row + dr, carnivore.col + dc
             if not (0 <= r < self.grid_size and 0 <= c < self.grid_size) or self.terrain[r, c] != TERRAIN_EMPTY:
-                obs[N_ACTIONS + i] = 1.0
-        obs[8] = min(carnivore.energy / self.cfg["max_energy_carnivore"], 1.0)
-        obs[9] = min(carnivore.health / self.cfg["max_health_carnivore"], 1.0)
+                obs[layout["block"] + i] = 1.0
+        obs[-2] = min(carnivore.energy / self.cfg["max_energy_carnivore"], 1.0)
+        obs[-1] = min(carnivore.health / self.cfg["max_health_carnivore"], 1.0)
         return obs
 
     def _resolve_carnivore_action(self, carnivore: Carnivore, action: int):
@@ -862,9 +885,11 @@ class ErlWorld:
         if not genomes:
             return {"carn_pursuit": float("nan"), "carn_avoid": float("nan"), "carn_generation": float("nan")}
         idx = np.arange(N_ACTIONS)
+        prey_rows = [off + idx for off in self.carn_layout["prey"].values()]
+        block_rows = self.carn_layout["block"] + idx
         return {
-            "carn_pursuit": float(np.mean([g.action_weights[idx, idx].mean() for g in genomes])),
-            "carn_avoid": float(np.mean([g.action_weights[N_ACTIONS + idx, idx].mean() for g in genomes])),
+            "carn_pursuit": float(np.mean([np.mean([g.action_weights[rows, idx] for rows in prey_rows]) for g in genomes])),
+            "carn_avoid": float(np.mean([g.action_weights[block_rows, idx].mean() for g in genomes])),
             "carn_generation": float(np.mean([c.generation for c in self.carnivores if c.alive])),
         }
 

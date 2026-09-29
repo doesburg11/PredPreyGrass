@@ -115,13 +115,20 @@ config_step0 = {
     "carnivore_energy_conserving_birth": False,  # NEW (not in 47534a0): True = newborn gets exactly the parent's cost, not initial_energy_carnivore
     # --- Step 2: carnivore genome (NEW, not in 47534a0; "fsa" = the hand-coded rule) ---
     "carnivore_mode": "fsa",  # "fsa" | "genome" | "genome_neutral" -- see world.py docstring
-    "carnivore_seed_pursuit_weight": 10.0,  # founder weight prey-signal_i -> action_i
+    "carnivore_obs": "basic",  # "basic" (10 inputs) | "rich" (18: prey split into living/sheltered/corpse)
+    "carnivore_seed_pursuit_weight": 10.0,  # founder weight prey-signal_i -> action_i ("basic")
+    "carnivore_seed_living_weight": 10.0,  # "rich" seed: all three prey channels equal = same behavior as basic
+    "carnivore_seed_sheltered_weight": 10.0,
+    "carnivore_seed_corpse_weight": 10.0,
     "carnivore_seed_block_weight": -10.0,  # founder weight blocked_i -> action_i
     "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
     "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
     "mixed_mutant_pursuit_weight": 10.0,  # "mixed" competition test: the mutant type's network
     "mixed_mutant_block_weight": -10.0,  # (defaults = identical to the resident, the neutral check)
+    "mixed_mutant_living_weight": 10.0,  # "rich" mutant channels (defaults = identical to the resident)
+    "mixed_mutant_sheltered_weight": 10.0,
+    "mixed_mutant_corpse_weight": 10.0,
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,

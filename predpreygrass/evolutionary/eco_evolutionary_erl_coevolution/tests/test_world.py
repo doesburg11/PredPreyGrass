@@ -411,3 +411,49 @@ def test_mixed_mode_types_alternate_inherit_and_count(rng):
     assert world.carnivores[-1].ctype == 1 and world.type_births == [0, 1]
     world.step()
     assert sum(world.type_steps) == world.carnivore_steps
+
+
+def test_rich_seed_behaves_exactly_like_basic_seed():
+    """Same world state, every living carnivore: the rich seed network (all prey
+    channels +10) must give the same action probabilities as the basic seed."""
+    from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.config import PRESETS
+    basic = ErlWorld(dict(PRESETS["step2_neutral"], seed=3, strategy="ERL"), np.random.default_rng(3))
+    for _ in range(300):
+        basic.step()
+    rich = ErlWorld.__new__(ErlWorld)
+    rich.__dict__.update(basic.__dict__)
+    rich.cfg = dict(basic.cfg, carnivore_obs="rich")
+    rich.carn_layout = __import__(
+        "predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world", fromlist=["x"]
+    ).CARN_OBS_LAYOUTS["rich"]
+    rich.carn_obs_dim = 18
+    rich._canonical_cache = None
+    b_net, r_net = basic._canonical_carnivore_genome, rich._canonical_carnivore_genome
+    checked = 0
+    for c in basic.carnivores:
+        pb = action_probs(basic._observe_carnivore(c), b_net.action_weights, b_net.action_bias)
+        pr = action_probs(rich._observe_carnivore(c), r_net.action_weights, r_net.action_bias)
+        assert np.allclose(pb, pr)
+        checked += 1
+    assert checked > 10
+
+
+def test_rich_observation_channels(rng):
+    world = ErlWorld(_small_world_cfg(carnivore_mode="mixed", carnivore_obs="rich",
+                                      n_initial_carnivores=1, n_initial_agents=2), rng)
+    carnivore, living, sheltered = world.carnivores[0], world.agents[0], world.agents[1]
+    for cell in [(r, 5) for r in range(1, 11)] + [(6, c) for c in range(1, 11)]:
+        _clear_cell(world, cell)
+    _place(world, carnivore, (6, 5))
+    _place(world, living, (4, 5))  # north, 2 cells
+    _place(world, sheltered, (6, 8))  # east, 3 cells, in a tree
+    world.terrain[(6, 8)] = 2
+    sheltered.in_tree = True
+    world.corpses[(8, 5)] = __import__(
+        "predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world", fromlist=["x"]
+    ).Corpse(kind="agent", energy=3.0)  # south, 2 cells
+    obs = world._observe_carnivore(carnivore)
+    assert obs.shape == (18,)
+    assert obs[0] > 0 and obs[4 + 0] == 0 and obs[8 + 0] == 0  # N: living
+    assert obs[4 + 2] > 0 and obs[2] == 0  # E: sheltered
+    assert obs[8 + 1] > 0 and obs[1] == 0  # S: corpse

@@ -34,7 +34,7 @@ from pathlib import Path
 
 import numpy as np
 
-from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import CARN_OBS_DIM, N_ACTIONS, STRATEGIES
+from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import N_ACTIONS, STRATEGIES
 
 STUDY_LOGS = Path.home() / "simulation_results" / "erl_results" / "erl_full_study_logs"
 STUDY_BUDGET = 1_000_000
@@ -118,8 +118,9 @@ def run_one(job: dict) -> dict:
         carn_dir = Path(job["out_dir"]) / "carnivore_lineage"
         carn_dir.mkdir(parents=True, exist_ok=True)
         with open(carn_dir / f"{job['tag']}_{job['strategy']}_seed{job['seed']}.csv", "w") as f:
-            f.write(",".join(CARNIVORE_FIELDS) + "\n")
-            f.writelines(",".join(str(row[k]) for k in CARNIVORE_FIELDS) + "\n" for row in carn_rows)
+            fields = carnivore_fields(world.carn_obs_dim)
+            f.write(",".join(fields) + "\n")
+            f.writelines(",".join(str(row[k]) for k in fields) + "\n" for row in carn_rows)
 
     return {
         "tag": job["tag"],
@@ -185,11 +186,12 @@ def _sample(world, counts) -> tuple:
     )
 
 
-CARNIVORE_FIELDS = (
-    ["carnivore_id", "generation", "born_step", "death_step", "censored", "offspring_count", "kills"]
-    + [f"w{i}_{j}" for i in range(CARN_OBS_DIM) for j in range(N_ACTIONS)]
-    + [f"b{j}" for j in range(N_ACTIONS)]
-)
+def carnivore_fields(obs_dim: int) -> list[str]:
+    return (
+        ["carnivore_id", "generation", "born_step", "death_step", "censored", "offspring_count", "kills"]
+        + [f"w{i}_{j}" for i in range(obs_dim) for j in range(N_ACTIONS)]
+        + [f"b{j}" for j in range(N_ACTIONS)]
+    )
 
 
 def _carnivore_record(c, death_step: int, censored: bool) -> dict:
@@ -198,7 +200,7 @@ def _carnivore_record(c, death_step: int, censored: bool) -> dict:
         "death_step": death_step, "censored": int(censored), "offspring_count": c.offspring_count,
         "kills": c.kills,
     }
-    for i in range(CARN_OBS_DIM):
+    for i in range(c.genome.action_weights.shape[0]):
         for j in range(N_ACTIONS):
             row[f"w{i}_{j}"] = round(float(c.genome.action_weights[i, j]), 5)
     for j in range(N_ACTIONS):
