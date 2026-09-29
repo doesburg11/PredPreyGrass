@@ -51,7 +51,9 @@ def per_seed(out_dir: Path, r: dict, switch: int):
         steps = int(b[f"{kind}_steps"]) - int(a[f"{kind}_steps"])
         return births / steps if steps else float("nan")
 
-    return freq(a), freq(b), rate("mutant") / rate("resident")
+    resident = rate("resident")
+    # A type that has died out (no births after the switch) leaves the ratio undefined.
+    return freq(a), freq(b), rate("mutant") / resident if resident else float("nan")
 
 
 def whole_trajectory(out_dir: Path, r: dict, switch: int):

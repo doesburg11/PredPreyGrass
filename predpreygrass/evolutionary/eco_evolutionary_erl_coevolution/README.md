@@ -480,3 +480,40 @@ variants (p < 0.0125). Results in `~/simulation_results/erl_results/coevo_rich_i
   architecture cannot express (anything state-dependent, e.g. "hunt only when
   hungry", since energy/health cannot change the chosen direction) is untested.
 
+### State-dependent competition test (2026-09-29): one candidate (persistent search), and the test's limits
+
+`mixed` mode, rich inputs, hand-coded state-dependent mutants vs. the rich seed
+resident (commit edc2df4), 10 seeds × 40k. Primary readout and threshold
+(p < 0.05/3) fixed before the run. Results in
+`~/simulation_results/erl_results/coevo_state_invasion`.
+
+| mutant | freq 500 → 20k (pre-registered, vs. identical) | warm-up birth ratio | freq at 500 vs. identical (exploratory) | prey extinct |
+|---|---|---|---|---|
+| identical | 0.51 → 0.52 | 1.000 | — | 2/10 |
+| persistent search | 0.79 → 0.79 (p=0.22, n=5) | 0.977 (p=0.06) | **0.75 vs. 0.51, p=0.004** | 5/10 (p=0.35) |
+| sated scavenger | 0.46 → 0.58 (p=0.69) | 0.957 (p=0.016) | 0.45, p=0.52 | 3/10 |
+| wounded scavenger | 0.55 → 0.34 (p=0.32) | 0.961 (p=0.004) | 0.55, p=0.21 | 1/10 |
+
+- **Pre-registered: no mutant beats the resident.** The wounded scavenger is
+  worse: its birth ratio after the switch is also 0.944 (p=0.004), and it
+  falls to 0.06 by 40k. The sated scavenger tends to be worse.
+- **Exploratory: persistent search pulls ahead early** (0.75 at step 500 vs.
+  0.51, p=0.004), while carnivores are numerous (~120–380) and drift is weak.
+  In all 5 runs that reached 40k it went to fixation, but see the next point.
+  It also tended to exterminate prey more often (5/10 vs. 2/10, n.s.).
+- **The competition test is low-powered in this setup.** Around step 1,000
+  carnivores crash to 1–5 individuals in most runs (the opening boom-bust),
+  and warm-up immigration (types alternating 50/50) refills them. So the
+  frequency at the switch is largely reset. After the switch, populations of
+  tens drift hard: the *identical* mutant went to fixation in 5/8 runs and
+  to 0–8% in two. Only large effects (like "no avoidance") survive this.
+  Persistent search's 5/5 fixation is therefore not distinguishable from
+  drift.
+- Persistence is memory-based, so a single-layer network over the current
+  inputs cannot express it. It could approximately if the previous move
+  were an input (weight previous-action_i → action_i, dominated by the ±10
+  pursuit/avoid weights whenever prey or walls are seen). That would need no
+  hidden layer.
+- `analyze_invasion.py` fix: a type that dies out (no births after the switch)
+  now yields an undefined (NaN) birth ratio instead of a crash.
+
