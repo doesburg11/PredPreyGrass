@@ -30,17 +30,29 @@ import numpy as np
 from scipy.stats import binomtest, mannwhitneyu
 
 from predpreygrass.evolutionary.model_selection import fit_all_models
-from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import N_ACTIONS
+from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import CARN_OBS_LAYOUTS, N_ACTIONS
 
 SWITCH_STEP = 20_000
 EARLY_WINDOW = 5_000
 LATE_WINDOW = 10_000
 MIN_PER_GENERATION = 5  # generations with fewer lineage rows are dropped from the trait series
 
-TRAITS = {
-    "pursuit": [f"w{i}_{i}" for i in range(N_ACTIONS)],
-    "avoid": [f"w{N_ACTIONS + i}_{i}" for i in range(N_ACTIONS)],
-}
+def traits_for(layout_name: str) -> dict[str, list[str]]:
+    """Lineage columns per trait for a carnivore input layout: `pursuit` = the
+    first prey channel's i -> i weights, `avoid` = blocked i -> i, and for
+    "rich_memory" `persist` = previous move i -> i."""
+    layout = CARN_OBS_LAYOUTS[layout_name]
+    first_prey = next(iter(layout["prey"].values()))
+    traits = {
+        "pursuit": [f"w{first_prey + i}_{i}" for i in range(N_ACTIONS)],
+        "avoid": [f"w{layout['block'] + i}_{i}" for i in range(N_ACTIONS)],
+    }
+    if "prev" in layout:
+        traits["persist"] = [f"w{layout['prev'] + i}_{i}" for i in range(N_ACTIONS)]
+    return traits
+
+
+TRAITS = traits_for("basic")
 
 
 def load_results(out_dir: Path, tag: str) -> list[dict]:
@@ -122,7 +134,11 @@ def main():
     parser.add_argument("--switch", type=int, default=SWITCH_STEP)
     parser.add_argument("--early", type=int, default=EARLY_WINDOW)
     parser.add_argument("--late", type=int, default=LATE_WINDOW)
+    parser.add_argument("--layout", default="basic", choices=sorted(CARN_OBS_LAYOUTS),
+                        help="carnivore_obs layout of the runs (sets which lineage columns form each trait)")
     args = parser.parse_args()
+    global TRAITS
+    TRAITS = traits_for(args.layout)
     out_dir = Path(args.out_dir).expanduser()
     groups = {"step2": load_results(out_dir, args.real_tag), "neutral": load_results(out_dir, args.neutral_tag)}
 
@@ -134,6 +150,7 @@ def main():
         print(f"  {name:8s} {kept}/{established} established runs keep carnivores ({share:.0%}) {verdict}")
 
     print("\n== 2. Kill-rate change, last 10k minus first 5k (per 1,000 carnivore-steps)")
+    print("   (reported only: dropped as a selection test 2026-09-29 -- per-capita kill rate tracks ecology; README)")
     changes = {}
     for name, results in groups.items():
         changes[name] = [c for c in (kill_rate_change(out_dir, r, args.early, args.late) for r in results)

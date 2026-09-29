@@ -507,3 +507,29 @@ def test_mixed_assign_step_splits_living_carnivores_after_warmup():
     victim = living[0]
     world._kill_carnivore(victim, "starvation")
     assert sum(world.type_deaths) == before + 1
+
+
+def test_rich_memory_encodes_previous_move_and_seed_ignores_it():
+    world = ErlWorld(_small_world_cfg(carnivore_mode="genome_neutral", carnivore_obs="rich_memory",
+                                      n_initial_carnivores=1), np.random.default_rng(0))
+    carnivore = world.carnivores[0]
+    obs0 = world._observe_carnivore(carnivore)
+    assert obs0.shape == (22,) and obs0[16:20].sum() == 0  # no previous move yet
+    carnivore.last_action = 3
+    obs = world._observe_carnivore(carnivore)
+    assert list(obs[16:20]) == [0, 0, 0, 1]
+    seed = world._canonical_carnivore_genome
+    assert np.all(seed.action_weights[16:20] == 0)  # no built-in persistence
+    assert np.allclose(action_probs(obs, seed.action_weights, seed.action_bias),
+                       action_probs(obs0, seed.action_weights, seed.action_bias))
+
+
+def test_rich_memory_network_can_express_persistence():
+    world = ErlWorld(_small_world_cfg(carnivore_mode="genome_neutral", carnivore_obs="rich_memory",
+                                      carnivore_seed_prev_weight=3.3, n_initial_carnivores=1), np.random.default_rng(0))
+    seed = world._canonical_carnivore_genome
+    obs = np.zeros(22)
+    obs[16 + 2] = 1.0  # moved east last step, nothing visible, nothing blocked
+    assert action_probs(obs, seed.action_weights, seed.action_bias)[2] > 0.85
+    obs[0] = 1.0  # prey north: pursuit (+10) dominates the persistence weight
+    assert action_probs(obs, seed.action_weights, seed.action_bias)[0] > 0.99

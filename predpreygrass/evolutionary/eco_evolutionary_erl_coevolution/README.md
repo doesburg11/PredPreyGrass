@@ -548,3 +548,25 @@ over in all 13 runs that reached 50k. n=15 per tag had both types at the split;
   may over-exploit its prey. Too few cases to conclude, but relevant for
   step 2 with evolvable persistence.
 
+### Step 2b: can evolution discover persistence? (pre-registered 2026-09-29, before running)
+
+`carnivore_obs = "rich_memory"`: the rich inputs plus a one-hot of the
+carnivore's previous move (22 inputs). The seed weight for previous move
+i → action i is **0**, so founders behave exactly like the rich seed and
+persistence is not built in. Founder noise (N(0, 1)) and mutation give that
+weight variation. The hand-coded persist rule corresponds to a weight of about
++3.3. `step2` vs. `step2_neutral` (neutral marker), ERL prey, 20 seeds each,
+60k steps, `analyze_step2.py --layout rich_memory`.
+
+Pass/fail, fixed now:
+1. **Coexistence:** ≥90% of runs with prey alive at the switch keep their
+   carnivores to 60k.
+2. **Persistence evolves by selection:** the `persist` trait's net change
+   (last vs. first generation mean) is positive in significantly more `step2`
+   seeds than chance (sign test p < 0.05), and not in `step2_neutral`.
+   Supporting: `step2`'s persist net change is larger than neutral's
+   (Mann-Whitney), and GRW is preferred more often.
+
+Expected risk: ~130 carnivore generations may move the trait only part of the
+way toward +3.3. The pass rule is about direction, not magnitude.
+

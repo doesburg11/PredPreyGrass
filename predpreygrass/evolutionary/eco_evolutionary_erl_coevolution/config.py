@@ -115,11 +115,12 @@ config_step0 = {
     "carnivore_energy_conserving_birth": False,  # NEW (not in 47534a0): True = newborn gets exactly the parent's cost, not initial_energy_carnivore
     # --- Step 2: carnivore genome (NEW, not in 47534a0; "fsa" = the hand-coded rule) ---
     "carnivore_mode": "fsa",  # "fsa" | "genome" | "genome_neutral" -- see world.py docstring
-    "carnivore_obs": "basic",  # "basic" (10 inputs) | "rich" (18: prey split into living/sheltered/corpse)
+    "carnivore_obs": "basic",  # "basic" (10) | "rich" (18: prey split living/sheltered/corpse) | "rich_memory" (22: + previous move)
     "carnivore_seed_pursuit_weight": 10.0,  # founder weight prey-signal_i -> action_i ("basic")
     "carnivore_seed_living_weight": 10.0,  # "rich" seed: all three prey channels equal = same behavior as basic
     "carnivore_seed_sheltered_weight": 10.0,
     "carnivore_seed_corpse_weight": 10.0,
+    "carnivore_seed_prev_weight": 0.0,  # "rich_memory": previous move i -> action i; 0 = no built-in persistence
     "carnivore_seed_block_weight": -10.0,  # founder weight blocked_i -> action_i
     "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
@@ -129,6 +130,7 @@ config_step0 = {
     "mixed_mutant_living_weight": 10.0,  # "rich" mutant channels (defaults = identical to the resident)
     "mixed_mutant_sheltered_weight": 10.0,
     "mixed_mutant_corpse_weight": 10.0,
+    "mixed_mutant_prev_weight": 0.0,
     "mixed_mutant_strategy": "network",  # or a hand-coded state-dependent variant: persist | sated_scavenger | wounded_scavenger
     "mixed_persist_prob": 0.9,
     "mixed_sated_energy_frac": 0.75,

@@ -167,7 +167,7 @@ def append_result(path: Path, result: dict):
 
 SAMPLE_FIELDS = [
     "step", "agent_count", "carnivore_count", "carnivore_kills", "carnivore_steps",
-    "carn_pursuit", "carn_avoid", "carn_generation",
+    "carn_pursuit", "carn_avoid", "carn_generation", "carn_persist",
     # "mixed" competition test (0 otherwise): mutant count, per-type cumulative births/steps
     "carn_mutants", "resident_births", "mutant_births", "resident_steps", "mutant_steps",
     "resident_deaths", "mutant_deaths",
@@ -181,7 +181,7 @@ def _sample(world, counts) -> tuple:
     return (
         world.current_step, counts["agent"], counts["carnivore"], world.carnivore_kills,
         world.carnivore_steps, round(stats["carn_pursuit"], 4), round(stats["carn_avoid"], 4),
-        round(stats["carn_generation"], 2),
+        round(stats["carn_generation"], 2), round(stats["carn_persist"], 4),
         sum(1 for c in world.carnivores if c.alive and c.ctype == 1),
         world.type_births[0], world.type_births[1], world.type_steps[0], world.type_steps[1],
         world.type_deaths[0], world.type_deaths[1],

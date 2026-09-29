@@ -123,6 +123,9 @@ CARN_OBS_DIM = 10  # "basic" layout: prey signal x4, adjacent blocked x4, energy
 CARN_OBS_LAYOUTS = {
     "basic": {"dim": 10, "prey": {"pursuit": 0}, "block": 4},
     "rich": {"dim": 18, "prey": {"living": 0, "sheltered": 4, "corpse": 8}, "block": 12},
+    # rich + a one-hot of the carnivore's previous move (rows 16-19), so a
+    # single-layer network can express persistent search (previous move i -> action i).
+    "rich_memory": {"dim": 22, "prey": {"living": 0, "sheltered": 4, "corpse": 8}, "block": 12, "prev": 16},
 }
 
 TERRAIN_EMPTY = 0
@@ -172,7 +175,7 @@ class Carnivore:
     kills: int = 0
     phenotype: Genome | None = None  # expressed network under "genome_nonheritable" only
     ctype: int = 0  # "mixed" only: 0 = resident, 1 = mutant
-    last_action: int | None = None  # "mixed" only: previous move, for the "persist" strategy
+    last_action: int | None = None  # previous move: "mixed" persist strategy and the "rich_memory" input
 
 
 @dataclass
@@ -352,6 +355,9 @@ class ErlWorld:
                 weights[offset + i, i] = self.cfg[f"{prefix}_{channel}_weight"]
         for i in range(N_ACTIONS):
             weights[self.carn_layout["block"] + i, i] = self.cfg[f"{prefix}_block_weight"]
+        if "prev" in self.carn_layout:
+            for i in range(N_ACTIONS):
+                weights[self.carn_layout["prev"] + i, i] = self.cfg[f"{prefix}_prev_weight"]
         return weights
 
     def _fixed_network(self, prefix: str) -> Genome:
@@ -609,6 +615,7 @@ class ErlWorld:
                     expressed = self._canonical_carnivore_genome
                 probs = action_probs(obs, expressed.action_weights, expressed.action_bias)
                 action = sample_action(probs, self.rng)
+                carnivore.last_action = action  # read back only by the "rich_memory" layout
             self._resolve_carnivore_action(carnivore, action)
             if carnivore.alive:
                 carnivore.energy -= self.cfg["basal_energy_cost_carnivore"]
@@ -684,6 +691,8 @@ class ErlWorld:
             r, c = carnivore.row + dr, carnivore.col + dc
             if not (0 <= r < self.grid_size and 0 <= c < self.grid_size) or self.terrain[r, c] != TERRAIN_EMPTY:
                 obs[layout["block"] + i] = 1.0
+        if "prev" in layout and carnivore.last_action is not None:
+            obs[layout["prev"] + carnivore.last_action] = 1.0
         obs[-2] = min(carnivore.energy / self.cfg["max_energy_carnivore"], 1.0)
         obs[-1] = min(carnivore.health / self.cfg["max_health_carnivore"], 1.0)
         return obs
@@ -943,13 +952,16 @@ class ErlWorld:
         blocked->same-direction weight (seeded negative). NaN under "fsa"."""
         genomes = [c.genome for c in self.carnivores if c.alive and c.genome is not None]
         if not genomes:
-            return {"carn_pursuit": float("nan"), "carn_avoid": float("nan"), "carn_generation": float("nan")}
+            return {"carn_pursuit": float("nan"), "carn_avoid": float("nan"), "carn_persist": float("nan"),
+                    "carn_generation": float("nan")}
         idx = np.arange(N_ACTIONS)
         prey_rows = [off + idx for off in self.carn_layout["prey"].values()]
         block_rows = self.carn_layout["block"] + idx
         return {
             "carn_pursuit": float(np.mean([np.mean([g.action_weights[rows, idx] for rows in prey_rows]) for g in genomes])),
             "carn_avoid": float(np.mean([g.action_weights[block_rows, idx].mean() for g in genomes])),
+            "carn_persist": float(np.mean([g.action_weights[self.carn_layout["prev"] + idx, idx].mean() for g in genomes]))
+            if "prev" in self.carn_layout else float("nan"),
             "carn_generation": float(np.mean([c.generation for c in self.carnivores if c.alive])),
         }
 
