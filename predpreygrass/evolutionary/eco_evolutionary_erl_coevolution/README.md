@@ -223,3 +223,25 @@ with 135 founders.
 Predation share of agent deaths is 17–20% for every strategy (13% on
 100×100).
 
+### Founder-pool test (2026-09-29): the bigger world, not founder count, is what helps L
+
+ERL and L at 150×150 with **60 founders** (`--set n_initial_agents=60`), 20 seeds
+each, 60k steps; results in `~/simulation_results/erl_results/coevo_step1_founders60`.
+
+| 150×150 world | ERL prey extinct | L prey extinct | ERL vs L, prey extinction (Fisher) | ERL vs L, coexistence time (Mann-Whitney) |
+|---|---|---|---|---|
+| 135 founders | 1/20 | 3/20 | p=0.6 | p=0.11 |
+| 60 founders | 1/20 | 5/20 | p=0.18 | p=0.013 |
+| *100×100, 60 founders* | *3/20* | *13/20* | *p=0.003* | |
+
+With 60 founders, L gets only slightly worse (3→5 prey extinct, 135 vs. 60
+not significant, p=0.69), and ERL doesn't change. With the *same* 60 founders,
+L goes from 13/20 extinct on 100×100 to 5/20 on 150×150. So the
+founder-pool hypothesis is largely rejected: most of L's improvement comes
+with the bigger world itself. Lower founder density at 150×150 would, if
+anything, work against L. Which aspect of the bigger world helps L (larger
+populations, more room to escape, a different carnivore regime) is not
+separated here. ERL's edge over L shows on coexistence time at 60 founders
+(p=0.013; L populations also lose their carnivores 3 times vs. ERL's 0). On
+prey extinction alone, n=20 doesn't separate ERL from L in the bigger world.
+
