@@ -353,3 +353,38 @@ Exploratory checks (not pre-registered):
   good weight settings (selection fixes the performance-relevant
   combinations, drift moves the rest), but this is not tested.
 
+### Carnivore headroom probe (2026-09-29): behavior barely changes per-capita fitness
+
+Fixed, non-evolving carnivore variants against ERL prey in the step-1 world,
+8 seeds × 30k steps each (commit e2e179c). Kill rate is measured over
+5k–30k steps, and only for runs where prey survived. Results in
+`~/simulation_results/erl_results/coevo_headroom`.
+
+| carnivore behavior | kills / 1,000 carnivore-steps | births / 1,000 carnivore-steps | mean carnivores | mean prey | prey extinct |
+|---|---|---|---|---|---|
+| seed network (weight 10) | 16.9 | 3.61 | 88 | 520 | 1/8 |
+| hand-coded rule | 16.3 | 3.50 | 111 | 737 | 0/8 |
+| sharp (weight 30) | 16.8 | 4.00 | 87 | 385 | 3/8 |
+| soft (weight 5) | 17.1 | 4.02 | 118 | 466 | 3/8 |
+| no obstacle avoidance | 16.6 | 3.85 | 149 | 602 | 2/8 |
+| rule, ignores sheltered prey | **15.5** | **3.13** | 99 | 598 | 0/8 |
+
+- **Per-capita carnivore fitness is nearly flat across quite different
+  behaviors.** Kill rates span 15.5–17.1 (±5%). Births per carnivore-step
+  for every variant are indistinguishable from the seed network (p ≥ 0.44),
+  except "ignore sheltered prey", which is *worse* (p=0.0002).
+- The differences show up at the **population level** instead: carnivore
+  numbers (87–149), prey numbers (385–737) and prey extinctions (0–3/8). This
+  is the expected ecological feedback. Better hunting means more carnivores
+  and fewer prey, and per-capita success evens out (numerical response).
+- The one extra piece of information tested (sheltered prey are
+  unattackable) does not help; ignoring them hurts. Waiting near sheltered
+  prey apparently pays.
+- **Caveat:** each run here is monomorphic, with all carnivores using the
+  same behavior. Selection acts on *differences within* a population, which
+  is invasion fitness. A variant that looks equal when everyone uses it can
+  still beat the resident as a rare mutant, or lose to it. So these results
+  show that the carnivore fitness landscape is flat at the population level,
+  consistent with step 2's drift-like genome change. They do not directly
+  measure within-population selection.
+
