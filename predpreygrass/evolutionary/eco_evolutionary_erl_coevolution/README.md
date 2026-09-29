@@ -388,3 +388,31 @@ Fixed, non-evolving carnivore variants against ERL prey in the step-1 world,
   consistent with step 2's drift-like genome change. They do not directly
   measure within-population selection.
 
+### Matched control (2026-09-29): kill rate is not a valid selection measure; an unexplained opening difference
+
+`step2_nonheritable` (commit 821fd8c), 20 seeds, 60k steps, compared with the
+step-2 pilot on the same seeds:
+
+| | step2 | step2_nonheritable | step2_neutral |
+|---|---|---|---|
+| prey extinct | 0/20 | **8/20** (all at steps 586–2,349) | 1/20 |
+| kills / 1,000 carnivore-steps, first 5k | 14.7 | 16.2 | 16.4 |
+| same, 50–60k | 16.7 | 17.2 | 17.1 |
+
+- The control was designed to match step 2's starting competence, but it
+  doesn't in practice. Founders are identical, yet the conditions diverge
+  within the first few hundred steps. Over steps 0–500, step 2 kills 19–27 per
+  1,000 carnivore-steps and the control 16–21. Per-capita kill rate tracks
+  the ecological state (prey density in the opening boom) more than hunting
+  skill; the headroom probe points the same way. **Criterion 2 therefore
+  cannot isolate selection with either control and is dropped as a selection
+  test.** Within-population selection is measured by the competition test
+  (`mixed` mode) instead.
+- **Unexplained:** the control loses its prey in the opening in 8/20 runs,
+  step 2 in 0/20. A direct check found no bug. Newborns express equivalent
+  networks in both modes at step 500 (mean pursuit 10.00 vs. 9.98, avoid
+  −9.97 vs. −10.02, same bias and off-diagonal size). Under step 2, expressed
+  behavior is less varied (per-carnivore pursuit spread 0.29 vs. 0.49 after
+  ~4 generations): a few lineages quickly dominate. Whether lower predator
+  diversity explains the milder opening is untested.
+
