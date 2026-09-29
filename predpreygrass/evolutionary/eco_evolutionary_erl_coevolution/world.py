@@ -63,6 +63,12 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
     birth. Same phenotypic variation and starting competence, but behavior is
     not inherited, so it cannot respond to selection. The genome is still
     inherited as a passive marker.
+  - "mixed" (competition test): two fixed carnivore types, resident (the
+    seed network) and mutant (seed network with `mixed_mutant_pursuit_weight`
+    / `mixed_mutant_block_weight`). Founders and immigrants alternate type
+    by id (exactly 50/50, no RNG); offspring inherit the parent's type. The
+    mutant frequency over time measures within-population selection between
+    the two behaviors. `self.type_births/type_steps/type_kills` hold per-type totals.
   Carnivore observation (CARN_OBS_DIM = 10): prey signal N/S/E/W (exactly
   what the hand-coded rule sees: nearest living agent or agent corpse within
   `carnivore_sense_range`, blocked by terrain), adjacent cell blocked N/S/E/W
@@ -99,7 +105,7 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 STRATEGIES = ("ERL", "E", "L", "F", "B")
-CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral", "genome_nonheritable")
+CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral", "genome_nonheritable", "mixed")
 
 
 @dataclass
@@ -138,6 +144,7 @@ class Carnivore:
     offspring_count: int = 0
     kills: int = 0
     phenotype: Genome | None = None  # expressed network under "genome_nonheritable" only
+    ctype: int = 0  # "mixed" only: 0 = resident, 1 = mutant
 
 
 @dataclass
@@ -195,6 +202,9 @@ class ErlWorld:
         self.carnivore_immigrants = 0
         self.carnivore_kills = 0  # agents killed by a carnivore attack
         self.carnivore_steps = 0  # carnivore-steps acted, the denominator for kill rate
+        self.type_births = [0, 0]  # "mixed" per-type totals: [resident, mutant]
+        self.type_steps = [0, 0]
+        self.type_kills = [0, 0]
 
         n = self.grid_size
         self.terrain = np.full((n, n), TERRAIN_EMPTY, dtype=np.int8)
@@ -293,10 +303,32 @@ class ErlWorld:
         )
         if self.carnivore_mode == "genome_nonheritable":
             carnivore.phenotype = carnivore.genome  # founders express their own seed+noise, as under "genome"
+        if self.carnivore_mode == "mixed":
+            carnivore.ctype = carnivore.carnivore_id % 2
         self._next_carnivore_id += 1
         self.carnivores.append(carnivore)
         self.occupant[(row, col)] = carnivore
         return True
+
+    @property
+    def _mixed_type_genomes(self) -> tuple[Genome, Genome]:
+        """("mixed") resident = the seed network, mutant = seed with its own weights. Cached, no RNG."""
+        cached = getattr(self, "_mixed_cache", None)
+        if cached is None:
+            cached = (
+                self._seed_network(self.cfg["carnivore_seed_pursuit_weight"], self.cfg["carnivore_seed_block_weight"]),
+                self._seed_network(self.cfg["mixed_mutant_pursuit_weight"], self.cfg["mixed_mutant_block_weight"]),
+            )
+            self._mixed_cache = cached
+        return cached
+
+    @staticmethod
+    def _seed_network(pursuit: float, block: float) -> Genome:
+        weights = np.zeros((CARN_OBS_DIM, N_ACTIONS))
+        for i in range(N_ACTIONS):
+            weights[i, i] = pursuit
+            weights[N_ACTIONS + i, i] = block
+        return Genome(np.zeros(CARN_OBS_DIM), 0.0, weights, np.zeros(N_ACTIONS))
 
     @property
     def _canonical_carnivore_genome(self) -> Genome:
@@ -491,6 +523,11 @@ class ErlWorld:
             self.carnivore_steps += 1
             if self.carnivore_mode in ("fsa", "fsa_skip_sheltered"):
                 action = self._carnivore_fsa_action(carnivore)
+            elif self.carnivore_mode == "mixed":
+                self.type_steps[carnivore.ctype] += 1
+                net = self._mixed_type_genomes[carnivore.ctype]
+                probs = action_probs(self._observe_carnivore(carnivore), net.action_weights, net.action_bias)
+                action = sample_action(probs, self.rng)
             else:
                 obs = self._observe_carnivore(carnivore)
                 if self.carnivore_mode == "genome":
@@ -587,6 +624,7 @@ class ErlWorld:
                 self._kill_agent(occupant, "carnivore")
                 carnivore.kills += 1
                 self.carnivore_kills += 1
+                self.type_kills[carnivore.ctype] += 1
             return
         if isinstance(occupant, Carnivore):
             return  # carnivores don't fight each other
@@ -694,7 +732,9 @@ class ErlWorld:
                 generation=carnivore.generation + 1,
                 born_step=self.current_step,
                 phenotype=self._founder_carnivore_genome() if self.carnivore_mode == "genome_nonheritable" else None,
+                ctype=carnivore.ctype,
             )
+            self.type_births[carnivore.ctype] += 1
             self._next_carnivore_id += 1
             self.carnivore_births += 1
             newborns.append(child)

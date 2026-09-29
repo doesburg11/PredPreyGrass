@@ -397,3 +397,17 @@ def test_nonheritable_control_expresses_fresh_noise_not_the_parents(rng):
     assert not np.array_equal(child.phenotype.action_weights, parent.genome.action_weights)  # behavior fresh
     idx = np.arange(4)
     assert np.allclose(child.phenotype.action_weights[idx, idx], 10.0, atol=5.0)  # still seed-centered
+
+
+def test_mixed_mode_types_alternate_inherit_and_count(rng):
+    world = ErlWorld(_small_world_cfg(carnivore_mode="mixed", n_initial_carnivores=4,
+                                      mixed_mutant_pursuit_weight=30.0), rng)
+    assert [c.ctype for c in world.carnivores] == [0, 1, 0, 1]
+    resident, mutant = world._mixed_type_genomes
+    assert resident.action_weights[0, 0] == 10.0 and mutant.action_weights[0, 0] == 30.0
+    parent = world.carnivores[1]
+    parent.energy = world.cfg["carnivore_reproduction_energy_threshold"]
+    world._handle_carnivore_reproduction()
+    assert world.carnivores[-1].ctype == 1 and world.type_births == [0, 1]
+    world.step()
+    assert sum(world.type_steps) == world.carnivore_steps

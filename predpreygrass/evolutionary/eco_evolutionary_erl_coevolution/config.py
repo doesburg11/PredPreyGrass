@@ -120,6 +120,8 @@ config_step0 = {
     "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
     "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
+    "mixed_mutant_pursuit_weight": 10.0,  # "mixed" competition test: the mutant type's network
+    "mixed_mutant_block_weight": -10.0,  # (defaults = identical to the resident, the neutral check)
 
     # --- Genome mutation (unchanged mechanism from earlier version) ---
     "mutation_rate": 0.05,
@@ -209,5 +211,6 @@ PRESETS = {
     "step2": config_step2,
     "step2_neutral": config_step2_neutral,
     "step2_nonheritable": config_step2_nonheritable,
+    "mixed": {**config_step1, "carnivore_mode": "mixed"},
 }
 
