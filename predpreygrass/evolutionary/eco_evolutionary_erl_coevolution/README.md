@@ -652,3 +652,24 @@ lifetime learning is predicted to guide evolution (Baldwin effect), and it
 motivates step 3 on exactly this trait: ERL carnivores starting from zero
 persistence.
 
+## Step 3: ERL carnivores (evolution + lifetime learning)
+
+Design (decided 2026-09-30): `carnivore_mode="erl"`. A live action network is
+copied from the genome at birth and learns each step with the prey's one-step
+REINFORCE rule. Reinforcement is the change in the innate evaluation (genome
+eval network over the carnivore inputs; founders seeded +5 on energy_norm plus
+N(0, 1) noise, evolvable). Offspring inherit the genome only. With
+`rich_memory` inputs this is a Baldwin-effect test on persistence, which
+evolution alone cannot start from zero (step 2b).
+
+**Smoke run (6 seeds, 25k steps; not the pre-registered test):** ERL carnivores
+coexist (6/6), but learning moves persistence slightly *down*. Learned minus
+genetic persist weight at death is −0.003 to −0.030, negative in all 6 seeds,
+vs. ~+3.3 needed. Likely cause, inferred from the rule and not tested:
+metabolism makes almost every step's ΔE slightly negative, so frequent
+actions get punished. Chasing often repeats the previous move, so the
+persistence weights take most of that punishment. Meanwhile one-step credit
+rewards only the final move into food, not the search that found it.
+Lifetimes (~280 steps) and learning rates are also small. The full
+comparison was not launched pending a decision on credit assignment.
+
