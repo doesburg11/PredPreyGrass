@@ -81,9 +81,9 @@ def main():
         tail_up = int((col("late_upper") > col("early_upper")).sum())
         g = col("gradient")[np.isfinite(col("gradient"))]
         print(f"{name:8s} n={n} persist mean {col('early_mean').mean():+.2f} -> {col('late_mean').mean():+.2f} "
-              f"(rises in {up}/{n}, one-sided p={binomtest(up, n, alternative="greater").pvalue:.2g}) | "
+              f"(rises in {up}/{n}, one-sided p={binomtest(up, n, alternative='greater').pvalue:.2g}) | "
               f"upper tail >{TAIL:+.0f}: {col('early_upper').mean():.1%} -> {col('late_upper').mean():.1%} "
-              f"(grows in {tail_up}/{n}, one-sided p={binomtest(tail_up, n, alternative="greater").pvalue:.2g}) | "
+              f"(grows in {tail_up}/{n}, one-sided p={binomtest(tail_up, n, alternative='greater').pvalue:.2g}) | "
               f"lower tail: {col('early_lower').mean():.1%} -> {col('late_lower').mean():.1%} | "
               f"gradient median {np.median(g):+.3f} (positive {int((g > 0).sum())}/{len(g)})")
     if groups["step2"] and groups["neutral"]:
