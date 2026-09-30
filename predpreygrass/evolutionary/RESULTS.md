@@ -37,6 +37,14 @@ Everything built on top of or alongside that result has come back null or unreso
   paper's specific crossover signature wasn't found; genuinely open whether that's a
   real absence or a metric problem.
 
+- **Toward predator–prey coevolution** (Trial 13, 2026-09-30,
+  `eco_evolutionary_erl_coevolution`): Trial 11's ERL advantage extends to a world where
+  carnivores are regulated by prey (robust coexistence on 150×150). There, ERL's observed
+  edge over learning-alone is lower carnivore loss, not prey survival. The one strategy
+  found to beat the hand-coded carnivore rule (persistent search) appears to sit behind a
+  fitness plateau, and paper-style lifetime learning did not bridge it in exploratory
+  smokes. No arms race yet.
+
 Read the trial-by-trial log below for how each conclusion was reached.
 
 ---
@@ -827,6 +835,43 @@ search for an accessible fix.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
 `eco_evolutionary_erl_flagship/README.md`.
+
+---
+
+## Trial 13 — `eco_evolutionary_erl_coevolution` — Trial 11 extended step by step toward predator–prey coevolution
+
+**Status (2026-09-30): steps 0–2 complete; step 3 paused after exploratory smokes.** Full
+results in `eco_evolutionary_erl_coevolution/RESULTS.md`; dated log in its README.md.
+
+Forks Trial 11 (left untouched) and changes one thing per step:
+
+- **Step 0.** Reproduces Trial 11's §9 study run-for-run (100/100). Trial 11's current HEAD
+  does not, because later kin/alarm genes shift its RNG stream (noted in its RESULTS.md).
+- **Step 1: carnivores regulated by prey** (20k warm-up with immigration, then none).
+  Coexistence is robust on 150×150 (60/63 established populations keep their carnivores)
+  but not on 100×100, where carnivores go extinct by chance at cycle lows. ERL beats E, F
+  and B on prey survival (p≤0.003). Against learning-alone, prey survival was not
+  detectably different in the larger world (5/60 vs. 8/60, p=0.56), but L systems lost
+  their carnivores 7/52 vs. ERL 0/55 (p=0.005), consistent with greater ecosystem stability.
+- **Step 2: carnivores with a genome.** An exploratory whole-trajectory analysis found
+  selection purging a variant without obstacle avoidance, but no better reactive behavior
+  among the variants tested, even with richer senses. That is consistent with the seed rule
+  lying on or near a local fitness peak, and the evolving carnivores' seeded traits
+  showed no consistent direction. A memory-based strategy, persistent search, does beat it
+  (p=1.6e-5, pre-registered). Starting near zero with small variation, evolution did not
+  raise persistence (exploratory selection gradient ≈ 0, consistent with a plateau). From
+  wide founder variation it rose in 18/20 seeds (p=0.0002), meeting two of three
+  pre-registered conditions.
+- **Step 3: ERL carnivores.** Lifetime learning with the paper's one-step rule, and with
+  baseline or eligibility-trace variants, learned persistence slightly *down* in 18/18
+  exploratory smoke seed-runs. The signal scale and credit horizon suggest learning may
+  be too weak and short-horizon for a search strategy, which makes a Baldwin test on this
+  trait unpromising as designed. The full comparison was not run.
+
+Against the three criteria: sustainability met; Darwin/Baldwin loop met for the prey;
+coevolution not reached. Predators can evolve and headroom exists, but neither
+evolution from near zero nor paper-style learning got them there in these tests. Open: whether a stronger,
+long-horizon learner produces a predator-side Baldwin effect on exactly this plateau.
 
 ---
 
