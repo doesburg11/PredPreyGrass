@@ -533,3 +533,14 @@ def test_rich_memory_network_can_express_persistence():
     assert action_probs(obs, seed.action_weights, seed.action_bias)[2] > 0.85
     obs[0] = 1.0  # prey north: pursuit (+10) dominates the persistence weight
     assert action_probs(obs, seed.action_weights, seed.action_bias)[0] > 0.99
+
+
+def test_founder_prev_std_widens_only_persistence_weights():
+    world = ErlWorld(_small_world_cfg(carnivore_mode="genome", carnivore_obs="rich_memory",
+                                      carnivore_founder_prev_std=3.0, n_initial_carnivores=0), np.random.default_rng(0))
+    genomes = [world._founder_carnivore_genome() for _ in range(400)]
+    idx = np.arange(4)
+    diag = np.array([g.action_weights[16 + idx, idx] for g in genomes]).ravel()
+    offdiag = np.array([g.action_weights[16 + idx, (idx + 1) % 4] for g in genomes]).ravel()
+    assert 2.6 < diag.std() < 3.4 and abs(diag.mean()) < 0.3
+    assert 0.8 < offdiag.std() < 1.2

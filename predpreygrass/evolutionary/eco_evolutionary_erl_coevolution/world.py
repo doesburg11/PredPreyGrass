@@ -423,6 +423,14 @@ class ErlWorld:
         network is random and unused until carnivores learn (step 3)."""
         genome = founder_genome(self.carn_obs_dim, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
         genome.action_weights += self._seed_weights("carnivore_seed")
+        prev_std = self.cfg.get("carnivore_founder_prev_std")
+        if prev_std is not None and "prev" in self.carn_layout:
+            # Wider founder variation on the persistence weights only (previous move
+            # i -> action i), so some founders reach the region where persistence pays.
+            rows = self.carn_layout["prev"] + np.arange(N_ACTIONS)
+            genome.action_weights[rows, np.arange(N_ACTIONS)] = (
+                self.cfg["carnivore_seed_prev_weight"] + self.rng.normal(0.0, prev_std, size=N_ACTIONS)
+            )
         return genome
 
     # ---- observation (agents only -- carnivores use their own hard-coded sensing) ----

@@ -123,6 +123,7 @@ config_step0 = {
     "carnivore_seed_prev_weight": 0.0,  # "rich_memory": previous move i -> action i; 0 = no built-in persistence
     "carnivore_seed_block_weight": -10.0,  # founder weight blocked_i -> action_i
     "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
+    "carnivore_founder_prev_std": None,  # "rich_memory": if set, founder persistence weights ~ N(seed, this) instead
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
     "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
     "mixed_mutant_pursuit_weight": 10.0,  # "mixed" competition test: the mutant type's network

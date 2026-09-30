@@ -598,3 +598,25 @@ Baldwin effect). Not tested: whether selection acts once variation reaches the
 advantageous region (e.g. wider founder variation on the persist weights), and
 whether learning carnivores find persistence within a lifetime.
 
+### Step 2c: landscape check with wide founder variation (pre-registered 2026-09-30, before running)
+
+Same as step 2b, but founders' persistence weights (previous move i → action i)
+are drawn from N(0, 3) (`carnivore_founder_prev_std=3`), so some founders
+already sit near the ~+3.3 that won the competition test. `step2` vs.
+`step2_neutral`, ERL prey, 20 seeds each, 60k steps.
+`analyze_persist.py` (written before the run):
+
+- **Pass (selection favors persistence):** in significantly more `step2` seeds
+  than chance (one-sided sign test p < 0.05), the persist mean rises from the
+  early (born < 2k) to the late (last 10k) carnivores, ends clearly above 0,
+  and the upper-tail share (persist > +2) grows. None of this should hold in
+  the neutral control.
+- **Purging, not favoring:** the mean climbs only from below toward 0, the
+  lower tail (< −2) shrinks, and the upper tail doesn't grow.
+- Supporting: selection gradient of offspring on persist (dead carnivores
+  born after the switch).
+
+If selection favors persistence here but not in 2b, the plateau explanation
+holds and the obstacle is the flat start. That is the case for ERL carnivores
+(step 3).
+
