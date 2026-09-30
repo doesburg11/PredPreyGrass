@@ -190,6 +190,9 @@ class Carnivore:
     live_bias: np.ndarray | None = None
     prev_obs: np.ndarray | None = None
     prev_eval: float | None = None
+    reward_baseline: float = 0.0  # running mean of reinforcement (carnivore_reward_baseline)
+    trace_w: np.ndarray | None = None  # eligibility traces (carnivore_trace_decay)
+    trace_b: np.ndarray | None = None
 
 
 @dataclass
@@ -702,16 +705,49 @@ class ErlWorld:
         obs = self._observe_carnivore(carnivore)
         e_now = evaluate(obs, carnivore.genome.eval_weights, carnivore.genome.eval_bias)
         if carnivore.prev_obs is not None:
-            reinforce_update(
-                carnivore.live_weights, carnivore.live_bias,
-                carnivore.prev_obs, carnivore.last_action, e_now - carnivore.prev_eval,
-                self.cfg["carnivore_lr_positive"], self.cfg["carnivore_lr_negative"],
-            )
+            reinforcement = e_now - carnivore.prev_eval
+            alpha = self.cfg.get("carnivore_reward_baseline")
+            if alpha is not None:
+                # Advantage = reinforcement minus this carnivore's running mean of it,
+                # so the steady metabolic drain doesn't punish whatever it does most.
+                advantage = reinforcement - carnivore.reward_baseline
+                carnivore.reward_baseline += alpha * (reinforcement - carnivore.reward_baseline)
+                reinforcement = advantage
+            lam = self.cfg.get("carnivore_trace_decay")
+            if lam is None:
+                reinforce_update(
+                    carnivore.live_weights, carnivore.live_bias,
+                    carnivore.prev_obs, carnivore.last_action, reinforcement,
+                    self.cfg["carnivore_lr_positive"], self.cfg["carnivore_lr_negative"],
+                )
+            else:
+                self._trace_update(carnivore, reinforcement, lam)
         action = sample_action(action_probs(obs, carnivore.live_weights, carnivore.live_bias), self.rng)
         carnivore.prev_obs = obs
         carnivore.prev_eval = e_now
         carnivore.last_action = action
         return action
+
+    def _trace_update(self, carnivore: Carnivore, reinforcement: float, lam: float):
+        """REINFORCE with an eligibility trace: the trace accumulates the
+        log-policy gradients of recent (obs, action) pairs, decayed by `lam`
+        per step; each reinforcement updates the live network along the trace,
+        so moves leading up to a reward share its credit."""
+        probs = action_probs(carnivore.prev_obs, carnivore.live_weights, carnivore.live_bias)
+        grad = -probs
+        grad[carnivore.last_action] += 1.0
+        if carnivore.trace_w is None:
+            carnivore.trace_w = np.zeros_like(carnivore.live_weights)
+            carnivore.trace_b = np.zeros_like(carnivore.live_bias)
+        carnivore.trace_w *= lam
+        carnivore.trace_w += np.outer(carnivore.prev_obs, grad)
+        carnivore.trace_b *= lam
+        carnivore.trace_b += grad
+        if reinforcement == 0.0:
+            return
+        lr = self.cfg["carnivore_lr_positive"] if reinforcement > 0 else self.cfg["carnivore_lr_negative"]
+        carnivore.live_weights += lr * reinforcement * carnivore.trace_w
+        carnivore.live_bias += lr * reinforcement * carnivore.trace_b
 
     def _observe_carnivore(self, carnivore: Carnivore) -> np.ndarray:
         """Step 2 carnivore input -- see module docstring. The prey signal uses

@@ -620,3 +620,40 @@ def test_erl_offspring_with_mate_ignore_both_parents_learned_state():
     assert np.array_equal(child.live_weights, child.genome.action_weights)
     assert np.array_equal(child.live_bias, child.genome.action_bias)
     assert child.prev_obs is None and child.prev_eval is None and child.last_action is None
+
+
+def test_reward_baseline_subtracts_running_mean():
+    import predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world as wmod
+    world = _erl_carn_world(carnivore_reward_baseline=0.5)
+    carnivore = world.carnivores[0]
+    obs = [np.zeros(22) for _ in range(3)]
+    obs[1][20], obs[2][20] = 0.2, 0.4  # eval rises by 5*0.2 = 1.0 twice (plus the noise-free... std 1 noise below)
+    seen = iter(obs)
+    world._observe_carnivore = lambda c: next(seen)
+    got = []
+    original = wmod.reinforce_update
+    wmod.reinforce_update = lambda w, b, o, a, r, lp, ln: got.append(r)
+    try:
+        for _ in range(3):
+            world._erl_carnivore_action(carnivore)
+    finally:
+        wmod.reinforce_update = original
+    e = lambda o: float(o @ carnivore.genome.eval_weights + carnivore.genome.eval_bias)
+    r1, r2 = e(obs[1]) - e(obs[0]), e(obs[2]) - e(obs[1])
+    assert np.isclose(got[0], r1)  # baseline starts at 0
+    assert np.isclose(got[1], r2 - 0.5 * r1)  # baseline after one update = 0.5 * r1
+
+
+def test_trace_update_accumulates_decayed_gradients():
+    world = _erl_carn_world(carnivore_trace_decay=0.5)
+    carnivore = world.carnivores[0]
+    obs = np.zeros(22)
+    obs[0] = 1.0
+    carnivore.prev_obs, carnivore.last_action = obs, 0
+    before = carnivore.live_weights.copy()
+    world._trace_update(carnivore, 0.0, 0.5)  # zero reinforcement: trace builds, no weight change
+    g1 = carnivore.trace_w.copy()
+    assert np.array_equal(carnivore.live_weights, before) and g1[0, 0] > 0
+    world._trace_update(carnivore, 1.0, 0.5)
+    assert np.allclose(carnivore.trace_w, 0.5 * g1 + g1, atol=1e-9)  # same obs/action/probs twice
+    assert carnivore.live_weights[0, 0] > before[0, 0]

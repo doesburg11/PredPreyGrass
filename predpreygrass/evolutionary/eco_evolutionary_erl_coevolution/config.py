@@ -128,6 +128,8 @@ config_step0 = {
     "carnivore_seed_eval_energy_weight": 5.0,  # founders' innate eval: + this * energy_norm (a guess; evolvable)
     "carnivore_lr_positive": 0.05,  # same as the prey's lr_positive / lr_negative
     "carnivore_lr_negative": 0.02,
+    "carnivore_reward_baseline": None,  # e.g. 0.01: subtract a running mean of reinforcement (None = off)
+    "carnivore_trace_decay": None,  # e.g. 0.9: eligibility trace over recent moves (None = one-step, like the prey)
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
     "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
     "mixed_mutant_pursuit_weight": 10.0,  # "mixed" competition test: the mutant type's network
