@@ -673,3 +673,28 @@ rewards only the final move into food, not the search that found it.
 Lifetimes (~280 steps) and learning rates are also small. The full
 comparison was not launched pending a decision on credit assignment.
 
+**Learning-rule smokes (2026-09-30, commits 72dda2b and e9102cc; same 6 seeds, 25k
+steps; results in `~/simulation_results/erl_results/coevo_step3_smokes`).**
+Learned persistence at death (live − genome, carnivores born after 15k), per seed:
+
+| learning rule / innate goal | learned persistence | positive |
+|---|---|---|
+| one-step, energy-seeded + noise | −0.003 to −0.030 | 0/6 |
+| + reward baseline (α 0.01) | −0.021 to −0.032 | 0/5 |
+| + eligibility trace (λ 0.9) | −0.042 to −0.074 | 0/5 |
+| + both | −0.042 to −0.075 | 0/6 |
+| one-step, pure-energy goal (eval noise 0) | −0.007 to −0.020 | 0/6 |
+| both, pure-energy goal | −0.008 to −0.019 | 0/5 |
+
+18 of 18 seed-runs learn persistence slightly *down*. The baseline and a
+noise-free energy goal don't change that, so the metabolic-bias and noisy-goal
+explanations are both rejected. Scale arithmetic shows why the design can't
+work as is. Reinforcement is ~0.03 per step (energy change × weight 5). With a
+learning rate of 0.05 and ~280-step lifetimes, a weight can move at most
+~0.1–0.4 in a lifetime, far from the ~+3.3 persistence needs. The payoff of
+persistence is a shorter search before food (tens to hundreds of steps). One-step
+credit, and even a ~10-step trace, mostly sees "walking costs energy" and
+rewards only the final bite. **With the paper's learning rule, lifetime learning
+cannot discover persistence here, so a Baldwin test on this trait is not
+feasible as designed.** The full step-3 comparison was not run.
+
