@@ -128,6 +128,7 @@ config_step0 = {
     "carnivore_seed_eval_energy_weight": 5.0,  # founders' innate eval: + this * energy_norm (a guess; evolvable)
     "carnivore_lr_positive": 0.05,  # same as the prey's lr_positive / lr_negative
     "carnivore_lr_negative": 0.02,
+    "carnivore_founder_eval_std": None,  # "erl": founder eval-network noise (None = carnivore_founder_weight_std; 0 = pure energy goal)
     "carnivore_reward_baseline": None,  # e.g. 0.01: subtract a running mean of reinforcement (None = off)
     "carnivore_trace_decay": None,  # e.g. 0.9: eligibility trace over recent moves (None = one-step, like the prey)
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey

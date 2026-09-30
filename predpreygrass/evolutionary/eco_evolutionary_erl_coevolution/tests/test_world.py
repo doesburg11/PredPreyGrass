@@ -657,3 +657,10 @@ def test_trace_update_accumulates_decayed_gradients():
     world._trace_update(carnivore, 1.0, 0.5)
     assert np.allclose(carnivore.trace_w, 0.5 * g1 + g1, atol=1e-9)  # same obs/action/probs twice
     assert carnivore.live_weights[0, 0] > before[0, 0]
+
+
+def test_founder_eval_std_zero_gives_pure_energy_goal():
+    world = _erl_carn_world(carnivore_founder_eval_std=0.0)
+    genome = world.carnivores[0].genome
+    assert genome.eval_weights[-2] == 5.0 and np.all(genome.eval_weights[:-2] == 0.0) and genome.eval_bias == 0.0
+    assert np.any(genome.action_weights != world._seed_weights("carnivore_seed"))  # action noise untouched

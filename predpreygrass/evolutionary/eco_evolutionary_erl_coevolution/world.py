@@ -449,6 +449,13 @@ class ErlWorld:
         genome = founder_genome(self.carn_obs_dim, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
         genome.action_weights += self._seed_weights("carnivore_seed")
         if self.carnivore_mode == "erl":
+            eval_std = self.cfg.get("carnivore_founder_eval_std")
+            if eval_std is not None:
+                # Rescale the eval network's founder noise (drawn above at founder_weight_std)
+                # without extra RNG draws; 0 = a pure-energy innate goal.
+                scale = eval_std / self.cfg["carnivore_founder_weight_std"]
+                genome.eval_weights *= scale
+                genome.eval_bias *= scale
             genome.eval_weights[-2] += self.cfg["carnivore_seed_eval_energy_weight"]  # energy_norm: more energy = good
         prev_std = self.cfg.get("carnivore_founder_prev_std")
         if prev_std is not None and "prev" in self.carn_layout:
