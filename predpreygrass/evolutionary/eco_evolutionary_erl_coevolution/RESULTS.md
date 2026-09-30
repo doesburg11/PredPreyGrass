@@ -163,6 +163,33 @@ suggests why (a hypothesis, not tested directly):
 smokes, so a Baldwin test on this trait is unpromising as designed.** The full step-3
 comparison was not run.
 
+## 6. ERL vs. L prey against evolving vs. fixed carnivores (2026-09-30): pilot, inconclusive
+
+2×2, 20 seeds per cell, 60k steps, 150×150, rich_memory carnivores with wide founder
+persistence variation. The ERL cells reuse step 2c (replay-verified); the L cells are new
+(commit b126e0d). Analysis `analyze_prey_vs_predators.py`, fixed before the run. Results
+in `~/simulation_results/erl_results/coevo_prey_vs_pred` and `coevo_step2c`.
+
+| prey × carnivores | prey extinct | carnivores extinct | any collapse |
+|---|---|---|---|
+| ERL × evolving | 0 | 0 | 0/20 |
+| L × evolving | 2 | 1 | 3/20 |
+| ERL × fixed | 3 | 0 | 3/20 |
+| L × fixed | 3 | 1 | 4/20 |
+
+- **Primary (vs. evolving carnivores): not significant.** Any collapse is 0/20 vs.
+  3/20 (Fisher p=0.23); prey extinction 0/20 vs. 2/20 (p=0.49). Against fixed carnivores
+  the two are nearly equal (3/20 vs. 4/20). The interaction points the predicted way
+  (+0.10) but is far from significant (permutation p=0.74). n=20 is underpowered.
+- Most collapses happen in the opening (steps 1,077–3,946), before carnivores have
+  evolved much. Only 3 are late (> 19k steps): L × evolving 2, L × fixed 1, ERL 0. Too few
+  to test.
+- Exploratory: carnivores evolved somewhat less persistence against L prey (late median
+  +1.58 vs. +2.04 against ERL prey, p=0.18). n.s.
+- Reading: consistent with the prediction that L falls behind against a moving target,
+  but not evidence for it. Late collapses are rare (~0–10% per cell), so separating the
+  cells would take on the order of 100 seeds per cell.
+
 ## Corrections made along the way
 
 Each was caught before it became a conclusion; details are in README.md.
