@@ -124,6 +124,10 @@ config_step0 = {
     "carnivore_seed_block_weight": -10.0,  # founder weight blocked_i -> action_i
     "carnivore_founder_weight_std": 1.0,  # per-founder variation on every weight/bias
     "carnivore_founder_prev_std": None,  # "rich_memory": if set, founder persistence weights ~ N(seed, this) instead
+    # --- Step 3: learning carnivores ("erl") ---
+    "carnivore_seed_eval_energy_weight": 5.0,  # founders' innate eval: + this * energy_norm (a guess; evolvable)
+    "carnivore_lr_positive": 0.05,  # same as the prey's lr_positive / lr_negative
+    "carnivore_lr_negative": 0.02,
     "carnivore_mutation_rate": 0.05,  # same per-site rate as the prey
     "carnivore_mutation_std": 0.2,  # prey use 0.05 on ~0.5-scale weights; carnivore weights are ~10-scale
     "mixed_mutant_pursuit_weight": 10.0,  # "mixed" competition test: the mutant type's network

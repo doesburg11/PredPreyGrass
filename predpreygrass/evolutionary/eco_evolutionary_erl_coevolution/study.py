@@ -34,7 +34,14 @@ from pathlib import Path
 
 import numpy as np
 
-from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import N_ACTIONS, STRATEGIES
+from predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world import (
+    CARN_OBS_LAYOUTS,
+    GENOME_CARNIVORE_MODES,
+    N_ACTIONS,
+    STRATEGIES,
+)
+
+_MEMORY = CARN_OBS_LAYOUTS["rich_memory"]
 
 STUDY_LOGS = Path.home() / "simulation_results" / "erl_results" / "erl_full_study_logs"
 STUDY_BUDGET = 1_000_000
@@ -78,7 +85,7 @@ def run_one(job: dict) -> dict:
     # at the end as censored) -- per-generation trait data for the Hunt
     # selection-vs-drift test. Only written when carnivores carry genomes.
     carn_rows = []
-    if world.carnivore_mode.startswith("genome"):
+    if world.carnivore_mode in GENOME_CARNIVORE_MODES:
         world.on_carnivore_death = lambda c, step: carn_rows.append(_carnivore_record(c, step, censored=False))
     sample_every = job["sample_every"]
 
@@ -113,7 +120,7 @@ def run_one(job: dict) -> dict:
     with open(ts_dir / f"{job['tag']}_{job['strategy']}_seed{job['seed']}.csv", "w") as f:
         f.write(",".join(SAMPLE_FIELDS) + "\n")
         f.writelines(",".join(str(v) for v in row) + "\n" for row in series)
-    if world.carnivore_mode.startswith("genome"):
+    if world.carnivore_mode in GENOME_CARNIVORE_MODES:
         carn_rows.extend(_carnivore_record(c, world.current_step, censored=True) for c in world.carnivores if c.alive)
         carn_dir = Path(job["out_dir"]) / "carnivore_lineage"
         carn_dir.mkdir(parents=True, exist_ok=True)
@@ -190,7 +197,8 @@ def _sample(world, counts) -> tuple:
 
 def carnivore_fields(obs_dim: int) -> list[str]:
     return (
-        ["carnivore_id", "generation", "born_step", "death_step", "censored", "offspring_count", "kills"]
+        ["carnivore_id", "generation", "born_step", "death_step", "censored", "offspring_count", "kills",
+         "live_persist"]
         + [f"w{i}_{j}" for i in range(obs_dim) for j in range(N_ACTIONS)]
         + [f"b{j}" for j in range(N_ACTIONS)]
     )
@@ -201,6 +209,10 @@ def _carnivore_record(c, death_step: int, censored: bool) -> dict:
         "carnivore_id": c.carnivore_id, "generation": c.generation, "born_step": c.born_step,
         "death_step": death_step, "censored": int(censored), "offspring_count": c.offspring_count,
         "kills": c.kills,
+        # "erl" + "rich_memory": the LEARNED persistence at death (mean previous-move i ->
+        # action i of the live network); the genome's is in the w columns. NaN otherwise.
+        "live_persist": round(float(np.mean([c.live_weights[_MEMORY["prev"] + j, j] for j in range(N_ACTIONS)])), 5)
+        if c.live_weights is not None and c.live_weights.shape[0] == _MEMORY["dim"] else float("nan"),
     }
     for i in range(c.genome.action_weights.shape[0]):
         for j in range(N_ACTIONS):

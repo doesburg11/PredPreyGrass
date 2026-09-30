@@ -78,7 +78,15 @@ Step 2 (`carnivore_mode`, default "fsa" = the hand-coded rule, unchanged):
         living and sheltered prey and go only for carcasses (needs "rich");
       "wounded_scavenger": at health < `mixed_wounded_health_frac` of max, the
         same carcass-only behavior (needs "rich").
-    `mixed_assign_step` (default None = types from the start): if set, every
+  - "erl" (step 3): evolution AND lifetime learning, like the ERL prey. Each
+    carnivore acts with a LIVE copy of its genome's action network, updated
+    every step by the same one-step REINFORCE rule the prey use, with
+    reinforcement = change in its innate evaluation (the genome's eval
+    network over the carnivore inputs). Founders' eval networks are seeded
+    "more energy = good" (`carnivore_seed_eval_energy_weight` on energy_norm)
+    plus N(0, carnivore_founder_weight_std) noise, and evolve. Offspring
+    inherit the GENOME only, never the learned live weights (Darwinian).
+  `mixed_assign_step` (default None = types from the start): if set, every
     carnivore is a resident until that step; then, after that step's
     immigration, every other living carnivore by id becomes a mutant (exact
     50/50, no RNG). This starts the competition after the opening bottleneck
@@ -135,7 +143,8 @@ TERRAIN_TREE = 2
 _DIRS = [(-1, 0), (1, 0), (0, 1), (0, -1)]  # N, S, E, W -- index matches action id
 
 STRATEGIES = ("ERL", "E", "L", "F", "B")
-CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral", "genome_nonheritable", "mixed")
+CARNIVORE_MODES = ("fsa", "fsa_skip_sheltered", "genome", "genome_neutral", "genome_nonheritable", "mixed", "erl")
+GENOME_CARNIVORE_MODES = ("genome", "genome_neutral", "genome_nonheritable", "erl")
 
 
 @dataclass
@@ -176,6 +185,11 @@ class Carnivore:
     phenotype: Genome | None = None  # expressed network under "genome_nonheritable" only
     ctype: int = 0  # "mixed" only: 0 = resident, 1 = mutant
     last_action: int | None = None  # previous move: "mixed" persist strategy and the "rich_memory" input
+    # --- "erl" only: live (learned) action network and the previous step's learning state ---
+    live_weights: np.ndarray | None = None
+    live_bias: np.ndarray | None = None
+    prev_obs: np.ndarray | None = None
+    prev_eval: float | None = None
 
 
 @dataclass
@@ -332,11 +346,13 @@ class ErlWorld:
             row=row, col=col,
             energy=self.cfg["initial_energy_carnivore"],
             health=self.cfg["initial_health_carnivore"],
-            genome=self._founder_carnivore_genome() if self.carnivore_mode.startswith("genome") else None,
+            genome=self._founder_carnivore_genome() if self.carnivore_mode in GENOME_CARNIVORE_MODES else None,
             born_step=self.current_step,
         )
         if self.carnivore_mode == "genome_nonheritable":
             carnivore.phenotype = carnivore.genome  # founders express their own seed+noise, as under "genome"
+        if self.carnivore_mode == "erl":
+            self._init_live_network(carnivore)
         if self.carnivore_mode == "mixed" and self.cfg.get("mixed_assign_step") is None:
             carnivore.ctype = carnivore.carnivore_id % 2
         self._next_carnivore_id += 1
@@ -371,6 +387,12 @@ class ErlWorld:
             cached = (self._fixed_network("carnivore_seed"), self._fixed_network("mixed_mutant"))
             self._mixed_cache = cached
         return cached
+
+    @staticmethod
+    def _init_live_network(carnivore: Carnivore):
+        """("erl") The live, learnable action network starts as a copy of the genome's."""
+        carnivore.live_weights = carnivore.genome.action_weights.copy()
+        carnivore.live_bias = carnivore.genome.action_bias.copy()
 
     def _state_strategy_action(self, carnivore: Carnivore) -> int:
         """Hand-coded state-dependent mutant ("mixed" only) -- see module docstring."""
@@ -423,6 +445,8 @@ class ErlWorld:
         network is random and unused until carnivores learn (step 3)."""
         genome = founder_genome(self.carn_obs_dim, N_ACTIONS, self.rng, self.cfg["carnivore_founder_weight_std"])
         genome.action_weights += self._seed_weights("carnivore_seed")
+        if self.carnivore_mode == "erl":
+            genome.eval_weights[-2] += self.cfg["carnivore_seed_eval_energy_weight"]  # energy_norm: more energy = good
         prev_std = self.cfg.get("carnivore_founder_prev_std")
         if prev_std is not None and "prev" in self.carn_layout:
             # Wider founder variation on the persistence weights only (previous move
@@ -613,6 +637,8 @@ class ErlWorld:
                     probs = action_probs(self._observe_carnivore(carnivore), net.action_weights, net.action_bias)
                     action = sample_action(probs, self.rng)
                 carnivore.last_action = action
+            elif self.carnivore_mode == "erl":
+                action = self._erl_carnivore_action(carnivore)
             else:
                 obs = self._observe_carnivore(carnivore)
                 if self.carnivore_mode == "genome":
@@ -668,6 +694,24 @@ class ErlWorld:
             if 0 <= r < self.grid_size and 0 <= c < self.grid_size and self.terrain[r, c] != TERRAIN_WALL:
                 return i
         return int(self.rng.integers(0, N_ACTIONS))
+
+    def _erl_carnivore_action(self, carnivore: Carnivore) -> int:
+        """("erl") Same loop as the prey's `_step_agents`: evaluate the current
+        situation with the innate eval network, reinforce the previous move by
+        the change in evaluation, then act with the live network."""
+        obs = self._observe_carnivore(carnivore)
+        e_now = evaluate(obs, carnivore.genome.eval_weights, carnivore.genome.eval_bias)
+        if carnivore.prev_obs is not None:
+            reinforce_update(
+                carnivore.live_weights, carnivore.live_bias,
+                carnivore.prev_obs, carnivore.last_action, e_now - carnivore.prev_eval,
+                self.cfg["carnivore_lr_positive"], self.cfg["carnivore_lr_negative"],
+            )
+        action = sample_action(action_probs(obs, carnivore.live_weights, carnivore.live_bias), self.rng)
+        carnivore.prev_obs = obs
+        carnivore.prev_eval = e_now
+        carnivore.last_action = action
+        return action
 
     def _observe_carnivore(self, carnivore: Carnivore) -> np.ndarray:
         """Step 2 carnivore input -- see module docstring. The prey signal uses
@@ -820,7 +864,7 @@ class ErlWorld:
             # exactly the parent's payment to the child instead.
             child_energy = cost if self.cfg.get("carnivore_energy_conserving_birth") else self.cfg["initial_energy_carnivore"]
             child_genome = None
-            if self.carnivore_mode.startswith("genome"):
+            if self.carnivore_mode in GENOME_CARNIVORE_MODES:
                 child_genome = self._carnivore_child_genome(carnivore)
             row, col = cell
             child = Carnivore(
@@ -835,6 +879,8 @@ class ErlWorld:
                 ctype=carnivore.ctype,
             )
             self.type_births[carnivore.ctype] += 1
+            if self.carnivore_mode == "erl":
+                self._init_live_network(child)  # from the inherited GENOME, never the parent's live weights
             self._next_carnivore_id += 1
             self.carnivore_births += 1
             newborns.append(child)

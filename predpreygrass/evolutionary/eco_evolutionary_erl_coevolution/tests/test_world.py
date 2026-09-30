@@ -544,3 +544,79 @@ def test_founder_prev_std_widens_only_persistence_weights():
     offdiag = np.array([g.action_weights[16 + idx, (idx + 1) % 4] for g in genomes]).ravel()
     assert 2.6 < diag.std() < 3.4 and abs(diag.mean()) < 0.3
     assert 0.8 < offdiag.std() < 1.2
+
+
+def _erl_carn_world(**overrides):
+    cfg = {"carnivore_mode": "erl", "carnivore_obs": "rich_memory", "n_initial_carnivores": 1,
+           "carnivore_mutation_rate": 0.0, **overrides}
+    return ErlWorld(_small_world_cfg(**cfg), np.random.default_rng(0))
+
+
+def test_erl_carnivore_founder_eval_is_energy_seeded():
+    world = _erl_carn_world(carnivore_founder_weight_std=0.0)
+    genome = world.carnivores[0].genome
+    assert genome.eval_weights[-2] == 5.0 and np.all(genome.eval_weights[:-2] == 0.0)
+
+
+def test_erl_carnivore_learns_live_but_genome_is_untouched():
+    world = _erl_carn_world(n_initial_agents=8, grid_size=20)
+    carnivore = world.carnivores[0]
+    genome_before = carnivore.genome.action_weights.copy()
+    for _ in range(60):
+        world.step()
+        if not carnivore.alive:
+            break
+    assert np.array_equal(carnivore.genome.action_weights, genome_before)
+    assert not np.array_equal(carnivore.live_weights, genome_before)  # learning happened
+
+
+def test_erl_carnivore_offspring_inherit_genome_not_learned_weights():
+    world = _erl_carn_world()
+    parent = world.carnivores[0]
+    parent.live_weights += 50.0  # a "lifetime of learning"
+    parent.energy = world.cfg["carnivore_reproduction_energy_threshold"]
+    world._handle_carnivore_reproduction()
+    child = world.carnivores[-1]
+    assert np.array_equal(child.genome.action_weights, parent.genome.action_weights)
+    assert np.array_equal(child.live_weights, child.genome.action_weights)
+    assert not np.array_equal(child.live_weights, parent.live_weights)
+
+
+def test_erl_carnivore_reinforces_previous_move_with_eval_change():
+    """Controlled two steps: step 1 has no history (no update); step 2 must
+    reinforce step 1's (obs, action) by e(obs2) - e(obs1)."""
+    import predpreygrass.evolutionary.eco_evolutionary_erl_coevolution.world as wmod
+    world = _erl_carn_world()
+    carnivore = world.carnivores[0]
+    obs1, obs2 = np.zeros(22), np.zeros(22)
+    obs1[20], obs2[20] = 0.4, 0.9  # energy_norm rises
+    seen = iter([obs1, obs2])
+    world._observe_carnivore = lambda c: next(seen)
+    calls = []
+    original = wmod.reinforce_update
+    wmod.reinforce_update = lambda w, b, o, a, r, lp, ln: calls.append((o.copy(), a, r))
+    try:
+        a1 = world._erl_carnivore_action(carnivore)
+        assert calls == []
+        world._erl_carnivore_action(carnivore)
+    finally:
+        wmod.reinforce_update = original
+    (o, a, r), = calls
+    e = lambda obs: float(obs @ carnivore.genome.eval_weights + carnivore.genome.eval_bias)
+    assert np.array_equal(o, obs1) and a == a1 and np.isclose(r, e(obs2) - e(obs1))
+
+
+def test_erl_offspring_with_mate_ignore_both_parents_learned_state():
+    world = _erl_carn_world(n_initial_carnivores=2, mate_search_radius=200)
+    parent, mate = world.carnivores
+    for c in (parent, mate):
+        c.live_weights += 50.0
+        c.live_bias += 50.0
+        c.prev_obs, c.prev_eval, c.last_action = np.ones(22), 3.0, 1
+    parent.energy = world.cfg["carnivore_reproduction_energy_threshold"]
+    world._handle_carnivore_reproduction()
+    child = world.carnivores[-1]
+    assert np.all(np.abs(child.live_weights) < 30) and np.all(np.abs(child.live_bias) < 30)
+    assert np.array_equal(child.live_weights, child.genome.action_weights)
+    assert np.array_equal(child.live_bias, child.genome.action_bias)
+    assert child.prev_obs is None and child.prev_eval is None and child.last_action is None
