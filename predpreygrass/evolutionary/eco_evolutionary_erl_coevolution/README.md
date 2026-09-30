@@ -620,3 +620,35 @@ If selection favors persistence here but not in 2b, the plateau explanation
 holds and the obstacle is the flat start. That is the case for ERL carnivores
 (step 3).
 
+### Step 2c result (2026-09-30): with variation in the right region, selection drives persistence up
+
+Commit 8e28093, results in `~/simulation_results/erl_results/coevo_step2c`,
+`analyze_persist.py`:
+
+| | persist mean, early → late | rises in (one-sided sign) | selection gradient > 0 | share > +2, early → late (grows in) |
+|---|---|---|---|---|
+| step2 | **+0.45 → +2.03** | **18/20 (p=0.0002)** | **17/20 (p=0.001)** | 15% → 52% (12/20, p=0.25) |
+| step2_neutral | −0.05 → −0.31 | 5/20 (p=0.99) | 9/17 | 10% → 3% (2/20) |
+
+Mean change, step2 vs. neutral: Mann-Whitney p=4.7e-5. The late mean is above
++1 in 16/20 seeds. In 9 seeds nearly every carnivore ended above +2 (e.g. seed 7:
++0.22 → +4.32). The lower tail (< −2) vanished (5.8% → 0%). Coexistence: step2
+20/20 runs reached 60k; neutral lost its prey in 3/20.
+
+**Pre-registered verdict:** two of three pass conditions met (the mean rises in
+significantly more seeds and ends clearly above 0). The third, the upper tail
+growing in significantly more seeds, failed (12/20). Per seed, that indicator
+was poorly chosen. Seeds that converged to a narrow distribution just below +2
+(means +1.5 to +1.7) show no growth above +2 even though the whole population
+moved up. The purging-only alternative the tail test was meant to exclude
+predicts a mean that stops near 0; it reached +2. Reading: selection **favors**
+persistence once variation reaches the advantageous region.
+
+Together with step 2b (same setup, founders at 0 ± small variation: no
+change, gradient ~0), this supports the plateau explanation. Persistence pays,
+but the fitness landscape is flat near 0, so evolution by small mutations
+cannot start the climb. That is the Hinton & Nowlan situation in which
+lifetime learning is predicted to guide evolution (Baldwin effect), and it
+motivates step 3 on exactly this trait: ERL carnivores starting from zero
+persistence.
+
