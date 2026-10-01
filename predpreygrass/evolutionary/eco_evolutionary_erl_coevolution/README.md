@@ -803,9 +803,10 @@ are reused (n=100).
   p=0.18. Post-switch only: +0.02, p=0.77. With two different fixed-control designs, L
   does not fall detectably further behind against evolving carnivores. **The
   moving-target prediction is not supported.**
-- **Robust across all four settings tested** (steps 1, n=100 neutral-marker, and both
-  matched-fixed cells): after the switch, carnivores die out only with L prey. Pooled,
-  that is ERL 0/230 vs. L 16/229 (Fisher p≈1e-5). Mechanism unknown.
+- **Robust in every setting tested:** after the switch, carnivores die out only with L
+  prey. Pooled over the three carnivore settings run at n=100 (evolving, neutral-marker
+  fixed, matched-fixed), that is ERL 0/230 vs. L 16/229 (Fisher p≈1e-5). Step 1
+  (hand-coded-rule carnivores) adds 0/55 vs. 7/52. Mechanism unknown.
 - **New, strong and unexplained: heritable carnivores do far less damage in the opening.**
   Opening prey extinction is 3/100 vs. 40/100 (ERL prey) and 10/100 vs. 37/100 (L prey)
   for evolving vs. matched non-heritable carnivores. Both are p < 1e-6 (exploratory). The

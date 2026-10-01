@@ -877,9 +877,9 @@ Forks Trial 11 (left untouched) and changes one thing per step:
   also start more competent, which confounds the contrast.
 
 - **Retest with a competence-matched fixed control (n=100, 2026-10-01): the moving-target
-  prediction is not supported** (interaction p=0.18; post-switch p=0.77). Robust across
-  all four settings: after the switch carnivores die out only with L prey (ERL 0/230 vs.
-  L 16/229). New and unexplained: carnivores whose behavior is heritable are far less
+  prediction is not supported** (interaction p=0.18; post-switch p=0.77). Robust in every
+  setting tested: after the switch carnivores die out only with L prey (ERL 0/230 vs.
+  L 16/229 pooled over three n=100 carnivore settings; step 1 adds 0/55 vs. 7/52). New and unexplained: carnivores whose behavior is heritable are far less
   destructive in the opening than identical non-heritable ones (prey extinction 3/100
   vs. 40/100).
 
