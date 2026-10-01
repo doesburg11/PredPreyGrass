@@ -768,3 +768,21 @@ Reading, hedged:
   never died out after the switch in 170 runs, while with L prey it did in 11 of 166.
   Why is still not established.
 
+### Moving-target retest with a matched fixed control (pre-registered 2026-10-01, before running)
+
+The first fixed control (neutral marker, noise-free seed network) started out more
+competent than the evolving carnivores. The retest uses `step2_nonheritable`
+(rich_memory, founder persistence std 3). Founders are identical to the evolving cell's
+founders (verified for seed 7). Every newborn is a fresh draw from the founder
+distribution, so starting competence and phenotypic variation match, but nothing
+evolves. ERL and L prey × 100 seeds × 60k against it; the evolving cells (n=100) are reused.
+
+- **Primary:** interaction on any collapse, i.e. L's excess collapse rate against evolving
+  minus against matched-fixed carnivores (permutation p < 0.05). This is the
+  moving-target prediction itself.
+- **Secondary:** the same interaction on post-switch collapses only; ERL vs. L within
+  the matched-fixed cells.
+- Known risk: in step 2 this mode lost prey in the opening more often than the evolving
+  mode (8/20 vs. 0/20, unexplained). If that recurs, the post-switch readout is the
+  cleaner one.
+

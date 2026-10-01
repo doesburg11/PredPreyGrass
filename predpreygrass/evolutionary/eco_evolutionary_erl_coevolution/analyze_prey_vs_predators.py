@@ -16,6 +16,15 @@ against fixed carnivores, and the interaction (is L's excess collapse rate
 larger against evolving carnivores?), by a permutation test shuffling prey labels
 within each carnivore condition. n=20 per cell makes the interaction a pilot.
 Exploratory: the carnivore persist trait's late mean under each prey type.
+
+2026-10-01 rerun with a MATCHED fixed control (`--erl-fixed-dir/--l-fixed-dir`,
+carnivore_mode "genome_nonheritable"): founders as in the evolving cells, each
+newborn a fresh draw from the founder distribution, so starting competence and
+phenotypic variation match but nothing evolves. The first fixed control (neutral
+marker, noise-free seed network) started more competent. For this rerun,
+PRIMARY = the interaction (L's excess any-collapse rate, evolving minus matched
+fixed; permutation p < 0.05). SECONDARY = the same interaction on post-switch
+collapses only, and ERL vs. L within the matched-fixed cells.
 """
 
 import argparse
@@ -70,13 +79,18 @@ def main():
     parser.add_argument("--l-dir", required=True)
     parser.add_argument("--l-evolving-tag", required=True)
     parser.add_argument("--l-fixed-tag", required=True)
+    parser.add_argument("--erl-fixed-dir", default=None, help="if the ERL fixed cell lives elsewhere")
+    parser.add_argument("--l-fixed-dir", default=None, help="if the L fixed cell lives elsewhere")
+    parser.add_argument("--switch", type=int, default=20_000)
     args = parser.parse_args()
     erl_dir, l_dir = Path(args.erl_dir).expanduser(), Path(args.l_dir).expanduser()
+    erl_fixed_dir = Path(args.erl_fixed_dir).expanduser() if args.erl_fixed_dir else erl_dir
+    l_fixed_dir = Path(args.l_fixed_dir).expanduser() if args.l_fixed_dir else l_dir
     cells = {
         ("ERL", "evolving"): (erl_dir, load(erl_dir, args.erl_evolving_tag)),
-        ("ERL", "fixed"): (erl_dir, load(erl_dir, args.erl_fixed_tag)),
+        ("ERL", "fixed"): (erl_fixed_dir, load(erl_fixed_dir, args.erl_fixed_tag)),
         ("L", "evolving"): (l_dir, load(l_dir, args.l_evolving_tag)),
-        ("L", "fixed"): (l_dir, load(l_dir, args.l_fixed_tag)),
+        ("L", "fixed"): (l_fixed_dir, load(l_fixed_dir, args.l_fixed_tag)),
     }
     out = {k: outcomes(rows) for k, (_, rows) in cells.items()}
 
@@ -96,7 +110,14 @@ def main():
                   f"{int(b[key].sum())}/{b['n']}, Fisher p={p:.3g}")
     diff, p = interaction_p(*(out[k]["collapse"].astype(float) for k in
                               [("ERL", "evolving"), ("L", "evolving"), ("ERL", "fixed"), ("L", "fixed")]))
-    print(f"  secondary interaction (L's excess collapse rate, evolving minus fixed): {diff:+.2f}, permutation p={p:.3g}")
+    print(f"  interaction, any collapse (L's excess collapse rate, evolving minus fixed): {diff:+.2f}, permutation p={p:.3g}")
+    post = {k: np.array([r["end_reason"] != "budget" and r["end_step"] > args.switch for r in rows])
+            for k, (_, rows) in cells.items()}
+    for k in post:
+        print(f"    post-switch collapses {k[0]:3s} x {k[1]:8s}: {int(post[k].sum())}/{int(sum(r['end_step'] > args.switch for r in cells[k][1]))}")
+    diff2, p2 = interaction_p(*(post[k].astype(float) for k in
+                                [("ERL", "evolving"), ("L", "evolving"), ("ERL", "fixed"), ("L", "fixed")]))
+    print(f"  interaction, post-switch collapses only: {diff2:+.2f}, permutation p={p2:.3g}")
 
 
 if __name__ == "__main__":
