@@ -302,6 +302,32 @@ clustered, which leaves prey refuges, a classic stabilizing effect in predator�
 ecology. Effects 1–4 are clear; the link from heritability to lower dispersal (5) is
 unresolved.
 
+## 10. Why heritable carnivores disperse less (2026-10-01, exploratory)
+
+Instrumented replays of the opening (16 seeds × 500 steps × both modes; parent ids,
+expressed traits, displacement from birthplace, offspring; ~15,600 carnivores aged ≥ 20
+steps; diagnostic scripts in the session scratchpad, module code unchanged).
+
+| | heritable (`step2`) | non-heritable |
+|---|---|---|
+| offspring rate vs. displacement, within-seed Spearman | median +0.04, negative in 4/16 seeds | +0.00, 8/16 |
+| parent–offspring correlation of displacement | **r=+0.40** (7,449 pairs) | r=+0.11 (7,669 pairs) |
+| mean displacement/step: founders → born 150–299 → born 300–480 | 0.227 → **0.114** → 0.149 | 0.239 → 0.168 → 0.204 |
+| single traits vs. displacement (|persist|, persist, bias spread, pursuit) | all \|Spearman\| < 0.10 | all < 0.10 |
+
+- **"Selection trims wanderers" is not supported** among carnivores that live ≥ 20 steps:
+  carnivores that move further don't have fewer offspring in either mode. Viability
+  selection on carnivores dying younger than 20 steps (excluded here) is not measured.
+- **"Lineages keep their movement habits" is supported.** Displacement is strongly
+  heritable in the heritable mode (r=0.40). The non-heritable mode's r=0.11 is the
+  baseline from offspring starting at the parent's location, so roughly 0.3 of it
+  looks genetic. After the founders, the heritable population's displacement falls well
+  below the non-heritable one's (0.114 vs. 0.168 for births in steps 150–299).
+- **Not identified:** which weights encode dispersal (no single summary trait predicts
+  it, so it is a property of the whole network in its local setting), and why the
+  heritable mean drops without selection on offspring rate. Early-death viability
+  selection is the remaining candidate.
+
 ## Corrections made along the way
 
 Each was caught before it became a conclusion; details are in README.md.
@@ -325,9 +351,11 @@ Each was caught before it became a conclusion; details are in README.md.
   3/100 vs. 17/100), but it is not detectably larger than against fixed carnivores,
   with either control design (interaction p=0.12 neutral marker; p=0.18, post-switch
   p=0.77 matched non-heritable, §8). Not supported.
-- **Why heritable carnivores disperse less** (§9). The opening difference traces to
-  carnivore spread and prey refuges, not to lower per-capita lethality. Whether
-  selection trims extreme wanderers or lineages keep local movement habits is untested.
+- **Why heritable carnivores disperse less** (§9–10). The opening difference traces to
+  carnivore spread and prey refuges. Displacement is strongly heritable (r=0.40 vs. a
+  0.11 shared-birthplace baseline), with no selection on it via offspring rate.
+  Open: which weights encode it, and whether early-death viability selection drives
+  the drop.
 - Why L systems lose their carnivores, and why the non-heritable control lost its prey
   in the opening.
 - An arms race (step 4) needs both sides to keep adapting; not reached.
