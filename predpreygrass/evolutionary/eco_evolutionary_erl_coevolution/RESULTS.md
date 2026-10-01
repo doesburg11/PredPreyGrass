@@ -267,6 +267,41 @@ are reused (n=100).
   in starting competence but not in opening dynamics, which loads the any-collapse
   interaction with opening noise. The post-switch interaction avoids that and is also null.
 
+## 9. Why heritable carnivores are milder in the opening (2026-10-01, exploratory)
+
+Paired comparison of the evolving (`step2`) and matched non-heritable runs. Same seeds,
+identical founders. Opening time series for all 100 seeds, plus instrumented replays of
+seeds 1–8 (diagnostic scripts in the session scratchpad; no module code changed).
+
+1. **It is not that evolving carnivores kill less.** Over steps 0–500 they are *more*
+   numerous at step 500 (median 453 vs. 372) and kill *more* per carnivore (23.3 vs. 18.4
+   per 1,000 carnivore-steps, paired p≈5e-16). Yet prey are far more abundant at step 500
+   (648 vs. 84, p≈4e-18). The "selection removes over-exploiters" candidate, in its simple
+   form, is rejected.
+2. **The difference is prey numbers, not corpse competition.** Carnivores eat similar
+   amounts of carrion in both modes. Prey eat more plants and corpses under evolving
+   carnivores, but that follows from there being more prey. Per-capita prey birth rates
+   are nearly equal (~22 vs. ~21 per 1,000 prey-steps through step 400).
+3. **The divergence is in per-capita predation risk, from about step 200–250.** Kills per
+   1,000 prey-steps are 4.1 vs. 6.2 at step 350 and 6.8 vs. 15.4 at step 450 (median of
+   8 seeds), at similar carnivore numbers.
+4. **Non-heritable carnivores are spread over much more of the map.** Occupied 15×15
+   blocks (of 100): 39 vs. 66 at step 350, 58 vs. 90 at step 450. They move ~25% further
+   from their birthplace (0.174 vs. 0.217 cells per step, paired p=0.008, 8 seeds).
+   Under evolving carnivores, prey keep predator-free refuges. Under non-heritable ones,
+   predation covers almost the whole map, and the prey crash.
+5. **Open: why heritable carnivores disperse less.** Mean expressed traits at step 400
+   barely differ (|persistence| 2.09 vs. 2.42, p=0.31; action-bias spread 1.91 vs. 2.06,
+   p=0.2; 8 seeds). Candidates: selection trimming the extreme wanderers (the tails, not
+   the mean), or offspring inheriting their parents' local movement habits so lineages
+   stay together, whereas each non-heritable newborn draws fresh travel traits. Not
+   tested.
+
+Reading (hedged): the mechanism looks spatial. Inheritance keeps carnivore populations
+clustered, which leaves prey refuges, a classic stabilizing effect in predator–prey
+ecology. Effects 1–4 are clear; the link from heritability to lower dispersal (5) is
+unresolved.
+
 ## Corrections made along the way
 
 Each was caught before it became a conclusion; details are in README.md.
@@ -290,9 +325,9 @@ Each was caught before it became a conclusion; details are in README.md.
   3/100 vs. 17/100), but it is not detectably larger than against fixed carnivores,
   with either control design (interaction p=0.12 neutral marker; p=0.18, post-switch
   p=0.77 matched non-heritable, §8). Not supported.
-- **Why heritable carnivores are so much milder in the opening** (§8: 3/100 vs. 40/100
-  prey extinction). Over-exploiting lineages being selected out early? Testable from
-  carnivore lineage data (kill rates of lineages that die early vs. survive).
+- **Why heritable carnivores disperse less** (§9). The opening difference traces to
+  carnivore spread and prey refuges, not to lower per-capita lethality. Whether
+  selection trims extreme wanderers or lineages keep local movement habits is untested.
 - Why L systems lose their carnivores, and why the non-heritable control lost its prey
   in the opening.
 - An arms race (step 4) needs both sides to keep adapting; not reached.
