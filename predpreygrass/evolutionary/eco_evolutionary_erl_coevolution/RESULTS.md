@@ -21,7 +21,9 @@ moves step by step toward predator–prey coevolution.
    ERL beats E, F and B. Against learning-alone (L), prey survival was not detectably
    different in the larger world (5/60 vs. 8/60, p=0.56), but L systems lost their
    carnivores 7/52 times vs. ERL's 0/55 (p=0.005). ERL's observed edge there is lower
-   carnivore loss, consistent with greater ecosystem stability.
+   carnivore loss, consistent with greater ecosystem stability. This replicated at
+   n=100 in a second setting: after the switch, carnivores died out in 0/170 ERL runs
+   vs. 11/166 L runs (p=0.0004), against both evolving and fixed carnivores (§7).
 4. **Carnivore evolution: purifying selection, but no better reactive behavior found.**
    Evolving carnivores coexist and recover to the seed rule's level, no further, and
    their seeded traits show no consistent directional change. Competition tests found
@@ -190,6 +192,49 @@ in `~/simulation_results/erl_results/coevo_prey_vs_pred` and `coevo_step2c`.
   but not evidence for it. Late collapses are rare (~0–10% per cell), so separating the
   cells would take on the order of 100 seeds per cell.
 
+## 7. ERL vs. L prey against evolving vs. fixed carnivores at n=100 (2026-10-01)
+
+Seeds 21–100 added to all four cells under the same tags and pre-registered analysis
+(job finished 2026-10-01 01:55; log `~/simulation_results/erl_results/coevo_prey_vs_pred_n100.log`).
+
+| prey × carnivores | prey extinct | carnivores extinct | any collapse |
+|---|---|---|---|
+| ERL × evolving | 3 | 0 | **3/100** |
+| L × evolving | 10 | 7 | **17/100** |
+| ERL × fixed | 27 | 0 | 27/100 |
+| L × fixed | 24 | 4 | 28/100 |
+
+**Pre-registered:** primary PASS. Any collapse against evolving carnivores is ERL 3/100
+vs. L 17/100 (Fisher p=0.0015). Prey extinction alone: 3 vs. 10 (p=0.08). Against fixed
+carnivores: 27 vs. 28 (p=1). Interaction: +0.13, permutation p=0.12, not significant.
+
+**When collapses happen** (exploratory breakdown):
+
+| | before the switch (all prey extinctions) | after the switch (all carnivore extinctions) |
+|---|---|---|
+| ERL × evolving | 3 | 0 / 97 |
+| L × evolving | 10 | 7 / 90 (vs. ERL p=0.005) |
+| ERL × fixed | 27 | 0 / 73 |
+| L × fixed | 24 | 4 / 76 (vs. ERL p=0.12) |
+
+Reading, hedged:
+- The primary pass combines two effects, and neither is specific to *evolving*
+  predators. (a) Opening prey extinctions: ERL 3 vs. L 10, p=0.08 n.s. (b)
+  Post-switch carnivore loss, which happens only in L systems. It occurs against
+  fixed carnivores too (4/76), and pooled it is ERL 0/170 vs. L 11/166, p=0.0004.
+  That replicates step 1's finding (L 7/52 vs. ERL 0/55) in a second setting.
+- The key prediction, that L falls *further* behind against a moving target, is
+  **not supported**. The interaction is n.s. (p=0.12), and L's post-switch carnivore
+  loss appears against fixed carnivores as well.
+- **Design confound:** "fixed" carnivores are the neutral marker. They all act with the
+  noise-free seed network, so from the start they are more competent hunters than the
+  noisy evolving founders. That likely explains their many opening prey extinctions
+  (24–27 vs. 3–10). Fixed vs. evolving therefore differs in starting competence as
+  well as in evolution, which weakens the interaction test.
+- So the robust result is the general one: with ERL prey, the predator population
+  never died out after the switch in 170 runs, while with L prey it did in 11 of 166.
+  Why is still not established.
+
 ## Corrections made along the way
 
 Each was caught before it became a conclusion; details are in README.md.
@@ -208,9 +253,11 @@ Each was caught before it became a conclusion; details are in README.md.
 - **A stronger learner** (long eligibility trace or full-return REINFORCE, larger
   learning rate): can a capable learner discover persistence and produce a Baldwin
   effect? This departs from Ackley & Littman.
-- **The ERL-vs-L gap against evolving predators.** L cannot change its innate goals, so
-  it should fall behind a moving target. Not yet tested, because predators do not yet
-  evolve beyond the rule.
+- **The ERL-vs-L gap against evolving predators** (§7). Tested at n=100 with carnivores
+  evolving persistence from wide founder variation. ERL's advantage is there (collapse
+  3/100 vs. 17/100), but it is not detectably larger than against fixed carnivores
+  (interaction p=0.12). A cleaner test needs a fixed-carnivore control matched in
+  starting competence.
 - Why L systems lose their carnivores, and why the non-heritable control lost its prey
   in the opening.
 - An arms race (step 4) needs both sides to keep adapting; not reached.

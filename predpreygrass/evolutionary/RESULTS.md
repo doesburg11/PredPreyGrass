@@ -868,6 +868,14 @@ Forks Trial 11 (left untouched) and changes one thing per step:
   be too weak and short-horizon for a search strategy, which makes a Baldwin test on this
   trait unpromising as designed. The full comparison was not run.
 
+- **ERL vs. L prey against evolving vs. fixed carnivores (n=100 per cell, 2026-10-01).**
+  Pre-registered primary passes: any collapse against evolving carnivores is ERL 3/100
+  vs. L 17/100 (p=0.0015). But it isn't specific to evolving predators. The
+  interaction is n.s. (p=0.12). All prey extinctions happen in the opening, and after
+  the switch only L systems lose their carnivores, against fixed carnivores too (pooled
+  ERL 0/170 vs. L 11/166, p=0.0004). The "fixed" carnivores (noise-free seed network)
+  also start more competent, which confounds the contrast.
+
 Against the three criteria: sustainability met; Darwin/Baldwin loop met for the prey;
 coevolution not reached. Predators can evolve and headroom exists, but neither
 evolution from near zero nor paper-style learning got them there in these tests. Open: whether a stronger,
