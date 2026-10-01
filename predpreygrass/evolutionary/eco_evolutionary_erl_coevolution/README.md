@@ -786,3 +786,33 @@ evolves. ERL and L prey × 100 seeds × 60k against it; the evolving cells (n=10
   mode (8/20 vs. 0/20, unexplained). If that recurs, the post-switch readout is the
   cleaner one.
 
+### Moving-target retest, competence-matched fixed control (2026-10-01): prediction not supported
+
+`step2_nonheritable` control, ERL and L prey × 100 seeds (commit 816db53; job finished
+12:31; log `~/simulation_results/erl_results/coevo_matched_fixed.log`). The evolving cells
+are reused (n=100).
+
+| prey × carnivores | before the switch (prey extinct) | after the switch (carnivores extinct) | any collapse |
+|---|---|---|---|
+| ERL × evolving | 3 | 0/97 | 3/100 |
+| L × evolving | 10 | 7/90 | 17/100 |
+| ERL × matched-fixed | 40 | 0/60 | 40/100 |
+| L × matched-fixed | 37 | 5/63 | 42/100 |
+
+- **Primary (pre-registered): FAIL.** Interaction on any collapse: +0.12, permutation
+  p=0.18. Post-switch only: +0.02, p=0.77. With two different fixed-control designs, L
+  does not fall detectably further behind against evolving carnivores. **The
+  moving-target prediction is not supported.**
+- **Robust across all four settings tested** (steps 1, n=100 neutral-marker, and both
+  matched-fixed cells): after the switch, carnivores die out only with L prey. Pooled,
+  that is ERL 0/230 vs. L 16/229 (Fisher p≈1e-5). Mechanism unknown.
+- **New, strong and unexplained: heritable carnivores do far less damage in the opening.**
+  Opening prey extinction is 3/100 vs. 40/100 (ERL prey) and 10/100 vs. 37/100 (L prey)
+  for evolving vs. matched non-heritable carnivores. Both are p < 1e-6 (exploratory). The
+  founders are identical (verified), so the difference arises from inheritance during
+  the first ~1–4k steps. This replicates step 2's unexplained 0/20 vs. 8/20 at n=100.
+  Candidate explanations, not tested: selection removing over-exploiting carnivore
+  lineages early, which would be ecologically interesting; reduced phenotypic diversity
+  as a few lineages take over; or both. This also means the "matched" control is matched
+  in starting competence but not in opening dynamics, which loads the any-collapse
+  interaction with opening noise. The post-switch interaction avoids that and is also null.

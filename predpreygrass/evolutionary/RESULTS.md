@@ -876,6 +876,13 @@ Forks Trial 11 (left untouched) and changes one thing per step:
   ERL 0/170 vs. L 11/166, p=0.0004). The "fixed" carnivores (noise-free seed network)
   also start more competent, which confounds the contrast.
 
+- **Retest with a competence-matched fixed control (n=100, 2026-10-01): the moving-target
+  prediction is not supported** (interaction p=0.18; post-switch p=0.77). Robust across
+  all four settings: after the switch carnivores die out only with L prey (ERL 0/230 vs.
+  L 16/229). New and unexplained: carnivores whose behavior is heritable are far less
+  destructive in the opening than identical non-heritable ones (prey extinction 3/100
+  vs. 40/100).
+
 Against the three criteria: sustainability met; Darwin/Baldwin loop met for the prey;
 coevolution not reached. Predators can evolve and headroom exists, but neither
 evolution from near zero nor paper-style learning got them there in these tests. Open: whether a stronger,
