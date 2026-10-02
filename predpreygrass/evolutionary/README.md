@@ -70,7 +70,7 @@ sustainability numbers.
   competition (9/10) and beats the sparse fitness reward 27/30 (p=0.000008), but the module's
   own evolution doesn't reliably find it (reward weights indistinguishable from neutral
   drift). See its [README](eco_evolutionary_erl_flagship/README.md).
-* **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 13) —
+* **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 14) —
   *closed, POSITIVE result; stays in this repo, not an archive candidate.* Forks
   `eco_evolutionary_erl_baldwin` step by step toward predator–prey coevolution
   (prey-regulated carnivores, evolving carnivore genomes, ERL carnivores). **Key message:

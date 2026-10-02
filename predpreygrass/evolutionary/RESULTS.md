@@ -37,11 +37,11 @@ Everything built on top of or alongside that result has come back null or unreso
   paper's specific crossover signature wasn't found; genuinely open whether that's a
   real absence or a metric problem.
 
-- **Trial 13 closed (2026-10-02): the new work replicates "nature + nurture beats nature
+- **Trial 14 closed (2026-10-02): the new work replicates "nature + nurture beats nature
   alone" robustly** (ERL vs. E with prey-regulated carnivores: 1/20 vs. 10/20 prey
   extinct, p=0.003). Against nurture alone the advantage is conditional (prey survival in
   a harsh world, ecosystem stability in an easier one). Details below.
-- **Toward predator–prey coevolution** (Trial 13, 2026-09-30,
+- **Toward predator–prey coevolution** (Trial 14, 2026-09-30,
   `eco_evolutionary_erl_coevolution`): Trial 11's ERL advantage extends to a world where
   carnivores are regulated by prey (robust coexistence on 150×150). There, ERL's observed
   edge over learning-alone is lower carnivore loss, not prey survival. The one strategy
@@ -575,7 +575,19 @@ genetic-assimilation study) in `eco_evolutionary_erl_baldwin/RESULTS.md` §9.
 
 ---
 
-## Trial 12 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
+## Trial 12 — `eco_evolutionary_erl_baldwin` §17 — proximate vs. ultimate reward
+
+Numbering stub. In this project's other documents (erl_flagship's README and code, the
+human-cooperation site), "Trial 12" is erl_baldwin's §17 analysis: evolution's innate
+reward (`eval_weights`) diverges from the fitness it is selected for (Singh, Lewis, Barto &
+Sorg 2010 pattern, confirmed at n=30). This log reports it under Trial 11 above and in
+`eco_evolutionary_erl_baldwin/RESULTS.md` §17. Renumbered 2026-10-02 so this log matches
+the rest of the project. Until then, this log called erl_flagship "Trial 12" and
+erl_coevolution "Trial 13".
+
+---
+
+## Trial 13 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
 
 **Key message: caution beats recklessness, decisively, once they actually have to compete — and
 beats the project's own literal fitness signal too.** A reward that makes prey reckless around
@@ -842,7 +854,7 @@ Full architecture, the complete diagnostic history for all of the above, and cur
 
 ---
 
-## Trial 13 — `eco_evolutionary_erl_coevolution` — Trial 11 extended step by step toward predator–prey coevolution
+## Trial 14 — `eco_evolutionary_erl_coevolution` — Trial 11 extended step by step toward predator–prey coevolution
 
 **Status: CLOSED (2026-10-02), POSITIVE result. Not a null; stays in this repo, unlike the archived null-result trials.**
 
