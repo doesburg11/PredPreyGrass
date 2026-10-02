@@ -37,6 +37,8 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 * **[ERL Baldwin](predpreygrass/evolutionary/eco_evolutionary_erl_baldwin)**: a structurally different architecture — each agent gets its own genome-conditioned policy network, rather than a single shared-policy scalar side-channel. The project's strongest confirmed result: ERL significantly outperforms the prior shared-policy trials (p < 0.00001).
 
+* **[ERL coevolution](predpreygrass/evolutionary/eco_evolutionary_erl_coevolution)** *(closed, positive result)*: extends ERL Baldwin step by step toward predator–prey coevolution: carnivores regulated by prey, carnivores with evolving genomes, and learning carnivores. Key message: it replicates "nature + nurture beats nature alone" robustly (ERL vs. evolution alone with prey-regulated carnivores: 1/20 vs. 10/20 prey extinct, p=0.003). Against learning alone the advantage is conditional: prey survival in a harsh world, ecosystem stability in an easier one (carnivores die out with learning-only prey but never with ERL prey, 16/229 vs. 0/230).
+
 * **[Nuptial-gift giving](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_nuptial_gift)** *(archived — stopped early, insufficient signal)*: sexed predators with obligate male provisioning — males hunt but never reproduce directly, females can never sustain themselves on grazing alone and depend on a male-to-female energy gift to reproduce.
 
 ## Fixed-trait behavioral & game-theoretic environments
