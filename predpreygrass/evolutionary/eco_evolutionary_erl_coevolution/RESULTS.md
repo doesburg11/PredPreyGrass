@@ -16,6 +16,48 @@ every run, including the dead ends, is in [README.md](README.md). All runs use
 ERL prey (evolution + lifetime learning) unless stated. Results live under
 `~/simulation_results/erl_results/coevo_*`.
 
+## Related work: "nature + nurture beats nature alone" is well established
+
+This module's key message is a **replication in a new ecological setting**, not a first
+demonstration. Citations below were written from memory (2026-10-02) and **have not been
+checked against the sources**. Verify titles, venues and years before citing.
+
+**Computational Baldwin-effect line (direct ancestors):**
+- **Hinton & Nowlan (1987)**, "How Learning Can Guide Evolution", *Complex Systems*. On a
+  needle-in-a-haystack fitness landscape, evolution alone essentially never finds the
+  target, but evolution plus learning does. The classic demonstration.
+- **Ackley & Littman (1991)**, "Interactions Between Learning and Evolution", *Artificial
+  Life II*. ERL beats evolution alone, learning alone, neither, and random behavior. This is
+  the paper this module family rebuilds; erl_baldwin §9 replicated it.
+- **Nolfi, Elman & Parisi (1994)**, "Learning and Evolution in Neural Networks", *Adaptive
+  Behavior*. Agents that learn during life, even on an auxiliary task, evolve better
+  foraging than evolution alone.
+- **Belew (1990)**; **Mayley (1996–97)**. Mayley showed the benefit is conditional on the
+  cost of learning and the shape of the fitness landscape. That is consistent with this
+  module's finding that the advantage over learning alone depends on how hard the world is.
+
+**Optimization / machine learning (same idea, different framing):**
+- **Whitley, Gordon & Mathias (1994)**, "Lamarckian Evolution, the Baldwin Effect and
+  Function Optimization". Genetic algorithms with local search outperform plain genetic
+  algorithms.
+- **Memetic algorithms** (Moscato, late 1980s onward). Evolution plus local search as a
+  standard, widely confirmed improvement.
+- **Evolved plasticity in neural networks:** Floreano & Urzelai (2000), evolved learning
+  rules in robots; Soltoggio, Stanley & Risi (2018), "Born to Learn" review, *Neural
+  Networks*; Fernando et al. (2018), "Meta-Learning by the Baldwin Effect".
+- **Singh, Lewis & Barto (2009–10)**, optimal rewards. Evolution shapes what learning
+  optimizes; erl_baldwin §17 replicated their pattern.
+
+**Biology:** that plasticity aids adaptation is broadly supported (e.g. West-Eberhard 2003;
+"plasticity-first" evolution). Clean empirical evidence for a Baldwin effect in nature is
+still debated.
+
+**What is new here** is the setting, not the core claim. It is a spatial predator–prey
+ecology where predators' numbers are regulated by prey, with hundreds of seeds. The most
+distinctive finding is that **the advantage over learning alone shifts from prey survival
+(harsh world) to ecosystem stability (easier world)**. Whether this has been reported
+before has **not been checked** against the literature.
+
 ## Summary
 
 Starting from erl_baldwin's §9 result (ERL beats E/L/F/B, p<0.00001), this module
