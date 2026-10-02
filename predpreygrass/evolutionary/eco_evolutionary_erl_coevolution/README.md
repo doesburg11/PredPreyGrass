@@ -1,6 +1,6 @@
 # ERL Coevolution — building gradually on the ERL Baldwin result
 
-**Status: CLOSED (2026-10-02).** Consolidated results: [RESULTS.md](RESULTS.md).
+**Status: CLOSED (2026-10-02), POSITIVE result. Not a null; keep in this repo (not an archive candidate).** Consolidated results: [RESULTS.md](RESULTS.md).
 
 **Key message: the new work replicates "nature + nurture beats nature alone" robustly.**
 With prey-regulated carnivores (150×150), ERL prey went extinct in 1/20 runs vs. 10/20 for

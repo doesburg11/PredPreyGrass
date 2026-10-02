@@ -64,6 +64,18 @@ sustainability numbers.
   Full code, tests and commit history preserved there; see that repo's README for
   what each found. `RESULTS.md` here still has the cross-module trial narrative.
 
+* **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 13) —
+  *closed, POSITIVE result; stays in this repo, not an archive candidate.* Forks
+  `eco_evolutionary_erl_baldwin` step by step toward predator–prey coevolution
+  (prey-regulated carnivores, evolving carnivore genomes, ERL carnivores). **Key message:
+  it replicates "nature + nurture beats nature alone" robustly** (ERL vs. evolution alone
+  with prey-regulated carnivores: 1/20 vs. 10/20 prey extinct, p=0.003). Against learning
+  alone the advantage is conditional: prey survival in a harsh world, ecosystem stability
+  in an easier one (carnivores die out with L prey, never with ERL prey: 16/229 vs.
+  0/230). Also documents a predator-side fitness plateau (persistent search) and a
+  heritability → spatial-refuge mechanism. See its
+  [RESULTS.md](eco_evolutionary_erl_coevolution/RESULTS.md).
+
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
 
