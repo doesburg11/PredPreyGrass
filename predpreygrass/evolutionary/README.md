@@ -64,6 +64,12 @@ sustainability numbers.
   Full code, tests and commit history preserved there; see that repo's README for
   what each found. `RESULTS.md` here still has the cross-module trial narrative.
 
+* **[eco_evolutionary_erl_flagship](eco_evolutionary_erl_flagship)** — *closed; positive on
+  reward design, null on evolution discovering it.* Ports the ERL architecture to the richer
+  flagship ecology. A hand-designed cautious reward (`avoider`) beats a reckless one in direct
+  competition (9/10) and beats the sparse fitness reward 27/30 (p=0.000008), but the module's
+  own evolution doesn't reliably find it (reward weights indistinguishable from neutral
+  drift). See its [README](eco_evolutionary_erl_flagship/README.md).
 * **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 13) —
   *closed, POSITIVE result; stays in this repo, not an archive candidate.* Forks
   `eco_evolutionary_erl_baldwin` step by step toward predator–prey coevolution
