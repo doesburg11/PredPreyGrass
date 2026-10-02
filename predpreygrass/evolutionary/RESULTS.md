@@ -37,6 +37,10 @@ Everything built on top of or alongside that result has come back null or unreso
   paper's specific crossover signature wasn't found; genuinely open whether that's a
   real absence or a metric problem.
 
+- **Trial 13 closed (2026-10-02): the new work replicates "nature + nurture beats nature
+  alone" robustly** (ERL vs. E with prey-regulated carnivores: 1/20 vs. 10/20 prey
+  extinct, p=0.003). Against nurture alone the advantage is conditional (prey survival in
+  a harsh world, ecosystem stability in an easier one). Details below.
 - **Toward predator–prey coevolution** (Trial 13, 2026-09-30,
   `eco_evolutionary_erl_coevolution`): Trial 11's ERL advantage extends to a world where
   carnivores are regulated by prey (robust coexistence on 150×150). There, ERL's observed
@@ -840,7 +844,18 @@ Full architecture, the complete diagnostic history for all of the above, and cur
 
 ## Trial 13 — `eco_evolutionary_erl_coevolution` — Trial 11 extended step by step toward predator–prey coevolution
 
-**Status (2026-09-30): steps 0–2 complete; step 3 paused after exploratory smokes.** Full
+**Status: CLOSED (2026-10-02).**
+
+**Key message: the new work replicates "nature + nurture beats nature alone" robustly.**
+With prey-regulated carnivores (150×150), ERL prey went extinct in 1/20 runs vs. 10/20 for
+evolution alone (E), p=0.003, and ERL also beats F and B. Against nurture alone (L) the
+advantage is conditional: it shows up as prey survival in a harsh world (100×100: 3/20 vs.
+13/20, p=0.003), and as ecosystem stability in an easier one (150×150: prey survival not
+detectably different, but carnivores die out with L prey and never with ERL prey, 16/229
+vs. 0/230, p≈1e-5). How the two combine (whether learning steers genetic evolution, i.e.
+a Baldwin effect proper) is not shown.
+
+**Earlier status (2026-09-30): steps 0–2 complete; step 3 paused after exploratory smokes.** Full
 results in `eco_evolutionary_erl_coevolution/RESULTS.md`; dated log in its README.md.
 
 Forks Trial 11 (left untouched) and changes one thing per step:

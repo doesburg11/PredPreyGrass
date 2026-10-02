@@ -1,6 +1,17 @@
 # Results — eco_evolutionary_erl_coevolution
 
-Consolidated findings, 2026-09-28 to 2026-09-30. The dated, step-by-step log with
+**Status: CLOSED (2026-10-02).**
+
+**Key message: the new work replicates "nature + nurture beats nature alone" robustly.**
+With prey-regulated carnivores (150×150), ERL prey went extinct in 1/20 runs vs. 10/20 for
+evolution alone (E), p=0.003, and ERL also beats F and B. Against nurture alone (L) the
+advantage is conditional: it shows up as prey survival in a harsh world (100×100: 3/20 vs.
+13/20, p=0.003), and as ecosystem stability in an easier one (150×150: prey survival not
+detectably different, but carnivores die out with L prey and never with ERL prey, 16/229
+vs. 0/230, p≈1e-5). How the two combine (whether learning steers genetic evolution, i.e.
+a Baldwin effect proper) is not shown.
+
+Consolidated findings, 2026-09-28 to 2026-10-01. The dated, step-by-step log with
 every run, including the dead ends, is in [README.md](README.md). All runs use
 ERL prey (evolution + lifetime learning) unless stated. Results live under
 `~/simulation_results/erl_results/coevo_*`.
