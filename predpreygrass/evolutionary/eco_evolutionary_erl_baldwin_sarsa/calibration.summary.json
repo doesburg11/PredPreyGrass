@@ -1,0 +1,112 @@
+[
+  {
+    "treatment": "reinforce",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 199.66666666666666,
+    "population_mean_mean": 133.53377630121815,
+    "births_mean": 806.6666666666666,
+    "learning_displacement_mean": 0.18190621428929557
+  },
+  {
+    "treatment": "evolution_only",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 156.33333333333334,
+    "population_mean_mean": 110.11960132890364,
+    "births_mean": 609.6666666666666,
+    "learning_displacement_mean": 0.0
+  },
+  {
+    "treatment": "sarsa_a0.001_l0",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 101.33333333333333,
+    "population_mean_mean": 97.35658914728681,
+    "births_mean": 521.0,
+    "learning_displacement_mean": 0.02445763569559566
+  },
+  {
+    "treatment": "sarsa_a0.001_l0.5",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 102.0,
+    "population_mean_mean": 96.49612403100775,
+    "births_mean": 523.3333333333334,
+    "learning_displacement_mean": 0.02570238762602974
+  },
+  {
+    "treatment": "sarsa_a0.001_l0.9",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 71.0,
+    "population_mean_mean": 83.6190476190476,
+    "births_mean": 432.3333333333333,
+    "learning_displacement_mean": 0.030726618969291273
+  },
+  {
+    "treatment": "sarsa_a0.01_l0",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 138.66666666666666,
+    "population_mean_mean": 100.70321151716502,
+    "births_mean": 521.3333333333334,
+    "learning_displacement_mean": 0.21692185940083197
+  },
+  {
+    "treatment": "sarsa_a0.01_l0.5",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 171.66666666666666,
+    "population_mean_mean": 115.0985603543743,
+    "births_mean": 610.0,
+    "learning_displacement_mean": 0.20689324293514935
+  },
+  {
+    "treatment": "sarsa_a0.01_l0.9",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 171.33333333333334,
+    "population_mean_mean": 126.46954595791806,
+    "births_mean": 677.3333333333334,
+    "learning_displacement_mean": 0.22619770042220264
+  },
+  {
+    "treatment": "sarsa_a0.05_l0",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 439.3333333333333,
+    "population_mean_mean": 191.1328903654485,
+    "births_mean": 1084.3333333333333,
+    "learning_displacement_mean": 0.5519729565979905
+  },
+  {
+    "treatment": "sarsa_a0.05_l0.5",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 407.3333333333333,
+    "population_mean_mean": 183.31118493909193,
+    "births_mean": 1070.3333333333333,
+    "learning_displacement_mean": 0.5933900460086711
+  },
+  {
+    "treatment": "sarsa_a0.05_l0.9",
+    "n": 3,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 632.6666666666666,
+    "population_mean_mean": 235.16943521594683,
+    "births_mean": 1446.3333333333333,
+    "learning_displacement_mean": 0.7670836996439041
+  }
+]

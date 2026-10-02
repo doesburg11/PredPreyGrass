@@ -1,0 +1,128 @@
+[
+  {
+    "treatment": "reinforce",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 199.66666666666666,
+    "population_mean_mean": 133.53377630121815,
+    "population_peak_mean": 212.33333333333334,
+    "carnivore_peak_mean": 20.333333333333332
+  },
+  {
+    "treatment": "evolution_only",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 156.33333333333334,
+    "population_mean_mean": 110.11960132890364,
+    "population_peak_mean": 164.66666666666666,
+    "carnivore_peak_mean": 16.333333333333332
+  },
+  {
+    "treatment": "ac_a0.002_b0.004_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 136.0,
+    "population_mean_mean": 118.46400885935769,
+    "population_peak_mean": 167.33333333333334,
+    "carnivore_peak_mean": 16.666666666666668
+  },
+  {
+    "treatment": "ac_a0.002_b0.004_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 125.66666666666667,
+    "population_mean_mean": 120.76965669988925,
+    "population_peak_mean": 164.0,
+    "carnivore_peak_mean": 19.333333333333332
+  },
+  {
+    "treatment": "ac_a0.002_b0.01_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 100.0,
+    "population_mean_mean": 109.62347729789589,
+    "population_peak_mean": 149.66666666666666,
+    "carnivore_peak_mean": 14.333333333333334
+  },
+  {
+    "treatment": "ac_a0.002_b0.01_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 184.66666666666666,
+    "population_mean_mean": 134.90697674418604,
+    "population_peak_mean": 203.33333333333334,
+    "carnivore_peak_mean": 15.333333333333334
+  },
+  {
+    "treatment": "ac_a0.01_b0.02_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 100.33333333333333,
+    "population_mean_mean": 95.78073089700997,
+    "population_peak_mean": 130.0,
+    "carnivore_peak_mean": 17.0
+  },
+  {
+    "treatment": "ac_a0.01_b0.02_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 94.66666666666667,
+    "population_mean_mean": 97.2015503875969,
+    "population_peak_mean": 141.66666666666666,
+    "carnivore_peak_mean": 17.666666666666668
+  },
+  {
+    "treatment": "ac_a0.01_b0.05_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 115.33333333333333,
+    "population_mean_mean": 104.70542635658914,
+    "population_peak_mean": 150.0,
+    "carnivore_peak_mean": 17.0
+  },
+  {
+    "treatment": "ac_a0.01_b0.05_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 133.33333333333334,
+    "population_mean_mean": 109.92912513842747,
+    "population_peak_mean": 157.0,
+    "carnivore_peak_mean": 13.333333333333334
+  },
+  {
+    "treatment": "ac_a0.05_b0.1_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 102.66666666666667,
+    "population_mean_mean": 95.14617940199336,
+    "population_peak_mean": 129.0,
+    "carnivore_peak_mean": 17.333333333333332
+  },
+  {
+    "treatment": "ac_a0.05_b0.1_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 194.0,
+    "population_mean_mean": 132.24141749723142,
+    "population_peak_mean": 202.66666666666666,
+    "carnivore_peak_mean": 16.333333333333332
+  },
+  {
+    "treatment": "ac_a0.05_b0.25_g0",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 146.33333333333334,
+    "population_mean_mean": 126.56367663344408,
+    "population_peak_mean": 194.0,
+    "carnivore_peak_mean": 17.666666666666668
+  },
+  {
+    "treatment": "ac_a0.05_b0.25_g0.9",
+    "n": 3,
+    "extinctions": 0,
+    "population_end_mean": 85.33333333333333,
+    "population_mean_mean": 87.23477297895901,
+    "population_peak_mean": 120.33333333333333,
+    "carnivore_peak_mean": 14.666666666666666
+  }
+]

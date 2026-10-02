@@ -2,7 +2,7 @@
 Python/NumPy, per Ackley & Littman 1991's actual compute profile).
 
 Usage:
-    python -m predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.run_erl_simulation \\
+    python -m predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.run_erl_simulation \\
         --steps 200000 --seed 41 --log-every 500 --constraint-window 5000
 
     # resume an interrupted run (--steps is how many MORE steps to run, not a total):
@@ -15,19 +15,19 @@ from pathlib import Path
 
 import numpy as np
 
-from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.checkpoint import (
+from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.checkpoint import (
     latest_checkpoint,
     load_checkpoint,
     save_checkpoint,
 )
-from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.config import config_erl
-from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.metrics import (
+from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.config import config_erl
+from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.metrics import (
     CsvLogger,
     lineage_fieldnames,
     lineage_record,
     truncate_csv_after_step,
 )
-from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.world import ErlWorld
+from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.world import ErlWorld
 from predpreygrass.global_config import ERL_RESULTS_DIR
 
 FIELDNAMES = [
@@ -36,15 +36,11 @@ FIELDNAMES = [
     "carnivore_count",
     "eval_weight_absmean",
     "action_weight_absmean",
+    "action_alpha_absmean",
+    "hebb_trace_absmean",
     "eval_site_change_rate",
     "action_site_change_rate",
 ]
-
-# Variant entry points may replace these two globals before calling main().
-# Exact type equality is intentional: a subclass checkpoint can implement a
-# different learning algorithm while still passing isinstance(ErlWorld).
-EXPECTED_WORLD_CLASS = ErlWorld
-RUN_NAME_PREFIX = "ERL_BALDWIN"
 
 
 def parse_args():
@@ -119,12 +115,6 @@ def main():
             # like it took effect when it did nothing.
             raise ValueError("--fixed-eval-weights has no effect with --resume-from (no new founders are spawned).")
         world = load_checkpoint(resume_path)
-        if type(world) is not EXPECTED_WORLD_CLASS:
-            raise TypeError(
-                f"Checkpoint contains {type(world).__module__}.{type(world).__name__}, "
-                f"but this runner requires {EXPECTED_WORLD_CLASS.__module__}."
-                f"{EXPECTED_WORLD_CLASS.__name__}."
-            )
         # checkpoints/ lives directly under the original run's out_dir.
         out_dir = Path(args.out_dir) if args.out_dir else resume_path.parent.parent
         print(f"Resumed from {resume_path} at step {world.current_step} (strategy={world.strategy}).")
@@ -142,7 +132,7 @@ def main():
         rng = np.random.default_rng(cfg["seed"])
         world = ErlWorld(cfg, rng)
         timestamp = time.strftime("%Y-%m-%d_%H-%M-%S")
-        out_dir = Path(args.out_dir) if args.out_dir else Path(ERL_RESULTS_DIR) / f"{RUN_NAME_PREFIX}_{timestamp}"
+        out_dir = Path(args.out_dir) if args.out_dir else Path(ERL_RESULTS_DIR) / f"ERL_BALDWIN_HEBBIAN_{timestamp}"
 
     out_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir = Path(args.checkpoint_dir) if args.checkpoint_dir else out_dir / "checkpoints"
@@ -182,7 +172,7 @@ def main():
 
     renderer = None
     if args.render != "none":
-        from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin.visualize import WorldRenderer
+        from predpreygrass.evolutionary.eco_evolutionary_erl_baldwin_hebbian.visualize import WorldRenderer
 
         if args.render == "live":
             import matplotlib.pyplot as plt

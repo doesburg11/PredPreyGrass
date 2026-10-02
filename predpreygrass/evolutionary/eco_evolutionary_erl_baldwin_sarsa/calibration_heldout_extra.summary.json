@@ -1,0 +1,42 @@
+[
+  {
+    "treatment": "reinforce",
+    "n": 5,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 158.0,
+    "population_mean_mean": 123.96744186046513,
+    "births_mean": 700.0,
+    "learning_displacement_mean": 0.19348604832778532
+  },
+  {
+    "treatment": "evolution_only",
+    "n": 5,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 154.2,
+    "population_mean_mean": 117.60265780730897,
+    "births_mean": 668.0,
+    "learning_displacement_mean": 0.0
+  },
+  {
+    "treatment": "sarsa_a0.05_l0",
+    "n": 5,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 498.4,
+    "population_mean_mean": 213.73222591362128,
+    "births_mean": 1275.6,
+    "learning_displacement_mean": 0.5231568285968065
+  },
+  {
+    "treatment": "sarsa_a0.05_l0.9",
+    "n": 5,
+    "failures": 0,
+    "extinctions": 0,
+    "population_end_mean": 477.8,
+    "population_mean_mean": 206.31960132890362,
+    "births_mean": 1124.4,
+    "learning_displacement_mean": 0.7813331684568476
+  }
+]
