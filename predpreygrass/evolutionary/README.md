@@ -71,6 +71,18 @@ sustainability numbers.
   competition (9/10) and beats the sparse fitness reward 27/30 (p=0.000008), but the module's
   own evolution doesn't reliably find it (reward weights indistinguishable from neutral
   drift). See its [README](eco_evolutionary_erl_flagship/README.md).
+* **[eco_evolutionary_erl_baldwin](eco_evolutionary_erl_baldwin)** — *closed comparative
+  learner investigation; original learner retained.* Implements private
+  genome-initialized lifetime learning in World AL. Five replacement learners
+  (Hebbian plasticity, SARSA, actor-critic, Double DQN, and clipped PPO) were
+  implemented and subjected to candidate-appropriate staged gates, ranging from
+  controlled lifetime assays to held-out learning-off comparisons and independent
+  replication. None produced a reproducible learning-specific advantage; the existing
+  REINFORCE-style update remains the only validated option. See the consolidated
+  [comparison and conclusion](eco_evolutionary_erl_baldwin/README.md#comparative-lifetime-learning-investigation-closed-2026-10-03).
+  Failed implementations and raw evidence are preserved in the separate
+  [`PredPreyGrass-archive`](https://github.com/doesburg11/PredPreyGrass-archive)
+  repository.
 * **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 14) —
   *closed, POSITIVE result; stays in this repo, not an archive candidate.* Forks
   `eco_evolutionary_erl_baldwin` step by step toward predator–prey coevolution

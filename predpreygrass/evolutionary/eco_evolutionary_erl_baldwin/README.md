@@ -28,6 +28,66 @@ family, and not a claim that PPO or the earlier trials were wrong. It's a
 different, cheaper, literature-validated bet on the one thing those trials
 structurally cannot test.
 
+## Comparative lifetime-learning investigation (closed 2026-10-03)
+
+The original implementation uses an immediate REINFORCE-style softmax update:
+the inherited evaluation change `E_t - E_{t-1}` directly scales the score
+gradient of the sampled action. Because that choice could have been responsible
+for the positive ERL result, five alternative lifetime learners were implemented
+and tested. Every alternative preserved the Baldwin boundary: a newborn began
+from inherited action parameters, all acquired state remained private to its
+lifetime, and reproduction copied only the genome.
+
+The investigation used candidate-appropriate staged gates rather than launching
+each alternative directly into an expensive evolutionary run. Every
+implementation first had to pass analytical/unit tests and numerical-stability
+checks. Hebbian plasticity stopped at a controlled single-lifetime assay;
+actor-critic stopped after its first held-out block; SARSA, DQN, and PPO received
+progressively stronger population checks where their earlier results warranted
+them. Learning-off and independent-replication controls were used where needed
+to distinguish learning from exploration and seed selection. Advancement always
+required a reproducible learning-specific benefit; favorable population results
+caused mainly by exploration did not count.
+
+| Learner | Main test and result | Decision |
+|---|---|---|
+| Reward-modulated Hebbian plasticity | Action credit, larger/no-decay traces, alpha scaling, and a uniform-positive-alpha control all failed to produce reliable evasion. Uniform-positive alpha improved away-action rate by only 0.21 percentage points (`p=0.121`). | Failed single-lifetime gate. |
+| Linear SARSA | SARSA(0) initially survived a three-seed stability screen, but in the prospective 10-seed, 3,000-step confirmation it went extinct on 4/10 seeds versus 0/10 for REINFORCE. Mean-population difference was -17.0 (`p=0.685`). SARSA(0.9) was even more seed-fragile and showed boom-and-bust extinctions. | Failed safety/confirmation gate. |
+| Linear actor-critic | The frozen TD(0) actor-critic averaged 103.6 agents versus 126.3 for REINFORCE on seeds 44-51. It lost 6/8 pairs; paired difference -22.7, 95% CI -44.2 to -1.2 (`p=0.041`). | Reliably worse than the existing learner. |
+| Linear Double DQN | Replay, a target network, Double-DQN targets, Huber clipping, and bounded updates were stable. After isolating ecology/exploration/replay RNG streams, the selected candidate averaged 182.6 agents versus 155.1 learning-off on untouched seeds, but the incremental effect was uncertain: +27.5, 5/8 wins, CI -18.4 to +73.4 (`p=0.200`). Earlier apparent gains over REINFORCE were largely reproduced with learning disabled at epsilon 0.75. | Exploration condition succeeded; DQN learning did not pass its matched control. |
+| Linear clipped PPO | Private actor/critic, GAE, clipped ratios, entropy regularization, and short rollouts produced a near-signal in the first untouched block: +25.3 over learning-off, 7/8 wins (`p=0.074`). A predefined independent replication collapsed to +2.1, 3/8 wins (`p=0.878`). | Near-signal did not replicate. |
+
+### Conclusion
+
+**No tested alternative replaced the existing REINFORCE-style update.** The
+negative results are not interchangeable: Hebbian plasticity failed to turn
+local traces into useful behavior; SARSA introduced ecological instability;
+actor-critic underperformed directly; DQN's headline population gain was mostly
+an exploration-policy effect; and PPO's promising first block failed
+replication. Across all five branches, greater algorithmic complexity did not
+produce a reproducible learning-specific improvement.
+
+The justified engineering choice is therefore to retain the existing update as
+the only validated lifetime learner for this ERL Baldwin implementation. This
+does **not** prove it is universally optimal, nor does it establish the full
+multi-generation Baldwin effect by itself. It means that, under the current
+World AL observation model, inherited evaluator, reward `E_t-E_{t-1}`, and
+available lifetime, none of the tested replacements cleared the pre-evolution
+gate. Further optimizer search is closed unless the scientific setup changes
+materially—for example, the reward semantics, observation state, or lifetime
+horizon—rather than merely adding another optimizer.
+
+All failed implementations, tests, raw CSVs, summaries, and detailed reports
+are preserved in the separate
+[`PredPreyGrass-archive`](https://github.com/doesburg11/PredPreyGrass-archive)
+repository:
+
+- [`eco_evolutionary_erl_baldwin_hebbian`](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_baldwin_hebbian)
+- [`eco_evolutionary_erl_baldwin_sarsa`](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_baldwin_sarsa)
+- [`eco_evolutionary_erl_baldwin_actor_critic`](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_baldwin_actor_critic)
+- [`eco_evolutionary_erl_baldwin_dqn`](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_baldwin_dqn)
+- [`eco_evolutionary_erl_baldwin_ppo`](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_baldwin_ppo)
+
 ## The mechanism (from the paper, read in full 2026-08-09)
 
 Each agent carries two single-layer networks:
