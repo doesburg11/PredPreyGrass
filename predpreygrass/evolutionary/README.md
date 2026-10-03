@@ -65,12 +65,19 @@ sustainability numbers.
   Full code, tests and commit history preserved there; see that repo's README for
   what each found. `RESULTS.md` here still has the cross-module trial narrative.
 
-* **[eco_evolutionary_erl_flagship](eco_evolutionary_erl_flagship)** — *closed; positive on
-  reward design, null on evolution discovering it.* Ports the ERL architecture to the richer
-  flagship ecology. A hand-designed cautious reward (`avoider`) beats a reckless one in direct
-  competition (9/10) and beats the sparse fitness reward 27/30 (p=0.000008), but the module's
-  own evolution doesn't reliably find it (reward weights indistinguishable from neutral
-  drift). See its [README](eco_evolutionary_erl_flagship/README.md).
+* **[eco_evolutionary_erl_flagship](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_flagship)** — *archived
+  2026-10-03; positive on reward design, null on evolution discovering it.*
+  A hand-designed cautious reward (`avoider`) beats a reckless one in direct
+  competition (9/10) and the sparse fitness reward (27/30, p=0.000008), but
+  evolutionary reward weights are indistinguishable from neutral drift.
+  Follow-ups exhausted the tested routes to autonomous discovery: a stronger
+  pooled learner reached the extreme region in only 3/30 populations, and
+  population scaling did not improve that (0/10). The pooled learner also adds
+  a cultural learning channel, so it is not a clean Darwinian remedy.
+  With no dependable improvement from these follow-ups, the investigation is
+  closed and its code, tests, and detailed [README](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_flagship/README.md)
+  moved to the archive. The positive reward-design finding is retained; this
+  does not rule out a materially different evolutionary design.
 * **[eco_evolutionary_erl_baldwin](eco_evolutionary_erl_baldwin)** — *closed comparative
   learner investigation; original learner retained.* Implements private
   genome-initialized lifetime learning in World AL. Five replacement learners

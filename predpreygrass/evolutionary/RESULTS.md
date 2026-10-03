@@ -597,6 +597,8 @@ erl_coevolution "Trial 13".
 
 ## Trial 13 — `eco_evolutionary_erl_flagship` — Trial 11's reward-divergence question, in the richer ecology
 
+**Archived 2026-10-03.** Stronger pooled learning and population scaling found no dependable route to evolutionary reward discovery. Code, tests, and the detailed [module README](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_flagship/README.md) are preserved in PredPreyGrass-archive; this cross-trial narrative remains here.
+
 **Key message: caution beats recklessness, decisively, once they actually have to compete — and
 beats the project's own literal fitness signal too.** A reward that makes prey reckless around
 predators can look fine, even thrive, when it never has to share space with more cautious prey —
@@ -858,7 +860,7 @@ promising remaining lever, tested directly, did not pan out — closing this inv
 search for an accessible fix.
 
 Full architecture, the complete diagnostic history for all of the above, and current status:
-`eco_evolutionary_erl_flagship/README.md`.
+[archived module README](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_flagship/README.md).
 
 ---
 
