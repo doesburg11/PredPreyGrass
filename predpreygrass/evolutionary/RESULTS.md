@@ -6,7 +6,7 @@ tracks the sequence of attempts against that goal: what was tried, why each pivo
 happened, and the current state of the search. Each module below (`eco_evolutionary_*`)
 also has its own detailed RESULTS.md with full data. Read top to bottom.
 
-## Where things stand (2026-08-27)
+## Where things stand (2026-10-03)
 
 One thing is established with real statistical power: **nature and nurture combined
 beats either alone.** Trial 11 (`eco_evolutionary_erl_baldwin`) found ERL agents (genome
@@ -18,9 +18,10 @@ Everything built on top of or alongside that result has come back null or unreso
 
 - **Single-continuous-scalar traits** (`metabolic_rate`, `offspring_investment_fraction`,
   `cooperation_rate` — Trials 2/3/5/6): real fitness landscapes exist, but no
-  selection-driven drift beyond neutral noise in properly-replicated tests. One partial
-  exception: Trial 6's population-scaling pilot showed a directional (but n=3-ceiling)
-  signal for prey investment — inconclusive, not followed up.
+  selection-driven drift beyond neutral noise in properly-replicated tests. Trial 6's
+  population-scaling pilot initially showed a directional, n=3-ceiling signal for prey
+  investment; a follow-up extension to n=6 (2026-10-03) found it didn't hold — retracted,
+  settled null, closing out this whole trait family with no exceptions.
 - **Combinatorial genome** (`loci`, Trial 7): also null, reversed on the headline metric.
 - **Dual-inheritance / cultural learning** (Trials 8-9): flat so far, both the
   static-coordination and seasonal-target versions.
@@ -262,7 +263,7 @@ mechanism design, so it's cheap to falsify or confirm before committing to (b)'s
 larger scoping effort. If (a) still comes back null at larger scale, that rules out
 "just noise" more convincingly and makes the case for (b) much stronger.
 
-## Trial 6 — population scaling on `offspring_investment_fraction` — complete, mixed/inconclusive
+## Trial 6 — population scaling on `offspring_investment_fraction` — complete, null
 
 **Why `investment`, not `metabolic_rate` or `cooperation`:** R6 already confirmed a real
 fitness landscape exists for `offspring_investment_fraction` (fitness outcomes are not
@@ -287,18 +288,25 @@ unscaled prey result (real=0.0397 vs. control=0.0351, p=0.500). p=0.050 at n=3 i
 the statistical floor of this design, not a result that clears conventional significance
 with room to spare.
 
-**Verdict:** first data point in the whole search pointing toward "a real selection
-signal exists but was below the unscaled noise floor" — but only for one species, at the
-edge of what n=3 can demonstrate, and not the clean both-species confirmation that would
-validate the noise-floor hypothesis outright. Neither a clean win (predator gives no
-support, and prey hasn't cleared the n=3 ceiling) nor a third flat null (prey's separation
-is the strongest directional result seen across three traits and two scales so far).
-**Genuinely inconclusive — the honest next step is more prey-focused seeds (e.g. 45/46/47)
-to see if the separation holds past n=3, not a verdict either way on criterion 3.** Full
-data, per-seed table, and timing in `eco_evolutionary_investment/RESULTS.md` R9.
+**R9 verdict (superseded below):** first data point in the whole search pointing toward "a
+real selection signal exists but was below the unscaled noise floor" — but only for one
+species, at the edge of what n=3 can demonstrate. Genuinely inconclusive at the time;
+the honest next step was more prey-focused seeds (45/46/47) to see if the separation held
+past n=3.
 
-**Status:** R9 complete (2026-07-24). Decision on next step (extend prey replication vs.
-proceed to the combinatorial-trait pivot below) not yet made.
+**R10 (2026-10-03): the n=3 separation did not hold — retracted, settled null.** Three
+more real + 3 more control seeds (45/46/47), pooled with R9's original three for n=6 per
+arm: prey's p-value moved from R9's n=3-floor value of 0.050 *up* to 0.120 — the opposite
+of what a real, merely-underpowered effect would do as n grows. Predator stays null
+(p=0.910, unchanged in substance from R9's 0.900). An independent cross-check (Hunt 2006
+model-fit on the full 1000-generation trajectory, both methods now agreeing) finds every
+one of the 24 seed/species trajectories (12 real + 12 control, both trials) best-fit as a
+pure unbiased random walk — no directional selection detected anywhere. Full data,
+per-seed table, and timing in `eco_evolutionary_investment/RESULTS.md` R9 and R10.
+
+**Status:** Trial 6 complete and closed (2026-10-03). `offspring_investment_fraction` is a
+confirmed null, joining `metabolic_rate`, `cooperation_rate`, `metabolic_code`,
+`cultural_plasticity` (×2), and `nuptial_gift`. No further replication planned.
 
 ---
 

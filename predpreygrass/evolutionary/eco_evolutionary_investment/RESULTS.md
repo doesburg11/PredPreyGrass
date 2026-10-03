@@ -748,6 +748,79 @@ being treated as... a confirmed win" caveat already above.
 
 ---
 
+### R10 — Trial 6 extension: 3 more prey seeds, settling the p=0.050 question (complete)
+
+**Config:** identical to R9 (`tune_ppo_investment_scaled.py` / `tune_ppo_investment_neutral_control_scaled.py`,
+same scaled 35×35 config), 3 more real + 3 more control seeds (45/46/47), 1000 iterations
+each, run sequentially on one GPU via `~/simulation_results/investment_r10.sh`
+(`systemd-run --user --unit=investment-r10`). Launched 2026-09-27 20:18, pushed through
+repeated contention from an unrelated concurrent job (`eco_evolutionary_erl_coevolution`'s
+study, up to 26 workers, which at times tripled this run's per-iteration wall-clock), and
+two mid-batch OOM retries (seed 43/44 from the attribution-test context, unrelated to this
+run specifically). All 6 runs finished cleanly at 1000/1000 iterations: real seed 45
+(→ 2026-09-28 14:20), real 46 (→ 09-29 12:25), real 47 (→ 09-30 13:01), control 45
+(→ 10-01 17:26), control 46 (→ 10-02 13:06), control 47 (→ 10-03 10:17). Total wall-clock
+~5.8 days, mostly contention-bound rather than compute-bound.
+
+**Result, pooled with R9's original seeds 42/43/44 (n=6 per arm, via
+`analyze_replication_seeds_scaled.py`, which globs every `*_SCALED_SEED*`/
+`*_SCALED_NEUTRAL_CONTROL_SEED*` run under `~/simulation_results/ray_results/` regardless of
+which batch produced it): the prey signal reverses toward null instead of strengthening.**
+
+| species | metric | real (n=6) | control (n=6) | U | p(real>control) |
+|---|---|---|---|---|---|
+| predator | final \|dev\| | 0.0235 | 0.0396 | 10.0 | 0.910 |
+| predator | max \|dev\| | 0.0559 | 0.0633 | 17.0 | 0.591 |
+| prey | final \|dev\| | 0.0265 | 0.0133 | 26.0 | 0.120 |
+| prey | max \|dev\| | 0.0691 | 0.0564 | 26.0 | 0.120 |
+
+Per-seed data for the 3 new seeds (Q1/Q5 quintile means, net change, deviation from founder
+0.35 — seeds 42/43/44 are unchanged from the R9 table above):
+
+| group | seed | species | Q1 | Q5 | net_chg | \|dev_final\| | max\|dev\| |
+|---|---|---|---|---|---|---|---|
+| real | 45 | predator | 0.3527 | 0.3489 | −0.0038 | 0.0011 | 0.0269 |
+| real | 45 | prey | 0.3008 | 0.2891 | −0.0117 | 0.0609 | 0.0981 |
+| real | 46 | predator | 0.3342 | 0.3417 | +0.0074 | 0.0083 | 0.0422 |
+| real | 46 | prey | 0.3315 | 0.3224 | −0.0091 | 0.0276 | 0.0693 |
+| real | 47 | predator | 0.2602 | 0.2745 | +0.0142 | 0.0755 | 0.1275 |
+| real | 47 | prey | 0.3419 | 0.3503 | +0.0084 | 0.0003 | 0.0467 |
+| control | 45 | predator | 0.3453 | 0.3407 | −0.0046 | 0.0093 | 0.0187 |
+| control | 45 | prey | 0.3122 | 0.3172 | +0.0050 | 0.0328 | 0.0610 |
+| control | 46 | predator | 0.3284 | 0.3272 | −0.0011 | 0.0228 | 0.0444 |
+| control | 46 | prey | 0.3656 | 0.3639 | −0.0017 | 0.0139 | 0.0886 |
+| control | 47 | predator | 0.2322 | 0.2318 | −0.0005 | 0.1182 | 0.1405 |
+| control | 47 | prey | 0.3495 | 0.3424 | −0.0071 | 0.0076 | 0.0448 |
+
+**Predator:** stays null, consistent with R9 (p=0.910 vs. 0.900 — no change).
+
+**Prey:** the n=3 "perfect separation" did NOT hold once seeds 45/46/47 were added — real
+seed 45's final |dev| (0.0609) is the largest of any seed in either group, but seeds 46/47
+land inside the control group's range, and p moved from R9's n=3-floor value of 0.050 up to
+0.120. That direction (p getting *less* significant as n grows, not more) is the textbook
+signature of a small-sample artifact, not a real effect that was merely underpowered —
+exactly the outcome the n=3 floor couldn't distinguish from. The independent Hunt (2006)
+model-fit (below) agrees.
+
+**Addendum: Hunt (2006) model-fit on the full 12-seed set.** Every single seed/species
+combination, real and control alike, is best-fit as a pure unbiased random walk (URW), with
+`mstep` on the order of 1e-5 and randomly signed in both groups (including the new prey
+seeds 45/46/47: -0.000011, -0.000032, +0.000049). No directional selection detected in any
+of the 24 trajectories. This is now two independent methods (quintile-mean Mann-Whitney U
+and full-trajectory model-selection) agreeing on null for both species.
+
+**Verdict: null, settled.** `offspring_investment_fraction` joins `metabolic_rate`,
+`cooperation_rate`, `metabolic_code`, `cultural_plasticity` (×2), and `nuptial_gift` as a
+confirmed null after proper multi-seed replication. R9's prey signal is retracted — it was
+the n=3 statistical floor, not a real effect awaiting more power. See
+`predpreygrass/evolutionary/RESULTS.md` Trial 6 entry for the cross-module framing and the
+decision this closes out (archive vs. keep as a "confirmed null worth documenting" case).
+
+**Status:** R10 complete, 2026-10-03. This closes Trial 6 — no further replication planned
+for this trait.
+
+---
+
 *R4-R7 addendum analysis date: 2026-07-18. R7 data source: 6 seeded runs (real seeds
 42/43/44, control seeds 42/43/44) launched 2026-07-16 10:14, all finished cleanly
 2026-07-18 01:41 — see `PPO_ECO_EVOLUTION_INVESTMENT_SEED{42,43,44}_*` and
