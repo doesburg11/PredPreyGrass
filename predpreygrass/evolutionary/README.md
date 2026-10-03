@@ -46,15 +46,16 @@ sustainability numbers.
   `eco_evolutionary_cadence` (Trial 1, rejected — the movement-cadence mechanic itself
   structurally prevents a sustainable predator population), `eco_evolutionary_cooperation`
   (Trial 5, likely null, paused after Pilot 1), `eco_evolutionary_metabolic_code` (Trial 7,
-  complete, null and reversed on the headline metric), and `eco_evolutionary_metabolic_rate`
+  complete, null and reversed on the headline metric), `eco_evolutionary_metabolic_rate`
   (Trial 3, null after proper 3-seed replication — this is also where the project's
-  drift-vs-control replication methodology was built). All four reached a real, concluded
-  null result with nothing to build on and were archived to keep this repo uncluttered. Full
-  code, tests and commit history preserved there; see that repo's README for what each found.
-* **[eco_evolutionary_investment](eco_evolutionary_investment)** — evolves an
-  `offspring_investment_fraction` trait — how much energy a parent hands each offspring
-  at birth. Sustainability/coexistence solved; selection-driven drift **null** after
-  replication.
+  drift-vs-control replication methodology was built), and
+  `eco_evolutionary_investment` (Trial 6, `offspring_investment_fraction` — looked like the
+  one real exception after R9's n=3 prey separation hit the statistical ceiling, p=0.050, but
+  R10's extension to n=6 reversed it, p=0.120 — a small-sample artifact, not a real effect;
+  confirmed null, closing the family with no surviving exception). All five reached a real,
+  concluded null result with nothing to build on and were archived to keep this repo
+  uncluttered. Full code, tests and commit history preserved there; see that repo's README
+  for what each found.
 * **Moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive)** —
   `eco_evolutionary_cultural_plasticity` (Trial 8, gene-culture coevolution/dual
   inheritance), `eco_evolutionary_cultural_plasticity_seasonal` (Trial 9, the same

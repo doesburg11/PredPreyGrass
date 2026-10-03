@@ -21,7 +21,7 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 * **[Eco-evolutionary cooperation](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_cooperation)** *(archived — likely null, paused)*: evolves a `cooperation_rate` trait — the fraction of an agent's net energy gain donated to nearby same-species agents, relying on spatial viscosity (offspring spawn near parents) for implicit kin selection.
 
-* **[Eco-evolutionary investment](predpreygrass/evolutionary/eco_evolutionary_investment)**: evolves an `offspring_investment_fraction` trait — how much energy a parent hands each offspring at birth.
+* **[Eco-evolutionary investment](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_investment)** *(archived — null)*: evolves an `offspring_investment_fraction` trait — how much energy a parent hands each offspring at birth. Looked like the one real exception after a population-scaled run (R9) hit the n=3 statistical ceiling for prey (p=0.050); an n=6 extension (R10) reversed it (p=0.120) instead of confirming it — a small-sample artifact, not a real effect.
 
 * **[Eco-evolutionary metabolic rate](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_metabolic_rate)** *(archived — null)*: evolves a `metabolic_rate` trait that symmetrically scales both energy gain and basal energy cost.
 
