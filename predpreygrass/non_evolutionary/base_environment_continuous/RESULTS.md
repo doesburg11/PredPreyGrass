@@ -2,7 +2,7 @@
 
 ## Runs
 
-| Run | Folder (`~/simulation_results/ray_results/base_environment_continuous/base_environment_continuous_...`) | Start | Iterations | What | Status |
+| Run | Folder (`runs/base_environment_continuous_...`) | Start | Iterations | What | Status |
 |---|---|---|---:|---|---|
 | BE-01 | `2026-10-13_11-25-07_420466` | scratch | 3,000 | the milestone world (as AW-21 and AW-22 of `add_walls`) trained from scratch with this environment | completed |
 | BE-02 | `2026-10-13_11-25-27_332055` | scratch | 3,000 | replicate of BE-01 (new training randomness) | completed |
@@ -10,7 +10,7 @@
 Trained in the [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
 development repository; the run folders, launchers (`be01.py`, `be02.py`), evaluation
 script (`evaluate_be.sh`, which refers to that repository's paths) and outputs are
-in `~/simulation_results/ray_results/base_environment_continuous/`. AW-21 and AW-22
+in this module's `runs/` folder (gitignored). AW-21 and AW-22
 are runs of that repository's `add_walls` module.
 
 ## 1. Validation against add_walls (runs BE-01 and BE-02)

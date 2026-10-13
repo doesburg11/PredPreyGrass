@@ -1,9 +1,9 @@
 """PPO hyperparameters, resources, and run settings. Edit before training."""
 
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from pathlib import Path
 
-# This module's runs, under the output root all PredPreyGrass modules share.
-RUNS_DIR = RAY_RESULTS_DIR / "base_environment_continuous"
+# This module's runs: runs/ inside the module (gitignored).
+RUNS_DIR = Path(__file__).resolve().parents[1] / "runs"
 
 # {run_name} becomes <module>_<Amsterdam timestamp> when training starts.
 # Set an output directory to None to disable that output.

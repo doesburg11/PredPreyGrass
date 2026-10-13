@@ -63,17 +63,15 @@ From the repository root:
 python predpreygrass/non_evolutionary/base_environment_continuous/train.py
 python predpreygrass/non_evolutionary/base_environment_continuous/eval.py
 python predpreygrass/non_evolutionary/base_environment_continuous/tournament.py \
-    ~/simulation_results/ray_results/base_environment_continuous/<run> --every 300
+    predpreygrass/non_evolutionary/base_environment_continuous/runs/<run> --every 300
 python -m pytest predpreygrass/non_evolutionary/base_environment_continuous/tests
 ```
 
 Training and evaluation take no command-line arguments: edit the config
-files. Runs are saved in
-`~/simulation_results/ray_results/base_environment_continuous/`
-(`RAY_RESULTS_DIR` in `predpreygrass/global_config.py`), each with a copy of
-the code and settings it was started with in `source_code/`. Saving videos
-needs `imageio` and `imageio-ffmpeg` (`pip install imageio imageio-ffmpeg`);
-on a machine without a display, set `SDL_VIDEODRIVER=dummy`.
+files. Runs are saved in the module's `runs/` folder (gitignored;
+`RUNS_DIR` in `config/config_ppo.py`), each with a copy of the code and
+settings it was started with in `source_code/`. Videos are written with
+OpenCV (mp4v); on a machine without a display, set `SDL_VIDEODRIVER=dummy`.
 
 ## How the equivalence was checked
 
@@ -107,8 +105,7 @@ as AW-21 and AW-22 did with `add_walls`. They reached the same state: both
 species survived in 72 of 100 evaluation episodes (35 and 37 of 50 per
 run) against 71 of 100 for AW-21 and AW-22 (33 and 38 of 50), the same catch risk, populations and behaviour
 (predators waiting near grass), and the same arms race. Details in
-[RESULTS.md](RESULTS.md). Their run folders are in
-`~/simulation_results/ray_results/base_environment_continuous/`;
+[RESULTS.md](RESULTS.md). Their run folders are in `runs/`;
 `config/config_eval.py` plays BE-01's final policies by default.
 
 Training took 8–15% less wall time than with `add_walls` (about 9 hours
