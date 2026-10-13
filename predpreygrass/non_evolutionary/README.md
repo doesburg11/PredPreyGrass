@@ -30,6 +30,7 @@ This is the project's main line for the human-cooperation research angle (predat
 | Module | What it is |
 |---|---|
 | [`base_environment`](base_environment/) | The plain Predator-Prey-Grass environment: no sexes, no diet, no bands — the common ancestor everything else in this folder ultimately traces back to. |
+| [`base_environment_continuous`](base_environment_continuous/) | A continuous-space counterpart: predators and prey with steering physics on a torus, direction and speed actions, a movement energy cost, moving grass clusters. A standalone RLlib environment replacing the Aquarium package; trained, it shows a Red Queen arms race between predators and prey. See its `RESULTS.md`. |
 | [`base_environment_seasonal`](base_environment_seasonal/) | `base_environment` + grass regrowth cycling between an "abundant" and a "scarce" phase over an episode. |
 | [`base_environment_step_energy`](base_environment_step_energy/) | `base_environment` + a real movement energy cost (the base module charges the same per-step tax regardless of action; this module makes moving itself cost more). See its `RESULTS.md`. |
 | [`drive_conditioned_environment`](drive_conditioned_environment/) | `base_environment` + internal drive state conditioning behavior; still close to baseline by design, built incrementally. |
