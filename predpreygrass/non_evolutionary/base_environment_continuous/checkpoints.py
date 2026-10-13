@@ -115,6 +115,7 @@ def load_module(checkpoint, species):
     """The species' RLModule from a checkpoint, on the CPU, in evaluation
     mode."""
     from ray.rllib.core.rl_module.rl_module import RLModule
+    from ray.rllib.core.rl_module.torch.torch_rl_module import TorchRLModule
 
     path = Path(checkpoint) / "learner_group" / "learner" / "rl_module" / f"{species}_policy"
     try:
@@ -123,7 +124,7 @@ def load_module(checkpoint, species):
         if "numpy._core" not in str(error):
             raise
         module = None  # written under NumPy 2, read under NumPy 1.x
-    if not hasattr(module, "to"):
+    if not isinstance(module, TorchRLModule):
         # RLlib could not restore the network (its pickles were written
         # under another NumPy version) or fell back to a bare RLModule:
         # rebuild the default PPO network that train.py uses and load the
@@ -157,8 +158,8 @@ def rebuild_default_module(checkpoint, species, path):
         )
     env = PredPreyGrassContinuous(checkpoint_env_config(checkpoint))
     module = DefaultPPOTorchRLModule(
-        observation_space=env.observation_spaces[f"{species}_0"],
-        action_space=env.action_spaces[f"{species}_0"],
+        observation_space=env.get_observation_space(f"{species}_0"),
+        action_space=env.get_action_space(f"{species}_0"),
         inference_only=False,
         model_config=DefaultModelConfig(vf_share_layers=ppo["vf_share_layers"]),
     )
