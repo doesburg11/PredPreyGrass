@@ -1,7 +1,7 @@
 """A pygame viewer for PredPreyGrassContinuous.
 
-Draws the arena (grass, animals facing their direction of movement, energy
-bars, and the view cones of one predator and one prey), with the predator
+Draws the arena (grass, animals facing their direction of movement, and
+the view cones of one predator and one prey), with the predator
 and prey populations over the episode to its right. It only reads the
 environment's state and never draws random numbers, so watching an
 episode does not change it (SPEC.md, section 8). The look follows
@@ -224,14 +224,8 @@ class Viewer:
         # pygame rotates counterclockwise: a right-facing sprite leans up with
         # a positive angle, a left-facing one with a negative angle.
         image = pygame.transform.rotate(image, tilt if right else -tilt)
-        fraction = animal.energy / self.env.max_energy[species]
-        fill = round(30 * min(1.0, max(0.0, fraction)))
         for x, y in self._copies(animal.position.x, animal.position.y):
             self.canvas.blit(image, (x - image.get_width() // 2, y - image.get_height() // 2))
-            left = round(x - 15)
-            top = round(y - self.sprites[species].get_height() / 2 - 6)
-            pygame.draw.rect(self.canvas, (60, 60, 60), (left, top, 30, 4))
-            pygame.draw.rect(self.canvas, (40, 170, 60), (left, top, fill, 4))
 
     def _draw_population(self, surface):
         """Predator and prey counts over the episode: physics steps on the x

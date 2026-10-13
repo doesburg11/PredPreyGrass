@@ -42,7 +42,7 @@ candidates for a later, deliberate cleanup.
   play a trained checkpoint (or random actions) in a window, to an mp4, or
   without rendering.
 - [`render.py`](render.py): the pygame viewer (hunters and antelopes facing
-  their direction of movement, energy bars, grass, one predator's and one
+  their direction of movement, grass, one predator's and one
   prey's view cone, and the populations over the episode). It only reads
   the state, so watching never changes an episode.
 - [`tournament.py`](tournament.py): every predator checkpoint of a run

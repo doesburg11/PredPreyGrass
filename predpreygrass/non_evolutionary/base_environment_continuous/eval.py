@@ -75,13 +75,30 @@ def select_actions(modules, obs, generator, stochastic):
     return actions
 
 
-def open_video(out_dir, episode, fps):
+class VideoWriter:
     """An mp4 writer; frames are encoded as they come, not kept in memory."""
-    import imageio.v2 as imageio
 
+    def __init__(self, path, fps):
+        self.path, self.fps, self.writer = path, fps, None
+
+    def append_data(self, frame):
+        import cv2
+
+        if self.writer is None:
+            height, width = frame.shape[:2]
+            fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+            self.writer = cv2.VideoWriter(str(self.path), fourcc, self.fps, (width, height))
+        self.writer.write(cv2.cvtColor(np.ascontiguousarray(frame), cv2.COLOR_RGB2BGR))
+
+    def close(self):
+        if self.writer is not None:
+            self.writer.release()
+
+
+def open_video(out_dir, episode, fps):
     Path(out_dir).mkdir(parents=True, exist_ok=True)
     path = Path(out_dir) / f"episode_{episode}.mp4"
-    return path, imageio.get_writer(str(path), fps=fps, codec="libx264")
+    return path, VideoWriter(path, fps)
 
 
 def main():
@@ -126,7 +143,7 @@ def main():
                 frame = viewer.draw()
                 if video is not None:
                     video.append_data(frame)
-            counts = dict.fromkeys(
+            counts: dict[str, int] = dict.fromkeys(
                 ("caught", "predator_births", "prey_births", "predators_starved", "prey_starved", "grass_eaten"),
                 0,
             )
