@@ -1,18 +1,19 @@
 # requires NVIDIA driver >=595.45.04 for CUDA 13.2
 --extra-index-url https://download.pytorch.org/whl/cu132
-torch==2.13.0
+torch==2.14.1
 
-ray[rllib]==2.58.0
+ray[rllib]==2.59.0
 tensorboard==2.20.0
 
-numpy==1.26.4
-scipy==1.11.4
+numpy==2.4.6
+scipy==1.17.1
 Pillow>=10.0.0
 matplotlib==3.10.1
 opencv-python==4.11.0.86
 pygame==2.6.1
 gymnasium==1.2.2
 pandas==2.2.3
+requests>=2.30  # older requests caps urllib3<2 and makes pip downgrade it
 
 GPUtil # library for querying available GPUs
 psutil # for checking RAM

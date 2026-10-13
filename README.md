@@ -1,5 +1,5 @@
 [![Python 3.11.13](https://img.shields.io/badge/python-3.11.13-blue.svg)](https://www.python.org/downloads/release/python-31113/)
-[![RLlib](https://img.shields.io/badge/RLlib-v2.58.0-blue)](https://docs.ray.io/en/latest/rllib/)
+[![RLlib](https://img.shields.io/badge/RLlib-v2.59.0-blue)](https://docs.ray.io/en/latest/rllib/)
 [![Tests](https://github.com/doesburg11/PredPreyGrass/actions/workflows/linux-test.yml/badge.svg)](https://github.com/doesburg11/PredPreyGrass/actions/workflows/linux-test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -16,7 +16,7 @@
 - **Darwinian evolution** of inherited traits (speed, cooperation rate, metabolic rate, and more) via reproduction and mutation
 - **Baldwinian interaction** between evolution and learning tested directly — do genetic selection and learned behavior actually shape each other, or just coexist?
 - **Emergent cooperation, defection, reciprocity and coevolution**, studied under both evolving and fixed-trait agent populations
-- Built with Python, Gymnasium and RLlib 2.58's new API stack (`RLModule` / `Learner` / `EnvRunner`), with dynamic, lifecycle-changing agent populations
+- Built with Python, Gymnasium and RLlib 2.59's new API stack (`RLModule` / `Learner` / `EnvRunner`), with dynamic, lifecycle-changing agent populations
 
 **Start here:** [Quick start](#quick-start-run-a-demo-in-under-five-minutes) to run a demo in under five minutes, or the [headline result](#headline-result-sparse-rewards-beat-dense-rewards) below for the project's strongest empirical finding.
 
