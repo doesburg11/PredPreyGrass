@@ -23,8 +23,8 @@ analysis_env.py.) All runs in one invocation share the bank, so their comparison
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_shared_states \
-      --run K05_s42=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42 \
-      --run REF=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_REF_PEN02_MB1024_SEED42 \
+      --run K05_s42=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42 \
+      --run REF=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_REF_PEN02_MB1024_SEED42 \
       --checkpoints 19 24 29 --episodes 20
 """
 import argparse

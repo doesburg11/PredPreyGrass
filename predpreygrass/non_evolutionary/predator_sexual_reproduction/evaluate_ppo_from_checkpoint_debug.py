@@ -107,9 +107,8 @@ if __name__ == "__main__":
         checkpoint_path = os.path.expanduser(sys.argv[1])
     else:
         _run_dir = os.path.join(
-            os.path.expanduser("~"),
-            "simulation_results",
-            "ray_results",
+            os.path.dirname(os.path.abspath(__file__)),
+            "runs",
             "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42",
         )
         _trial = sorted(glob.glob(os.path.join(_run_dir, "PPO_PredPreyGrass_*/")))[0]
@@ -132,7 +131,7 @@ if __name__ == "__main__":
         "predator_female_policy": predator_female_path,
         "prey_policy": prey_path,
     }
-    rl_modules = {pid: RLModule.from_checkpoint(path) for pid, path in module_paths.items()}
+    rl_modules = {pid: RLModule.from_checkpoint(os.path.abspath(path)) for pid, path in module_paths.items()}
     print("Loaded RLModules:", list(rl_modules.keys()))
 
     seed = 42

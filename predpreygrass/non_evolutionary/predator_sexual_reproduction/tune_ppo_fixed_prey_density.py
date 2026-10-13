@@ -16,7 +16,7 @@ than a flag on the existing one, so nothing the existing tune script or any run 
 is touched by this experiment.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved
-under ~/simulation_results/ray_results/<experiment_name>/ for provenance.
+under this module's runs/<experiment_name>/ for provenance.
 """
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.fixed_prey_density_env import FixedPreyDensityEnv
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.fixed_predator_density_env import (
@@ -27,7 +27,6 @@ from predpreygrass.non_evolutionary.predator_sexual_reproduction.tune_ppo_predat
     EpisodeReturn,
     policy_mapping_fn,
 )
-from predpreygrass.global_config import RAY_RESULTS_DIR
 
 #  external libraries
 import argparse
@@ -182,7 +181,7 @@ if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
-    ray_results_path = Path(RAY_RESULTS_DIR).expanduser()
+    ray_results_path = Path(__file__).resolve().parent / "runs"
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
     experiment_name = args.name or f"PPO_FIXED_PREY_DENSITY{seed_tag}_{timestamp}"

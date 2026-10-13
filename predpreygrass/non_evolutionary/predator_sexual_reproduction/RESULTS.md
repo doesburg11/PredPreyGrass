@@ -96,7 +96,7 @@ then jump to whichever iteration number you need.
   (`fixed_prey_density_env.py`) that replenishes prey to a floor (20) after every step, to test the odds ablations without
   ecological collapse. Trained via a new script, `tune_ppo_fixed_prey_density.py`. `PPO_FIXED_PREY_DENSITY_SUCCESS_ONLY_SEED42`
   (women 90%/10%) and `..._EQUAL_ODDS_SEED42` (women 90%/5%), k=0.5, penalty 0.2, minibatch 1024, 300 iterations, seed 42.
-- **Iterations 12, 13, 15 run families** (all `PPO_FIXED_PREY_DENSITY_<CELL>_...` in `~/simulation_results/ray_results/`, cells CONTROL 20%/10%,
+- **Iterations 12, 13, 15 run families** (all `PPO_FIXED_PREY_DENSITY_<CELL>_...` in `runs/`, cells CONTROL 20%/10%,
   DEATHONLY 20%/5%, SUCCESSONLY 90%/10%, EQUALODDS 90%/5% for the women's odds; k=0.5, penalty 0.2, minibatch 1024, 300 iterations,
   prey floor 20, 50,000 prey IDs, seeds 42/43/44): `..._<CELL>_SEED<n>` (Iteration 12; EQUALODDS seed 42 is `..._CALIB3_EQUALODDS_SEED42`),
   `..._<CELL>_CAP26_SEED<n>` (Iteration 13, `predator_population_cap=26`), `..._<CELL>_DENS26_SEED<n>` (Iteration 15, `predator_density_target=26`).
@@ -104,8 +104,46 @@ then jump to whichever iteration number you need.
   given the men's hunting odds (success 0.90, death 0.05). **ABL_SUCCESS_ONLY** (`--female-success-prob 0.90 --female-death-prob 0.10`)
   and **ABL_DEATH_ONLY** (`--female-success-prob 0.20 --female-death-prob 0.05`), seed 42: single-factor variants.
 - **POSITIVE_CONTROL** (Iteration 0): extreme hunting odds, sparse reward. Not in the chart.
+- **CALIB_MATCHED / CALIB2_MATCHED** (Iteration 7, matched-ecology attempt): `PPO_PREDATOR_SEXUAL_REPRODUCTION_CALIB_MATCHED_SEED42`
+  and `..._CALIB2_MATCHED_SEED42`, the two abandoned supply-boost calibration runs (starting prey 8 → 24 and 8 → 40, grass and
+  grass regrowth raised with it; 50 and 80 iterations).
+- **FORAGING_CHECK aborted run** (Iteration 2): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42_ABORTED_PARTIAL`.
+- **SMOKE** (Iteration 11): `PPO_FIXED_PREY_DENSITY_SMOKE_SEED42`, the 20-iteration smoke test of the fixed prey-density environment.
+- **Density-target sweep** (designed in Iteration 15, reported in Iteration 16): `PPO_FIXED_PREY_DENSITY_<CELL>_DENS13_SEED42`
+  (CONTROL, SUCCESSONLY) and `..._<CELL>_DENS52_SEED<n>` (CONTROL seeds 42 and a partial 43, EQUALODDS and SUCCESSONLY seed 42);
+  stopped early when the module was closed.
 
 Unless a run family above says otherwise (seeds 43/44 exist for several), runs use seed 42.
+
+### Run folders
+
+All runs and analysis outputs are kept in this module's `runs/` folder (gitignored, so local to the training machine):
+
+- `runs/PPO_*`: one folder per training run listed above (76 in total).
+- `runs/analysis/`: the outputs, logs and launcher scripts of the analyses, by iteration:
+
+| Iteration | In `runs/analysis/` |
+|---|---|
+| 0-1 | `prey_approach_analysis_2026-09-19.json` (POSITIVE_CONTROL and REALISTIC approach bias) |
+| 2 | `foraging_rollout{9,14,19,29}.log`, `prey_approach_foraging_ckpt9_2026-09-20.json`, `eval_visual.log` (visual check with `evaluate_ppo_from_checkpoint_debug.py`) |
+| 3 | `penalty_rollout{9,14,19,24,29}.log` |
+| 4 | `penalty02_rollout{9,19,29}.log` |
+| 5 | `ab_speedtest/` (AB_MB1024, AB_EP10) |
+| 6 | `energy_sources/` |
+| 7 | `proportional_reward/` (REF, PROP k=0.2, PROP k=0.5 and its seeds); `matched_ecology/` (CALIB runs) |
+| 8 | `ablation_equal_odds/`, `ablation_split/` (ABL_SUCCESS_ONLY and ABL_DEATH_ONLY, seed 42) |
+| 9 | `no_penalty/` (A); `queue_3_4/` (B-D: shared states, ABL_FSUCC40/60, seeds 43/44 of the ablations) |
+| 10 | `death_surface/` |
+| 11 | `matched_ecology/` (SMOKE, SUCCESS_ONLY and EQUAL_ODDS in the fixed prey-density environment) |
+| 12 | `factorial/` |
+| 13 | `popcap_pilot/` |
+| 14 | `mate_contingency/`, `coordination_followup/` (pair fitness) |
+| 15 | `density_pilot/` |
+| 16 | `reanalysis/`, `density_sweep/` |
+| 17 | `counterfactual/` |
+
+Launcher scripts in these folders (`chain.sh` and others) still contain the paths of the time
+(`~/simulation_results/...`); they record how the runs were made and are not meant to be re-run as is.
 
 ---
 
@@ -176,7 +214,7 @@ expected value, survivable in the short-to-medium term) is needed to actually ob
 PPO can learn male/female specialization while both sexes survive long enough to reproduce.
 
 **Status:** complete, 100/100 iterations, no crashes. Raw data:
-`~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_POSITIVE_CONTROL_SEED42/`.
+`runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_POSITIVE_CONTROL_SEED42/`.
 
 **Adjustment → Iteration 1 (launched):** rather than invent a new synthetic intermediate death
 probability, use the module's own already-established realistic defaults directly — they're
@@ -225,7 +263,7 @@ shipped-default hunting odds, plus `reward_predator_catch_prey = 1.0` and
 paid to both sexes alike. GPU default setup. Ran 2026-09-19 23:45 to 2026-09-20 07:51 as unit
 `psr-foraging-check` (about 8 hours; 30 s/iteration at first, about 115 s late, as episodes
 lengthen). A first attempt with 100 iterations was stopped at iteration 26 and restarted with 300;
-its partial output is kept as `..._ABORTED_PARTIAL` in `ray_results`.
+its partial output is kept as `..._ABORTED_PARTIAL` in `runs/`.
 
 **Training curves** (block means, per episode):
 

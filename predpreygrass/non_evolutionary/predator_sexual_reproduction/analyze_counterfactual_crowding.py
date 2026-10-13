@@ -42,7 +42,7 @@ cell is not how real neighbors are distributed). It says nothing about training-
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_counterfactual_crowding \
-      --run CONTROL_s42=~/simulation_results/ray_results/PPO_FIXED_PREY_DENSITY_CONTROL_SEED42 --episodes 20
+      --run CONTROL_s42=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_FIXED_PREY_DENSITY_CONTROL_SEED42 --episodes 20
 """
 import argparse
 import glob

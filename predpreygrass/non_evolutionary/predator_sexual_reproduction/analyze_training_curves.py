@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
 
-ROOT = os.path.expanduser("~/simulation_results/ray_results")
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs")
 RUNS = {
     "REALISTIC (sparse reward)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42",
     "FORAGING (foraging reward)": "PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42",

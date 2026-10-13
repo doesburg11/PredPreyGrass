@@ -19,8 +19,8 @@ always-approach / always-avoid policies.
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_prey_approach_from_checkpoint \
-      --run POSCONTROL=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_POSITIVE_CONTROL_SEED42 \
-      --run REALISTIC=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42 \
+      --run POSCONTROL=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_POSITIVE_CONTROL_SEED42 \
+      --run REALISTIC=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_REALISTIC_SEED42 \
       --checkpoints 0 4 9 --episodes 40
 """
 import argparse
@@ -50,7 +50,7 @@ def load_modules(checkpoint_dir):
     from ray.rllib.core.rl_module.rl_module import RLModule
 
     root = os.path.join(checkpoint_dir, "learner_group", "learner", "rl_module")
-    return {pid: RLModule.from_checkpoint(os.path.join(root, pid)) for pid in POLICY_IDS}
+    return {pid: RLModule.from_checkpoint(os.path.abspath(os.path.join(root, pid))) for pid in POLICY_IDS}
 
 
 def module_probs(module, observations):

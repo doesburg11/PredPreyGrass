@@ -16,7 +16,7 @@ thin subclass of the environment that only adds bookkeeping; the environment fil
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_energy_sources \
-      --run FORAGING=~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42 \
+      --run FORAGING=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42 \
       --checkpoint 29 --episodes 20
 """
 import argparse

@@ -5,7 +5,7 @@ rendered with the viewer's renderer, written as an optimised GIF.
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.record_gif \
-      ~/simulation_results/ray_results/PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42/PPO_*/checkpoint_000029 \
+      predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_PREDATOR_SEXUAL_REPRODUCTION_PROP_K05_MB1024_SEED42/PPO_*/checkpoint_000029 \
       --steps 400 --every 5 --out predpreygrass/non_evolutionary/predator_sexual_reproduction/results_figures/trained_policies.gif
 """
 import argparse
@@ -41,7 +41,7 @@ def main():
 
     checkpoint = sorted(glob.glob(os.path.expanduser(args.checkpoint)))[0]
     root = os.path.join(checkpoint, "learner_group", "learner", "rl_module")
-    modules = {pid: RLModule.from_checkpoint(os.path.join(root, pid)) for pid in ("predator_male_policy", "predator_female_policy", "prey_policy")}
+    modules = {pid: RLModule.from_checkpoint(os.path.abspath(os.path.join(root, pid))) for pid in ("predator_male_policy", "predator_female_policy", "prey_policy")}
     env = make_instrumented_env(_find_run_config(checkpoint) or {})
     observations, _ = env.reset(seed=args.seed)
     active = list(observations.keys())

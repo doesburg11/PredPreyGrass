@@ -9,11 +9,10 @@ predator_creation_energy_threshold AND be within mate_search_radius of each
 other -- see predpreygrass_rllib_env.py and config_env.py for the mechanism.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved
-under ~/simulation_results/ray_results/<experiment_name>/ for provenance.
+under this module's runs/<experiment_name>/ for provenance.
 """
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.predator_sexual_reproduction.config_env import config_env
-from predpreygrass.global_config import RAY_RESULTS_DIR
 
 #  external libraries
 import argparse
@@ -328,7 +327,7 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    ray_results_path = Path(RAY_RESULTS_DIR).expanduser()
+    ray_results_path = Path(__file__).resolve().parent / "runs"
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
     experiment_name = args.name or f"PPO_PREDATOR_SEXUAL_REPRODUCTION{seed_tag}_{timestamp}"

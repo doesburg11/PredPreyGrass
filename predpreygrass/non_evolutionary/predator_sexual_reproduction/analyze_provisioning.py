@@ -26,7 +26,7 @@ whatever the rules; energy bands are fixed edges, not fitted.
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_sexual_reproduction.analyze_provisioning \
-      --run CONTROL_s42=~/simulation_results/ray_results/PPO_FIXED_PREY_DENSITY_CONTROL_SEED42 --episodes 30
+      --run CONTROL_s42=predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/PPO_FIXED_PREY_DENSITY_CONTROL_SEED42 --episodes 30
 """
 import argparse
 import glob

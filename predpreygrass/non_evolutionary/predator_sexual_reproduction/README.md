@@ -293,7 +293,7 @@ seeds at every odds setting tested this way.**
 | **ABL_FDEATH20 / ABL_FDEATH30** | As ABL_DEATH_ONLY with women's death chance 20% / 30% instead of 5% (two seeds each: 42, 43) | 300 | 1024 |
 | **SUCCESS_ONLY_MATCHED / EQUAL_ODDS_MATCHED** | As ABL_SUCCESS_ONLY / ABL_EQUAL_ODDS, but trained in `FixedPreyDensityEnv` (prey held near a floor of 20) instead of the base environment | 300 | 1024 |
 
-Run directories are `PPO_PREDATOR_SEXUAL_REPRODUCTION_<...>_SEED42` under `~/simulation_results/ray_results/` (see `RESULTS.md`
+Run directories are `PPO_PREDATOR_SEXUAL_REPRODUCTION_<...>_SEED42` under this module's `runs/` folder (gitignored; analysis outputs in `runs/analysis/`) (see `RESULTS.md`
 for the exact names). The penalty and proportional runs are diagnostics on the reward design, not proposed final rewards.
 
 ![Population over training](results_figures/population_over_training.png)
