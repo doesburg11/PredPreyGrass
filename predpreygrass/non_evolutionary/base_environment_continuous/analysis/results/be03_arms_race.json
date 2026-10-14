@@ -1,0 +1,73 @@
+{
+  "checkpoints": [
+    300,
+    900,
+    1800,
+    2100,
+    3000,
+    3990
+  ],
+  "episodes_per_matchup": 100,
+  "bootstrap_replicates": 10000,
+  "method": "Paired seed bootstrap: resample 100 seeds jointly across every matchup; Pointwise percentile 95% intervals (no multiplicity correction); ties count one half. Conditional on this one training run and these selected checkpoints; averages weight each checkpoint pair and opponent equally. Tournament resets environment and action generator with the same seed across all matchups. Positive catch-risk differences indicate improvement. Late analysis restricts both species and fixed opponents to >=2100.",
+  "full": {
+    "prey_improvement_share": {
+      "estimate": 0.7666666666666667,
+      "ci95": [
+        0.7333333333333333,
+        0.8222222222222222
+      ]
+    },
+    "predator_improvement_share": {
+      "estimate": 0.7111111111111111,
+      "ci95": [
+        0.6444444444444445,
+        0.7666666666666667
+      ]
+    },
+    "prey_mean_risk_reduction": {
+      "estimate": 0.7649286773044656,
+      "ci95": [
+        0.7220406327688794,
+        0.8042665579535238
+      ]
+    },
+    "predator_mean_risk_increase": {
+      "estimate": 0.3282438237685953,
+      "ci95": [
+        0.292211014268665,
+        0.36377836741795533
+      ]
+    }
+  },
+  "late": {
+    "prey_improvement_share": {
+      "estimate": 0.8888888888888888,
+      "ci95": [
+        0.6666666666666666,
+        1.0
+      ]
+    },
+    "predator_improvement_share": {
+      "estimate": 0.6666666666666666,
+      "ci95": [
+        0.5555555555555556,
+        0.7777777777777778
+      ]
+    },
+    "prey_mean_risk_reduction": {
+      "estimate": 0.29230336624338193,
+      "ci95": [
+        0.20915666775841715,
+        0.3747329090144154
+      ]
+    },
+    "predator_mean_risk_increase": {
+      "estimate": 0.09957236671767017,
+      "ci95": [
+        0.021605909588067764,
+        0.17847679355818588
+      ]
+    }
+  }
+}

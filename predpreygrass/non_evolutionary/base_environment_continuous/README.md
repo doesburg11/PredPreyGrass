@@ -119,3 +119,54 @@ so `checkpoints.py` then rebuilds RLlib's default PPO network, which
 trained weights, refusing any mismatch in their names or shapes. For BE-01
 the rebuilt policies give bit-identical outputs, and its 50-episode final
 check gives identical episodes in both repositories.
+
+## Arms-race test: BE-03
+
+BE-03 trained both species from scratch for 4,000 iterations. A cross-play
+tournament provides strong evidence of an arms race **within this run**:
+newer prey evade fixed predators better, and newer predators catch fixed
+prey better. Both trends persist in late training.
+
+![BE-03 arms-race test: improvement shares and 95% confidence intervals](../../../assets/images/readme/be03_arms_race.png)
+
+The tournament crossed six predator checkpoints with the same six prey
+checkpoints (iterations 300, 900, 1,800, 2,100, 3,000 and 3,990), playing
+100 episodes per matchup: **3,600 episodes** in total. Each matchup used
+the same 100 fresh evaluation seeds (10,000–10,099), with sampled actions
+and the saved training environment settings. Iteration 3,990 is the last
+numbered checkpoint in the 4,000-iteration run.
+
+Improvement means lower catch risk for newer prey against the same predator,
+or higher catch risk for newer predators against the same prey. Catch risk
+is prey caught per prey alive per 1,000 physics steps, pooled over episodes.
+The chart shows the fraction of checkpoint comparisons that improve,
+averaging equally over checkpoint pairs and fixed opponents (ties receive
+half credit). The full tournament gives **77% for prey (95% interval:
+73–82%)** and **71% for predators (64–77%)**.
+
+Restricting both species and their fixed opponents to iterations 2,100,
+3,000 and 3,990 gives **89% for prey (67–100%)** and **67% for predators
+(56–78%)**. All four intervals exceed the 50% no-directional-trend
+benchmark. Average catch-risk changes also support late improvement:
+newer prey reduce risk by 0.292 (95% interval: 0.209–0.375), while newer
+predators increase it by 0.100 (0.022–0.178), in the catch-risk units above.
+This supports continued co-adaptation through late training, with smaller
+late predator gains, rather than a complete plateau.
+
+Intervals use 10,000 paired-seed bootstrap replicates: each replicate
+resamples episode seeds jointly across every matchup, preserving the
+pairing and dependence between comparisons. These are pointwise 95%
+intervals without a multiplicity correction, conditional on this training
+run and these selected checkpoints. They quantify evaluation uncertainty;
+independent training runs are needed to establish repeatability.
+The numerical results are saved in
+[`analysis/results/be03_arms_race.json`](analysis/results/be03_arms_race.json).
+
+Reproduce the tournament from the repository root, with `RUN` set to
+`predpreygrass/non_evolutionary/base_environment_continuous/runs/base_environment_continuous_2026-10-14_00-27-11_018144`:
+
+```bash
+python -m predpreygrass.non_evolutionary.base_environment_continuous.tournament \
+    "$RUN" --iterations 300,900,1800,2100,3000,3990 \
+    --episodes 100 --seed 10000 --workers 30 --out "$RUN/tournament_100ep.csv"
+```
