@@ -44,7 +44,7 @@ outweighs the benefit it was meant to provide.
 
 **Full writeup — motivation, methodology, every module's results, and open
 questions — lives in
-[`predpreygrass/non_evolutionary/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/project_reward_shaping).**
+[`predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping).**
 
 ## Start here
 
@@ -68,7 +68,7 @@ git clone https://github.com/doesburg11/PredPreyGrass.git
 cd PredPreyGrass
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-python ./predpreygrass/non_evolutionary/base_environment_discrete/random_policy.py
+python ./predpreygrass/non_evolutionary/discrete_space/base_environment_discrete/random_policy.py
 ```
 
 This installs the base dependencies and runs a random policy in the base environment —

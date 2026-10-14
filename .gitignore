@@ -194,9 +194,9 @@ logs/**
 # RLlib training artifacts and generated experiment outputs
 ray_results/
 ray_results_failed/
-predpreygrass/non_evolutionary/base_environment_discrete/runs/
+predpreygrass/non_evolutionary/discrete_space/base_environment_discrete/runs/
 predpreygrass/non_evolutionary/base_environment_continuous/runs/
-predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/
+predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/runs/
 ray_results_archive/
 **/ray_results/
 **/ray_results_failed/
@@ -232,22 +232,22 @@ assets/images/video/*.mp4
 
 predpreygrass/evolutionary/eco_evolutionary_metabolic_rate_positive_control/runs/
 
-predpreygrass/non_evolutionary/base_environment_seasonal/runs/
+predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/runs/
 
-predpreygrass/non_evolutionary/base_environment_step_energy/runs/
+predpreygrass/non_evolutionary/discrete_space/base_environment_step_energy/runs/
 
-predpreygrass/non_evolutionary/drive_conditioned_environment/runs/
+predpreygrass/non_evolutionary/discrete_space/drive_conditioned_environment/runs/
 
-predpreygrass/non_evolutionary/predator_bands/runs/
+predpreygrass/non_evolutionary/discrete_space/predator_bands/runs/
 
-predpreygrass/non_evolutionary/predator_complementary_diet/runs/
+predpreygrass/non_evolutionary/discrete_space/predator_complementary_diet/runs/
 
-predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards/runs/
+predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_dense_rewards/runs/
 
-predpreygrass/non_evolutionary/project_reward_shaping/base_environment_dense_rewards_additive/runs/
+predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_dense_rewards_additive/runs/
 
-predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards/runs/
+predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_sparse_rewards/runs/
 
-predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_eating/runs/
+predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_sparse_rewards_plus_eating/runs/
 
-predpreygrass/non_evolutionary/project_reward_shaping/base_environment_sparse_rewards_plus_kickback/runs/
+predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_sparse_rewards_plus_kickback/runs/
