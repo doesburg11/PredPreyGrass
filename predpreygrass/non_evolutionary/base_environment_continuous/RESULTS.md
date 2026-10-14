@@ -6,8 +6,9 @@
 |---|---|---|---:|---|---|
 | BE-01 | `2026-10-13_11-25-07_420466` | scratch | 3,000 | the milestone world (as AW-21 and AW-22 of `add_walls`) trained from scratch with this environment | completed |
 | BE-02 | `2026-10-13_11-25-27_332055` | scratch | 3,000 | replicate of BE-01 (new training randomness) | completed |
+| BE-03 | `2026-10-14_00-27-11_018144` | scratch | 4,000 | the same world and settings, trained in this repository on 28 simulation workers (BE-01 and BE-02: 14) | completed |
 
-Trained in the [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
+BE-01 and BE-02 were trained in the [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
 development repository; the run folders, launchers (`be01.py`, `be02.py`), evaluation
 script (`evaluate_be.sh`, which refers to that repository's paths) and outputs are
 in this module's `runs/` folder (gitignored). AW-21 and AW-22
@@ -90,3 +91,79 @@ the same state as with `add_walls`: 72 of 100 episodes coexisting (two
 runs of 50) against 71 of 100, the same catch risk, populations and behaviour (predators
 waiting near grass, about 45% of catches there), and the same arms race.
 The environment can replace `add_walls` for this world.
+
+## 2. Arms race in three runs (BE-01, BE-02, BE-03)
+
+**Question.** BE-03's cross-play tournament showed newer prey evading fixed
+predators better and newer predators catching fixed prey better (README,
+"Arms-race test: BE-03"). Does that hold in independent training runs?
+
+**Method.** In each run, the predator and prey checkpoints 300, 600, ...,
+2,700 and 2,990 (every 300 iterations; 2,990 is BE-01's and BE-02's last)
+play against each other: 100 matchups of 100 episodes, seeds 10,000–10,099,
+sampled actions, 30,000 episodes in all. The three runs have the same
+environment and PPO settings (constant learning rate, 4,800 steps per
+iteration), so BE-03 up to iteration 2,990 is comparable with the other two.
+They differ in the number of simulation workers (28 against 14) and the Ray
+version (2.59 against 2.58). Catch risk, improvement shares and the
+paired-seed bootstrap are as in BE-03's test; "late" restricts both species
+and their fixed opponents to 2,100, 2,400, 2,700 and 2,990.
+[`analysis/arms_race_three_runs.py`](analysis/arms_race_three_runs.py)
+computes everything from the runs' `tournament_grid300_100ep.csv` and writes
+[`analysis/results/arms_race_three_runs.json`](analysis/results/arms_race_three_runs.json)
+and the figure.
+
+![Arms race in three runs: catch-risk matrices and improvement shares](../../../assets/images/readme/arms_race_three_runs.png)
+
+**Improvement shares** (% of comparisons against a fixed opponent in which
+the newer checkpoint does better; 95% intervals):
+
+| Run | Prey, all | Predators, all | Prey, late | Predators, late |
+|---|---:|---:|---:|---:|
+| BE-01 | 90 (88–91) | 80 (76–82) | 67 (50–79) | 75 (54–83) |
+| BE-02 | 96 (93–96) | 72 (68–75) | 92 (75–96) | 75 (58–88) |
+| BE-03 | 69 (64–72) | 72 (66–74) | 58 (42–71) | 83 (62–92) |
+
+**Mean catch-risk change** (prey: reduction by newer prey; predators:
+increase by newer predators; 95% intervals):
+
+| Run | Prey, all | Predators, all | Prey, late | Predators, late |
+|---|---:|---:|---:|---:|
+| BE-01 | 1.15 (1.12–1.18) | 0.56 (0.54–0.59) | 0.14 (0.07–0.21) | 0.08 (0.03–0.14) |
+| BE-02 | 1.27 (1.24–1.31) | 0.50 (0.47–0.53) | 0.36 (0.27–0.46) | 0.16 (0.08–0.24) |
+| BE-03 | 0.40 (0.37–0.42) | 0.27 (0.25–0.29) | 0.01 (−0.03–0.06) | 0.14 (0.07–0.20) |
+
+**Results.**
+
+- Over all checkpoints, both species improve against fixed opponents in all
+  three runs; every interval lies well above 50%.
+- Late in training (2,100–2,990), predators still improve in all three runs
+  (catch-risk intervals above zero). Prey still improve in BE-01 and BE-02;
+  in BE-03 the late window shows no clear evidence of prey improvement
+  (mean risk reduction 0.01, interval −0.03 to 0.06).
+- BE-03's prey make most of their gain between iterations 300 and 600: in
+  its catch-risk matrix, values within each predator row vary little and
+  without a clear trend across prey checkpoints from 600 on (against the
+  2,990 predator, 3.60 for prey 600 and 3.60 for prey 2,990).
+  In BE-01 and BE-02 newer prey keep getting harder to catch (against the
+  300 predator, catch risk falls from 6.78 to 1.03 and from 6.24 to 0.93).
+  BE-03's own 4,000-iteration tournament found its prey improving again
+  between iterations 3,000 and 3,990, beyond this grid.
+- Across the whole cross-play grid (all 100 matchups, not only the final
+  checkpoints), 7,143 of BE-03's 10,000 episodes reach the time limit with
+  both species alive, against 4,481 (BE-01) and 2,680 (BE-02).
+- Episodes are reproducible: the 2,500 matchup episodes each run shares with
+  an earlier five-checkpoint tournament (same seeds) are identical row for row.
+
+**Conclusion.** The same directional pattern appears in all three
+independent runs: newer predators catch fixed prey better and newer prey
+evade fixed predators better, as expected under an arms race between the
+two species (improvement against past opponents is consistent with
+co-adaptation, but does not by itself show that each species' improvement
+is driven by the other's). Predators improve up to iteration 2,990 in all
+three runs; for the prey this holds in BE-01 and BE-02, while BE-03's prey
+show no clear late improvement. Whether BE-03's difference comes from its
+28 simulation workers or is ordinary variation between runs cannot be told
+from three runs. The intervals are pointwise, without a multiplicity
+correction, and resample evaluation seeds within each run: they describe
+each run, not the variation between training runs.

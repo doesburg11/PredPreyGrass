@@ -48,6 +48,8 @@ candidates for a later, deliberate cleanup.
 - [`tournament.py`](tournament.py): every predator checkpoint of a run
   against every prey checkpoint, to see an arms race.
 - [`checkpoints.py`](checkpoints.py): a checkpoint's settings and policies.
+- [`analysis/arms_race_three_runs.py`](analysis/arms_race_three_runs.py):
+  the arms-race test over BE-01, BE-02 and BE-03 (tables, figure).
 - [`analysis/final_check.py`](analysis/final_check.py): final check of a
   trained checkpoint (outcomes, catch risk, populations, speed choices,
   time and catches near grass).
@@ -158,7 +160,7 @@ resamples episode seeds jointly across every matchup, preserving the
 pairing and dependence between comparisons. These are pointwise 95%
 intervals without a multiplicity correction, conditional on this training
 run and these selected checkpoints. They quantify evaluation uncertainty;
-independent training runs are needed to establish repeatability.
+the repeat over three runs is in the next section.
 The numerical results are saved in
 [`analysis/results/be03_arms_race.json`](analysis/results/be03_arms_race.json).
 
@@ -170,3 +172,27 @@ python -m predpreygrass.non_evolutionary.base_environment_continuous.tournament 
     "$RUN" --iterations 300,900,1800,2100,3000,3990 \
     --episodes 100 --seed 10000 --workers 30 --out "$RUN/tournament_100ep.csv"
 ```
+
+## Arms race in three runs
+
+The same test on an evenly spaced grid, repeated in BE-01, BE-02 and BE-03:
+in each run, checkpoints 300, 600, ..., 2,700 and 2,990 play against each
+other, 100 episodes per matchup with the same seeds (30,000 episodes in
+all). The three runs have the same environment and PPO settings; BE-03 is cut at 2,990 to
+match the others.
+
+![Arms race in three runs: catch-risk matrices and improvement shares](../../../assets/images/readme/arms_race_three_runs.png)
+
+The same directional pattern appears **in all three runs**: over all
+checkpoints, newer prey evade fixed predators better (90%, 96% and 69% of
+comparisons) and newer predators catch fixed prey better (80%, 72% and
+72%), all intervals well above 50%. Late in training (2,100–2,990)
+predators still improve in all three runs and prey in BE-01 and BE-02; for
+BE-03's prey, which make most of their gain by iteration 600, the late
+window shows no clear evidence of further improvement.
+Whether that comes from BE-03's 28 simulation workers (BE-01 and BE-02: 14)
+or is ordinary variation between runs is open. Details in
+[RESULTS.md](RESULTS.md), section 2; reproduce with
+`python -m predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_three_runs`
+after running `tournament.py` with `--iterations 300,600,900,1200,1500,1800,2100,2400,2700,2990
+--episodes 100 --seed 10000 --out <run>/tournament_grid300_100ep.csv` on each run.
