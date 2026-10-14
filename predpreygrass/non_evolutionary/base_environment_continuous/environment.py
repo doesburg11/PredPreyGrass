@@ -6,9 +6,10 @@ move, starve at zero energy and give birth at an energy threshold. Each
 agent chooses a direction and a speed, and observes the nearest animals and
 grass patch in its view cone, egocentrically.
 
-The dynamics reproduce add_walls (Aquarium 0.1.10 with its patches) in the
-milestone configuration exactly, including Aquarium's quirks (SPEC.md,
-section 9).
+With the default settings the dynamics reproduce add_walls (Aquarium 0.1.10
+with its patches) in the milestone configuration exactly, including
+Aquarium's quirks. Each quirk can be fixed with its own fix_* setting
+(SPEC.md, section 9); FIXES turns them all on.
 """
 
 import math
@@ -29,6 +30,8 @@ SPEEDS = (1.0, 0.5, 0.0)  # full, half, stopped
 SELF_SIZE = 4  # own vx, vy (/ top speed), sin and cos of own heading
 SLOT_SIZE = 6  # seen flag, dx, dy, distance (/ view distance), vx, vy
 GRASS_SIZE = 4  # seen flag, dx, dy, distance (/ view distance)
+# Below this speed an animal counts as stopped (fix_keep_heading_when_stopped).
+STOPPED_SPEED = 1e-6
 
 # The milestone world (runs AW-17 to AW-22).
 DEFAULT_CONFIG = {
@@ -90,7 +93,20 @@ DEFAULT_CONFIG = {
     "reproduction_max_prey": 100,
     "reproduction_predator_pool": 2000,
     "reproduction_prey_pool": 2000,
+    # Fixes of Aquarium's quirks (SPEC.md, section 9). All off reproduces
+    # add_walls exactly.
+    "fix_simultaneous_movement": False,
+    "fix_caught_prey_does_not_move": False,
+    "fix_keep_heading_when_stopped": False,
+    "fix_wrap_borders": False,
+    "fix_same_collisions_for_both": False,
+    "fix_all_contacts": False,
+    "fix_episode_length": False,
+    "fix_no_spare_spawn_draw": False,
 }
+
+# Every fix on: the cleaned-up world.
+FIXES = {key: True for key in DEFAULT_CONFIG if key.startswith("fix_")}
 
 GRASS_KEYS = (
     "count",
@@ -209,6 +225,10 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             self.pool[species] = c[f"reproduction_{species}_pool"]
         self.grass_gain = c["energy_grass_gain"]
         self.catch_efficiency = c["energy_catch_efficiency_predator"]
+        for key in FIXES:
+            if not isinstance(c[key], bool):
+                raise ValueError(f"{key} must be True or False")
+        self.fix = {key[len("fix_") :]: c[key] for key in FIXES}
         self._validate()
 
         self.obs_size = SELF_SIZE + SLOT_SIZE * (self.observe_count["predator"] + self.observe_count["prey"]) + GRASS_SIZE + 1
@@ -299,7 +319,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         self.prey = []
         for i in range(self.count["prey"]):
             position = Vector(spawn.randint(20, self.width - 20), spawn.randint(20, self.height - 20))
-            spawn.randint(150, 250)  # Aquarium's unused replication age
+            if not self.fix["no_spare_spawn_draw"]:
+                spawn.randint(150, 250)  # Aquarium's unused replication age
             self.prey.append(self._animal("prey", i, position))
         self.predators = []
         for i in range(self.count["predator"]):
@@ -373,17 +394,25 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         truncateds, infos, whether anyone was born)."""
         agents = list(self.active)
         catches = []  # (catching predator, prey energy at the catch)
-        for animal in list(self.entities):
-            desired = self._desired_velocity(actions[animal.id], animal)
-            if animal.species == "prey":
-                self._move_prey(animal, desired, catches)
-            else:
-                self._move_predator(animal, desired)
+        if self.fix["simultaneous_movement"]:
+            # Every contact from the positions at the start of the step,
+            # then every move.
+            moves = [(animal, *self._contacts(animal)) for animal in self.entities]
+            for animal, catcher, aways in moves:
+                self._move(animal, actions[animal.id], catcher, aways, catches)
+        else:
+            for animal in list(self.entities):
+                self._move(animal, actions[animal.id], *self._contacts(animal), catches)
 
         living = {a.id for a in self.predators} | {a.id for a in self.prey}
         terminateds = {agent: agent not in living for agent in agents}
         truncateds = {agent: False for agent in agents}
-        if self.time_step > self.max_time_steps or not self.prey or not self.predators:
+        if self.fix["episode_length"]:
+            # Exactly max_time_steps physics steps.
+            out_of_time = self.time_step + 1 >= self.max_time_steps
+        else:
+            out_of_time = self.time_step > self.max_time_steps
+        if out_of_time or not self.prey or not self.predators:
             truncateds = {agent: True for agent in agents}
         self.time_step += 1
         self.active = [agent for agent in agents if not (terminateds[agent] or truncateds[agent])]
@@ -436,6 +465,29 @@ class PredPreyGrassContinuous(MultiAgentEnv):
                 return other
         return None
 
+    def _contacts(self, animal):
+        """(catching predator or None, unit vectors pointing away from the
+        animals of its own species it bumps into), from the current
+        positions."""
+        catcher = self._first_contact(animal, self.predators) if animal.species == "prey" else None
+        own = self.prey if animal.species == "prey" else self.predators
+        if self.fix["all_contacts"]:
+            others = [
+                other
+                for other in own
+                if other is not animal and self.torus.distance(animal.position, other.position) < animal.radius + other.radius
+            ]
+        else:
+            other = self._first_contact(animal, own)
+            others = [] if other is None else [other]
+        aways = []
+        for other in others:
+            away = self.torus.away_vector(animal.position, other.position)
+            away.negate()
+            away.normalize()
+            aways.append(away)
+        return catcher, aways
+
     def _steer(self, animal, desired):
         """Acceleration towards the desired velocity: the steering force,
         limited, over the mass, rescaled to the effective maximum
@@ -453,47 +505,50 @@ class PredPreyGrassContinuous(MultiAgentEnv):
     def _finish_move(self, animal):
         animal.velocity.limit(animal.max_speed)
         animal.position.add(animal.velocity)
-        # Borders: set to the opposite edge, not wrapped (SPEC.md, 3.2).
-        if animal.position.x > self.width:
-            animal.position.x = 0
-        elif animal.position.x < 0:
-            animal.position.x = self.width
-        if animal.position.y > self.height:
-            animal.position.y = 0
-        elif animal.position.y < 0:
-            animal.position.y = self.height
-        animal.orientation = round(heading_degrees(animal.velocity), 1)
-
-    def _move_prey(self, prey, desired, catches):
-        catcher = self._first_contact(prey, self.predators)
-        if catcher is not None:
-            prey.alive = False
-            catches.append((catcher, prey.energy))
-        self._steer(prey, desired)
-        other = self._first_contact(prey, self.prey)
-        if other is None:
-            prey.velocity.add(prey.acceleration)
+        if self.fix["wrap_borders"]:
+            animal.position.x %= self.width
+            animal.position.y %= self.height
         else:
-            # A bump replaces the acceleration: a unit push away.
-            push = self.torus.away_vector(prey.position, other.position)
-            push.negate()
-            push.normalize()
-            prey.velocity.add(push)
-        self._finish_move(prey)
-        if catcher is not None:
-            self.entities.remove(prey)
-            self.prey.remove(prey)
+            # Borders: set to the opposite edge, not wrapped (SPEC.md, 3.2).
+            if animal.position.x > self.width:
+                animal.position.x = 0
+            elif animal.position.x < 0:
+                animal.position.x = self.width
+            if animal.position.y > self.height:
+                animal.position.y = 0
+            elif animal.position.y < 0:
+                animal.position.y = self.height
+        if not (self.fix["keep_heading_when_stopped"] and animal.velocity.mag() < STOPPED_SPEED):
+            animal.orientation = round(heading_degrees(animal.velocity), 1)
 
-    def _move_predator(self, predator, desired):
-        self._steer(predator, desired)
-        other = self._first_contact(predator, self.predators)
-        if other is not None:
-            push = self.torus.away_vector(predator.position, other.position)
-            push.negate()
-            push.set_mag(predator.max_speed / 8)
-            predator.acceleration.add(push)
-        predator.velocity.add(predator.acceleration)
-        self._finish_move(predator)
+    def _move(self, animal, action, catcher, aways, catches):
+        """One animal's update (SPEC.md, 3.2 and 3.3), given its contacts."""
+        desired = self._desired_velocity(action, animal)
+        if catcher is not None:
+            animal.alive = False
+            catches.append((catcher, animal.energy))
+            if self.fix["caught_prey_does_not_move"]:
+                self.entities.remove(animal)
+                self.prey.remove(animal)
+                return
+        self._steer(animal, desired)
+        if animal.species == "prey" and not self.fix["same_collisions_for_both"]:
+            if aways:
+                # A bump replaces the acceleration: a unit push away.
+                for away in aways:
+                    animal.velocity.add(away)
+            else:
+                animal.velocity.add(animal.acceleration)
+        else:
+            # A bump adds to the acceleration: a push of top speed / 8.
+            for away in aways:
+                away.mult(animal.max_speed / 8)
+                animal.acceleration.add(away)
+            animal.velocity.add(animal.acceleration)
+        self._finish_move(animal)
+        if catcher is not None:
+            self.entities.remove(animal)
+            self.prey.remove(animal)
 
     def _gain(self, animal, amount):
         animal.energy = min(self.max_energy[animal.species], animal.energy + amount)

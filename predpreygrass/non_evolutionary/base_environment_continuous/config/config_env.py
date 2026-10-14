@@ -75,4 +75,14 @@ config_env = {
     # Agent IDs per species, never reused within an episode.
     "reproduction_predator_pool": 2000,
     "reproduction_prey_pool": 2000,
+    # Fixes of Aquarium's quirks (SPEC.md, section 9). All False reproduces
+    # add_walls exactly; environment.FIXES turns them all on.
+    "fix_simultaneous_movement": False,  # Everyone moves on the same positions.
+    "fix_caught_prey_does_not_move": False,  # A caught prey is removed first.
+    "fix_keep_heading_when_stopped": False,  # The view cone stays put.
+    "fix_wrap_borders": False,  # Crossing an edge keeps the overshoot.
+    "fix_same_collisions_for_both": False,  # Prey bumps add to acceleration too.
+    "fix_all_contacts": False,  # A bump pushes away from every animal touched.
+    "fix_episode_length": False,  # Exactly max_time_steps physics steps.
+    "fix_no_spare_spawn_draw": False,  # No unused random draw per initial prey.
 }

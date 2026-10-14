@@ -22,10 +22,11 @@ predators, and grass in 20 small clusters. In that world predators and prey
 keep improving against each other for about 2,000 training iterations, a
 Red Queen arms race.
 
-This first version reproduces `add_walls` **exactly**, including
-Aquarium's quirks, so the results obtained there remain valid here.
-[SPEC.md](SPEC.md) records every rule, and in section 9 the quirks that are
-candidates for a later, deliberate cleanup.
+By default it reproduces `add_walls` **exactly**, including Aquarium's
+quirks, so the results obtained there remain valid here.
+[SPEC.md](SPEC.md) records every rule. Section 9 lists the quirks, each
+with a `fix_*` setting in `config/config_env.py` that removes it (all off by
+default; `environment.FIXES` turns them all on).
 
 ## Files
 

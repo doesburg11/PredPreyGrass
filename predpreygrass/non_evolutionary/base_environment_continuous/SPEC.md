@@ -18,8 +18,8 @@ respawn mode are left out.
 **Rule for this version.** Everything that affects the dynamics is
 reproduced exactly, including Aquarium's quirks (marked **quirk** below), so
 that results obtained with `add_walls` remain valid for the new environment.
-Quirks may be removed in a later version, but only deliberately, one at a
-time, and with validation runs. Section 9 lists the candidates.
+Each quirk can be removed with its own `fix_*` setting, all off by
+default (section 9); with every setting off the environment stays exact.
 
 ## 1. Arena, time and seeding
 
@@ -251,18 +251,23 @@ population chart) only draws the state and is reimplemented separately
 (`tests/test_environment.py` checks that an episode is the same with and
 without drawing).
 
-## 9. Quirks kept for now, candidates for a later cleanup
+## 9. Quirks and their fixes
 
-| Quirk | Effect | Possible fix |
-|---|---|---|
-| Sequential updates in list order | The first animals in the list move on stale positions of the others | Simultaneous update |
-| A caught prey still moves in its last step | Negligible | Remove before moving |
-| A stopped animal's heading resets to 0° | Its view cone jumps to +x when it stops | Keep the last heading at zero speed |
-| Borders set to 0 or 800 instead of wrapping | An animal crossing an edge loses the overshoot | Modulo |
-| A prey bump replaces its acceleration; a predator bump adds to it | Asymmetric collisions | One rule for both |
-| Only the first colliding animal counts for a bump | Crowds resolve unevenly | Sum over all contacts |
-| Episodes last up to 8,002 physics steps | Off by two | Check after incrementing |
-| A spare random draw per initial prey | None (keeps the stream) | Drop |
+Each quirk has a setting that removes it. All are off by default, which
+reproduces `add_walls` exactly; `environment.FIXES` turns them all on.
+
+| Quirk | Effect | Setting | With the fix |
+|---|---|---|---|
+| Sequential updates in list order | Later animals in the list react to positions already updated in this step | `fix_simultaneous_movement` | Catches and bumps of every animal are found from the positions at the start of the step (with the push directions), then every animal moves. A prey touched by several predators still goes to the first in the predator list (birth order) |
+| A caught prey still moves in its last step | Small; it can still bump other prey | `fix_caught_prey_does_not_move` | A caught prey is removed without moving |
+| A stopped animal's heading resets to 0° | Its view cone jumps to +x when it stops; a leftover speed of about 1e-9 points it in an arbitrary direction | `fix_keep_heading_when_stopped` | Below a speed of 1e-6 the heading stays as it was |
+| Borders set to 0 or 800 instead of wrapping | An animal crossing an edge loses the overshoot | `fix_wrap_borders` | Position modulo the arena size |
+| A prey bump replaces its acceleration; a predator bump adds to it | Asymmetric collisions | `fix_same_collisions_for_both` | Prey use the predators' rule: a push of top speed / 8 added to the acceleration |
+| Only the first colliding animal counts for a bump | Crowds resolve unevenly | `fix_all_contacts` | One push away from every animal of its species it touches, summed |
+| Episodes last up to 8,002 physics steps | Off by two | `fix_episode_length` | Truncated after exactly `max_time_steps` physics steps |
+| A spare random draw per initial prey | None (keeps the stream) | `fix_no_spare_spawn_draw` | Dropped; initial positions differ for the same seed |
+
+`tests/test_fixes.py` checks what each setting changes.
 
 ## 10. Verification
 
