@@ -41,7 +41,8 @@ where = ["."]
 include = ["predpreygrass*"]
 
 [tool.pytest.ini_options]
-testpaths = ["predpreygrass/evolutionary/eco_evolutionary_investment/tests"]
+testpaths = ["predpreygrass"]
+norecursedirs = ["runs", "ray_results*", "source_code", ".*", "__pycache__"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 
