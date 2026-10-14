@@ -7,7 +7,7 @@ the run had them) and writes an optimised GIF.
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_bands.record_gif \
-      ~/simulation_results/ray_results/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42/PPO_*/checkpoint_000019 \
+      predpreygrass/non_evolutionary/predator_bands/runs/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42/PPO_*/checkpoint_000019 \
       --steps 400 --every 4 --out predpreygrass/non_evolutionary/predator_bands/results_figures/trained_policies.gif
 """
 import argparse

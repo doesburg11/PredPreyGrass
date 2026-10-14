@@ -193,3 +193,8 @@ Training is applied in accordance with the RLlib new API stack protocol. The tra
 </p>
 
 A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.
+
+Training and frozen-opponent retraining save results in `runs/` beside these
+scripts. The checkpoint viewer also reads from this folder by default. Tournament,
+population-plot, and GIF scripts accept explicit run or checkpoint paths; point
+those arguments at the relocated files under `runs/`.

@@ -23,6 +23,7 @@ from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_spar
 # --- External libs ---
 import json
 import os
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_sparse_rewards_plus_eating.paths import RUNS_DIR
 import sys
 import types
 from datetime import datetime
@@ -106,13 +107,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "ray_results",
-        "PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_PLUS_EATING_2026-07-31_17-26-12",
-        "PPO_PredPreyGrass_29f27_00000_0_2026-07-31_17-26-12",
-        "checkpoint_000099",
-    )
+    checkpoint_path = str(RUNS_DIR / "PPO_BASE_ENVIRONMENT_SPARSE_REWARDS_PLUS_EATING_2026-07-31_17-26-12/PPO_PredPreyGrass_29f27_00000_0_2026-07-31_17-26-12/checkpoint_000099")
 
     # Minimal sanity checks
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")

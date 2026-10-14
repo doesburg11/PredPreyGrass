@@ -14,8 +14,8 @@ from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control
 from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # ==== CONFIG ====
-RAY_RESULTS_DIR = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/rllib_termination/experiments/"
-CHECKPOINT_PATH = "legacy/checkpoints_2025_11_01/checkpoint_000004"
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control.paths import RUNS_DIR as RAY_RESULTS_DIR
+CHECKPOINT_PATH = "PPO_ECO_EVOLUTION_METABOLIC_RATE_POSITIVE_CONTROL_2026-08-08_21-37-13/PPO_PredPreyGrass_8e669_00000_0_2026-08-08_21-37-14/checkpoint_000019"
 
 SAVE_MOVIE = False
 MOVIE_FILENAME = "eval_video.mp4"

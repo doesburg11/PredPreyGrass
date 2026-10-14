@@ -20,6 +20,8 @@ with everything else (RLlib-compliance fixes, resource config) held equal.
 from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.config_env import config_env
 
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.paths import RUNS_DIR
+
 #  external libraries
 from datetime import datetime
 import ray
@@ -218,6 +220,7 @@ if __name__ == "__main__":
         param_space=ppo.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
+            storage_path=str(RUNS_DIR),
             stop={"training_iteration": 1000},
             checkpoint_config=CheckpointConfig(
                 num_to_keep=100,

@@ -10,7 +10,7 @@ store at the end of a life is not subtracted, and shares given away are).
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_bands.analyze_female_meat_intake \
-      --run MEAT060_s42=~/simulation_results/ray_results/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42 --checkpoint 19 --episodes 20
+      --run MEAT060_s42=predpreygrass/non_evolutionary/predator_bands/runs/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42 --checkpoint 19 --episodes 20
 """
 import argparse
 import glob

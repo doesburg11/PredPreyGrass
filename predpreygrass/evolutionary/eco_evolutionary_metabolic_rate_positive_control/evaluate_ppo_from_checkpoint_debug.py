@@ -44,11 +44,8 @@ SAVE_MOVIE = False
 MOVIE_FILENAME = "simulation.mp4"
 MOVIE_FPS = 10
 
-from predpreygrass.global_config import RAY_RESULTS_DIR
-CHECKPOINT_ROOT = (
-    "PPO_ECO_EVOLUTION_2026-06-23_10-30-31/"
-    "PPO_PredPreyGrass_cc36a_00000_0_2026-06-23_10-30-31"
-)
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control.paths import RUNS_DIR as RAY_RESULTS_DIR
+CHECKPOINT_ROOT = "PPO_ECO_EVOLUTION_METABOLIC_RATE_POSITIVE_CONTROL_2026-08-08_21-37-13/PPO_PredPreyGrass_8e669_00000_0_2026-08-08_21-37-14"
 
 
 def env_creator(config):

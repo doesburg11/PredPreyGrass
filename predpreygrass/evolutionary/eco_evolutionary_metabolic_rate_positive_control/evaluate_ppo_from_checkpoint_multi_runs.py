@@ -4,6 +4,7 @@ from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control
 
 # external libraries
 import os
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control.paths import RUNS_DIR
 import json
 from datetime import datetime
 import ray
@@ -36,10 +37,7 @@ def policy_pi(observation, policy_module, deterministic=True):
 
 
 def setup_modules():
-    ray_results_dir = "/home/doesburg/Dropbox/02_marl_results/predpreygrass_results/ray_results/"
-    checkpoint_path = "v2_7_tune_default_benchmark/PPO_PredPreyGrass_86337_00000_0_2025-08-04_23-53-58/"
-    checkpoint_dir = "checkpoint_000099"
-    checkpoint_root = os.path.abspath(ray_results_dir + checkpoint_path + checkpoint_dir)
+    checkpoint_root = str(RUNS_DIR / "PPO_ECO_EVOLUTION_METABOLIC_RATE_POSITIVE_CONTROL_2026-08-08_21-37-13/PPO_PredPreyGrass_8e669_00000_0_2026-08-08_21-37-14/checkpoint_000019")
     rl_module_dir = os.path.join(checkpoint_root, "learner_group", "learner", "rl_module")
     module_paths = {
         pid: os.path.join(rl_module_dir, pid)

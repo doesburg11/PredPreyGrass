@@ -40,7 +40,7 @@ from predpreygrass.non_evolutionary.base_environment.master_tournament_matrix im
     read_training_iteration,
 )
 from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR
 
 # --- External libraries ---
 import argparse
@@ -76,7 +76,7 @@ def parse_args():
     )
     parser.add_argument(
         "--checkpoint-run-dir", type=str,
-        default=str(Path(RAY_RESULTS_DIR).expanduser() / "master_tournament_2026-09-06"
+        default=str(RUNS_DIR / "master_tournament_2026-09-06"
                     / "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"),
         help="Trial directory containing the checkpoint_* dirs to pull starting "
              "weights from (the original base_environment SEED42 run by default).",
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     ray.shutdown()
     ray.init(log_to_driver=True, ignore_reinit_error=True)
 
-    ray_results_path = Path(RAY_RESULTS_DIR).expanduser()
+    ray_results_path = RUNS_DIR
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
     experiment_name = args.name or (

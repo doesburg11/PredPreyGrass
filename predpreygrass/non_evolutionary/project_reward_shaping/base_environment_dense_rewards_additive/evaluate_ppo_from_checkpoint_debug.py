@@ -23,6 +23,7 @@ from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dens
 # --- External libs ---
 import json
 import os
+from predpreygrass.non_evolutionary.project_reward_shaping.base_environment_dense_rewards_additive.paths import RUNS_DIR
 import sys
 import types
 from datetime import datetime
@@ -106,13 +107,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "ray_results",
-        "PPO_BASE_ENVIRONMENT_DENSE_REWARDS_ADDITIVE_2026-07-30_21-13-43",
-        "PPO_PredPreyGrass_c7b59_00000_0_2026-07-30_21-13-43",
-        "checkpoint_000099",
-    )
+    checkpoint_path = str(RUNS_DIR / "PPO_BASE_ENVIRONMENT_DENSE_REWARDS_ADDITIVE_2026-07-30_21-13-43/PPO_PredPreyGrass_c7b59_00000_0_2026-07-30_21-13-43/checkpoint_000099")
 
     # Minimal sanity checks
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")

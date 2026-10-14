@@ -95,6 +95,6 @@ late nearest same-band distance and within-range share. Control: 36% / 21% / 28%
 Per-run settings and the behaviour and scatter tables are in `README.md`; the rollout analyses are logged in `~/simulation_results/band_behavior/*.log`
 (`behavior_*`, `scatter_*`, `female_meat_*`). Training figures quoted for viability, threat kills, lone-kill shares, repelled counts, shared meat and mammoth
 attempts and kills are block averages of the last logged block of the TensorBoard `ecology/*` scalars of the runs named `PPO_PREDATOR_BANDS_*`
-(`CALIB_*`, `COMPASS3_*`, `THREATS4*`, `THREATCAL*`, `THREATREST_*`, `SHARE_*`, `MAMMOTH*`) under `~/simulation_results/ray_results/`; those scalars are not
+(`CALIB_*`, `COMPASS3_*`, `THREATS4*`, `THREATCAL*`, `THREATREST_*`, `SHARE_*`, `MAMMOTH*`) under `predpreygrass/non_evolutionary/predator_bands/runs/`; those scalars are not
 reproduced elsewhere in the repository. A Codex fact check of a first draft of this file found several unsupported or overstated statements (the pair-only
 sweep, a merged sharing row, causal wording, the cohesion wording); they are corrected here.

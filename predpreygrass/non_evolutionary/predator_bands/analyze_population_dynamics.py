@@ -10,7 +10,7 @@ episodes with the same sign of best-lag correlation and the median dominant peri
 
 Example:
   python -m predpreygrass.non_evolutionary.predator_bands.analyze_population_dynamics \
-      --run MEAT060=~/simulation_results/ray_results/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42 --checkpoint 19 --episodes 6
+      --run MEAT060=predpreygrass/non_evolutionary/predator_bands/runs/PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42 --checkpoint 19 --episodes 6
 """
 import argparse
 import glob

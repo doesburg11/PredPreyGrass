@@ -20,6 +20,7 @@ from predpreygrass.non_evolutionary.base_environment_seasonal.utils.pygame_grid_
 
 # --- External libs ---
 import os
+from predpreygrass.non_evolutionary.base_environment_seasonal.paths import RUNS_DIR
 import sys
 import types
 
@@ -101,13 +102,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "ray_results",
-        "PPO_2026-06-17_22-06-02",
-        "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
-        "checkpoint_000099",
-    )
+    checkpoint_path = str(RUNS_DIR / "seasonal/BASE_ENV_SEASONAL_HIGH1.5_LOW0.5_2026-08-07_05-26-24/PPO_PredPreyGrass_c4c16_00000_0_2026-08-07_05-26-24/checkpoint_000049")
 
     # Minimal sanity checks
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")

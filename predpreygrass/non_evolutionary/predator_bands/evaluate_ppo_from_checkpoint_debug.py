@@ -24,6 +24,7 @@ from predpreygrass.non_evolutionary.predator_bands.utils.pygame_grid_renderer_rl
 import glob
 import json
 import os
+from predpreygrass.non_evolutionary.predator_bands.paths import RUNS_DIR
 import sys
 import types
 
@@ -107,7 +108,7 @@ if __name__ == "__main__":
         checkpoint_path = os.path.expanduser(sys.argv[1])
     else:
         _run_dir = os.path.join(
-            os.path.expanduser("~"), "simulation_results", "ray_results", "PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42"
+            str(RUNS_DIR), "PPO_PREDATOR_BANDS_CALIB_F008_MEAT060_SEED42"
         )
         _trial = sorted(glob.glob(os.path.join(_run_dir, "PPO_*/")))[0]
         checkpoint_path = os.path.join(_trial, "checkpoint_000019")

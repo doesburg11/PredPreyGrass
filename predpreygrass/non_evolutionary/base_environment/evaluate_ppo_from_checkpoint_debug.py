@@ -18,6 +18,8 @@ from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_
     LoopControlHelper,
 )
 
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR
+
 # --- External libs ---
 import os
 import sys
@@ -102,8 +104,7 @@ if __name__ == "__main__":
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
     checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "ray_results",
+        str(RUNS_DIR),
         "PPO_2026-06-17_22-06-02",
         "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
         "checkpoint_000099",

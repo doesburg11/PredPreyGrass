@@ -31,7 +31,7 @@ import argparse
 import json
 import shutil
 from typing import Any
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control.paths import RUNS_DIR as RAY_RESULTS_DIR
 
 
 def parse_args():

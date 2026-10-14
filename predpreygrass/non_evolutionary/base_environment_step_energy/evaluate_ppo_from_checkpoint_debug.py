@@ -20,6 +20,7 @@ from predpreygrass.non_evolutionary.base_environment_step_energy.utils.pygame_gr
 
 # --- External libs ---
 import os
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
 import sys
 import types
 
@@ -103,14 +104,7 @@ if __name__ == "__main__":
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
     # Final checkpoint (iteration ~500) of the validated default configuration: predator move
     # cost eased to 0.08, seed 42 -- see RESULTS.md sections 11-12.
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "simulation_results",
-        "ray_results",
-        "PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42",
-        "PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45",
-        "checkpoint_000049",
-    )
+    checkpoint_path = str(RUNS_DIR / "PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45/checkpoint_000049")
 
     # Minimal sanity checks
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")

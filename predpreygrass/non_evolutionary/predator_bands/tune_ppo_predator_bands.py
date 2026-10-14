@@ -9,11 +9,11 @@ predator_creation_energy_threshold AND be within mate_search_radius of each
 other -- see predpreygrass_rllib_env.py and config_env.py for the mechanism.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved
-under ~/simulation_results/ray_results/<experiment_name>/ for provenance.
+under predpreygrass/non_evolutionary/predator_bands/runs/<experiment_name>/ for provenance.
 """
 from predpreygrass.non_evolutionary.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.predator_bands.config_env import config_env
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from predpreygrass.non_evolutionary.predator_bands.paths import RUNS_DIR as RAY_RESULTS_DIR
 
 #  external libraries
 import argparse
@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument(
         "--name", type=str, default=None,
         help="Override the auto-generated experiment name (used as the Tune "
-             "RunConfig name and the ray_results subdirectory).",
+             "RunConfig name and the runs subdirectory).",
     )
     parser.add_argument(
         "--max-iters", type=int, default=1000,

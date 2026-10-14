@@ -12,6 +12,8 @@ equivalent additive-cost keys.
 and the mean predator count. Writes clustering_density_data/dose_<kind>_<seed>.json.
 Analysis (random-placement null, density-adjusted test): analyze_clustering_density.py.
 """
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, math, glob, os
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -19,7 +21,7 @@ import numpy as np, torch
 torch.set_num_threads(1)
 from ray.rllib.core.rl_module.rl_module import RLModule
 
-RR = os.path.expanduser("~/simulation_results/ray_results")
+RR = str(RUNS_DIR)
 EVAL_SEEDS = list(range(100, 130))
 CK = "checkpoint_000029"
 
@@ -28,10 +30,10 @@ def root_for(task):
     if kind == "runA": return glob.glob(f"{RR}/PPO_STEP_ENERGY_ADDITIVE_CONFIRM500_SEED42/PPO_*")[0]
     if kind == "freerest":  return glob.glob(f"{RR}/PPO_STEP_ENERGY_CONFIRM500_SEED42/PPO_*")[0]
     if seed == 42:
-        return (f"{RR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
+        return (f"{BASE_RUNS_DIR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
                 if kind == "base" else f"{RR}/PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45")
     name = f"PPO_BASE_ENVIRONMENT_SEED{seed}_MULTISEED" if kind == "base" else f"PPO_STEP_ENERGY_RUNB_SEED{seed}_MULTISEED"
-    return glob.glob(f"{RR}/{name}/PPO_*")[0]
+    return glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{name}/PPO_*")[0]
 
 OVERRIDES = {"runA": {"move_energy_cost_per_step_predator": 0.10},
              "freerest": {"homeostatic_energy_cost_per_step_predator": 0.0, "homeostatic_energy_cost_per_step_prey": 0.0,

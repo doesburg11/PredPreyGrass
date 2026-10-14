@@ -10,9 +10,11 @@ deterministic (greedy) evaluation episodes each (environment reset seeds 100-129
 one Clark-Evans index R per episode (predators; R < 1 clustered, R = 1 random, R > 1 dispersed;
 expected nearest-neighbour distance under CSR = 0.5 * sqrt(area / N), area = 25*25).
 Writes clustering_seed<seed>.json next to this file. Checkpoint paths are those used in this
-investigation (ray_results under ~/simulation_results); seed 42 uses the pre-existing runs.
+investigation (module-local runs folders); seed 42 uses the pre-existing runs.
 Consolidated raw results for all six seeds: clustering_results.json.
 """
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, math, glob, os
 os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
@@ -20,19 +22,19 @@ import torch
 torch.set_num_threads(1)
 from ray.rllib.core.rl_module.rl_module import RLModule
 
-RR = os.path.expanduser("~/simulation_results/ray_results")
+RR = str(RUNS_DIR)
 N_EPISODES = 30
 EVAL_SEEDS = list(range(100, 100 + N_EPISODES))
 
 def ckpt_dir(kind, seed, ckpt="checkpoint_000029"):
     if seed == 42:
         if kind == "base":
-            root = f"{RR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
+            root = f"{BASE_RUNS_DIR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"
         else:
             root = f"{RR}/PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45"
     else:
         name = f"PPO_BASE_ENVIRONMENT_SEED{seed}_MULTISEED" if kind == "base" else f"PPO_STEP_ENERGY_RUNB_SEED{seed}_MULTISEED"
-        root = glob.glob(f"{RR}/{name}/PPO_*")[0]
+        root = glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{name}/PPO_*")[0]
     return f"{root}/{ckpt}"
 
 def load_modules(path):

@@ -7,13 +7,13 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 and prey separately.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved under
-~/simulation_results/ray_results/<experiment_name>/ for provenance -- see
+base_environment/runs/<experiment_name>/ for provenance -- see
 --seed and --name below, and drive_conditioned_environment/tune_ppo_drive_conditioned_environment.py
 for the counterpart run this script is meant to be compared against.
 """
 from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR
 
 #  external libraries
 import argparse
@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument(
         "--name", type=str, default=None,
         help="Override the auto-generated experiment name (used as the Tune "
-             "RunConfig name and the ray_results subdirectory).",
+             "RunConfig name and the runs subdirectory).",
     )
     parser.add_argument(
         "--max-iters", type=int, default=1000,
@@ -248,7 +248,7 @@ if __name__ == "__main__":
         ignore_reinit_error=True,
     )
 
-    ray_results_path = Path(RAY_RESULTS_DIR).expanduser()
+    ray_results_path = RUNS_DIR
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     seed_tag = f"_SEED{args.seed}" if args.seed is not None else ""
     experiment_name = args.name or f"PPO_BASE_ENVIRONMENT{seed_tag}_{timestamp}"

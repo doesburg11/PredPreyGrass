@@ -1,7 +1,7 @@
 """
 Six-seed population comparison, base_environment vs base_environment_step_energy (see RESULTS.md section 19).
 
-Reads each run's Ray Tune result.json under ~/simulation_results/ray_results (seed 42 uses the
+Reads each run's Ray Tune result.json under the environment modules' runs folders (seed 42 uses the
 pre-existing runs, seeds 43-47 the multi-seed runs) and prints:
   - the population table for training iterations 201-300 (predator extinction rate, predators, prey,
     episode length; averaged over iterations that logged a completed episode)
@@ -11,6 +11,8 @@ pre-existing runs, seeds 43-47 the multi-seed runs) and prints:
 
 Usage: python analyze_populations.py
 """
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
 import glob
 import json
 import math
@@ -19,7 +21,7 @@ import os
 import numpy as np
 from scipy.stats import mannwhitneyu, wilcoxon
 
-RR = os.path.expanduser("~/simulation_results/ray_results")
+RR = str(RUNS_DIR)
 HERE = os.path.dirname(os.path.abspath(__file__))
 SEEDS = [42, 43, 44, 45, 46, 47]
 
@@ -27,12 +29,12 @@ SEEDS = [42, 43, 44, 45, 46, 47]
 def result_path(kind, seed):
     if seed == 42:
         if kind == "base":
-            return (f"{RR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/"
+            return (f"{BASE_RUNS_DIR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/"
                     "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45/result.json")
         return glob.glob(f"{RR}/PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_*/result.json")[0]
     name = (f"PPO_BASE_ENVIRONMENT_SEED{seed}_MULTISEED" if kind == "base"
             else f"PPO_STEP_ENERGY_RUNB_SEED{seed}_MULTISEED")
-    return glob.glob(f"{RR}/{name}/PPO_*/result.json")[0]
+    return glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{name}/PPO_*/result.json")[0]
 
 
 def get(rec, key):

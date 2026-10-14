@@ -10,18 +10,20 @@ torch seeded per episode), CPU-only, and records per episode the number of steps
 predator population went extinct, the final predator count and the mean predator count.
 Writes sampled_action_data/sampled_<kind>_<seed>.json. Greedy counterparts: clustering_density_data/.
 """
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, glob, os
 os.environ["OMP_NUM_THREADS"]="1"; os.environ["CUDA_VISIBLE_DEVICES"]=""
 import numpy as np, torch
 torch.set_num_threads(1)
 from ray.rllib.core.rl_module.rl_module import RLModule
-RR=os.path.expanduser("~/simulation_results/ray_results"); CK="checkpoint_000029"; SEEDS=list(range(100,130))
+RR=str(RUNS_DIR); CK="checkpoint_000029"; SEEDS=list(range(100,130))
 def root(kind,seed):
     if seed==42:
-        return (f"{RR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45" if kind=="base"
+        return (f"{BASE_RUNS_DIR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45" if kind=="base"
                 else f"{RR}/PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_PredPreyGrass_eed47_00000_0_2026-09-17_07-30-45")
     n=f"PPO_BASE_ENVIRONMENT_SEED{seed}_MULTISEED" if kind=="base" else f"PPO_STEP_ENERGY_RUNB_SEED{seed}_MULTISEED"
-    return glob.glob(f"{RR}/{n}/PPO_*")[0]
+    return glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{n}/PPO_*")[0]
 kind,seed=sys.argv[1],int(sys.argv[2])
 if kind=="base":
     from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass as Env

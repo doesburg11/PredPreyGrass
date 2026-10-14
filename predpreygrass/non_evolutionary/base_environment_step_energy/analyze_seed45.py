@@ -1,7 +1,7 @@
 """
 Why did base_environment_step_energy seed 45 fail to establish a predator population? (RESULTS.md section 20)
 
-Reads the runs' Ray result logs under ~/simulation_results/ray_results (training-time policy entropy,
+Reads the runs' Ray result logs under the environment modules' runs folders (training-time policy entropy,
 predator births per episode, predator training samples per iteration) plus the saved evaluation data in
 clustering_density_data/ (greedy) and sampled_action_data/ (actions sampled from the policy), and prints:
   - predator and prey policy entropy by training window (ln 9 = 2.197 is a uniform-random policy)
@@ -11,6 +11,8 @@ clustering_density_data/ (greedy) and sampled_action_data/ (actions sampled from
 
 Usage: python analyze_seed45.py
 """
+from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
 import glob
 import json
 import math
@@ -18,7 +20,7 @@ import os
 
 import numpy as np
 
-RR = os.path.expanduser("~/simulation_results/ray_results")
+RR = str(RUNS_DIR)
 HERE = os.path.dirname(os.path.abspath(__file__))
 SEEDS = [42, 43, 44, 45, 46, 47]
 WINDOWS = [(0, 50), (50, 100), (100, 150), (150, 200), (200, 250), (250, 300)]
@@ -27,12 +29,12 @@ WINDOWS = [(0, 50), (50, 100), (100, 150), (150, 200), (200, 250), (250, 300)]
 def result_path(kind, seed):
     if seed == 42:
         if kind == "base":
-            return (f"{RR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/"
+            return (f"{BASE_RUNS_DIR}/base_v_drive_2026-09-06/PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45/"
                     "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45/result.json")
         return glob.glob(f"{RR}/PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42/PPO_*/result.json")[0]
     name = (f"PPO_BASE_ENVIRONMENT_SEED{seed}_MULTISEED" if kind == "base"
             else f"PPO_STEP_ENERGY_RUNB_SEED{seed}_MULTISEED")
-    return glob.glob(f"{RR}/{name}/PPO_*/result.json")[0]
+    return glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{name}/PPO_*/result.json")[0]
 
 
 LOGS = {(k, s): [json.loads(line) for line in open(result_path(k, s))] for k in ("step", "base") for s in SEEDS}

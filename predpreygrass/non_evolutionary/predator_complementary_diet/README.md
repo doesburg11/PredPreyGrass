@@ -21,7 +21,7 @@ they are calibration evidence, not a verdict.
 extinction in the last blocks was 93% (meat share 0.10), 99% (0.15) and 94% (0.20), with episodes of ~430 / ~196 / ~116 steps and ~10-13 female
 meat-deficiency deaths per episode; the mate gift fired less than once per episode (a recorded mate exists only after a first birth). No meat share
 gave a viable population in this pair-only design, which is why the band-sharing module `predator_bands` was built.
-Run names: `PPO_PREDATOR_COMPLEMENTARY_DIET_*` under `~/simulation_results/ray_results/`.
+Run names: `PPO_PREDATOR_COMPLEMENTARY_DIET_*` under `predpreygrass/non_evolutionary/predator_complementary_diet/runs/`.
 
 ## What is new
 

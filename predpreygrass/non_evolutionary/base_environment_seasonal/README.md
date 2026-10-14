@@ -50,14 +50,14 @@ bash predpreygrass/non_evolutionary/base_environment_seasonal/run_season_multipl
 
 Each regime is launched via `tune_ppo_base_environment_seasonal.py --season-high H --season-low
 L --max-iters 500`, tagging the experiment name (`BASE_ENV_SEASONAL_HIGH<h>_LOW<l>_<timestamp>`)
-so results land in distinct `~/ray_results` directories. The training script's `EpisodeReturn`
+so results land in distinct `predpreygrass/non_evolutionary/base_environment_seasonal/runs` directories. The training script's `EpisodeReturn`
 callback also logs, per episode, via `metrics_logger`: `predator_births` / `prey_births` (read
 directly off the env's own `_next_predator_idx`/`_next_prey_idx` counters — the primary metric
 of interest for this sweep), plus `predator_count_end` / `prey_count_end` / `grass_count_end` /
 `grass_energy_mean_end` (end-of-episode population/resource snapshot).
 
 **Status: complete.** All 6 regimes finished (~44h total), zero crashes. Results are in
-`~/ray_results/seasonal/`.
+`predpreygrass/non_evolutionary/base_environment_seasonal/runs/seasonal/`.
 
 **Final comparison**, last-50-of-500-iteration averages, single seed per regime (not
 replicated — see caveat below):

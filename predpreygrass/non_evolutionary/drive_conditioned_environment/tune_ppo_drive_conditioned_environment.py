@@ -7,7 +7,7 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 and prey separately.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved under
-~/simulation_results/ray_results/<experiment_name>/ for provenance -- see --seed,
+predpreygrass/non_evolutionary/drive_conditioned_environment/runs/<experiment_name>/ for provenance -- see --seed,
 --name and --drive-set below. --drive-set selects which arm of the
 baseline-vs-drive-conditioned comparison this run represents (see README.md):
 "full" (all 5 drives, the module default), "energy_only" (just
@@ -19,7 +19,7 @@ baseline when drives are off).
 """
 from predpreygrass.non_evolutionary.drive_conditioned_environment.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.drive_conditioned_environment.config_env import config_env
-from predpreygrass.global_config import RAY_RESULTS_DIR
+from predpreygrass.non_evolutionary.drive_conditioned_environment.paths import RUNS_DIR as RAY_RESULTS_DIR
 
 #  external libraries
 import argparse
@@ -75,7 +75,7 @@ def parse_args():
     parser.add_argument(
         "--name", type=str, default=None,
         help="Override the auto-generated experiment name (used as the Tune "
-             "RunConfig name and the ray_results subdirectory).",
+             "RunConfig name and the runs subdirectory).",
     )
     parser.add_argument(
         "--drive-set", choices=sorted(DRIVE_SETS), default="full",

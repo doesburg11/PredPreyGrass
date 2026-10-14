@@ -20,6 +20,7 @@ from predpreygrass.non_evolutionary.drive_conditioned_environment.utils.pygame_g
 
 # --- External libs ---
 import os
+from predpreygrass.non_evolutionary.drive_conditioned_environment.paths import RUNS_DIR
 import sys
 import types
 
@@ -101,13 +102,7 @@ if __name__ == "__main__":
     register_env("PredPreyGrass", lambda config: env_creator(config))
 
     # --- Set your checkpoint path (directory that contains 'learner_group/learner/rl_module/...' ) ---
-    checkpoint_path = os.path.join(
-        os.path.expanduser("~"),
-        "ray_results",
-        "PPO_2026-06-17_22-06-02",
-        "PPO_PredPreyGrass_f6de4_00000_0_2026-06-17_22-06-02",
-        "checkpoint_000099",
-    )
+    checkpoint_path = str(RUNS_DIR / "base_v_drive_2026-09-06/PPO_DRIVE_CONDITIONED_FULL_SEED42_2026-09-06_07-26-38/PPO_PredPreyGrass_88c36_00000_0_2026-09-06_07-26-38/checkpoint_000099")
 
     # Minimal sanity checks
     expected_rlmodule_root = os.path.join(checkpoint_path, "learner_group", "learner", "rl_module")
