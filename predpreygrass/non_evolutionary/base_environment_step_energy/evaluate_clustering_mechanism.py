@@ -15,7 +15,7 @@ Writes clustering_mechanism_data/mech_<kind>_<seed>.json.
 Analysis: analyze_clustering_mechanism.py.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, math, glob, os
 os.environ["OMP_NUM_THREADS"] = "1"; os.environ["CUDA_VISIBLE_DEVICES"] = ""
 import numpy as np, torch
@@ -108,8 +108,8 @@ def run_episode(Env, cfg, mods, seed):
 if __name__ == "__main__":
     kind, seed = sys.argv[1], int(sys.argv[2])
     if kind == "base":
-        from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass as Env
-        from predpreygrass.non_evolutionary.base_environment.config_env import config_env as cfg
+        from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass as Env
+        from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env as cfg
     else:
         from predpreygrass.non_evolutionary.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass as Env
         from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env as cfg

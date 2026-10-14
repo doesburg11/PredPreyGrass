@@ -14,7 +14,7 @@ config_env = {
     # one PredPreyGrass grid step: ~1000 decisions per episode. A physics
     # step with a birth ends its decision early.
     "action_repeat": 8,
-    # Initial populations (PredPreyGrass base_environment: 6 and 8).
+    # Initial populations (PredPreyGrass base_environment_discrete: 6 and 8).
     "predator_count": 6,
     "prey_count": 8,
     # Movement, in arena units per physics step. Prey are a little faster.
@@ -50,7 +50,7 @@ config_env = {
     "grass_overgrazing": True,
     "grass_overgrazing_threshold": 0.0,
     "grass_overgrazing_delay": 400,
-    # Energy, in PredPreyGrass base_environment units per physics step (its
+    # Energy, in PredPreyGrass base_environment_discrete units per physics step (its
     # per-step rates divided by 8). 75% of the cost at full speed comes from
     # movement, linear in speed (Taylor, Heglund & Maloiy 1982).
     "energy_predator_initial": 5.0,

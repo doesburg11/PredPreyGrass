@@ -47,7 +47,7 @@ These environments layer a genuine evolutionary algorithm — founder genome, mu
 
 These environments hold every agent trait fixed and instead vary the interaction mechanics or reward shaping. Agents are still born, reproduce, and die, but nothing is inherited or mutated — only the RL policy adapts, converging on a behavioral equilibrium (cooperate, defect, share, reciprocate) under a given incentive design.
 
-* **[Base environment](predpreygrass/non_evolutionary/base_environment)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass))
+* **[Base environment](predpreygrass/non_evolutionary/base_environment_discrete)**: the two-policy base environment. Only reproduction rewards. ([results](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass))
 
 * **[Base environment, seasonal](predpreygrass/non_evolutionary/base_environment_seasonal)**: same mechanics as the base environment, plus a seasonal grass-regrowth cycle (a square wave alternating "abundant" and "scarce" phases over the episode) instead of a flat regrowth rate.
 

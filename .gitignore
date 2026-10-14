@@ -194,7 +194,7 @@ logs/**
 # RLlib training artifacts and generated experiment outputs
 ray_results/
 ray_results_failed/
-predpreygrass/non_evolutionary/base_environment/runs/
+predpreygrass/non_evolutionary/base_environment_discrete/runs/
 predpreygrass/non_evolutionary/base_environment_continuous/runs/
 predpreygrass/non_evolutionary/predator_sexual_reproduction/runs/
 ray_results_archive/

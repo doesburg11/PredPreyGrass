@@ -1,5 +1,5 @@
 """
-Six-seed population comparison, base_environment vs base_environment_step_energy (see RESULTS.md section 19).
+Six-seed population comparison, base_environment_discrete vs base_environment_step_energy (see RESULTS.md section 19).
 
 Reads each run's Ray Tune result.json under the environment modules' runs folders (seed 42 uses the
 pre-existing runs, seeds 43-47 the multi-seed runs) and prints:
@@ -12,7 +12,7 @@ pre-existing runs, seeds 43-47 the multi-seed runs) and prints:
 Usage: python analyze_populations.py
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import glob
 import json
 import math

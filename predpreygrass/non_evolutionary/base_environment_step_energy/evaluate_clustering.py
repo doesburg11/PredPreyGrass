@@ -5,7 +5,7 @@ Usage (from the repo root, with the project's Python):
     python predpreygrass/non_evolutionary/base_environment_step_energy/evaluate_clustering.py <seed>
 
 For the given seed it loads the iteration-300 checkpoint (checkpoint_000029) of the seed's
-base_environment policy and its base_environment_step_energy (default settings) policy, runs 30
+base_environment_discrete policy and its base_environment_step_energy (default settings) policy, runs 30
 deterministic (greedy) evaluation episodes each (environment reset seeds 100-129), and computes
 one Clark-Evans index R per episode (predators; R < 1 clustered, R = 1 random, R > 1 dispersed;
 expected nearest-neighbour distance under CSR = 0.5 * sqrt(area / N), area = 25*25).
@@ -14,7 +14,7 @@ investigation (module-local runs folders); seed 42 uses the pre-existing runs.
 Consolidated raw results for all six seeds: clustering_results.json.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, math, glob, os
 os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
@@ -75,8 +75,8 @@ def run_episode(Env, cfg, mods, seed):
 
 def evaluate(kind, seed, ckpt):
     if kind == "base":
-        from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass as Env
-        from predpreygrass.non_evolutionary.base_environment.config_env import config_env as cfg
+        from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass as Env
+        from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env as cfg
     else:
         from predpreygrass.non_evolutionary.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass as Env
         from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env as cfg

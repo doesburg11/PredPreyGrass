@@ -14,7 +14,7 @@ results log — read this first.
 
 ## 1. Motivating hypothesis
 
-[`base_environment`](../base_environment)'s only nonzero reward anywhere is
+[`base_environment_discrete`](../base_environment_discrete)'s only nonzero reward anywhere is
 a flat `+10` bonus at the instant of successful reproduction — every other
 reward hook (`reward_predator_catch_prey`, `reward_prey_eat_grass`,
 `reward_predator_step`, `reward_prey_step`, `penalty_prey_caught`) is `0.0`.
@@ -93,7 +93,7 @@ on *both* axes — but still falls short of sparse itself on both.
 ### `base_environment_sparse_rewards` — the baseline
 
 Byte-for-byte the same sparse, reproduction-only reward as
-`base_environment`. Exists to be the fair comparison partner for every
+`base_environment_discrete`. Exists to be the fair comparison partner for every
 other module here. **Result**: 135.3 / 588.7 births, zero extinctions
 across tested seeds, first reached ~1000-step episodes at iteration 20.
 

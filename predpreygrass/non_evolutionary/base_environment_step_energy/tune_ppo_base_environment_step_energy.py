@@ -8,7 +8,7 @@ and prey separately.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved under
 predpreygrass/non_evolutionary/base_environment_step_energy/runs/<experiment_name>/ for provenance -- see
---seed and --name below, and base_environment/tune_ppo_base_environment.py
+--seed and --name below, and base_environment_discrete/tune_ppo_base_environment.py
 for the counterpart run this script is meant to be compared against.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass
@@ -110,7 +110,7 @@ class EpisodeReturn(RLlibCallback):
         Logs the total and average rewards separately for predators and prey,
         plus the ecology metrics (episode length, births/deaths, extinction,
         population) needed to compare this baseline against
-        base_environment -- see that module's README for why.
+        base_environment_discrete -- see that module's README for why.
         """
         self.num_episodes += 1
         self.overall_sum_of_rewards += episode.get_return()

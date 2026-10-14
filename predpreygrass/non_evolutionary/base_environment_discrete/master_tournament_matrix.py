@@ -1,7 +1,7 @@
 """
-Master Tournament cross-checkpoint matrix for base_environment.
+Master Tournament cross-checkpoint matrix for base_environment_discrete.
 
-Cross-evaluates every predator-policy checkpoint saved during a base_environment PPO
+Cross-evaluates every predator-policy checkpoint saved during a base_environment_discrete PPO
 run against every prey-policy checkpoint (mixing checkpoints from different training
 iterations into one episode), and records ecology/reward outcome metrics into an
 NxN matrix rendered as a heatmap. This diagnoses whether predator-prey coevolution is
@@ -19,27 +19,27 @@ active on the same machine.
 
 Usage:
     # 1. Sanity-check checkpoint discovery and a full-sweep size/time estimate (loads nothing):
-    python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
+    python -m predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix \\
         --run-dir <path-to-trial-dir> --stride 10 --dry-run
 
     # 2. Cheap pilot (short episodes, one per cell) to calibrate real per-episode timing:
-    python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
+    python -m predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix \\
         --run-dir <path-to-trial-dir> --stride 10 --episodes-per-cell 1 --max-steps 200
 
     # 3. Full sweep once training has produced all checkpoints, using 30 worker processes:
-    python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
+    python -m predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix \\
         --run-dir <path-to-trial-dir> --workers 30
 
     # 4. Re-render the heatmap from a previous sweep's results without rerunning episodes:
-    python -m predpreygrass.non_evolutionary.base_environment.master_tournament_matrix \\
+    python -m predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix \\
         --replot <path-to-trial-dir>/master_tournament --metric prey_avg_reward
 """
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env
 # Reusing the proven checkpoint-loading/inference pattern (and the numpy._core.numeric
 # checkpoint compatibility shim that runs as an import-time side effect of this module)
 # rather than duplicating it.
-from predpreygrass.non_evolutionary.base_environment.evaluate_ppo_from_checkpoint_debug import (
+from predpreygrass.non_evolutionary.base_environment_discrete.evaluate_ppo_from_checkpoint_debug import (
     policy_pi,
     policy_mapping_fn,
 )

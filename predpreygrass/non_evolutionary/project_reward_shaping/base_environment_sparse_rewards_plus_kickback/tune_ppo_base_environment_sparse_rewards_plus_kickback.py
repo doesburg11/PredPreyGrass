@@ -7,7 +7,7 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 and prey separately.
 
 Sparse, event-based reward: reproduction bonus (+10, same as
-base_environment) PLUS a "kick back" bonus -- a second +10 to a grandparent
+base_environment_discrete) PLUS a "kick back" bonus -- a second +10 to a grandparent
 every time its own child reproduces (see predpreygrass_rllib_env.py /
 config_env.py / README). Same RLlib-compliance fixes as the other
 base_environment_* modules. Compare training dynamics against

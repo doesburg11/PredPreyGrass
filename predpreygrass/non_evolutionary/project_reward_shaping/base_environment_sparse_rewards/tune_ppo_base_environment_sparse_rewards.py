@@ -6,7 +6,7 @@ Predators try to catch prey, and prey try to eat grass.
 This implements MultiRLModuleSpec explicitly to define the policies for predators
 and prey separately.
 
-Sparse, reproduction-only reward (same as base_environment) plus RLlib-
+Sparse, reproduction-only reward (same as base_environment_discrete) plus RLlib-
 compliance fixes (see predpreygrass_rllib_env.py / README). Compare training
 dynamics against
 base_environment_dense_rewards/tune_ppo_base_environment_dense_rewards.py,

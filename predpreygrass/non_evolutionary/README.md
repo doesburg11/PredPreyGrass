@@ -29,11 +29,11 @@ This is the project's main line for the human-cooperation research angle (predat
 
 | Module | What it is |
 |---|---|
-| [`base_environment`](base_environment/) | The plain Predator-Prey-Grass environment: no sexes, no diet, no bands — the common ancestor everything else in this folder ultimately traces back to. |
+| [`base_environment_discrete`](base_environment_discrete/) | The plain Predator-Prey-Grass environment: no sexes, no diet, no bands — the common ancestor everything else in this folder ultimately traces back to. |
 | [`base_environment_continuous`](base_environment_continuous/) | A continuous-space counterpart: predators and prey with steering physics on a torus, direction and speed actions, a movement energy cost, moving grass clusters. A standalone RLlib environment replacing the Aquarium package; trained, it shows a Red Queen arms race between predators and prey. See its `RESULTS.md`. |
-| [`base_environment_seasonal`](base_environment_seasonal/) | `base_environment` + grass regrowth cycling between an "abundant" and a "scarce" phase over an episode. |
-| [`base_environment_step_energy`](base_environment_step_energy/) | `base_environment` + a real movement energy cost (the base module charges the same per-step tax regardless of action; this module makes moving itself cost more). See its `RESULTS.md`. |
-| [`drive_conditioned_environment`](drive_conditioned_environment/) | `base_environment` + internal drive state conditioning behavior; still close to baseline by design, built incrementally. |
+| [`base_environment_seasonal`](base_environment_seasonal/) | `base_environment_discrete` + grass regrowth cycling between an "abundant" and a "scarce" phase over an episode. |
+| [`base_environment_step_energy`](base_environment_step_energy/) | `base_environment_discrete` + a real movement energy cost (the base module charges the same per-step tax regardless of action; this module makes moving itself cost more). See its `RESULTS.md`. |
+| [`drive_conditioned_environment`](drive_conditioned_environment/) | `base_environment_discrete` + internal drive state conditioning behavior; still close to baseline by design, built incrementally. |
 | [`red_queen`](red_queen/) | Tests the Red Queen Hypothesis — an agent must keep adapting to maintain *relative* fitness against a coevolving opponent, not an absolute score. |
 | [`walls_occlusion`](walls_occlusion/) | Walls and line-of-sight occlusion experiments. |
 
@@ -45,5 +45,5 @@ This is the project's main line for the human-cooperation research angle (predat
   lineage_rewards, mammoths, mammoths_defection, network_reciprocity, pack_hunt_opponent_shaping, shared_prey,
   stag_hunt and its variants).
 - **[`project_reward_shaping/`](project_reward_shaping/README.md)** — one connected investigation into sparse vs.
-  dense reward shaping on `base_environment`; five trained sibling environments; headline result: reward shaping
+  dense reward shaping on `base_environment_discrete`; five trained sibling environments; headline result: reward shaping
   should be minimized here, not maximized.

@@ -4,7 +4,7 @@ Clustering evaluation that also records predator density (see RESULTS.md section
 Usage (repo root, project Python), one task per invocation, kind in {base, step, runA, freerest}:
     python predpreygrass/non_evolutionary/base_environment_step_energy/evaluate_clustering_density.py <kind> <seed>
 
-kind base/step: the seed's base_environment / base_environment_step_energy policy (iteration-300 checkpoint);
+kind base/step: the seed's base_environment_discrete / base_environment_step_energy policy (iteration-300 checkpoint);
 runA: run A (rest 0.10, move +0.10) seed-42 policy; freerest: an earlier run in which resting was free
 (rest 0, move 0.15/0.05; a design since removed from the code) seed-42 policy, evaluated with the
 equivalent additive-cost keys.
@@ -13,7 +13,7 @@ and the mean predator count. Writes clustering_density_data/dose_<kind>_<seed>.j
 Analysis (random-placement null, density-adjusted test): analyze_clustering_density.py.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, math, glob, os
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     kind, seed = sys.argv[1], int(sys.argv[2])
     task = (kind, seed)
     if kind == "base":
-        from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass as Env
-        from predpreygrass.non_evolutionary.base_environment.config_env import config_env as cfg
+        from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass as Env
+        from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env as cfg
     else:
         from predpreygrass.non_evolutionary.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass as Env
         from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env as cfg

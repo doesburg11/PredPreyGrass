@@ -80,7 +80,7 @@ print("  across all 14 policies, Spearman(R, N) = %.2f" % spearmanr(
     [v[1] for v in rows.values()], [v[0] for v in rows.values()])[0])
 
 print("\nSEED-42 DOSE-RESPONSE (one policy per level; move cost = extra cost of moving over resting)")
-for k, label, gap in (("base", "base_environment", 0.00), ("step", "base_environment_step_energy", 0.08),
+for k, label, gap in (("base", "base_environment_discrete", 0.00), ("step", "base_environment_step_energy", 0.08),
                       ("runA", "run A", 0.10), ("freerest", "earlier free-resting run (rest 0)", 0.15)):
     v = rows[(k, 42)]
     print(f"  gap {gap:.2f}  {label:32s} R={v[0]:.3f} N={v[1]:.1f} excess={v[2]:+.3f}")

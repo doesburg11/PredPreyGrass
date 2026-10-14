@@ -1,5 +1,5 @@
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_discrete.utils.pygame_grid_renderer_rllib import PyGameRenderer
 import pygame
 
 

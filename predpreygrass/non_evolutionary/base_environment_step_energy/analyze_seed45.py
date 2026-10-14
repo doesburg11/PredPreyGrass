@@ -12,7 +12,7 @@ clustering_density_data/ (greedy) and sampled_action_data/ (actions sampled from
 Usage: python analyze_seed45.py
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import glob
 import json
 import math

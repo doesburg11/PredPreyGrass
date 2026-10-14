@@ -11,7 +11,7 @@ predator population went extinct, the final predator count and the mean predator
 Writes sampled_action_data/sampled_<kind>_<seed>.json. Greedy counterparts: clustering_density_data/.
 """
 from predpreygrass.non_evolutionary.base_environment_step_energy.paths import RUNS_DIR
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR as BASE_RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
 import sys, json, glob, os
 os.environ["OMP_NUM_THREADS"]="1"; os.environ["CUDA_VISIBLE_DEVICES"]=""
 import numpy as np, torch
@@ -26,8 +26,8 @@ def root(kind,seed):
     return glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{n}/PPO_*")[0]
 kind,seed=sys.argv[1],int(sys.argv[2])
 if kind=="base":
-    from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass as Env
-    from predpreygrass.non_evolutionary.base_environment.config_env import config_env as cfg
+    from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass as Env
+    from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env as cfg
 else:
     from predpreygrass.non_evolutionary.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass as Env
     from predpreygrass.non_evolutionary.base_environment_step_energy.config_env import config_env as cfg

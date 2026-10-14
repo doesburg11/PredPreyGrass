@@ -68,7 +68,7 @@ git clone https://github.com/doesburg11/PredPreyGrass.git
 cd PredPreyGrass
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
-python ./predpreygrass/non_evolutionary/base_environment/random_policy.py
+python ./predpreygrass/non_evolutionary/base_environment_discrete/random_policy.py
 ```
 
 This installs the base dependencies and runs a random policy in the base environment —

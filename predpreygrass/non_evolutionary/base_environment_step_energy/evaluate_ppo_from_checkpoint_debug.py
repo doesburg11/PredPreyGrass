@@ -59,7 +59,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
-    # base_environment naming: "predator_x" / "prey_y" -> two policies
+    # base_environment_discrete naming: "predator_x" / "prey_y" -> two policies
     if "predator" in agent_id:
         return "predator_policy"
     if "prey" in agent_id:

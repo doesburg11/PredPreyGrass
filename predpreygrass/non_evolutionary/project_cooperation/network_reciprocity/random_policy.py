@@ -17,7 +17,7 @@ The PyGame window colour-codes prey:
 """
 from predpreygrass.non_evolutionary.project_cooperation.network_reciprocity.predpreygrass_rllib_env import PredPreyGrass
 from predpreygrass.non_evolutionary.project_cooperation.network_reciprocity.config.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.base_environment_discrete.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 import pygame
 

@@ -1,6 +1,6 @@
 # Predator-Prey-Grass: dense energy-delta reward
 
-This module is a variant of [`base_environment`](../../base_environment) that
+This module is a variant of [`base_environment_discrete`](../../base_environment_discrete) that
 replaces the sparse, reproduction-only reward with a **dense, biologically
 literal reward**: on every step, each agent's reward is exactly its own net
 energy delta for that step (`energy_after - energy_before`), which folds in
@@ -10,13 +10,13 @@ to the parent. There are no hand-designed reward-shaping constants — reward
 pulse.
 
 Everything else (grid/observation settings, energy thresholds, spawning
-rules, satiation-free catch mechanics) is identical to `base_environment`, so
+rules, satiation-free catch mechanics) is identical to `base_environment_discrete`, so
 this module is meant to be trained head-to-head against
 [`base_environment_sparse_rewards`](../base_environment_sparse_rewards) —
 the sparse-reward sibling that carries the *same* RLlib-compliance fixes
-(see below) applied to the original `base_environment` logic, so the only
+(see below) applied to the original `base_environment_discrete` logic, so the only
 intended difference between the two is reward density itself. (Plain
-`base_environment` is kept untouched as the original historical reference
+`base_environment_discrete` is kept untouched as the original historical reference
 and is **not** the fair comparison partner for this module — it still has
 the bugs described below.)
 
@@ -37,9 +37,9 @@ the bugs described below.)
 
 ## RLlib-compliance fixes (also applied in `base_environment_sparse_rewards`)
 
-Two bugs present in the original `base_environment` are fixed here:
+Two bugs present in the original `base_environment_discrete` are fixed here:
 
-1. **Termination-reporting timing**: `base_environment`'s output filter used
+1. **Termination-reporting timing**: `base_environment_discrete`'s output filter used
    `self.agents` *after* dying agents were already removed from it, so a
    dying agent's `terminated=True`, final reward, and final observation were
    silently dropped before ever reaching RLlib. Fixed by deferring removal
@@ -47,7 +47,7 @@ Two bugs present in the original `base_environment` are fixed here:
    agent stays listed through the step in which it dies (matching what
    RLlib's env-checker expects), and by not returning entries for agents
    that were only ever declared in `self.possible_agents` on truncation.
-2. **Agent-ID reuse within an episode**: `base_environment` recycles freed
+2. **Agent-ID reuse within an episode**: `base_environment_discrete` recycles freed
    ID slots (`predator_0`..`49`, `prey_0`..`49`) for newborns, which
    collides with RLlib's `MultiAgentEpisode` design (one continuous
    trajectory per agent-ID string per episode) — once fix #1 correctly
@@ -60,8 +60,8 @@ Two bugs present in the original `base_environment` are fixed here:
 
 Without fix #1, fix #2 silently conflates unrelated individuals' trajectories
 into one fabricated continuous episode object instead of crashing — which is
-what let `base_environment` run without erroring despite having both bugs.
-Measured ID-reuse rate under `base_environment`'s default config: ~75% of all
+what let `base_environment_discrete` run without erroring despite having both bugs.
+Measured ID-reuse rate under `base_environment_discrete`'s default config: ~75% of all
 births reuse a retired ID within the same episode, so this was not a rare
 edge case.
 

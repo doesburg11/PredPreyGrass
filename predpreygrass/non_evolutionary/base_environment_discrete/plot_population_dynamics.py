@@ -9,10 +9,10 @@ No rendering (no PyGame) -- this is a headless population-count logger for
 generating that chart from a specific trained checkpoint, not for interactive
 debugging (see evaluate_ppo_from_checkpoint_debug.py for that).
 """
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment.evaluate_ppo_from_checkpoint_debug import policy_pi
-from predpreygrass.non_evolutionary.base_environment.master_tournament_matrix import policy_mapping_fn
+from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_discrete.evaluate_ppo_from_checkpoint_debug import policy_pi
+from predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix import policy_mapping_fn
 
 # --- External libraries ---
 import argparse

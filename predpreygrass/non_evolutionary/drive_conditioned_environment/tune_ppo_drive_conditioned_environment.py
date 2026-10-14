@@ -13,7 +13,7 @@ baseline-vs-drive-conditioned comparison this run represents (see README.md):
 "full" (all 5 drives, the module default), "energy_only" (just
 hunger_pressure/reproductive_readiness -- the drives predicted to matter most,
 since they encode thresholds the raw observation cannot otherwise contain), or
-"none" (drive channels disabled -- should reproduce base_environment's obs
+"none" (drive channels disabled -- should reproduce base_environment_discrete's obs
 shapes, useful as a sanity check that this code path is equivalent to the
 baseline when drives are off).
 """
@@ -109,7 +109,7 @@ class EpisodeReturn(RLlibCallback):
         Logs the total and average rewards separately for predators and prey,
         plus the ecology metrics (episode length, births/deaths, extinction,
         population, and drive-channel value stats) needed to compare this run
-        against base_environment -- see this module's README for why.
+        against base_environment_discrete -- see this module's README for why.
         """
         self.num_episodes += 1
         self.overall_sum_of_rewards += episode.get_return()

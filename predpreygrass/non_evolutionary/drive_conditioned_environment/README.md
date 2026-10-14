@@ -1,6 +1,6 @@
 # Predator-Prey-Grass drive-conditioned environment
 
-This environment starts as a copy of [`base_environment`](../base_environment). The current implementation is intentionally still close to that baseline so drive-conditioned behavior can be added and reviewed incrementally.
+This environment starts as a copy of [`base_environment_discrete`](../base_environment_discrete). The current implementation is intentionally still close to that baseline so drive-conditioned behavior can be added and reviewed incrementally.
 
 ## Purpose
 
@@ -31,13 +31,13 @@ The core idea: make hidden, sample-expensive-to-discover internal state directly
 
 ## Status
 
-Drive-conditioned logic is implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment` remains unchanged. Verified correct: observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), and all 5 drive-feature formulas were verified numerically at both boundary and mid-range values. A first baseline-vs-drive-conditioned (full drive set) comparison has now been run — see **Results** below. Not yet done: the energy-only arm, additional seeds, and the stronger-affordances arm of the originally planned three-way comparison.
+Drive-conditioned logic is implemented on top of the copied baseline (the "conservative first feature set" described below), while the original `base_environment_discrete` remains unchanged. Verified correct: observation channel counts match expectations (7 for predators, 8 for prey, world + drive channels), and all 5 drive-feature formulas were verified numerically at both boundary and mid-range values. A first baseline-vs-drive-conditioned (full drive set) comparison has now been run — see **Results** below. Not yet done: the energy-only arm, additional seeds, and the stronger-affordances arm of the originally planned three-way comparison.
 
 ## Results: baseline vs. drive-conditioned, single seed (2026-09-06)
 
 **Key message**: adding drive-conditioned observations made agents reproduce about 6% more successfully overall — mostly by helping predators specifically — in this one training run. A promising early sign, not proof yet, since it's only been tested once.
 
-**Setup**: `base_environment` and `drive_conditioned_environment --drive-set full`, both seed 42, both 1000 PPO training iterations, identical `config_env.py` settings and PPO hyperparameters (verified like-for-like beforehand — the only difference is the 3-4 extra drive channels drive-conditioned adds to the observation). Runs: `PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45` and `PPO_DRIVE_CONDITIONED_FULL_SEED42_2026-09-06_07-26-38` under `predpreygrass/non_evolutionary/drive_conditioned_environment/runs/base_v_drive_2026-09-06/`. Both completed cleanly (1000/1000 iterations, no crashes, no extinctions to speak of — `extinct_predator`/`extinct_prey` ≈ 0 throughout).
+**Setup**: `base_environment_discrete` and `drive_conditioned_environment --drive-set full`, both seed 42, both 1000 PPO training iterations, identical `config_env.py` settings and PPO hyperparameters (verified like-for-like beforehand — the only difference is the 3-4 extra drive channels drive-conditioned adds to the observation). Runs: `PPO_BASE_ENVIRONMENT_SEED42_2026-09-05_18-55-45` and `PPO_DRIVE_CONDITIONED_FULL_SEED42_2026-09-06_07-26-38` under `predpreygrass/non_evolutionary/drive_conditioned_environment/runs/base_v_drive_2026-09-06/`. Both completed cleanly (1000/1000 iterations, no crashes, no extinctions to speak of — `extinct_predator`/`extinct_prey` ≈ 0 throughout).
 
 **Headline**: drive-conditioned showed a **+6.0% higher pooled return** over the full run — 7322.6 vs. 6905.1, episode-count-weighted across 1057 vs. 1055 completed episodes (pooling by actual completed episodes, not by per-iteration means, since many iterations complete only 0-3 episodes and a naive per-iteration-mean read is noisy/misleading — an extraction bug an independent Codex review caught and corrected in this analysis).
 
@@ -80,7 +80,7 @@ The two-group prediction earlier in this document (see "Rationale") is that `hun
 
 Everything in "Results" above is a single seed (42) per arm. Per the caveat already stated there, a consistent-looking pattern in one seed is not evidence of a real effect on its own — this project's own history (see the cultural-plasticity and nuptial-gift experiments elsewhere in this repo) has produced single-seed patterns that turned out to be noise once more seeds were run. The `+6.0%` full-run gap and its windowed shape should be treated as a documented observation from this one run, not a validated result, until replicated.
 
-**To validate**: run `base_environment` and `drive_conditioned_environment --drive-set full` again with at least 2-3 more seeds each (e.g. `--seed 43`, `--seed 44`), using the same `--max-iters 1000`. If the gap holds up in the same direction and rough magnitude across seeds, that's real evidence for the effect. If it varies wildly in sign or size, this run's `+6.0%` was this seed's particular luck. Same episode-count-weighted pooling method as above applies when comparing.
+**To validate**: run `base_environment_discrete` and `drive_conditioned_environment --drive-set full` again with at least 2-3 more seeds each (e.g. `--seed 43`, `--seed 44`), using the same `--max-iters 1000`. If the gap holds up in the same direction and rough magnitude across seeds, that's real evidence for the effect. If it varies wildly in sign or size, this run's `+6.0%` was this seed's particular luck. Same episode-count-weighted pooling method as above applies when comparing.
 
 ## Expected advantages (predictions for future work, partially checked above)
 

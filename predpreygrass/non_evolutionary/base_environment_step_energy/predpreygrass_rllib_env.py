@@ -1,5 +1,5 @@
 """
-A copy of the PredPreyGrass base environment that splits base_environment's
+A copy of the PredPreyGrass base environment that splits base_environment_discrete's
 single, unconditional per-step energy tax into two independent, additive
 costs: homeostatic_energy_cost_per_step_predator/prey (always charged, every
 step, regardless of action -- upkeep) and move_energy_cost_per_step_predator/

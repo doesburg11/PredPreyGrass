@@ -629,7 +629,7 @@ found an accessible fix for. Full evidence-by-evidence path below, including the
 and corrected along the way.
 
 **Status: resolved — sharper than Trial 11's original finding, not just a replication.** Ports Trial 11's genome/REINFORCE architecture onto the project's
-flagship predator/prey/grass ecology (`non_evolutionary/base_environment`) instead of the small
+flagship predator/prey/grass ecology (`non_evolutionary/base_environment_discrete`) instead of the small
 abstract World AL rebuild, to test whether the same proximate-vs-ultimate reward divergence
 Trial 11 confirmed at n=30 (evolution weights `health_norm`/`energy_norm` ~2.5-3× more heavily
 than their near-zero correlation with realized fitness would predict) also shows up in a richer,

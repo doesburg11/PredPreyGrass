@@ -6,7 +6,7 @@ Two prey subtypes with hard-coded strategies:
                      each step. Recipients receive donation * cooperation_benefit_multiplier.
   defector_prey    — keeps all energy; never donates.
 
-Predators are unchanged from base_environment and can be trained with PPO.
+Predators are unchanged from base_environment_discrete and can be trained with PPO.
 
 Spatial mechanism (Nowak & May 1992): because offspring spawn adjacent to parents,
 cooperators that start near each other form clusters. Within the cluster each agent

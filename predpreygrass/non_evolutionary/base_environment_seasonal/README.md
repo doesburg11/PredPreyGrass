@@ -1,6 +1,6 @@
 # Predator-Prey-Grass base environment — seasonal variant
 
-Same mechanics as [`base_environment`](../base_environment/), plus one addition: grass regrowth
+Same mechanics as [`base_environment_discrete`](../base_environment_discrete/), plus one addition: grass regrowth
 rate cycles between an "abundant" and a "scarce" phase over the course of an episode, instead of
 staying flat.
 
@@ -24,8 +24,8 @@ Three config keys in [`config_env.py`](./config_env.py) control it:
 With the defaults, grass regrows at 0.06/step for steps 0-39, 0.02/step for steps 40-79,
 0.06/step again for 80-119, and so on.
 
-**Equivalence to `base_environment`:** setting *both* `season_high_multiplier = 1.0` and
-`season_low_multiplier = 1.0` makes this module behave exactly like `base_environment` — the
+**Equivalence to `base_environment_discrete`:** setting *both* `season_high_multiplier = 1.0` and
+`season_low_multiplier = 1.0` makes this module behave exactly like `base_environment_discrete` — the
 multiplier always evaluates to 1.0 regardless of `current_step`/`season_length_steps`, so
 `energy_gain_per_step_grass * 1.0` is byte-for-byte the same flat rate as the original
 (covered by `test_season_disabled_reproduces_flat_baseline` in
@@ -34,13 +34,13 @@ only *one* of the two multipliers to 1.0 does **not** reproduce the original —
 an alternating cycle, just asymmetric (e.g. flat-then-scarce instead of constant-rate).
 
 Everything else — energy costs, reproduction thresholds, rewards, population sizes — is
-unchanged from `base_environment`.
+unchanged from `base_environment_discrete`.
 
 ## Season-multiplier parameter sweep
 
 [`run_season_multiplier_sweep.sh`](./run_season_multiplier_sweep.sh) trains 6 regimes
 sequentially (single GPU), 500 iterations each, sweeping `season_high_multiplier` /
-`season_low_multiplier` from `1.0/1.0` (no seasonality, equivalent to `base_environment` — see
+`season_low_multiplier` from `1.0/1.0` (no seasonality, equivalent to `base_environment_discrete` — see
 above) up to `1.5/0.5` (this module's committed default), in steps of `0.1`/`-0.1`:
 `1.0/1.0`, `1.1/0.9`, `1.2/0.8`, `1.3/0.7`, `1.4/0.6`, `1.5/0.5`.
 

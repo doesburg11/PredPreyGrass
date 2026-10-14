@@ -7,7 +7,7 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 and prey separately.
 
 Sparse, event-based reward: reproduction bonus (+10, same as
-base_environment) PLUS a flat eating-event bonus (+1 predator / +0.1 prey,
+base_environment_discrete) PLUS a flat eating-event bonus (+1 predator / +0.1 prey,
 asymmetric -- see config_env.py for why), still no continuous energy-delta
 signal. Same RLlib-compliance fixes as the other base_environment_* modules
 (see predpreygrass_rllib_env.py / README). Compare training dynamics against

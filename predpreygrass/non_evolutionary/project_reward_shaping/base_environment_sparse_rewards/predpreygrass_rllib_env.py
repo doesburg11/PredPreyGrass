@@ -1,7 +1,7 @@
 """
 Sparse-reward copy of the PredPreyGrass base environment, for fair
 comparison against base_environment_dense_rewards. Reward logic is
-identical to plain base_environment (sparse, reproduction-only). Two types
+identical to plain base_environment_discrete (sparse, reproduction-only). Two types
 of agents: predators and prey, independently learning policies for each
 type.
 """

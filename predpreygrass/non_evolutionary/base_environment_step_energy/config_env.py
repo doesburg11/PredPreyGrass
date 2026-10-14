@@ -14,7 +14,7 @@ config_env = {
     "reproduction_reward_predator": 10.0,
     "reproduction_reward_prey": 10.0,
     # Energy settings
-    # base_environment charges energy_loss_per_step_* unconditionally every
+    # base_environment_discrete charges energy_loss_per_step_* unconditionally every
     # step, regardless of the action taken (including noop) -- 0.15 predator
     # / 0.05 prey. This module splits that single figure into two
     # independent, additive costs instead of one flat tax:
@@ -28,17 +28,17 @@ config_env = {
     # These are independent values, not a split of a fixed shared total (an
     # earlier energy_loss_per_step_*/energy_loss_per_move_* design coupled
     # them via a --move-fraction split so their sum was pinned to
-    # base_environment's original figure -- see RESULTS.md for why that
+    # base_environment_discrete's original figure -- see RESULTS.md for why that
     # both mismodeled real metabolism and empirically failed at 500
     # iterations). Validated via two full 500-iteration runs (RESULTS.md
     # sections 10-12): an initial symmetric split (predator homeostatic
     # 0.10 / move 0.10) recovered from early instability but settled at a
-    # predator population well below base_environment's own equilibrium;
+    # predator population well below base_environment_discrete's own equilibrium;
     # easing only the predator move cost to 0.08 (below) fixed that,
-    # tracking base_environment closely and holding stable for 400+
+    # tracking base_environment_discrete closely and holding stable for 400+
     # iterations with no late-run drift. This is the current default.
     # Six-seed replication (RESULTS.md section 19): fewer predators than
-    # base_environment in every seed and sustainable in 5 of 6 seeds; in seed 45
+    # base_environment_discrete in every seed and sustainable in 5 of 6 seeds; in seed 45
     # the predator population never established.
     "homeostatic_energy_cost_per_step_predator": 0.10,
     "homeostatic_energy_cost_per_step_prey": 0.035,

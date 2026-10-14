@@ -30,17 +30,17 @@ same architecture) so this is a controlled comparison against that baseline run
 -- and the checkpoint-discovery/iteration-lookup helpers from
 master_tournament_matrix.py, rather than duplicating either.
 """
-from predpreygrass.non_evolutionary.base_environment.tune_ppo_base_environment import (
+from predpreygrass.non_evolutionary.base_environment_discrete.tune_ppo_base_environment import (
     env_creator,
     policy_mapping_fn,
     EpisodeReturn,
 )
-from predpreygrass.non_evolutionary.base_environment.master_tournament_matrix import (
+from predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix import (
     discover_checkpoints,
     read_training_iteration,
 )
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR
 
 # --- External libraries ---
 import argparse
@@ -79,7 +79,7 @@ def parse_args():
         default=str(RUNS_DIR / "master_tournament_2026-09-06"
                     / "PPO_PredPreyGrass_a2fe1_00000_0_2026-09-05_18-55-45"),
         help="Trial directory containing the checkpoint_* dirs to pull starting "
-             "weights from (the original base_environment SEED42 run by default).",
+             "weights from (the original base_environment_discrete SEED42 run by default).",
     )
     parser.add_argument(
         "--checkpoint-iteration", type=int, default=500,

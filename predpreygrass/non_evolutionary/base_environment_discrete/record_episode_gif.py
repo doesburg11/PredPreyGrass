@@ -10,7 +10,7 @@ driver -- run this under `xvfb-run` (or with SDL_VIDEODRIVER=dummy already
 exported) rather than relying on the ambient DISPLAY, since that may be a
 stale value with nothing actually listening on it:
 
-    xvfb-run -a python -m predpreygrass.non_evolutionary.base_environment.record_episode_gif \\
+    xvfb-run -a python -m predpreygrass.non_evolutionary.base_environment_discrete.record_episode_gif \\
         --checkpoint-path <checkpoint_dir> --output out.gif
 
 To keep the output a reasonable size regardless of episode length, frames are
@@ -19,11 +19,11 @@ captured every single step, so the GIF still spans the full arc of the episode
 (population growth, decline, oscillation) instead of only showing however far
 the first N raw steps happen to get.
 """
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment.evaluate_ppo_from_checkpoint_debug import policy_pi
-from predpreygrass.non_evolutionary.base_environment.master_tournament_matrix import policy_mapping_fn
-from predpreygrass.non_evolutionary.base_environment.utils.pygame_grid_renderer_rllib import PyGameRenderer
+from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_discrete.evaluate_ppo_from_checkpoint_debug import policy_pi
+from predpreygrass.non_evolutionary.base_environment_discrete.master_tournament_matrix import policy_mapping_fn
+from predpreygrass.non_evolutionary.base_environment_discrete.utils.pygame_grid_renderer_rllib import PyGameRenderer
 
 # --- External libraries ---
 import argparse

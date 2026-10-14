@@ -3,7 +3,7 @@ Analysis of the birth-and-dispersal mechanism measurements (see RESULTS.md secti
 Reads clustering_mechanism_data/ (evaluate_clustering_mechanism.py) and clustering_density_data/
 (per-episode predator counts, evaluate_clustering_density.py) and prints:
   - per-policy movement, birth, dispersal and adjacency measures
-  - base_environment vs base_environment_step_energy across the six seeds, one-sided in the direction the mechanism predicts
+  - base_environment_discrete vs base_environment_step_energy across the six seeds, one-sided in the direction the mechanism predicts
   - Spearman correlation of each measure with clustering R across the 12 policies
   - the mean parent-offspring dispersal profile by offspring age
   - adjacency measured against a random-placement null at each episode's own predator count

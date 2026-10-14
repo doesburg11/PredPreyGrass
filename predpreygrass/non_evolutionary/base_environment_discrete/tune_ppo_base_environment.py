@@ -7,13 +7,13 @@ This implements MultiRLModuleSpec explicitly to define the policies for predator
 and prey separately.
 
 Checkpoints and a run_config.json snapshot of the env/PPO config are saved under
-base_environment/runs/<experiment_name>/ for provenance -- see
+base_environment_discrete/runs/<experiment_name>/ for provenance -- see
 --seed and --name below, and drive_conditioned_environment/tune_ppo_drive_conditioned_environment.py
 for the counterpart run this script is meant to be compared against.
 """
-from predpreygrass.non_evolutionary.base_environment.predpreygrass_rllib_env import PredPreyGrass
-from predpreygrass.non_evolutionary.base_environment.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment.paths import RUNS_DIR
+from predpreygrass.non_evolutionary.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass
+from predpreygrass.non_evolutionary.base_environment_discrete.config_env import config_env
+from predpreygrass.non_evolutionary.base_environment_discrete.paths import RUNS_DIR
 
 #  external libraries
 import argparse

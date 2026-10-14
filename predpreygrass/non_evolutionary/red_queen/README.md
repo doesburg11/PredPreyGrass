@@ -87,7 +87,7 @@ with `config_env_eval.py` specifically (not `config_env_train.py`): that
 config disables `type_2` entirely, so exactly two policies get created —
 `type_1_predator` and `type_1_prey` — matching what both evaluation scripts
 above expect. Follows the same structure as `walls_occlusion`'s and
-`base_environment`'s training scripts (own `utils/networks.py` for
+`base_environment_discrete`'s training scripts (own `utils/networks.py` for
 auto-sized conv nets per obs-window size, own `utils/episode_return_callback.py`
 for per-group reward/timing logging), auto-selects
 `config/config_ppo_gpu_default.py` (0.5 GPU request) or `config/config_ppo_cpu.py`

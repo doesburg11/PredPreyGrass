@@ -1,6 +1,6 @@
 #!/bin/bash
 # Seasonal grass-regrowth multiplier sweep for base_environment_seasonal.
-# 6 regimes, from "no seasonality" (1.0/1.0, equivalent to base_environment --
+# 6 regimes, from "no seasonality" (1.0/1.0, equivalent to base_environment_discrete --
 # see test_season_disabled_reproduces_flat_baseline) up to the module's
 # committed default (1.5/0.5), 500 iterations each, sequential (single GPU).
 # Each run gets its own experiment name (BASE_ENV_SEASONAL_HIGH<h>_LOW<l>_<ts>)

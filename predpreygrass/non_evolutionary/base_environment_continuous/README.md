@@ -7,7 +7,7 @@ species pay energy to live and to move, starve at zero energy and give
 birth at an energy threshold. Each agent chooses one of 16 directions at
 full speed, half speed or standing still, and sees the nearest animals and
 grass patch in its view cone. The only reward is +10 per birth, as in
-[`base_environment`](../base_environment/).
+[`base_environment_discrete`](../base_environment_discrete/).
 
 The environment was developed in the
 [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
