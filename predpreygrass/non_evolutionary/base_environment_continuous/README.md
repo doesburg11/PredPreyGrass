@@ -207,11 +207,14 @@ BE-04 and BE-05 trained the same world with every quirk of SPEC.md section
 9 fixed (`environment.FIXES`), the design of BE-01 and BE-02. The arms race
 remains (over all checkpoints, newer prey evade fixed predators better in
 84% and 97% of comparisons, newer predators catch fixed prey better in 83%
-in both) and coexistence rose to 47 and 46 of 50 final-check episodes
-(BE-01 to BE-03: 35, 37 and 43). The balance shifted towards the prey:
-predators catch about half as often, and prey are almost twice as numerous.
-Late in training BE-05 still improves strongly in both species, BE-04 in
-neither, a difference between runs also seen in the exact environment.
+in both), and 47 and 46 of 50 final-check episodes ended with both species
+alive (BE-01 to BE-03: 35, 37 and 43). The balance in these runs is
+shifted towards the prey: predators catch about half as often, and prey are
+almost twice as numerous. Late in training BE-05 still improves strongly in
+both species; BE-04 is the only run of the five in which neither does.
+These runs were also trained with a different repository and Ray version
+than BE-01 and BE-02, so whether the quirks cause the shift is not yet
+established.
 Details in [RESULTS.md](RESULTS.md), section 3.
 
 ![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../assets/images/readme/arms_race_quirks_fixed.png)

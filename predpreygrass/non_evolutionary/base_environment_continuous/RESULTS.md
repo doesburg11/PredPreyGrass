@@ -240,11 +240,13 @@ For the exact runs see section 2.
 
 **Results.**
 
-- Coexistence rose: 93 of 100 final-check episodes in the two runs without
-  quirks, against 115 of 150 in the three exact runs (72 of 100 in BE-01
-  and BE-02, trained the same way). Treating episodes as independent,
-  Fisher's exact test gives p = 0.0005; this ignores variation between
-  training runs, of which there are only two and three.
+- More final-check episodes ended with both species alive: 93 of 100 in
+  the two runs without quirks, against 115 of 150 in the three exact runs
+  (72 of 100 in BE-01 and BE-02, trained the same way). Treating episodes
+  as independent, Fisher's exact test gives p = 0.0005, but all episodes of
+  a run use the same trained policies: the training run is the unit for a
+  claim about the environment, and with two and three runs no meaningful
+  run-level test is possible. The difference describes these runs.
 - Predators catch about half as often: catch risk 1.69–1.93 against
   3.20–3.74, with nearly twice as many prey alive (27–29 against 15–17) and
   slightly fewer predators. Prey extinctions became rare (2 of 100) and
@@ -255,10 +257,11 @@ For the exact runs see section 2.
 - The arms race remains: over all checkpoints both species improve against
   fixed opponents in both runs, predators by 83% in each, at least as
   clearly as in the exact runs. Late in training, BE-05 shows the strongest
-  continued improvement of all five runs in both species, while in BE-04
-  neither species improves clearly (both catch-risk intervals include
-  zero), the same variation between runs as among the exact runs (BE-02
-  against BE-03).
+  continued improvement of all five runs in both species, while BE-04 is
+  the only run of the five in which neither species improves clearly late
+  (both catch-risk intervals include zero). Among the exact runs late
+  predator improvement is clear in all three and only late prey
+  improvement varies (clear in BE-01 and BE-02, not in BE-03).
 - Training took longer: 12.7 and 14.2 hours, against 8.9 and 9.1 for BE-01
   and BE-02 (longer episodes, fewer extinctions, and slower physics; not
   separated).
@@ -267,15 +270,16 @@ For the exact runs see section 2.
 BE-02 in where they were trained (this repository, Ray 2.59, against the
 development repository, Ray 2.58). BE-03 shares this repository and Ray
 version with them and still looks like BE-01 and BE-02 (catch risk 3.20,
-17 prey on average), so these differences are unlikely to explain the
-shift; BE-03 differs in turn in its 28 simulation workers and 4,000
-iterations.
+17 prey on average), which argues against these differences as the
+explanation, but BE-03 is a single run and differs in turn in its 28
+simulation workers and 4,000 iterations. Isolating the effect of the quirks
+needs exact and fixed runs trained under the same conditions, repeated.
 
-**Conclusion.** In these runs, removing the quirks kept the arms race and
-went with a more stable ecosystem shifted towards the prey: predators catch
-about half as often and prey are almost twice as numerous. Which quirk
-favoured the predators is not known; each can be switched on separately to
-find out. Candidates are the sequential movement order and the prey's
-collision rule, which stopped prey from steering while they touched another
-prey. Two runs per environment show the direction of the change, not its
-size precisely.
+**Conclusion.** The two runs without quirks kept the arms race and were
+associated with more persistent coexistence over the final checks'
+8,000 physics steps and a balance shifted towards the prey: predators catch
+about half as often and prey are almost twice as numerous. Whether the
+quirks cause this, and if so which, is not yet established; each quirk can
+be switched on separately, under otherwise identical training, to find
+out. Candidates are the sequential movement order and the prey's collision
+rule, which stopped prey from steering while they touched another prey.
