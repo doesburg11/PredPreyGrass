@@ -1,0 +1,6 @@
+{
+  "name": "predpreygrass-quality-checks",
+  "private": true,
+  "scripts": {"check": ".conda/bin/python scripts/check_quality.py"},
+  "devDependencies": {"pyright": "1.1.414", "markdownlint-cli2": "0.23.3"}
+}
