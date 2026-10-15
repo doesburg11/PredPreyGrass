@@ -120,7 +120,6 @@ def print_origin_visibility(origin: Coord, width: int, height: int, walls: Set[C
       . = visible cell (line-of-sight clear)
         = blocked cell
     """
-    ox, oy = origin
     lines = []
     for y in range(height):
         row_chars = []
@@ -225,7 +224,6 @@ def main():
         print_origin_visibility(origin, args.width, args.height, wall_set)
         if args.origin_matrix:
             # Two-channel style: first show walls, then visibility from origin.
-            ox, oy = origin
             header = "    " + " ".join(f"{x:2d}" for x in range(args.width))
             # Wall channel
             print("\nWall channel (rows=y, cols=x):")

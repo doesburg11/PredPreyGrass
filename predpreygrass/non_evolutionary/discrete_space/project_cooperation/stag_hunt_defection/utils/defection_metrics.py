@@ -129,7 +129,7 @@ def compute_opportunity_preference_metrics(per_step_agent_data: list[dict]) -> d
                 return True
         return False
 
-    buckets = {
+    buckets: dict[str, dict[str, float]] = {
         "any_prey": {"predator_steps": 0, "join_steps": 0},
         "mammoth_available": {"predator_steps": 0, "join_steps": 0},
         "rabbit_available": {"predator_steps": 0, "join_steps": 0},
@@ -222,7 +222,7 @@ def run_rollout(steps: int, seed: int | None) -> tuple[PredPreyGrass, list[dict]
 
 
 def main() -> None:
-    env, info_all_list = run_rollout(DEFAULT_STEPS, DEFAULT_SEED)
+    env, _ = run_rollout(DEFAULT_STEPS, DEFAULT_SEED)
     join_stats = aggregate_join_choices(env.per_step_agent_data)
     capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
 

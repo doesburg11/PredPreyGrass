@@ -11,5 +11,7 @@ def test_legacy_environment_class_pickle_round_trip():
     current = importlib.import_module(
         "predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.predpreygrass_rllib_env"
     )
+    assert legacy.__file__ is not None
+    assert current.__file__ is not None
     assert Path(legacy.__file__) == Path(current.__file__)
     assert pickle.loads(pickle.dumps(legacy.PredPreyGrass)) is legacy.PredPreyGrass

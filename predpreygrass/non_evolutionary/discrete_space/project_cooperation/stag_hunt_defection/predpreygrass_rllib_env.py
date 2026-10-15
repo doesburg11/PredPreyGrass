@@ -8,6 +8,8 @@ Additional features:
 - Go for smaller prey alone or wait for help on larger prey
 """
 
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomSource
+from typing import Any
 import gymnasium
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 import numpy as np
@@ -16,6 +18,14 @@ from typing import Optional
 
 
 class PredPreyGrass(MultiAgentEnv):
+    rng: RandomSource
+    agents: list[str]
+    possible_agents: list[str]
+    action_spaces: dict[str, gymnasium.Space]
+    observation_spaces: dict[str, gymnasium.Space]
+    # Populated by the interactive evaluator, distinct from RLlib's agent list.
+    active_agents: list[str]
+
     def __init__(self, config=None):
         super().__init__()
         if config is None:
@@ -356,7 +366,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Reset the environment to its initial state.
         """
-        super().reset(seed=seed)
+        super().reset(seed=seed, options=options)
         self._init_reset_variables(seed)
 
         self._create_and_place_grid_world_entities()
@@ -370,7 +380,7 @@ class PredPreyGrass(MultiAgentEnv):
         observations = {agent: self._get_observation(agent) for agent in self.agents}
         return observations, {}
 
-    def step(self, action_dict):
+    def step(self, action_dict: dict[str, Any]):
         self.observations, self.rewards, self.terminations, self.truncations, self.infos = {}, {}, {}, {}, {}
         self.agents_just_ate.clear()  # For stepwise display eating in grid
         self._pending_infos = {}  # Reset per-step self.infos
@@ -1236,6 +1246,13 @@ class PredPreyGrass(MultiAgentEnv):
                     self._printed_capacity_exhaustion.add(key)
                 return
 
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            if new_position is None:
+                # Return the reserved ID before any energy/genealogy changes.
+                self._available_id_pools[f"type_{parent_type}_predator"].appendleft(new_agent)
+                return
+
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -1261,10 +1278,6 @@ class PredPreyGrass(MultiAgentEnv):
 
             # Count successful predator spawns
             self.spawned_predators += 1
-
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
-            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
 
             self.agent_positions[new_agent] = new_position
             self.predator_positions[new_agent] = new_position
@@ -1327,6 +1340,13 @@ class PredPreyGrass(MultiAgentEnv):
                     self._printed_capacity_exhaustion.add(key)
                 return
 
+            occupied_positions = set(self.agent_positions.values())
+            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
+            if new_position is None:
+                # Return the reserved ID before any energy/genealogy changes.
+                self._available_id_pools[f"type_{parent_type}_prey"].appendleft(new_agent)
+                return
+
             self.agents.append(new_agent)
             self._per_agent_step_deltas[new_agent] = {
                 "decay": 0.0,
@@ -1353,10 +1373,6 @@ class PredPreyGrass(MultiAgentEnv):
                     )
             # Count successful prey spawns
             self.spawned_prey += 1
-
-            # Spawn position
-            occupied_positions = set(self.agent_positions.values())
-            new_position = self._find_available_spawn_position(self.agent_positions[agent], occupied_positions)
 
             self.agent_positions[new_agent] = new_position
             self.prey_positions[new_agent] = new_position
@@ -1533,7 +1549,7 @@ class PredPreyGrass(MultiAgentEnv):
             "agent_id": agent_id,
             "birth_step": self.current_step,
             "death_step": None,
-            "parent_id": None,
+            "parent_id": parent_agent_id,
             "death_cause": None,
             "eating_events": [],
             "failed_eating_events": [],
@@ -1545,7 +1561,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_stats_live[agent_id] = {
             "agent_id": agent_id,
             "birth_step": self.current_step,
-            "parent": None,
+            "parent": parent_agent_id,
             "offspring_count": 0,
             "offspring_ids": self.agent_live_offspring_ids[agent_id],
             "distance_traveled": 0.0,
@@ -1578,29 +1594,6 @@ class PredPreyGrass(MultiAgentEnv):
         if cause is not None:
             record["death_cause"] = cause
 
-        def export_agent_event_log(self, path: str) -> None:
-            """Export the per-agent event log to a JSON file.
-
-            Designed for evaluation scripts. Writes a dict keyed by agent_id,
-            where each value is that agent's event-log record.
-            """
-            import json
-
-            def _convert(obj):
-                if isinstance(obj, (int, float, str)) or obj is None:
-                    return obj
-                if isinstance(obj, dict):
-                    return {k: _convert(v) for k, v in obj.items()}
-                if isinstance(obj, (list, tuple)):
-                    return [_convert(v) for v in obj]
-                try:
-                    return obj.item()
-                except Exception:
-                    return str(obj)
-
-            payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
-            with open(path, "w", encoding="utf-8") as f:
-                json.dump(payload, f, indent=2)
         if record.get("death_step") is None:
             record["death_step"] = self.current_step
         record["offspring_count"] = self.agent_offspring_counts.get(agent_id, record.get("offspring_count", 0))
@@ -1628,6 +1621,30 @@ class PredPreyGrass(MultiAgentEnv):
             info.setdefault("species", "prey")
         self.agent_stats_completed[agent_id] = record
         self.agent_live_offspring_ids.pop(agent_id, None)
+
+    def export_agent_event_log(self, path: str) -> None:
+        """Export the per-agent event log to a JSON file.
+
+        Designed for evaluation scripts. Writes a dict keyed by agent_id,
+        where each value is that agent's event-log record.
+        """
+        import json
+
+        def _convert(obj):
+            if isinstance(obj, (int, float, str)) or obj is None:
+                return obj
+            if isinstance(obj, dict):
+                return {k: _convert(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple)):
+                return [_convert(v) for v in obj]
+            try:
+                return obj.item()
+            except Exception:
+                return str(obj)
+
+        payload = {aid: _convert(rec) for aid, rec in self.agent_event_log.items()}
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
 
     def _attach_final_cumulative_rewards_for_live_agents(self):
         """Ensure all agents that remain alive at episode end expose their cumulative rewards via infos."""
@@ -1934,6 +1951,7 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _get_initial_age(self, agent_id: str, *, is_founder: bool) -> int:
         # With age caps removed, all agents start at age 0 regardless of founder status.
+        _ = agent_id, is_founder
         return 0
 
     def _init_available_id_pools(self):

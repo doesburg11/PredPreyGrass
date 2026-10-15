@@ -26,7 +26,7 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
-from ray.rllib.utils.typing import AgentID, EpisodeType, PolicyID
+from ray.rllib.utils.typing import EpisodeType, PolicyID
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -38,6 +38,7 @@ class EpisodeReturn(RLlibCallback):
         self.num_episodes = 0
 
     def on_episode_end(self, *, episode, **kwargs):
+        _ = kwargs
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -95,7 +96,10 @@ def env_creator(config):
     return PredPreyGrass(config or config_env)
 
 
-def policy_mapping_fn(agent_id: AgentID, episode: EpisodeType) -> PolicyID:
+def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
+    _ = episode
+    if not isinstance(agent_id, str):
+        raise TypeError("PredPreyGrass requires string agent IDs")
     agent_id_str = str(agent_id)
     if "predator" in agent_id_str:
         return "predator_policy"

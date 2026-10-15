@@ -15,10 +15,12 @@ class EpisodeReturn(RLlibCallback):
         self.episode_lengths = {}
 
     def on_episode_step(self, *, episode, **kwargs):
+        _ = kwargs
         eid = episode.id_
         self.episode_lengths[eid] = self.episode_lengths.get(eid, 0) + 1
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
+        _ = kwargs
         """Logs total/per-group rewards and episode length at the end of each episode."""
         self.num_episodes += 1
         episode_return = episode.get_return()
@@ -52,6 +54,7 @@ class EpisodeReturn(RLlibCallback):
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
 
     def on_train_result(self, *, result, **kwargs):
+        _ = kwargs
         now = time.time()
         total_elapsed = now - self.start_time
         iter_num = result.get("training_iteration", 1)

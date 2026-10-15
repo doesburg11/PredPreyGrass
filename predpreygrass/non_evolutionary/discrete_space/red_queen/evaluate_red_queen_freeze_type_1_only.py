@@ -25,6 +25,7 @@ def load_frozen_rl_modules(pred_ckpt_path, prey_ckpt_path):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    _ = args, kwargs
     return "_".join(agent_id.split("_")[:3])  # 'type_1_predator' or 'type_1_prey'
 
 
@@ -45,7 +46,7 @@ def run_freeze_test(pred_ckpt_path, prey_ckpt_path, label, max_steps=1000, seed=
     print(f"\n=== Running: {label} ===")
     ray.init(ignore_reinit_error=True)
     env = PredPreyGrass(config=config_env)
-    register_env("PredPreyGrass", lambda cfg: env)
+    register_env("PredPreyGrass", lambda cfg: PredPreyGrass(config=cfg))
     rl_modules = load_frozen_rl_modules(pred_ckpt_path, prey_ckpt_path)
 
     obs, _ = env.reset(seed=seed)

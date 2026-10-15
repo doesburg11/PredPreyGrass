@@ -11,6 +11,8 @@ The simulation can be controlled in real-time using a graphical interface.
 The environment is rendered using PyGame, and the simulation can be recorded as a video.
 """
 import json
+from importlib import import_module
+from typing import Any, Callable
 import os
 import re
 import shutil
@@ -34,30 +36,26 @@ TRAINED_EXAMPLE_DIR = os.getenv("TRAINED_EXAMPLE_DIR")
 
 
 def _prepend_snapshot_source() -> None:
-    script_path = Path(__file__).resolve()
-    try:
-        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
-            source_root = script_path.parents[3]
-            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
-                source_root_str = str(source_root)
-                if source_root_str not in sys.path:
-                    sys.path.insert(0, source_root_str)
-    except IndexError:
-        return
+    for source_root in Path(__file__).resolve().parents:
+        if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"} and (source_root / "predpreygrass").is_dir():
+            source_root_str = str(source_root)
+            if source_root_str not in sys.path:
+                sys.path.insert(0, source_root_str)
+            break
 
 
 _prepend_snapshot_source()
 
-PredPreyGrass = None
-config_env = None
-CombinedEvolutionVisualizer = None
-PreyDeathCauseVisualizer = None
-PyGameRenderer = None
-ViewerControlHelper = None
-LoopControlHelper = None
-aggregate_capture_outcomes_from_event_log = None
-aggregate_join_choices = None
-compute_opportunity_preference_metrics = None
+PredPreyGrass: Callable[..., Any] | None = None
+config_env: dict[str, Any] | None = None
+CombinedEvolutionVisualizer: Callable[..., Any] | None = None
+PreyDeathCauseVisualizer: Callable[..., Any] | None = None
+PyGameRenderer: Callable[..., Any] | None = None
+ViewerControlHelper: Callable[..., Any] | None = None
+LoopControlHelper: Callable[..., Any] | None = None
+aggregate_capture_outcomes_from_event_log: Callable[..., Any] | None = None
+aggregate_join_choices: Callable[..., Any] | None = None
+compute_opportunity_preference_metrics: Callable[..., Any] | None = None
 
 
 SAVE_EVAL_RESULTS = True
@@ -92,22 +90,16 @@ def load_predpreygrass_modules() -> None:
     global PyGameRenderer, ViewerControlHelper, LoopControlHelper
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices, compute_opportunity_preference_metrics
 
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.config.config_env_stag_hunt_reputation import config_env as _config_env
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.matplot_renderer import (
-        CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
-        PreyDeathCauseVisualizer as _PreyDeathCauseVisualizer,
-    )
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.pygame_grid_renderer_rllib import (
-        PyGameRenderer as _PyGameRenderer,
-        ViewerControlHelper as _ViewerControlHelper,
-        LoopControlHelper as _LoopControlHelper,
-    )
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.reputation_metrics import (
-        aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
-        aggregate_join_choices as _aggregate_join_choices,
-        compute_opportunity_preference_metrics as _compute_opportunity_preference_metrics,
-    )
+    _PredPreyGrass = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.predpreygrass_rllib_env").PredPreyGrass
+    _config_env = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.config.config_env_stag_hunt_reputation").config_env
+    _CombinedEvolutionVisualizer = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.matplot_renderer").CombinedEvolutionVisualizer
+    _PreyDeathCauseVisualizer = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.matplot_renderer").PreyDeathCauseVisualizer
+    _PyGameRenderer = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.pygame_grid_renderer_rllib").PyGameRenderer
+    _ViewerControlHelper = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.pygame_grid_renderer_rllib").ViewerControlHelper
+    _LoopControlHelper = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.pygame_grid_renderer_rllib").LoopControlHelper
+    _aggregate_capture_outcomes_from_event_log = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.reputation_metrics").aggregate_capture_outcomes_from_event_log
+    _aggregate_join_choices = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.reputation_metrics").aggregate_join_choices
+    _compute_opportunity_preference_metrics = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_reputation.utils.reputation_metrics").compute_opportunity_preference_metrics
 
     PredPreyGrass = _PredPreyGrass
     config_env = _config_env
@@ -122,10 +114,12 @@ def load_predpreygrass_modules() -> None:
 
 
 def env_creator(config):
+    assert PredPreyGrass is not None, "Call load_predpreygrass_modules() before evaluation"
     return PredPreyGrass(config)
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "runs",
     "ray_results",
     "ray_results_failed",
     "trained_examples",
@@ -138,15 +132,25 @@ def copy_module_snapshot(source_dir: Path) -> None:
     module_name = module_dir.name
 
     pkg_root = source_dir / "predpreygrass"
-    rllib_root = pkg_root / "rllib"
+    rllib_root = pkg_root / "non_evolutionary" / "discrete_space" / "project_cooperation"
     rllib_root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        module_dir.parents[1] / "random_source.py",
+        rllib_root.parent / "random_source.py",
+    )
 
     pkg_init = pkg_root / "__init__.py"
     if not pkg_init.exists():
         pkg_init.write_text("")
-    rllib_init = rllib_root / "__init__.py"
-    if not rllib_init.exists():
-        rllib_init.write_text("")
+    for package_dir in (pkg_root / "non_evolutionary", rllib_root.parent, rllib_root):
+        init_file = package_dir / "__init__.py"
+        if not init_file.exists():
+            init_file.write_text("")
+    # Keep legacy archived-evaluator/checkpoint names resolvable in this snapshot.
+    (pkg_root / "non_evolutionary" / "__init__.py").write_text(
+        'from pathlib import Path\n'
+        '__path__.append(str(Path(__file__).resolve().parent / "discrete_space"))\n'
+    )
 
     dest_dir = rllib_root / module_name
     if dest_dir.exists():
@@ -308,7 +312,7 @@ def policy_pi(observation, policy_module, deterministic=True):
         logits = logits[0]
 
     action_space = getattr(policy_module, "action_space", None)
-    if hasattr(action_space, "nvec"):
+    if action_space is not None and hasattr(action_space, "nvec"):
         actions = []
         idx = 0
         for n in list(action_space.nvec):
@@ -327,6 +331,10 @@ def policy_pi(observation, policy_module, deterministic=True):
     return int(dist.sample().item())
 
 def setup_environment_and_visualizer(now):
+    assert CombinedEvolutionVisualizer is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert PreyDeathCauseVisualizer is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert PyGameRenderer is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert config_env is not None, "Call load_predpreygrass_modules() before evaluation"
     if TRAINED_EXAMPLE_DIR:
         example_dir = Path(TRAINED_EXAMPLE_DIR).expanduser().resolve()
         checkpoint_path = resolve_trained_example_checkpoint(example_dir)
@@ -510,7 +518,8 @@ def step_forward(
         frame = pygame.surfarray.array3d(visualizer.screen)
         frame = np.transpose(frame, (1, 0, 2))
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        video_writer.write(frame)
+        if video_writer is not None:
+            video_writer.write(frame)
 
     control.step_once = False
     clock.tick(visualizer.target_fps)
@@ -594,6 +603,9 @@ def print_ranked_reward_summary(env, total_reward):
 
 
 def compute_defection_metrics(env):
+    assert aggregate_capture_outcomes_from_event_log is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert aggregate_join_choices is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert compute_opportunity_preference_metrics is not None, "Call load_predpreygrass_modules() before evaluation"
     join_stats = aggregate_join_choices(env.per_step_agent_data)
     capture_stats = aggregate_capture_outcomes_from_event_log(env.agent_event_log)
     opportunity_stats = compute_opportunity_preference_metrics(env.per_step_agent_data)
@@ -772,6 +784,16 @@ def print_ranked_fitness_summary(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
+    assert CombinedEvolutionVisualizer is not None
+    assert LoopControlHelper is not None
+    assert PredPreyGrass is not None
+    assert PreyDeathCauseVisualizer is not None
+    assert PyGameRenderer is not None
+    assert ViewerControlHelper is not None
+    assert aggregate_capture_outcomes_from_event_log is not None
+    assert aggregate_join_choices is not None
+    assert compute_opportunity_preference_metrics is not None
+    assert config_env is not None
     seed = 2
     ray.init(ignore_reinit_error=True)
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -784,7 +806,7 @@ if __name__ == "__main__":
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*"mp4v")
         movie_path = Path(eval_output_dir) / "visuals" / MOVIE_FILENAME
         movie_path.parent.mkdir(parents=True, exist_ok=True)
         video_writer = cv2.VideoWriter(str(movie_path), fourcc, MOVIE_FPS, (screen_width, screen_height))
@@ -896,7 +918,7 @@ if __name__ == "__main__":
                 pos = agent_entry.get("position")
                 if pos is None:
                     return None
-                if hasattr(pos, "tolist"):
+                if isinstance(pos, np.ndarray):
                     pos = pos.tolist()
                 elif isinstance(pos, tuple):
                     pos = list(pos)
@@ -918,7 +940,7 @@ if __name__ == "__main__":
                 pos = evt.get("position_consumer") or evt.get("position")
                 if pos is None:
                     pos = _get_position(evt.get("t"), agent_id)
-                if hasattr(pos, "tolist"):
+                if isinstance(pos, np.ndarray):
                     pos = pos.tolist()
                 elif isinstance(pos, tuple):
                     pos = list(pos)
@@ -926,7 +948,7 @@ if __name__ == "__main__":
                 pos_resource = evt.get("position_resource")
                 if pos_resource is None:
                     pos_resource = _get_resource_position(evt.get("t"), resource_id)
-                if hasattr(pos_resource, "tolist"):
+                if isinstance(pos_resource, np.ndarray):
                     pos_resource = pos_resource.tolist()
                 elif isinstance(pos_resource, tuple):
                     pos_resource = list(pos_resource)

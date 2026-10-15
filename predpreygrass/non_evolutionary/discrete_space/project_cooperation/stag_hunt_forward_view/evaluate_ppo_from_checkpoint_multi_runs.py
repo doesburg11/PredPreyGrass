@@ -1,5 +1,7 @@
 import os
 import json
+from importlib import import_module
+from typing import Any
 import math
 import shutil
 import subprocess
@@ -25,25 +27,28 @@ SURVIVAL_REQUIRED_TYPES = ("type_1_predator", "type_1_prey", "type_2_prey")
 
 
 def _prepend_snapshot_source() -> None:
-    script_path = Path(__file__).resolve()
-    try:
-        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
-            source_root = script_path.parents[3]
-            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
-                source_root_str = str(source_root)
-                if source_root_str not in sys.path:
-                    sys.path.insert(0, source_root_str)
-    except IndexError:
-        return
+    for source_root in Path(__file__).resolve().parents:
+        if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"} and (source_root / "predpreygrass").is_dir():
+            source_root_str = str(source_root)
+            if source_root_str not in sys.path:
+                sys.path.insert(0, source_root_str)
+            break
 
 
 _prepend_snapshot_source()
 
-PredPreyGrass = None
-config_env = None
-CombinedEvolutionVisualizer = None
-aggregate_capture_outcomes_from_event_log = None
-aggregate_join_choices = None
+PredPreyGrass: Any = None
+config_env: Any = None
+CombinedEvolutionVisualizer: Any = None
+aggregate_capture_outcomes_from_event_log: Any = None
+aggregate_join_choices: Any = None
+
+
+def _require_loaded_global(name: str) -> Any:
+    value = globals().get(name)
+    if value is None:
+        raise RuntimeError(f"Required evaluation module {name!r} was not loaded.")
+    return value
 
 
 
@@ -70,15 +75,11 @@ def load_predpreygrass_modules() -> None:
     global PredPreyGrass, config_env, CombinedEvolutionVisualizer
     global aggregate_capture_outcomes_from_event_log, aggregate_join_choices
 
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.predpreygrass_rllib_env import PredPreyGrass as _PredPreyGrass
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view import config_env as _config_env
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.matplot_renderer import (
-        CombinedEvolutionVisualizer as _CombinedEvolutionVisualizer,
-    )
-    from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.defection_metrics import (
-        aggregate_capture_outcomes_from_event_log as _aggregate_capture_outcomes_from_event_log,
-        aggregate_join_choices as _aggregate_join_choices,
-    )
+    _PredPreyGrass = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.predpreygrass_rllib_env").PredPreyGrass
+    _config_env = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.config.config_env_stag_hunt_forward_view").config_env
+    _CombinedEvolutionVisualizer = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.matplot_renderer").CombinedEvolutionVisualizer
+    _aggregate_capture_outcomes_from_event_log = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.defection_metrics").aggregate_capture_outcomes_from_event_log
+    _aggregate_join_choices = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.defection_metrics").aggregate_join_choices
 
     PredPreyGrass = _PredPreyGrass
     config_env = _config_env
@@ -88,6 +89,7 @@ def load_predpreygrass_modules() -> None:
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "runs",
     "ray_results",
     "ray_results_failed",
     "trained_examples",
@@ -100,21 +102,32 @@ def copy_module_snapshot(source_dir: Path) -> None:
     module_name = module_dir.name
 
     pkg_root = source_dir / "predpreygrass"
-    rllib_root = pkg_root / "rllib"
+    rllib_root = pkg_root / "non_evolutionary" / "discrete_space" / "project_cooperation"
     rllib_root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        module_dir.parents[1] / "random_source.py",
+        rllib_root.parent / "random_source.py",
+    )
 
     pkg_init = pkg_root / "__init__.py"
     if not pkg_init.exists():
         pkg_init.write_text("")
-    rllib_init = rllib_root / "__init__.py"
-    if not rllib_init.exists():
-        rllib_init.write_text("")
+    for package_dir in (pkg_root / "non_evolutionary", rllib_root.parent, rllib_root):
+        init_file = package_dir / "__init__.py"
+        if not init_file.exists():
+            init_file.write_text("")
+    # Keep legacy archived-evaluator/checkpoint names resolvable in this snapshot.
+    (pkg_root / "non_evolutionary" / "__init__.py").write_text(
+        'from pathlib import Path\n'
+        '__path__.append(str(Path(__file__).resolve().parent / "discrete_space"))\n'
+    )
 
     dest_dir = rllib_root / module_name
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
 
-    def _ignore(path: str, entries):
+    def _ignore(_path: str, entries):
+        _ = _path
         ignored = []
         for entry in entries:
             if entry in _SNAPSHOT_EXCLUDE_DIRS:
@@ -218,7 +231,7 @@ def policy_pi(observation, policy_module, deterministic=True):
         logits = logits[0]
 
     action_space = getattr(policy_module, "action_space", None)
-    if hasattr(action_space, "nvec"):
+    if action_space is not None and hasattr(action_space, "nvec"):
         actions = []
         idx = 0
         for n in list(action_space.nvec):
@@ -516,6 +529,8 @@ def setup_modules():
 
 
 def compute_defection_metrics(env):
+    assert aggregate_capture_outcomes_from_event_log is not None, "Call load_predpreygrass_modules() before evaluation"
+    assert aggregate_join_choices is not None, "Call load_predpreygrass_modules() before evaluation"
     def _safe_div(num, denom):
         return num / denom if denom else 0.0
 
@@ -575,6 +590,13 @@ def compute_defection_metrics(env):
 if __name__ == "__main__":
     prepend_example_sources()
     load_predpreygrass_modules()
+    CombinedEvolutionVisualizer = _require_loaded_global("CombinedEvolutionVisualizer")
+    PredPreyGrass = _require_loaded_global("PredPreyGrass")
+    aggregate_capture_outcomes_from_event_log = _require_loaded_global(
+        "aggregate_capture_outcomes_from_event_log"
+    )
+    aggregate_join_choices = _require_loaded_global("aggregate_join_choices")
+    config_env = _require_loaded_global("config_env")
     ray.init(ignore_reinit_error=True)
     register_env("PredPreyGrass", lambda config: PredPreyGrass(config))
     now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -588,6 +610,7 @@ if __name__ == "__main__":
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         active_agents = list(observations.keys())
+        eval_output_dir: Path | None = None
         if SAVE_EVAL_RESULTS:
             eval_output_dir = get_eval_output_dir(checkpoint_path, now)
             if run == 0:
@@ -659,6 +682,8 @@ if __name__ == "__main__":
             }
         )
         if SAVE_EVAL_RESULTS:
+            assert eval_output_dir is not None
+            assert visualizer is not None
             visualizer.plot()
             config_env_dir = eval_output_dir / "config_env"
             config_env_dir.mkdir(exist_ok=True)
@@ -940,9 +965,7 @@ if __name__ == "__main__":
             with open(summary_dir / "defection_metrics_aggregate.json", "w") as f:
                 json.dump(aggregate_metrics, f, indent=2)
             try:
-                from predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.summarize_capture_failures import (
-                    build_capture_failure_summary,
-                )
+                build_capture_failure_summary = import_module("predpreygrass.non_evolutionary.project_cooperation.stag_hunt_forward_view.utils.summarize_capture_failures").build_capture_failure_summary
 
                 failure_summary, failure_text = build_capture_failure_summary(aggregate_path)
                 (summary_dir / "capture_failures_summary.json").write_text(

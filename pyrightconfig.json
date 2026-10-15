@@ -1,0 +1,18 @@
+{
+  "include": [
+    "predpreygrass/non_evolutionary"
+  ],
+  "exclude": [
+    "predpreygrass/non_evolutionary/base_environment_continuous/**",
+    "**/runs",
+    "**/ray_results*",
+    "**/source_code",
+    "**/SOURCE_CODE",
+    "**/REPRODUCE_CODE",
+    "**/__pycache__"
+  ],
+  "venvPath": ".",
+  "venv": ".conda",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "basic"
+}

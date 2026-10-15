@@ -45,7 +45,6 @@ import argparse
 import json
 import os
 import statistics
-from collections import defaultdict
 
 import torch
 from ray.rllib.core.rl_module.rl_module import RLModule
@@ -59,6 +58,7 @@ METRIC_KEYS = ["total_reward", "avg_prey_offspring", "avg_prey_lifespan", "prey_
 
 
 def policy_mapping_fn(agent_id, *_args, **_kwargs):
+    _ = _args, _kwargs
     return "_".join(agent_id.split("_")[:3])  # 'type_1_predator' or 'type_1_prey'
 
 

@@ -69,7 +69,7 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 
-def policy_mapping_fn(agent_id, *args, **kwargs):
+def policy_mapping_fn(agent_id, *_args, **_kwargs):
     """
     Maps agent IDs to policies based on their type and role.
     This function is used to determine which policy to apply for each agent.
@@ -78,6 +78,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     Returns:
         str: The policy name for the agent, formatted as "type_X_role_Y".
     """
+    _ = _args, _kwargs
     parts = agent_id.split("_")
     type = parts[1]
     role = parts[2]
@@ -185,7 +186,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         ppo_config.algo_class,
-        param_space=ppo_config,
+        param_space=ppo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

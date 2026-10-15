@@ -505,7 +505,8 @@ class EpisodeReturn(RLlibCallback):
         for group, totals in group_rewards.items():
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
-    def on_train_result(self, *, result, **kwargs):
+    def on_train_result(self, *, result, **_kwargs):
+        _ = _kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

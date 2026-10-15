@@ -15,16 +15,12 @@ import subprocess
 
 
 def _prepend_snapshot_source() -> None:
-    script_path = Path(__file__).resolve()
-    try:
-        if script_path.parents[2].name == "predpreygrass" and script_path.parents[1].name == "rllib":
-            source_root = script_path.parents[3]
-            if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"}:
-                source_root_str = str(source_root)
-                if source_root_str not in sys.path:
-                    sys.path.insert(0, source_root_str)
-    except IndexError:
-        return
+    for source_root in Path(__file__).resolve().parents:
+        if source_root.name in {"REPRODUCE_CODE", "SOURCE_CODE"} and (source_root / "predpreygrass").is_dir():
+            source_root_str = str(source_root)
+            if source_root_str not in sys.path:
+                sys.path.insert(0, source_root_str)
+            break
 
 
 _prepend_snapshot_source()
@@ -42,6 +38,7 @@ from ray.tune import Tuner, RunConfig, CheckpointConfig
 
 
 _SNAPSHOT_EXCLUDE_DIRS = {
+    "runs",
     "ray_results",
     "ray_results_failed",
     "trained_examples",
@@ -55,21 +52,32 @@ def copy_module_snapshot(reproduce_dir: Path) -> None:
     module_name = module_dir.name
 
     pkg_root = reproduce_dir / "predpreygrass"
-    rllib_root = pkg_root / "rllib"
+    rllib_root = pkg_root / "non_evolutionary" / "discrete_space" / "project_cooperation"
     rllib_root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(
+        module_dir.parents[1] / "random_source.py",
+        rllib_root.parent / "random_source.py",
+    )
 
     pkg_init = pkg_root / "__init__.py"
     if not pkg_init.exists():
         pkg_init.write_text("")
-    rllib_init = rllib_root / "__init__.py"
-    if not rllib_init.exists():
-        rllib_init.write_text("")
+    for package_dir in (pkg_root / "non_evolutionary", rllib_root.parent, rllib_root):
+        init_file = package_dir / "__init__.py"
+        if not init_file.exists():
+            init_file.write_text("")
+    # Keep legacy archived-evaluator/checkpoint names resolvable in this snapshot.
+    (pkg_root / "non_evolutionary" / "__init__.py").write_text(
+        'from pathlib import Path\n'
+        '__path__.append(str(Path(__file__).resolve().parent / "discrete_space"))\n'
+    )
 
     dest_dir = rllib_root / module_name
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
 
     def _ignore(path: str, entries):
+        _ = path
         ignored = []
         for entry in entries:
             if entry in _SNAPSHOT_EXCLUDE_DIRS:
@@ -132,7 +140,8 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 
-def policy_mapping_fn(agent_id, *args, **kwargs):
+def policy_mapping_fn(agent_id, *_args, **_kwargs):
+    _ = _args, _kwargs
     """
     Maps agent IDs to policies based on their type and role.
     This function is used to determine which policy to apply for each agent.
@@ -261,7 +270,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         ppo_config.algo_class,
-        param_space=ppo_config,
+        param_space=ppo_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),
