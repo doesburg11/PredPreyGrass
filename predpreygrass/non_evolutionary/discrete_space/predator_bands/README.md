@@ -5,8 +5,7 @@ fruit/meat stores with a complementary-diet requirement, scripted prey) with **b
 unchanged. Non-evolutionary: PPO learning only. The design and its open questions are in
 [`../predator_complementary_diet/BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md).
 
-**Consolidated results: [`RESULTS.md`](RESULTS.md).**
-
+Consolidated results: [`RESULTS.md`](RESULTS.md).
 ![Trained predator_bands policies](results_figures/trained_policies.gif)
 
 *Trained policies, first 400 steps (every 5th step shown): 5 bands (symbol and ring colour = band, shape = sex), the viable meat-sharing run
@@ -20,7 +19,7 @@ Built and tested (113 tests; Codex review found 4 issues, all fixed). First cali
 5 s per iteration, 30 learning predators):
 
 | Run (seed 42) | Meat share | Fruit regrowth | Band sharing | Result |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Pilot (stopped at 82 iterations) | 0.25 | 0.04 | 0.3 | Females extinct in every episode from iteration 25; hunters supplied only ~120 energy of meat per episode against ~250 needed |
 | CALIB M010_SHARE030 (100 it.) | 0.10 | 0.04 | 0.3 | Female extinction 92% early, 67% late; episode length 362 to 737; ~7 female births and ~7 marriages per episode |
 | CALIB M010_NOSHARE (100 it., control) | 0.10 | 0.04 | 0 | Females extinct in ~100% of episodes; episode length ~390; ~3 births per episode |
@@ -47,7 +46,7 @@ next to band sharing, moves onto occupied cells are treated as blocked, and the 
 Full logs: `~/simulation_results/band_behavior/behavior_{s42,s43,mjf}.log`.
 
 | Per life (pooled over lives) | seed 42 | seed 43 | `male_joins_female` |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Life length, male / female (steps, all lives) | 508 / 230 | 469 / 245 | 472 / 258 |
 | Prey share of own foraging, male / female | 16% / 2.7% | 18% / 2.7% | 20% / 2.4% |
 | Own meat per life, male / female | 23.3 / 1.2 | 23.8 / 1.3 | 24.5 / 1.2 |
@@ -62,6 +61,7 @@ Full logs: `~/simulation_results/band_behavior/behavior_{s42,s43,mjf}.log`.
 zero; the 95% episode-cluster intervals are in the logs.)
 
 What the runs show:
+
 - **A sex differentiation in foraging emerges.** Males approach and take prey; females approach fruit like males do but barely approach prey, so
   females live almost entirely on fruit they gather themselves and on meat that reaches them through the band (75-80% of their meat, against ~22% for males).
   Band sharing moves meat from the hunters to everyone in range, and females pass on a similar amount of fruit (~12-14 energy given per life).
@@ -108,7 +108,7 @@ Solo attempts made harmless and useless (party of 1: success 0, death 0; pairs 0
 3 bands, no threats, sharing 0.6 / 0.3, meat cost share 0.10, fruit regrowth 0.05.
 
 | Per episode | Compass off (iterations 175-217) | Compass on (iterations 200-211) | First pilot (2% solo odds) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Attempts by a pair / by a triple | 3.1 / 0.2 | 8.9 / 0.8 | 0.8 / 0 |
 | Kills by a pair / by a triple | 0.9 / 0.2 | 3.6 / 0.5 | 0.2 / 0 |
 | Mammoth energy distributed | 18-27 | 80 | 6 |
@@ -158,7 +158,7 @@ checkpoint; the control is a shorter no-membership-rule run.
 Motivation: predator and prey numbers were roughly stable with no Lotka-Volterra pattern; predators appear fruit-limited (prey is about 15% of their foraging energy). Three runs lowered fruit income and raised the meat share of the cost (3 bands, sharing 0.6/0.3, no threats/mammoths):
 
 | run | fruit gain | meat cost share | female extinction (from the training log) | episode length (rollouts) | prey share of foraging energy |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | A | 0.03 | 0.30 | 100% | about 209 | 24% |
 | B | 0.03 | 0.50 | 97% | about 81 | 19.5% |
 | C | 0.05 | 0.40 | not read out | 73-156 (mean about 124) | 16.1% |
@@ -168,7 +168,7 @@ None is viable, so `analyze_population_dynamics.py` (needs episodes of at least 
 Then a richer catch instead: new option `prey_energy_yield` (default 1.0 = unchanged) multiplies the energy a predator gains from a catch, leaving the prey's own ecology alone. Both runs use fruit 0.03, meat cost share 0.15, sharing 0.6/0.3, one seed, 150 iterations, and the analysis on checkpoint 14 (6 rollout episodes, max 1001 steps):
 
 | run | prey energy yield | episode lengths (steps) | prey share of foraging energy | predators / prey (mean per episode) | best-lag corr(prey, predators) |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | D | 3 | 568, 1001, 1001, 670, 1001, 1001 | 52.1% | 12.7-17.7 / 38.5-45.3 | -0.81 to +0.69 (mostly negative) |
 | E | 5 | 1001 in all six | 62.4% | 15.4-17.7 / 39.7-44.2 | -0.71 to -0.40 (all negative) |
 
@@ -181,7 +181,7 @@ What this does and does not show: predator and prey counts are negatively correl
 Two more runs added 6 roaming threats to run E's setup (prey yield 5, fruit 0.03, meat cost share 0.15), with `threat_kill_prob=0.3`, satiation 100, cooldown 10, and a wider `threat_defense_radius=5`, differing only in `threat_defenders_to_repel`:
 
 | run | defenders to repel | episode lengths (steps) | prey share of foraging energy | encounters/iter (end of training) | repelled/iter | killed/iter | killed-alone share |
-|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | THREATS6 | 2 | 568-1001 (4 of 6 at cap) | 57.1% | 158.2 | 64.6 (41%) | 23.6 (15%) | 69% |
 | THREATS6_REPEL5 | 5 | 225-1001 (mixed) | 58.8% | 102.5 | 5.7 (6%) | 20.4 (20%) | 47% |
 
@@ -198,7 +198,7 @@ Reputation was then also made **observable**: a new observation channel (auto +1
 **First calibration (2026-09-27, one seed each, 150 iterations): mechanical-only vs. observable, both on the richer-prey + 6-threats regime (repel=2).** Both runs show reputation doing real work -- it is not a dead mechanic: mean reputation drifts down over training from about 0.87 to 0.80-0.82, and the worst (minimum) predator's reputation drifts down further, from about 0.85 to 0.62-0.64. Free-riding is common under these settings, in other words, whether or not it is visible.
 
 | | mean reputation (start / end) | min reputation (start / end) | threat repel rate (end) | killed-alone share of kills (end) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Mechanical only (no observation channel) | 0.87 / 0.82 | 0.85 / 0.62 | 26% | 65% |
 | Observable (+ obs channel) | 0.87 / 0.80 | 0.84 / 0.64 | 21% | 68% |
 
@@ -217,7 +217,7 @@ Read plainly: fixing the exposure rule to allow group credit did not noticeably 
 **Formal attribution test (2026-09-27): the cohesion effect above does not survive multiple seeds.** Every cohesion comparison so far (this section and the free-rider section) was one seed per condition; the single-seed pattern looked consistent (reputation always tighter than no-reputation) across three separate comparisons, which is what motivated a proper test. Ran 5 independent seeds (42-46) x 2 conditions (`band_reputation` 0 vs 1, cluster rule, same richer-prey + 6-threats regime, 150 iterations each, `--num-env-runners 3` to fit concurrently) -- 10 training runs. Two of the reputation-on runs hit a CUDA OOM under the 10-way GPU contention and were retried alone afterward; all 10 completed. For each trained checkpoint, computed one pooled summary number (mean Chebyshev centroid distance to the rest of the band, pooled across every founder/born/moved group and 8 rollout episodes), then a two-sided Mann-Whitney U test on the 5 no-reputation values against the 5 reputation-on values:
 
 | | seed 42 | seed 43 | seed 44 | seed 45 | seed 46 | mean | median |
-|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | No reputation | 8.220 | 7.998 | 7.374 | 7.972 | 8.025 | 7.918 | 7.998 |
 | Reputation on | 7.573 | 8.082 | 8.085 | 8.220 | 7.687 | 7.929 | 8.082 |
 
@@ -241,13 +241,14 @@ Read plainly: fixing the exposure rule to allow group credit did not noticeably 
 
 ## Running
 
-```
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_bands.tune_ppo_predator_bands \
     --seed 42 --max-iters 100 --reward-per-energy 0.5 --penalty-combat-death 0.2 --minibatch-size 1024 \
     --diet-meat-cost-share 0.10 --band-share-rate 0.3
 python -m predpreygrass.non_evolutionary.discrete_space.predator_bands.random_policy
 pytest predpreygrass/non_evolutionary/discrete_space/predator_bands/tests/ -v
 ```
+
 Flags: `--num-bands`, `--band-share-rate`, `--band-share-range`, `--kin-exclusion 0/1`, `--marriage-rule`,
 `--band-meat-share-rate`, `--band-fruit-share-rate` (each defaults to the single rate), `--diet-meat-cost-share`, `--scripted-prey 0/1`,
 `--initial-num-fruit`, `--energy-gain-per-step-fruit`.

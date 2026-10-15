@@ -13,18 +13,26 @@ Writes clustering_seed<seed>.json next to this file. Checkpoint paths are those 
 investigation (module-local runs folders); seed 42 uses the pre-existing runs.
 Consolidated raw results for all six seeds: clustering_results.json.
 """
+
 from predpreygrass.non_evolutionary.discrete_space.base_environment_step_energy.paths import RUNS_DIR
 from predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.paths import RUNS_DIR as BASE_RUNS_DIR
-import sys, json, math, glob, os
+import sys
+import json
+import math
+import glob
+import os
+
 os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
 import torch
+
 torch.set_num_threads(1)
 from ray.rllib.core.rl_module.rl_module import RLModule
 
 RR = str(RUNS_DIR)
 N_EPISODES = 30
 EVAL_SEEDS = list(range(100, 100 + N_EPISODES))
+
 
 def ckpt_dir(kind, seed, ckpt="checkpoint_000029"):
     if seed == 42:
@@ -37,55 +45,75 @@ def ckpt_dir(kind, seed, ckpt="checkpoint_000029"):
         root = glob.glob(f"{BASE_RUNS_DIR if kind == 'base' else RUNS_DIR}/{name}/PPO_*")[0]
     return f"{root}/{ckpt}"
 
+
 def load_modules(path):
     return {
         "predator_policy": RLModule.from_checkpoint(f"{path}/learner_group/learner/rl_module/predator_policy"),
         "prey_policy": RLModule.from_checkpoint(f"{path}/learner_group/learner/rl_module/prey_policy"),
     }
 
+
 def act(obs, module):
     with torch.no_grad():
         out = module._forward_inference({"obs": torch.tensor(obs).float().unsqueeze(0)})
     return torch.argmax(out["action_dist_inputs"], dim=-1).item()
 
+
 def clark_evans(per_step_positions, area=625.0):
-    o = e = 0.0; n_s = 0
+    o = e = 0.0
+    n_s = 0
     for pos in per_step_positions:
         n = len(pos)
-        if n < 2: continue
+        if n < 2:
+            continue
         pts = np.array(pos, dtype=float)
         nn = []
         for i in range(n):
-            d = np.sqrt(((pts - pts[i]) ** 2).sum(axis=1)); d[i] = np.inf; nn.append(d.min())
-        o += np.mean(nn); e += 0.5 * math.sqrt(area / n); n_s += 1
+            d = np.sqrt(((pts - pts[i]) ** 2).sum(axis=1))
+            d[i] = np.inf
+            nn.append(d.min())
+        o += np.mean(nn)
+        e += 0.5 * math.sqrt(area / n)
+        n_s += 1
     return None if n_s == 0 else o / e
+
 
 def run_episode(Env, cfg, mods, seed):
     env = Env(cfg)
     obs, _ = env.reset(seed=seed)
-    active = list(obs.keys()); traj = []; step = 0
+    active = list(obs.keys())
+    traj = []
+    step = 0
     while step < 1000 and active:
         acts = {a: act(obs[a], mods["predator_policy" if "predator" in a else "prey_policy"]) for a in active}
         obs, rew, term, trunc, _ = env.step(acts)
         active = [a for a in obs if not term.get(a, False) and not trunc.get(a, False)]
         traj.append([p for a, p in env.agent_positions.items() if "predator" in a])
         step += 1
-        if trunc.get("__all__", False) or term.get("__all__", False): break
+        if trunc.get("__all__", False) or term.get("__all__", False):
+            break
     return traj
+
 
 def evaluate(kind, seed, ckpt):
     if kind == "base":
-        from predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.predpreygrass_rllib_env import PredPreyGrass as Env
+        from predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.predpreygrass_rllib_env import (
+            PredPreyGrass as Env,
+        )
         from predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.config_env import config_env as cfg
     else:
-        from predpreygrass.non_evolutionary.discrete_space.base_environment_step_energy.predpreygrass_rllib_env import PredPreyGrass as Env
+        from predpreygrass.non_evolutionary.discrete_space.base_environment_step_energy.predpreygrass_rllib_env import (
+            PredPreyGrass as Env,
+        )
         from predpreygrass.non_evolutionary.discrete_space.base_environment_step_energy.config_env import config_env as cfg
     mods = load_modules(ckpt_dir(kind, seed, ckpt))
     rs = []
     for s in EVAL_SEEDS:
         r = clark_evans(run_episode(Env, cfg, mods, s))
-        if r is not None: rs.append(r)
+        if r is not None:
+            rs.append(r)
     return rs
+
 
 if __name__ == "__main__":
     seed = int(sys.argv[1])
@@ -97,4 +125,6 @@ if __name__ == "__main__":
         out["step_final"] = evaluate("step", seed, "checkpoint_000049")
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"clustering_seed{seed}.json")
     json.dump(out, open(path, "w"))
-    print(f"seed {seed} done: base mean R={np.mean(out['base']):.4f} (n={len(out['base'])}), step mean R={np.mean(out['step']):.4f} (n={len(out['step'])})")
+    print(
+        f"seed {seed} done: base mean R={np.mean(out['base']):.4f} (n={len(out['base'])}), step mean R={np.mean(out['step']):.4f} (n={len(out['step'])})"
+    )

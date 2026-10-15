@@ -49,7 +49,7 @@ When enabled, two optional signals can appear in each predator's observation:
 
 Example config:
 
-```
+```text
 config_env.update({
     "reputation_enabled": True,
     "include_reputation_channel": True,
@@ -60,7 +60,7 @@ config_env.update({
 
 Example values in a step (conceptual):
 
-```
+```text
 obs = {
   "grid": [..., reputation_channel, ...],   # extra channel appended
   "reputation_mean_in_range": 0.63,         # scalar summary for this predator

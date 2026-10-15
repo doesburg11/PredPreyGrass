@@ -27,5 +27,5 @@ def test_summarize_reports_every_group_and_handles_empty_ones():
     lines = sc.summarize("t", episodes, 8.0, rng)
     text = "\n".join(lines)
     assert "founder" in text and "no observations" in text
-    founder = next(l for l in lines if l.strip().startswith("founder"))
+    founder = next(_entry_value for _entry_value in lines if _entry_value.strip().startswith("founder"))
     assert "+3.00" in founder and "+0.400" in founder and "+0.500" in founder  # 30/10, 4/10, 5/10

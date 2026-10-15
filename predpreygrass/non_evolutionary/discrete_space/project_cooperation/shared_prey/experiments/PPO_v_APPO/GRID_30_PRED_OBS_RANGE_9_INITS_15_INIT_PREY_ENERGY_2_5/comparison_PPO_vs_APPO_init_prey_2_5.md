@@ -1,11 +1,13 @@
 # PPO vs APPO eval comparison (init_prey=2.5, prey_threshold=5.5)
 
 ## Scope
+
 - PPO log: `predpreygrass/shared_prey/experiments/PPO_v_APPO/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5/PPO/PPO_PredPreyGrass_5c0be_00000_0_2025-12-19_23-59-23/checkpoint_000099/eval_checkpoint_000099_2025-12-20_10-17-26/agent_event_log_2025-12-20_10-17-26.json`
 - APPO log: `predpreygrass/shared_prey/experiments/PPO_v_APPO/GRID_30_PRED_OBS_RANGE_9_INITS_15_INIT_PREY_ENERGY_2_5/APPO/APPO_PredPreyGrass/checkpoint_000099/eval_checkpoint_000099_2025-12-20_19-16-10/agent_event_log_2025-12-20_19-16-10.json`
 - Same grid/obs settings (GRID_30, obs_range=9, inits=15); only algorithm differs.
 
 ## Definitions
+
 - Cooperative predation = predator event with `team_capture = true`
 - Solo predation = predator event with `team_capture = false`
 - Attempt = success + failed predator eating event
@@ -13,6 +15,7 @@
 - Prey eating events are grass bites (energy gain equals grass energy at that cell)
 
 ## Key outcomes
+
 - PPO achieves much higher overall success rate (65.7% vs 37.8%) driven by higher solo success (62.2% vs 31.7%).
 - APPO has a higher coop share of successes (25.4% vs 16.0%) but lower coop success rate (86.1% vs 92.4%).
 - APPO generates more attempts (1681 vs 1159) but far more failures (1046 vs 398).
@@ -20,7 +23,9 @@
 - Prey grass eating is much higher in APPO (14611 vs 7125) but with smaller bites (mean 0.27 vs 0.51).
 
 ## Predation and cooperation
+
 ### Event counts
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Success events (total) | 761 | 635 |
@@ -32,6 +37,7 @@
 | Attempts (total) | 1159 | 1681 |
 
 ### Rates
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Coop attempt share | 11.4% | 11.1% |
@@ -41,16 +47,19 @@
 | Coop share of successes | 16.0% | 25.4% |
 
 ### Participation
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Predators with any coop attempt | 76 / 206 | 80 / 132 |
 | Predators with coop success | 74 / 206 | 73 / 132 |
 
 ### Helper counts
+
 - PPO: 2: 120, 3: 12
 - APPO: 2: 178, 3: 9
 
 ## Energy at capture (predator events)
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Success mean (all) | 3.27 | 3.35 |
@@ -63,6 +72,7 @@
 | Failed mean (solo) | 3.77 | 3.94 |
 
 ## Population and reproduction
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Predator agents | 206 | 132 |
@@ -71,6 +81,7 @@
 | Prey reproduction events | 733 | 603 |
 
 ## Mortality and lifetime
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Predator death causes | starved 193, time_limit 13 | starved 123, time_limit 9 |
@@ -79,6 +90,7 @@
 | Prey lifetime (mean / median steps) | 34.70 / 19.5 | 66.80 / 38.5 |
 
 ## Prey grass eating
+
 | Metric | PPO | APPO |
 | --- | --- | --- |
 | Eating events | 7125 | 14611 |
@@ -86,6 +98,7 @@
 | Bite median | 0.32 | 0.16 |
 
 ## Interpretation (data-driven)
+
 - PPO shows higher hunting efficiency with fewer failed attempts, while APPO produces more attempts but a lower overall success rate.
 - APPO relies more on cooperative successes, but its solo success rate is substantially lower, which likely drives the overall gap.
 - APPO sustains longer-lived populations (predators and prey) alongside higher grass-eating counts and smaller bites, suggesting slower prey turnover.

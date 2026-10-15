@@ -14,7 +14,7 @@ The per-step tax is split into two independent, additive costs instead of `base_
 So resting costs `homeostatic`, moving costs `homeostatic + move` -- always more expensive than resting, never free, and never equal to `base_environment_discrete`'s single number since that number no longer exists as one quantity. Current defaults (`config_env.py`; see `RESULTS.md` sections 10-12 and 19):
 
 | | resting (homeostatic only) | moving (homeostatic + move) | `base_environment_discrete`'s flat tax (for reference) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | predator | 0.10 | 0.18 | 0.15 |
 | prey | 0.035 | 0.07 | 0.05 |
 
@@ -52,7 +52,7 @@ The current defaults (predator move cost eased to 0.08) fixed that: a full 500-i
 
 **To run**: `python -m predpreygrass.non_evolutionary.discrete_space.base_environment_step_energy.tune_ppo_base_environment_step_energy --seed 42 --max-iters 500`, using `config_env.py`'s shipped defaults, or override any of the four cost parameters directly:
 
-```
+```text
 --homeostatic-cost-predator FLOAT
 --homeostatic-cost-prey FLOAT
 --move-cost-predator FLOAT

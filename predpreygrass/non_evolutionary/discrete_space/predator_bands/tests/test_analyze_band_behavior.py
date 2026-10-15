@@ -113,10 +113,10 @@ def test_short_random_rollout_and_summary_run_end_to_end():
     episodes, lives = ab.rollout(cfg, None, 3, 10, random_policy=True)
     assert len(episodes) == 3 and lives
     assert {"episode", "sex", "role", "life", "own_meat", "recv_meat", "given_fruit", "censored"} <= set(lives[0])
-    assert {l["role"] for l in lives} <= set(ab.ROLES)
+    assert {_entry_value["role"] for _entry_value in lives} <= set(ab.ROLES)
     # every founder appears once per episode with a role other than "born"
     for ep in range(3):
-        founders = [l for l in lives if l["episode"] == ep and l["role"] != "born"]
+        founders = [_entry_value for _entry_value in lives if _entry_value["episode"] == ep and _entry_value["role"] != "born"]
         assert len(founders) == 6 * _base["num_bands"]
     lines = ab.summarize("test", episodes, lives, np.random.default_rng(0), episodes)
     text = "\n".join(lines)
@@ -159,5 +159,5 @@ def test_random_baseline_is_only_printed_for_the_first_bucket():
     cfg = _cfg(max_steps=150)
     eps, lives = ab.rollout(cfg, None, 6, 3, random_policy=True)
     lines = ab.summarize("t", eps, lives, np.random.default_rng(0), eps)
-    d = [l for l in lines if "steps" in l and "same-band dist" in l]
-    assert all(("random same-band" in l) == ("steps 0-100" in l) for l in d)
+    d = [_entry_value for _entry_value in lines if "steps" in _entry_value and "same-band dist" in _entry_value]
+    assert all(("random same-band" in _entry_value) == ("steps 0-100" in _entry_value) for _entry_value in d)

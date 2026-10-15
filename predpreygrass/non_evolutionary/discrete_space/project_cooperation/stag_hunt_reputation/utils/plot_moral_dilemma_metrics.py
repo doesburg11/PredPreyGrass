@@ -91,7 +91,7 @@ def _plot_bar(values, labels, title, ylabel, visuals_dir: Path, filename: str):
 
 def _plot_box(data, labels, title, ylabel, visuals_dir: Path, filename: str):
     fig, ax = plt.subplots(figsize=(6, 4))
-    ax.boxplot(data, labels=labels, showmeans=True)
+    ax.boxplot(data, tick_labels=labels, showmeans=True)
     ax.set_title(title)
     ax.set_ylabel(ylabel)
     return _save_fig(fig, visuals_dir, filename)

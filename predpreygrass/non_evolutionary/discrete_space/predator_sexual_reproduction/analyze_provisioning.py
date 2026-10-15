@@ -165,8 +165,10 @@ def _adjusted(num, den):
 
 def _stats_from_totals(num, den):
     """num/den shape (..., groups, bands) -> dict of named statistics, each shape (...)."""
-    g = lambda name: [GI[name]]
-    r = lambda groups: _ratio(num, den, groups)
+    def g(name):
+        return [GI[name]]
+    def r(groups):
+        return _ratio(num, den, groups)
     return {
         "crude near-away": r(NEAR) - r(AWAY),
         "energy-adjusted near-away": _adjusted(num, den),

@@ -7,15 +7,18 @@ This document focusses on the changes from the `walls_oclussion` environment tow
 `lineage_rewards` fixes a long standing work around in the `PredPreyGrass` repo. Previously (up until `walls_oclussion`), "dead" agents were "recreated" back to live to make reusement of non-active agents possible. The original goal was to limit the `possible_agents` (which needs to be predefinied and caps the number of possible_agents at run time). Although this increases the pool of (re)created agents susbstantially in practice,it on the othere side is not compeletely aligned with RLlib protocol. In our previous setup(s) we did not actually `terminated` an agent in the `RLLib` (and `Gymnasium`) sense. We used a activation/deactivation flag in our logic as a workaround. That meant in practice that agents not really terminated when dying, but that a "true" trajectory existed of multiple lives of different agents (of the same species obviously), stitched together with intervals of "inactivenes". That worked magically well but is not according to the strict RLlib protocol and thefore can result in strange unexpected learning behavior.
 
 ## Termination Protocol Change Notes: Purpose
+
 - Document the behavioral difference between historical agent-slot reuse and the corrected termination handling.
 - Provide guidance for interpreting metrics and evaluating experiments that span the two implementations.
 
 ## Terminology
+
 - **Agent slot**: fixed identifier (e.g., `type_1_predator_0`) allocated to an active agent instance.
 - **Lifetime**: period between an agent spawning and being marked terminated/truncated.
 - **Episode return**: sum of rewards accrued during a single lifetime; reset when a termination signal is emitted.
 
 ## Historical Implementation ("Old" Approach)
+
 - Agent slots were recycled without emitting `terminated=True` when a creature despawned.
 - RLlib kept an episode open across multiple lifetimes that re-used the same slot.
 - Episode returns accumulated rewards across reincarnations, inflating metrics.
@@ -24,6 +27,7 @@ This document focusses on the changes from the `walls_oclussion` environment tow
 - num_possible_agents can remain limited to the possible maximum number of active agents at one point in time, without bumping into capacity constraints in the spawning of "new" agents since "died" agents earlier on in the episode can be reused.
 
 ## Corrected Implementation ("New" Approach)
+
 - Every lifetime ends with an explicit `terminated=True` or `truncated=True` signal before a slot is reused.
 - RLlib resets episode accounting when a creature despawns; new spawns start fresh episodes.
 - Episode returns now reflect rewards earned within a single lifetime (e.g., reproduction reward of 10 → return spikes proportional to average births per predator).
@@ -32,22 +36,25 @@ This document focusses on the changes from the `walls_oclussion` environment tow
 - Every new spawned agent cannot have been active in the past. If it otherwise should then, after flagged terminations=True, it will produce an error at revivaval, since SingleAgentEpisode.done=True cannot be undone per RLlib protocol. This means num_possible_agents must be as large as the total number of agents ever existed during an episode, in order to not run into capcity constraints of newly spawned agents.
 
 ## Observable Differences
+
 - **Episode Return Curves**: values dropped to realistic ranges (e.g., predators near 40 ≈ 4 reproductions per lifetime) versus inflated historical peaks (≈100) caused by reward carry-over.
 - **Episode Length Metrics**: average lengths no longer grow indefinitely; they track actual lifetime durations in steps.
 - **Learner Stability**: reduced variance in policy updates because hidden states are reset when lifetimes end.
 - **Logging**: terminated agents appear in final observation batches, eliminating "acted then truncated" warnings.
 
 ## What Did *Not* Change
+
 - Environment dynamics, reward magnitudes, and visual behavior in evaluation grids remain the same.
 - Reproduction probability, energy budgets, and other config parameters were untouched; gameplay still matches prior intuition.
 
-
 ## Implications for Experiment Tracking
+
 - Compare historical runs to new ones with caution: legacy metrics overstate per-episode returns and lengths.
 - When reproducing published results that relied on the old protocol, note the bookkeeping bug and prefer reruns with the fix for accuracy.
 - Hyperparameter searches using the new implementation yield more trustworthy objective signals (e.g., `score_pred`).
 
 ## Recommendations
+
 - Treat old logs as qualitatively informative but quantitatively inflated; annotate analyses that included pre-fix data.
 - For fair comparisons, rerun key baselines under the corrected termination protocol.
 - Keep the debug invariants enabled when extending the environment to catch future regressions in slot management.
@@ -55,7 +62,6 @@ or Experiment Tracking
 - Compare historical runs to new ones with caution: legacy metrics overstate per-episode returns and lengths.
 - When reproducing published results that relied on the old protocol, note the bookkeeping bug and prefer reruns with the fix for accuracy.
 - Hyperparameter searches using the new implementation yield more trustworthy objective signals (e.g., `score_pred`).
-
 
 Both `walls_occlusion` and `lineage_rewards` environments implement the same core predator-prey-grass ecosystem with walls and line-of-sight mechanics. However, they differ significantly in their **configuration philosophy**, **ID management strategy**, and **implementation maturity**.
 
@@ -67,25 +73,29 @@ Both `walls_occlusion` and `lineage_rewards` environments implement the same cor
 
 ### 1. Configuration Access Pattern
 
-**walls_occlusion: Defensive with Defaults**
+walls_occlusion: Defensive with Defaults
+
 ```python
 self.debug_mode = config.get("debug_mode", False)
 self.max_steps = config.get("max_steps", 10000)
 self.num_walls = config.get("num_walls", 20)
 self.wall_placement_mode = config.get("wall_placement_mode", "random")
 ```
+
 - Uses `.get()` with fallback defaults throughout
 - More forgiving: works even with incomplete config dicts
 - Suitable for experimentation and quick prototyping
 - Safer for config evolution (missing keys won't crash)
 - Nevertheless, we've removed fallback options as much as possible on purpose to minimize unexpected behavior (and unexpected parameter use) during development.
 
-**lineage_rewards: Strict Direct Access**
+lineage_rewards: Strict Direct Access
+
 ```python
 self.debug_mode = config["debug_mode"]
 self.max_steps = config["max_steps"]
 self.manual_wall_positions = config["manual_wall_positions"]
 ```
+
 - Uses direct `config[]` dictionary access
 - Requires all keys to be present (KeyError if missing)
 - Enforces complete configuration contracts
@@ -97,7 +107,8 @@ self.manual_wall_positions = config["manual_wall_positions"]
 
 ### 2. Agent ID Management System
 
-**walls_occlusion: Simple Reuse with Unique Tracking**
+walls_occlusion: Simple Reuse with Unique Tracking
+
 ```python
 # Reuse agent IDs within an episode, track with unique_id
 self.unique_agents = {}  # Maps agent_id → unique_id
@@ -109,12 +120,14 @@ def _register_new_agent(self, agent_id, parent_unique_id=None):
     self.unique_agents[agent_id] = unique_id
     self.agent_activation_counts[agent_id] += 1
 ```
+
 - Agent IDs can be reused multiple times in same episode
 - Tracked via `unique_id = agent_id_reuse_count`
 - Simpler bookkeeping, less memory overhead
 - Requires disambiguation in lineage tracking
 
-**lineage_rewards: Never-Reuse ID Pools**
+lineage_rewards: Never-Reuse ID Pools
+
 ```python
 # Never reuse IDs within an episode, use deque pools
 # Due to the proper termination proptocol resuing agents is not possible anymore
@@ -137,6 +150,7 @@ def _alloc_new_id(self, species: str, type_nr: int):
             return cand
     return None
 ```
+
 - Each agent ID used only once per episode
 - Deque-based O(1) allocation per species/type
 - Capacity tracking: `reproduction_blocked_due_to_capacity_predator/prey`
@@ -144,6 +158,7 @@ def _alloc_new_id(self, species: str, type_nr: int):
 - Higher memory usage (must track all used IDs)
 
 **Trade-offs**:
+
 - **walls_occlusion**: More agents possible per episode (via reuse), complex lineage tracking
 - **lineage_rewards**: Simpler lineage tracking, limited by total possible agents per type
 
@@ -151,7 +166,8 @@ def _alloc_new_id(self, species: str, type_nr: int):
 
 ### 3. Wall Placement Modes
 
-**walls_occlusion: Two Modes**
+walls_occlusion: Two Modes
+
 ```python
 self.wall_placement_mode = config.get("wall_placement_mode", "random")
 self.num_walls = config.get("num_walls", 20)  # For random mode
@@ -164,7 +180,8 @@ elif self.wall_placement_mode == "random":
     # Randomly sample num_walls positions
 ```
 
-**lineage_rewards: Manual Only**
+lineage_rewards: Manual Only
+
 ```python
 self.manual_wall_positions = config["manual_wall_positions"]
 # No random wall generation mode
@@ -176,7 +193,8 @@ self.manual_wall_positions = config["manual_wall_positions"]
 
 ### 4. RNG Initialization
 
-**walls_occlusion: Constructor Seeding**
+walls_occlusion: Constructor Seeding
+
 ```python
 def _initialize_from_config(self):
     self.rng = np.random.default_rng(config.get("seed", 42))
@@ -185,7 +203,8 @@ def _init_reset_variables(self, seed):
     self.rng = np.random.default_rng(seed)  # Re-seed on reset
 ```
 
-**lineage_rewards: Reset-Only Seeding**
+lineage_rewards: Reset-Only Seeding
+
 ```python
 def _initialize_from_config(self):
     # RNG will be initialized during reset to ensure per-episode reproducibility
@@ -204,6 +223,7 @@ def _init_reset_variables(self, seed):
 ### 5. Additional Tracking in lineage_rewards
 
 **Episode-level counters** (not in walls_occlusion):
+
 ```python
 self.used_agent_ids = set()  # Prevent ID reuse
 self.reproduction_blocked_due_to_capacity_predator = 0
@@ -219,7 +239,8 @@ self._printed_termination_ids = set()  # Debug print guard
 
 ### 6. Precomputed LOS Masks
 
-**lineage_rewards only:**
+lineage_rewards only:
+
 ```python
 def __init__(self, config=None):
     # ...
@@ -233,14 +254,16 @@ def __init__(self, config=None):
 
 ### 7. Reproduction Cooldown Access
 
-**walls_occlusion: Inline Default**
+walls_occlusion: Inline Default
+
 ```python
 cooldown = self.config.get("reproduction_cooldown_steps", 10)
 if self.current_step - self.agent_last_reproduction.get(agent, -cooldown) < cooldown:
     return
 ```
 
-**lineage_rewards: Direct Access**
+lineage_rewards: Direct Access
+
 ```python
 self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_steps"]
 ```
@@ -254,6 +277,7 @@ self.agent_last_reproduction[agent_id] = -self.config["reproduction_cooldown_ste
 Both share the following core mechanics:
 
 ### Grid World & Movement
+
 - Static wall obstacles (`wall_positions` set)
 - Line-of-sight (LOS) visibility calculations (Bresenham algorithm)
 - Movement blocking by walls
@@ -262,22 +286,26 @@ Both share the following core mechanics:
 - Optional visibility channel (`include_visibility_channel`)
 
 ### Energy & Lifecycle
+
 - Per-step energy decay (predator/prey)
 - Energy thresholds for reproduction
 - Grass regeneration (`energy_gain_per_step_grass`)
 - Max grass energy cap (`max_energy_grass`)
 
 ### Observation & Action
+
 - Multi-channel observations (walls, predators, prey, grass)
 - Type-specific observation ranges (predator vs prey)
 - Type-specific action ranges (type_1 vs type_2)
 
 ### Agent Types & Policies
+
 - Two predator types, two prey types
 - Separate configs for possible vs initially active agents
 - Mutation during reproduction (type switching)
 
 ### Tracking & Diagnostics
+
 - Unique agent stats (distance_traveled, times_ate, energy_gained, etc.)
 - Per-step agent data logging
 - LOS rejection counters
@@ -290,9 +318,10 @@ Both share the following core mechanics:
 
 ### From walls_occlusion → lineage_rewards
 
-**Required changes:**
+Required changes:
 
 1. **Complete your config dict** - remove reliance on defaults:
+
    ```python
    # walls_occlusion worked with:
    config = {"grid_size": 10}  # Other keys got defaults
@@ -308,9 +337,11 @@ Both share the following core mechanics:
    ```
 
 2. **Switch from random to manual walls**:## Recommendations
+
 - Treat old logs as qualitatively informative but quantitatively inflated; annotate analyses that included pre-fix data.
 - For fair comparisons, rerun key baselines under the corrected termination protocol.
 - Keep the debug invariants enabled when extending the environment to catch future regressions in slot management.
+
    ```python
    # walls_occlusion:
    "wall_placement_mode": "random",
@@ -320,22 +351,24 @@ Both share the following core mechanics:
    "manual_wall_positions": [(x1,y1), (x2,y2), ...]  # Must specify all
    ```
 
-3. **Understand ID capacity limits**:
+1. **Understand ID capacity limits**:
    - Your episode may end earlier if ID pools exhaust
    - Monitor `reproduction_blocked_due_to_capacity_*` counters
    - Consider increasing `n_possible_type_*` config values
 
-4. **Expect stricter error messages**:
+2. **Expect stricter error messages**:
    - Missing config keys → immediate KeyError
    - Invalid wall positions → no silent fallback
 
-**What you gain:**
+What you gain:
+
 - Guaranteed unique IDs (simpler lineage tracking)
 - Explicit configuration contracts (no hidden defaults)
 - Capacity diagnostics (know when ID pools exhaust)
 - Potential LOS optimizations (precomputed masks)
 
-**What you lose:**
+What you lose:
+
 - Random wall placement convenience
 - Forgiving config defaults
 - Ability to reuse agent IDs within episode (higher capacity)
@@ -344,13 +377,14 @@ Both share the following core mechanics:
 
 ### From lineage_rewards → walls_occlusion
 
-**Required changes:**
+Required changes:
 
 1. **Add default handling in your config loaders**:
    - walls_occlusion tolerates incomplete configs
    - But best practice: still provide all keys explicitly
 
 2. **Decide on wall placement mode**:
+
    ```python
    # Can now use random walls:
    "wall_placement_mode": "random",
@@ -365,12 +399,14 @@ Both share the following core mechanics:
    - Lineage tracking requires checking `unique_id` not just `agent_id`
    - Use `agent_activation_counts` to see reuse frequency
 
-**What you gain:**
+What you gain:
+
 - Random wall generation (faster experimentation)
 - Tolerance for incomplete configs
 - Higher effective capacity (ID reuse)
 
-**What you lose:**
+What you lose:
+
 - Simple 1:1 agent_id mapping (reuse complicates tracking)
 - Capacity diagnostics
 - Precomputed LOS masks (if applicable)
@@ -380,33 +416,38 @@ Both share the following core mechanics:
 ## Implementation Maturity
 
 ### walls_occlusion
+
 - **Stability**: Production-ready with defensive programming
 - **Flexibility**: Random walls, default configs
 - **Use case**: Research prototyping, config experimentation
 
 ### lineage_rewards
+
 - **Stability**: Strict contracts, explicit requirements
 - **Optimization**: ID pools, precomputed masks, capacity tracking
 - **Use case**: Reproducible experiments, lineage studies, production training
 
 ---
 
-## Recommendations
+## Recommendations (continued)
 
-**Choose walls_occlusion if:**
+Choose walls_occlusion if:
+
 - You want rapid prototyping with minimal config setup
 - You need random wall generation for procedural environments
 - You want to maximize agent capacity via ID reuse
 - You prefer forgiving defaults during development
 
-**Choose lineage_rewards if:**
+Choose lineage_rewards if:
+
 - You need strict reproducibility guarantees
 - You're analyzing lineage/genealogy (simpler with unique IDs)
 - You want explicit capacity limits and diagnostics
 - You prefer explicit contracts over implicit defaults
 - You need LOS computation optimizations
 
-**Hybrid approach:**
+Hybrid approach:
+
 - Start with walls_occlusion for rapid iteration
 - Migrate to lineage_rewards for final experiments
 - Use walls_occlusion's random walls to generate fixed `manual_wall_positions` for lineage_rewards
@@ -416,6 +457,7 @@ Both share the following core mechanics:
 ## Future Unification
 
 Potential merged features:
+
 - **Config flexibility**: Support both `.get()` defaults AND strict mode (via flag)
 - **Wall modes**: Add random generation to lineage_rewards
 - **ID strategy**: Make ID reuse vs never-reuse a configurable option
@@ -430,9 +472,10 @@ Potential merged features:
 
 ---
 
-*Document created: 2025-12-03*
+Document created: 2025-12-03
 
 ## Further feature changes
+
 - **lineage_rewards**: `predpreygrass/lineage_rewards/predpreygrass_rllib_env_works_3.py`
 
 -kinship rewards for parents when offspring survive time steps
@@ -441,42 +484,41 @@ Potential merged features:
 -kinship rewards for parents when offspring survive time steps
 -integrated kinship rewards into config_env_lineage_rewards.py
 - **lineage_rewards**: `predpreygrass/lineage_rewards/predpreygrass_rllib_env_works_5.py`
--adjust the kinship rewards for parents when offspring succeeds in 
+-adjust the kinship rewards for parents when offspring succeeds in
 producing offspring themseleves (instead of only surviving time steps (works_4))
 - **lineage_rewards**: `predpreygrass/lineage_rewards/predpreygrass_rllib_env_works_6.py`
 - simplify config options
 - remove unused rewards
 - **lineage_rewards**: `predpreygrass/lineage_rewards/predpreygrass_rllib_env_works_7.py`
  Limited intake per step:
- - Predator–prey: each predator can only consume up to a fixed
+- Predator–prey: each predator can only consume up to a fixed
    energy bite from a caught prey per step (bite = min(prey_energy,
    max_energy_gain_per_prey)); any remaining prey energy stays on the
    prey so it can be bitten again later instead of being fully removed
    in one go.
- - If bite >= prey_energy, the prey is fully caught and removed as usual.
- - Prey–grass: each prey can only consume up to a fixed energy bite
+- If bite >= prey_energy, the prey is fully caught and removed as usual.
+- Prey–grass: each prey can only consume up to a fixed energy bite
    from grass per step (bite = min(grass_energy,
    max_energy_gain_per_grass)); any remaining grass energy stays on
    the patch and continues to regrow, enabling multiple partial
    grazings over time.
- - If bite >= grass_energy, the grass is fully eaten and its energy is
+- If bite >= grass_energy, the grass is fully eaten and its energy is
    reset to zero as usual, with regeneration starting in the next step.
 - **lineage_rewards**: `predpreygrass/lineage_rewards/predpreygrass_rllib_env_works_8.py`
- - Dead-prey carcasses:
-   * When a prey is first bitten but still has remaining energy,
+- Dead-prey carcasses:
+  - When a prey is first bitten but still has remaining energy,
      it becomes "dead" (added to dead_prey) but is not immediately
      terminated. It acts as a static carcass:
-       - cannot move,
-       - cannot eat grass,
-       - cannot reproduce,
-       - cannot receive kin kickback rewards,
-       - cannot age further
-   * Predators can continue to take limited-intake bites from a
+    - cannot move,
+    - cannot eat grass,
+    - cannot reproduce,
+    - cannot receive kin kickback rewards,
+    - cannot age further
+  - Predators can continue to take limited-intake bites from a
      dead prey’s remaining energy until it reaches zero, after
      which the prey is fully removed as usual.
 
-
-# Kin Kickback Rewards in `lineage_rewards`
+## Kin Kickback Rewards in `lineage_rewards`
 
 This document describes the "kin kickback" reward mechanism added to the `PredPreyGrass` environment in the `lineage_rewards` variant.
 

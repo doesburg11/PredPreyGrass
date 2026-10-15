@@ -16,7 +16,7 @@ phase 0 uses the high multiplier, phase 1 uses the low one.
 Three config keys in [`config_env.py`](config_env.py) control it:
 
 | Key | Default | Meaning |
-|---|---|---|
+| --- | --- | --- |
 | `season_length_steps` | 40 | how many env steps each phase lasts (a full cycle is 80 steps) |
 | `season_high_multiplier` | 1.5 | multiplier during the "abundant" phase |
 | `season_low_multiplier` | 0.5 | multiplier during the "scarce" phase |
@@ -44,7 +44,7 @@ sequentially (single GPU), 500 iterations each, sweeping `season_high_multiplier
 above) up to `1.5/0.5` (this module's committed default), in steps of `0.1`/`-0.1`:
 `1.0/1.0`, `1.1/0.9`, `1.2/0.8`, `1.3/0.7`, `1.4/0.6`, `1.5/0.5`.
 
-```
+```text
 bash predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/run_season_multiplier_sweep.sh
 ```
 
@@ -63,7 +63,7 @@ of interest for this sweep), plus `predator_count_end` / `prey_count_end` / `gra
 replicated — see caveat below):
 
 | Metric | 1.0/1.0 | 1.1/0.9 | 1.2/0.8 | 1.3/0.7 | 1.4/0.6 | 1.5/0.5 |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | `predator_births` | 107.6±8.3 | 125.2±7.0 | 125.8±8.6 | **139.2±7.6** | 100.1±12.7 | 115.1±8.1 |
 | `prey_births` | 511.7±16.7 | 555.0±10.9 | 544.8±13.7 | **572.2±16.9** | 471.0±24.7 | 512.5±15.3 |
 | `predator_count_end` | 16.5±2.8 | 17.5±2.4 | 17.4±2.2 | **18.0±2.4** | 14.5±3.0 | 15.7±2.7 |
@@ -87,7 +87,7 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 `1.4/0.6` trough with 2-3 more seeds each to check whether they hold up.
 
 <p align="center">
-    <img align="center" src="../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
+    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
 </p>
 
 ### Features base environment
@@ -114,22 +114,21 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 
   - **Reproduction conditions**:
 
-      - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-      - New agents are spawned near their parent.
+    - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
+    - New agents are spawned near their parent.
 - **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
 
 - Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
-
 ## Training and evaluation results
 
 [Training](tune_ppo_base_environment_seasonal.py) the agents and [evaluating](evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://humanbehaviorpatterns.org/learning-selection-interaction/marl-challenges-predpreygrass#reward-design-sparse-and-why-magnitude-matters). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
+
 - Predators hunting Prey
 - Multiple Predators collaborating/competing hunting Prey; increasing the probability of Prey being caught
 - Prey finding and eating grass
 - Predators hovering around grass to ambush Prey
 - Prey trying to escape Predators
-
 
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
 
@@ -138,14 +137,15 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 - The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
 
 <p align="center">
-    <img src="../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
+    <img alt="base environment seasonal illustration" src="../../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
 </p>
 
-
 ## Centralized versus decentralized training
+
 The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo).
 
 ### (Legacy) Configuration of centralized training
+
 The MARL environment [`predpreygrass_base.py`](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
 
 ### Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
@@ -155,7 +155,7 @@ Obviously, using only one network has its limitations as Predators and Prey lack
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
 <p align="center">
-    <img src="../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
+    <img alt="base environment seasonal illustration" src="../../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
 A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.

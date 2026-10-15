@@ -18,7 +18,7 @@ threats with group defense, distance-scaled sharing, and mammoths that only a ba
 ## 1. Viability: with matched controls, the diet requirement was sustained only when band sharing was wide enough
 
 | Setting (seed 42) | Result |
-|---|---|
+| --- | --- |
 | Pair-only design (`predator_complementary_diet`), learned prey: meat share 0.25, then 0.10 | Females extinct in ~100% of episodes at 0.25 and ~90-100% at 0.10; the failure moves from meat to fruit deficiency |
 | Same design, scripted prey, meat share 0.10 / 0.15 / 0.20 (150 iterations) | Female extinction 93% / 99% / 94% in the last blocks; meat-deficiency deaths dominate |
 | Bands, 5 bands, band sharing 0.3 flat, meat share 0.10, fruit regrowth 0.04 (100 iterations) | Extinction 92% early, 67% late; the no-sharing control ~100% |
@@ -54,7 +54,7 @@ Cohesion measures (20 episodes, final checkpoint): share of observations with no
 late nearest same-band distance and within-range share. Control: 36% / 21% / 28%; 4.5 cells (males), 4.0 (females); 0.72 / 0.81.
 
 | Intervention | Viability | Cohesion vs control |
-|---|---|---|
+| --- | --- | --- |
 | Band compass (direction and distance to the nearest band-mate) | Viable; more females alive at the end of training episodes (5-8 against 3-4, training-block averages) | Not analysed alone; with mammoths and threats no gain (below) |
 | 4 roaming threats, kill chance 0.5 | **Collapse**: episodes ~77-83 steps, ~16 kills per episode, 86-90% of kills of a predator with no defender | Not analysed |
 | 1 threat at 0.5, or 2 threats at 0.25 | Collapse (episodes ~185 steps, ~14 kills) | Not analysed |

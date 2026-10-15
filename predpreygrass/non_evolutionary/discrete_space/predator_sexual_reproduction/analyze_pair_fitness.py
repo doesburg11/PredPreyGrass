@@ -88,7 +88,7 @@ def run_episodes(env_config, modules, n_episodes, seed0):
         # Tally offspring per reproducing pair THIS episode -- agent_parents is reset fresh at the
         # next reset(), and agent names are reused episode to episode, so this must be done now.
         offspring_counts = {}
-        for child, parents in env.agent_parents.items():
+        for _, parents in env.agent_parents.items():
             offspring_counts[parents] = offspring_counts.get(parents, 0) + 1
         for (male, female), count in offspring_counts.items():
             male_share = _prey_share(env, male)
@@ -127,7 +127,7 @@ def _spearman(sample_pairs):
     counts = [p["offspring_count"] for p in sample_pairs]
     if len(set(diffs)) < 2 or len(set(counts)) < 2:
         return None  # no variation in one of the two variables -- correlation is undefined
-    rho, _ = spearmanr(diffs, counts)  # scipy handles ties via average ranks; a naive
+    rho = spearmanr(diffs, counts).statistic  # scipy handles ties via average ranks; a naive
     # double-argsort (an earlier version's approach, caught by Codex review) assigns ties distinct
     # arbitrary ranks instead, which is wrong whenever offspring_count repeats -- as it does here,
     # almost always (small integer counts).

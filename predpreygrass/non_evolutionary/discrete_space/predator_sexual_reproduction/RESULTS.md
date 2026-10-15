@@ -123,7 +123,7 @@ All runs and analysis outputs are kept in this module's `runs/` folder (gitignor
 - `runs/analysis/`: the outputs, logs and launcher scripts of the analyses, by iteration:
 
 | Iteration | In `runs/analysis/` |
-|---|---|
+| --- | --- |
 | 0-1 | `prey_approach_analysis_2026-09-19.json` (POSITIVE_CONTROL and REALISTIC approach bias) |
 | 2 | `foraging_rollout{9,14,19,29}.log`, `prey_approach_foraging_ckpt9_2026-09-20.json`, `eval_visual.log` (visual check with `evaluate_ppo_from_checkpoint_debug.py`) |
 | 3 | `penalty_rollout{9,14,19,24,29}.log` |
@@ -179,7 +179,7 @@ can't at the real, subtler odds either. This is the same "positive control befor
 null" logic used in `predpreygrass/evolutionary/eco_evolutionary_metabolic_rate/RESULTS.md`'s
 Iteration 6 (sharpen the fitness gradient before concluding a trait lacks selective leverage).
 
-**Result: the extreme killed the mechanism outright rather than stress-testing it.**
+Result: the extreme killed the mechanism outright rather than stress-testing it.
 `hunting_success_rate_predator_male`/`_female` tracked the configured 95%/5% almost exactly
 (0.956 / 0.047 at iteration 100) — the hunting-outcome code is wired correctly. But at a 90%
 death chance per failed hunt, a female's expected survival is ~1 hunting attempt
@@ -187,7 +187,7 @@ death chance per failed hunt, a female's expected survival is ~1 hunting attempt
 in essentially **every single episode, from iteration 1 onward, and never recovered**:
 
 | Iteration | Female hunting attempts | Female hunting deaths | Final # females | Female-extinct episode rate |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | 5.5 | 5.5 | 0.0 | 100% |
 | 25 | 9.8 | 8.3 | 0.0 | 100% |
 | 50 | 10.2 | 9.1 | 0.0 | 100% |
@@ -234,7 +234,7 @@ CPU-only (`--gpu-fraction 0`, to leave the GPU to another run), about 480 s/iter
 **Training curves** (block means, per episode; see `results_figures/population_over_training.png`):
 
 | Iterations | Episode length | Males alive at end | Females alive at end | Prey alive at end | Births M / F |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 1-10 | 350 | 3.2 | 0.03 | 48.0 | 1.8 / 2.5 |
 | 41-50 | 534 | 4.6 | 0.33 | 49.4 | 4.2 / 4.5 |
 | 91-100 | 459 | 4.9 | 0.06 | 50.0 | 4.3 / 4.4 |
@@ -268,7 +268,7 @@ its partial output is kept as `..._ABORTED_PARTIAL` in `runs/`.
 **Training curves** (block means, per episode):
 
 | Iterations | Episode length | Males alive at end | Females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | 1-10 | 323 | 5.0 | 0.0 | 42.1 | 41 / 42 | 2.5 / 2.0 |
 | 91-100 | 829 | 8.9 | 1.0 | 41.5 | 208 / 179 | 16.7 / 16.7 |
 | 191-200 | 839 | 13.9 | 1.7 | 34.6 | 270 / 187 | 25.3 / 19.9 |
@@ -286,13 +286,14 @@ the end, males climb from 6 to about 17-21. One episode, illustrative only.
 random mover; 30 episodes per checkpoint; bootstrap CIs exclude 0 for every fruit value):
 
 | | Iter 100 | Iter 150 | Iter 200 | Iter 300 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Male, fruit | x1.25 | x1.34 | x1.40 | **x1.54** |
 | Female, fruit | x1.24 | x1.41 | x1.54 | **x1.65** |
 | Male, prey | x1.00 | x1.03 | x1.06 | **x1.07** |
 | Female, prey | x0.96 | x0.98 | x0.99 | **x0.99** |
 
-**Findings**
+Findings
+
 1. Predators can learn to steer here. Fruit approach grew steadily and had not plateaued, in
    both sexes. Iteration 1 showed none. So the earlier null result was at least partly a
    reward-density problem.
@@ -322,7 +323,7 @@ identical to FORAGING (catch +1.0, fruit +0.5) plus `--penalty-combat-death 1.0`
 **Training curves** (block means, per episode; FORAGING in brackets, see the chart):
 
 | Iterations | Episode length | Males / females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 91-100 | 707 (829) | 7.0 / 0.5 (8.9 / 1.0) | 44.5 (41.5) | 183 / 135 (208 / 179) | 12.4 / 11.8 (16.7 / 16.7) |
 | 191-200 | 545 (839) | 4.1 / 0.3 (13.9 / 1.7) | 49.6 (34.6) | 108 / 74 (270 / 187) | 4.9 / 5.3 (25.3 / 19.9) |
 | 291-300 | **607 (1001)** | 3.8 / 0.35 (16.1 / 6.0) | 49.8 (31.3) | 109 / 78 (348 / 279) | 3.0 / 3.6 (30.0 / 36.0) |
@@ -335,7 +336,7 @@ FORAGING, and prey rose to the 50 cap.
 brackets):
 
 | | Iter 100 | Iter 150 | Iter 200 | Iter 250 | Iter 300 |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | Female, prey (cells) | -0.010 | -0.025 | -0.039 | -0.044 | **-0.056** (-0.008) |
 | Male, prey (cells) | +0.005 | +0.014 | +0.018 | +0.015 | +0.013 (+0.027) |
 | Male, P(step onto prey) vs random | x0.96 | x0.99 | x0.95 | x0.92 | **x0.87** (x1.07) |
@@ -343,7 +344,8 @@ brackets):
 | Female, fruit | x1.28 | x1.36 | x1.46 | x1.53 | x1.59 (x1.65) |
 | Male, fruit | x1.12 | x1.21 | x1.30 | x1.39 | x1.52 (x1.54) |
 
-**Findings**
+Findings
+
 1. **The penalty did not create a sex-specific division of labor.** Females do lean away from prey
    at a distance about 7x more than in FORAGING (-0.056 against -0.008 cells), the predicted
    direction. But males also became less willing to step onto an adjacent prey (x0.87 against
@@ -375,7 +377,7 @@ hours, 82-115 s/iteration). Minibatch 128, 30 epochs, like every run up to this 
 **Training curves** (block means, per episode; FORAGING and FORAGING_PENALTY in brackets):
 
 | Iterations | Episode length | Males / females alive at end | Prey alive at end | Hunting attempts M / F | Births M / F |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 91-100 | 822 (829, 707) | 9.8 / 1.6 (8.9 / 1.0, 7.0 / 0.5) | 41.6 | 210 / 161 | 16.2 / 14.9 |
 | 191-200 | 973 (839, 545) | 17.8 / 3.5 (13.9 / 1.7, 4.1 / 0.3) | 31.4 | 369 / 237 | 35.6 / 28.3 |
 | 291-300 | **990** (1001, 607) | 19.2 / 4.9 (16.1 / 6.0, 3.8 / 0.35) | 28.3 | 366 / 278 | 36.9 / 39.2 |
@@ -387,7 +389,7 @@ populations at or above FORAGING). The 1.0 penalty had already declined by itera
 at iteration 300 in brackets):
 
 | | Iter 100 | Iter 200 | Iter 300 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Male, prey (cells) | +0.014 | +0.031 | **+0.040** (+0.027, +0.013) |
 | Female, prey (cells) | -0.004 | -0.011 | **-0.026** (-0.008, -0.056) |
 | Male, P(step onto prey) vs random | x1.00 | x1.06 | **x1.08** (x1.07, x0.87) |
@@ -395,7 +397,8 @@ at iteration 300 in brackets):
 | Male, fruit | x1.24 | x1.39 | x1.52 (x1.54, x1.52) |
 | Female, fruit | x1.23 | x1.61 | **x1.74** (x1.65, x1.59) |
 
-**Findings**
+Findings
+
 1. **No collapse.** Unlike 1.0, the 0.2 penalty leaves the ecosystem intact.
 2. **The predicted pattern appears.** Males approach prey and step onto it more than a random
    mover (x1.08), where the 1.0 run made them stop (x0.87). Females lean away from prey about
@@ -430,7 +433,8 @@ dominated by CPU environment simulation (they are not), and (2) that two runs wo
 same cores (they would not; only Ray's reservation and, as found below, GPU memory limit running
 jobs in parallel).
 
-**Search.**
+Search.
+
 - Read the PPO settings in the tune script: `train_batch_size_per_learner=1024` (in environment
   steps), `minibatch_size=128`, `num_epochs=30`.
 - Tried `py-spy` on the running learner: refused (`Permission Denied`, `ptrace_scope=1`, would need
@@ -438,19 +442,21 @@ jobs in parallel).
 - Read the per-phase timers already in the run's `progress.csv` and TensorBoard events:
 
 | Iteration | Total | Environment sampling | Learner update |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | ~10 | 31.5 s | 1.1 s | 30.4 s |
 | ~37 | 50.6 s | 1.4 s | 49.2 s |
 | ~73 | 68.2 s | 1.6 s | 66.5 s |
 
   About 97% of every iteration is the learner update.
+
 - The logged training counters show about 1.26 million samples trained per policy per iteration,
   identical for all three policies, with `module_train_batch_size_mean` = 128: about 9,800
   minibatches per policy, about 29,000 gradient steps per iteration, about 2.3 ms per step.
 - Read the installed RLlib source (ray 2.58.0, `ray/rllib/utils/minibatch_utils.py`,
   `MiniBatchCyclicIterator`).
 
-**Explanation.**
+Explanation.
+
 1. The cost is the number of tiny gradient steps, not the mathematics: 128-sample steps on a small
    network are limited by single-threaded Python and kernel-launch overhead, which is why one CPU
    core is saturated while the GPU idles.
@@ -470,7 +476,7 @@ jobs in parallel).
 penalty), seed 42, run one after the other on the GPU after the penalty-0.2 run finished, using the
 new flags added to the tune script (defaults unchanged, 128 and 30):
 
-```
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.tune_ppo_predator_sexual_reproduction \
     --seed 42 --max-iters 50 --reward-catch-prey 1.0 --reward-gather-fruit 0.5 \
     --name PPO_PREDATOR_SEXUAL_REPRODUCTION_AB_MB1024_SEED42 --minibatch-size 1024
@@ -481,7 +487,7 @@ The baseline for comparison is the first 50 iterations of the existing FORAGING 
 (minibatch 128, 30 epochs), not a re-run.
 
 | | Baseline (128, 30 ep) | **MB1024** (1024, 30 ep) | EP10 (128, 10 ep) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Time for 50 iterations | 84.7 min | **14.7 min** | 30.3 min |
 | Seconds per iteration | 41.3 | 8.1 | 15.6 |
 | Learner update per iteration | 40.0 s | 6.9 s | 14.4 s |
@@ -495,13 +501,14 @@ The baseline for comparison is the first 50 iterations of the existing FORAGING 
 **Rollout at iteration 50** (P(step onto target) vs a random mover, 30 episodes):
 
 | | Baseline | MB1024 | EP10 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Male, fruit | x1.18 | **x1.34** | x1.18 |
 | Female, fruit | x1.12 | **x1.47** | x1.27 |
 | Male, prey | x0.96 | x1.05 | x0.93 |
 | Female, prey | x0.95 | x1.00 | x0.87 |
 
-**Findings**
+Findings
+
 1. `minibatch_size=1024` makes training **5.8x faster** (a 300-iteration run of about 1.5 hours
    instead of 8-9), matching the 5-8x estimate from the diagnosis.
 2. Both variants also reached a healthier ecosystem than the baseline by iteration 50; MB1024 is
@@ -535,16 +542,17 @@ the transfers in and out (mate gift, parental care), measured from the change in
 totals equal `parental_care_energy_total` / `mate_gift_energy_total` (9.597 and 2.806 in one test episode). A first
 version counted only own foraging and was replaced after it was pointed out that gifts received were missing.
 
-**Results, per life, all lives, final checkpoint (men | women):**
+Results, per life, all lives, final checkpoint (men | women):
 
 | Run | Men: life | fruit energy (fruits) | prey energy (catches) | prey share | net intake /100 steps | Women: life | fruit (fruits) | prey (catches) | prey share |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Random policy | 236 | 35.9 (38.6) | 25.2 (5.7) | 41.3% | 25.8 | 148 | 22.1 (24.0) | 3.9 (0.9) | 14.8% |
 | FORAGING (MB128) | 385 | 62.3 (121) | 40.9 (8.7) | 39.6% | 26.7 | 192 | 33.7 (59) | 5.5 (1.2) | 14.1% |
 | FORAGING_PENALTY02 (MB128) | 389 | 60.6 (117) | 40.3 (8.5) | 39.9% | 25.8 | 179 | 31.5 (55) | 5.4 (1.1) | 14.5% |
 | REF (MB1024) | 382 | 64.2 (159) | 38.5 (8.8) | 37.4% | 26.7 | 197 | 34.5 (69) | 5.3 (1.2) | 13.2% |
 
-**Findings**
+Findings
+
 1. **Training did not change what men eat.** Their prey share (about 37-40%) equals a random walker's (41%); they only
    live longer and take in more in total.
 2. **Gifts are energetically negligible.** A woman receives about 0.3-0.5 energy from her mate and 0.5-0.8 from parents per
@@ -571,10 +579,10 @@ FORAGING_PENALTY02 but at 1024, so the comparison is like for like), PROP k=0.2,
 replicated with seeds 43 and 44 (about 60-85 minutes each, 2026-09-21 16:55-18:49). Chart:
 `results_figures/population_over_training_mb1024.png`.
 
-**Ecology, iterations 291-300 (block means, per episode):**
+Ecology, iterations 291-300 (block means, per episode):
 
 | | Episode length | Hunting attempts M / F | F/M ratio | Births M / F | Males / females alive | Prey alive |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | REF (flat) | 1001 | 342 / 239 | 0.70 | 31 / 32 | 17.2 / 6.4 | 32.0 |
 | PROP k=0.2 | **640** | 154 / 115 | 0.75 | 8 / 8 | 5.1 / **0.6** | 47.6 |
 | PROP k=0.5 | 926 | 473 / 191 | **0.40** | 37 / 39 | 20.1 / 5.4 | 19.2 |
@@ -589,24 +597,24 @@ below the cap after iteration 245 (prey are depleted to about 19).
 brackets), iterations 100 / 200 / 300:
 
 | | REF | PROP k=0.2 | PROP k=0.5 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Male, prey** | x0.92 / x0.90 / x0.85 (+0.018 / +0.005 / -0.010) | x1.15 / x1.09 / x1.18 (+0.073 / +0.088 / +0.104) | x1.24 / x1.32 / **x1.44** (+0.201 / +0.275 / **+0.286**) |
 | Female, prey | x1.04 / x0.97 / x0.91 | x0.98 / x0.95 / x1.00 | x1.14 / x1.08 / x0.99 |
 | Male, fruit | x1.42 / x1.54 / x1.61 | x1.24 / x1.31 / x1.42 | x1.27 / x1.47 / x1.54 |
 | **Female, fruit** | x1.61 / x1.75 / x1.78 | x1.21 / x1.18 / x1.12 | x1.72 / x1.87 / **x1.91** |
 
-**Energy per life, final checkpoint (all lives):**
+Energy per life, final checkpoint (all lives):
 
 | | Men: life | fruit energy (fruits) | prey energy (catches) | prey share | net /100 steps | Women: life | fruit (fruits) | prey (catches) | prey share |
-|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | REF | 382 | 64.2 (159) | 38.5 (8.8) | 37.4% | 26.7 | 197 | 34.5 (69) | 5.3 (1.2) | 13.2% |
 | PROP k=0.2 | 307 | 82.5 (84) | 49.7 (11.1) | 37.6% | 42.9 | 166 | 25.0 (34) | 6.5 (1.4) | 20.5% |
 | PROP k=0.5 | 363 | 55.9 (98) | 49.4 (10.3) | **46.9%** | 28.8 | 164 | 30.0 (57) | 3.7 (0.8) | **11.1%** |
 
-**Replication of k = 0.5 (seeds 42, 43, 44; iteration 300, 30 rollout episodes, 20 energy episodes):**
+Replication of k = 0.5 (seeds 42, 43, 44; iteration 300, 30 rollout episodes, 20 energy episodes):
 
 | | Seed 42 | Seed 43 | Seed 44 | Flat-reward runs (FORAGING, PENALTY02, REF) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Male, prey: approach bias (cells) | +0.286 | +0.281 | +0.263 | -0.010 to +0.040 |
 | **Male, prey: P(step onto adjacent) vs random** | x1.44 | x1.49 | x1.32 | x0.85 to x1.08 |
 | Female, prey: P(step onto adjacent) | x0.99 | x1.02 | x1.07 | x0.91 to x0.99 |
@@ -626,7 +634,8 @@ prey share (46.9-49.6%) is above the highest flat-reward value (39.9%) and above
 the three seeds (0.023 cells in approach bias, +0.263 to +0.286) is about half the 0.050-cell difference between two flat-reward runs of
 the same configuration (FORAGING_PENALTY02 at minibatch 128: +0.040; REF at minibatch 1024: -0.010).
 
-**Findings**
+Findings
+
 1. **Flat rewards pay repeated eating of nearly empty fruit, and the proportional reward stops that.** In REF a fruit yields 0.40 energy; at k=0.2
    it yields 0.99 and net intake per step rises 60%. That flat rewards cause the missing male prey preference through this farming is a
    plausible explanation, not an isolated one: k=0.2 and k=0.5 pay the same per unit of energy for fruit and prey and differ only in reward scale,
@@ -656,10 +665,10 @@ checkpoint only; hunting-attempt counts are noisy and were not used as evidence.
 `--female-success-prob 0.90 --female-death-prob 0.05`, so women have the men's odds. Seeds 42 and 43
 (2026-09-21 19:30-21:10, about 50 minutes each).
 
-**Results, iteration 300 (unequal k = 0.5 baseline in the last column):**
+Results, iteration 300 (unequal k = 0.5 baseline in the last column):
 
 | | Equal odds, seed 42 | Equal odds, seed 43 | Unequal odds (three seeds) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Male, prey: approach bias (cells) | +0.254 | +0.397 | +0.26 to +0.29 |
 | **Female, prey: approach bias (cells)** | **+0.406** | **+0.346** | +0.02 to +0.04 |
 | **Men: prey share of own intake** | 38.0% | 33.7% | 46.9% to 49.6% |
@@ -668,7 +677,8 @@ checkpoint only; hunting-attempt counts are noisy and were not used as evidence.
 | Prey alive at end / episode length (iters 291-300) | 1.6 / 268 | 0.0 / 175 | 18-21 / 926-1001 |
 | Men / women life (steps) | 94 / 136 | 107 / 114 | about 370 / 165-200 |
 
-**Findings**
+Findings
+
 1. **The division of labor disappears when the odds are equal**, on both seeds: women hunt as much as men (they approach prey as hard and
    make more attempts per episode) and both sexes take about the same share (34-38%) of their energy from prey.
 2. **The ecosystem collapses**: with both sexes hunting at 90% success, prey are hunted to extinction within 175-270 steps and the
@@ -690,7 +700,7 @@ success (90%) but keeps their own death chance (10%); ABL_DEATH_ONLY gives them 
 success (20%). Both at k = 0.5, minibatch 1024, 300 iterations, 2026-09-21 21:11-23:02.
 
 | Women's odds (success / death) | Men: prey share | **Women: prey share** | Women: prey approach (cells) | Women: P(step onto prey) | Women / men attempts | Prey alive | Episode length |
-|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | **20% / 10%** (baseline, 3 seeds) | 46.9-49.6% | **11.1-12.1%** | +0.02 to +0.04 | x1.02-1.07 | 0.40-0.53 | 18-21 | 926-1001 |
 | **20% / 5%** (death-only) | 44.9% | **15.3%** | +0.051 | x1.31 | 0.62 | 19.0 | 1001 |
 | **90% / 10%** (success-only) | 33.4% | **47.9%** | +0.344 | x1.32 | 0.73 | 2.9 | 393 |
@@ -698,7 +708,8 @@ success (20%). Both at k = 0.5, minibatch 1024, 300 iterations, 2026-09-21 21:11
 
 Men in the single-factor runs: prey approach +0.276 (death-only) and +0.358 (success-only) cells, life 381 and 294 steps; women live 199 and 132 steps.
 
-**Findings from the single-factor runs**
+Findings from the single-factor runs
+
 1. **Women's success rate appears to be the more influential factor.** Giving women only the men's success (90%), with their 10% death chance kept, removes
    the split and even reverses it: women take 47.9% of their energy from prey against 33.4% for men, and approach prey as hard as men.
 2. **The death chance alone does not remove the split.** With only the men's 5% death chance (success still 20%) men take 44.9% and women
@@ -731,7 +742,7 @@ k = 0.5, flat rewards 0, minibatch 1024, 300 iterations, `penalty_predator_death
 the three penalty-0.2 seeds:
 
 | | NOPEN s42 | NOPEN s43 | Penalty 0.2 (3 seeds) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Male, prey approach (cells) | +0.325 | +0.295 | +0.263 to +0.286 |
 | Male, P(step onto adjacent prey) | x1.73 | x1.77 | x1.32 to x1.49 |
 | Female, prey approach (cells) | +0.026 | +0.018 | +0.017 to +0.039 |
@@ -751,7 +762,7 @@ trained policy); each checkpoint's male and female modules are queried on the sa
 confound that rollouts measure a policy partly on the states it creates for itself. Prey approach-bias, male minus female, checkpoint 29:
 
 | Run | Men | Women | **Men - women** |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | k=0.5, penalty 0.2 (seeds 42/43/44) | +0.230/+0.237/+0.189 | +0.009/+0.038/+0.043 | **+0.221/+0.199/+0.146** |
 | k=0.5, no penalty (seeds 42/43) | +0.209/+0.228 | +0.030/+0.040 | **+0.178/+0.189** |
 | REF (flat rewards) | +0.019 | -0.001 | +0.020 |
@@ -776,7 +787,7 @@ Four points at k = 0.5, penalty 0.2, women's death chance held at 10% (their own
 and 90% (= ABL_SUCCESS_ONLY, death 10%).
 
 | Women's success | Episode length | Women's catches/episode | Women/men attempts | Prey alive | Women: prey share of energy | Female prey approach (cells) |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | 20% (baseline) | 926 | 35.2 | 0.40 | 19.2 | 11.1% | +0.017 |
 | **40%** | 913 | 76.6 | 0.43 | 21.4 | 26.4-27.2% | +0.106 |
 | **60%** | **721** | **158.1** | **0.89** | **5.1** | 37.7-38.5% | +0.198 |
@@ -790,7 +801,7 @@ absorbable by the ecosystem, but a large one triggers over-hunting and collapse.
 #### D. Replicating the single-factor ablations (seeds 43, 44)
 
 | | ABL_SUCCESS_ONLY (90%/10%) | | | ABL_DEATH_ONLY (20%/5%) | | |
-|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- |
 | Seed | 42 | 43 | 44 | 42 | 43 | 44 |
 | Women/men attempts | 0.73 | 0.92 | 0.80 | 0.62 | 0.78 | 0.80 |
 | Prey alive (iters 291-300) | 2.9 | 0.4 | 0.5 | 19.0 | 22.8 | 22.8 |
@@ -826,13 +837,14 @@ ABL_DEATH_ONLY, three seeds, from Iteration 9), 10% (baseline, three seeds), and
 seed 42 and 43), k=0.5, penalty 0.2, minibatch 1024, 300 iterations.
 
 | Women's death chance | Episode length | Prey alive | Women/men attempts | Women: prey share of energy | Female prey approach (cells) |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | 5% (3 seeds) | 1001 | 19.0-22.8 | 0.62-0.80 | 14.7-15.4% | (not re-measured here; Iteration 9D) |
 | 10% baseline (3 seeds) | 926-1001 | 18-21 | 0.40-0.53 | 11.1-12.1% | +0.017 to +0.039 |
 | **20%** (2 seeds) | 901-975 | 27.5-30.2 | 0.33-0.37 | 11.1-12.4% | +0.003 to +0.008 |
 | **30%** (2 seeds) | 757-818 | 24.9-31.7 | 0.23-0.29 | 9.2-9.4% | **-0.018 to -0.021** |
 
-**Findings**
+Findings
+
 1. **The attempt ratio declines broadly across the range, though not every metric moves cleanly at every step.** Women/men
    attempts: 0.62-0.80 (5%) to 0.40-0.53 (10%) to 0.33-0.37 (20%) to 0.23-0.29 (30%) -- a consistent downward trend across all
    four points. Women's prey-energy share is lower at 30% (9.2-9.4%) than at 5% (14.7-15.4%), but the 10% and 20% points
@@ -855,8 +867,7 @@ of the outcome, with success held fixed -- not a pure, fully isolated change in 
 
 ### Iteration 11 — Fixed prey-density experiment: does the split need the collapse?
 
-*Wording tightened after a third Codex review, which caught a real factual error (see the end of this section).*
-
+Wording tightened after a third Codex review, which caught a real factual error (see the end of this section).
 **Purpose:** every hunting-success ablation so far (Iteration 8's ABL_SUCCESS_ONLY/ABL_EQUAL_ODDS, Iteration 9's response
 surface above 40-60%) removed the k=0.5 division of labor, but also collapsed the prey population (0.4-2.9 alive). Codex's
 second opinion flagged this directly: it is unclear whether raising success removes the split, or whether the collapsing
@@ -888,7 +899,7 @@ per-episode budget shared with normal births), so under heavy enough hunting pre
 single long episode, after which replenishment silently stops and prey collapse resumes:
 
 | Run | Iters 1-50 (prey) | Iters 91-100 (prey) | Iters 191-300 (prey) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | SUCCESS_ONLY_MATCHED (90%/10%) | ~20 (clean) | 20.1 (clean) | drops to 6.3 by iter 300 |
 | EQUAL_ODDS_MATCHED (90%/5%) | 20.5-20.0 through iter 50 | 4.6 (already degraded) | 0.0 from iter ~190 |
 
@@ -901,7 +912,7 @@ steps the environment -- see Iteration 9B), on both the last genuinely clean che
 (9/19/29 = iterations 100/200/300, seed 42 only):
 
 | Checkpoint | Ecology at that point | Prey approach, men - women |
-|---|---|---|
+| --- | --- | --- |
 | SUCCESS_ONLY_MATCHED ckpt9 (iter 100) | clean | -0.001 [-0.013,+0.011] |
 | SUCCESS_ONLY_MATCHED ckpt19 (iter 200) | clean | -0.016 [-0.029,-0.002] |
 | SUCCESS_ONLY_MATCHED ckpt29 (iter 300) | degraded | -0.007 [-0.027,+0.012] |
@@ -914,7 +925,8 @@ Compare against the same measure elsewhere: k=0.5 baseline +0.146 to +0.221 (the
 the *unmatched* ABL_SUCCESS_ONLY +0.038 (a residual male lean survives); the *unmatched* ABL_EQUAL_ODDS -0.037/+0.095
 (inconsistent between seeds).
 
-**Findings**
+Findings
+
 1. **SUCCESS_ONLY_MATCHED: the large positive male lean disappears; two of the three checkpoints are consistent with zero, and
    the third (iteration 200) shows a small female lean whose interval excludes zero** (-0.016 [-0.029,-0.002]). None shows the
    +0.15 to +0.22 male lean of the unmatched k=0.5 baseline, and none matches the unmatched ABL_SUCCESS_ONLY's residual +0.038
@@ -987,8 +999,7 @@ A follow-up review of Iterations 10-11 (read-only). It found one factual error a
 
 ### Iteration 12 — The missing control: a full 2x2 odds factorial inside the fixed-density environment
 
-**Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.**
-
+Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.
 **Purpose:** Iteration 11 ended with three gaps its own findings could not close: no original-odds (20%/10%) control
 trained inside `FixedPreyDensityEnv`; only one seed per condition; and the pool-exhaustion bug meant the two conditions
 tested only had a "clean" window at different, uncomparable training maturities. The third Codex review's top
@@ -1030,10 +1041,10 @@ success changes *and* the resulting endogenous ecology changes with it -- not th
 under otherwise-matched ecological conditions, and not whether the behavioral change is a direct effect of the odds
 themselves versus an indirect effect of the crowding, turnover, and competition that the odds change also causes.
 
-**Shared-state comparison (approach-bias difference, male minus female; 95% bootstrap CI in brackets):**
+Shared-state comparison (approach-bias difference, male minus female; 95% bootstrap CI in brackets):
 
 | Condition | seed | prey approach diff(M-F) | fruit approach diff(M-F) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | CONTROL | 42 | +0.150 [+0.135,+0.169] | -0.136 [-0.153,-0.120] |
 | CONTROL | 43 | +0.144 [+0.128,+0.158] | -0.146 [-0.157,-0.135] |
 | CONTROL | 44 | +0.221 [+0.208,+0.233] | -0.142 [-0.151,-0.133] |
@@ -1050,16 +1061,16 @@ themselves versus an indirect effect of the crowding, turnover, and competition 
 (Adjacent step-onto-prey/fruit probabilities show the same qualitative pattern per condition; full detail in
 `shared_states_factorial.log`, omitted here for space.)
 
-**Energy-source comparison (prey share of own gross foraging energy, completed lives only):**
+Energy-source comparison (prey share of own gross foraging energy, completed lives only):
 
 | Condition | seed | male prey share | female prey share |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | CONTROL | 42 / 43 / 44 | 52.6% / 52.1% / 51.9% | 11.4% / 11.4% / 13.0% |
 | DEATHONLY | 42 / 43 / 44 | 51.0% / 52.7% / 50.4% | 13.7% / 14.9% / 14.8% |
 | SUCCESSONLY | 42 / 43 / 44 | 27.8% / 29.9% / 28.0% | 40.5% / 42.2% / 40.7% |
 | EQUALODDS | 43 / 44 (42 missing, see caveats) | 30.1% / 30.8% | 33.9% / 34.9% |
 
-**What this shows, condition by condition:**
+What this shows, condition by condition:
 
 1. **CONTROL replicates the original division of labor cleanly, on both measures, all three seeds, in the stabilized
    environment.** This closes Iteration 11's biggest gap: the k=0.5 finding was never an artifact of measuring only in
@@ -1091,7 +1102,8 @@ themselves versus an indirect effect of the crowding, turnover, and competition 
    lifespans plausibly do explain noisier estimates. EQUALODDS's predator population is also 3-4x CONTROL's, so this
    condition's ecology is furthest from "same as CONTROL, only odds differ."
 
-**Caveats:**
+Caveats:
+
 - Predator population size is not held fixed and grows substantially with hunting success (see above): these four
   conditions are not clean single-variable-changed comparisons of each other. SUCCESSONLY and especially EQUALODDS
   occur in more crowded ecologies than CONTROL/DEATHONLY, which is itself a plausible contributor to their noisier or
@@ -1110,8 +1122,7 @@ themselves versus an indirect effect of the crowding, turnover, and competition 
 
 ### Iteration 13 — Controlling for population size: does the reversal survive?
 
-**Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.**
-
+Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.
 **Purpose:** Iteration 12 found that raising female hunting success also roughly triples predator population, so it
 was unclear whether the behavioral reversal it reported was a direct effect of the odds or an indirect effect of the
 population/crowding change the odds also cause. A new `predator_population_cap` config option (added this iteration;
@@ -1134,10 +1145,10 @@ held tightly at the same ceiling. This is a capped comparison, not a matched one
 real, not merely cosmetic, residual asymmetry -- but the 21-to-26 range here is far narrower than Iteration 12's
 roughly 26-to-92 range.
 
-**Shared-state comparison (approach-bias difference, male minus female; capped vs. the Iteration 12 uncapped runs):**
+Shared-state comparison (approach-bias difference, male minus female; capped vs. the Iteration 12 uncapped runs):
 
 | Condition | seed | prey, capped | prey, uncapped | fruit, capped | fruit, uncapped |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | CONTROL | 42 | +0.190 [+.176,+.204] | +0.150 [+.135,+.165] | -0.099 [-.115,-.085] | -0.136 [-.156,-.119] |
 | CONTROL | 43 | +0.132 [+.114,+.149] | +0.144 [+.129,+.158] | -0.077 [-.090,-.067] | -0.146 [-.156,-.135] |
 | CONTROL | 44 | +0.099 [+.085,+.115] | +0.221 [+.208,+.233] | -0.063 [-.072,-.054] | -0.142 [-.153,-.133] |
@@ -1151,16 +1162,16 @@ roughly 26-to-92 range.
 | EQUALODDS | 43 | +0.027 [+.013,+.043] | +0.008 [-.004,+.019] | -0.055 [-.065,-.046] | +0.024 [+.010,+.039] |
 | EQUALODDS | 44 | +0.008 [-.002,+.018] | -0.035 [-.050,-.020] | +0.000 [-.010,+.010] | +0.063 [+.053,+.074] |
 
-**Energy-source comparison (prey share of own gross foraging energy, completed lives; capped vs. uncapped):**
+Energy-source comparison (prey share of own gross foraging energy, completed lives; capped vs. uncapped):
 
 | Condition | seed | male, capped | male, uncapped | female, capped | female, uncapped |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | CONTROL | 42 / 43 / 44 | 48.4% / 44.0% / 46.0% | 52.6% / 52.1% / 51.9% | 10.0% / 13.4% / 13.3% | 11.4% / 11.4% / 13.0% |
 | DEATHONLY | 42 / 43 / 44 | 54.1% / 52.3% / 50.9% | 51.0% / 52.7% / 50.4% | 11.6% / 12.8% / 13.7% | 13.7% / 14.9% / 14.8% |
 | SUCCESSONLY | 42 / 43 / 44 | 38.1% / 40.8% / 41.3% | 27.8% / 29.9% / 28.0% | 39.5% / 39.5% / 37.9% | 40.5% / 42.2% / 40.7% |
 | EQUALODDS | 42 / 43 / 44 | 43.4% / 43.1% / 40.5% | 30.1% / 30.8% (2 seeds) | 37.1% / 38.4% / 39.8% | 33.9% / 34.9% (2 seeds) |
 
-**What this shows:**
+What this shows:
 
 1. **CONTROL and DEATHONLY keep the same qualitative pattern, though some seed-level effect sizes shift
    considerably.** Every seed still shows a clear male-leaning prey split and a clear female-leaning fruit split
@@ -1214,7 +1225,8 @@ a thousandth or two in places (e.g. CONTROL seed 42's prey CI is [+.135,+.169] i
 policy, not a data or measurement discrepancy. Worth a single canonical set of numbers if this table is ever
 regenerated again, so a reader doesn't have to work that out themselves.
 
-**Caveats:**
+Caveats:
+
 - The cap constrains growth; it does not force an exact population match. CONTROL's population (~21-22) sits below
   the other three conditions' ~25.5-26 (roughly 15-19% lower), a residual asymmetry, though far smaller than
   Iteration 12's 26-to-92 range. "Closer to a common ceiling" is accurate; "matched population" is not.
@@ -1232,8 +1244,7 @@ regenerated again, so a reader doesn't have to work that out themselves.
 
 ### Iteration 14 — Coordination or parallel specialization? A mate-proximity contingency test
 
-**Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.**
-
+Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.
 **Purpose:** every result so far (Iterations 7-13) only shows an *average* difference between the sexes -- males hunt
 more than females across the whole population. None of it says whether any individual predator's behavior is
 associated with its own specific partner's real-time proximity, or whether the split is two fixed per-sex
@@ -1256,7 +1267,7 @@ seeds (the best-established, most consistently replicated condition), checkpoint
 away decisions):**
 
 | Sex | Target | seed 42 | seed 43 | seed 44 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | male | prey | -0.000 [-.010,+.010] (30/30) | +0.018 [+.008,+.028] (30/30) | +0.019 [+.008,+.029] (30/30) |
 | male | fruit | -0.016 [-.023,-.009] (30/30) | -0.004 [-.010,+.001] (30/30) | +0.000 [-.007,+.009] (30/30) |
 | female | prey | -0.010 [-.019,-.002] (30/30) | -0.017 [-.024,-.008] (30/30) | -0.014 [-.025,-.004] (30/30) |
@@ -1267,7 +1278,7 @@ For context: 42.6-43.5% of all prey-decisions across the three seeds came from a
 elsewhere (bucket "abandoned", included in "away" -- a Codex review caught an early version of this script
 mislabeling these as "never-mated" and silently excluding them, discussed below).
 
-**What this shows:**
+What this shows:
 
 1. **Females show a small contingency effect on both targets, statistically detectable in these evaluation episodes
    on every seed.** Every one of the six female cells above has a negative near-minus-away difference with a CI
@@ -1315,7 +1326,8 @@ less consistently for males, especially on prey** -- inconsistent with the simpl
 unconditional, partner-indifferent per-sex average, but not itself a demonstration of partner-contingent behavior,
 mate recognition, causality, or coordination in the fuller sense.
 
-**Caveats:**
+Caveats:
+
 - Only CONTROL (original odds) has been tested this way; whether the same pattern holds under DEATHONLY/SUCCESSONLY/
   EQUALODDS, or under the capped-population runs (Iteration 13), is untested.
 - The "away" bucket pools far, dead, and abandoned together -- a heterogeneous population, not "distant but otherwise
@@ -1339,7 +1351,7 @@ contrast, because the "away" bucket above pools far, dead, and abandoned. Near-m
 95% bootstrap CI:
 
 | Sex | Target | seed 42 | seed 43 | seed 44 |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | female | fruit | -0.047 [-.058,-.036] | -0.074 [-.084,-.063] | -0.090 [-.103,-.079] |
 | female | prey | -0.008 [-.022,+.006] | -0.011 [-.028,+.006] | -0.013 [-.028,+.001] |
 | male | prey | +0.012 [+.001,+.024] | +0.031 [+.018,+.044] | +0.032 [+.018,+.046] |
@@ -1359,7 +1371,7 @@ episode (1,777 / 1,671 / 1,726 pairs on the three seeds), does a larger differen
 prey-share go with more offspring from that pair? Episode-cluster bootstrap, tie-aware Spearman:
 
 | | seed 42 | seed 43 | seed 44 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | high-minus-low mean offspring (median split) | -0.017 [-.078,+.039] | -0.022 [-.090,+.050] | -0.007 [-.069,+.052] |
 | Spearman rho | -0.019 [-.061,+.028] | -0.019 [-.055,+.019] | +0.006 [-.038,+.049] |
 
@@ -1373,8 +1385,7 @@ a reminder not to read smoke tests.
 
 ### Iteration 15 — Exact population density without blocking reproduction
 
-**Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.**
-
+Correction (added in Iteration 16): the rollout-based energy-share and coordination figures in this iteration were computed in the plain base environment, not the prey-floor / density-target env the runs were trained in. See Iteration 16 for the corrected numbers; conclusions that depended on them are superseded there. Shared-state (approach-bias) tables are unaffected.
 **Purpose:** Iteration 13's own review flagged that `predator_population_cap` changes population size and, at the
 same time, which pairs get to reproduce near the ceiling (an arbitrary agent-ID tie-break), so it could not isolate
 population size. `FixedPredatorDensityEnv` (`fixed_predator_density_env.py`, new) removes that specific confound:
@@ -1396,10 +1407,10 @@ steps, prey stayed at 21-25. Population is now equal across all four conditions,
 at ~21-22. (Completed lives in the two high-success cells are shorter, roughly 126-162 steps against 200-238 for
 CONTROL/DEATHONLY, partly because culled predators count as completed lives.)
 
-**Shared-state approach-bias difference (male minus female, 95% bootstrap CI):**
+Shared-state approach-bias difference (male minus female, 95% bootstrap CI):
 
 | Condition | seed | prey | fruit |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | CONTROL | 42 | +0.163 [+.150,+.176] | -0.076 [-.093,-.058] |
 | CONTROL | 43 | +0.128 [+.110,+.143] | -0.186 [-.207,-.167] |
 | CONTROL | 44 | +0.149 [+.124,+.179] | -0.072 [-.092,-.056] |
@@ -1413,10 +1424,10 @@ CONTROL/DEATHONLY, partly because culled predators count as completed lives.)
 | EQUALODDS | 43 | -0.032 [-.046,-.018] | -0.067 [-.079,-.054] |
 | EQUALODDS | 44 | -0.048 [-.064,-.033] | -0.072 [-.081,-.063] |
 
-**Energy-source comparison (prey share of own gross foraging energy, completed lives):**
+Energy-source comparison (prey share of own gross foraging energy, completed lives):
 
 | Condition | male, seeds 42/43/44 | female, seeds 42/43/44 |
-|---|---|---|
+| --- | --- | --- |
 | CONTROL | 50.5% / 54.9% / 53.3% | 11.4% / 11.8% / 11.4% |
 | DEATHONLY | 53.6% / 54.6% / 55.7% | 14.3% / 12.8% / 13.1% |
 | SUCCESSONLY | 34.7% / 35.3% / 35.4% | 44.2% / 42.6% / 41.0% |
@@ -1426,7 +1437,7 @@ CONTROL/DEATHONLY, partly because culled predators count as completed lives.)
 (positive = females take the larger prey share):
 
 | Cell | Uncapped (Iteration 12) | Cap, reproduction blocked (Iteration 13) | Density target (this iteration) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | SUCCESSONLY | +12.3 to +12.7 | -3.4 to +1.4 | +5.6 to +9.5 |
 | EQUALODDS | +3.8, +4.1 (two seeds only) | -6.3 to -0.7 | +0.2 to +3.9 |
 
@@ -1461,7 +1472,8 @@ The reversal in direction is not simply a population-size artifact, since it sur
 without blocking reproduction. Its size is sensitive to how population is controlled, so a single number should not be
 quoted. Necessity of the odds asymmetry is still not settled by this, only narrowed.
 
-**Caveats:**
+Caveats:
+
 - One target value (26) has been tested. The density target also actively adds individuals in CONTROL and DEATHONLY
   (whose natural population is below 26), a different treatment from the cap, which never adds anyone.
 - The random cull shortens lives and changes the completed-life sample in an exogenous way. It is uniform across
@@ -1490,10 +1502,10 @@ pass, including forced hunt, fruit, gift and care transfers through each generat
 no functional bug (it asked for stronger tests, the interactive evaluator fix and documentation of the bank's env, all done).
 Everything below was re-run with the fixed scripts (checkpoint 29; 20 episodes for energy, 30 for the coordination tests).
 
-**Corrected energy shares (prey share of own gross foraging energy, completed lives, seeds 42/43/44):**
+Corrected energy shares (prey share of own gross foraging energy, completed lives, seeds 42/43/44):
 
 | Design | Cell | male | female | female minus male, mean (points) |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | uncapped | CONTROL | 54.7 / 52.9 / 53.4 | 12.5 / 12.2 / 13.3 | -41.0 |
 | uncapped | DEATHONLY | 52.3 / 54.7 / 53.0 | 14.0 / 15.7 / 15.2 | -38.4 |
 | uncapped | SUCCESSONLY | 58.6 / 58.7 / 62.6 | 71.2 / 70.0 / 69.3 | **+10.2** |
@@ -1514,7 +1526,8 @@ from prey in the uncapped high-success cells). Completed lives are shorter under
 130-300 elsewhere), partly because culled predators count as completed lives. The EQUALODDS uncapped seed 42
 (the calibration run, previously missing its energy analysis) is now included, which completes that old backfill item.
 
-**How this changes the earlier conclusions.**
+How this changes the earlier conclusions.
+
 - **Iteration 15's headline is withdrawn.** It said the reproduction-blocking cap was the outlier and that exact density
   brought the female lead back (about +7.5 points in SUCCESSONLY). With the trained env, density-26 gives +3.3 and
   -0.7, close to the cap's -0.8 and -2.9. Both fixed-population designs are near parity; only the uncapped runs,
@@ -1541,7 +1554,8 @@ intervals exclude zero). The same holds for prey approach and in the other two s
 (group means about 7-11). So this test does **not** support gifts or own energy as the explanation. It does not exclude other
 things that track mate proximity, and it cannot say what the policy responds to.
 
-**Coordination tests across all 36 cell-runs (four cells x three designs x three seeds, 30 episodes each).**
+Coordination tests across all 36 cell-runs (four cells x three designs x three seeds, 30 episodes each).
+
 - *Female fruit approach is lower with a living mate nearby than away* in **every one of the 36 runs** (all CIs exclude
   zero). Size depends on the cell: -0.045 to -0.08 in CONTROL and DEATHONLY, where females rarely hunt, in every design;
   -0.03 to -0.05 in the capped and density-target high-success cells; only about -0.005 to -0.013 in uncapped
@@ -1585,7 +1599,7 @@ bootstrap of only one arm, total-versus-policy confound, overstated docstring); 
 **Results, per cell and design, the two extreme seeds (listed in order of first to last extreme, not sorted; a plus/minus sign change shows spread)** (observational near-away, then the policy crowding effect for one inserted predator at distance 2):
 
 | Sex, target | Cell / design | Observational near-away | Policy crowding, +d2 |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Female, fruit** | CONTROL uncapped | -0.058 to -0.090 | -0.035 to -0.048 |
 | | CONTROL density 26 | -0.039 to -0.080 | -0.021 to -0.026 |
 | | SUCCESSONLY uncapped | -0.008 to -0.049 | -0.017 to -0.023 |
@@ -1617,7 +1631,8 @@ and -0.021; male prey -0.006 and -0.071. The observational interval excludes zer
 near-versus-away definition on a different sampling; here states are subsampled, restricted to a visible target and a mate history, and 12 episodes give
 wider intervals. The two are consistent in sign, not in power.)
 
-**What the data show.**
+What the data show.
+
 1. **The policies respond to anonymous neighbors.** Adding one generic predator lowers approach in almost every run and both sexes: policy effect at
    d=2 is negative in 17 of 17 runs for female fruit, 15 of 17 for female prey, 16 of 17 for male fruit and 17 of 17 for male prey. A higher-energy
    inserted neighbor (12) lowers approach more than a low-energy one (3) in 17 of 17 female-fruit runs. The effect is not monotone in distance in most runs.

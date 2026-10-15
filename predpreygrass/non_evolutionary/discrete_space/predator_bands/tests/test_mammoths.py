@@ -1,6 +1,7 @@
 """Tests for the mammoth (group big game) option of predator_bands, default off: placement, single-band parties, the party-size
 arithmetic, equal split as meat with energy-proportional rewards, deaths on failure, blocking by a larger party of another band,
 wandering, respawn, the observation channel, snapshots and validation."""
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 import numpy as np
@@ -10,7 +11,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env imp
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 
 
-class _Seq:
+class _Seq(RandomProxy):
     """rng whose random() returns the given values in order (then 0.99); everything else is the real generator."""
 
     def __init__(self, real, values):

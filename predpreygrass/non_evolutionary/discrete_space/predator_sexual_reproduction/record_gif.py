@@ -72,7 +72,10 @@ def main():
             )
         if step % args.every == 0:
             img = Image.frombytes("RGB", renderer.screen.get_size(), pygame.image.tostring(renderer.screen, "RGB"))
-            img = img.resize((int(img.width * args.scale), int(img.height * args.scale)), Image.LANCZOS)
+            img = img.resize(
+                (int(img.width * args.scale), int(img.height * args.scale)),
+                Image.Resampling.LANCZOS,
+            )
             frames.append(img.quantize(colors=args.colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE))
         if terminations.get("__all__") or truncations.get("__all__"):
             break

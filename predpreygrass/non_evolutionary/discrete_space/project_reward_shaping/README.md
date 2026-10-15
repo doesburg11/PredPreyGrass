@@ -33,7 +33,7 @@ reward equal to its own net energy delta every single step — decay,
 movement, eating, reproduction cost, no hand-designed shaping constants)
 was expected to improve outcomes.
 
-**This hypothesis is what the final result below falsifies.**
+This hypothesis is what the final result below falsifies.
 
 ## 2. Methodology
 
@@ -72,7 +72,7 @@ episodes with deterministic actions.
 ## 3. Results table
 
 | module | reward design | predator births (avg, 3 seeds) | prey births (avg) | % of sparse (pred / prey) | wall time |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | [`base_environment_sparse_rewards`](base_environment_sparse_rewards) | sparse, `+10` on reproduction only | **135.3** | **588.7** | 100% / 100% | **12.45h** |
 | [`base_environment_sparse_rewards_plus_eating`](base_environment_sparse_rewards_plus_eating) | sparse + asymmetric eating bonus (`+1` predator / `+0.1` prey) | 111.3 | 552.0 | 82% / 94% | 11h22min |
 | [`base_environment_dense_rewards_additive`](base_environment_dense_rewards_additive) | dense per-step energy delta **+** `+10` reproduction bonus | 85.0 | 445.0 | 63% / 76% | 16.22h |
@@ -254,7 +254,7 @@ kickback) are also the ones closest to "reward = did you (or your lineage)
 reproduce" rather than "reward = a continuous approximation of how well
 things are going."
 
-**Why kickback recovers more than eating, despite a larger magnitude — reward-shaping theory, not "competing incentives."**
+Why kickback recovers more than eating, despite a larger magnitude — reward-shaping theory, not "competing incentives."
 Kickback's secondary reward is the largest tested (`+10`, equal to the
 primary reproduction bonus) yet it recovered *more* of sparse's
 reproduction rate than eating's much smaller, asymmetric bonus did (86%/96%
@@ -290,7 +290,7 @@ environment's own numbers (section 4, `sparse_rewards_plus_eating`'s
 writeup) make the comparison concrete:
 
 | | fires per reproduction cycle (avg) | reward per firing | contribution per cycle | as % of total cycle reward |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | predator eating | 4.4 catches | `+1` | `+4.4` | 4.4 / 14.4 ≈ 31% |
 | prey eating | 60.5 grazes | `+0.1` | `+6.05` | 6.05 / 16.05 ≈ 38% |
 | kickback | ~1 grandchild birth per own reproduction (structurally) | `+10` | `+10` | bounded by the same reproduction-event rate, not a separate faster-firing behavior |
@@ -328,7 +328,7 @@ same net progress toward the threshold. Not done here — flagged as the
 natural next diagnostic if this line of investigation continues (see
 section 8).
 
-**Why kickback still falls short of sparse — credit assignment, not misdirection.**
+Why kickback still falls short of sparse — credit assignment, not misdirection.
 The argument above explains why kickback beats eating; it does not explain
 why kickback still trails pure sparse (86%/96%, not 100%/100%). "Fires on
 the same rare event class as the primary reward" is not the same claim as
@@ -522,7 +522,8 @@ scope for this investigation as currently resourced.
 
 ## References
 
-**Reward shaping theory:**
+Reward shaping theory:
+
 - Ng, A. Y., Harada, D., & Russell, S. (1999). *Policy invariance under
   reward transformations: Theory and application to reward shaping.* In
   Proceedings of the Sixteenth International Conference on Machine
@@ -537,7 +538,8 @@ scope for this investigation as currently resourced.
   be inflated by "doing more of an unrelated frequent behavior" the way an
   eating bonus can.
 
-**Multi-agent credit assignment:**
+Multi-agent credit assignment:
+
 - Wolpert, D. H., & Tumer, K. (1999). *An Introduction to Collective
   Intelligence.* NASA Ames Research Center, Technical Report NASA-ARC-IC-
   99-63 — introduces difference rewards/utilities: the general principle

@@ -8,6 +8,7 @@ _make_test_env + narrowly-scoped test_* pattern.
 Run explicitly (not auto-discovered by the repo's pytest testpaths):
     pytest predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/tests/ -v
 """
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 import pytest
@@ -16,7 +17,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.
 from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 
 
-class _FixedRandom:
+class _FixedRandom(RandomProxy):
     """Wraps a real np.random.Generator, forcing .random() to a fixed value
     while forwarding everything else (e.g. .integers(), used by
     _find_available_spawn_position's fallback) to the real generator.

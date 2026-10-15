@@ -154,7 +154,7 @@ def test_share_does_not_rescue_a_doomed_member_and_can_be_switched_off():
     env.diet_required = True
     env.agent_energies[near] = 8.0
     env.agent_fruit_store[near] = 0.0  # fruit store empty: already doomed
-    others = [a for a in env.predator_positions if a not in (forager, near) and env.agent_band[a] == 0
+    _unused_others = [a for a in env.predator_positions if a not in (forager, near) and env.agent_band[a] == 0
               and max(abs(env.predator_positions[a][0] - 10), abs(env.predator_positions[a][1] - 10)) <= 5]
     e_near = env.agent_energies[near]
     env._apply_band_share(forager, 2.0, is_fruit=True)

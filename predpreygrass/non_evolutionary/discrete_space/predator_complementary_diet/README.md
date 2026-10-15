@@ -9,7 +9,7 @@ the original module was changed, so its results and runs stay valid. Non-evoluti
 The diet requirement has been built and tested (81 tests) but two pilot runs did not produce a viable population:
 
 | Pilot | Meat share of costs | Result |
-|---|---|---|
+| --- | --- | --- |
 | 1 (37 of 100 iterations, stopped) | 0.25 | Females extinct in every episode; ~7.5 female deaths per episode from meat deficiency |
 | 2 (60 iterations) | 0.10 | Females still extinct in ~90-100% of episodes; deaths flipped to fruit deficiency (~10 per episode) plus combat deaths (females hunt ~98 times per episode at 20% success, 10% death per attempt) |
 
@@ -46,7 +46,7 @@ Run names: `PPO_PREDATOR_COMPLEMENTARY_DIET_*` under `predpreygrass/non_evolutio
 
 ## Running
 
-```
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_complementary_diet.tune_ppo_predator_complementary_diet \
     --seed 42 --max-iters 150 --reward-per-energy 0.5 --penalty-combat-death 0.2 --minibatch-size 1024 \
     --diet-meat-cost-share 0.15 --scripted-prey 1

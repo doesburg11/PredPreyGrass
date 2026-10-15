@@ -3,7 +3,7 @@
 <p align="center">
     <b>Emerging human cooperation, defection and free-riding</b></p>
 <p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
+    <img alt="Stag-hunt cooperation and defection simulation" align="center" src="../../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
 </p>
 
 This module is a full copy of `stag_hunt` with an addition that introduces
@@ -115,12 +115,12 @@ Rationale: predators/humans tend to have forward-facing eyes, which increases bi
 overlap and depth perception for judging distance to prey. Prey species more often have
 laterally placed eyes that maximize field of view for threat detection, at the cost of
 reduced depth perception. This ecological trade-off motivates forward-shifted predator
-observations but centered prey observations. [1][2]
+observations but centered prey observations. [1], [2]
 
 Visualization (grid-world style; centered vs forward-shifted):
 
 <p align="center">
-  <img align="center" src="./../../../../assets/images/readme/forward_view_observation_shift.svg" width="960" />
+  <img alt="Stag-hunt cooperation and defection simulation" align="center" src="../../../../../assets/images/readme/forward_view_observation_shift.svg" width="960" />
 </p>
 
 Diagonal moves push the window into a corner, and the human LOS mask is computed
@@ -129,8 +129,8 @@ from that shifted position (right panel shows an example LOS mask with a wall).
 In code: `view_center = position + facing * offset`, with `offset = (predator_obs_range - 1) // 2`.
 
 References:
-[1] University of Nebraska State Museum — *Animal Detective* teacher guide (eyes of prey on sides for wider field of view; predators front for depth/stereoscopy). https://museum.unl.edu/file_download/inline/UNSMAnimalDetGuide.pdf
-[2] Royal Saskatchewan Museum — *Predator & Prey: Adaptations* (prey eyes on sides for wide field of view; predators front for binocular vision/depth). https://royalsaskmuseum.ca/pub/Educate/Student%20Resources/Life%20Sciences/predator-and-prey-adaptations.pdf
+[1] University of Nebraska State Museum — *Animal Detective* teacher guide (eyes of prey on sides for wider field of view; predators front for depth/stereoscopy). <https://museum.unl.edu/file_download/inline/UNSMAnimalDetGuide.pdf>
+[2] Royal Saskatchewan Museum — *Predator & Prey: Adaptations* (prey eyes on sides for wide field of view; predators front for binocular vision/depth). <https://royalsaskmuseum.ca/pub/Educate/Student%20Resources/Life%20Sciences/predator-and-prey-adaptations.pdf>
 
 ## New action semantics
 
@@ -150,7 +150,7 @@ The env is backward compatible with old int actions for predators:
 
 Example action dict (manual stepping):
 
-```
+```text
 actions = {
     "type_1_predator_0": [4, 1],  # move index 4, join
     "type_1_predator_1": [4, 0],  # move index 4, free-ride
@@ -161,6 +161,7 @@ actions = {
 ## Join-or-Free-Ride capture logic
 
 Let:
+
 - `J` = predators in Moore neighborhood (Chebyshev <= 1) with `join_hunt = 1`
 - `F` = nearby predators with `join_hunt = 0`
 - `E` = prey energy
@@ -172,19 +173,22 @@ Let:
 - `s` = `team_capture_scavenger_fraction`
 
 ### Eligibility
+
 Only predators in Moore neighborhood are eligible. If no joiners are present,
 no capture attempt happens.
 
 ### Capture condition
+
 Capture succeeds if:
 
-```
+```text
 sum(energy of J) > E + margin
 ```
 
 Defectors (non-joiners) do not count toward success.
 
 ### Success payouts
+
 - If `F` is non-empty, a scavenger pool is reserved: `E * s`.
 - If `F` is empty, the scavenger pool is zero.
 - Joiners split the remaining energy (`E - scavenger_pool`) either equally or
@@ -195,12 +199,14 @@ Defectors (non-joiners) do not count toward success.
 - Each free rider gets `scavenger_pool / |F|`.
 
 ### Failure handling
+
 - On any failed attempt, joiners pay `c_attempt` (even if `attempt_cost_on_failure_only` is true).
 - On failed **cooperative** attempts, joiners also pay `c_join` (regardless of
   `join_cost_on_failure_only`).
 - Free riders never pay failure costs.
 
 ### Solo vs cooperative cost rule (explicit)
+
 **Join cost is a cooperation-only cost.** If exactly one predator joins (`|J| == 1`),
 then `team_capture_join_cost = 0` for that attempt (success or failure). The cost is
 applied only when `|J| > 1`, and on success only if `join_cost_on_failure_only` is false.
@@ -209,6 +215,7 @@ applied only when `|J| > 1`, and on success only if `join_cost_on_failure_only` 
 attempt succeeds.
 
 ### Why defectors cannot solo-capture
+
 `join_hunt = 0` means “refuse to contribute.” If defectors could still capture
 alone, defection would become a safe default (no cost, still gets prey), which
 weakens the social dilemma. Requiring `join_hunt = 1` for any capture keeps the
@@ -217,6 +224,7 @@ This preserves the minimal-change goal and avoids a degenerate policy like
 “defect unless others are present.”
 
 ### Death from join cost
+
 If a joiner drops to `<= 0` energy after paying the join cost on a **cooperative**
 attempt, it dies with cause `exhausted_hunt`.
 
@@ -234,6 +242,7 @@ attempt, it dies with cause `exhausted_hunt`.
 | Defection metrics | Not defined | Join/defect decision rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
 
 Explanation notes:
+
 - "Nearby" means Moore neighborhood (Chebyshev distance <= 1), same as the base env.
 - "Joiners" are predators with `join_hunt = 1` on that step; "free riders" are `join_hunt = 0`.
 - A scavenger pool exists only if at least one free rider is present; otherwise joiners split full prey energy.
@@ -310,6 +319,7 @@ Some analysis (e.g., `eval_hunt_style_report.md`) uses a **dominant hunt-style**
 This is **not a fixed trait** and **not a per-step rule**. It is a summary label used only for reporting.
 
 How it is assigned:
+
 - For each predator and each run, we count event types from the event logs:
   - **solo join events** (`join_hunt=True` and `team_capture=False`)
   - **cooperative join events** (`join_hunt=True` and `team_capture=True`)
@@ -321,6 +331,7 @@ How it is assigned:
   - `mixed_joiner` if solo == coop (ties)
 
 Important implications:
+
 - An agent can **free‑ride early and cooperate later** in the same run.
 - The label is **recomputed for every run** (not persistent across runs).
 - This is a **reporting abstraction**, not a behavioral constraint in the environment.
@@ -337,11 +348,13 @@ Log source: `predpreygrass/stag_hunt_forward_view/ray_results/join_cost_0.02/STA
 This note explains how the “deliberate vs coincidental” label is computed for predator attack attempts in
 `extract_predator_trajectory.py`.
 
-**Facing**
+### Facing
+
 - `facing_x` / `facing_y` are the predator’s last non-zero movement direction (normalized to -1, 0, 1).
 - If the predator does not move on a step, facing stays at its previous non-zero direction.
 
-**Alignment computation (per event step)**
+### Alignment computation (per event step)
+
 - For each step that has `eat` or `failed` events, we look up predator and prey positions from
   `per_step_agent_data_{run}.json`.
 - We compute the vector from predator to prey and compare it to facing:
@@ -354,19 +367,20 @@ dot = dx * facing_x + dy * facing_y
 angle = acos(dot / (distance * |facing|))   # in degrees
 ```
 
-**Labels**
+### Labels
+
 - `alignment_prey_in_front` is true when `dot > 0` (prey in front half-plane).
 - `alignment_deliberate` is true when `distance <= 3.0` and `angle <= 45°`.
 - If multiple prey are involved in the same step, we use the closest one for the alignment fields.
 
-**Visuals**
+Visuals
 Legend: P = predator, R = prey, arrow = facing.
 
 ![Deliberate vs coincidental example](../../../../../assets/eval_comparison_summary_plots/deliberate_vs_coincidental.svg)
 ![Alignment border cases](../../../../../assets/eval_comparison_summary_plots/alignment_border_cases.svg)
 ![Alignment example grid](../../../../../assets/eval_comparison_summary_plots/alignment_examples_grid.svg)
 
-**Caveat**
+Caveat
 Facing reflects the last non-zero movement, not necessarily movement in the current step. If the predator is
 stationary, the arrow may be stale.
 
@@ -376,6 +390,7 @@ To make denominators explicit, several metrics were renamed. New runs use the
 new names in TensorBoard and JSON outputs; older runs keep the old names.
 
 Old name → New name:
+
 - `join_rate` → `join_decision_rate` (per predator decision step)
 - `defect_rate` → `defect_decision_rate`
 - `solo_rate` → `solo_capture_rate` (successful captures only)
@@ -426,6 +441,7 @@ From the latest eval folder:
 - Both available: join decision rate 0.784 (29 / 37)
 
 Interpretation:
+
 - Joining is consistently higher when mammoths are present (0.848) than when
   only rabbits are present (0.742).
 - This indicates a revealed preference to cooperate for the higher-risk,
@@ -455,6 +471,7 @@ Risk/return profile:
 - Joiner net gain per success: mammoth 12.27 vs rabbit 1.35
 
 Interpretation:
+
 - Predators attempt mammoths far more often, and almost all cooperative attempts
   target mammoths.
 - Mammoths are high risk but high return; rabbits are low risk and low return.
@@ -484,6 +501,7 @@ Interpretation:
 | 10 | 229 | no | 6740 | 1971 | 8711 | 77% | 23% | 260 | 210 | 50 | 81% | 19% | 335 | 10 | 3% |
 
 Notes:
+
 - Join/defect decision rates are per predator-step.
 - Solo/coop capture rates are over successful captures only.
 - Free rider share is `free_riders_total / (joiners_total + free_riders_total)`.

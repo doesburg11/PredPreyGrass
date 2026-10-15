@@ -3,12 +3,12 @@
 <p align="center">
     <b>Emerging cooperative hunting in Predator-Prey-Grass environment</b></p>
 <p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/shared_prey.gif" width="600" height="500" />
+    <img alt="shared prey illustration" align="center" src="../../../../../assets/images/gifs/shared_prey.gif" width="600" height="500" />
 </p>
 
-- At startup Predators <img src="../../../../assets/images/icons/predator.png" alt="predator icon" height="
-  24" style="vertical-align: middle;">, Prey <img src="../../../../assets/images/icons/prey.png" alt="prey icon" height="
-  24" style="vertical-align: middle;"> and Grass are randomly positioned on the gridworld. Walls are surrounding the gridworld and are possibly manually placed within the gridworld. 
+- At startup Predators <img src="../../../../../assets/images/icons/predator.png" alt="predator icon" height="
+  24" style="vertical-align: middle;">, Prey <img src="../../../../../assets/images/icons/prey.png" alt="prey icon" height="
+  24" style="vertical-align: middle;"> and Grass are randomly positioned on the gridworld. Walls are surrounding the gridworld and are possibly manually placed within the gridworld.
 
 - Predators and Prey can move in a Moore neighborhood. Predators cannot share a cell with other Predators. Prey cannot share a cell with other Prey. Neither Predator nor Prey can move to a Wall cell.
 
@@ -50,18 +50,18 @@ $$
 \Delta E_i = E_{\text{prey}} \cdot \frac{E_i}{\sum_j E_j}
 $$
 
-**Implications:**
+Implications:
 
-* Predators with higher energy receive a larger share of the prey.
-* Contribution is implicit: bringing more energy to the coalition yields a higher payoff.
-* Cooperation is encouraged **only when necessary** (i.e. when no single predator can meet the capture threshold alone).
-* This rule tends to produce **hierarchical cooperation**:
+- Predators with higher energy receive a larger share of the prey.
+- Contribution is implicit: bringing more energy to the coalition yields a higher payoff.
+- Cooperation is encouraged **only when necessary** (i.e. when no single predator can meet the capture threshold alone).
+- This rule tends to produce **hierarchical cooperation**:
 
-  * strong predators dominate kills,
-  * weaker predators may trail or be excluded,
-  * “rich-get-richer” dynamics can emerge.
+  - strong predators dominate kills,
+  - weaker predators may trail or be excluded,
+  - “rich-get-richer” dynamics can emerge.
 
-**Interpretation:**
+Interpretation:
 This split is purely local and does not require counterfactual reasoning or centralized credit assignment. Cooperation emerges as a *means* to enable capture, not as a rewarded objective.
 
 ---
@@ -74,16 +74,16 @@ $$
 \Delta E_i = \frac{E_{\text{prey}}}{|\text{helpers}|}
 $$
 
-**Implications:**
+Implications:
 
-* All helpers receive the same payoff regardless of their individual energy.
-* Low-energy predators are incentivized to stay close to others, as participation alone guarantees reward.
-* This often leads to **increased spatial clustering and pack-like movement**.
-* However, it also introduces **free-rider incentives**:
+- All helpers receive the same payoff regardless of their individual energy.
+- Low-energy predators are incentivized to stay close to others, as participation alone guarantees reward.
+- This often leads to **increased spatial clustering and pack-like movement**.
+- However, it also introduces **free-rider incentives**:
 
-  * predators may join late or contribute little energy while still receiving an equal share.
+  - predators may join late or contribute little energy while still receiving an equal share.
 
-**Interpretation:**
+Interpretation:
 Equal splitting removes implicit hierarchy and favors inclusive cooperation, but at the cost of increased exploitation pressure. Whether stable cooperation emerges becomes a learning problem rather than a structural guarantee.
 
 ---
@@ -105,28 +105,27 @@ Equal splitting removes implicit hierarchy and favors inclusive cooperation, but
 
 Both division rules preserve the **minimal-assumption philosophy** of the environment:
 
-* No explicit cooperation reward
-* No kin selection or shared team reward
-* No centralized or counterfactual credit assignment
+- No explicit cooperation reward
+- No kin selection or shared team reward
+- No centralized or counterfactual credit assignment
 
 The difference lies in **what kind of cooperation agents are able to learn**:
 
-* proportional split emphasizes *power-based coalition formation*,
-* equal split emphasizes *presence-based cooperation and coordination*.
+- proportional split emphasizes *power-based coalition formation*,
+- equal split emphasizes *presence-based cooperation and coordination*.
 
 Comparing these regimes allows us to study how reward division alone shapes emergent cooperative behavior in multi-agent reinforcement learning.
 
-
-# MADRL training
+## MADRL training
 
 - Predators and Prey are independently (decentralized) trained via their own RLlib policy module.
 
-  - **Predator** 
+  - **Predator**
   - **Prey**
 
   - Predators and Prey **learn movement strategies** based on their **partial observations**.
 
-# Results
+## Results
 
 - Cooperative hunting occurs, though it is **not strictly imposed nor rewarded**.
 - Prey usually possess less energy than prey, so cooperative hunting is usually not necessary.

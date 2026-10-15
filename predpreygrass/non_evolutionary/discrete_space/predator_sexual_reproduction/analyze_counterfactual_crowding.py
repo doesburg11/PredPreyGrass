@@ -182,7 +182,8 @@ def evaluate(bank, offset, moves, module, insert_energy, blocking=True):
         for i, b in enumerate(bank):
             for t in TARGETS:
                 if b["geo"][t] is not None:
-                    d = edited_d_after(*b["geo"][t], obs_list[i], offset, moves, blocking)
+                    d_free, d_stay = b["geo"][t]
+                    d = edited_d_after(d_free, d_stay, obs_list[i], offset, moves, blocking)
                     bias[name][t][i] = approach_bias(probs[i], d)
     # insertion conditions: every legal placement, then average per state
     for name, dist, energy in conds:
@@ -203,7 +204,10 @@ def evaluate(bank, offset, moves, module, insert_energy, blocking=True):
             for t in TARGETS:
                 g = bank[i]["geo"][t]
                 if g is not None:
-                    acc[t][i] += approach_bias(probs[k], edited_d_after(*g, flat[k], offset, moves, blocking))
+                    d_free, d_stay = g
+                    acc[t][i] += approach_bias(
+                        probs[k], edited_d_after(d_free, d_stay, flat[k], offset, moves, blocking)
+                    )
                     cnt[t][i] += 1
         for t in TARGETS:
             ok = cnt[t] > 0
@@ -251,7 +255,8 @@ def summarize(label, sex, bank, bias_total, bias_policy, rng):
         f"{int((n_neighbors > 0).sum())} with >=1 other predator in view, "
         f"{int(near.sum())} with the recorded mate within the near radius"
     )
-    fmt = lambda r: "n/a" if r is None or not np.isfinite(r[0]) else f"{r[0]:+.3f} [{r[1]:+.3f},{r[2]:+.3f}]"
+    def fmt(r):
+        return 'n/a' if r is None or not np.isfinite(r[0]) else f'{r[0]:+.3f} [{r[1]:+.3f},{r[2]:+.3f}]'
     for t in TARGETS:
         ok = common_mask(bias_total, t) & common_mask(bias_policy, t)  # same states for every condition and version
         ep, nr = episodes[ok], near[ok]

@@ -71,4 +71,3 @@ This gives you evidence of conditional cooperation without hard-coding it.
   reputation, improving long-term team captures without forcing them.
 - Potential downsides: noisy rep signals can cause mistrust and collapse; early
   bad luck can trap agents in low-rep states unless rep decays or is reset.
-

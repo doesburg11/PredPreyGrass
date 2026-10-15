@@ -1,9 +1,11 @@
 # Mammoths: Single vs Mutual Predator Captures
 
 Source log:
+
 - `/home/doesburg/Projects/PredPreyGrass/predpreygrass/mammoths/ray_results/pred_decay_0_20/GRID_30_PRED_OBS_RANGE_9_MAMMOTHS_2025-12-23_23-09-36/PPO_PredPreyGrass_119c3_00000_0_2025-12-23_23-09-36/checkpoint_000000/eval_checkpoint_000000_2025-12-24_19-56-27/agent_event_log_2025-12-24_19-56-27.json`
 
 Method:
+
 - Unique success = unique `(t, prey_id, predator_list)` in predator `eating_events`.
 - Unique failure = unique `(t, prey_id, predator_list)` in predator `failed_eating_events`.
 - Single = team size 1; Mutual = team size >1.
@@ -61,7 +63,7 @@ Method:
 | Mutual (>1 predator) | 474 | 20.88% |
 | Total | 2270 | 100.00% |
 
-### Team Size Distribution
+### Team Size Distribution (continued)
 
 | Team size | Failed attempts |
 | --- | ---: |

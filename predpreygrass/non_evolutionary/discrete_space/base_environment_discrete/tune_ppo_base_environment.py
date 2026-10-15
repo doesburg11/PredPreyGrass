@@ -19,7 +19,6 @@ from predpreygrass.non_evolutionary.discrete_space.base_environment_discrete.pat
 import argparse
 import json
 from datetime import datetime
-from pathlib import Path
 from typing import Any, Callable, Dict, Optional, cast
 
 import ray
@@ -30,7 +29,7 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
-from ray.rllib.utils.typing import AgentID, EpisodeType, PolicyID
+from ray.rllib.utils.typing import EpisodeType, PolicyID
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -227,7 +226,9 @@ def env_creator(config):
     return PredPreyGrass({**config_env, **(config or {})})
 
 
-def policy_mapping_fn(agent_id: AgentID, episode: EpisodeType) -> PolicyID:
+def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
+    if not isinstance(agent_id, str):
+        raise TypeError("PredPreyGrass requires string agent IDs")
     agent_id_str = str(agent_id)
     if "predator" in agent_id_str:
         return "predator_policy"

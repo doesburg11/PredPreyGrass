@@ -1,3 +1,4 @@
+from typing import Callable
 import os
 import math
 import pygame
@@ -545,6 +546,9 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
+        self.visualizer: PyGameRenderer | None = None
+        self.fps_slider_rect: pygame.Rect | None = None
+        self.fps_slider_update_fn: Callable[[int], None] | None = None
 
     def handle_events(self):
         for event in pygame.event.get():

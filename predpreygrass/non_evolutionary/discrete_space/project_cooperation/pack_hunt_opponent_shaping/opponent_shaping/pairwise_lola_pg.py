@@ -35,7 +35,7 @@ equivalence at small parameter counts before being used at network scale --
 see `tests/test_pairwise_lola_pg.py`.
 """
 
-from typing import Dict, List
+from typing import Dict
 
 import torch
 

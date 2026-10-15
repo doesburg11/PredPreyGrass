@@ -92,6 +92,11 @@ def _to_float(value):
         return None
 
 
+def _mean_difference(left, right):
+    left_mean, right_mean = _mean(left), _mean(right)
+    return left_mean - right_mean if left_mean is not None and right_mean is not None else None
+
+
 def _mean(values):
     items = [v for v in values if isinstance(v, (int, float)) and not math.isnan(v)]
     if not items:
@@ -231,22 +236,22 @@ def _compute_payoff_metrics(reward_summary_path: Path, join_cost_path: Path):
         "reward_minus_total_cost_mean_joiner": _mean(joiner_net_rewards_total),
         "reward_minus_total_cost_mean_non_joiner": _mean(non_joiner_net_rewards_total),
         "reward_diff_joiner_vs_non_joiner": (
-            _mean(joiner_rewards) - _mean(non_joiner_rewards)
+            _mean_difference(joiner_rewards, non_joiner_rewards)
             if joiner_rewards and non_joiner_rewards
             else None
         ),
         "reward_minus_cost_diff_joiner_vs_non_joiner": (
-            _mean(joiner_net_rewards) - _mean(non_joiner_net_rewards)
+            _mean_difference(joiner_net_rewards, non_joiner_net_rewards)
             if joiner_net_rewards and non_joiner_net_rewards
             else None
         ),
         "reward_minus_attempt_cost_diff_joiner_vs_non_joiner": (
-            _mean(joiner_net_rewards_attempt) - _mean(non_joiner_net_rewards_attempt)
+            _mean_difference(joiner_net_rewards_attempt, non_joiner_net_rewards_attempt)
             if joiner_net_rewards_attempt and non_joiner_net_rewards_attempt
             else None
         ),
         "reward_minus_total_cost_diff_joiner_vs_non_joiner": (
-            _mean(joiner_net_rewards_total) - _mean(non_joiner_net_rewards_total)
+            _mean_difference(joiner_net_rewards_total, non_joiner_net_rewards_total)
             if joiner_net_rewards_total and non_joiner_net_rewards_total
             else None
         ),

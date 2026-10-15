@@ -155,8 +155,9 @@ def test_summarize_reports_na_when_an_arm_has_too_few_episodes(monkeypatch):
     rng = np.random.default_rng(0)
     bank = _bank(list(range(6)), [True, False, False, False, False, False])  # one near episode only
     n = len(bank)
-    mk = lambda: {c: {"prey": np.linspace(0, 1, n), "fruit": np.full(n, np.nan)} for c, _, _ in cf.conditions(8.0)}
+    def mk():
+        return {c: {'prey': np.linspace(0, 1, n), 'fruit': np.full(n, np.nan)} for c, _, _ in cf.conditions(8.0)}
     lines = cf.summarize("x", "female", bank, mk(), mk(), rng)
-    assert any("observational near-away=n/a" in l for l in lines)
-    assert any("(near 1, away 5)" in l for l in lines)
-    assert any("fruit" in l and "skipped" in l for l in lines)
+    assert any("observational near-away=n/a" in _entry_value for _entry_value in lines)
+    assert any("(near 1, away 5)" in _entry_value for _entry_value in lines)
+    assert any("fruit" in _entry_value and "skipped" in _entry_value for _entry_value in lines)

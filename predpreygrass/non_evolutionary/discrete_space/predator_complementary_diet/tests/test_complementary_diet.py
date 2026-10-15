@@ -88,7 +88,7 @@ def test_fruit_raises_fruit_store_and_meat_raises_meat_store():
     env = _env()
     male, female = _agents(env)
     fruit = next(iter(env.fruit_positions))
-    prey = next(a for a in env.agents if a.startswith("prey"))
+    _unused_prey = next(a for a in env.agents if a.startswith("prey"))
     _place(env, female, (5, 5))
     env.fruit_positions[fruit] = (5, 5)
     env.fruit_energies[fruit] = 2.0

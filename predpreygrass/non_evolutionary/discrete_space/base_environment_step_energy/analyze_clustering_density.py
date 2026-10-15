@@ -35,7 +35,8 @@ def null_R(N, trials=3000):
 
 Ns = list(range(6, 27, 2))
 tab = {N: null_R(N) for N in Ns}
-R0 = lambda N: np.interp(N, Ns, [tab[k] for k in Ns])
+def R0(N):
+    return np.interp(N, Ns, [tab[k] for k in Ns])
 print("NULL: expected R for random placement (no shared cells, edge effects included)")
 print("  N :", " ".join(f"{N:5d}" for N in Ns))
 print("  R0:", " ".join(f"{tab[N]:5.3f}" for N in Ns))

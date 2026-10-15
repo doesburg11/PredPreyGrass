@@ -1,3 +1,4 @@
+from typing import Callable
 import pygame
 from dataclasses import dataclass
 from pathlib import Path
@@ -195,7 +196,7 @@ class PyGameRenderer:
         self.icon_coop = pygame.image.load(str(coop_path)).convert_alpha() if coop_path.is_file() else None
 
     def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None, coop_events=None):
-        step_data = per_step_agent_data[step - 1]
+        step_data = per_step_agent_data[step - 1] if per_step_agent_data is not None else {}
         if agents_just_ate is None:
             agents_just_ate = set()
         if dead_prey is None:
@@ -932,8 +933,9 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
-        self.fps_slider_rect = None
-        self.fps_slider_update_fn = None
+        self.visualizer: PyGameRenderer | None = None
+        self.fps_slider_rect: pygame.Rect | None = None
+        self.fps_slider_update_fn: Callable[[int], None] | None = None
         self.is_dragging_slider = False
 
     def handle_events(self):
@@ -977,6 +979,10 @@ class ViewerControlHelper:
                     self.is_dragging_slider = False
 
     def _update_fps_slider(self, slider_x):
+        if self.visualizer is None or self.fps_slider_rect is None or self.fps_slider_update_fn is None:
+            return
+        if self.fps_slider_rect.width <= 0:
+            return
         slider_max_fps = self.visualizer.slider_max_fps
         slider_start_x = self.fps_slider_rect.left
         slider_width = self.fps_slider_rect.width

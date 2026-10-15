@@ -1,10 +1,8 @@
 # Stag Hunt Defection (Join-or-Free-Ride)
 
-<p align="center">
-    <b>Emerging human cooperation, defection and free-riding</b></p>
-<p align="center">
-    <img align="center" src="./../../../../assets/images/gifs/stag_hunt_defect.gif" width="600" height="500" />
-</p>
+Emerging human cooperation, defection and free-riding
+
+![Stag-hunt predators cooperating and free-riding](../../../../../assets/images/gifs/stag_hunt_defect.gif)
 
 This module is a full copy of `stag_hunt` with an addition that introduces
 defection. The ecology stays intact; only the cooperative hunting decision
@@ -30,7 +28,7 @@ This directory `stag_hunt_defection` mirrors `stag_hunt`. Key files:
 - `random_policy.py`: quick rollout viewer (predators now random sample MultiDiscrete).
 - `utils/*`: copied helpers (renderer, callbacks, scenario inspector, etc).
 
-All imports inside this module point to `predpreygrass.stag_hunt_defection.*`
+All imports inside this module point to `predpreygrass.non_evolutionary.discrete_space.project_cooperation.stag_hunt_defection.*`
 so you can run it without touching the original module. Default `ray_results`
 paths also point at `.../stag_hunt_defection/ray_results/`.
 
@@ -52,7 +50,7 @@ The env is backward compatible with old int actions for predators:
 
 Example action dict (manual stepping):
 
-```
+```python
 actions = {
     "type_1_predator_0": [4, 1],  # move index 4, join
     "type_1_predator_1": [4, 0],  # move index 4, free-ride
@@ -63,6 +61,7 @@ actions = {
 ## Join-or-Free-Ride capture logic
 
 Let:
+
 - `J` = predators in Moore neighborhood (Chebyshev <= 1) with `join_hunt = 1`
 - `F` = nearby predators with `join_hunt = 0`
 - `E` = prey energy
@@ -71,19 +70,22 @@ Let:
 - `s` = `team_capture_scavenger_fraction`
 
 ### Eligibility
+
 Only predators in Moore neighborhood are eligible. If no joiners are present,
 no capture attempt happens.
 
 ### Capture condition
+
 Capture succeeds if:
 
-```
+```text
 sum(energy of J) > E + margin
 ```
 
 Defectors (non-joiners) do not count toward success.
 
 ### Success payouts
+
 - If `F` is non-empty, a scavenger pool is reserved: `E * s`.
 - If `F` is empty, the scavenger pool is zero.
 - Joiners split the remaining energy (`E - scavenger_pool`) either equally or
@@ -92,12 +94,14 @@ Defectors (non-joiners) do not count toward success.
 - Each free rider gets `scavenger_pool / |F|`.
 
 ### Failure handling
+
 - Failure penalties apply only to joiners.
 - The existing penalty `energy_percentage_loss_per_failed_attacked_prey` is
   applied to joiners as before.
 - Free riders never pay failure costs.
 
 ### Why defectors cannot solo-capture
+
 `join_hunt = 0` means “refuse to contribute.” If defectors could still capture
 alone, defection would become a safe default (no cost, still gets prey), which
 weakens the social dilemma. Requiring `join_hunt = 1` for any capture keeps the
@@ -106,6 +110,7 @@ This preserves the minimal-change goal and avoids a degenerate policy like
 “defect unless others are present.”
 
 ### Death from join cost
+
 If a joiner drops to `<= 0` energy after paying the join cost, it dies with
 cause `exhausted_hunt`.
 
@@ -122,6 +127,7 @@ cause `exhausted_hunt`.
 | Defection metrics | Not defined | Join/defect rates and free-rider exposure tracked | `utils/defection_metrics.py`, `EpisodeReturn` |
 
 Explanation notes:
+
 - "Nearby" means Moore neighborhood (Chebyshev distance <= 1), same as the base env.
 - "Joiners" are predators with `join_hunt = 1` on that step; "free riders" are `join_hunt = 0`.
 - A scavenger pool exists only if at least one free rider is present; otherwise joiners split full prey energy.
@@ -130,7 +136,7 @@ Explanation notes:
 
 ## New config keys
 
-Defined in `config/config_env_stag_hunt.py`:
+Defined in `config/config_env_stag_hunt_defection.py`:
 
 - `team_capture_join_cost` (float): fixed energy cost paid by joiners on success.
 - `team_capture_scavenger_fraction` (float in [0, 1]): fraction of prey energy
@@ -169,10 +175,10 @@ Per-step agent data additions:
 ## Measuring defection/cooperation/solo
 
 Use the helper script in `utils/defection_metrics.py` to summarize metrics from a
-short rollout (defaults come from `config_env_stag_hunt.py`):
+short rollout (defaults come from `config/config_env_stag_hunt_defection.py`):
 
 ```bash
-PYTHONPATH=src python -m predpreygrass.stag_hunt_defection.utils.defection_metrics
+python -m predpreygrass.non_evolutionary.discrete_space.project_cooperation.stag_hunt_defection.utils.defection_metrics
 ```
 
 It reports:
@@ -210,6 +216,7 @@ From the latest eval folder:
 - Both available: join rate 0.784 (29 / 37)
 
 Interpretation:
+
 - Joining is consistently higher when mammoths are present (0.848) than when
   only rabbits are present (0.742).
 - This indicates a revealed preference to cooperate for the higher-risk,
@@ -239,6 +246,7 @@ Risk/return profile:
 - Joiner net gain per success: mammoth 12.27 vs rabbit 1.35
 
 Interpretation:
+
 - Predators attempt mammoths far more often, and almost all cooperative attempts
   target mammoths.
 - Mammoths are high risk but high return; rabbits are low risk and low return.
@@ -268,6 +276,7 @@ Interpretation:
 | 10 | 229 | no | 6740 | 1971 | 8711 | 77% | 23% | 260 | 210 | 50 | 81% | 19% | 335 | 10 | 3% |
 
 Notes:
+
 - Join/defect rates are per predator-step.
 - Solo/coop rates are over successful captures only.
 - Free rider rate is `free_riders_total / (joiners_total + free_riders_total)`.
@@ -288,10 +297,16 @@ that can be probed by norms or punishment in later experiments.
 
 ## Training and evaluation
 
+Both evaluation scripts default to the recovered local run in
+`runs/STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/`,
+trial `PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12`, checkpoint
+`checkpoint_000049`. This run includes saved policy state and historical
+evaluation logs and plots. The `runs/` directory is gitignored.
+
 Typical entry points:
 
-- Train: `python predpreygrass/stag_hunt_defection/tune_ppo.py`
-- Random rollouts: `python predpreygrass/stag_hunt_defection/random_policy.py`
+- Train: `python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/tune_ppo.py`
+- Random rollouts: `python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/random_policy.py`
 - Debug/eval: `evaluate_ppo_from_checkpoint_debug.py`
 - Multi-run eval: `evaluate_ppo_from_checkpoint_multi_runs.py`
 
@@ -305,16 +320,20 @@ From the repo root:
 
 ```bash
 # Train
-PYTHONPATH=src python predpreygrass/stag_hunt_defection/tune_ppo.py
+
+python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/tune_ppo.py
 
 # Random rollout viewer
-PYTHONPATH=src python predpreygrass/stag_hunt_defection/random_policy.py
+
+python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/random_policy.py
 
 # Evaluate a checkpoint (debug viewer)
-PYTHONPATH=src python predpreygrass/stag_hunt_defection/evaluate_ppo_from_checkpoint_debug.py
+
+python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/evaluate_ppo_from_checkpoint_debug.py
 
 # Evaluate multiple runs (batch)
-PYTHONPATH=src python predpreygrass/stag_hunt_defection/evaluate_ppo_from_checkpoint_multi_runs.py
+
+python predpreygrass/non_evolutionary/discrete_space/project_cooperation/stag_hunt_defection/evaluate_ppo_from_checkpoint_multi_runs.py
 ```
 
 ## Compatibility notes

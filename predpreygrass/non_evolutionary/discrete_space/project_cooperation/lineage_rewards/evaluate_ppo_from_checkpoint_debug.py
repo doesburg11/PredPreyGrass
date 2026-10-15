@@ -290,7 +290,8 @@ def step_forward(
         frame = pygame.surfarray.array3d(visualizer.screen)
         frame = np.transpose(frame, (1, 0, 2))
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        video_writer.write(frame)
+        if video_writer is not None:
+            video_writer.write(frame)
 
     control.step_once = False
     clock.tick(visualizer.target_fps)
@@ -548,7 +549,7 @@ if __name__ == "__main__":
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None

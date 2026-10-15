@@ -181,7 +181,8 @@ def summarize(label, records, min_life):
             if not rows:
                 lines.append(f"{label:20} {sex[9:]:6} {name:20} n=0")
                 continue
-            m = lambda k: float(np.mean([r[k] for r in rows]))
+            def m(k):
+                return float(np.mean([r[k] for r in rows]))
             life, fruit, prey = m("life"), m("fruit_e"), m("prey_e")
             g_in, g_out, c_in, c_out = m("gift_in"), m("gift_out"), m("care_in"), m("care_out")
             own = fruit + prey

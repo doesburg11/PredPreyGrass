@@ -45,7 +45,8 @@ def get(rec, key):
 def window(kind, seed, lo, hi):
     rows = [json.loads(line) for line in open(result_path(kind, seed))]
     rows = [r for r in rows if lo < r["training_iteration"] <= hi and get(r, "episode_length") is not None]
-    f = lambda k: float(np.mean([get(r, k) for r in rows]))
+    def f(k):
+        return float(np.mean([get(r, k) for r in rows]))
     return {"ext": 100 * f("extinct_predator"), "pred": f("final_num_predators"),
             "prey": f("final_num_prey"), "len": f("episode_length")}
 
@@ -57,7 +58,8 @@ for s in SEEDS:
     b, t = T[("base", s)], T[("step", s)]
     print(f"| {s} | {b['ext']:.0f}% | {b['pred']:.1f} | {b['prey']:.1f} | {b['len']:.0f} | "
           f"{t['ext']:.0f}% | {t['pred']:.1f} | {t['prey']:.1f} | {t['len']:.0f} |")
-m = lambda k, f: np.mean([T[(k, s)][f] for s in SEEDS])
+def m(k, f):
+    return np.mean([T[k, s][f] for s in SEEDS])
 print(f"| mean | {m('base', 'ext'):.0f}% | {m('base', 'pred'):.1f} | {m('base', 'prey'):.1f} | {m('base', 'len'):.0f} | "
       f"{m('step', 'ext'):.0f}% | {m('step', 'pred'):.1f} | {m('step', 'prey'):.1f} | {m('step', 'len'):.0f} |")
 

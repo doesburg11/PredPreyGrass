@@ -24,7 +24,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_bands.analyze_band_b
 
 
 def net_rate(lives):
-    return np.array([(l["own_meat"] + l["recv_meat"] - l["given_meat"]) / max(l["life"], 1) for l in lives])
+    return np.array([(_entry_value["own_meat"] + _entry_value["recv_meat"] - _entry_value["given_meat"]) / max(_entry_value["life"], 1) for _entry_value in lives])
 
 
 def describe(name, lives):
@@ -34,8 +34,8 @@ def describe(name, lives):
     q = np.percentile(r, [0, 5, 25, 50, 75])
     return (
         f"   {name:34} n={len(lives):5d} net meat/step: min {q[0]:+.4f}  p5 {q[1]:+.4f}  p25 {q[2]:+.4f}  median {q[3]:+.4f}  p75 {q[4]:+.4f}"
-        f" | mean life {np.mean([l['life'] for l in lives]):6.1f}, mean own meat {np.mean([l['own_meat'] for l in lives]):5.2f}, "
-        f"mean received {np.mean([l['recv_meat'] for l in lives]):5.2f}"
+        f" | mean life {np.mean([_entry_value['life'] for _entry_value in lives]):6.1f}, mean own meat {np.mean([_entry_value['own_meat'] for _entry_value in lives]):5.2f}, "
+        f"mean received {np.mean([_entry_value['recv_meat'] for _entry_value in lives]):5.2f}"
     )
 
 
@@ -55,16 +55,16 @@ def main():
         trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
         modules = load_modules(os.path.join(trial, f"checkpoint_{args.checkpoint:06d}"))
         _, lives = rollout(config, modules, args.episodes, args.seed)
-        fem = [l for l in lives if l["sex"] == "predator_female"]
-        mal = [l for l in lives if l["sex"] == "predator_male"]
+        fem = [_entry_value for _entry_value in lives if _entry_value["sex"] == "predator_female"]
+        mal = [_entry_value for _entry_value in lives if _entry_value["sex"] == "predator_male"]
         share = config.get("diet_meat_cost_share")
         floor = (share * config["homeostatic_energy_cost_per_step_predator"],
                  share * (config["homeostatic_energy_cost_per_step_predator"] + config["move_energy_cost_per_step_predator"]))
         print(f"== {label} ckpt{args.checkpoint}: meat share {share}, rule floor {floor[0]:.4f} (idle) to {floor[1]:.4f} (always moving) per step", flush=True)
         print(describe("females, all lives", fem))
-        print(describe(f"females, lives >= {args.min_life} steps", [l for l in fem if l["life"] >= args.min_life]))
-        print(describe("females, lives >= 800 steps", [l for l in fem if l["life"] >= 800]))
-        print(describe("females alive at episode end", [l for l in fem if l["censored"]]))
+        print(describe(f"females, lives >= {args.min_life} steps", [_entry_value for _entry_value in fem if _entry_value["life"] >= args.min_life]))
+        print(describe("females, lives >= 800 steps", [_entry_value for _entry_value in fem if _entry_value["life"] >= 800]))
+        print(describe("females alive at episode end", [_entry_value for _entry_value in fem if _entry_value["censored"]]))
         print(describe("males, all lives (comparison)", mal))
         print(flush=True)
 

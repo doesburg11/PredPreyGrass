@@ -7,7 +7,7 @@ This documents the reasoning and results behind `base_environment_step_energy`, 
 **The configurations compared, and how their energy costs differ** (energy per step; each cell is predator / prey):
 
 | configuration | cost per step when resting (noop) | cost per step when moving | extra cost of moving over resting |
-|---|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: |
 | `base_environment_discrete` | 0.15 / 0.05 | 0.15 / 0.05 | 0 / 0 (one flat tax, same whatever the action) |
 | `base_environment_step_energy` (default) | 0.10 / 0.035 | 0.18 / 0.07 | +0.08 / +0.035 |
 | run A (earlier setting, section 10) | 0.10 / 0.035 | 0.20 / 0.07 | +0.10 / +0.035 |
@@ -32,7 +32,7 @@ Three probes, seed 42, `f ∈ {0.5, 0.75, 1.0}`, 100 iterations each. Rationale 
 **Result at the time**: all three looked sustainable. Shape was consistent across all three: an early-training instability phase (some predator die-off while the near-random policy learns to survive, matching `base_environment_discrete`'s own documented early-training behavior) that resolved by iteration ~30-40 into 0% extinction, full 1000-step episodes, and stable-looking populations (~20 predators / ~19-22 prey) through iteration 100. No visible degradation as `f` increased from 0.5 to 1.0 — if anything, `f=1.0`'s late-training numbers (21/22) were marginally higher than `f=0.5`'s (20/19).
 
 | `move_fraction` | early (&le;30) | mid (31-70) | late (&gt;70) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 0.5 | 50% predator extinction, ep_len 548 | 11% predator extinction, ep_len 905 | 0% extinction, ep_len 1000, ~20 pred / ~19 prey |
 | 0.75 | 54% predator extinction, ep_len 520 | 0% extinction, ep_len 1000 | 0% extinction, ep_len 1000, ~20 pred / ~20 prey |
 | 1.0 | 42% predator extinction, ep_len 624 | 0% extinction, ep_len 1000 | 0% extinction, ep_len 1000, ~21 pred / ~22 prey |
@@ -52,7 +52,7 @@ Given the infrastructure fix, a full confirmation run at the shipped default (`m
 **`base_environment_step_energy` at `move_fraction=1.0`, tracked through all 500 iterations**:
 
 | iterations | predators | prey | prey extinction rate | episode length |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 31-70 | 20.6 | 20.6 | 0% | 1000 |
 | 71-100 | 21.6 | 16.5 | 6% | 949 |
 | 101-200 | 22.0 | 16.4 | 1% | 997 |
@@ -98,7 +98,7 @@ Discussing the §6/§7 findings surfaced a second problem with the `move_fractio
 **New defaults** (`config_env.py`), chosen to sit symmetrically around `base_environment_discrete`'s original flat tax rather than at either extreme — resting somewhat cheaper than the original tax, moving somewhat more expensive than it:
 
 | | resting (homeostatic only) | moving (homeostatic + move) | `base_environment_discrete`'s original flat tax |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | predator | 0.10 | 0.20 | 0.15 |
 | prey | 0.035 | 0.07 | 0.05 |
 
@@ -109,7 +109,7 @@ This has **not yet been run at training scale** — it's a redesign motivated by
 500-iteration run at the §9 defaults (seed 42, `PPO_STEP_ENERGY_ADDITIVE_CONFIRM500_SEED42`, 577.5 min total). This run answered §9's question (does a nonzero resting cost prevent the §5 collapse — yes) but surfaced a different problem, the opposite of §5's.
 
 | iterations | predator extinction | predators | prey | episode length |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1-30 | 91% | 0.4 | 42.1 | 222 |
 | 31-100 | 41% | ~3.4 | ~48.7 | ~737 |
 | 101-200 | 40% | 3.7 | 48.0 | 775 |
@@ -130,7 +130,7 @@ To address the "predator population too small relative to `base_environment_disc
 500-iteration run launched, seed 42, `PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42`, 420.2 min total. **Complete, and this is the best result of the whole investigation:**
 
 | iterations | predator extinction | predators | prey | episode length |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1-100 | 27% | 8.0 | 33.6 | 784 |
 | 101-200 | 0% | 13.6 | 23.9 | 1000 |
 | 201-300 | 0% | 14.1 | 23.9 | 1000 |
@@ -139,10 +139,10 @@ To address the "predator population too small relative to `base_environment_disc
 
 After the usual early-training instability (27% extinction while the policy is still near-random, the same shape seen in every run including `base_environment_discrete` itself), it settled by iteration ~100 into a low-noise equilibrium that **held for the full remaining 400 iterations** — extinction pinned near 0%, episode length at or near the full 1000 throughout, populations (~12-14 predators, ~24-29 prey) in a tight, non-drifting band close to `base_environment_discrete`'s own equilibrium (~18-19 / ~19-25). No repeat of run A's late-run wobble.
 
-**Full three-way comparison, same iteration ranges, all now complete:**
+Full three-way comparison, same iteration ranges, all now complete:
 
 | iters | base_environment_discrete | | | | run A (homeostatic 0.10/0.035, move 0.10/0.035) | | | | `base_environment_step_energy` (homeostatic 0.10/0.035, move 0.08/0.035) | | | |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | | **extinction predator** | **pred/episode** | **prey/episode** | **len** | **extinction predator** | **pred/episode** | **prey/episode** | **len** | **extinction predator** | **pred/episode** | **prey/episode** | **len** |
 | 1-100 | 22% | 12.3 | 35.2 | 818 | 58% | 2.3 | 46.7 | 558 | 27% | 8.0 | 33.6 | 784 |
 | 101-200 | 0% | 18.6 | 19.5 | 1000 | 40% | 3.7 | 48.0 | 775 | 0% | 13.6 | 23.9 | 1000 |
@@ -158,7 +158,7 @@ Easing only the predator's move cost (leaving homeostatic cost and both prey cos
 
 This closes the loop the module was built to investigate: `base_environment_discrete`'s flat, action-independent tax (§1) → a version where noop is completely free (§3, looked fine at 100 iterations, §5 showed it collapses at 500) → independent additive homeostatic+move costs so noop can never be free (§9) → still noticeably below-baseline predator population (§10) → predator move cost eased, now tracking baseline closely and stable for 400+ iterations (§11). Still open: only one seed (42) throughout: replication across 2-3 more seeds, and a run past 500 iterations to see how long the stability in §11 actually holds, are the natural next steps if this module is revisited.
 
-*(Update 2026-09-19: replicated across six seeds in §16 and §19. The default is sustainable in five of six; seed 45 never established a stable predator population -- see §19.)*
+(Update 2026-09-19: replicated across six seeds in §16 and §19. The default is sustainable in five of six; seed 45 never established a stable predator population -- see §19.)
 
 ## 13. A second, unplanned finding: predator spatial clustering (2026-09-17)
 
@@ -169,7 +169,7 @@ Watching `base_environment_step_energy`'s trained policy in the interactive PyGa
 **First measurement**: one full deterministic (greedy-action) episode each, seed 42, using each config's own final seed-42 checkpoint (`base_environment_discrete`: iteration 1000; `base_environment_step_energy`: iteration ~500).
 
 | | Clark-Evans R | mean predators |
-|---|---|---|
+| --- | --- | --- |
 | base_environment_discrete | 1.11 (mildly dispersed) | 16.6 |
 | `base_environment_step_energy` | 0.90 (mildly clustered) | 14.3 |
 
@@ -187,7 +187,7 @@ Asked to statistically validate §13's finding, two genuinely different question
 Question 1 was answered first, at zero training cost: 30 evaluation episodes per config (different environment-reset seeds 100-129, deterministic actions, same two existing seed-42 checkpoints), one Clark-Evans R per episode (aggregated over that episode's ~1000 steps, not per-timestep, to avoid pseudoreplication from within-episode autocorrelation).
 
 | | n | mean R | median R | std |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | base_environment_discrete | 30 | 1.072 | 1.069 | 0.032 |
 | `base_environment_step_energy` | 30 | 0.928 | 0.924 | 0.038 |
 
@@ -207,8 +207,7 @@ The two distributions barely overlap (base_environment_discrete's single lowest 
 
 **Plan once training completes**: run the same zero-training evaluation methodology from §14 (30 episodes per new policy, one Clark-Evans R per episode) on each of the 10 new policies, aggregate one mean R per seed per config, then run the paired Wilcoxon signed-rank test across all 6 seed-pairs (42 existing + 43-47 new).
 
-*(Correction added 2026-09-19, see §16: the "pairing is more powerful" argument above turned out to be wrong for this data -- the seed-paired base and step_energy values are uncorrelated, and at n=6 an unpaired test actually has a finer p-value floor. Both tests agree; §16 reports both.)*
-
+(Correction added 2026-09-19, see §16: the "pairing is more powerful" argument above turned out to be wrong for this data -- the seed-paired base and step_energy values are uncorrelated, and at n=6 an unpaired test actually has a finer p-value floor. Both tests agree; §16 reports both.)
 **Status**: training completed 2026-09-19 16:05 CEST (all 10 runs, sequential, no failures); evaluation and result in §16.
 
 ## 16. Result: predator clustering in base_environment_step_energy replicates across six independently-trained seeds (2026-09-19)
@@ -216,7 +215,7 @@ The two distributions barely overlap (base_environment_discrete's single lowest 
 **Setup**: six seeds (42-47), each with one `base_environment_discrete` and one `base_environment_step_energy` (default settings) policy. Seed 42 uses the pre-existing runs; seeds 43-47 were trained for this test (300 iterations each, sequentially, full resources). To keep training length identical, **all 12 policies are evaluated at their iteration-300 checkpoint** (`checkpoint_000029`; for seed 42 this is an intermediate checkpoint of its longer run). Each policy: 30 deterministic evaluation episodes (environment reset seeds 100-129), one Clark-Evans R per episode (§13), and the mean over episodes as that policy's value. Script: [`evaluate_clustering.py`](evaluate_clustering.py); raw per-episode values: [`clustering_results.json`](clustering_results.json).
 
 | seed | base_environment_discrete R | `base_environment_step_energy` R | difference | within-seed Mann-Whitney p (30 vs 30 episodes) |
-|---|:---:|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: | :---: |
 | 42 | 1.049 | 0.921 | 0.127 | 1.5e-11 |
 | 43 | 1.009 | 0.883 | 0.126 | 4.1e-10 |
 | 44 | 0.996 | 0.974 | 0.022 | 0.023 |
@@ -233,7 +232,7 @@ The two distributions barely overlap (base_environment_discrete's single lowest 
 
 **Sensitivity**: evaluating seed 42 at its final checkpoints instead (base iteration 1000, `base_environment_step_energy` iteration 500) gives R = 1.072 vs 0.928 and leaves the paired result unchanged (p = 0.0156).
 
-*(Two statements in this section were corrected by the density analysis in §17: R ≈ 1 is not "random" on this bounded grid -- random placement gives R ≈ 1.13 -- so `base_environment_discrete` is also mildly clustered, just less than `base_environment_step_energy`; and the density confound described below biases in the opposite direction from what is stated here.)*
+(Two statements in this section were corrected by the density analysis in §17: R ≈ 1 is not "random" on this bounded grid -- random placement gives R ≈ 1.13 -- so `base_environment_discrete` is also mildly clustered, just less than `base_environment_step_energy`; and the density confound described below biases in the opposite direction from what is stated here.)
 
 ### What this establishes, and what it doesn't
 
@@ -250,14 +249,15 @@ Two checks on §16, run on existing checkpoints only (no new training): the same
 **A correction to §16's reference point.** The Clark-Evans "R = 1 is random" reading assumes an unbounded plane. On this bounded 25x25 grid, with no two agents sharing a cell, N randomly placed predators give a *higher* R because of edge effects, and higher still at low N (simulated, 3,000 placements per N):
 
 | N predators | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 | 24 | 26 |
-|---|---|---|---|---|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | expected R under random placement | 1.24 | 1.20 | 1.18 | 1.16 | 1.15 | 1.14 | 1.13 | 1.13 | 1.13 | 1.13 |
 
 Measured against this null (excess = observed R minus random R at that policy's predator count), **both configurations are clustered**: `base_environment_discrete` −0.110, `base_environment_step_energy` −0.235. So "`base_environment_discrete` is about random" (§16) was wrong; it is mildly clustered, and `base_environment_step_energy` considerably more.
 
 **The density confound raised in §16 runs the other way.** §16 worried that the smaller `base_environment_step_energy` population might be misread because agents cannot share cells. The null model shows the geometric bias at low density *raises* R (the random baseline is higher at `base_environment_step_energy`'s lower N), which works against finding clustering in `base_environment_step_energy`. After adjustment the difference is unchanged in direction and slightly stronger: paired Wilcoxon one-sided p = 0.0156 (6/6 pairs; the floor for six pairs), unpaired Mann-Whitney one-sided p = 0.0011.
 
-**But density is not separable from configuration here, and one pattern points the other way.**
+But density is not separable from configuration here, and one pattern points the other way.
+
 - The configurations have **no overlap in predator count** (`base_environment_discrete` 18.2-18.5, `base_environment_step_energy` 8.6-14.4 per policy), so no density-matched comparison across them exists in this data.
 - **Within `base_environment_step_energy`, clustering weakens as predator count rises**: dR/dN = +0.015 per predator (episode level, policy-demeaned, p = 3.6e-5, r = 0.30); within `base_environment_discrete` there is no significant slope. Extrapolating that slope from `base_environment_step_energy`'s ~12 predators to `base_environment_discrete`'s ~18 would raise R by about 0.09, roughly the size of the gap. That extrapolation is outside the observed range and the relation could run either way (clustered predators may compete and end up fewer), so it is a warning, not a result.
 - Across all 14 policies R and predator count correlate at Spearman 0.73, confounded with configuration.
@@ -265,7 +265,7 @@ Measured against this null (excess = observed R minus random R at that policy's 
 **The dose-response does not show what the move-cost mechanism predicts** (seed 42, one policy per level; "gap" = extra cost of moving over resting):
 
 | gap | policy | R | mean predators | excess vs random |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 0 | base_environment_discrete | 1.049 | 18.2 | −0.085 |
 | 0.08 | `base_environment_step_energy` | 0.921 | 14.4 | −0.229 |
 | 0.10 | run A | 0.983 | 10.0 | −0.195 |
@@ -273,7 +273,8 @@ Measured against this null (excess = observed R minus random R at that policy's 
 
 It is non-monotonic, and it is one policy per level while `base_environment_step_energy`'s own seed-to-seed range is 0.882-0.998 -- so run A's 0.983 lies inside `base_environment_step_energy`'s spread and 0.08 vs 0.10 cannot be told apart. The informative point is the last row: with resting free, waiting near an ambush spot is costless, the mechanism's most extreme case, yet those predators are no more clustered than `base_environment_discrete` (excess −0.087). That is a different regime (prey collapsing, predators abundant at ~24, so density again differs), so it is not a clean refutation, but it is evidence against a simple "cheaper waiting -> more clustering" story, not for it.
 
-**Where this leaves the clustering finding**
+Where this leaves the clustering finding
+
 - **Established:** `base_environment_step_energy` predators are more clustered than `base_environment_discrete` predators, consistently across six seeds, after correcting for the geometry of the bounded grid.
 - **Not established:** that the move/rest cost gap causes it. The ambush explanation of §13 is untested by these data and partly disfavored by the dose-response point above; a predator-density explanation cannot be excluded because the configurations do not overlap in density.
 - **What would separate them:** conditions that vary the cost gap while holding predator count fixed (or vice versa) -- for example the default costs with a larger initial or capped predator population, or several additional move-cost levels across seeds, which requires new training (~1.5-2 days, §15's estimate).
@@ -293,7 +294,7 @@ Item 1 of the original note (test the ambush story via noop/movement rates) has 
 **Method.** The same 14 policies and 30 deterministic episodes as §17 (12 base/`base_environment_step_energy` policies at iteration 300, plus run A and the earlier free-resting run at seed 42), instrumented (no training, CPU-only): per predator, the share of actions that are noop and the share of steps in which it changes cell; per-predator birth rate; mean parent-offspring distance at offspring ages of 1 to 100 steps (the spawn call is wrapped to capture each newborn's parent); and the share of predators with another predator within 1.5 cells. Scripts: [`evaluate_clustering_mechanism.py`](evaluate_clustering_mechanism.py), [`analyze_clustering_mechanism.py`](analyze_clustering_mechanism.py); raw data: [`clustering_mechanism_data/`](clustering_mechanism_data/). The instrumented R values reproduce §16-17 exactly.
 
 | measure | base_environment_discrete | `base_environment_step_energy` | seeds in the predicted direction | p (unpaired / paired, one-sided) |
-|---|:---:|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: | :---: |
 | share of predator actions that are noop | 0.139 | 0.163 | 4/6 | 0.12 / 0.22 |
 | share of predator-steps in which the predator moves | 0.793 | 0.765 | 5/6 | 0.12 / 0.078 |
 | mean displacement per step (cells) | 0.964 | 0.931 | 4/6 | 0.24 / 0.16 |
@@ -307,12 +308,14 @@ Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50
 
 **A measurement pitfall caught along the way.** The *raw* adjacent-neighbour share is not higher in `base_environment_step_energy` (0.264 vs 0.285, 2/6 seeds), which at first looked like evidence against the mechanism. It is density-dependent: `base_environment_step_energy` has fewer predators, so fewer are adjacent by chance. Against random placement at each episode's own predator count (2,000 random draws per N), adjacent pairs are 2.0x the random expectation in `base_environment_step_energy` (0.264 vs 0.132) and 1.46x in base (0.285 vs 0.196); the excess in the table above uses this null.
 
-**Reading**
+Reading
+
 - **Point 1 (births create adjacent pairs) is supported.** Adjacent pairs exceed random expectation in both configurations (base is also clustered, consistent with births alone), more so in `base_environment_step_energy`, and `base_environment_step_energy` predators reproduce more per capita (6/6 seeds, p = 0.001). Across the 12 policies, per-predator birth rate correlates with clustering R at Spearman -0.76 (p = 0.004), though this is confounded with configuration and within `base_environment_step_energy` alone (6 policies) it is not significant (-0.37, p = 0.47).
 - **Point 2 (costly moving keeps clusters together) is supported only modestly.** Offspring end up 5-8% closer to the parent at ages 10-50 in `base_environment_step_energy` (5/6 seeds), and dispersal distance tracks clustering across the 12 policies (Spearman +0.62 at age 30, +0.75 at age 50; +0.83 within `base_environment_step_energy`, p = 0.042, n = 6). But overall movement barely differs: `base_environment_step_energy` predators move in 77% of steps versus 79%, not significant. This is not predators sitting still; the effect is a small slowing of dispersal that accumulates over the offspring's lifetime. Noop share and movement do not track R across the policies.
 - **The two extra seed-42 policies fit "births and slow dispersal are both needed" (post hoc, one policy each).** The earlier free-resting run moves least (noop 0.22, displacement 0.85) but has the lowest birth rate (5.4 per 1000) and no extra clustering (R = 1.039); run A has the highest birth rate (10.5) but base-like movement (noop 0.11, displacement 0.99) and only moderate clustering (R = 0.983).
 
-**Caveats**
+Caveats
+
 - **Correlation, not causation.** Every measure differs between the two configurations together, so these data cannot say which one drives clustering. In particular the higher per-predator birth rate may itself be a consequence of the configuration (`base_environment_step_energy` has more prey per predator), i.e. downstream of the cost structure rather than independent of it. Density remains entangled with configuration (§17).
 - **Multiple comparisons.** About a dozen base-vs-`base_environment_step_energy` comparisons were made. Only the birth-rate result (p = 0.0011) clearly survives a strict correction (0.05/12 = 0.004); the adjacency excess (p = 0.0043) is borderline; the dispersal results (nominal p = 0.02-0.05) do not survive one and should be read as suggestive.
 - **Adjacency and R are related by construction.** Excess adjacency correlates with R at Spearman -0.92 across the policies, but adjacent pairs feed directly into R's nearest-neighbour distances, so this is largely definitional and is not independent evidence.
@@ -325,7 +328,7 @@ Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50
 §11-12 judged the default sustainable on one seed (42). The ten runs trained for §15 allow the same look across six seeds. The two configurations and their cost differences are defined in the table under "Naming" at the top of this file (in short: the default module has the same energy economy as `base_environment_discrete` except that moving costs extra). Numbers below are training-time ecology metrics for iterations 201-300 (averaged over the iterations that logged a completed episode), the same window for every seed; script: [`analyze_populations.py`](analyze_populations.py), which reads the runs' Ray result logs.
 
 | seed | base_environment_discrete | | | | base_environment_step_energy | | | |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | | **extinction predator** | **pred/episode** | **prey/episode** | **len** | **extinction predator** | **pred/episode** | **prey/episode** | **len** |
 | 42 | 0% | 19.8 | 18.0 | 997 | 0% | 14.1 | 23.9 | 1000 |
 | 43 | 0% | 19.3 | 19.2 | 981 | 4% | 11.7 | 30.1 | 970 |
@@ -339,7 +342,8 @@ Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50
 
 **`base_environment_discrete` is uniformly robust; the default is not.** `base_environment_discrete` shows 0% predator extinction and ~19 predators in all six seeds. `base_environment_step_energy` shows 0-4% extinction in five seeds, but **seed 45 never established a stable predator population**: 47%, 48%, 34% and 38% predator extinction over the four training windows (1-100, 101-200, 201-250, 251-300) with only ~3-4 predators throughout. Every other seed recovered by iteration 100-200 (extinction 0-7% afterwards), so this is not a slow recovery that more of the same training would obviously fix, although 300 iterations is all that was run and a longer run might behave differently.
 
-**What this changes.**
+What this changes.
+
 - The sustainability claim in §11-12 and the README, made on seed 42 alone, holds in 5 of 6 seeds and fails in 1. "Sustainable" should be read as "sustainable in most seeds", with a ~1-in-6 chance (from six seeds) of a failed predator population, until more seeds or a tuning change say otherwise. `base_environment_discrete` showed no such failures in the same six seeds.
 - **The clustering result (§16) does not depend on seed 45**, even though it is the seed with the lowest predator count (8.6 in evaluation) and among the strongest clustering: without it, the five remaining pairs are all in the predicted direction (mean R 1.022 vs 0.935, difference 0.086 against 0.096 with all six; paired one-sided p = 0.031, the floor for five pairs; unpaired p = 0.008).
 - Seed 45 also fits the pattern in §17 that clustering is strongest where predator numbers are lowest, which again cannot separate configuration from density (§17).
@@ -353,7 +357,7 @@ Mean parent-offspring distance by offspring age (ages 1, 2, 3, 5, 10, 20, 30, 50
 **1. Its predator policy barely learned.** Policy entropy is the training-log measure of how random a policy still is; a uniformly random policy over the 9 actions has entropy ln 9 = 2.20. Predator policy entropy by training window (1-50, 51-100, 101-150, 151-200, 201-250, 251-300):
 
 | | 1-50 | 51-100 | 101-150 | 151-200 | 201-250 | 251-300 |
-|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| --- | :---: | :---: | :---: | :---: | :---: | :---: |
 | seed 45 | 2.04 | 1.92 | 1.92 | 1.92 | 1.89 | **1.85** |
 | other five `base_environment_step_energy` seeds (range) | 1.92-2.03 | 1.59-1.85 | 1.37-1.69 | 1.29-1.52 | 1.27-1.43 | **1.23-1.40** |
 | `base_environment_discrete`, six seeds (range) | 1.88-1.95 | 1.42-1.54 | 1.21-1.28 | 1.11-1.16 | 1.07-1.12 | **1.05-1.10** |
@@ -367,14 +371,15 @@ Seed 45's predators stayed close to random for the whole run; every other seed's
 **4. The policy that acts greedily is viable; the policy that acts by sampling is not.** Training samples every action from the policy's distribution; the evaluations in §16-18 take the most likely action. Evaluating each iteration-300 policy both ways (30 episodes, same reset seeds):
 
 | | greedy: episodes ended early / mean predators | sampled: predator extinction / mean predators |
-|---|:---:|:---:|
+| --- | :---: | :---: |
 | seed 45, `base_environment_step_energy` | 0% / 8.6 | **27% / 6.3** |
 | other five `base_environment_step_energy` seeds | 0% / 12.4-14.4 | 0% / 10.6-13.3 |
 | `base_environment_discrete`, six seeds | 0-17% / 18.2-18.5 | 0% / 18.2-18.5 |
 
 Sampled-action evaluation reproduces the training-time failure for seed 45 only (27% extinction in evaluation against 34-48% in training) and for no other policy, while greedy evaluation of seed 45 shows no extinctions. So seed 45's policy contains a workable greedy strategy but is still too random to be reliable when it samples its actions, and predators, which start with few individuals and little energy, die out when their actions are noisy. (Greedy is not uniformly safer: `base_environment_discrete` seed 42 ended early in 17% of greedy episodes and 0% of sampled ones; the cause was not checked.)
 
-**What this says and does not say**
+What this says and does not say
+
 - **The failure is a training-dynamics failure, not evidence that the cost structure cannot support a trained predator.** The policy did not sharpen; five other seeds with the same costs did, and even seed 45's greedy policy survives every evaluation episode.
 - **It is more likely under the step-energy economy.** All six `base_environment_discrete` predator policies sharpened within about 100-200 iterations, while the step-energy economy leaves a thinner margin (predators are fewer and get less data even when things go well: 10-14 thousand samples per iteration against 19 thousand), so a slow start is harder to recover from. With six seeds and one failure this is a plausible reading, not a measured failure rate.
 - **Nothing here tests why seed 45 lagged at iterations 51-100.** Early random luck is the obvious candidate. No intervention was tried (for example continuing training from the seed-45 checkpoint, or an entropy bonus; all runs used an entropy coefficient of 0, so nothing pushes a policy either to explore or to sharpen).

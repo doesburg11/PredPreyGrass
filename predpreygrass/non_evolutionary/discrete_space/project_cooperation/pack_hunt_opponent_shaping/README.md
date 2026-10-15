@@ -53,17 +53,20 @@ final answer, so the choices can be revisited if the resulting dynamics
 don't look right.
 
 Run the viewer with:
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.project_cooperation.pack_hunt_opponent_shaping.random_policy
 ```
 
 Run the naive-PPO baseline with:
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.project_cooperation.pack_hunt_opponent_shaping.tune_ppo
 ```
 
 Run the pairwise opponent-shaping loop with:
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.project_cooperation.pack_hunt_opponent_shaping.tune_opponent_shaping
 ```
 
@@ -189,7 +192,7 @@ no cheap-talk gap.
 ### The three radii
 
 | Radius | Role | Starting value (10×10 grid, 1 cell/step) |
-|---|---|---|
+| --- | --- | --- |
 | Capture radius | Actual tag/catch check | 1 (adjacent) |
 | Engagement radius | Pays `−c`, contributes to catch probability | ≈ 2 |
 | Reward-sharing radius | Must be within this at the tag to collect a share | ≈ 2–3 (≥ engagement radius) |
@@ -220,7 +223,7 @@ mistake worth naming: it collapses the whole cooperate/defect question to a
 memory-one-style reciprocity is even expressible if there's no "last round" to
 react to.
 
-**Fix: a capture (or a timed-out failed hunt) ends a *round*, not the episode.**
+Fix: a capture (or a timed-out failed hunt) ends a *round*, not the episode.
 The prey respawns and the same fixed group of predators immediately faces
 another hunt. This restores genuine within-episode repetition — the same
 structural role IPD's repeated C/D rounds play for LOLA — so reciprocity has

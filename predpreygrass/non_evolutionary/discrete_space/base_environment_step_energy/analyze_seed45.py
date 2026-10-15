@@ -49,9 +49,12 @@ def series(kind, seed, getter):
     return out
 
 
-entropy = lambda pid: (lambda r: r.get("learners", {}).get(pid, {}).get("entropy"))
-births = lambda r: r.get("env_runners", {}).get("ecology/births_predator")
-pred_steps = lambda r: r["env_runners"]["num_module_steps_sampled"]["predator_policy"] / 1000
+def entropy(pid):
+    return lambda r: r.get('learners', {}).get(pid, {}).get('entropy')
+def births(r):
+    return r.get('env_runners', {}).get('ecology/births_predator')
+def pred_steps(r):
+    return r['env_runners']['num_module_steps_sampled']['predator_policy'] / 1000
 
 hdr = "  ".join(f"{lo + 1}-{hi}".rjust(7) for lo, hi in WINDOWS)
 print("PREDATOR policy entropy by training window (ln 9 = 2.197 is uniform-random)")

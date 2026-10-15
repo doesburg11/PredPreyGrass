@@ -1,4 +1,5 @@
 """Tests for prey_energy_yield (richer prey)."""
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 import pytest
@@ -7,7 +8,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env imp
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 
 
-class _Fixed:
+class _Fixed(RandomProxy):
     def __init__(self, real, value):
         self._real, self._value = real, value
 

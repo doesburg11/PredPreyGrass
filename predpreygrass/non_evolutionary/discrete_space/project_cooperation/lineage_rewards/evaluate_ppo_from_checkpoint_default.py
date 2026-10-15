@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     if SAVE_MOVIE:
         screen_size = visualizer.screen.get_size()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, screen_size)
     else:
         video_writer = None
@@ -105,7 +105,8 @@ if __name__ == "__main__":
             frame = pygame.surfarray.array3d(visualizer.screen)
             frame = np.transpose(frame, (1, 0, 2))  # Pygame to OpenCV format
             frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-            video_writer.write(frame)
+            if video_writer is not None:
+                video_writer.write(frame)
 
         total_reward += sum(rewards.values())
         terminated = terminations.get("__all__", False)

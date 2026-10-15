@@ -17,6 +17,7 @@ It is a qualitative, plot-based analysis (not a full statistical study).
   - `predpreygrass/stag_hunt_defection/ray_results/STAG_HUNT_DEFECT_PRED_LOSS_0_08_2026-01-05_01-26-09/PPO_PredPreyGrass_225cc_00000_0_2026-01-05_01-26-10/checkpoint_000029/eval_multiple_runs_STAG_HUNT_DEFECT_2026-01-05_14-04-28/summary_plots/iters=1000`
 
 Legend reference (per `stag_hunt/README.md`):
+
 - `type_1_prey` = mammoths
 - `type_2_prey` = rabbits
 

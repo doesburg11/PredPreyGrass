@@ -6,13 +6,13 @@ This module is set up to make **each Ray experiment folder self‑contained** so
 
 Every training run creates a new experiment directory under:
 
-```
+```text
 .../ray_results/<EXPERIMENT_NAME>/
 ```
 
 Inside it, you’ll find:
 
-```
+```text
 REPRODUCE_CODE/
   predpreygrass/<module_name>/   # snapshot of this module only
   assets/images/icons/                 # icon assets used by pygame renderers
@@ -30,7 +30,7 @@ run_config.json
 
 If you run evaluations with `SAVE_EVAL_RESULTS=True`, each eval output folder also contains:
 
-```
+```text
 checkpoint_000xyz/eval_*/REPRODUCE_CODE/
   predpreygrass/<module_name>/
   assets/images/icons/
@@ -41,12 +41,14 @@ checkpoint_000xyz/eval_*/REPRODUCE_CODE/
 ```
 
 ### What is included
+
 - **Code snapshot** of only `predpreygrass/<module_name>` (no other modules).
 - **Icons** from `assets/images/icons`.
 - **Resolved config JSONs** for the run.
 - **pip freeze** of the Python environment.
 
 ### What is excluded
+
 - `ray_results/`, `trained_examples/`, `__pycache__/`, and `*.pyc`.
 - External system dependencies (CUDA, OS libraries, GPU driver versions, etc.).
 
@@ -72,7 +74,7 @@ export TRAINED_EXAMPLE_DIR=/path/to/EXPERIMENT
 
 This will write new results to:
 
-```
+```text
 EXPERIMENT/ray_results/
 ```
 
@@ -99,6 +101,7 @@ export TRAINED_EXAMPLE_DIR=/path/to/EXPERIMENT
 ## Notes on determinism
 
 This setup captures the **exact code + configs + Python packages** used at the time of the run. Full determinism still depends on:
+
 - GPU/CPU driver versions
 - CUDA/cuDNN versions
 - OS libraries

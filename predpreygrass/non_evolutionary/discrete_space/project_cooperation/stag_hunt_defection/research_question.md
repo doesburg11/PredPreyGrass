@@ -18,6 +18,7 @@ This framing preserves the full ecological richness of the environment while all
 ## Why This Is Not a Classical Stag Hunt
 
 A classical stag hunt assumes:
+
 - simultaneous choice
 - static payoff matrix
 - no population dynamics
@@ -25,6 +26,7 @@ A classical stag hunt assumes:
 - no changing incentives over time
 
 The PPG environment violates all of these assumptions:
+
 - choices are **sequential and spatial**
 - opportunities are **unevenly distributed**
 - populations evolve during episodes
@@ -41,7 +43,7 @@ This is a *feature*, not a bug.
 The environment instantiates the following trade-off:
 
 | Strategy | Description | Properties |
-|--------|------------|------------|
+| -------- | ------------ | ------------ |
 | **Safe foraging** | Solo hunting rabbits | Reliable, low payoff, low coordination cost |
 | **Risky cooperation** | Coordinated mammoth hunting | High payoff, coordination-dependent, failure-prone |
 
@@ -54,13 +56,15 @@ The key question is **not** whether cooperation exists, but **when it becomes ev
 Rather than redesigning the environment, we isolate the *minimal ecological pressures* that shift behavior.
 
 ### 1. Payoff Gap (Necessity)
-**Condition:**  
+
+Condition:
 Expected long-term energy gain from successful mammoth cooperation must exceed rabbit foraging.
 
-**Why it matters:**  
+Why it matters:
 If mammoths are not clearly better *when successful*, cooperation is irrational.
 
-**Knobs:**
+Knobs:
+
 - Mammoth energy yield
 - Energy split rule
 - Rabbit energy yield
@@ -68,13 +72,15 @@ If mammoths are not clearly better *when successful*, cooperation is irrational.
 ---
 
 ### 2. Coordination Threshold (True Dilemma)
-**Condition:**  
+
+Condition:
 Solo mammoth hunting must usually fail, while pair (or group) hunting usually succeeds.
 
-**Why it matters:**  
+Why it matters:
 If solo success is common, the problem degenerates into individual optimization.
 
-**Knobs:**
+Knobs:
+
 - Cumulative predator energy threshold
 - Team-capture condition
 - Required number of predators
@@ -82,15 +88,18 @@ If solo success is common, the problem degenerates into individual optimization.
 ---
 
 ### 3. Opportunity Structure (Choice Visibility)
-**Condition:**  
+
+Condition:
 Agents must frequently face situations where:
+
 - rabbits are available **and**
 - mammoth cooperation is feasible
 
-**Why it matters:**  
+Why it matters:
 Without overlapping opportunities, observed behavior reflects availability, not preference.
 
-**Knobs:**
+Knobs:
+
 - Mammoth density
 - Predator density / clustering
 - Observation range
@@ -98,13 +107,15 @@ Without overlapping opportunities, observed behavior reflects availability, not 
 ---
 
 ### 4. Cost of Coordination (Risk)
-**Condition:**  
+
+Condition:
 Cooperation must incur real costs (time, energy, exposure to starvation).
 
-**Why it matters:**  
+Why it matters:
 If cooperation is cheap, it is not risky and loses explanatory power.
 
-**Knobs:**
+Knobs:
+
 - Per-step energy drain
 - Movement cost
 - Episode horizon
@@ -112,13 +123,15 @@ If cooperation is cheap, it is not risky and loses explanatory power.
 ---
 
 ### 5. Credit Assignment (Stability)
-**Condition:**  
+
+Condition:
 Successful cooperation must not systematically reward free-riding or late arrival.
 
-**Why it matters:**  
+Why it matters:
 Perverse incentives can suppress stable cooperation even when payoffs are high.
 
-**Knobs:**
+Knobs:
+
 - Energy split rule (equal vs proportional)
 - Participant eligibility rules
 
@@ -129,21 +142,26 @@ Perverse incentives can suppress stable cooperation even when payoffs are high.
 To isolate causality, modify **one dimension at a time** while keeping the rest of the ecosystem intact.
 
 ### Stage A — Baseline Ecology
+
 - Current environment settings
 - Measure behavior without assumptions
 
 ### Stage B — Payoff Gap Only
+
 - Increase mammoth payoff
 - Keep all dynamics unchanged
 
 ### Stage C — Opportunity Structure Only
+
 - Increase mammoth or predator encounter probability
 - Keep payoffs unchanged
 
 ### Stage D — Coordination Threshold Only
+
 - Tighten solo-failure / group-success boundary
 
 ### Stage E — Risk Reinforcement
+
 - Increase coordination costs
 - Test robustness of cooperation
 
@@ -158,15 +176,18 @@ Episode length is insufficient and misleading in ecological settings.
 Instead, track **conditional behavior**:
 
 ### 1. Outcome-Based Metrics
+
 - Solo rabbit captures
 - Cooperative mammoth captures
 - Failed attempts (intent signal)
 
 ### 2. Opportunity-Normalized Rates
+
 - Rabbit capture rate *given rabbit opportunity*
 - Mammoth cooperation rate *given mammoth opportunity*
 
 ### 3. Simultaneous Opportunity Choice
+>
 > When both options are available, which is chosen next?
 
 This is the strongest indicator of preference.
@@ -184,6 +205,7 @@ A falsifiable hypothesis consistent with the environment:
 > given that solo mammoth success is sufficiently unlikely.
 
 This formulation explicitly separates:
+
 - incentives
 - coordination feasibility
 - ecological risk
@@ -199,6 +221,7 @@ It *does* answer:
 > “Under what ecological pressures does cooperation emerge, stabilize, or collapse in spatial multi-agent populations?”
 
 That makes it closer to:
+
 - evolutionary game dynamics
 - behavioral ecology
 - open-ended MARL
@@ -212,4 +235,3 @@ than to static game theory.
 - Risky cooperation emerges only under specific, minimal ecological conditions
 - These conditions can be isolated **without simplifying the environment**
 - The result is behavior that is harder to analyze — but far more meaningful
-

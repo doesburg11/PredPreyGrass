@@ -34,7 +34,7 @@ This is the project's main line for the human-cooperation research angle (predat
 ## Other modules
 
 | Module | What it is |
-|---|---|
+| --- | --- |
 | [`base_environment_discrete`](discrete_space/base_environment_discrete/) | The plain Predator-Prey-Grass environment: no sexes, no diet, no bands — the common ancestor everything else in this folder ultimately traces back to. |
 | [`base_environment_continuous`](base_environment_continuous/) | A continuous-space counterpart: predators and prey with steering physics on a torus, direction and speed actions, a movement energy cost, moving grass clusters. A standalone RLlib environment replacing the Aquarium package; trained, it shows a Red Queen arms race between predators and prey. See its `RESULTS.md`. |
 | [`base_environment_seasonal`](discrete_space/base_environment_seasonal/) | `base_environment_discrete` + grass regrowth cycling between an "abundant" and a "scarce" phase over an episode. |

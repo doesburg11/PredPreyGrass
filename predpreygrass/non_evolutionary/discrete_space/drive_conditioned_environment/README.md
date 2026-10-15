@@ -44,7 +44,7 @@ Drive-conditioned logic is implemented on top of the copied baseline (the "conse
 **Shape of the effect over training** (episode-pooled return, gap vs. baseline):
 
 | Iterations | Gap |
-|---|---|
+| --- | --- |
 | 1–25 (both still learning to survive) | +76.0% |
 | 26–50 (both just reached full-length episodes) | +28.9% |
 | 51–100 | +9.3% |

@@ -72,7 +72,8 @@ Status quo: the number of bands can only fall (a band ends when its last member 
 Real hunter-gatherer bands split and merge with the seasons and the food supply, so the count would rise and fall. Proposed as
 default-off options so all existing runs stay reproducible.
 
-**Rules (mechanical, no reward terms)**
+Rules (mechanical, no reward terms)
+
 1. **Fission by size** (`band_fission`, `band_max_size`, default 12): when a band has more than `band_max_size` living members, it
    splits into two spatial clusters (2-means on member positions, each part at least `band_min_split_size` = 3). The
    part with the higher-energy centroid keeps the ID; the other gets a NEW ID from a counter that never reuses IDs. Children stay with
@@ -91,7 +92,8 @@ bands), and the same-band / other-band observation channels (they always reflect
 mean band size (already partly logged as `bands_alive` at the end of an episode). Snapshot and removal bookkeeping as for the other
 band state.
 
-**Design consequences and risks**
+Design consequences and risks
+
 - Bands become close to spatial clusters, so the within-range sharing rule and band membership largely coincide; that is realistic
   (camp = co-residence) but reduces how much "band" adds beyond proximity. A comparison with fission/fusion off shows how much.
 - Policies see membership only through the two band channels, so frequent re-labelling changes their inputs; the hysteresis

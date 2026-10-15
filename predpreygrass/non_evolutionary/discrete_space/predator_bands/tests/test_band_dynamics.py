@@ -2,7 +2,6 @@
 timing, integration with step(), snapshots and validation."""
 import copy
 
-import numpy as np
 import pytest
 
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env import config_env as _base

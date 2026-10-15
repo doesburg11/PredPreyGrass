@@ -3,7 +3,7 @@
 <p align="center">
     <b>Trained Predator-Prey-Grass walls-occlusion environment</b></p>
 <p align="center">
-    <img align="center" src="../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
+    <img alt="walls occlusion illustration" align="center" src="../../../../assets/images/gifs/walls_occlusion.gif" width="600" height="500" />
 </p>
 
 This directory contains experiment scripts, configs, and documentation for studying the effects of static and dynamic walls, as well as line-of-sight (LOS) occlusion, on multi-agent co-evolution in the Predator-Prey-Grass (PPG) environment.
@@ -11,6 +11,7 @@ This directory contains experiment scripts, configs, and documentation for study
 ## Overview
 
 In the PPG environment, agents (predators and prey) interact on a gridworld with grass as a renewable resource. Walls can be placed to create obstacles, corridors, or complex mazes. When occlusion is enabled, walls block agents' line of sight, affecting both their observations and their ability to move. This setup allows for the study of:
+
 - How spatial structure and visibility constraints shape co-evolutionary dynamics
 - The emergence of new strategies in response to environmental complexity
 - The robustness of learned behaviors to changes in wall layout or occlusion rules
@@ -56,6 +57,7 @@ config_env = {
 ```
 
 ## Suggested Wall Layouts
+
 - **Central Maze:** Spiral or labyrinth in the center.
 - **Chambers:** Multiple rooms with narrow corridors.
 - **Forest:** Scattered single-tile obstacles.
@@ -63,25 +65,31 @@ config_env = {
 - **Dynamic:** Walls move or change during training.
 
 ## Research Questions
+
 - How do static vs. dynamic walls affect predator/prey strategies?
 - Does occlusion promote more robust or generalizable behaviors?
 - Can agents adapt to non-stationary environments with moving obstacles?
 
 ## Usage
+
 1. Edit the config file to set your desired wall and occlusion parameters.
 2. Run the training script:
+
    ```bash
    python -u predpreygrass/ppg_visibility/tune_ppo_walls_occlusion.py | tee logs/last_run_tune.log
    ```
+
 3. Visualize and evaluate results using the provided evaluation scripts.
 
 ## Files
+
 - `tune_ppo_walls_occlusion.py`: Main training script for wall/occlusion experiments.
 - `evaluate_ppo_from_checkpoint_debug.py`: Visual evaluation with wall and LOS overlays.
 - `config_env_train_2_policies.py`: Example config with manual/dynamic wall options.
 - `README.md`: This documentation.
 
 ## Tips
+
 - For reproducibility, always snapshot your config and wall layout with each experiment.
 - Try both static and dynamic walls to see how agent strategies change.
 - Use the visibility channel for richer policy learning, or mask observations for harder partial observability.

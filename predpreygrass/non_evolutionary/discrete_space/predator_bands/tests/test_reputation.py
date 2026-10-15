@@ -3,6 +3,7 @@ switches) how much a predator's presence counts toward repelling a threat / lowe
 band-mate's shared forage it receives -- an image-scoring-style free-rider punishment. Supersedes an earlier binary
 "ostracism" design from the same session (never used in a run). See predpreygrass_rllib_env.py's __init__, _update_reputation
 and _defender_weight for the full rationale."""
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 import numpy as np
@@ -12,7 +13,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env imp
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 
 
-class _FixedRandom:
+class _FixedRandom(RandomProxy):
     """Real generator with random() forced to a value (integers/choice/etc. stay real)."""
 
     def __init__(self, real, value):

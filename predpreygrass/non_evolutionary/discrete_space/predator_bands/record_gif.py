@@ -16,9 +16,7 @@ import os
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 
-import numpy as np
 import pygame
-import torch
 from PIL import Image
 from ray.rllib.core.rl_module.rl_module import RLModule
 
@@ -80,7 +78,10 @@ def main():
         if step % args.every == 0:
             raw = pygame.image.tostring(renderer.screen, "RGB")
             img = Image.frombytes("RGB", renderer.screen.get_size(), raw)
-            img = img.resize((int(img.width * args.scale), int(img.height * args.scale)), Image.LANCZOS)
+            img = img.resize(
+                (int(img.width * args.scale), int(img.height * args.scale)),
+                Image.Resampling.LANCZOS,
+            )
             frames.append(img.quantize(colors=args.colors, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE))
         if terminations.get("__all__") or truncations.get("__all__"):
             break

@@ -3,7 +3,7 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 
 
-def build_module_spec(obs_space, act_space, policy_name: str = None):
+def build_module_spec(obs_space, act_space, policy_name: str | None = None):
     """
     Build an RLModuleSpec whose conv depth L matches the observation window size H
     so that the receptive field RF = 1 + 2L equals H.

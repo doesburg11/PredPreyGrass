@@ -157,7 +157,7 @@ def compute_opportunity_preference_metrics(per_step_agent_data: list[dict]) -> d
                 return True
         return False
 
-    buckets = {
+    buckets: dict[str, dict[str, float]] = {
         "any_prey": {"predator_steps": 0, "join_steps": 0},
         "mammoth_available": {"predator_steps": 0, "join_steps": 0},
         "rabbit_available": {"predator_steps": 0, "join_steps": 0},

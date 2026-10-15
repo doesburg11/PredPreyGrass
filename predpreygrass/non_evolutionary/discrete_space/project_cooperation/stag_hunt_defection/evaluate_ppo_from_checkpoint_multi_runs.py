@@ -41,7 +41,7 @@ def policy_pi(observation, policy_module, deterministic=True):
         logits = logits[0]
 
     action_space = getattr(policy_module, "action_space", None)
-    if hasattr(action_space, "nvec"):
+    if action_space is not None and hasattr(action_space, "nvec"):
         actions = []
         idx = 0
         for n in list(action_space.nvec):
@@ -67,7 +67,7 @@ def _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr):
 
 def setup_modules():
     # STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/
-    ray_results_dir = "/home/doesburg/Projects/PredPreyGrass/predpreygrass/stag_hunt_defection/ray_results/"
+    ray_results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs")
     checkpoint_root = "STAG_HUNT_DEFECT_RABBIT_LOSS_0_01_2026-01-06_00-22-12/PPO_PredPreyGrass_5d5bc_00000_0_2026-01-06_00-22-12/"
     checkpoint_nr = "checkpoint_000049"
     checkpoint_path = _resolve_checkpoint_path(ray_results_dir, checkpoint_root, checkpoint_nr)
@@ -148,6 +148,7 @@ if __name__ == "__main__":
             }
         )
         if SAVE_EVAL_RESULTS:
+            assert visualizer is not None
             visualizer.plot()
             config_env_dir = os.path.join(eval_output_dir, "config_env")
             os.makedirs(config_env_dir, exist_ok=True)

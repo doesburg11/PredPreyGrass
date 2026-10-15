@@ -291,7 +291,8 @@ def step_forward(
         frame = pygame.surfarray.array3d(visualizer.screen)
         frame = np.transpose(frame, (1, 0, 2))
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-        video_writer.write(frame)
+        if video_writer is not None:
+            video_writer.write(frame)
 
     control.step_once = False
     clock.tick(visualizer.target_fps)
@@ -549,7 +550,7 @@ if __name__ == "__main__":
     if SAVE_MOVIE:
         screen_width = visualizer.screen.get_width()
         screen_height = visualizer.screen.get_height()
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*"mp4v")
         video_writer = cv2.VideoWriter(MOVIE_FILENAME, fourcc, MOVIE_FPS, (screen_width, screen_height))
     else:
         video_writer = None
@@ -660,7 +661,7 @@ if __name__ == "__main__":
                 pos = agent_entry.get("position")
                 if pos is None:
                     return None
-                if hasattr(pos, "tolist"):
+                if isinstance(pos, np.ndarray):
                     pos = pos.tolist()
                 elif isinstance(pos, tuple):
                     pos = list(pos)
@@ -682,7 +683,7 @@ if __name__ == "__main__":
                 pos = evt.get("position_consumer") or evt.get("position")
                 if pos is None:
                     pos = _get_position(evt.get("t"), agent_id)
-                if hasattr(pos, "tolist"):
+                if isinstance(pos, np.ndarray):
                     pos = pos.tolist()
                 elif isinstance(pos, tuple):
                     pos = list(pos)
@@ -690,7 +691,7 @@ if __name__ == "__main__":
                 pos_resource = evt.get("position_resource")
                 if pos_resource is None:
                     pos_resource = _get_resource_position(evt.get("t"), resource_id)
-                if hasattr(pos_resource, "tolist"):
+                if isinstance(pos_resource, np.ndarray):
                     pos_resource = pos_resource.tolist()
                 elif isinstance(pos_resource, tuple):
                     pos_resource = list(pos_resource)

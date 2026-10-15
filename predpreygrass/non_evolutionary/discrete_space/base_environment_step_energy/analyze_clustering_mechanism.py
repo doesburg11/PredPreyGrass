@@ -104,7 +104,8 @@ def null_adj(N, trials=2000):
 
 Ns = list(range(4, 31, 2))
 tab = {N: null_adj(N) for N in Ns}
-A0 = lambda N: np.interp(N, Ns, [tab[k] for k in Ns])
+def A0(N):
+    return np.interp(N, Ns, [tab[k] for k in Ns])
 print("\nADJACENCY vs RANDOM PLACEMENT at the episode's own predator count")
 print("  random expectation of adj_frac by N:", " ".join(f"N={N}:{tab[N]:.3f}" for N in Ns[::2]))
 ex, obs_m, rnd_m = {}, {}, {}

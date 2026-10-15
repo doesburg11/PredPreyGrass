@@ -1,11 +1,12 @@
 # predator_sexual_reproduction
 
-> ## STATUS: CLOSED (2026-09-25). Read this before anything else.
+> ## STATUS: CLOSED (2026-09-25). Read this before anything else
 >
 > **This module is stopped, not finished.** It produced one solid descriptive result and two questions it could not answer. Details and
 > numbers are in [`RESULTS.md`](RESULTS.md) (Iterations 0-16); this box is the short version.
 >
 > **What was achieved**
+>
 > - A working sexed-predator environment (two-parent reproduction, asymmetric birth cost, sex-specific hunting odds, male-to-mate gift,
 >   parental care, fixed prey density, fixed predator density) with 88 passing tests and an analysis toolkit (shared-state approach bias,
 >   energy sources, mate contingency, provisioning, pair fitness), all run in the environment each run was trained in.
@@ -20,6 +21,7 @@
 >   withdrawn; Iteration 16 corrects them). Independent review caught association-to-causation overclaims in every write-up.
 >
 > **What was NOT settled, and what was already tried**
+>
 > 1. **Necessity of the odds asymmetry: not settled.** Tried: the unmatched ablations (Iterations 8-9), a fixed prey-density environment and full
 >    2x2 odds factorial with 3 seeds per cell (11-12), a reproduction-blocking population cap (13), exact predator density without blocking (15), and a
 >    population-target sweep (stopped early). Every design that fixes population is itself an intervention (blocked reproduction, or random death with
@@ -225,24 +227,29 @@ reward. Command-line flags for the tune script: `--reward-per-energy`, `--reward
 ## Running
 
 Train:
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.tune_ppo_predator_sexual_reproduction --seed 42 --max-iters 500
 ```
 
 Watch a random policy (sanity check, no training needed):
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.random_policy
 ```
 
 Evaluate a checkpoint interactively:
-```
+
+```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.evaluate_ppo_from_checkpoint_debug
 ```
+
 (update the hardcoded `checkpoint_path` first).
 
 Run the validation test suite (not auto-discovered by the repo's pytest
 `testpaths` -- must be invoked explicitly, same as every other module's tests):
-```
+
+```text
 pytest predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/tests/ -v
 ```
 
@@ -279,7 +286,7 @@ seeds at every odds setting tested this way.**
 **The runs compared** (all seed 42 unless noted, all at the shipped-default hunting odds):
 
 | Name | Reward | Iterations | Minibatch |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **REALISTIC** | Sparse: only reproduction pays (10.0) | 100 | 128 |
 | **FORAGING** | REALISTIC plus catch prey +1.0 and gather fruit +0.5 (flat, per event) | 300 | 128 |
 | **FORAGING_PENALTY** | FORAGING plus -1.0 when a predator dies in a failed hunt | 300 | 128 |
@@ -303,8 +310,7 @@ Left: individuals alive at episode end. Right: episode length (cap 1000). Seed 4
 
 ![Population over training, minibatch 1024](results_figures/population_over_training_mb1024.png)
 
-*Minibatch-1024 runs. Rows: REF (flat rewards), PROP k=0.2 (declines: women almost extinct), PROP k=0.5 with seeds 42, 43, 44 (healthy).*
-
+Minibatch-1024 runs. Rows: REF (flat rewards), PROP k=0.2 (declines: women almost extinct), PROP k=0.5 with seeds 42, 43, 44 (healthy).
 ![Evaluation episode population](results_figures/evaluation_population_foraging_iter300_seed42.png)
 
 *One evaluation episode of the FORAGING run's final checkpoint (iteration 300, seed 42, deterministic
@@ -337,15 +343,15 @@ the approach/avoid measurement with `analyze_prey_approach_from_checkpoint`, and
 
 ### Is there a sex differentiation in foraging ("division of labor")? What is and is not established
 
-*This section was tightened after an independent second opinion (Codex); see `RESULTS.md`, "Second opinion".*
-
+This section was tightened after an independent second opinion (Codex); see `RESULTS.md`, "Second opinion".
 **Working definition.** Here "division of labor" only means a difference between the sexes, emerging from training rather than
 hard-coded, in (a) what they do (approach toward prey and fruit) and (b) where their energy comes from (prey share of gross
 own-forage energy), while the population stays viable. It does not imply coordination or task allocation. Nothing forces the
 difference: both sexes can hunt and gather, and the male/female difference in hunting odds (90% / 5% against 20% / 10% success /
 death) is the only built-in asymmetry that bears on hunting.
 
-**Established (descriptive; three training seeds, energy-proportional reward `reward_predator_per_energy` = 0.5, iteration 300):**
+Established (descriptive; three training seeds, energy-proportional reward `reward_predator_per_energy` = 0.5, iteration 300):
+
 - Men step onto an adjacent prey x1.32-1.49 as often as a random mover; women x1.02-1.07. In REF (flat rewards, same minibatch, one seed) men were x0.85.
 - Men take 46.9-49.6% of their gross own-forage energy from prey (a random walker: 41%; flat-reward runs 37-40%); women 11.1-12.1% (random 15%; flat-reward runs 13-15%).
 - Women approach fruit the most (x1.83-1.91), and the ecosystem stays healthy (births about 37-43, 19-20 men and 5-8 women alive).
@@ -358,12 +364,13 @@ penalty, shows a male-minus-female prey approach-bias difference of +0.15 to +0.
 does not change deaths-in-combat per episode, so **the explicit penalty appears unnecessary for the split at this setting** (it does not show
 death risk itself is irrelevant, since dying still ends a predator's future reward either way).
 
-**Supported by the runs but not fully isolated (working hypotheses):**
+Supported by the runs but not fully isolated (working hypotheses):
+
 - **Women's lower hunting success is what matters most, and it responds as a threshold, not a gradient.** Giving women the men's odds (90% /
   5%; seeds 42, 43) removes the split. Both single-factor ablations now have three-seed support:
 
   | Women's odds (success / death) | Men: prey share | Women: prey share | Prey alive | Split? |
-  |---|---|---|---|---|
+  | --- | --- | --- | --- | --- |
   | 20% / 5% (three seeds) | 44.9-52.7% | 14.7-15.4% | 19-23 | yes, slightly narrower than baseline |
   | 20% / 10% (baseline, three seeds) | 47-50% | 11-12% | 18-21 | yes |
   | 20% / 20% (two seeds) | 42.1-42.6% | 11.1-12.4% | 27.5-30.2 | yes, similar to baseline |
@@ -398,7 +405,8 @@ death risk itself is irrelevant, since dying still ends a predator's future rewa
   isolated, because k = 0.2 and k = 0.5 pay the same per unit of energy for fruit and prey and differ only in reward scale (relative to
   the reproduction reward of 10 and the death penalty), which may also matter.
 
-**Not established, or limits:**
+Not established, or limits:
+
 - **It is partial, not exclusive specialization, and no causal coordination or task allocation is established.** Men still get about half their energy from fruit; a
   woman catches about one prey per life (0.8-1.0) against about 10 for a man.
 - **Few independent training runs at most settings.** Three seeds for k = 0.5, for both unmatched single-factor ablations, and (since

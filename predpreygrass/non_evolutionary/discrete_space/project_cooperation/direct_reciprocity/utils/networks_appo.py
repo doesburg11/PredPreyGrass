@@ -9,7 +9,7 @@ from ray.rllib.algorithms.appo.torch.default_appo_torch_rl_module import (
 def build_module_spec(
     obs_space,
     act_space,
-    policy_name: str = None,
+    policy_name: str | None = None,
     module_class=DefaultAPPOTorchRLModule,
 ):
     """

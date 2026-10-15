@@ -28,7 +28,7 @@ worth far more than a single prey. No rule tells anyone where to stand and no re
 - **Outcome by party size n** (`mammoth_success_by_party`, `mammoth_death_by_party`, indexed n = 1, 2, 3, 4+; first guesses):
 
   | n | success | each party member dies on failure |
-  |---|---|---|
+  | --- | --- | --- |
   | 1 | 0.02 | 0.30 |
   | 2 | 0.25 | 0.15 |
   | 3 | 0.60 | 0.05 |

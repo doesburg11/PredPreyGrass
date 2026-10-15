@@ -1,21 +1,20 @@
 # PPO vs APPO in PredPreyGrass (PPG)
 
-## Conclusions 
+## Conclusions
+
 - Theoretically PPO favored over APPO given spcifics of the PredPreyGrass environment.
 - The training and evaluation results show comparable result between PPO and APPO.
 - The wall time however shows APPO is three times faster with 1000 iterations.
 - Despite the faster training we for now stick to PPO given more stability and the theoretical more sound foundations.
 
-
-
 <p align="center">
-    <b>Trained Predator-Prey-Grass shared_prey environment</b><br/>
+    <b>Trained Predator-Prey-Grass shared_prey environment</b>;
     <b>(iteration steps)</b></p>
-    <img align="center" src="../../../../assets/images/readme/PPO_v_APPO_steps.png" width="700" />
+    <img alt="shared prey illustration" align="center" src="../../../../../assets/images/readme/PPO_v_APPO_steps.png" width="700" />
 </p>
 <p align="center">
     <b>(time steps)</b></p>
-    <img align="center" src="../../../../assets/images/readme/PPO_v_APPO_time.png" width="700" />
+    <img alt="shared prey illustration" align="center" src="../../../../../assets/images/readme/PPO_v_APPO_time.png" width="700" />
 </p>
 
 ## Purpose
@@ -24,10 +23,10 @@ This document provides a **single, self-contained comparison** of **Proximal Pol
 
 PredPreyGrass is a **multi-agent, population-based predator–prey–resource system** with:
 
-* dynamic birth and death,
-* energy-based survival and reproduction,
-* long-horizon feedback loops,
-* strong non-stationarity by design.
+- dynamic birth and death,
+- energy-based survival and reproduction,
+- long-horizon feedback loops,
+- strong non-stationarity by design.
 
 The key question addressed here is **not** “which algorithm learns faster in general,” but:
 
@@ -39,21 +38,21 @@ The key question addressed here is **not** “which algorithm learns faster in g
 
 This comparison assumes the canonical properties of your environment:
 
-* multiple agent roles (predators, prey; possibly multiple types),
-* dynamically changing agent sets,
-* policies that co-adapt over time,
-* population persistence (avoiding extinction) as a core success criterion,
-* Ray RLlib **new API stack** (Ray ≥ 2.40; you are on 2.48),
-* reward signals used as *proxies* for longer-term ecological success.
+- multiple agent roles (predators, prey; possibly multiple types),
+- dynamically changing agent sets,
+- policies that co-adapt over time,
+- population persistence (avoiding extinction) as a core success criterion,
+- Ray RLlib **new API stack** (Ray ≥ 2.40; you are on 2.48),
+- reward signals used as *proxies* for longer-term ecological success.
 
 ---
 
 ## High-level takeaway
 
-* **PPO** prioritizes *learning stability and interpretability*.
-* **APPO** prioritizes *throughput and wall-clock speed*.
-* In PredPreyGrass, this trade-off often changes the **observed ecology itself**.
-* See detailed eval comparison: `comparison_PPO_vs_APPO_init_prey_2_5.md`
+- **PPO** prioritizes *learning stability and interpretability*.
+- **APPO** prioritizes *throughput and wall-clock speed*.
+- In PredPreyGrass, this trade-off often changes the **observed ecology itself**.
+- See detailed eval comparison: `comparison_PPO_vs_APPO_init_prey_2_5.md`
 
 If PPG is treated as a **scientific simulator**, PPO is the safer default.
 If PPG is treated as an **engineering throughput problem**, APPO can be useful.
@@ -73,10 +72,10 @@ PPO is a **synchronous, on-policy** algorithm:
 
 Key characteristics:
 
-* minimal policy lag,
-* tighter on-policy guarantees,
-* coherent advantage estimation,
-* easier debugging and reproducibility.
+- minimal policy lag,
+- tighter on-policy guarantees,
+- coherent advantage estimation,
+- easier debugging and reproducibility.
 
 Policy updates are based on experience that reflects the *current* population state.
 
@@ -86,16 +85,16 @@ Policy updates are based on experience that reflects the *current* population st
 
 APPO is a **distributed, asynchronous** variant of PPO:
 
-* rollout workers collect experience continuously,
-* the learner updates the policy while rollouts are still running,
-* training batches contain data from **slightly older policy versions**.
+- rollout workers collect experience continuously,
+- the learner updates the policy while rollouts are still running,
+- training batches contain data from **slightly older policy versions**.
 
 Key characteristics:
 
-* much higher sample throughput,
-* policy lag between acting and learning,
-* increased sensitivity to rollout/learner timing,
-* weaker causal attribution between update and outcome.
+- much higher sample throughput,
+- policy lag between acting and learning,
+- increased sensitivity to rollout/learner timing,
+- weaker causal attribution between update and outcome.
 
 ---
 
@@ -116,13 +115,13 @@ policy → behavior → encounters → births/deaths → population structure �
 
 With **PPO**, this loop is relatively tight:
 
-* behavior changes are reflected in the data before the next update,
-* population-level consequences are visible to the learner quickly.
+- behavior changes are reflected in the data before the next update,
+- population-level consequences are visible to the learner quickly.
 
 With **APPO**, the loop is loosened:
 
-* learning updates may be based on outdated interaction regimes,
-* corrections can arrive *after* irreversible population changes (e.g. extinction).
+- learning updates may be based on outdated interaction regimes,
+- corrections can arrive *after* irreversible population changes (e.g. extinction).
 
 This can amplify instability in ways that look ecological but are algorithm-induced.
 
@@ -132,16 +131,16 @@ This can amplify instability in ways that look ecological but are algorithm-indu
 
 PredPreyGrass already contains genuine non-stationarity:
 
-* predators and prey learn simultaneously,
-* population sizes fluctuate,
-* reproduction introduces new agents,
-* death removes agents permanently.
+- predators and prey learn simultaneously,
+- population sizes fluctuate,
+- reproduction introduces new agents,
+- death removes agents permanently.
 
 APPO adds **algorithmic non-stationarity** on top:
 
-* mixed-policy experience within a batch,
-* drifting value baselines,
-* blurred “who was I competing against?” signals.
+- mixed-policy experience within a batch,
+- drifting value baselines,
+- blurred “who was I competing against?” signals.
 
 The combined effect can turn structured co-adaptation into hard-to-interpret noise.
 
@@ -151,24 +150,24 @@ The combined effect can turn structured co-adaptation into hard-to-interpret noi
 
 In PPG, rewards typically approximate:
 
-* survival,
-* reproduction,
-* lineage continuation,
-* sustained coexistence.
+- survival,
+- reproduction,
+- lineage continuation,
+- sustained coexistence.
 
 These are **delayed, population-level outcomes**.
 
 Under PPO:
 
-* reward timing is more coherent,
-* changes in reward are easier to map to behavioral causes,
-* “fitness-like” interpretations are more defensible.
+- reward timing is more coherent,
+- changes in reward are easier to map to behavioral causes,
+- “fitness-like” interpretations are more defensible.
 
 Under APPO:
 
-* reward may be optimized under lagged conditions,
-* short-term exploitation can be favored,
-* long-term ecological viability can be sacrificed unintentionally.
+- reward may be optimized under lagged conditions,
+- short-term exploitation can be favored,
+- long-term ecological viability can be sacrificed unintentionally.
 
 ---
 
@@ -191,11 +190,11 @@ Under APPO:
 
 Use **PPO** when you care about:
 
-* stable predator–prey coexistence,
-* interpreting oscillations as ecological phenomena,
-* cooperation, sharing, or lineage mechanisms,
-* long-horizon population persistence,
-* clean ablations and publishable results.
+- stable predator–prey coexistence,
+- interpreting oscillations as ecological phenomena,
+- cooperation, sharing, or lineage mechanisms,
+- long-horizon population persistence,
+- clean ablations and publishable results.
 
 Rule of thumb:
 
@@ -211,18 +210,18 @@ Typical use cases:
 
 1. **Pretraining primitives**
 
-   * navigation,
-   * basic foraging,
-   * chase/escape reflexes.
+   - navigation,
+   - basic foraging,
+   - chase/escape reflexes.
 2. **Frozen-opponent experiments**
 
-   * one side learns while the other is fixed,
-   * reduced non-stationarity.
+   - one side learns while the other is fixed,
+   - reduced non-stationarity.
 3. **Engineering and stress testing**
 
-   * large-scale sampling,
-   * finding rare environment bugs,
-   * scalability experiments.
+   - large-scale sampling,
+   - finding rare environment bugs,
+   - scalability experiments.
 
 Rule of thumb:
 
@@ -234,11 +233,11 @@ Rule of thumb:
 
 Indicators that APPO is distorting the ecology:
 
-* sudden population collapse absent under PPO,
-* oscillations that scale with rollout parallelism,
-* high sensitivity to rollout fragment length,
-* large variance across random seeds,
-* policies that score well short-term but destabilize the ecosystem.
+- sudden population collapse absent under PPO,
+- oscillations that scale with rollout parallelism,
+- high sensitivity to rollout fragment length,
+- large variance across random seeds,
+- policies that score well short-term but destabilize the ecosystem.
 
 Such effects should be treated as **algorithm artifacts until proven otherwise**.
 
@@ -248,11 +247,11 @@ Such effects should be treated as **algorithm artifacts until proven otherwise**
 
 For a fair PPO vs APPO comparison in PPG, keep constant:
 
-* environment configuration,
-* observation/action spaces,
-* network architecture,
-* total environment steps,
-* evaluation protocol and metrics.
+- environment configuration,
+- observation/action spaces,
+- network architecture,
+- total environment steps,
+- evaluation protocol and metrics.
 
 Vary **only** the training algorithm and its required distributed settings.
 
@@ -262,12 +261,12 @@ Vary **only** the training algorithm and its required distributed settings.
 
 For population-level analysis, track:
 
-* time to first extinction,
-* long-run mean population sizes,
-* oscillation amplitude and period,
-* reproduction counts per type,
-* lineage survival (if logged),
-* spatial or encounter-rate statistics.
+- time to first extinction,
+- long-run mean population sizes,
+- oscillation amplitude and period,
+- reproduction counts per type,
+- lineage survival (if logged),
+- spatial or encounter-rate statistics.
 
 These reveal regime changes that raw return often hides.
 
@@ -288,7 +287,7 @@ A pragmatic approach that balances speed and validity:
 
 In PredPreyGrass, **PPO and APPO are not interchangeable knobs**.
 
-* **PPO** preserves ecological coherence and interpretability.
-* **APPO** increases speed but can fundamentally alter observed dynamics.
+- **PPO** preserves ecological coherence and interpretability.
+- **APPO** increases speed but can fundamentally alter observed dynamics.
 
 If PredPreyGrass is used as a **scientific ecosystem**, PPO should be your default, with APPO used deliberately and cautiously.

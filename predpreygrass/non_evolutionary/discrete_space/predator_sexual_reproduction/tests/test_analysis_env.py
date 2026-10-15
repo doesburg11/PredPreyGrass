@@ -6,6 +6,7 @@ mismatch that motivated it.
 Run explicitly:
     pytest predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/tests/ -v
 """
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.analysis_env import env_class_for, make_env
@@ -65,11 +66,10 @@ def test_instrumented_env_sits_on_the_trained_env_class_and_tracks():
 
 # ---- instrumentation actually fires on each generated class (Codex review: the tests above only checked
 # inheritance/reset/population, so a skipped or double-counted hook would have passed) ----
-import numpy as np
 import pytest
 
 
-class _FixedRandom:
+class _FixedRandom(RandomProxy):
     def __init__(self, real, value):
         self._real, self._value = real, value
 

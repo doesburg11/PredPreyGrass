@@ -75,7 +75,8 @@ def summarize(label, series, burn_in):
             continue
         males, females, prey = b[:, 0], b[:, 1], b[:, 2]
         pred = males + females
-        cv = lambda x: x.std() / max(x.mean(), 1e-9)
+        def cv(x):
+            return x.std() / max(x.mean(), 1e-09)
         lags = list(range(-60, 61, 5))
         cors = [lag_corr(prey, pred, L) for L in lags]
         k = int(np.nanargmax(np.abs(cors))) if not np.all(np.isnan(cors)) else None

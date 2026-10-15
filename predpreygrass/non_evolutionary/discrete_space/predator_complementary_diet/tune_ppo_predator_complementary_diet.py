@@ -30,7 +30,7 @@ from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
-from ray.rllib.utils.typing import AgentID, EpisodeType, PolicyID
+from ray.rllib.utils.typing import EpisodeType, PolicyID
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -217,8 +217,10 @@ class EpisodeReturn(RLlibCallback):
         resolved_env = self._resolve_env(env=env, env_index=env_index, **kwargs)
         build_metrics = getattr(resolved_env, "_build_episode_training_metrics", None)
         if metrics_logger is not None and callable(build_metrics):
-            for metric_name, metric_value in build_metrics().items():
-                metrics_logger.log_value(f"ecology/{metric_name}", float(metric_value), reduce="mean")
+            episode_metrics = build_metrics()
+            if isinstance(episode_metrics, dict):
+                for metric_name, metric_value in episode_metrics.items():
+                    metrics_logger.log_value(f"ecology/{metric_name}", float(metric_value), reduce="mean")
 
     @staticmethod
     def _resolve_env(env=None, env_index: int = 0, **kwargs) -> Any:
@@ -303,7 +305,10 @@ def env_creator(config):
     return PredPreyGrass({**config_env, **(config or {})})
 
 
-def policy_mapping_fn(agent_id: AgentID, episode: EpisodeType) -> PolicyID:
+def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
+    del episode
+    if not isinstance(agent_id, str):
+        raise TypeError("PredPreyGrass requires string agent IDs")
     agent_id_str = str(agent_id)
     if "predator_male" in agent_id_str:
         return "predator_male_policy"

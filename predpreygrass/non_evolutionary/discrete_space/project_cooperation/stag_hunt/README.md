@@ -4,12 +4,12 @@
 
 - The environment is a gridworld with Predators, Prey, and Grass.
 - Predators come in one type:
-  - Humans <img src="../../../../assets/images/icons/male.png" alt="predator icon" height="
+  - Humans <img src="../../../../../assets/images/icons/male.png" alt="predator icon" height="
   36" style="vertical-align: middle;"> (type_1_predator)
 - Prey come in two types:
-  - Large prey; Mammoths <img src="../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
+  - Large prey; Mammoths <img src="../../../../../assets/images/icons/mammoth_2.jpeg" alt="predator icon" height="
   36" style="vertical-align: middle;"> (type_1_prey)
-  - Small prey; Rabbits <img src="../../../../assets/images/icons/prey.png" alt="predator icon" height="
+  - Small prey; Rabbits <img src="../../../../../assets/images/icons/prey.png" alt="predator icon" height="
   36" style="vertical-align: middle;"> (type_2_prey)
 - Walls surround the grid and can be manually placed inside the grid if desired.
 
@@ -53,11 +53,11 @@
 - The episode ends when all predators (humans) are extinct, or all prey (mammoths + rabbits) are extinct,
   or when `max_steps` is reached.
 
-# MADRL training
+## MADRL training
 
 - Humans (predators), mammoths (prey) and rabbits (prey) are as groups independently (decentralized) trained via their own RLlib policy module.
 - All three agent types learn movement strategies based on partial observations of the full state (gridworld).
 
-# Results
+## Results
 
 - Cooperative hunting occurs, though it is not explicitly rewarded.

@@ -1,3 +1,4 @@
+from typing import Callable
 import pygame
 from dataclasses import dataclass
 from pathlib import Path
@@ -160,7 +161,7 @@ class PyGameRenderer:
     def update(self, grass_positions, grass_energies=None, step=0, agents_just_ate=None, per_step_agent_data=None, walls=None, dead_prey=None, coop_events=None):
         if per_step_agent_data is None:
             raise ValueError("update(): per_step_agent_data is required (got None)")
-        step_data = per_step_agent_data[step - 1]
+        step_data = per_step_agent_data[step - 1] if per_step_agent_data is not None else {}
         if agents_just_ate is None:
             agents_just_ate = set()
         if dead_prey is None:
@@ -931,6 +932,9 @@ class ViewerControlHelper:
         self.paused = initial_paused
         self.step_once = False
         self.step_backward = False
+        self.visualizer: PyGameRenderer | None = None
+        self.fps_slider_rect: pygame.Rect | None = None
+        self.fps_slider_update_fn: Callable[[int], None] | None = None
 
     def handle_events(self):
         for event in pygame.event.get():

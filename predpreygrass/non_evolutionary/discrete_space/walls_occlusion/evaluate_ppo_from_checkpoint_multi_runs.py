@@ -96,6 +96,7 @@ if __name__ == "__main__":
         #    print(f"{aid:20}: {r:.2f}")
 
         if SAVE_EVAL_RESULTS:
+            assert visualizer is not None
             visualizer.plot()
             config_env_dir = os.path.join(eval_output_dir, "config_env")
             os.makedirs(config_env_dir, exist_ok=True)

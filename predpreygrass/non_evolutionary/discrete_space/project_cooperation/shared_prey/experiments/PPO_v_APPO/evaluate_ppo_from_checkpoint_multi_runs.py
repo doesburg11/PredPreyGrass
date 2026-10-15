@@ -97,6 +97,7 @@ if __name__ == "__main__":
         agent_stats = env.get_all_agent_stats()
 
         if SAVE_EVAL_RESULTS:
+            assert visualizer is not None
             visualizer.plot()
             config_env_dir = os.path.join(eval_output_dir, "config_env")
             os.makedirs(config_env_dir, exist_ok=True)

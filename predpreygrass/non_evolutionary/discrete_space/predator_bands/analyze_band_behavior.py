@@ -272,10 +272,11 @@ def summarize(label, episodes, lives, rng, random_episodes=None):
     # A. energy sources by sex
     out.append("A. energy sources per life (pooled mean over lives), by sex; 'received' = band sharing + parental care + mate gifts")
     for sex in SEXES:
-        rows = [l for l in lives if l["sex"] == sex]
+        rows = [_entry_value for _entry_value in lives if _entry_value["sex"] == sex]
         if not rows:
             continue
-        m = lambda k: float(np.mean([r[k] for r in rows]))
+        def m(k):
+            return float(np.mean([r[k] for r in rows]))
         own_meat, recv_meat = m("own_meat"), m("recv_meat")
         meat_in = own_meat - m("given_meat") + recv_meat
         share = 100 * m("recv_meat") / (own_meat + m("recv_meat")) if own_meat + m("recv_meat") > 0 else float("nan")
@@ -290,10 +291,11 @@ def summarize(label, episodes, lives, rng, random_episodes=None):
     # B. by founder role
     out.append("B. founders by role (pooled mean per life)")
     for role in ROLES:
-        rows = [l for l in lives if l["role"] == role]
+        rows = [_entry_value for _entry_value in lives if _entry_value["role"] == role]
         if not rows:
             continue
-        m = lambda k: float(np.mean([r[k] for r in rows]))
+        def m(k):
+            return float(np.mean([r[k] for r in rows]))
         denom = m("own_meat") + m("recv_meat")
         out.append(
             f"   {role:14} n={len(rows):5d} life={m('life'):6.1f} censored={sum(r['censored'] for r in rows):4d} | own meat {m('own_meat'):6.2f} "

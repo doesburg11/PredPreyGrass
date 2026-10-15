@@ -4,6 +4,7 @@ Observer: predator at window center (odd obs_range). Channels:
 0=walls, 1=predators, 2=prey, 3=grass, (optional 4=visibility).
 
 Rules:
+
 - Use LoS with Bresenham-style rays precomputed per (dy,dx) for the obs window.
 - When building an observer’s patch, apply a visibility mask to **all** channels:
   - Cells with vis=0 are set to 0 (or sentinel), including prey/predator/grass.
@@ -13,6 +14,7 @@ Rules:
   prey at (2,2) (visible) and (2,6) (occluded because ray hits (3,5)).
 
 Targets:
+
 - Add `self.walls: (H,W) bool`.
 - Precompute `los_table[(dy,dx)] -> [(ry,rx), ...]` once per obs_range.
 - Implement `extract_patch_with_occlusion(...)`.

@@ -9,14 +9,13 @@ Existing runs live in `runs/`; their saved source snapshots and experiment
 names retain their original spelling for provenance. The training entry point
 remains `tune_ppo_base_environment.py`.
 
-
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img align="center" src="../../../assets/images/gifs/rllib_pygame_seed42_iter1000.gif" width="600" height="500" />
+    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/rllib_pygame_seed42_iter1000.gif" width="600" height="500" />
 </p>
 
-### Features base environment
+## Features base environment
 
 - At startup Predators, Prey and Grass are randomly positioned on the gridworld.
 
@@ -40,22 +39,21 @@ remains `tune_ppo_base_environment.py`.
 
   - **Reproduction conditions**:
 
-      - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-      - New agents are spawned near their parent.
+    - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
+    - New agents are spawned near their parent.
 - **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
 
 - Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
-
 ## Training and evaluation results
 
 [Training](tune_ppo_base_environment.py) the agents and [evaluating](evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://humanbehaviorpatterns.org/learning-selection-interaction/marl-challenges-predpreygrass#reward-design-sparse-and-why-magnitude-matters). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
+
 - Predators hunting Prey
 - Multiple Predators collaborating/competing hunting Prey; increasing the probability of Prey being caught
 - Prey finding and eating grass
 - Predators hovering around grass to ambush Prey
 - Prey trying to escape Predators
-
 
 Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
 
@@ -64,9 +62,8 @@ Moreover, these learning behaviors lead to more complex emergent dynamics at the
 - The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time. Below: a full 1000-step self-play episode from the SEED42 run's final (iteration 1000) checkpoint. Prey booms early, then predators catch up and the two settle into a lagged oscillation for the rest of the episode (grass, which sits flat near its carrying capacity throughout, is omitted so the predator/prey cycle is easier to read):
 
 <p align="center">
-    <img src="../../../assets/images/readme/population_dynamics_seed42_iter1000.png" width="450" height="270"/>
+    <img alt="base environment discrete illustration" src="../../../../assets/images/readme/population_dynamics_seed42_iter1000.png" width="450" height="270"/>
 </p>
-
 
 ## Coevolutionary dynamics: is the predator-prey arms race still going?
 
@@ -99,10 +96,10 @@ A full 100x100 sweep (all checkpoints saved every 10 iterations across the
 1000-iteration SEED42 run, 3 episodes/cell, 30 parallel workers) produced:
 
 <p align="center">
-    <img src="../../../assets/images/readme/master_tournament_heatmap.png" width="480" height="450"/>
+    <img alt="base environment discrete illustration" src="../../../../assets/images/readme/master_tournament_heatmap.png" width="480" height="450"/>
 </p>
 
-**Finding: a two-phase pattern, not a single clean gradient.**
+Finding: a two-phase pattern, not a single clean gradient.
 
 - **Early training (iterations <300): a real, asymmetric arms race.** Predator
   training iteration strongly predicts prey losses (`corr(predator_iteration,
@@ -152,7 +149,7 @@ the start of retraining against the same checkpoint near the end (5 episodes
 each, offline, against the fixed frozen opponent) gives:
 
 | Run | `final_num_prey` (start &rarr; end) | frozen side's own reward |
-|---|---|---|
+| --- | --- | --- |
 | Freeze prey, warm-start predator | 19.6 &rarr; 19.6 (+0.0) | flat (9.591 &rarr; 9.612) |
 | Freeze predator, warm-start prey | 14.6 &rarr; 26.2 (**+11.6**) | flat (9.866 &rarr; 9.873) |
 | Freeze prey, predator from scratch | 37.6 &rarr; 6.4 | reaches ~ceiling by iteration ~10 |
@@ -186,9 +183,11 @@ therefore demonstrates **transient Red Queen dynamics rather than sustained
 open-ended co-evolution**.
 
 ## Centralized versus decentralized training
+
 The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo).
 
 ### (Legacy) Configuration of centralized training
+
 The MARL environment [`predpreygrass_base.py`](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
 
 ### Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
@@ -198,7 +197,7 @@ Obviously, using only one network has its limitations as Predators and Prey lack
 Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
 
 <p align="center">
-    <img src="../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
+    <img alt="base environment discrete illustration" src="../../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
 </p>
 
 A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.

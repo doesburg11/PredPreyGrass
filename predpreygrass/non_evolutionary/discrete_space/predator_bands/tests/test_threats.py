@@ -1,5 +1,6 @@
 """Tests for the roaming threats of predator_bands (default off): placement, movement, defense arithmetic, kills and repelling,
 the threat observation channel, snapshots, validation; plus the band-compass fixes from the Codex review."""
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy
 import copy
 
 import numpy as np
@@ -9,7 +10,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env imp
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.predpreygrass_rllib_env import PredPreyGrass
 
 
-class _FixedRandom:
+class _FixedRandom(RandomProxy):
     """Real generator with random() forced to a value (integers/choice/etc. stay real)."""
 
     def __init__(self, real, value):
@@ -272,7 +273,7 @@ def test_channel_validation_applies_with_bands_off_too():
 def test_two_threats_attacking_the_same_target_use_the_start_of_phase_state():
     """A kill by one threat must not change the defenders or the target seen by the next threat (no order dependence)."""
     env, target = _attack_setup(1)  # 1 defender: p = 0.3333 per threat
-    band0 = _members(env, 0)
+    _unused_band0 = _members(env, 0)
     env.threat_positions = {"threat_0": (9, 10), "threat_1": (9, 9)}  # both adjacent to the target only
     env.num_threats = 2
     env.rng = _FixedRandom(env.rng, 0.30)  # both rolls succeed
@@ -284,8 +285,8 @@ def test_two_threats_attacking_the_same_target_use_the_start_of_phase_state():
 
 def test_threat_ids_are_processed_in_numeric_not_lexicographic_order():
     env = _env(num_threats=12)
-    order = []
-    orig = env.rng.integers
+    _unused_order = []
+    _unused_orig = env.rng.integers
 
     ids = sorted(env.threat_positions, key=lambda t: int(t.split("_")[1]))
     assert ids[2] == "threat_2" and ids[10] == "threat_10"  # numeric order the code uses
@@ -442,7 +443,7 @@ def _multi_target_setup(n_targetA_defenders=0, n_targetB_defenders=0, **kw):
     return env, target_a, target_b
 
 
-class _CountingRandom:
+class _CountingRandom(RandomProxy):
     """Real generator with .random() counted and forced to a fixed value; every other method stays real."""
 
     def __init__(self, real, value):
