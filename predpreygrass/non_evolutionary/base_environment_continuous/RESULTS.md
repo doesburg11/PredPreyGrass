@@ -7,6 +7,8 @@
 | BE-01 | `2026-10-13_11-25-07_420466` | scratch | 3,000 | the milestone world (as AW-21 and AW-22 of `add_walls`) trained from scratch with this environment | completed |
 | BE-02 | `2026-10-13_11-25-27_332055` | scratch | 3,000 | replicate of BE-01 (new training randomness) | completed |
 | BE-03 | `2026-10-14_00-27-11_018144` | scratch | 4,000 | the same world and settings, trained in this repository on 28 simulation workers (BE-01 and BE-02: 14) | completed |
+| BE-04 | `2026-10-14_21-35-19_937331` | scratch | 3,000 | the same world with every quirk fixed (`environment.FIXES`, SPEC.md section 9), 14 simulation workers, side by side with BE-05 | running |
+| BE-05 | `2026-10-14_21-35-40_020808` | scratch | 3,000 | replicate of BE-04 (new training randomness) | running |
 
 BE-01 and BE-02 were trained in the [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
 development repository; the run folders, launchers (`be01.py`, `be02.py`), evaluation
