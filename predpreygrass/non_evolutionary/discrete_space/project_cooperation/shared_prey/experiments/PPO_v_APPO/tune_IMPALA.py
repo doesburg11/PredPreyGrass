@@ -40,6 +40,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     """
     Maps agent IDs to policies based on their type and role.
     This function is used to determine which policy to apply for each agent.
@@ -155,7 +156,7 @@ if __name__ == "__main__":
 
     tuner = Tuner(
         impala_config.algo_class,
-        param_space=impala_config,
+        param_space=impala_config.to_dict(),
         run_config=RunConfig(
             name=experiment_name,
             storage_path=str(ray_results_path),

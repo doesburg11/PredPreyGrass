@@ -36,7 +36,10 @@ if __name__ == "__main__":
 
     env = PackHuntEnv(cfg)
     observations, _ = env.reset(seed=seed)
-    for i, (agent_id, space) in enumerate(env.action_spaces.items()):
+    action_spaces = env.action_spaces
+    if action_spaces is None:
+        raise RuntimeError("PackHuntEnv must define action spaces before random play.")
+    for i, (agent_id, space) in enumerate(action_spaces.items()):
         space.seed(seed + i * 9973)
 
     renderer = PackHuntRenderer(env.grid_size)

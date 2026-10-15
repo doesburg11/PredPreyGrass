@@ -17,6 +17,7 @@ import glob
 import json
 import math
 import os
+from typing import cast
 
 import numpy as np
 from scipy.stats import mannwhitneyu, wilcoxon
@@ -45,8 +46,15 @@ def get(rec, key):
 def window(kind, seed, lo, hi):
     rows = [json.loads(line) for line in open(result_path(kind, seed))]
     rows = [r for r in rows if lo < r["training_iteration"] <= hi and get(r, "episode_length") is not None]
+
     def f(k):
-        return float(np.mean([get(r, k) for r in rows]))
+        values: list[float] = []
+        for row in rows:
+            value = get(row, k)
+            if value is not None:
+                values.append(float(value))
+        return float(np.mean(values)) if values else math.nan
+
     return {"ext": 100 * f("extinct_predator"), "pred": f("final_num_predators"),
             "prey": f("final_num_prey"), "len": f("episode_length")}
 
@@ -67,8 +75,10 @@ for f, alt, label in (("pred", "greater", "predators, base > step_energy"), ("pr
     b = np.array([T[("base", s)][f] for s in SEEDS])
     t = np.array([T[("step", s)][f] for s in SEEDS])
     n_dir = int((b > t).sum()) if alt == "greater" else int((b < t).sum())
-    print(f"{label}: {n_dir}/6 seeds; unpaired one-sided p={mannwhitneyu(b, t, alternative=alt).pvalue:.4f}; "
-          f"paired p={wilcoxon(b, t, alternative=alt).pvalue:.4f}; base {b.min():.1f}-{b.max():.1f}, step_energy {t.min():.1f}-{t.max():.1f}")
+    p_unpaired = cast(float, mannwhitneyu(b, t, alternative=alt)[1])
+    p_paired = cast(float, wilcoxon(b, t, alternative=alt)[1])
+    print(f"{label}: {n_dir}/6 seeds; unpaired one-sided p={p_unpaired:.4f}; "
+          f"paired p={p_paired:.4f}; base {b.min():.1f}-{b.max():.1f}, step_energy {t.min():.1f}-{t.max():.1f}")
 
 print("\nbase_environment_step_energy trajectory: predator extinction % / predators, by training window")
 print("seed | 1-100 | 101-200 | 201-250 | 251-300")
@@ -86,4 +96,7 @@ t = np.array([np.mean(d[str(s)]["step_energy_runB"]) for s in keep])
 print("\nCLUSTERING R without seed 45 (5 pairs): base %.3f, step_energy %.3f, difference %.3f; pairs in predicted direction %d/5"
       % (b.mean(), t.mean(), (b - t).mean(), int((b > t).sum())))
 print("  paired Wilcoxon one-sided p=%.4f (floor for 5 pairs is 0.0313); unpaired Mann-Whitney one-sided p=%.4f"
-      % (wilcoxon(b, t, alternative="greater").pvalue, mannwhitneyu(b, t, alternative="greater").pvalue))
+      % (
+          float(getattr(wilcoxon(b, t, alternative="greater"), "pvalue")),
+          float(getattr(mannwhitneyu(b, t, alternative="greater"), "pvalue")),
+      ))

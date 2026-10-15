@@ -94,7 +94,7 @@ def run_episode(Env, cfg, mods, seed):
     step = 0
     while step < 1000 and active:
         acts = {a: act(obs[a], mods["predator_policy" if "predator" in a else "prey_policy"]) for a in active}
-        obs, rew, term, trunc, _ = env.step(acts)
+        obs, _, term, trunc, _ = env.step(acts)
         active = [a for a in obs if not term.get(a, False) and not trunc.get(a, False)]
         traj.append([p for a, p in env.agent_positions.items() if "predator" in a])
         step += 1

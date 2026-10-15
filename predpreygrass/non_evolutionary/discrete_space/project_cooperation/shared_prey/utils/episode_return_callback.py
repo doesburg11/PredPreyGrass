@@ -18,6 +18,7 @@ class EpisodeReturn(RLlibCallback):
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
         """
+        del kwargs
         self.num_episodes += 1
         episode_return = episode.get_return()
         self.overall_sum_of_rewards += episode_return
@@ -75,6 +76,7 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

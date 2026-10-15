@@ -19,7 +19,7 @@ class EpisodeReturn(RLlibCallback):
         self.last_iteration_time = self.start_time
 
     @staticmethod
-    def _resolve_env(episode, **kwargs):
+    def _resolve_env(**kwargs):
         def _looks_like_target_env(obj) -> bool:
             if obj is None:
                 return False
@@ -114,7 +114,7 @@ class EpisodeReturn(RLlibCallback):
         share_events_total = info_all.get("share_events_total", 0)
         share_opportunities_total = info_all.get("share_opportunities_total", 0)
         share_refusals_total = info_all.get("share_refusals_total", 0)
-        env = self._resolve_env(episode, **kwargs)
+        env = self._resolve_env(**kwargs)
 
         share_metrics = {}
         reciprocity_metrics = {}
@@ -200,6 +200,7 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

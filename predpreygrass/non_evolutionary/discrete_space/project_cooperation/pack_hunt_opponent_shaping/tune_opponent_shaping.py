@@ -24,6 +24,7 @@ from datetime import datetime
 from pathlib import Path
 
 import torch
+from gymnasium.spaces import Box, Discrete
 
 from predpreygrass.non_evolutionary.discrete_space.project_cooperation.pack_hunt_opponent_shaping.config.config_env_pack_hunt_opponent_shaping import (
     config_env,
@@ -62,9 +63,19 @@ def main():
 
     sample_env = PackHuntEnv(env_cfg)
     sample_env.reset(seed=cfg.get("seed"))
-    agent_ids = list(sample_env.agents)
-    obs_dim = sample_env.observation_spaces[agent_ids[0]].shape[0]
-    n_actions = sample_env.action_spaces[agent_ids[0]].n
+    agent_ids = [agent_id for agent_id in sample_env.agents if isinstance(agent_id, str)]
+    if len(agent_ids) != len(sample_env.agents):
+        raise TypeError("PackHuntEnv agent IDs must be strings.")
+    observation_spaces = sample_env.observation_spaces
+    action_spaces = sample_env.action_spaces
+    if observation_spaces is None or action_spaces is None or not agent_ids:
+        raise RuntimeError("PackHuntEnv must define spaces for at least one agent before training.")
+    observation_space = observation_spaces[agent_ids[0]]
+    action_space = action_spaces[agent_ids[0]]
+    if not isinstance(observation_space, Box) or not isinstance(action_space, Discrete):
+        raise TypeError("PackHuntEnv must provide Box observations and Discrete actions.")
+    obs_dim = observation_space.shape[0]
+    n_actions = int(action_space.n)
     del sample_env
 
     models = {a: MLPPolicy(obs_dim, n_actions, hidden=cfg["hidden_size"]) for a in agent_ids}

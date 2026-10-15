@@ -33,6 +33,7 @@ class _FixedRandom(RandomProxy):
         self._fixed_value = fixed_value
 
     def random(self, *args, **kwargs):
+        del args, kwargs
         return self._fixed_value
 
     def __getattr__(self, name):
@@ -105,7 +106,7 @@ def test_predator_male_eats_fruit_and_hunts_same_step():
 
     _force_next_random(env, 0.0)  # forces the hunting-attempt success band
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, _, _, _, _ = env.step(actions)
 
     assert prey not in env.agent_positions  # hunted
     # Gained the fruit's energy, and the prey's CURRENT energy at the moment
@@ -170,7 +171,7 @@ def test_reproduction_succeeds_when_both_eligible_and_within_radius():
     female_energy_before = env.agent_energies[female]
 
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, rewards, _, _, _ = env.step(actions)
 
     new_predators = [a for a in env.agents if "predator" in a and a not in initial_agent_ids]
     assert len(new_predators) == 1
@@ -335,7 +336,7 @@ def test_predator_population_cap_stops_a_later_pair_reached_mid_step():
     assert env.episode_births["predator_male"] + env.episode_births["predator_female"] == 1
     paid_pairs = sum(
         1
-        for male, female in zip(males, females)
+        for _, female in zip(males, females)
         if env.agent_energies[female] < env.predator_creation_energy_threshold + 1.0 - env.homeostatic_energy_cost_per_step_predator
     )
     assert paid_pairs == 1
@@ -386,7 +387,7 @@ def test_full_grid_declines_birth_instead_of_crashing():
 
     n_agents_before = len(env.agents)
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)  # must not raise
+    _, _, _, _, _ = env.step(actions)  # must not raise
 
     assert len(env.agents) == n_agents_before  # no births actually landed
 
@@ -413,7 +414,7 @@ def test_episode_terminates_when_either_predator_sex_extinct():
         env.agent_energies[female] = -1.0  # force starvation this step
 
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, _, terms, _, _ = env.step(actions)
     assert terms["__all__"] is True
 
 
@@ -494,7 +495,7 @@ def test_predator_female_can_successfully_hunt():
 
     _force_next_random(env, 0.0)  # forces the success band for any success_prob > 0
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, rewards, _, _, _ = env.step(actions)
 
     assert prey not in env.agent_positions
     assert rewards[female] >= env.reward_predator_catch_prey
@@ -515,7 +516,7 @@ def test_predator_female_dies_from_failed_hunt_and_prey_survives():
     # Lands in the death band: success_prob <= roll < success_prob + death_prob.
     _force_next_random(env, env.prey_vs_predator_female_success_prob + 1e-6)
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, _, terms, _, _ = env.step(actions)
 
     assert female not in env.agent_positions
     assert terms.get(female) is True
@@ -540,7 +541,7 @@ def test_predator_male_dies_from_failed_hunt_and_prey_survives():
 
     _force_next_random(env, env.prey_vs_predator_male_success_prob + 1e-6)
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, _, terms, _, _ = env.step(actions)
 
     assert male not in env.agent_positions
     assert terms.get(male) is True
@@ -859,7 +860,7 @@ def test_no_donation_to_already_starving_female():
 
     _force_next_random(env, 0.0)  # forces the male's hunting success band
     actions = _noop_actions(env)
-    obs, rewards, terms, truncs, infos = env.step(actions)
+    _, _, terms, _, _ = env.step(actions)
 
     assert female not in env.agent_positions  # she starved as expected
     assert terms.get(female) is True
@@ -1467,7 +1468,7 @@ def test_per_energy_reward_cumulative_after_successful_hunt():
     energy_before = env.agent_energies[male]
 
     _force_next_random(env, 0.0)
-    _, rewards, _, _, _ = env.step(_noop_actions(env))
+    _, _, _, _, _ = env.step(_noop_actions(env))
 
     gain = env.agent_energies[male] - (energy_before - env.homeostatic_energy_cost_per_step_predator)
     assert env.cumulative_rewards[male] == pytest.approx(0.2 * gain)
@@ -1483,6 +1484,7 @@ def test_per_energy_reward_not_paid_on_failed_hunt_or_combat_death():
         if expect_dead:
             _force_next_random(env, env.prey_vs_predator_female_success_prob + 1e-6)  # death band
         else:
+            assert roll_offset is not None
             _force_next_random(env, env.prey_vs_predator_female_success_prob + env.prey_vs_predator_female_death_prob + roll_offset * 0.1)  # failure band
         _, rewards, terms, _, _ = env.step(_noop_actions(env))
 

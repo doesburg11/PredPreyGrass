@@ -76,7 +76,8 @@ def copy_module_snapshot(reproduce_dir: Path) -> None:
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
 
-    def _ignore(path: str, entries):
+    def _ignore(_path: str, entries):
+        del _path
         ignored = []
         for entry in entries:
             if entry in _SNAPSHOT_EXCLUDE_DIRS:
@@ -148,6 +149,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     Returns:
         str: The policy name for the agent, formatted as "type_X_role_Y".
     """
+    del args, kwargs
     parts = agent_id.split("_")
     type = parts[1]
     role = parts[2]

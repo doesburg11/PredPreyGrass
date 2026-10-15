@@ -292,15 +292,26 @@ def _run_cell(task: Tuple[int, int]) -> List[dict]:
     episode (kept separate, not pre-averaged, so results_long.csv stays as rich
     as the sequential version's)."""
     i, j = task
+    if (
+        _ENV is None
+        or _PREDATOR_MODULES is None
+        or _PREY_MODULES is None
+        or _ITERATIONS is None
+    ):
+        raise RuntimeError("Tournament worker state must be initialized before running cells")
+    env = _ENV
+    predator_modules = _PREDATOR_MODULES
+    prey_modules = _PREY_MODULES
+    iterations = _ITERATIONS
     rows = []
     for ep in range(_EPISODES_PER_CELL):
         seed = _SEED + ep
-        row = run_one_episode(_ENV, _PREDATOR_MODULES[i], _PREY_MODULES[j], seed, _DETERMINISTIC)
+        row = run_one_episode(env, predator_modules[i], prey_modules[j], seed, _DETERMINISTIC)
         row.update(
             predator_ckpt_index=i,
             prey_ckpt_index=j,
-            predator_iteration=_ITERATIONS[i],
-            prey_iteration=_ITERATIONS[j],
+            predator_iteration=iterations[i],
+            prey_iteration=iterations[j],
             episode_index=ep,
         )
         rows.append(row)
@@ -349,7 +360,10 @@ def replot(args):
         .to_dict()
     )
     n = len(iteration_map)
-    iterations = [iteration_map[i] for i in sorted(iteration_map)]
+    checkpoint_indices = [index for index in iteration_map if isinstance(index, int)]
+    if len(checkpoint_indices) != len(iteration_map):
+        raise ValueError("Checkpoint indices in results_long.csv must be integers")
+    iterations = [iteration_map[index] for index in sorted(checkpoint_indices)]
 
     matrix = build_matrix(df, args.metric, n)
     output_dir = Path(args.output_dir) if args.output_dir else replot_dir

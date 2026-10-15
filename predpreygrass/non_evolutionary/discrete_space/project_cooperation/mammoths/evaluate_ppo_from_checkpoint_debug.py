@@ -93,6 +93,7 @@ def _load_training_env_config_from_run(checkpoint_path, base_cfg):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     parts = agent_id.split("_")
     if len(parts) >= 3:
         return "_".join(parts[:3])
@@ -239,6 +240,7 @@ def step_forward(
     SAVE_MOVIE,
     video_writer,
 ):
+    del pdviz
     action_dict = {}
     for agent_id in env.active_agents:
         group = policy_mapping_fn(agent_id)
@@ -475,7 +477,7 @@ def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
     group_stats = defaultdict(list)
     for uid, stats in env.get_all_agent_stats().items():
-        group, index, reuse = parse_uid(uid)
+        group, _, _ = parse_uid(uid)
         lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
         group_stats[group].append(
             {

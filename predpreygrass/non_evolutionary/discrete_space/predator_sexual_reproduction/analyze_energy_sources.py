@@ -24,6 +24,7 @@ import glob
 import json
 import os
 from collections import defaultdict
+from typing import cast
 
 import numpy as np
 import torch
@@ -43,6 +44,17 @@ SEXES = ("predator_male", "predator_female")
 class InstrumentedMixin:
     """Adds per-agent gross energy-by-source bookkeeping; does not change any dynamics. A mixin so the same
     instrumentation can sit on whichever env class a run was trained in (see analysis_env.py)."""
+
+    agent_energies: dict[str, float]
+    energy_from_prey: dict[str, float]
+    energy_from_fruit: dict[str, float]
+    n_prey_caught: dict[str, int]
+    n_fruit_eaten: dict[str, int]
+    _pending_prey: dict[str, float]
+    gift_received: dict[str, float]
+    gift_given: dict[str, float]
+    care_received: dict[str, float]
+    care_given: dict[str, float]
 
     def _init_energy_log(self):
         self.energy_from_prey = defaultdict(float)
@@ -71,10 +83,12 @@ class InstrumentedMixin:
 
     def reset(self, *args, **kwargs):
         self._init_energy_log()
-        return super().reset(*args, **kwargs)
+        base = cast(PredPreyGrass, super(InstrumentedMixin, self))
+        return base.reset(*args, **kwargs)
 
     def _resolve_hunting_attempt(self, agent, *args, **kwargs):
-        outcome, reward_delta, energy_gained = super()._resolve_hunting_attempt(agent, *args, **kwargs)
+        base = cast(PredPreyGrass, super(InstrumentedMixin, self))
+        outcome, reward_delta, energy_gained = base._resolve_hunting_attempt(agent, *args, **kwargs)
         if outcome == "success":
             self._pending_prey[agent] = energy_gained
             self.energy_from_prey[agent] += energy_gained
@@ -83,7 +97,8 @@ class InstrumentedMixin:
 
     def _apply_male_gift(self, agent, energy_gained):
         before = self._predator_energies()
-        result = super()._apply_male_gift(agent, energy_gained)
+        base = cast(PredPreyGrass, super(InstrumentedMixin, self))
+        result = base._apply_male_gift(agent, energy_gained)
         self._track_transfer(before, self.gift_received, self.gift_given)
         return result
 
@@ -96,7 +111,8 @@ class InstrumentedMixin:
             self.energy_from_fruit[agent] += energy_gained
             self.n_fruit_eaten[agent] += 1
         before = self._predator_energies()
-        result = super()._share_energy_with_offspring(agent, energy_gained)
+        base = cast(PredPreyGrass, super(InstrumentedMixin, self))
+        result = base._share_energy_with_offspring(agent, energy_gained)
         self._track_transfer(before, self.care_received, self.care_given)
         return result
 
@@ -108,12 +124,12 @@ class InstrumentedEnv(InstrumentedMixin, PredPreyGrass):
 _INSTRUMENTED_CLASSES = {}
 
 
-def make_instrumented_env(config):
+def make_instrumented_env(config) -> "InstrumentedEnv":
     """Instrumented version of the env class this run was trained in (see analysis_env.env_class_for)."""
     base = env_class_for(config)
     if base not in _INSTRUMENTED_CLASSES:
         _INSTRUMENTED_CLASSES[base] = type(f"Instrumented{base.__name__}", (InstrumentedMixin, base), {})
-    return _INSTRUMENTED_CLASSES[base](config)
+    return cast(InstrumentedEnv, _INSTRUMENTED_CLASSES[base](config))
 
 
 def run_episodes(env_config, modules, n_episodes, seed0, random_policy=False):

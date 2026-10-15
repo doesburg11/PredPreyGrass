@@ -195,16 +195,16 @@ class EpisodeReturn(RLlibCallback):
             episode_successes = _pick_value(episode_successes, env_episode_successes)
             episode_failures = _pick_value(episode_failures, env_episode_failures)
 
-        coop_success = coop_success or 0
-        coop_fail = coop_fail or 0
-        total_success = total_success or 0
-        total_fail = total_fail or 0
-        episode_attempts = episode_attempts or 0
-        episode_participants = episode_participants or 0
-        episode_cooperators = episode_cooperators or 0
-        episode_defectors = episode_defectors or 0
-        episode_successes = episode_successes or 0
-        episode_failures = episode_failures or 0
+        coop_success = float(coop_success or 0)
+        coop_fail = float(coop_fail or 0)
+        total_success = float(total_success or 0)
+        total_fail = float(total_fail or 0)
+        episode_attempts = float(episode_attempts or 0)
+        episode_participants = float(episode_participants or 0)
+        episode_cooperators = float(episode_cooperators or 0)
+        episode_defectors = float(episode_defectors or 0)
+        episode_successes = float(episode_successes or 0)
+        episode_failures = float(episode_failures or 0)
 
         if episode_attempts:
             self.total_capture_attempts += int(episode_attempts)
@@ -286,6 +286,7 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

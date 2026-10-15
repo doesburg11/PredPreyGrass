@@ -93,7 +93,7 @@ def test_culled_predator_pays_no_extra_penalty_and_is_removed_next_step():
     # the victim's own position entry is gone from agent_positions by the time step() returns.
     positions_before = {a: pos for a, pos in env.agent_positions.items() if "predator" in a}
 
-    observations, rewards, terminations, truncations, infos = env.step(actions)
+    _, rewards, terminations, truncations, _ = env.step(actions)
 
     culled = [a for a in terminations if terminations[a] and "predator" in a and truncations.get(a) is False]
     assert len(culled) == 1
@@ -183,7 +183,7 @@ def test_max_steps_truncation_is_untouched_no_cull_or_replenish_attempted():
     env.step(_noop_actions(env))  # current_step 0 -> 1; not yet truncated, culls normally
     total_before_truncation = _total_predators(env)
 
-    _, _, terminations, truncations, _ = env.step(_noop_actions(env))  # current_step 1 >= max_steps 1
+    _, _, _, truncations, _ = env.step(_noop_actions(env))  # current_step 1 >= max_steps 1
 
     assert truncations.get("__all__") is True
     assert _total_predators(env) == total_before_truncation  # override returned early

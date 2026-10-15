@@ -212,6 +212,7 @@ class PyGameRenderer:
         pygame.draw.polygon(self.screen, self.gui_style.birth_heart_color, points)
 
     def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
+        del agents_just_ate
         for agent_id, pos in agent_positions.items():
             x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
             y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
@@ -423,6 +424,8 @@ class PyGameRenderer:
 
     def _draw_legend_food_scores(self, x, y):
         """Cumulative food score per sex, fruit and prey separately: gross energy eaten (number of items)."""
+        if self.food_scores is None:
+            return y
         font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
         title = font_small.render("Food score by sex: energy (items)", True, (0, 0, 0))
         self.screen.blit(title, (x + 30, y))
@@ -457,6 +460,8 @@ class PyGameRenderer:
 
     def _draw_legend_energy_pies(self, x, y):
         """One pie per sex: share of gross foraged energy from prey vs fruit (cumulative, same numbers as the food score)."""
+        if self.food_scores is None:
+            return y
         font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
         title = font_small.render("Energy sources (prey / fruit share)", True, (0, 0, 0))
         self.screen.blit(title, (x + 30, y))

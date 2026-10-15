@@ -227,6 +227,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
+    del episode
     if not isinstance(agent_id, str):
         raise TypeError("PredPreyGrass requires string agent IDs")
     agent_id_str = str(agent_id)

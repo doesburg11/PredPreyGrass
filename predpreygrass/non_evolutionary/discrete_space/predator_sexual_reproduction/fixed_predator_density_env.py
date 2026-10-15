@@ -148,6 +148,7 @@ class FixedPredatorDensityEnv(FixedPreyDensityEnv):
         return True
 
     def _replenish_predators_to_target(self, observations, rewards, terminations, truncations):
+        del observations
         """Spawns (target - current total) replacement predators, random sex, no parent/mate record
         -- mirroring FixedPreyDensityEnv's own prey-floor replenishment. Returns True iff at least
         one replacement was actually spawned (the caller uses this to decide whether every agent's

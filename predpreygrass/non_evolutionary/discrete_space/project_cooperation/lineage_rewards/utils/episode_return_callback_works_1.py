@@ -2,6 +2,7 @@ from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.utils.metrics.metrics_logger import MetricsLogger
 import time
 from collections import defaultdict
+from collections.abc import Iterable
 
 
 class EpisodeReturn(RLlibCallback):
@@ -24,7 +25,9 @@ class EpisodeReturn(RLlibCallback):
             if hasattr(episode, attr):
                 obj = getattr(episode, attr)
                 try:
-                    return list(obj() if callable(obj) else obj)
+                    agent_ids = obj() if callable(obj) else obj
+                    if isinstance(agent_ids, Iterable):
+                        return list(agent_ids)
                 except Exception:
                     pass
         # Last resort: peek into known internal mapping used by last_info_for
@@ -36,10 +39,12 @@ class EpisodeReturn(RLlibCallback):
         return []
 
     def on_episode_step(self, *, episode, **kwargs):
+        del kwargs
         eid = episode.id_
         self.episode_lengths[eid] = self.episode_lengths.get(eid, 0) + 1
 
     def on_episode_end(self, *, episode, metrics_logger: MetricsLogger, **kwargs):
+        del kwargs
         """
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
@@ -81,6 +86,7 @@ class EpisodeReturn(RLlibCallback):
         metrics_logger.log_value("episode_length", episode_length, reduce="mean")
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

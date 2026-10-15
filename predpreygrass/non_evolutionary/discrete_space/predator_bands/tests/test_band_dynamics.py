@@ -108,7 +108,7 @@ def test_no_split_at_the_cap_or_when_a_part_would_be_too_small_and_ids_are_never
     env._update_bands()
     assert env.band_fissions == 0  # size 6 is not above the cap of 6
     env = _env(num_bands=1, band_fission=True, band_max_size=5, band_min_split_size=2)
-    mother, father, kids, singles = _roles(env)
+    _roles(env)
     members = _members(env, 0)
     _park(env, set(members))
     _cluster(env, members[:5], LEFT[:5])
@@ -179,7 +179,7 @@ def test_a_member_out_of_range_for_long_enough_leaves_after_the_configured_steps
     _park(env, set(members))
     _cluster(env, [father, singles[0], singles[1], kids[0], kids[1]], [(5, 5), (5, 6), (6, 5), (6, 6), (5, 7)])
     _place(env, mother, (20, 20))  # far from everyone in her band
-    for i in range(4):
+    for _ in range(4):
         env._update_bands()
         assert env.agent_band[mother] == 0  # 10, 20, 30, 40 steps out
     env._update_bands()
@@ -209,7 +209,7 @@ def test_coming_back_into_range_resets_the_drift_counter():
 # ---- integration, snapshot, metrics --------------------------------------------------------------------------------------------
 def test_step_runs_the_update_every_check_interval():
     env = _env(num_bands=1, band_fission=True, band_max_size=5, band_min_split_size=2, band_check_interval=5, diet_required=False)
-    mother, father, kids, singles = _roles(env)
+    _roles(env)
     members = _members(env, 0)
     _park(env, set(members))
     _cluster(env, members[:3], LEFT[:3])
@@ -228,7 +228,7 @@ def test_snapshot_round_trip_and_metrics():
     snap = env.get_state_snapshot()
     env._next_band_id = 9
     env.band_fissions = 3
-    env._band_out_steps = {"predator_male_0": 20}
+    env._band_out_steps = {"predator_male_0": (1, 20)}
     env.restore_state_snapshot(snap)
     assert env._next_band_id == env.num_bands and env.band_fissions == 0 and env._band_out_steps == {}
     m = env._build_episode_training_metrics()

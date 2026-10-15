@@ -20,6 +20,7 @@ class EpisodeReturn(RLlibCallback):
         Called at the end of each episode.
         Logs the total and average rewards separately for predators and prey.
         """
+        del kwargs
         self.num_episodes += 1
         episode_return = episode.get_return()
         episode_length = getattr(episode, "length", 0)
@@ -98,6 +99,7 @@ class EpisodeReturn(RLlibCallback):
         # RLlib already emits episode_len_* metrics for TensorBoard; no extra episode-length metrics_logger entry needed here
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time

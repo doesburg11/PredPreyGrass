@@ -23,7 +23,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.
 from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.predpreygrass_rllib_env import PredPreyGrass
 
 
-def env_class_for(config):
+def env_class_for(config) -> type[PredPreyGrass]:
     if config.get("predator_density_target") is not None:
         return FixedPredatorDensityEnv
     if "prey_density_floor" in config:
@@ -31,5 +31,5 @@ def env_class_for(config):
     return PredPreyGrass
 
 
-def make_env(config):
+def make_env(config) -> PredPreyGrass:
     return env_class_for(config)(config)

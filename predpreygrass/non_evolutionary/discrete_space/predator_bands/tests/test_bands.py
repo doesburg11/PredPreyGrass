@@ -154,8 +154,6 @@ def test_share_does_not_rescue_a_doomed_member_and_can_be_switched_off():
     env.diet_required = True
     env.agent_energies[near] = 8.0
     env.agent_fruit_store[near] = 0.0  # fruit store empty: already doomed
-    _unused_others = [a for a in env.predator_positions if a not in (forager, near) and env.agent_band[a] == 0
-              and max(abs(env.predator_positions[a][0] - 10), abs(env.predator_positions[a][1] - 10)) <= 5]
     e_near = env.agent_energies[near]
     env._apply_band_share(forager, 2.0, is_fruit=True)
     assert env.agent_energies[near] == e_near
@@ -166,7 +164,7 @@ def test_share_does_not_rescue_a_doomed_member_and_can_be_switched_off():
 
 
 def test_a_step_with_fruit_shares_it_with_the_band():
-    env, forager, near, far, stranger = _sharing_setup()
+    env = _sharing_setup()[0]
     fruit = next(iter(env.fruit_positions))
     env.fruit_positions[fruit] = (10, 10)
     env.fruit_energies[fruit] = 2.0
@@ -263,7 +261,7 @@ def test_marriage_takes_dependent_children_along_but_not_grown_ones():
         env.predator_positions[a] = pos
         env.agent_energies[a] = 1.0
         env.agent_fruit_store[a] = 0.5
-        env.agent_parents[a] = (None, female)
+        env.agent_parents[a] = (male, female)
         env.agent_band[a] = 1
         env.agents.append(a)
         env.cumulative_rewards[a] = 0
@@ -336,7 +334,7 @@ def test_full_random_episode_with_default_bands_runs_and_reports_band_metrics():
     obs, _ = env.reset(seed=4)
     rng = np.random.default_rng(0)
     for _ in range(150):
-        obs, r, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
+        obs, _, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
         assert all("prey" not in a and o.shape[0] == 8 and np.isfinite(o).all() for a, o in obs.items())
         assert set(env.agent_band) >= set(env.predator_positions)
         if t.get("__all__") or tr.get("__all__"):
@@ -385,7 +383,7 @@ def test_unrelated_cross_band_pair_reproduces_when_kin_pairs_do_not():
 
 # ---- separate meat / fruit sharing rates ---------------------------------------------------------------------------
 def test_meat_and_fruit_use_their_own_sharing_rates():
-    env, forager, near, *_ = _sharing_setup()
+    env, forager, _, *_ = _sharing_setup()
     env.band_meat_share_rate, env.band_fruit_share_rate = 0.6, 0.2
     env._apply_band_share(forager, 2.0, is_fruit=False)
     assert env.band_share_meat_total == pytest.approx(1.2) and env.band_share_fruit_total == 0.0
@@ -473,7 +471,7 @@ def test_compass_points_diagonally_and_needs_enough_channels():
 
 # ---- distance decay of band sharing ----------------------------------------------------------------------------------------
 def test_distance_decay_scales_each_share_and_the_donor_pays_only_what_is_delivered():
-    env, forager, near, far, stranger = _sharing_setup(band_share_distance_decay=1.0)
+    env, forager, near, far, _ = _sharing_setup(band_share_distance_decay=1.0)
     _place(env, far, (10, 15))  # 5 cells away, inside the range of 5
     _place(env, near, (10, 11))  # 1 cell away
     others = [a for a in _members(env, 0) if a != forager]
@@ -491,7 +489,7 @@ def test_distance_decay_scales_each_share_and_the_donor_pays_only_what_is_delive
 
 
 def test_distance_decay_zero_is_the_flat_split_and_bad_values_are_rejected():
-    env, forager, near, far, stranger = _sharing_setup()
+    env, forager, *_ = _sharing_setup()
     before = env.agent_energies[forager]
     env._apply_band_share(forager, 2.0, is_fruit=False)
     assert before - env.agent_energies[forager] == pytest.approx(0.6)

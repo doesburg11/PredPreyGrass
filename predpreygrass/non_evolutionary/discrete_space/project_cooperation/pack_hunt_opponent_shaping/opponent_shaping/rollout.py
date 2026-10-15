@@ -15,10 +15,11 @@ own `Rollout` dataclass fields in spirit.
 """
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Mapping
 
 import numpy as np
 import torch
+from ray.rllib.utils.typing import AgentID
 
 from predpreygrass.non_evolutionary.discrete_space.project_cooperation.pack_hunt_opponent_shaping.predpreygrass_rllib_env import (
     PackHuntEnv,
@@ -39,11 +40,11 @@ class MultiAgentRollout:
 
 
 def collect_rollout(
-    models: Dict[str, torch.nn.Module],
+    models: Mapping[str, torch.nn.Module],
     env_config: dict,
     horizon: int,
     batch_size: int,
-    seed: int = None,
+    seed: int | None = None,
 ) -> MultiAgentRollout:
     max_episode_steps = env_config.get("max_episode_steps", 500)
     if horizon > max_episode_steps:
@@ -96,7 +97,9 @@ def collect_rollout(
 
         next_obs_batch = {a: [] for a in agent_ids}
         for i, env in enumerate(envs):
-            action_dict = {a: int(actions_tensors[a][i].item()) for a in agent_ids}
+            action_dict: Dict[AgentID, int] = {}
+            for agent_id in agent_ids:
+                action_dict[agent_id] = int(actions_tensors[agent_id][i].item())
             obs, step_rewards, terminations, truncations, _ = env.step(action_dict)
             for a in agent_ids:
                 rewards[a][t, i] = step_rewards[a]
@@ -107,6 +110,8 @@ def collect_rollout(
                     n_catches += 1
                 elif env.last_event == "escape":
                     n_escapes += 1
+            if (terminations.get("__all__", False) or truncations.get("__all__", False)) and t + 1 < horizon:
+                raise ValueError("Rollout episode ended before the requested horizon.")
         obs_batch = next_obs_batch
 
     mean_reward = {a: rewards[a].mean().item() for a in agent_ids}

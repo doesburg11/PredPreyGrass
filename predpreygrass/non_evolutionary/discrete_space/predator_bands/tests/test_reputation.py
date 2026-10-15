@@ -19,7 +19,8 @@ class _FixedRandom(RandomProxy):
     def __init__(self, real, value):
         self._real, self._value = real, value
 
-    def random(self, *a, **k):
+    def random(self, *args, **kwargs):
+        del args, kwargs
         return self._value
 
     def __getattr__(self, name):
@@ -37,11 +38,11 @@ def _place(env, agent, pos):
     env.grid_world_state[1, *pos] = env.agent_energies[agent]
 
 
-def _park_others(env, keep, start=(24, 0)):
+def _park_others(env, keep, start=(24, 16)):
     i = 0
     for a in list(env.predator_positions):
         if a not in keep:
-            _place(env, a, (24 - i // 8, 16 + i % 8))
+            _place(env, a, (start[0] - i // 8, start[1] + i % 8))
             i += 1
 
 
@@ -127,7 +128,7 @@ def test_cluster_exposure_works_in_any_shape_not_only_a_straight_line():
 
 
 def test_cluster_exposure_target_is_never_in_the_returned_set_or_credited_itself():
-    env, target, (d1,) = _relay_setup((11, 10))
+    env, target, (_,) = _relay_setup((11, 10))
     exposed = env._cluster_exposed(env._defender_ids(target), target)
     assert target not in exposed  # only defender_ids are ever returned, by construction
     env._update_reputation(env._defender_ids(target), target)
@@ -154,7 +155,7 @@ def test_default_reputation_is_full_and_off_is_a_true_no_op():
 
 
 def test_a_pure_free_rider_loses_reputation_by_ema_and_a_genuine_defender_keeps_it():
-    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.1)
+    env, _, free_rider = _free_rider_setup(reputation_ema_alpha=0.1)
     assert env._reputation_weight(free_rider) == 1.0  # unseen: full benefit of the doubt
     prev = 1.0
     for _ in range(5):
@@ -177,7 +178,7 @@ def test_reputation_scales_the_defender_weight_not_a_hard_cutoff():
 
 
 def test_reputation_recovers_when_a_predator_becomes_genuinely_exposed():
-    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
+    env, _, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
     for _ in range(5):
         env._threats_act()
     low = env._reputation_weight(free_rider)
@@ -239,7 +240,7 @@ def test_no_order_dependence_an_updated_reputation_does_not_change_a_later_resol
 
 
 def test_reputation_is_dropped_on_removal():
-    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
+    env, _, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
     for _ in range(5):
         env._threats_act()
     assert free_rider in env.reputation
@@ -248,7 +249,7 @@ def test_reputation_is_dropped_on_removal():
 
 
 def test_snapshot_round_trips_reputation():
-    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
+    env, _, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
     for _ in range(5):
         env._threats_act()
     rep = env.reputation[free_rider]
@@ -259,7 +260,7 @@ def test_snapshot_round_trips_reputation():
 
 
 def test_metrics_average_reputation_over_the_whole_population_not_just_observed_predators():
-    env, target, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
+    env, _, free_rider = _free_rider_setup(reputation_ema_alpha=0.2)
     for _ in range(10):
         env._threats_act()
     rep = env.reputation[free_rider]

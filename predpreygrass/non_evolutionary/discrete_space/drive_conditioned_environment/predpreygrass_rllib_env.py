@@ -176,7 +176,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Reset the environment to its initial state.
         """
-        super().reset(seed=seed)
+        super().reset(seed=seed, options=options)
         self.current_step = 0
         # Per the Gymnasium reset(seed=...) contract: only reseed when an
         # explicit seed is given. RLlib's auto-reset between episodes calls
@@ -329,7 +329,7 @@ class PredPreyGrass(MultiAgentEnv):
                 old_position = self.agent_positions[agent]
                 new_position = self._get_move(agent, action)
                 self.agent_positions[agent] = new_position
-                move_cost = self._get_movement_energy_cost(agent, old_position, new_position)
+                move_cost = self._get_movement_energy_cost()
                 self.agent_energies[agent] -= move_cost
                 if "predator" in agent:
                     self.predator_positions[agent] = new_position
@@ -550,25 +550,14 @@ class PredPreyGrass(MultiAgentEnv):
         self._record_drive_value_stats(observations)
         return observations, rewards, terminations, truncations, infos
 
-    def _get_movement_energy_cost(self, agent, current_position, new_position, distance_factor=0.1):
+    def _get_movement_energy_cost(self):
         """
         Calculate the energy cost for moving an agent.
-
-        Args:
-            current_position (np.array): Current position of the agent [x, y].
-            new_position (np.array): New position of the agent [x, y].
-            current_energy (float): Current energy level of the agent.
-            distance_factor (float): Scaling factor for the movement energy cost based on distance.
 
         Returns:
             float: Energy cost of the move.
         """
-        # current_energy = self.agent_energies[agent]
-        # distance = math.sqrt((new_position[0] - current_position[0]) ** 2 + (new_position[1] - current_position[1]) ** 2)
-
-        # Calculate the energy cost
-        # energy_cost = distance * distance_factor * current_energy
-        return 0  # energy_cost
+        return 0
 
     def _get_move(self, agent: str, action: int) -> Tuple[int, int]:
         """
@@ -734,7 +723,6 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Removes an agent from all tracking dictionaries.
         """
-        position = self.agent_positions[agent]
         del self.agent_positions[agent]
         del self.agent_energies[agent]
 

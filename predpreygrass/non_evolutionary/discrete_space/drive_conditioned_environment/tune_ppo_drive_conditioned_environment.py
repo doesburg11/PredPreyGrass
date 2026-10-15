@@ -24,6 +24,7 @@ from predpreygrass.non_evolutionary.discrete_space.drive_conditioned_environment
 #  external libraries
 import argparse
 import json
+from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
@@ -150,7 +151,10 @@ class EpisodeReturn(RLlibCallback):
         resolved_env = self._resolve_env(env=env, env_index=env_index, **kwargs)
         build_metrics = getattr(resolved_env, "_build_episode_training_metrics", None)
         if metrics_logger is not None and callable(build_metrics):
-            for metric_name, metric_value in build_metrics().items():
+            metrics = build_metrics()
+            if not isinstance(metrics, Mapping):
+                raise TypeError("_build_episode_training_metrics must return a mapping")
+            for metric_name, metric_value in metrics.items():
                 # reduce="mean": the default (EMA, coeff=0.01) would smooth
                 # these over ~100 episodes, badly lagging population/extinction
                 # swings; a per-iteration mean is what a baseline-vs-drive-
@@ -245,6 +249,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
+    del episode
     if not isinstance(agent_id, str):
         raise TypeError("PredPreyGrass requires string agent IDs")
     agent_id_str = str(agent_id)

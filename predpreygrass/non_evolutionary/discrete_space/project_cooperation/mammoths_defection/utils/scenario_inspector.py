@@ -193,11 +193,11 @@ def simulate_engagement(scn: Scenario) -> EngagementResult:
     # Wrap team-capture to record helpers/share while using env logic.
     original_team_capture = env._handle_team_capture
 
-    def wrapped_team_capture(prey_id):
+    def wrapped_team_capture(prey_id, participants, action_dict):
         prey_pos = tuple(env.agent_positions[prey_id])
         helpers = env._predators_in_moore_neighborhood(prey_pos)
         prey_energy = env.agent_energies[prey_id]
-        ok = original_team_capture(prey_id)
+        ok = original_team_capture(prey_id, participants, action_dict)
         if ok:
             share = prey_energy / len(helpers) if helpers else 0.0
             captured[prey_id] = {

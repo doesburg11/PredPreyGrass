@@ -12,7 +12,7 @@ The environment is rendered using PyGame, and the simulation can be recorded as 
 """
 import json
 from importlib import import_module
-from typing import Any, Callable
+from typing import Any
 import os
 import re
 import shutil
@@ -46,16 +46,16 @@ def _prepend_snapshot_source() -> None:
 
 _prepend_snapshot_source()
 
-PredPreyGrass: Callable[..., Any] | None = None
-config_env: dict[str, Any] | None = None
-CombinedEvolutionVisualizer: Callable[..., Any] | None = None
-PreyDeathCauseVisualizer: Callable[..., Any] | None = None
-PyGameRenderer: Callable[..., Any] | None = None
-ViewerControlHelper: Callable[..., Any] | None = None
-LoopControlHelper: Callable[..., Any] | None = None
-aggregate_capture_outcomes_from_event_log: Callable[..., Any] | None = None
-aggregate_join_choices: Callable[..., Any] | None = None
-compute_opportunity_preference_metrics: Callable[..., Any] | None = None
+PredPreyGrass: Any = None
+config_env: Any = None
+CombinedEvolutionVisualizer: Any = None
+PreyDeathCauseVisualizer: Any = None
+PyGameRenderer: Any = None
+ViewerControlHelper: Any = None
+LoopControlHelper: Any = None
+aggregate_capture_outcomes_from_event_log: Any = None
+aggregate_join_choices: Any = None
+compute_opportunity_preference_metrics: Any = None
 
 
 SAVE_EVAL_RESULTS = True
@@ -157,6 +157,7 @@ def copy_module_snapshot(source_dir: Path) -> None:
         shutil.rmtree(dest_dir)
 
     def _ignore(path: str, entries):
+        del path
         ignored = []
         for entry in entries:
             if entry in _SNAPSHOT_EXCLUDE_DIRS:
@@ -248,52 +249,8 @@ def resolve_trained_example_checkpoint(example_dir: Path) -> Path:
     raise FileExistsError(f"Multiple checkpoints found in {example_dir}; please keep only one.")
 
 
-def _load_training_env_config_from_run(checkpoint_path, base_cfg):
-    """
-    Try to locate a run_config.json near the checkpoint and merge its env settings
-    into the provided base_cfg. This aligns evaluation observations with the
-    shapes the policy network was trained on (avoids matmul shape errors).
-    """
-    training_env_cfg = None
-    cand = _find_run_config_path(checkpoint_path)
-    if cand and cand.is_file():
-        try:
-            with open(cand, "r") as f:
-                rc = json.load(f)
-            # Prefer explicit env_config if present; else, fall back to top-level keys
-            if isinstance(rc, dict):
-                if isinstance(rc.get("env_config"), dict):
-                    training_env_cfg = rc["env_config"]
-                else:
-                    # Heuristic: intersect with known keys in base_cfg
-                    training_env_cfg = {k: rc[k] for k in base_cfg.keys() if k in rc}
-        except Exception:
-            pass
-
-    if not isinstance(training_env_cfg, dict):
-        return base_cfg  # nothing to merge
-
-    # Only override observation-critical keys to avoid changing wall layout requests
-    obs_keys = {
-        "grid_size",
-        "num_obs_channels",
-        "predator_obs_range",
-        "prey_obs_range",
-        "include_visibility_channel",
-        "mask_observation_with_visibility",
-        "respect_los_for_movement",
-        # Action ranges can affect obs encoding in some setups; include for safety
-        "type_1_action_range",
-        "type_2_action_range",
-    }
-    merged = dict(base_cfg)
-    for k in obs_keys:
-        if k in training_env_cfg:
-            merged[k] = training_env_cfg[k]
-    return merged
-
-
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     parts = agent_id.split("_")
     if len(parts) >= 3:
         return "_".join(parts[:3])
@@ -473,6 +430,7 @@ def step_forward(
     SAVE_MOVIE,
     video_writer,
 ):
+    del pdviz
     action_dict = {}
     for agent_id in env.active_agents:
         group = policy_mapping_fn(agent_id)
@@ -719,7 +677,7 @@ def print_ranked_fitness_summary(env):
     print("\n--- Ranked Fitness Summary by Group ---")
     group_stats = defaultdict(list)
     for uid, stats in env.get_all_agent_stats().items():
-        group, index, reuse = parse_uid(uid)
+        group, _, _ = parse_uid(uid)
         lifetime = (stats["death_step"] or env.current_step) - stats["birth_step"]
         group_stats[group].append(
             {

@@ -69,6 +69,7 @@ def _find_run_config(checkpoint_path):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     if "predator_male" in agent_id:
         return "predator_male_policy"
     if "predator_female" in agent_id:

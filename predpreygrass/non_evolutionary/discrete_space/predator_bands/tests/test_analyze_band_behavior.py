@@ -77,7 +77,7 @@ def test_cohesion_features_distances_and_range():
     _place(env, band[1], (10, 13))
     _place(env, band[2], (10, 17))
     _place(env, other, (12, 10))
-    d_same, d_other, n_in_range, same, other_pos = ab.cohesion_features(env, a)
+    d_same, d_other, n_in_range, _, _ = ab.cohesion_features(env, a)
     assert d_same == 3 and d_other == 2 and n_in_range == 1
     lone = _members(env, 2)[0]
     _place(env, lone, (0, 0))
@@ -93,6 +93,7 @@ def test_action_geometry_sign_and_visibility():
     pos = np.array([5, 5])
     east = np.array([[8, 5]])
     d = ab.action_geometry(pos, east, moves, 20, 3)
+    assert d is not None
     assert d[1] < d[0] < d[2]  # stepping east is closest, west farthest
     assert ab.action_geometry(pos, np.array([[12, 5]]), moves, 20, 3) is None  # not visible
     assert ab.action_geometry(pos, np.array([[5, 5]]), moves, 20, 3) is None  # co-located
@@ -102,9 +103,13 @@ def test_action_geometry_sign_and_visibility():
 def test_ratio_ci_needs_episodes_and_recovers_constants():
     rng = np.random.default_rng(0)
     assert ab.ratio_ci([0, 0], [0, 0], rng) is None
-    p, lo, hi = ab.ratio_ci([1.0, 2.0], [1, 1], rng)
+    result = ab.ratio_ci([1.0, 2.0], [1, 1], rng)
+    assert result is not None
+    p, lo, hi = result
     assert p == 1.5 and np.isnan(lo)
-    p, lo, hi = ab.ratio_ci([2.0] * 6, [1] * 6, rng)
+    result = ab.ratio_ci([2.0] * 6, [1] * 6, rng)
+    assert result is not None
+    p, lo, hi = result
     assert (p, lo, hi) == (2.0, 2.0, 2.0)
 
 
@@ -151,6 +156,7 @@ def test_action_geometry_treats_moves_onto_occupied_cells_as_staying():
     target = np.array([[8, 5]])
     free = ab.action_geometry(pos, target, moves, 20, 3)
     blocked = ab.action_geometry(pos, target, moves, 20, 3, occupied={(6, 5)})
+    assert free is not None and blocked is not None
     assert free[1] < free[0] and blocked[1] == blocked[0]  # the step east is blocked, so it ends where staying does
     assert blocked[2] == free[2]
 

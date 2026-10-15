@@ -78,7 +78,7 @@ def test_max_steps_truncation_is_untouched_no_replenishment_attempted():
     env.step(_noop_actions(env))  # current_step 0 -> 1; not yet truncated, replenishes normally
     prey_before_truncation = env.current_num_prey
 
-    _, _, terminations, truncations, _ = env.step(_noop_actions(env))  # current_step 1 >= max_steps 1
+    _, _, _, truncations, _ = env.step(_noop_actions(env))  # current_step 1 >= max_steps 1
 
     assert truncations.get("__all__") is True
     assert env.current_num_prey == prey_before_truncation  # override returned early; no replenishment

@@ -145,7 +145,7 @@ def summarize(label, bank, probs_m, probs_f, rng):
     ep = bank["episode"]
     for t in TARGETS:
         bm, pm, um = per_state_metrics(bank, probs_m, t)
-        bf, pf, uf = per_state_metrics(bank, probs_f, t)
+        bf, pf, _ = per_state_metrics(bank, probs_f, t)
         n_vis = int(np.isfinite(bm).sum())
         n_adj = int(np.isfinite(pm).sum())
         d_pt, d_lo, d_hi = boot_mean_diff(bm, bf, ep, rng)

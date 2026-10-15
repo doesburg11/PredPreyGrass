@@ -1,6 +1,7 @@
 import copy
 
 import pytest
+from gymnasium.spaces import MultiDiscrete
 
 from predpreygrass.non_evolutionary.discrete_space.project_cooperation.direct_reciprocity.config.config_env_direct_reciprocity import config_env
 from predpreygrass.non_evolutionary.discrete_space.project_cooperation.direct_reciprocity.predpreygrass_rllib_env import PredPreyGrass
@@ -38,7 +39,9 @@ def test_predator_action_space_is_multidiscrete():
     env.reset(seed=42)
     predator = next(a for a in env.agents if "predator" in a)
 
-    assert env.action_spaces[predator].nvec.tolist()[-1] == 2
+    predator_action_space = env.action_spaces[predator]
+    assert isinstance(predator_action_space, MultiDiscrete)
+    assert predator_action_space.nvec.tolist()[-1] == 2
 
 
 def test_share_action_transfers_energy_and_updates_trust():

@@ -16,7 +16,8 @@ class _FixedRandom(RandomProxy):
     def __init__(self, real, value):
         self._real, self._value = real, value
 
-    def random(self, *a, **k):
+    def random(self, *args, **kwargs):
+        del args, kwargs
         return self._value
 
     def __getattr__(self, name):
@@ -43,12 +44,12 @@ def _place(env, agent, pos):
     env.grid_world_state[1, *pos] = env.agent_energies[agent]
 
 
-def _park_others(env, keep, start=(24, 0)):
+def _park_others(env, keep, start=(24, 16)):
     """Move every predator not in `keep` to unique cells far away (bottom-right region)."""
     i = 0
     for a in list(env.predator_positions):
         if a not in keep:
-            _place(env, a, (24 - i // 8, 16 + i % 8))
+            _place(env, a, (start[0] - i // 8, start[1] + i % 8))
             i += 1
 
 
@@ -201,7 +202,7 @@ def test_a_killed_predator_is_removed_in_the_step_and_counted_by_sex():
     env, target = _attack_setup(0)
     env.rng = _FixedRandom(env.rng, 0.0)
     male = "male" in target and "female" not in target
-    obs, rewards, terms, truncs, _ = env.step(_noop(env))
+    _, _, terms, _, _ = env.step(_noop(env))
     assert target not in env.agent_positions and terms.get(target) is True
     assert env.threat_kills["predator_male" if male else "predator_female"] == 1
     assert target not in env.agent_band and target not in env.agent_fruit_store
@@ -229,7 +230,7 @@ def test_full_random_episode_with_threats_runs_and_reports_metrics():
     obs, _ = env.reset(seed=4)
     rng = np.random.default_rng(0)
     for _ in range(200):
-        obs, r, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
+        obs, _, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
         assert all(o.shape[0] == env.num_obs_channels and np.isfinite(o).all() for o in obs.values())
         if t.get("__all__") or tr.get("__all__"):
             break
@@ -273,7 +274,6 @@ def test_channel_validation_applies_with_bands_off_too():
 def test_two_threats_attacking_the_same_target_use_the_start_of_phase_state():
     """A kill by one threat must not change the defenders or the target seen by the next threat (no order dependence)."""
     env, target = _attack_setup(1)  # 1 defender: p = 0.3333 per threat
-    _unused_band0 = _members(env, 0)
     env.threat_positions = {"threat_0": (9, 10), "threat_1": (9, 9)}  # both adjacent to the target only
     env.num_threats = 2
     env.rng = _FixedRandom(env.rng, 0.30)  # both rolls succeed
@@ -285,9 +285,6 @@ def test_two_threats_attacking_the_same_target_use_the_start_of_phase_state():
 
 def test_threat_ids_are_processed_in_numeric_not_lexicographic_order():
     env = _env(num_threats=12)
-    _unused_order = []
-    _unused_orig = env.rng.integers
-
     ids = sorted(env.threat_positions, key=lambda t: int(t.split("_")[1]))
     assert ids[2] == "threat_2" and ids[10] == "threat_10"  # numeric order the code uses
 
@@ -311,7 +308,7 @@ def test_doomed_predators_are_neither_targets_nor_defenders():
 
 
 def test_repel_moves_to_a_free_cell_and_counts_only_if_it_moved():
-    env, target = _attack_setup(3)
+    env, _ = _attack_setup(3)
     env.rng = _FixedRandom(env.rng, 0.0)
     env._threats_act()
     assert env.threat_repelled == 1
@@ -397,7 +394,7 @@ def test_a_resting_threat_does_not_attack_or_chase_and_resumes_afterwards():
 
 
 def test_a_repelled_threat_takes_the_cooldown_and_snapshots_keep_the_rest_state():
-    env, target = _attack_setup(3, threat_cooldown_steps=7)
+    env, _ = _attack_setup(3, threat_cooldown_steps=7)
     env.current_step = 20
     env.rng = _FixedRandom(env.rng, 0.0)
     env._threats_act()
@@ -449,7 +446,8 @@ class _CountingRandom(RandomProxy):
     def __init__(self, real, value):
         self._real, self._value, self.calls = real, value, 0
 
-    def random(self, *a, **k):
+    def random(self, *args, **kwargs):
+        del args, kwargs
         self.calls += 1
         return self._value
 

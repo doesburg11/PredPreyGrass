@@ -22,6 +22,7 @@ from pathlib import Path
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from ray.rllib.policy.policy import PolicySpec
 from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.registry import register_env
 
@@ -41,6 +42,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     # One independent policy per predator -- no weight sharing, so each
     # predator can specialize as an engager or a scrounger, which is the
     # whole point of the dilemma this environment is testing.
@@ -64,10 +66,20 @@ if __name__ == "__main__":
 
     sample_env = env_creator(config=env_config)
     sample_env.reset(seed=None)
-    policies = {
-        agent_id: (None, sample_env.observation_spaces[agent_id], sample_env.action_spaces[agent_id], {})
-        for agent_id in sample_env.agents
-    }
+    observation_spaces = sample_env.observation_spaces
+    action_spaces = sample_env.action_spaces
+    if observation_spaces is None or action_spaces is None:
+        raise RuntimeError("PackHuntEnv must define observation and action spaces before training.")
+    policies: dict[str, PolicySpec] = {}
+    for agent_id in sample_env.agents:
+        if not isinstance(agent_id, str):
+            raise TypeError(f"Expected string agent IDs, got {type(agent_id).__name__}.")
+        policies[agent_id] = PolicySpec(
+            policy_class=None,
+            observation_space=observation_spaces[agent_id],
+            action_space=action_spaces[agent_id],
+            config={},
+        )
     del sample_env
 
     ppo_config = (

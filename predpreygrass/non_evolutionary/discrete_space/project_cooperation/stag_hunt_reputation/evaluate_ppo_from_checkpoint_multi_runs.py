@@ -1,7 +1,7 @@
 import os
 import json
 from importlib import import_module
-from typing import Any, Callable
+from typing import Any
 import math
 import shutil
 import subprocess
@@ -36,11 +36,11 @@ def _prepend_snapshot_source() -> None:
 
 _prepend_snapshot_source()
 
-PredPreyGrass: Callable[..., Any] | None = None
-config_env: dict[str, Any] | None = None
-CombinedEvolutionVisualizer: Callable[..., Any] | None = None
-aggregate_capture_outcomes_from_event_log: Callable[..., Any] | None = None
-aggregate_join_choices: Callable[..., Any] | None = None
+PredPreyGrass: Any = None
+config_env: Any = None
+CombinedEvolutionVisualizer: Any = None
+aggregate_capture_outcomes_from_event_log: Any = None
+aggregate_join_choices: Any = None
 
 
 
@@ -119,6 +119,7 @@ def copy_module_snapshot(source_dir: Path) -> None:
         shutil.rmtree(dest_dir)
 
     def _ignore(path: str, entries):
+        del path
         ignored = []
         for entry in entries:
             if entry in _SNAPSHOT_EXCLUDE_DIRS:
@@ -348,6 +349,7 @@ if __name__ == "__main__":
         env = PredPreyGrass(config=config_env)
         observations, _ = env.reset(seed=SEED + run)  # Use different seed per run
         active_agents = list(observations.keys())
+        eval_output_dir: Path | None = None
         if SAVE_EVAL_RESULTS:
             eval_output_dir = get_eval_output_dir(checkpoint_path, now)
             if run == 0:
@@ -414,8 +416,9 @@ if __name__ == "__main__":
                 **defection_metrics.get("capture_outcomes", {}),
             }
         )
-        if SAVE_EVAL_RESULTS:
-            assert visualizer is not None
+        if eval_output_dir is not None:
+            if visualizer is None:
+                raise RuntimeError("Evaluation output was enabled without a visualizer.")
             visualizer.plot()
             config_env_dir = eval_output_dir / "config_env"
             config_env_dir.mkdir(exist_ok=True)

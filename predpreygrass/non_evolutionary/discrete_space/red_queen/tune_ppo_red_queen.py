@@ -50,6 +50,7 @@ def env_creator(config):
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
     """'type_1_predator_3' -> 'type_1_predator' (one policy per species/type combo)."""
+    del args, kwargs
     parts = agent_id.split("_")
     return f"type_{parts[1]}_{parts[2]}"
 

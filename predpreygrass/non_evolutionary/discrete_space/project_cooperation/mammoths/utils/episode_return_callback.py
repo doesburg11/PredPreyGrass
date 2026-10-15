@@ -174,10 +174,10 @@ class EpisodeReturn(RLlibCallback):
             total_success = _pick_value(total_success, env_total_success)
             total_fail = _pick_value(total_fail, env_total_fail)
 
-        coop_success = coop_success or 0
-        coop_fail = coop_fail or 0
-        total_success = total_success or 0
-        total_fail = total_fail or 0
+        coop_success = float(coop_success or 0)
+        coop_fail = float(coop_fail or 0)
+        total_success = float(total_success or 0)
+        total_fail = float(total_fail or 0)
 
         coop_denom = coop_success + coop_fail
         total_denom = total_success + total_fail
@@ -225,6 +225,7 @@ class EpisodeReturn(RLlibCallback):
             print(f"  - {group}: Total = {sum(totals):.2f}")
 
     def on_train_result(self, *, result, **kwargs):
+        del kwargs
         # Add training time metrics
         now = time.time()
         total_elapsed = now - self.start_time
@@ -259,5 +260,3 @@ class EpisodeReturn(RLlibCallback):
         if num_eps and len_mean is not None:
             self._last_episode_len_mean = len_mean
             self._last_episode_return_mean = ret_mean
-
-

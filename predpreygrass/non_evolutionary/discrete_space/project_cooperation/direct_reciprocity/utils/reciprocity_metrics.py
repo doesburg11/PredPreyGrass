@@ -21,7 +21,7 @@ def _safe_div(num: float, denom: float) -> float:
     return num / denom if denom else 0.0
 
 
-def _iter_share_opportunity_events(event_log: dict) -> list[tuple[int, str, dict]]:
+def _iter_share_opportunity_events(event_log: object) -> list[tuple[int, str, dict]]:
     events: list[tuple[int, str, dict]] = []
     if not isinstance(event_log, dict):
         return events

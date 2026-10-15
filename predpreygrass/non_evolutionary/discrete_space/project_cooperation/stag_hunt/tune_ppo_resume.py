@@ -15,11 +15,13 @@ from ray.rllib.algorithms.ppo import PPOConfig
 from ray.rllib.algorithms.ppo.torch.ppo_torch_learner import PPOTorchLearner
 
 import torch
+from typing import cast
 
 import copy
 import json
 import os
 import shutil
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 
@@ -45,6 +47,7 @@ def env_creator(config):
     return PredPreyGrass(config)
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     parts = agent_id.split("_")
     type_id = parts[1]
     role = parts[2]
@@ -131,21 +134,25 @@ class ResumeCallbacks(EpisodeReturn):
 
     def _get_margin(self, result):
         training_iter = int(result.get("training_iteration", 0))
-        if self._curriculum_start_iter is None:
+        start_margin = CURRICULUM_START_MARGIN
+        end_margin = CURRICULUM_END_MARGIN
+        if start_margin is None or end_margin is None:
+            raise RuntimeError("Margin curriculum is enabled without start and end margins.")
+
+        start_iter = self._curriculum_start_iter
+        if start_iter is None:
             if CURRICULUM_START_ITER is not None:
-                self._curriculum_start_iter = int(CURRICULUM_START_ITER)
+                start_iter = int(CURRICULUM_START_ITER)
             else:
-                self._curriculum_start_iter = training_iter
+                start_iter = training_iter
+            self._curriculum_start_iter = start_iter
 
         if CURRICULUM_RAMP_ITERS <= 0:
-            return float(CURRICULUM_END_MARGIN)
+            return end_margin
 
-        progress = (training_iter - self._curriculum_start_iter) / float(CURRICULUM_RAMP_ITERS)
+        progress = (training_iter - start_iter) / float(CURRICULUM_RAMP_ITERS)
         progress = max(0.0, min(1.0, progress))
-        return float(
-            CURRICULUM_START_MARGIN
-            + (CURRICULUM_END_MARGIN - CURRICULUM_START_MARGIN) * progress
-        )
+        return start_margin + (end_margin - start_margin) * progress
 
     def _apply_margin(self, algorithm, margin):
         if algorithm is None:
@@ -187,9 +194,15 @@ class ResumeCallbacks(EpisodeReturn):
 
 class PPOTorchLearnerNoForeach(PPOTorchLearner):
     def configure_optimizers_for_module(self, module_id, config=None):
-        module = self._module[module_id]
+        modules = self._module
+        if modules is None:
+            raise RuntimeError("Learner modules must be initialized before optimizer setup.")
+        module = modules[module_id]
         params = self.get_parameters(module)
-        optimizer = torch.optim.Adam(params, foreach=False)
+        optimizer = torch.optim.Adam(
+            cast(Iterable[torch.Tensor], params),
+            foreach=False,
+        )
         self._sanitize_optimizer_params(optimizer)
         self.register_optimizer(
             module_id=module_id,

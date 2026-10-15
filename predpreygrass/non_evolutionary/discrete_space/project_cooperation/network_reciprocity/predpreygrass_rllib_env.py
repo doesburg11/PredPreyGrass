@@ -152,7 +152,7 @@ class PredPreyGrass(MultiAgentEnv):
     # -------------------------------------------------------------------------
 
     def reset(self, *, seed=None, options=None):
-        super().reset(seed=seed)
+        super().reset(seed=seed, options=options)
         self.current_step = 0
         self.rng = np.random.default_rng(seed)
         self.grid_world_state = self.initial_grid_world_state.copy()

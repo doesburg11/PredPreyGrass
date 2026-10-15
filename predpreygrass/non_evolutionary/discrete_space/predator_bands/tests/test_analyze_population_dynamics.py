@@ -15,9 +15,13 @@ def test_lag_corr_recovers_a_known_lag_and_sign():
 
 def test_dominant_period_finds_a_sine_and_rejects_noise_and_constants():
     t = np.arange(800)
-    period, share = pd_.dominant_period(np.sin(2 * np.pi * t / 80) + 0.1 * np.random.default_rng(0).normal(size=800))
+    result = pd_.dominant_period(np.sin(2 * np.pi * t / 80) + 0.1 * np.random.default_rng(0).normal(size=800))
+    assert result is not None
+    period, share = result
     assert abs(period - 80) < 4 and share > 0.5
-    _, noise_share = pd_.dominant_period(np.random.default_rng(1).normal(size=800))
+    noise_result = pd_.dominant_period(np.random.default_rng(1).normal(size=800))
+    assert noise_result is not None
+    _, noise_share = noise_result
     assert noise_share < 0.1
     assert pd_.dominant_period(np.ones(300)) is None and pd_.dominant_period(np.arange(50.0)) is None
 

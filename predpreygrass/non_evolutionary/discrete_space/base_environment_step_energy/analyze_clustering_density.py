@@ -61,8 +61,10 @@ be = np.array([rows[("base", s)][2] for s in SEEDS])
 se = np.array([rows[("step", s)][2] for s in SEEDS])
 print("\nDENSITY-ADJUSTED TEST across the six seed pairs (excess clustering vs random at own density)")
 print(f"  base excess {be.mean():+.3f} | base_environment_step_energy excess {se.mean():+.3f}")
-print(f"  paired Wilcoxon one-sided p={wilcoxon(be, se, alternative='greater').pvalue:.4f}; "
-      f"unpaired Mann-Whitney one-sided p={mannwhitneyu(be, se, alternative='greater').pvalue:.4f}; "
+paired_p = float(getattr(wilcoxon(be, se, alternative="greater"), "pvalue"))
+unpaired_p = float(getattr(mannwhitneyu(be, se, alternative="greater"), "pvalue"))
+print(f"  paired Wilcoxon one-sided p={paired_p:.4f}; "
+      f"unpaired Mann-Whitney one-sided p={unpaired_p:.4f}; "
       f"pairs base>base_environment_step_energy: {(be > se).sum()}/6")
 print("  predator N ranges: base %.1f-%.1f, base_environment_step_energy %.1f-%.1f (no overlap)" % (
     min(rows[("base", s)][1] for s in SEEDS), max(rows[("base", s)][1] for s in SEEDS),
@@ -76,7 +78,10 @@ for kind in ("base", "step"):
         xs += list(N - N.mean())
         ys += list(R - R.mean())
     lr = linregress(xs, ys)
-    print(f"  {kind}: dR/dN = {lr.slope:+.4f} per predator (p={lr.pvalue:.3g}, r={lr.rvalue:+.2f})")
+    slope = float(getattr(lr, "slope"))
+    pvalue = float(getattr(lr, "pvalue"))
+    rvalue = float(getattr(lr, "rvalue"))
+    print(f"  {kind}: dR/dN = {slope:+.4f} per predator (p={pvalue:.3g}, r={rvalue:+.2f})")
 print("  across all 14 policies, Spearman(R, N) = %.2f" % spearmanr(
     [v[1] for v in rows.values()], [v[0] for v in rows.values()])[0])
 

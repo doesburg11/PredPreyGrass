@@ -76,6 +76,7 @@ class PackHuntEnv(MultiAgentEnv):
         self.last_event_position = None
 
     def reset(self, *, seed=None, options=None):
+        del options
         if seed is not None:
             self._rng = np.random.default_rng(seed)
 

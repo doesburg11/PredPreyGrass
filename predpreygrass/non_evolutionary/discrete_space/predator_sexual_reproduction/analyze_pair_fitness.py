@@ -41,6 +41,7 @@ import argparse
 import glob
 import json
 import os
+from typing import cast
 
 import numpy as np
 import torch
@@ -127,7 +128,7 @@ def _spearman(sample_pairs):
     counts = [p["offspring_count"] for p in sample_pairs]
     if len(set(diffs)) < 2 or len(set(counts)) < 2:
         return None  # no variation in one of the two variables -- correlation is undefined
-    rho = spearmanr(diffs, counts).statistic  # scipy handles ties via average ranks; a naive
+    rho = cast(float, spearmanr(diffs, counts)[0])  # scipy handles ties via average ranks; a naive
     # double-argsort (an earlier version's approach, caught by Codex review) assigns ties distinct
     # arbitrary ranks instead, which is wrong whenever offspring_count repeats -- as it does here,
     # almost always (small integer counts).

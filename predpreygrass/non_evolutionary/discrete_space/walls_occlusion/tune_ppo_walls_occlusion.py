@@ -46,6 +46,7 @@ def policy_mapping_fn(agent_id, *args, **kwargs):
     Returns:
         str: The policy name for the agent, formatted as "type_X_role_Y".
     """
+    del args, kwargs
     parts = agent_id.split("_")
     type = parts[1]
     role = parts[2]

@@ -59,6 +59,7 @@ def env_creator(config):
 
 
 def policy_mapping_fn(agent_id, *args, **kwargs):
+    del args, kwargs
     # drive_conditioned_environment naming: "predator_x" / "prey_y" -> two policies
     if "predator" in agent_id:
         return "predator_policy"

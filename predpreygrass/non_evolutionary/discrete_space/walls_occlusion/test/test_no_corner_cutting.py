@@ -28,7 +28,7 @@ def test_no_corner_cutting():
         'n_initial_active_type_2_prey': 0,
     }
     env = PredPreyGrass(config)
-    obs, _ = env.reset()
+    env.reset()
     prey_id = [aid for aid in env.agent_positions if 'prey' in aid][0]
     env.agent_positions[prey_id] = (0,0)
     # Try to move prey diagonally into (1,1)

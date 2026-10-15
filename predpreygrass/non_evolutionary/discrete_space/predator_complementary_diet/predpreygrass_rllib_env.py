@@ -368,6 +368,7 @@ class PredPreyGrass(MultiAgentEnv):
         """
         Reset the environment to its initial state.
         """
+        del options  # Accepted by the Gymnasium reset API; not used by this environment.
         super().reset(seed=seed)
         self.current_step = 0
         # Per the Gymnasium reset(seed=...) contract: only reseed when an

@@ -15,7 +15,7 @@ direct neural-network analog of Foerster2018's `_bernoulli_score` -- same
 role in the pipeline, different (unavoidably more expensive) computation.
 """
 
-from typing import Dict
+from typing import Dict, Mapping
 
 import torch
 import torch.nn as nn
@@ -91,7 +91,7 @@ def flat_grad_from_params_grad(params: Dict[str, torch.Tensor]) -> torch.Tensor:
     return torch.cat([p.reshape(-1) for p in params.values()])
 
 
-def unflatten_to_params(flat: torch.Tensor, params: Dict[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
+def unflatten_to_params(flat: torch.Tensor, params: Mapping[str, torch.Tensor]) -> Dict[str, torch.Tensor]:
     """Inverse of concatenation: splits a (P,) vector back into a dict with
     the same shapes as `params`, in the same order."""
     out = {}

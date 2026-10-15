@@ -128,7 +128,7 @@ def run_episode(Env, cfg, mods, seed):
             if "predator" in a:
                 pact += 1
                 noop += ac == 4
-        obs, rew, term, trunc, _ = env.step(acts)
+        obs, _, term, trunc, _ = env.step(acts)
         active = [a for a in obs if not term.get(a, False) and not trunc.get(a, False)]
         cur = {a: tuple(p) for a, p in env.agent_positions.items() if "predator" in a}
         for a, p in cur.items():

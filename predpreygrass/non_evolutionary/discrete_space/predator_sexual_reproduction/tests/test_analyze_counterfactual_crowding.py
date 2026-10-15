@@ -83,10 +83,6 @@ def test_approach_bias_sign_and_uniform_policy_is_zero():
     assert cf.approach_bias(np.array([0, 1.0, 0, 0]), d) > 0  # picks the closest-after action
 
 
-class _FakeModule:
-    """Policy that goes to action 1 iff a predator sits at obs[PRED, OFFSET+1, OFFSET]; used through module_probs."""
-
-
 def test_evaluate_matches_hand_computation_and_blocks_moves(monkeypatch):
     moves = np.array([(0, 0), (1, 0), (-1, 0)])
     o = _obs()
@@ -94,6 +90,7 @@ def test_evaluate_matches_hand_computation_and_blocks_moves(monkeypatch):
     bank = [{"obs": o, "episode": 0, "near": False, "geo": {"prey": (d_free, d_stay), "fruit": None}}]
 
     def fake_probs(module, obs_list):
+        del module
         return np.array([[0.0, 1.0, 0.0] for _ in obs_list])  # always tries to step to (+1,0)
 
     monkeypatch.setattr(cf, "module_probs", fake_probs)
@@ -120,7 +117,9 @@ def test_cluster_stat_requires_min_episodes_and_recovers_constant():
     x = np.arange(10, dtype=float)
     assert cf._cluster_stat(lambda w: cf.wmean(x, w), np.zeros(10, dtype=int), rng) is None
     ep = np.repeat(np.arange(5), 2)
-    point, lo, hi, n = cf._cluster_stat(lambda w: cf.wmean(np.ones(10), w), ep, rng)
+    result = cf._cluster_stat(lambda w: cf.wmean(np.ones(10), w), ep, rng)
+    assert result is not None
+    point, lo, hi, n = result
     assert (point, lo, hi, n) == (1.0, 1.0, 1.0, 5)
 
 
@@ -128,7 +127,9 @@ def test_cluster_stat_resamples_whole_episodes():
     rng = np.random.default_rng(1)
     ep = np.repeat(np.arange(6), 3)
     vals = ep.astype(float) * 10  # constant within an episode: bootstrap spread comes only from episode resampling
-    point, lo, hi, _ = cf._cluster_stat(lambda w: cf.wmean(vals, w), ep, rng)
+    result = cf._cluster_stat(lambda w: cf.wmean(vals, w), ep, rng)
+    assert result is not None
+    point, lo, hi, _ = result
     assert lo < point < hi and hi - lo > 5
 
 
@@ -136,7 +137,11 @@ def test_blocking_false_isolates_policy_response(monkeypatch):
     """An observation-invariant policy has zero policy-only crowding effect but a nonzero total (mechanical) one."""
     moves = np.array([(0, 0), (1, 0), (-1, 0)])
     bank = [{"obs": _obs(), "episode": 0, "near": False, "geo": {"prey": (np.array([2.0, 1.0, 3.0]), 2.0), "fruit": None}}]
-    monkeypatch.setattr(cf, "module_probs", lambda module, obs_list: np.array([[0.0, 1.0, 0.0] for _ in obs_list]))
+    def fake_probs(module, obs_list):
+        del module
+        return np.array([[0.0, 1.0, 0.0] for _ in obs_list])
+
+    monkeypatch.setattr(cf, "module_probs", fake_probs)
     total = cf.evaluate(bank, OFFSET, moves, None, 8.0, blocking=True)
     policy = cf.evaluate(bank, OFFSET, moves, None, 8.0, blocking=False)
     assert abs(policy["+d1"]["prey"][0] - policy["alone"]["prey"][0]) < 1e-12
@@ -151,7 +156,7 @@ def _bank(episodes, near, n_per=10):
     return bank
 
 
-def test_summarize_reports_na_when_an_arm_has_too_few_episodes(monkeypatch):
+def test_summarize_reports_na_when_an_arm_has_too_few_episodes():
     rng = np.random.default_rng(0)
     bank = _bank(list(range(6)), [True, False, False, False, False, False])  # one near episode only
     n = len(bank)

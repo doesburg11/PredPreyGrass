@@ -12,7 +12,9 @@ Reads clustering_mechanism_data/ (evaluate_clustering_mechanism.py) and clusteri
 Usage: python analyze_clustering_mechanism.py
 """
 import json
+import math
 import os
+from typing import cast
 
 import numpy as np
 from scipy.stats import mannwhitneyu, spearmanr, wilcoxon
@@ -31,11 +33,16 @@ def episodes(kind, seed):
 
 def policy(kind, seed):
     eps = episodes(kind, seed)
-    m = {k: np.mean([e[k] for e in eps]) for k in ("R", "noop_frac", "moved_frac", "mean_disp", "adj_frac")}
-    m["birth_rate"] = 1000 * sum(e["births"] for e in eps) / sum(e["pred_steps"] for e in eps)  # per 1000 predator-steps
+    m: dict[str, float] = {
+        k: float(np.mean([e[k] for e in eps]))
+        for k in ("R", "noop_frac", "moved_frac", "mean_disp", "adj_frac")
+    }
+    m["birth_rate"] = float(
+        1000 * sum(e["births"] for e in eps) / sum(e["pred_steps"] for e in eps)
+    )  # per 1000 predator-steps
     for a in AGES:
         c = sum(e["age_cnt"][str(a)] for e in eps)
-        m[f"d{a}"] = sum(e["age_sum"][str(a)] for e in eps) / c if c else np.nan
+        m[f"d{a}"] = float(sum(e["age_sum"][str(a)] for e in eps) / c) if c else math.nan
     return m
 
 
@@ -54,8 +61,8 @@ def compare(key, predicted):
     b = np.array([P[("base", s)][key] for s in SEEDS])
     st = np.array([P[("step", s)][key] for s in SEEDS])
     alt = "greater" if predicted == "lower" else "less"  # test that base is greater when base_environment_step_energy is predicted lower
-    p_unp = mannwhitneyu(b, st, alternative=alt).pvalue
-    p_pair = wilcoxon(b, st, alternative=alt).pvalue
+    p_unp = float(getattr(mannwhitneyu(b, st, alternative=alt), "pvalue"))
+    p_pair = float(getattr(wilcoxon(b, st, alternative=alt), "pvalue"))
     n_dir = int((b > st).sum()) if predicted == "lower" else int((b < st).sum())
     print(f"  {key:11s} base {b.mean():7.3f}  base_environment_step_energy {st.mean():7.3f}  predicted base_environment_step_energy {predicted:6s}: "
           f"{n_dir}/6 seeds, unpaired p={p_unp:.4f}, paired p={p_pair:.4f}")
@@ -127,6 +134,7 @@ print("  observed / random-expected: base %.3f / %.3f (x%.2f) | base_environment
     np.mean([obs_m[("step", s)] for s in SEEDS]) / np.mean([rnd_m[("step", s)] for s in SEEDS])))
 print("  excess adjacency: base %+.3f | base_environment_step_energy %+.3f; base_environment_step_energy > base in %d/6 seeds; unpaired one-sided p=%.4f; paired p=%.4f" % (
     b.mean(), st.mean(), (st > b).sum(),
-    mannwhitneyu(st, b, alternative="greater").pvalue, wilcoxon(st, b, alternative="greater").pvalue))
+    cast(float, mannwhitneyu(st, b, alternative="greater")[1]),
+    cast(float, wilcoxon(st, b, alternative="greater")[1])))
 r, p = spearmanr([ex[k] for k in keys], Rv)
 print("  Spearman(excess adjacency, R) across 12 policies: rho=%+.2f (p=%.3f) -- largely definitional: adjacent pairs feed directly into R" % (r, p))

@@ -74,6 +74,7 @@ class _FixedRandom(RandomProxy):
         self._real, self._value = real, value
 
     def random(self, *a, **k):
+        del a, k
         return self._value
 
     def __getattr__(self, name):

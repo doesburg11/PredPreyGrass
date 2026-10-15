@@ -7,8 +7,24 @@ import copy
 import numpy as np
 import pytest
 
+from predpreygrass.non_evolutionary.discrete_space.random_source import RandomProxy, RandomSource
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.config_env import config_env as _base
 from predpreygrass.non_evolutionary.discrete_space.predator_bands.predpreygrass_rllib_env import PredPreyGrass
+
+
+class _FixedRandom(RandomProxy):
+    def __init__(self, source: RandomSource, value: float) -> None:
+        self._source = source
+        self._value = value
+
+    def __getattr__(self, name: str):
+        if name == "random":
+            def fixed_random(*args, **kwargs):
+                del args, kwargs
+                return self._value
+
+            return fixed_random
+        return getattr(self._source, name)
 
 
 def _env(**overrides):
@@ -79,7 +95,7 @@ def test_debit_draws_from_stores_in_fixed_shares():
 
 def test_step_costs_use_the_same_shares():
     env = _env()
-    male, female = _agents(env)
+    _, female = _agents(env)
     f0, m0 = env.agent_fruit_store[female], _meat(env, female)
     env.step(_noop(env))  # homeostatic cost only (noop is free)
     c = env.homeostatic_energy_cost_per_step_predator
@@ -89,9 +105,8 @@ def test_step_costs_use_the_same_shares():
 
 def test_fruit_raises_fruit_store_and_meat_raises_meat_store():
     env = _env()
-    male, female = _agents(env)
+    _, female = _agents(env)
     fruit = next(iter(env.fruit_positions))
-    _unused_prey = next(a for a in env.agents if a.startswith("prey"))
     _place(env, female, (5, 5))
     env.fruit_positions[fruit] = (5, 5)
     env.fruit_energies[fruit] = 2.0
@@ -108,8 +123,7 @@ def test_fruit_raises_fruit_store_and_meat_raises_meat_store():
     _place(env2, male2, (4, 4))
     env2.agent_positions[prey2] = (4, 4)
     env2.prey_positions[prey2] = (4, 4)
-    env2.rng = type("R", (), {"random": lambda self: 0.0, "__getattr__": lambda self, n: getattr(env2._real, n)})()
-    env2._real = np.random.default_rng(0)
+    env2.rng = _FixedRandom(env2.rng, 0.0)
     f0, m0 = env2.agent_fruit_store[male2], _meat(env2, male2)
     gained = env2.agent_energies[prey2] - env2.homeostatic_energy_cost_per_step_prey
     env2.step(_noop(env2))
@@ -214,8 +228,7 @@ def test_female_gift_moves_fruit_energy_to_recorded_mate_only_in_range():
     assert _meat(env, female) == pytest.approx(b[female][2] - 0.25 * c)
     assert env.female_gift_events == 1 and env.female_gift_energy_total == pytest.approx(donation)
 
-    for kwargs in ({"rate": 0.0}, {"mate_pos": (5, 9)}, {"recorded": False}):
-        env, male, female, b = run(**kwargs)
+    for env, male, female, b in (run(rate=0.0), run(mate_pos=(5, 9)), run(recorded=False)):
         assert env.female_gift_events == 0
         assert env.agent_energies[male] == pytest.approx(b[male][0] - c)
 
@@ -271,7 +284,7 @@ def test_observation_has_store_channel_with_own_and_neighbor_store():
 
 def test_snapshot_round_trips_the_stores():
     env = _env()
-    male, female = _agents(env)
+    _, female = _agents(env)
     snap = env.get_state_snapshot()
     env.step(_noop(env))
     assert env.agent_fruit_store[female] != snap["agent_fruit_store"][female]
@@ -284,8 +297,8 @@ def test_random_policy_episode_runs_and_reports_diet_metrics():
     obs, _ = env.reset(seed=3)
     rng = np.random.default_rng(0)
     for _ in range(200):
-        obs, r, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
-        for a, o in obs.items():
+        obs, _, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
+        for _, o in obs.items():
             assert o.shape[0] == env.num_obs_channels and np.isfinite(o).all()
         if t.get("__all__") or tr.get("__all__"):
             break
@@ -334,7 +347,7 @@ def test_gift_does_not_rescue_a_recipient_already_doomed_by_a_store():
     env.agent_fruit_store[female] = 7.999  # meat store 0.001: dead after this step's cost
     env.agent_positions[prey] = (5, 5)
     env.prey_positions[prey] = (5, 5)
-    env.rng = type("R", (), {"random": lambda self: 0.0})()  # hunting succeeds
+    env.rng = _FixedRandom(env.rng, 0.0)  # hunting succeeds
     env.step(_noop(env))
     assert env.mate_gift_events == 0
     assert female not in env.agent_positions
@@ -383,7 +396,7 @@ def test_scripted_prey_are_not_learning_agents_but_still_live_in_the_world():
     assert not any(a.startswith("prey") for a in env.possible_agents)
     assert not any(a.startswith("prey") for a in env.observation_spaces)
     assert len(env._scripted_prey_ids) == 4 and env.current_num_prey == 4
-    obs, _, t, tr, _ = env.step(_noop(env))
+    obs, _, _, _, _ = env.step(_noop(env))
     assert all("prey" not in a for a in obs)  # RLlib only ever sees predators
 
 
@@ -441,7 +454,7 @@ def test_scripted_prey_reproduce_and_get_hunted_without_errors():
     obs, _ = env.reset(seed=5)
     rng = np.random.default_rng(1)
     for _ in range(300):
-        obs, r, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
+        obs, _, t, tr, _ = env.step({a: int(rng.integers(env.num_actions)) for a in obs})
         assert all("prey" not in a for a in obs)
         assert set(env._scripted_prey_ids) <= set(env.agent_positions)
         if t.get("__all__") or tr.get("__all__"):
