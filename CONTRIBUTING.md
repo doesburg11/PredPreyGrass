@@ -43,3 +43,15 @@ selection) or `predpreygrass/non_evolutionary/` (fixed traits, incentive-design
 variation only) — see [EXPERIMENTS.md](EXPERIMENTS.md) for the distinction and existing
 examples to follow. Each environment module is expected to ship its own `README.md`
 (methodology/results) and `tests/` directory, matching the pattern of its siblings.
+
+## Repeatable editor checks
+
+Install the Python development dependencies with `.conda/bin/python -m pip install -e '.[dev]'`,
+then install the pinned Node tools with `npm ci`. Run `npm run check` from the repository root.
+
+The current clean scope covers the `stag_hunt_forward_view` and `stag_hunt_defection` Python modules, the
+archived-source evaluators in `stag_hunt_reputation`, and the forward-view and
+defection READMEs plus the stag-hunt comparison. Local Markdown and HTML links are checked across tracked
+documentation, excluding the active continuous environment. Existing lint findings
+in other experiments are outside this scope. Pyright uses the same `.conda`
+environment configured for VS Code; no diagnostic categories are disabled.
