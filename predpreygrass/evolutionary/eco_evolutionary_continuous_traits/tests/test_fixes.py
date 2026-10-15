@@ -226,3 +226,48 @@ def test_a_caught_prey_that_does_not_move_feeds_its_catcher_its_energy():
     cost = env.resting_cost["predator"] + env.speed_cost["predator"] * predator.velocity.mag()
     assert predator.energy == pytest.approx(8.0 + 0.5 * 6.0 - cost)
     assert env.births == {"predator": 0, "prey": 0}
+
+
+@pytest.mark.parametrize("all_contacts", [False, True])
+def test_vectorized_contacts_match_the_per_animal_search(all_contacts):
+    """_all_contacts (simultaneous movement) gives exactly what _contacts
+    gives animal by animal, in dense crowds that wrap around the edges."""
+    rng = np.random.default_rng(1)
+    fixes = ["simultaneous_movement"] + (["all_contacts"] if all_contacts else [])
+    for trial in range(30):
+        prey = [(float(x), float(y), 0, 0) for x, y in rng.uniform(-60, 60, size=(40, 2)) % 800]
+        predators = [(float(x), float(y), 0, 0) for x, y in rng.uniform(-60, 60, size=(15, 2)) % 800]
+        env = world(fixes, prey=prey, predators=predators)
+        expected = [(animal, *env._contacts(animal)) for animal in env.entities]
+        got = env._all_contacts()
+        assert [(a, c) for a, c, _ in got] == [(a, c) for a, c, _ in expected]
+        assert [[(v.x, v.y) for v in aways] for _, _, aways in got] == [
+            [(v.x, v.y) for v in aways] for _, _, aways in expected
+        ]
+
+
+@pytest.mark.parametrize("all_contacts", [False, True])
+@pytest.mark.parametrize(
+    "prey, predators",
+    [
+        # Exactly tangent (distance 32: no contact) and just inside.
+        ([(400, 400, 0, 0), (432, 400, 0, 0), (400, 431.9, 0, 0)], [(468, 400, 0, 0)]),
+        # Two prey at the same spot, touched by two predators (first in list catches).
+        ([(400, 400, 0, 0), (400, 400, 0, 0)], [(410, 400, 0, 0), (390, 400, 0, 0)]),
+        # Across the corner of the torus.
+        ([(2, 2, 0, 0), (798, 798, 0, 0), (2, 798, 0, 0)], [(798, 2, 0, 0)]),
+        # No predators; one prey.
+        ([(400, 400, 0, 0)], []),
+    ],
+)
+def test_vectorized_contacts_edge_cases(all_contacts, prey, predators):
+    fixes = ["simultaneous_movement"] + (["all_contacts"] if all_contacts else [])
+    for reverse in (False, True):
+        env = world(fixes, prey=prey, predators=predators)
+        if reverse:
+            env.entities.reverse()
+        expected = [(animal, *env._contacts(animal)) for animal in env.entities]
+        got = env._all_contacts()
+        assert [(a, c, [(v.x, v.y) for v in w]) for a, c, w in got] == [
+            (a, c, [(v.x, v.y) for v in w]) for a, c, w in expected
+        ]

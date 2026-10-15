@@ -557,7 +557,7 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if self.fix["simultaneous_movement"]:
             # Every contact from the positions at the start of the step,
             # then every move.
-            moves = [(animal, *self._contacts(animal)) for animal in self.entities]
+            moves = self._all_contacts()
             for animal, catcher, aways in moves:
                 self._move(animal, actions[animal.id], catcher, aways, catches)
         else:
@@ -647,6 +647,51 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             away.normalize()
             aways.append(away)
         return catcher, aways
+
+    def _touching(self, group_a, group_b):
+        """Boolean matrix: animal i of group_a touches animal j of group_b
+        (torus distance below the sum of radii). Same arithmetic as
+        Torus.distance, for all pairs at once."""
+        a = np.array([(x.position.x, x.position.y, x.radius) for x in group_a], dtype=float).reshape(-1, 3)
+        b = np.array([(x.position.x, x.position.y, x.radius) for x in group_b], dtype=float).reshape(-1, 3)
+        dx = np.abs(a[:, None, 0] - b[None, :, 0])
+        dy = np.abs(a[:, None, 1] - b[None, :, 1])
+        dx = np.minimum(dx, self.width - dx)
+        dy = np.minimum(dy, self.height - dy)
+        return np.sqrt(dx**2 + dy**2) < a[:, None, 2] + b[None, :, 2]
+
+    def _all_contacts(self):
+        """[(animal, catcher, aways)] for every animal in movement order,
+        as _contacts gives them, from the current positions of all."""
+        touch = {
+            ("prey", "predator"): self._touching(self.prey, self.predators),
+            ("prey", "prey"): self._touching(self.prey, self.prey),
+            ("predator", "predator"): self._touching(self.predators, self.predators),
+        }
+        index = {id(a): k for k, a in enumerate(self.prey)} | {id(a): k for k, a in enumerate(self.predators)}
+        moves = []
+        for animal in self.entities:
+            i = index[id(animal)]
+            catcher = None
+            if animal.species == "prey":
+                hits = np.flatnonzero(touch["prey", "predator"][i])
+                if len(hits):
+                    catcher = self.predators[hits[0]]
+                own = self.prey
+            else:
+                own = self.predators
+            row = touch[animal.species, animal.species][i].copy()
+            row[i] = False  # not itself
+            hits = np.flatnonzero(row)
+            others = [own[j] for j in (hits if self.fix["all_contacts"] else hits[:1])]
+            aways = []
+            for other in others:
+                away = self.torus.away_vector(animal.position, other.position)
+                away.negate()
+                away.normalize()
+                aways.append(away)
+            moves.append((animal, catcher, aways))
+        return moves
 
     def _steer(self, animal, desired):
         """Acceleration towards the desired velocity: the steering force,
