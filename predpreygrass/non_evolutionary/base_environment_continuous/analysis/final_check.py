@@ -45,16 +45,16 @@ def near_grass_distance(env, position):
 def play(env, modules, seed, stats):
     generator = torch.Generator().manual_seed(seed)
     catches = []
-    move_prey = env._move_prey
+    move = env._move
 
-    def recording_move_prey(prey, desired, caught):
+    def recording_move(animal, action, catcher, aways, caught):
         before = len(caught)
-        move_prey(prey, desired, caught)
+        move(animal, action, catcher, aways, caught)
         if len(caught) > before:
             catcher = caught[-1][0]
             catches.append((catcher.velocity.mag(), near_grass_distance(env, catcher.position)))
 
-    env._move_prey = recording_move_prey
+    env._move = recording_move
     try:
         obs, _ = env.reset(seed=seed)
         exposure = {"predator": 0.0, "prey": 0.0}
@@ -80,7 +80,7 @@ def play(env, modules, seed, stats):
             if terms["__all__"] or truncs["__all__"]:
                 break
     finally:
-        env._move_prey = move_prey
+        env._move = move
     stats["catches"] += len(catches)
     stats["catches_near_grass"] += sum(d <= NEAR_GRASS for _, d in catches)
     stats["catches_standing"] += sum(speed < 0.5 for speed, _ in catches)
