@@ -2,13 +2,39 @@
 
 ## Runs
 
-| Run | Folder (`runs/base_environment_continuous_...`) | Start | Iterations | What | Status |
-|---|---|---|---:|---|---|
-| BE-01 | `2026-10-13_11-25-07_420466` | scratch | 3,000 | the milestone world (as AW-21 and AW-22 of `add_walls`) trained from scratch with this environment | completed |
-| BE-02 | `2026-10-13_11-25-27_332055` | scratch | 3,000 | replicate of BE-01 (new training randomness) | completed |
-| BE-03 | `2026-10-14_00-27-11_018144` | scratch | 4,000 | the same world and settings, trained in this repository on 28 simulation workers (BE-01 and BE-02: 14) | completed |
-| BE-04 | `2026-10-14_21-35-19_937331` | scratch | 3,000 | the same world with every quirk fixed (`environment.FIXES`, SPEC.md section 9), 14 simulation workers, side by side with BE-05 | running |
-| BE-05 | `2026-10-14_21-35-40_020808` | scratch | 3,000 | replicate of BE-04 (new training randomness) | running |
+**Setup.** All five runs train the milestone world from scratch with the
+same PPO settings (constant learning rate 3e-4, 4,800 steps per iteration,
+one shared policy per species).
+
+| Run | Folder (`runs/base_environment_continuous_...`) | Environment | Trained in | Ray | Simulation workers | Iterations | Purpose |
+|---|---|---|---|---|---:|---:|---|
+| BE-01 | `2026-10-13_11-25-07_420466` | exact (`add_walls`'s quirks) | development repository | 2.58 | 14 | 3,000 | validation against `add_walls` (as AW-21 and AW-22) |
+| BE-02 | `2026-10-13_11-25-27_332055` | exact | development repository | 2.58 | 14 | 3,000 | replicate of BE-01 (new training randomness) |
+| BE-03 | `2026-10-14_00-27-11_018144` | exact | this repository | 2.59 | 28 | 4,000 | longer training; arms-race test |
+| BE-04 | `2026-10-14_21-35-19_937331` | every quirk fixed (`environment.FIXES`, SPEC.md section 9) | this repository | 2.59 | 14 | 3,000 | do coexistence and the arms race survive without the quirks? |
+| BE-05 | `2026-10-14_21-35-40_020808` | every quirk fixed | this repository | 2.59 | 14 | 3,000 | replicate of BE-04 (new training randomness) |
+
+BE-01 and BE-02 ran side by side, as did BE-04 and BE-05; BE-03 had the
+machine to itself.
+
+**Outcome.**
+
+| Run | Status | Wall time | Settled at iteration | Episodes per iteration at the end | Final check: coexisting | Newer prey harder to catch | Newer predators catch more |
+|---|---|---:|---:|---:|---:|---:|---:|
+| BE-01 | completed | 9.1 h | 1,653 | 4.4 | 35 of 50 | 90% (88–91) | 80% (76–82) |
+| BE-02 | completed | 8.9 h | 2,270 | 4.8 | 37 of 50 | 96% (93–96) | 72% (68–75) |
+| BE-03 | completed | 8.8 h (4,000 iterations) | 347 | 4.2 | not run | 69% (64–72) | 72% (66–74) |
+| BE-04 | running | 8.0 h for 1,717 iterations | 371 | 3.9 (so far) | | | |
+| BE-05 | running | 8.0 h for 2,057 iterations | 1,366 | 4.3 (so far) | | | |
+
+*Settled at iteration:* the first iteration from which the mean number of
+episodes per iteration over the next 100 iterations is at most 5, i.e.
+most episodes last the full time limit instead of ending in an extinction.
+*Episodes per iteration at the end:* mean over the last 100 iterations.
+*Final check:* 50 evaluation episodes of the final policies (section 1).
+The last two columns: share of comparisons against a fixed opponent in
+which the newer checkpoint does better, checkpoints 300–2,990, with 95%
+intervals (section 2).
 
 BE-01 and BE-02 were trained in the [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
 development repository; the run folders, launchers (`be01.py`, `be02.py`), evaluation
