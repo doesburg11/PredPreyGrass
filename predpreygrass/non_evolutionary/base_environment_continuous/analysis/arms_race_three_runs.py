@@ -85,47 +85,52 @@ def analyse(caught, exposure, rng):
     return out
 
 
-def plot(risks, results, path):
+def plot(risks, results, path, title="Predator–prey arms race in three independent training runs",
+         subtitle="Each run's checkpoints 300–2,990 (every 300) played against each other · "
+         "100 episodes per matchup · 30,000 episodes", labels=None, figsize=(12, 10.6), caption_y=0.475):
+    """Catch-risk matrices (top) and improvement shares (bottom) of the runs
+    in risks, in that order; labels name them (default: the run names)."""
+    labels = labels or {run: run for run in risks}
+    n = len(risks)
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10.5, "text.color": INK, "axes.labelcolor": INK_2})
-    fig = plt.figure(figsize=(12, 10.6), facecolor="white")
-    grid = fig.add_gridspec(2, 4, width_ratios=[1, 1, 1, 0.05], height_ratios=[1, 1.02], hspace=0.42, wspace=0.12,
+    fig = plt.figure(figsize=figsize, facecolor="white")
+    grid = fig.add_gridspec(2, n + 1, width_ratios=[1] * n + [0.05], height_ratios=[1, 1.02], hspace=0.42, wspace=0.12,
                             left=0.08, right=0.94, top=0.88, bottom=0.08)
-    fig.text(0.08, 0.965, "Predator–prey arms race in three independent training runs", fontsize=15, weight="bold")
-    fig.text(0.08, 0.937, "Each run's checkpoints 300–2,990 (every 300) played against each other · "
-             "100 episodes per matchup · 30,000 episodes", fontsize=10.5, color=INK_2)
+    fig.text(0.08, 0.965, title, fontsize=15, weight="bold")
+    fig.text(0.08, 0.937, subtitle, fontsize=10.5, color=INK_2)
 
     # Top: catch risk of every predator checkpoint against every prey checkpoint.
     cmap = LinearSegmentedColormap.from_list("blues", BLUES)
     vmax = max(r.max() for r in risks.values())
     ticks = range(len(ITERATIONS))
-    labels = [f"{i:,}" if k % 3 == 0 or i == ITERATIONS[-1] else "" for k, i in enumerate(ITERATIONS)]
+    tick_labels = [f"{i:,}" if k % 3 == 0 or i == ITERATIONS[-1] else "" for k, i in enumerate(ITERATIONS)]
     for k, (run, risk) in enumerate(risks.items()):
         ax = fig.add_subplot(grid[0, k])
         image = ax.imshow(risk, cmap=cmap, vmin=0, vmax=vmax, origin="upper")
-        ax.set_title(run, fontsize=12, weight="bold", loc="left")
-        ax.set_xticks(ticks, labels, fontsize=9, color=MUTED)
-        ax.set_yticks(ticks, labels if k == 0 else [], fontsize=9, color=MUTED)
+        ax.set_title(labels[run], fontsize=12, weight="bold", loc="left")
+        ax.set_xticks(ticks, tick_labels, fontsize=9, color=MUTED)
+        ax.set_yticks(ticks, tick_labels if k == 0 else [], fontsize=9, color=MUTED)
         ax.tick_params(length=0)
         ax.set_xlabel("Prey checkpoint (iteration)")
         if k == 0:
             ax.set_ylabel("Predator checkpoint (iteration)")
         for spine in ax.spines.values():
             spine.set_visible(False)
-    bar = fig.colorbar(image, cax=fig.add_subplot(grid[0, 3]))
+    bar = fig.colorbar(image, cax=fig.add_subplot(grid[0, n]))
     bar.set_label("Catch risk", color=INK_2)
     bar.ax.tick_params(labelsize=9, colors=MUTED, length=0)
     bar.outline.set_visible(False)
-    fig.text(0.08, 0.475, "Catch risk: prey caught per prey alive per 1,000 physics steps. Darker downwards: newer predators "
+    fig.text(0.08, caption_y, "Catch risk: prey caught per prey alive per 1,000 physics steps. Darker downwards: newer predators "
              "catch more. Lighter to the right: newer prey escape more.", fontsize=9.5, color=INK_2)
 
     # Bottom: improvement shares with 95% intervals.
-    ax = fig.add_subplot(grid[1, :3])
+    ax = fig.add_subplot(grid[1, :n])
     rows, headers, y = [], [], 0.0
     for window, title in [("all", "All checkpoints"), ("late", "Late training (2,100–2,990)")]:
         for species, color, key in [("Prey", PREY, "prey_improvement_share"), ("Predators", PREDATOR, "predator_improvement_share")]:
             headers.append((y - 0.75, f"{title} · {species}"))
-            for run in RUNS:
-                rows.append((y, run, results[run][window][key], color))
+            for run in risks:
+                rows.append((y, labels[run], results[run][window][key], color))
                 y += 1
             y += 0.9
         y += 0.4

@@ -51,6 +51,9 @@ default; `environment.FIXES` turns them all on).
 - [`checkpoints.py`](checkpoints.py): a checkpoint's settings and policies.
 - [`analysis/arms_race_three_runs.py`](analysis/arms_race_three_runs.py):
   the arms-race test over BE-01, BE-02 and BE-03 (tables, figure).
+- [`analysis/arms_race_quirks_fixed.py`](analysis/arms_race_quirks_fixed.py):
+  the same test for BE-04 and BE-05 (every quirk fixed) next to BE-01 to
+  BE-03.
 - [`analysis/final_check.py`](analysis/final_check.py): final check of a
   trained checkpoint (outcomes, catch risk, populations, speed choices,
   time and catches near grass).
@@ -197,3 +200,18 @@ or is ordinary variation between runs is open. Details in
 `python -m predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_three_runs`
 after running `tournament.py` with `--iterations 300,600,900,1200,1500,1800,2100,2400,2700,2990
 --episodes 100 --seed 10000 --out <run>/tournament_grid300_100ep.csv` on each run.
+
+## Without Aquarium's quirks: BE-04 and BE-05
+
+BE-04 and BE-05 trained the same world with every quirk of SPEC.md section
+9 fixed (`environment.FIXES`), the design of BE-01 and BE-02. The arms race
+remains (over all checkpoints, newer prey evade fixed predators better in
+84% and 97% of comparisons, newer predators catch fixed prey better in 83%
+in both) and coexistence rose to 47 and 46 of 50 final-check episodes
+(BE-01 to BE-03: 35, 37 and 43). The balance shifted towards the prey:
+predators catch about half as often, and prey are almost twice as numerous.
+Late in training BE-05 still improves strongly in both species, BE-04 in
+neither, a difference between runs also seen in the exact environment.
+Details in [RESULTS.md](RESULTS.md), section 3.
+
+![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../assets/images/readme/arms_race_quirks_fixed.png)

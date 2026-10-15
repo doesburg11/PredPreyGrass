@@ -23,15 +23,16 @@ machine to itself.
 |---|---|---:|---:|---:|---:|---:|---:|
 | BE-01 | completed | 9.1 h | 1,653 | 4.4 | 35 of 50 | 90% (88–91) | 80% (76–82) |
 | BE-02 | completed | 8.9 h | 2,270 | 4.8 | 37 of 50 | 96% (93–96) | 72% (68–75) |
-| BE-03 | completed | 8.8 h (4,000 iterations) | 347 | 4.2 | not run | 69% (64–72) | 72% (66–74) |
-| BE-04 | running | 8.0 h for 1,717 iterations | 371 | 3.9 (so far) | | | |
-| BE-05 | running | 8.0 h for 2,057 iterations | 1,366 | 4.3 (so far) | | | |
+| BE-03 | completed | 8.8 h (4,000 iterations) | 347 | 4.2 | 43 of 50 | 69% (64–72) | 72% (66–74) |
+| BE-04 | completed | 14.2 h | 371 | 4.1 | 47 of 50 | 84% (80–85) | 83% (78–83) |
+| BE-05 | completed | 12.7 h | 1,366 | 4.1 | 46 of 50 | 97% (94–97) | 83% (79–84) |
 
 *Settled at iteration:* the first iteration from which the mean number of
 episodes per iteration over the next 100 iterations is at most 5, i.e.
 most episodes last the full time limit instead of ending in an extinction.
 *Episodes per iteration at the end:* mean over the last 100 iterations.
-*Final check:* 50 evaluation episodes of the final policies (section 1).
+*Final check:* 50 evaluation episodes of the final policies (section 1;
+BE-03's final policies are those of iteration 4,000).
 The last two columns: share of comparisons against a fixed opponent in
 which the newer checkpoint does better, checkpoints 300–2,990, with 95%
 intervals (section 2).
@@ -195,3 +196,86 @@ show no clear late improvement. Whether BE-03's difference comes from its
 from three runs. The intervals are pointwise, without a multiplicity
 correction, and resample evaluation seeds within each run: they describe
 each run, not the variation between training runs.
+
+## 3. Without Aquarium's quirks (runs BE-04 and BE-05)
+
+**Question.** The environment keeps eight quirks of Aquarium so that it
+reproduces `add_walls` exactly (SPEC.md, section 9): animals move one after
+another on partly updated positions, prey and predators bump differently,
+only the first contact counts, a stopped animal's view cone swings to an
+arbitrary direction, edges clamp instead of wrapping, and smaller
+bookkeeping differences. Do coexistence and the arms race depend on them?
+
+**Setup.** BE-04 and BE-05 train the same world with every quirk fixed
+(`environment.FIXES`), from scratch, 3,000 iterations, 14 simulation workers
+each, side by side: the design of BE-01 and BE-02. Final check and
+tournament as for the other runs (sections 1 and 2), each played in the
+run's own environment.
+[`analysis/arms_race_quirks_fixed.py`](analysis/arms_race_quirks_fixed.py)
+writes [`analysis/results/arms_race_quirks_fixed.json`](analysis/results/arms_race_quirks_fixed.json)
+and the figure.
+
+**Final checks** (50 episodes each):
+
+| Run | Environment | Coexisting | Prey extinct | Predators extinct | Catch risk | Predators / prey alive on average | Predators stopped | Catches near grass |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| BE-01 | exact | 35 | 15 | 0 | 3.63 | 11.4 / 15.8 | 41% | 46% |
+| BE-02 | exact | 37 | 13 | 0 | 3.74 | 11.7 / 14.9 | 47% | 46% |
+| BE-03 | exact | 43 | 7 | 0 | 3.20 | 11.6 / 17.1 | 43% | 46% |
+| BE-04 | fixed | 47 | 1 | 2 | 1.93 | 10.6 / 27.1 | 44% | 41% |
+| BE-05 | fixed | 46 | 1 | 3 | 1.69 | 10.4 / 28.8 | 48% | 44% |
+
+![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../assets/images/readme/arms_race_quirks_fixed.png)
+
+**Tournaments** (checkpoints 300–2,990, every 300; % of comparisons in
+which the newer checkpoint does better against a fixed opponent, and mean
+catch-risk change; 95% intervals):
+
+| Run | Prey, all | Predators, all | Prey, late | Predators, late | Prey risk reduction, late | Predator risk increase, late |
+|---|---:|---:|---:|---:|---:|---:|
+| BE-04 | 84 (80–85) | 83 (78–83) | 58 (46–67) | 71 (42–75) | 0.05 (−0.03–0.14) | 0.05 (−0.03–0.13) |
+| BE-05 | 97 (94–97) | 83 (79–84) | 96 (79–100) | 88 (71–92) | 0.54 (0.44–0.64) | 0.37 (0.28–0.46) |
+
+For the exact runs see section 2.
+
+**Results.**
+
+- Coexistence rose: 93 of 100 final-check episodes in the two runs without
+  quirks, against 115 of 150 in the three exact runs (72 of 100 in BE-01
+  and BE-02, trained the same way). Treating episodes as independent,
+  Fisher's exact test gives p = 0.0005; this ignores variation between
+  training runs, of which there are only two and three.
+- Predators catch about half as often: catch risk 1.69–1.93 against
+  3.20–3.74, with nearly twice as many prey alive (27–29 against 15–17) and
+  slightly fewer predators. Prey extinctions became rare (2 of 100) and
+  predator extinctions appeared (5 of 100, none in the exact runs).
+- The predators' behaviour hardly changed: stopped 44–48% of the time, near
+  grass 38–39% of the time (exact runs: 41–47% and 38–39%), 41–44% of
+  catches near grass (46%).
+- The arms race remains: over all checkpoints both species improve against
+  fixed opponents in both runs, predators by 83% in each, at least as
+  clearly as in the exact runs. Late in training, BE-05 shows the strongest
+  continued improvement of all five runs in both species, while in BE-04
+  neither species improves clearly (both catch-risk intervals include
+  zero), the same variation between runs as among the exact runs (BE-02
+  against BE-03).
+- Training took longer: 12.7 and 14.2 hours, against 8.9 and 9.1 for BE-01
+  and BE-02 (longer episodes, fewer extinctions, and slower physics; not
+  separated).
+
+**Confounds.** Besides the quirks, BE-04 and BE-05 differ from BE-01 and
+BE-02 in where they were trained (this repository, Ray 2.59, against the
+development repository, Ray 2.58). BE-03 shares this repository and Ray
+version with them and still looks like BE-01 and BE-02 (catch risk 3.20,
+17 prey on average), so these differences are unlikely to explain the
+shift; BE-03 differs in turn in its 28 simulation workers and 4,000
+iterations.
+
+**Conclusion.** In these runs, removing the quirks kept the arms race and
+went with a more stable ecosystem shifted towards the prey: predators catch
+about half as often and prey are almost twice as numerous. Which quirk
+favoured the predators is not known; each can be switched on separately to
+find out. Candidates are the sequential movement order and the prey's
+collision rule, which stopped prey from steering while they touched another
+prey. Two runs per environment show the direction of the change, not its
+size precisely.
