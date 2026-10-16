@@ -1,5 +1,13 @@
 # non_evolutionary
 
+<p align="center">
+  <img src="../../assets/images/gifs/arena_no_walls.gif" alt="Continuous-space hunters chasing antelopes grazing grass clusters, with shaded vision cones" width="480">
+</p>
+
+*Continuous-space simulation from [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous):
+`add_walls` with walls disabled, using policies trained in run T (speed actions,
+fixed energy cost). Shaded cones show one predator's and one prey's field of view.*
+
 Non-evolutionary experiments: agent traits are fixed rather than inherited with mutation;
 learning agents adapt through RL policies (usually PPO). Populations can still reproduce
 and die, and some experiments use scripted agents or fixed populations.
