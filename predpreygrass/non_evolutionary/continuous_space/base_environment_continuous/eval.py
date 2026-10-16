@@ -3,7 +3,7 @@
 Settings come from config/config_eval.py; edit it, then run from the
 repository root (no command-line arguments):
 
-    python predpreygrass/non_evolutionary/base_environment_continuous/eval.py
+    python predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/eval.py
 
 source "checkpoint" loads each species' policy from a checkpoint and samples
 actions as in training (stochastic=True) or takes the argmax; "random"
@@ -21,10 +21,10 @@ import numpy as np
 import torch
 from ray.rllib.core.columns import Columns
 
-from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import SPECIES, checkpoint_env_config, load_modules
-from predpreygrass.non_evolutionary.base_environment_continuous.config.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment_continuous.config.config_eval import config_eval
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import PredPreyGrassContinuous
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import SPECIES, checkpoint_env_config, load_modules
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.config.config_env import config_env
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.config.config_eval import config_eval
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import PredPreyGrassContinuous
 
 SOURCES = ("checkpoint", "random")
 RENDERS = ("window", "video", "none")
@@ -117,7 +117,7 @@ def main():
     env = PredPreyGrassContinuous(env_config)
     viewer = None
     if args.render != "none":
-        from predpreygrass.non_evolutionary.base_environment_continuous.render import Viewer
+        from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.render import Viewer
 
         viewer = Viewer(
             env,

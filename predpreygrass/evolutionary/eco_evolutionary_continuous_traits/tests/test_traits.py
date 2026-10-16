@@ -13,7 +13,7 @@ from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.environment i
 )
 from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.geometry import Vector
 from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.tests.compare import random_actions, snapshot
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import (
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import (
     PredPreyGrassContinuous as BaseEnvironment,
 )
 

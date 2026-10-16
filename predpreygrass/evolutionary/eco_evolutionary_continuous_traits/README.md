@@ -11,7 +11,7 @@ Heritable body traits in the continuous Predator-Prey-Grass world: does an
 eco-evolutionary arms race appear when animals' bodies evolve while their
 behaviour is learned?
 
-[`base_environment_continuous`](../../non_evolutionary/base_environment_continuous/)
+[`base_environment_continuous`](../../non_evolutionary/continuous_space/base_environment_continuous/)
 showed a learning arms race in that world: one shared PPO policy per
 species, newer predators catching fixed prey better and newer prey evading
 fixed predators better, in five independent runs, with and without

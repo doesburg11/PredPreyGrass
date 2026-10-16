@@ -2,7 +2,7 @@
 
 Run from the repository root:
 
-    python predpreygrass/non_evolutionary/base_environment_continuous/train.py
+    python predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/train.py
 
 Each run saves what it was started with in <run>/source_code/ (see
 save_source_code), so it can be reproduced later.
@@ -21,8 +21,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
-from predpreygrass.non_evolutionary.base_environment_continuous.config.config_env import config_env
-from predpreygrass.non_evolutionary.base_environment_continuous.config.config_ppo import config_ppo
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.config.config_env import config_env
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.config.config_ppo import config_ppo
 
 # Set native thread limits before loading NumPy/PyTorch in CLI runs.
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 from tensorboardX import SummaryWriter
 
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import ENV_NAME, register
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import ENV_NAME, register
 
 
 def _species_of(agent_id: str) -> str:

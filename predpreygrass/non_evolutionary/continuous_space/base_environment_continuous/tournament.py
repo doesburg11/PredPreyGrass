@@ -48,7 +48,7 @@ from pathlib import Path
 
 import numpy as np
 
-from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import checkpoint_env_config, load_module
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import checkpoint_env_config, load_module
 
 SPECIES = ("predator", "prey")
 CATCH_RISK = "prey caught per prey per 1000 physics steps"
@@ -147,7 +147,7 @@ def _module(species, iteration):
 
 
 def _env():
-    from predpreygrass.non_evolutionary.base_environment_continuous.environment import PredPreyGrassContinuous
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import PredPreyGrassContinuous
 
     if _worker["env"] is None:
         _worker["env"] = PredPreyGrassContinuous(dict(_worker["env_config"]))

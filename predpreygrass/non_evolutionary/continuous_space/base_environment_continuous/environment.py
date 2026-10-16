@@ -20,8 +20,8 @@ from gymnasium.spaces import Box, Dict, Discrete
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 from ray.tune.registry import register_env
 
-from predpreygrass.non_evolutionary.base_environment_continuous.geometry import Torus, Vector, direction_vector, heading_degrees
-from predpreygrass.non_evolutionary.base_environment_continuous.grass import Grass
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.geometry import Torus, Vector, direction_vector, heading_degrees
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.grass import Grass
 
 ENV_NAME = "predpreygrass_continuous"
 SPECIES = ("predator", "prey")

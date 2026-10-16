@@ -1,7 +1,7 @@
 # eco_evolutionary_continuous_traits: specification
 
 This module is a copy of
-[`base_environment_continuous`](../../non_evolutionary/base_environment_continuous/)
+[`base_environment_continuous`](../../non_evolutionary/continuous_space/base_environment_continuous/)
 with heritable body traits added (section 11). Sections 1 to 10 are that
 module's specification, unchanged: they describe the world every animal
 lives in. In this module's training settings every quirk fix of section 9

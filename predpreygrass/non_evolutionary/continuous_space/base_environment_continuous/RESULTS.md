@@ -142,7 +142,7 @@ computes everything from the runs' `tournament_grid300_100ep.csv` and writes
 [`analysis/results/arms_race_three_runs.json`](analysis/results/arms_race_three_runs.json)
 and the figure.
 
-![Arms race in three runs: catch-risk matrices and improvement shares](../../../assets/images/readme/arms_race_three_runs.png)
+![Arms race in three runs: catch-risk matrices and improvement shares](../../../../assets/images/readme/arms_race_three_runs.png)
 
 **Improvement shares** (% of comparisons against a fixed opponent in which
 the newer checkpoint does better; 95% intervals):
@@ -225,7 +225,7 @@ and the figure.
 | BE-04 | fixed | 47 | 1 | 2 | 1.93 | 10.6 / 27.1 | 44% | 41% |
 | BE-05 | fixed | 46 | 1 | 3 | 1.69 | 10.4 / 28.8 | 48% | 44% |
 
-![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../assets/images/readme/arms_race_quirks_fixed.png)
+![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../../assets/images/readme/arms_race_quirks_fixed.png)
 
 **Tournaments** (checkpoints 300–2,990, every 300; % of comparisons in
 which the newer checkpoint does better against a fixed opponent, and mean

@@ -6,13 +6,13 @@ import random
 import numpy as np
 import pytest
 
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import (
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import (
     DEFAULT_CONFIG,
     FIXES,
     PredPreyGrassContinuous,
 )
-from predpreygrass.non_evolutionary.base_environment_continuous.geometry import Vector
-from predpreygrass.non_evolutionary.base_environment_continuous.tests.compare import random_actions, snapshot
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.geometry import Vector
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.tests.compare import random_actions, snapshot
 
 STOP = 32  # any action from 32 to 47: speed 0
 EAST = 4  # full speed towards +x

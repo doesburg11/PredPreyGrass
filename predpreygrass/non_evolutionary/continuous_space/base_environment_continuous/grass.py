@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from predpreygrass.non_evolutionary.base_environment_continuous.geometry import Torus, Vector
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.geometry import Torus, Vector
 
 
 @dataclass

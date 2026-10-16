@@ -18,14 +18,14 @@ import pytest
 
 HERE = Path(__file__).resolve().parent
 
-from predpreygrass.non_evolutionary.base_environment_continuous.tests.compare import (
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.tests.compare import (
     CASES,
     count_events,
     digest,
     random_actions,
     snapshot,
 )
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import PredPreyGrassContinuous
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import PredPreyGrassContinuous
 
 FIXTURE = json.loads((HERE / "data" / "reference_digests.json").read_text())
 

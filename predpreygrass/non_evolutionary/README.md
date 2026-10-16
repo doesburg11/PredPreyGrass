@@ -1,7 +1,7 @@
 # non_evolutionary
 
 Discrete environments live in [`discrete_space/`](discrete_space/). The continuous-space
-environment remains in [`base_environment_continuous/`](base_environment_continuous/).
+environment lives in [`base_environment_continuous/`](continuous_space/base_environment_continuous/).
 Use `predpreygrass.non_evolutionary.discrete_space.<environment>` for new imports.
 The former `predpreygrass.non_evolutionary.<environment>` module names remain
 importable for saved checkpoints and older callers.
@@ -36,7 +36,7 @@ This is the project's main line for the human-cooperation research angle (predat
 | Module | What it is |
 | --- | --- |
 | [`base_environment_discrete`](discrete_space/base_environment_discrete/) | The plain Predator-Prey-Grass environment: no sexes, no diet, no bands — the common ancestor everything else in this folder ultimately traces back to. |
-| [`base_environment_continuous`](base_environment_continuous/) | A continuous-space counterpart: predators and prey with steering physics on a torus, direction and speed actions, a movement energy cost, moving grass clusters. A standalone RLlib environment replacing the Aquarium package; trained, it shows a Red Queen arms race between predators and prey. See its `RESULTS.md`. |
+| [`base_environment_continuous`](continuous_space/base_environment_continuous/) | A continuous-space counterpart: predators and prey with steering physics on a torus, direction and speed actions, a movement energy cost, moving grass clusters. A standalone RLlib environment replacing the Aquarium package; trained, it shows a Red Queen arms race between predators and prey. See its `RESULTS.md`. |
 | [`base_environment_seasonal`](discrete_space/base_environment_seasonal/) | `base_environment_discrete` + grass regrowth cycling between an "abundant" and a "scarce" phase over an episode. |
 | [`base_environment_step_energy`](discrete_space/base_environment_step_energy/) | `base_environment_discrete` + a real movement energy cost (the base module charges the same per-step tax regardless of action; this module makes moving itself cost more). See its `RESULTS.md`. |
 | [`drive_conditioned_environment`](discrete_space/drive_conditioned_environment/) | `base_environment_discrete` + internal drive state conditioning behavior; still close to baseline by design, built incrementally. |

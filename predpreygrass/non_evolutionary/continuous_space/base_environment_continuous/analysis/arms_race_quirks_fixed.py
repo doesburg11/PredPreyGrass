@@ -4,14 +4,14 @@ environment.FIXES), with the same tournament design and statistics as
 arms_race_three_runs.py. Writes analysis/results/arms_race_quirks_fixed.json
 and the README figure.
 
-    python -m predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_quirks_fixed
+    python -m predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.analysis.arms_race_quirks_fixed
 """
 
 import json
 
 import numpy as np
 
-from predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_three_runs import (
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.analysis.arms_race_three_runs import (
     BOOTSTRAP_SEED,
     EPISODES,
     FIRST_SEED,

@@ -30,9 +30,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import checkpoint_env_config, load_modules
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import PredPreyGrassContinuous
-from predpreygrass.non_evolutionary.base_environment_continuous.tournament import classify, sample_actions
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import checkpoint_env_config, load_modules
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import PredPreyGrassContinuous
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.tournament import classify, sample_actions
 
 NEAR_GRASS = 64.0
 

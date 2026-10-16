@@ -1,7 +1,7 @@
-"""Fixed-trait environments, with compatibility for saved discrete checkpoints."""
+"""Fixed-trait environments, with compatibility for saved checkpoints."""
 from pathlib import Path
 
-# Older pickles and archived evaluators refer to non_evolutionary.<environment>.
-# Search the relocated directory after this package's own directory so the
-# continuous environment keeps its original resolution.
-__path__.append(str(Path(__file__).resolve().parent / "discrete_space"))
+# Older pickles and archived evaluators use paths predating the space grouping.
+# Keep those module names importable after relocating the environments.
+for _space in ("discrete_space", "continuous_space"):
+    __path__.append(str(Path(__file__).resolve().parent / _space))

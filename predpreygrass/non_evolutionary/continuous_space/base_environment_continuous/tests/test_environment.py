@@ -4,8 +4,8 @@
 import numpy as np
 import pytest
 
-from predpreygrass.non_evolutionary.base_environment_continuous.environment import PredPreyGrassContinuous
-from predpreygrass.non_evolutionary.base_environment_continuous.geometry import Vector
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.environment import PredPreyGrassContinuous
+from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.geometry import Vector
 
 
 def test_spaces_cover_the_id_pool():
@@ -83,8 +83,8 @@ def test_watching_does_not_change_an_episode(monkeypatch):
     """The viewer only reads the state (SPEC.md, section 8)."""
     pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    from predpreygrass.non_evolutionary.base_environment_continuous.tests.compare import digest, random_actions, snapshot
-    from predpreygrass.non_evolutionary.base_environment_continuous.render import Viewer
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.tests.compare import digest, random_actions, snapshot
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.render import Viewer
 
     results = []
     for watch in (False, True):
@@ -110,7 +110,7 @@ def test_watching_does_not_change_an_episode(monkeypatch):
 def test_viewer_draws_narrow_cones_and_forgets_old_episodes(monkeypatch):
     pytest.importorskip("pygame")
     monkeypatch.setenv("SDL_VIDEODRIVER", "dummy")
-    from predpreygrass.non_evolutionary.base_environment_continuous.render import Viewer
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.render import Viewer
 
     env = PredPreyGrassContinuous({"predator_fov": 1, "prey_fov": 360})
     viewer = Viewer(env, window_size=None)
@@ -127,7 +127,7 @@ def test_viewer_draws_narrow_cones_and_forgets_old_episodes(monkeypatch):
 def test_checkpoint_settings_translate_from_add_walls(tmp_path):
     import pickle
 
-    from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import checkpoint_env_config
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import checkpoint_env_config
 
     def saved(env_config):
         with open(tmp_path / "class_and_ctor_args.pkl", "wb") as f:
@@ -174,7 +174,7 @@ def test_rebuilt_network_matches_the_saved_one(tmp_path):
     import torch
     from ray.rllib.core.columns import Columns
 
-    from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import rebuild_default_module
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import rebuild_default_module
 
     settings = {"config_env": {}, "config_ppo": {"vf_share_layers": False}}
     original, checkpoint, path = _saved_default_module(tmp_path, settings)
@@ -197,7 +197,7 @@ def test_rebuilt_network_matches_the_saved_one(tmp_path):
 
 
 def test_rebuild_needs_the_runs_settings(tmp_path):
-    from predpreygrass.non_evolutionary.base_environment_continuous.checkpoints import rebuild_default_module
+    from predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.checkpoints import rebuild_default_module
 
     _, checkpoint, path = _saved_default_module(tmp_path, None)
     with pytest.raises(ValueError):

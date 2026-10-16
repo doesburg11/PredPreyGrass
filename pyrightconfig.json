@@ -3,7 +3,7 @@
     "predpreygrass/non_evolutionary"
   ],
   "exclude": [
-    "predpreygrass/non_evolutionary/base_environment_continuous/**",
+    "predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/**",
     "**/runs",
     "**/ray_results*",
     "**/source_code",

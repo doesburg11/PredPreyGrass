@@ -7,7 +7,7 @@ species pay energy to live and to move, starve at zero energy and give
 birth at an energy threshold. Each agent chooses one of 16 directions at
 full speed, half speed or standing still, and sees the nearest animals and
 grass patch in its view cone. The only reward is +10 per birth, as in
-[`base_environment_discrete`](../base_environment_discrete/).
+[`base_environment_discrete`](../../discrete_space/base_environment_discrete/).
 
 The environment was developed in the
 [PredPreyGrassContinuous](https://github.com/doesburg11/PredPreyGrassContinuous)
@@ -66,11 +66,11 @@ default; `environment.FIXES` turns them all on).
 From the repository root:
 
 ```bash
-python predpreygrass/non_evolutionary/base_environment_continuous/train.py
-python predpreygrass/non_evolutionary/base_environment_continuous/eval.py
-python predpreygrass/non_evolutionary/base_environment_continuous/tournament.py \
-    predpreygrass/non_evolutionary/base_environment_continuous/runs/<run> --every 300
-python -m pytest predpreygrass/non_evolutionary/base_environment_continuous/tests
+python predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/train.py
+python predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/eval.py
+python predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/tournament.py \
+    predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/runs/<run> --every 300
+python -m pytest predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/tests
 ```
 
 Training and evaluation take no command-line arguments: edit the config
@@ -133,7 +133,7 @@ tournament provides strong evidence of an arms race **within this run**:
 newer prey evade fixed predators better, and newer predators catch fixed
 prey better. Both trends persist in late training.
 
-![BE-03 arms-race test: improvement shares and 95% confidence intervals](../../../assets/images/readme/be03_arms_race.png)
+![BE-03 arms-race test: improvement shares and 95% confidence intervals](../../../../assets/images/readme/be03_arms_race.png)
 
 The tournament crossed six predator checkpoints with the same six prey
 checkpoints (iterations 300, 900, 1,800, 2,100, 3,000 and 3,990), playing
@@ -169,10 +169,10 @@ The numerical results are saved in
 [`analysis/results/be03_arms_race.json`](analysis/results/be03_arms_race.json).
 
 Reproduce the tournament from the repository root, with `RUN` set to
-`predpreygrass/non_evolutionary/base_environment_continuous/runs/base_environment_continuous_2026-10-14_00-27-11_018144`:
+`predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/runs/base_environment_continuous_2026-10-14_00-27-11_018144`:
 
 ```bash
-python -m predpreygrass.non_evolutionary.base_environment_continuous.tournament \
+python -m predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.tournament \
     "$RUN" --iterations 300,900,1800,2100,3000,3990 \
     --episodes 100 --seed 10000 --workers 30 --out "$RUN/tournament_100ep.csv"
 ```
@@ -185,7 +185,7 @@ other, 100 episodes per matchup with the same seeds (30,000 episodes in
 all). The three runs have the same environment and PPO settings; BE-03 is cut at 2,990 to
 match the others.
 
-![Arms race in three runs: catch-risk matrices and improvement shares](../../../assets/images/readme/arms_race_three_runs.png)
+![Arms race in three runs: catch-risk matrices and improvement shares](../../../../assets/images/readme/arms_race_three_runs.png)
 
 The same directional pattern appears **in all three runs**: over all
 checkpoints, newer prey evade fixed predators better (90%, 96% and 69% of
@@ -197,7 +197,7 @@ window shows no clear evidence of further improvement.
 Whether that comes from BE-03's 28 simulation workers (BE-01 and BE-02: 14)
 or is ordinary variation between runs is open. Details in
 [RESULTS.md](RESULTS.md), section 2; reproduce with
-`python -m predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_three_runs`
+`python -m predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.analysis.arms_race_three_runs`
 after running `tournament.py` with `--iterations 300,600,900,1200,1500,1800,2100,2400,2700,2990
 --episodes 100 --seed 10000 --out <run>/tournament_grid300_100ep.csv` on each run.
 
@@ -217,4 +217,4 @@ than BE-01 and BE-02, so whether the quirks cause the shift is not yet
 established.
 Details in [RESULTS.md](RESULTS.md), section 3.
 
-![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../assets/images/readme/arms_race_quirks_fixed.png)
+![Arms race with and without the quirks: catch-risk matrices and improvement shares of five runs](../../../../assets/images/readme/arms_race_quirks_fixed.png)

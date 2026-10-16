@@ -6,7 +6,7 @@ Each run's tournament crosses the predator and prey checkpoints 300, 600, ...,
 (tournament_grid300_100ep.csv in its run folder). Writes
 analysis/results/arms_race_three_runs.json and the README figure.
 
-    python -m predpreygrass.non_evolutionary.base_environment_continuous.analysis.arms_race_three_runs
+    python -m predpreygrass.non_evolutionary.continuous_space.base_environment_continuous.analysis.arms_race_three_runs
 """
 
 import json
@@ -21,7 +21,7 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 
 MODULE = Path(__file__).resolve().parents[1]
-REPO = MODULE.parents[2]
+REPO = MODULE.parents[3]
 RUNS = {
     "BE-01": "base_environment_continuous_2026-10-13_11-25-07_420466",
     "BE-02": "base_environment_continuous_2026-10-13_11-25-27_332055",
