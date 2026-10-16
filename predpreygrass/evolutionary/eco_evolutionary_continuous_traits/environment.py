@@ -129,6 +129,13 @@ DEFAULT_CONFIG = {
     "trait_min_cost_multiplier": 0.25,
     # Recent births kept per species, the founder pool after an extinction.
     "trait_archive_size": 200,
+    # Observation scales. False (as in the pilot runs CT-01, CT-02): distances
+    # over the observer's own view distance, velocities over each animal's
+    # own top speed. True: the same scales for every animal, distances over
+    # half the arena (the longest possible view distance) and velocities
+    # over the fastest possible top speed, so an input means the same
+    # distance or speed whatever the observer's and observed animal's bodies.
+    "observation_fixed_scale": False,
 }
 
 # Every fix on: the cleaned-up world.
@@ -262,6 +269,9 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if not isinstance(c["trait_expression"], bool):
             raise ValueError("trait_expression must be True or False")
         self.express = c["trait_expression"]
+        if not isinstance(c["observation_fixed_scale"], bool):
+            raise ValueError("observation_fixed_scale must be True or False")
+        self.fixed_scale = c["observation_fixed_scale"]
         self.trait_bound = c["trait_bound"]
         self.founder_std = c["trait_founder_std"]
         self.mutation_std = c["trait_mutation_std"]
@@ -277,6 +287,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if isinstance(c["trait_archive_size"], bool) or not isinstance(c["trait_archive_size"], int) or c["trait_archive_size"] < 1:
             raise ValueError("trait_archive_size must be a positive integer")
         self._validate()
+        self.distance_scale = min(self.width, self.height) / 2
+        self.speed_scale = max(self.settings[species][2] for species in SPECIES) * math.exp(self.trait_bound)
         # The evolving gene pool: founders of the next episode per species
         # (None: draw from N(0, trait_founder_std)), and recent births.
         self.gene_pool = {species: None for species in SPECIES}
@@ -844,24 +856,26 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             seen.append((math.hypot(dx, dy), dx, dy, animal))
         seen.sort(key=lambda entry: entry[0])
         values = []
-        reach = observer.view_distance
+        reach = self.distance_scale if self.fixed_scale else observer.view_distance
         for distance, dx, dy, animal in seen[:count]:
+            speed = self.speed_scale if self.fixed_scale else animal.max_speed
             values += [
                 1.0,
                 dx / reach,
                 dy / reach,
                 distance / reach,
-                animal.velocity.x / animal.max_speed,
-                animal.velocity.y / animal.max_speed,
+                animal.velocity.x / speed,
+                animal.velocity.y / speed,
             ]
         return values + [0.0] * (SLOT_SIZE * count - len(values))
 
     def _observe(self, animal):
         """SPEC.md, section 7.1."""
         heading = math.radians(animal.orientation)
+        speed = self.speed_scale if self.fixed_scale else animal.max_speed
         values = [
-            animal.velocity.x / animal.max_speed,
-            animal.velocity.y / animal.max_speed,
+            animal.velocity.x / speed,
+            animal.velocity.y / speed,
             math.sin(heading),
             math.cos(heading),
         ]
@@ -874,7 +888,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if not np.all(np.abs(obs) <= 1.0 + 1e-4):
             raise RuntimeError(f"observation out of [-1, 1]: {obs}")
         obs = np.clip(obs, -1.0, 1.0)
-        grass = self.grass.observation(animal, animal.view_distance, animal.fov)
+        scale = self.distance_scale if self.fixed_scale else animal.view_distance
+        grass = self.grass.observation(animal, animal.view_distance, animal.fov, scale)
         energy = np.float32(np.clip(animal.energy / self.max_energy[animal.species], 0.0, 1.0))
         return np.append(np.concatenate((obs, grass)), energy)
 

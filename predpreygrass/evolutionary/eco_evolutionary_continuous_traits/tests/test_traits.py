@@ -260,3 +260,72 @@ def test_gene_pools_from_a_checkpoint(tmp_path):
         for _ in range(20):
             env.step({agent: STOP for agent in env.active})
     assert env.gene_pool["predator"].tolist() == [[0.1, 0, 0], [0.3, 0, 0]]
+
+
+def _observer_pair(fixed):
+    """Two predators with different bodies watching the same prey 40 units
+    to their right, standing still."""
+    env = PredPreyGrassContinuous({"prey_count": 1, "predator_count": 2, "observation_fixed_scale": fixed})
+    env.reset(seed=0)
+    prey = env.prey[0]
+    prey.position, prey.velocity = Vector(440.0, 400.0), Vector(3.0, 0.0)
+    for k, predator in enumerate(env.predators):
+        predator.position = Vector(400.0, 400.0 + 300 * k)  # far apart, same view of their own prey
+        predator.velocity = Vector(0.0, 0.0)
+        predator.orientation = 0.0  # facing +x
+    env.predators[1].position = Vector(400.0, 400.0)
+    near, far = env.predators
+    near.view_distance, far.view_distance = 100.0, 300.0
+    near.max_speed, far.max_speed = 4.0, 8.0
+    return env, near, far
+
+
+def test_fixed_scale_gives_every_body_the_same_inputs():
+    env, near, far = _observer_pair(fixed=True)
+    prey_slot = slice(7 + 6, 7 + 12)  # first prey slot, after self and one predator slot
+    a, b = env._observe(near)[prey_slot], env._observe(far)[prey_slot]
+    assert np.allclose(a, b)
+    assert a[1] == pytest.approx(40 / 400) and a[4] == pytest.approx(3.0 / env.speed_scale)
+    assert env.speed_scale == pytest.approx(6.0 * math.exp(0.7))
+
+
+def test_own_scale_gives_bodies_different_inputs():
+    env, near, far = _observer_pair(fixed=False)
+    prey_slot = slice(7 + 6, 7 + 12)
+    a, b = env._observe(near)[prey_slot], env._observe(far)[prey_slot]
+    assert a[1] == pytest.approx(40 / 100) and b[1] == pytest.approx(40 / 300)
+
+
+def test_fixed_scale_grass_observation():
+    env = PredPreyGrassContinuous({"observation_fixed_scale": True})
+    env.reset(seed=0)
+    animal = env.prey[0]
+    patch = next(p for p in env.grass.patches if env.grass.available(p))
+    animal.position = Vector(patch.position.x - 50.0, patch.position.y)
+    animal.orientation = 0.0
+    animal.view_distance = 100.0
+    grass = env._observe(animal)[-5:-1]
+    assert grass[0] == 1.0 and grass[3] <= 50 / 400 + 1e-6
+
+
+@pytest.mark.parametrize("fixed", [False, True])
+def test_own_velocity_scale(fixed):
+    env = PredPreyGrassContinuous({"observation_fixed_scale": fixed})
+    env.reset(seed=0)
+    slow, fast = env.prey[0], env.prey[1]
+    for animal, top in ((slow, 4.0), (fast, 8.0)):
+        animal.velocity, animal.max_speed = Vector(2.0, 0.0), top
+    a, b = env._observe(slow)[0], env._observe(fast)[0]
+    if fixed:
+        assert a == b == pytest.approx(2.0 / env.speed_scale)
+    else:
+        assert a == pytest.approx(0.5) and b == pytest.approx(0.25)
+
+
+def test_settings_without_the_key_keep_the_pilots_scaling():
+    """Checkpoints of CT-01 and CT-02 were saved before the setting existed."""
+    from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.config.config_env import config_env
+
+    saved = {key: value for key, value in config_env.items() if key != "observation_fixed_scale"}
+    assert PredPreyGrassContinuous(saved).fixed_scale is False
+    assert PredPreyGrassContinuous(config_env).fixed_scale is True

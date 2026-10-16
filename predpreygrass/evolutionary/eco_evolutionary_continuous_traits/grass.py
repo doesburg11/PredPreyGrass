@@ -280,10 +280,11 @@ class Grass:
             patch.ready_at = regrows
             patch.regrow = "centre"
 
-    def observation(self, observer, view_distance, fov):
+    def observation(self, observer, view_distance, fov, scale=None):
         """The nearest available patch in the observer's view cone, as
-        [seen, dx / view_distance, dy / view_distance, distance /
-        view_distance], or zeros."""
+        [seen, dx / scale, dy / scale, distance / scale], or zeros. The scale
+        defaults to the view distance."""
+        scale = view_distance if scale is None else scale
         visible = []
         for patch in self.patches:
             if not self.available(patch):
@@ -296,6 +297,6 @@ class Grass:
             return np.zeros(4, dtype=np.float32)
         distance, dx, dy = min(visible)
         return np.asarray(
-            [1.0, dx / view_distance, dy / view_distance, distance / view_distance],
+            [1.0, dx / scale, dy / scale, distance / scale],
             dtype=np.float32,
         )

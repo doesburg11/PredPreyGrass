@@ -97,4 +97,8 @@ config_env = {
     "trait_cost_fov": 0.25,
     "trait_min_cost_multiplier": 0.25,
     "trait_archive_size": 200,
+    # Same observation scales for every body (distances / 400, velocities /
+    # the fastest possible top speed). The pilot runs CT-01 and CT-02 used
+    # False (each animal's own view distance and top speed).
+    "observation_fixed_scale": True,
 }

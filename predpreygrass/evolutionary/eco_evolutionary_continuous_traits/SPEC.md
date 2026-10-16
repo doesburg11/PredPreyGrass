@@ -347,9 +347,19 @@ per worker). Gene-pool draws use their own random stream, seeded with
 those of `base_environment_continuous` (`tests/test_traits.py`).
 
 **Observation.** Three more self inputs (36 in all): the animal's genes
-divided by `trait_bound`, or zeros with `trait_expression` off. Other
-animals' velocities are still divided by their own top speed and distances
-by the observer's own view distance.
+divided by `trait_bound`, or zeros with `trait_expression` off. Scales,
+set by `observation_fixed_scale`:
+
+- `False` (the default, and the pilot runs CT-01 and CT-02): as in section
+  7.1, distances divided by the observer's own view distance and
+  velocities by each animal's own top speed. With evolving bodies the same
+  input then means different distances and speeds for different animals.
+- `True` (this module's training setting from 2026-10-16): the same scales
+  for every animal, distances (to animals and grass) divided by half the
+  arena (400, the longest possible view distance) and velocities (its own
+  and others') by the fastest possible top speed (6 × e^0.7 ≈ 12.1).
+  Which animals and patches are visible still depends on the observer's own
+  view distance and field of view.
 
 **Neutral control.** With `trait_expression` off, genes are inherited,
 mutated and carried across episodes exactly as above, but every animal has
