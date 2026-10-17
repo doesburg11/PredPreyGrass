@@ -151,6 +151,27 @@ Stronger features such as an escape direction or best hunting target have not
 been tested here. They would supply tactical advice and should be treated as a
 separate experimental extension.
 
+## TODO: next experimental steps
+
+- [ ] **Run the energy-only arm with seed 42**, using the same ecological
+  settings and 1,000-iteration budget as the completed baseline and full-drive
+  runs. Compare episode-weighted training returns and births by species. Treat
+  this as an exploratory feature ablation, not a replicated result.
+- [ ] **Replicate all three arms across additional training seeds:** baseline,
+  energy-only, and full drives. Start with at least three training seeds per arm,
+  keeping settings and budgets consistent. Report each seed's outcome and
+  variability, rather than only a pooled improvement.
+- [ ] **Evaluate final checkpoints separately from training returns**, using the
+  same set of evaluation episode seeds for every checkpoint. Measure births by
+  species, extinction frequency, and final predator/prey populations.
+- [ ] **Use the comparison to decide what to retain.** If energy-only performs
+  similarly to full drives, prefer the simpler representation. If full drives
+  consistently improve further, retain the ecological summaries. If neither
+  reliably beats baseline, report the original +6% as an unreplicated observation.
+
+The immediate next experiment is the energy-only seed-42 run. This checklist
+records planned work; no additional training is implied by documenting it.
+
 ## Running the experiment
 
 From the repository root, with the project environment installed:
