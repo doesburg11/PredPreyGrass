@@ -87,8 +87,15 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 `1.4/0.6` trough with 2-3 more seeds each to check whether they hold up.
 
 <p align="center">
-    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/rllib_pygame_1000.gif" width="600" height="500" />
+    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/base_environment_seasonal_trained_synced.gif" width="960" />
 </p>
+
+*Trained seasonal predator and prey policies from the final checkpoint
+(`checkpoint_000049`, 500 training iterations) of
+`BASE_ENV_SEASONAL_HIGH1.5_LOW0.5_2026-08-07_05-26-24`, evaluated with seed 42
+and deterministic actions. Grass regrowth alternates between 1.5× and 0.5×
+every 40 steps. Every fourth simulation step is shown at 10 frames per second;
+the population chart uses actual simulation steps.*
 
 ### Features base environment
 
@@ -96,15 +103,15 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 
 - Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
-  - **Predators** (red)
-  - **Prey** (blue)
+  - **Predators** (human hunter icons)
+  - **Prey** (deer icons)
 
 - **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
   - Predators and Prey **learn movement strategies** based on their **partial observations**.
   - Both expend **energy** as they move around the grid and **replenish energy by eating**:
 
-    - **Prey** eat **Grass** (green) by moving onto a grass-occupied cell.
+    - **Prey** eat **Grass** (grass icons) by moving onto a grass-occupied cell.
     - **Predators** eat **Prey** by moving onto the same grid cell.
 
   - **Survival conditions**:
