@@ -78,8 +78,8 @@ episodes that strengthens drift.
 The model charges every animal a resting energy cost that rises with its
 view distance and field of view (SPEC.md, section 11). This section sets
 out what is known about the energy cost of vision in real animals, and
-where the model follows or departs from it. Sources are listed at the end
-of the section.
+where the model follows or departs from it (references at the end of this
+README).
 
 **Seeing is energetically expensive.**
 
@@ -156,35 +156,6 @@ of the section.
   front, so that predators could evolve "hunting eyes" and prey
   "panoramic eyes".
 
-**Sources.**
-
-- Laughlin, S. B., de Ruyter van Steveninck, R. R. & Anderson, J. C. (1998).
-  The metabolic cost of neural information. *Nature Neuroscience* 1(1),
-  36–41. [doi:10.1038/236](https://doi.org/10.1038/236)
-- Niven, J. E., Anderson, J. C. & Laughlin, S. B. (2007). Fly photoreceptors
-  demonstrate energy-information trade-offs in neural coding. *PLoS Biology*
-  5(4), e116. [PMC1828148](https://pmc.ncbi.nlm.nih.gov/articles/PMC1828148)
-- Niven, J. E. & Laughlin, S. B. (2008). Energy limitation as a selective
-  pressure on the evolution of sensory systems. *Journal of Experimental
-  Biology* 211, 1792–1804.
-  [doi:10.1242/jeb.017574](https://doi.org/10.1242/jeb.017574)
-- Moran, D., Softley, R. & Warrant, E. J. (2015). The energetic cost of
-  vision and the evolution of eyeless Mexican cavefish. *Science Advances*
-  1(8), e1500363.
-  [doi:10.1126/sciadv.1500363](https://doi.org/10.1126/sciadv.1500363);
-  summary: [Lund University](https://www.lunduniversity.lu.se/article/large-eyes-come-high-cost)
-- Heesy, C. P. (2004). On the relationship between orbit orientation and
-  binocular visual field overlap in mammals. *The Anatomical Record Part A*
-  281A, 1104–1110.
-- Heesy, C. P. Hunters and the hunted: ecological influences on mammalian
-  orbit orientation. Society for Integrative and Comparative Biology,
-  meeting abstract (year not given on the page).
-  [sicb.org](https://sicb.org/?p=33915)
-- Banks, M. S. et al. (2015). Why do animal eyes have pupils of different
-  shapes? *Science Advances*, e1500391.
-  [PMC4643806](https://pmc.ncbi.nlm.nih.gov/articles/PMC4643806/); summary:
-  [UC Berkeley News](https://news.berkeley.edu/2015/08/07/pupil-shape-and-ecological-niche/)
-
 ## Files
 
 - [`environment.py`](environment.py): the world with traits.
@@ -222,3 +193,30 @@ python -m pytest predpreygrass/evolutionary/eco_evolutionary_continuous_traits/t
 ```
 
 Runs are saved in the module's `runs/` folder (gitignored).
+
+## References
+
+- Banks, M. S., et al. (2015). "Why do animal eyes have pupils of different
+  shapes?" *Science Advances*, e1500391.
+  [PMC4643806](https://pmc.ncbi.nlm.nih.gov/articles/PMC4643806/)
+- Heesy, C. P. (2004). "On the relationship between orbit orientation and
+  binocular visual field overlap in mammals." *The Anatomical Record Part
+  A* 281A, 1104–1110.
+- Heesy, C. P. "Hunters and the hunted: ecological influences on mammalian
+  orbit orientation." Society for Integrative and Comparative Biology,
+  meeting abstract (year not given). [sicb.org](https://sicb.org/?p=33915)
+- Laughlin, S. B., de Ruyter van Steveninck, R. R., & Anderson, J. C.
+  (1998). "The metabolic cost of neural information." *Nature
+  Neuroscience* 1(1), 36–41. [doi:10.1038/236](https://doi.org/10.1038/236)
+- Moran, D., Softley, R., & Warrant, E. J. (2015). "The energetic cost of
+  vision and the evolution of eyeless Mexican cavefish." *Science
+  Advances* 1(8), e1500363.
+  [doi:10.1126/sciadv.1500363](https://doi.org/10.1126/sciadv.1500363)
+- Niven, J. E., Anderson, J. C., & Laughlin, S. B. (2007). "Fly
+  photoreceptors demonstrate energy-information trade-offs in neural
+  coding." *PLoS Biology* 5(4), e116.
+  [PMC1828148](https://pmc.ncbi.nlm.nih.gov/articles/PMC1828148)
+- Niven, J. E., & Laughlin, S. B. (2008). "Energy limitation as a selective
+  pressure on the evolution of sensory systems." *Journal of Experimental
+  Biology* 211, 1792–1804.
+  [doi:10.1242/jeb.017574](https://doi.org/10.1242/jeb.017574)
