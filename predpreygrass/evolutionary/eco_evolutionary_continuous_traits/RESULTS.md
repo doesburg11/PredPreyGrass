@@ -5,10 +5,15 @@
 | Run | Folder (`runs/eco_evolutionary_continuous_traits_...`) | Traits | Iterations | Simulation workers | Wall time | Status |
 |---|---|---|---:|---:|---:|---|
 | CT-01 | `2026-10-15_21-31-22_924979` | expressed | 3,000 | 14 | 21.3 h | completed |
-| CT-02 | `2026-10-15_21-31-42_894279` | neutral control | 3,000 | 14 | 13.7 h | completed |
+| CT-02 | `2026-10-15_21-31-42_894279` | neutral control | 3,000 | 14 | 13.8 h | completed |
+| CT-03 | `2026-10-16_20-52-50_092027` | neutral control, fixed observation scales | 3,000 | 10 | 15.6 h | completed |
+| CT-04 | `2026-10-16_20-53-10_085977` | expressed, costs 0.5× the pilot's, fixed observation scales | 3,000 | 10 | 24.7 h | completed |
+| CT-05 | `2026-10-16_20-53-30_161103` | expressed, costs 0.25× the pilot's, fixed observation scales | 3,000 | 10 | 23.7 h | completed |
 
-Both: every quirk fixed, cost coefficients speed 1.0, vision 0.5, field of
-view 0.25 (SPEC.md section 11), trained side by side from scratch. A first
+CT-01 and CT-02: every quirk fixed, cost coefficients speed 1.0, vision
+0.5, field of view 0.25 (SPEC.md section 11), trained side by side from
+scratch. CT-03 to CT-05: the same, but with `observation_fixed_scale`
+(commit d3ffee3) and 10 simulation workers each, trained side by side. A first
 attempt at the pair (2026-10-15, 20:00) was stopped after about 200
 iterations to speed up the contact search (commit af36d91); its logs are
 kept as `runs/train_ct0*_2026-10-15_20-*.aborted.log`.
@@ -113,3 +118,109 @@ and run cheaper capacity: a new neutral control and cost coefficients at
 0.5× and 0.25×. A repeat at 1× would show whether the collapse of the arms
 race and of coexistence repeats, which would be of interest in itself
 (predators evolving to over-exploit their prey).
+
+## 2. Cheaper capacity (CT-03, CT-04, CT-05)
+
+**Question.** The pilot's cost coefficients made capacity so expensive that
+the cheapest bodies won and both stability and the learning arms race were
+lost. With capacity 2× and 4× cheaper, and observations on the same scale
+for every body, do bodies and behaviour escalate together?
+
+**Setup.** CT-03 is a neutral control, CT-04 has the pilot's cost
+coefficients × 0.5 (speed 0.5, vision 0.25, field of view 0.125) and CT-05
+× 0.25. All three use fixed observation scales and 10 simulation workers
+(the pilot: own-body scales and 14), so they are compared with each other,
+not with the pilot. Measures as in section 1;
+[`analysis/v2_costs.py`](analysis/v2_costs.py) writes
+[`analysis/results/v2_costs.json`](analysis/results/v2_costs.json) and the
+figure.
+
+![v2 round: mean genes and selection differentials over training, CT-03 to CT-05](../../../assets/images/readme/continuous_traits_v2_costs.png)
+
+**Genes at the end of training** (selection differential averaged over all
+iterations, share of iterations in which it is positive):
+
+| | CT-03 (neutral) | CT-04 (×0.5) | CT-05 (×0.25) |
+|---|---:|---:|---:|
+| Predator speed | −0.06 (+0.0001, 33%) | −0.29 (+0.0009, 58%) | +0.20 (+0.0018, 100%) |
+| Predator vision | +0.02 (+0.0001, 55%) | −0.63 (−0.0048, 0%) | −0.60 (−0.0037, 4%) |
+| Predator field of view | +0.01 (−0.0002, 47%) | +0.39 (+0.0008, 84%) | +0.52 (+0.0022, 95%) |
+| Prey speed | +0.03 (0.0000, 72%) | −0.09 (+0.0013, 100%) | +0.10 (+0.0014, 100%) |
+| Prey vision | −0.03 (−0.0001, 47%) | −0.55 (−0.0041, 1%) | −0.53 (−0.0034, 2%) |
+| Prey field of view | +0.04 (0.0000, 59%) | +0.55 (+0.0032, 92%) | +0.55 (+0.0037, 96%) |
+
+**Final checks** (50 episodes):
+
+| Run | Coexisting | Prey extinct | Predators extinct | Catch risk | Predators / prey alive on average | Predators stopped | Prey stopped | Predators near grass |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| CT-03 | 31 | 13 | 6 | 2.13 | 10.7 / 25.0 | 45% | 4% | 38% |
+| CT-04 | 50 | 0 | 0 | 0.75 | 15.1 / 58.2 | 60% | 62% | 56% |
+| CT-05 | 50 | 0 | 0 | 1.61 | 13.4 / 33.5 | 67% | 53% | 50% |
+
+**Tournaments** (checkpoints 300–2,990; a checkpoint is its policy together
+with its evolved gene pool; 95% intervals):
+
+| Run | Prey, all | Predators, all | Prey risk reduction, late | Predator risk increase, late | Episodes ending with both alive |
+|---|---:|---:|---:|---:|---:|
+| CT-03 | 98% (94–97) | 82% (78–83) | 0.71 (0.59–0.84) | 0.38 (0.25–0.50) | 14% |
+| CT-04 | 84% (82–86) | 6% (5–9) | 0.09 (0.07–0.10) | −0.12 (−0.14 to −0.10) | 85% |
+| CT-05 | 84% (82–85) | 26% (23–29) | 0.08 (0.05–0.11) | 0.17 (0.13–0.22) | 91% |
+
+**Results.**
+
+- **Vision for width, in both species and both cost levels.** View
+  distance fell to −0.53 to −0.63 (about 0.55× the base) and field of view
+  rose to +0.39 to +0.55, as in the pilot. The selection differentials kept
+  one sign in 84–100% of iterations (vision negative in 96–100%, field of
+  view positive in 84–96%). This is repeatable selection towards shorter,
+  wider vision at both cost settings; it does not show the traits' separate
+  benefits, since cheaper capacity still costs something and the traits
+  were not varied independently.
+- **Speed rose and fell.** In both runs both species first became faster
+  (predators +0.35 to +0.42, prey +0.26 to +0.35 around iteration
+  500–900), then speed declined again (CT-04 below the base for both,
+  CT-05 still above it). The selection differential for speed stayed
+  positive in most iterations even while the mean fell, so the measure,
+  selection through offspring within an episode, does not account for the
+  change. Survival to the end of an episode, whose survivors found the
+  next one, is not in the measure and could have acted in the other
+  direction; drift through the founder bottleneck, mutation near the gene
+  limits, correlations between traits and the changing policies could also
+  contribute, and the current measures cannot tell these apart.
+- **Coexistence in every final-check episode** in both runs (CT-03: 31 of
+  50), with more prey, lower catch risk, and both species standing still
+  most of the time; predators wait near grass 50–56% of the time.
+- **Newer prey checkpoints do better, newer predator checkpoints mostly
+  worse.** A checkpoint here is a policy together with its evolved gene
+  pool. Newer prey (policy and bodies) evade fixed predators better in 84%
+  of comparisons in both runs, but newer predators (policy and bodies)
+  catch fixed prey *less* well over all checkpoints (6% in CT-04, 26% in
+  CT-05; catch-risk changes −1.06 and −0.31). Late in training CT-05's
+  predators do better again (75%, +0.17); CT-04's do not. In CT-03, where
+  bodies do not change, both species improve, late as well, more strongly
+  than in any earlier run.
+
+**Interpretation and caveats.** One run per condition. Unlike the pilot,
+both cheaper-cost runs were stable, but they differ from it in observation
+scales and simulation workers too, so the design does not isolate the cost
+as the cause. Neither showed an arms race in bodies: both species kept
+trading view distance for field of view, and speed rose only temporarily. A checkpoint in these tournaments is a
+policy together with the bodies evolved by then, so "newer predators catch
+less" mixes learning with body evolution (CT-04's predators ended slower
+and short-sighted, CT-05's still faster than the base); separating the two
+needs tournaments that exchange policies and gene pools independently.
+CT-03, the neutral control under the same settings, is less stable than
+the pilot's neutral control (31 against 46 of 50), which may come from the
+fixed observation scales, the fewer simulation workers, or run-to-run
+variation.
+
+One interval note: CT-03's prey share, 98%, lies just above its percentile
+bootstrap interval (94–97%); an improvement share with ties counted as a
+half is a discontinuous statistic, and the bootstrap is biased for it near
+100%. The same happened for BE-02 (`base_environment_continuous`). The
+mean catch-risk changes do not have this problem.
+
+**Open.** A tournament that crosses policies and gene pools separately
+(does the predators' decline come from their bodies or their behaviour?);
+a selection measure that includes survival to the next episode; repeats of
+each condition.

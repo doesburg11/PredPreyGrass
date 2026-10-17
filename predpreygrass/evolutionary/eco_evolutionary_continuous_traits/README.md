@@ -1,11 +1,13 @@
 # eco_evolutionary_continuous_traits
 
-**Status (2026-10-16): pilot done** ([RESULTS.md](RESULTS.md)). With the
-starting cost coefficients, the traits evolved by selection (not drift) into
-cheap bodies: slow, short-sighted predators and short-sighted, wide-angle
-prey. The ecosystem became unstable (coexistence 13 of 50 against 46 for
-the neutral control) and the learning arms race disappeared. One run per
-condition; next, fixed observation scales and cheaper capacity.
+**Status (2026-10-17): pilot and v2 round done** ([RESULTS.md](RESULTS.md)).
+With expensive capacity (pilot) the traits evolved by selection into cheap
+bodies and the ecosystem and the learning arms race collapsed. The two
+cheaper-capacity runs (v2: 2× and 4× cheaper, also with fixed observation
+scales) were stable (coexistence 50 of 50); both species traded view
+distance for a wide field of view, speed rose and fell again, and newer
+prey checkpoints did better while newer predator checkpoints mostly did
+worse. One run per condition.
 
 Heritable body traits in the continuous Predator-Prey-Grass world: does an
 eco-evolutionary arms race appear when animals' bodies evolve while their
@@ -83,6 +85,9 @@ episodes that strengthens drift.
   pool.
 - [`analysis/pilot.py`](analysis/pilot.py): the pilot's figure and
   results JSON (CT-01 against CT-02).
+- [`analysis/v2_costs.py`](analysis/v2_costs.py): the v2 round's figure and
+  results JSON (CT-03 to CT-05), with bootstrap intervals for the
+  tournaments.
 - [`analysis/final_check.py`](analysis/final_check.py),
   [`tournament.py`](tournament.py): evaluation with each checkpoint's
   evolved gene pool.

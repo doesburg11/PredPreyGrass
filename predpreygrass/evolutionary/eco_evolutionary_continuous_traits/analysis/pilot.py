@@ -58,11 +58,11 @@ def smooth(values, window):
     return np.convolve(values, kernel, mode="valid")
 
 
-def plot(series, path):
+def plot(series, path, labels=LABELS, colors=COLORS, title="Heritable traits in the continuous world: pilot"):
     plt.rcParams.update({"font.family": "DejaVu Sans", "font.size": 10, "text.color": INK, "axes.labelcolor": INK_2})
     fig, axes = plt.subplots(4, 3, figsize=(13, 12.5), sharex=True, facecolor="white")
     fig.subplots_adjust(left=0.08, right=0.98, top=0.885, bottom=0.06, hspace=0.35, wspace=0.22)
-    fig.text(0.08, 0.965, "Heritable traits in the continuous world: pilot", fontsize=15, weight="bold")
+    fig.text(0.08, 0.965, title, fontsize=15, weight="bold")
     fig.text(0.08, 0.937, "Mean gene of the living animals at episode ends (rows 1–2) and selection differential "
              f"cov(relative offspring, gene), {SMOOTH}-iteration mean (rows 3–4)", fontsize=10.5, color=INK_2)
     for row, (kind, species) in enumerate([("mean", "predator"), ("mean", "prey"), ("selection", "predator"), ("selection", "prey")]):
@@ -75,7 +75,7 @@ def plot(series, path):
                     x = np.arange(len(y)) + SMOOTH
                 else:
                     x = np.arange(1, len(y) + 1)
-                ax.plot(x, y, color=COLORS[run], lw=2, label=LABELS[run])
+                ax.plot(x, y, color=colors[run], lw=2, label=labels[run])
             ax.axhline(0, color=AXIS, lw=1, zorder=0)
             if kind == "mean":
                 for bound in (-BOUND, BOUND):
@@ -94,8 +94,8 @@ def plot(series, path):
             if row == 3:
                 ax.set_xlabel("Training iteration")
     axes[0, 0].text(60, -0.66, "gene limits ±0.7", fontsize=8.5, color=MUTED)
-    handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper left", bbox_to_anchor=(0.075, 0.93), ncol=2, frameon=False, fontsize=10)
+    handles, names = axes[0, 0].get_legend_handles_labels()
+    fig.legend(handles, names, loc="upper left", bbox_to_anchor=(0.075, 0.93), ncol=len(series), frameon=False, fontsize=10)
     fig.savefig(path, dpi=150, facecolor="white")
 
 
