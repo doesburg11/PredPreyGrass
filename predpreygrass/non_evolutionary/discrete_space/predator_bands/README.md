@@ -271,6 +271,39 @@ Read plainly: fixing the exposure rule to allow group credit did not noticeably 
 - New metrics: `band_share_events`, `band_share_meat_total`, `band_share_fruit_total`, `marriages`, `within_band_pairings`,
   `kin_blocked_checks`, `bands_alive`.
 
+## TODO: next experiments on learned cohesion
+
+- [ ] **Write a short experimental plan first.** Define learned cohesion,
+  the control condition, the intervention, and success metrics before launching
+  training. Distinguish active regrouping from proximity caused by initial
+  placement, food locations, or membership rules.
+- [ ] **Establish a reproducible viable baseline.** Use the calibrated sharing
+  and food settings described above, train several independent seeds, and
+  evaluate multiple episode seeds per checkpoint. Record female extinction,
+  births, and surviving populations before interpreting cohesion outcomes.
+- [ ] **Test one clear benefit of staying close.** Compare the viable baseline
+  with one controlled change, such as group defense requiring proximity that
+  shares actual threat exposure. Check the current cluster-exposure rules before
+  designing this intervention: reputation exposure and effective defense are
+  distinct mechanisms. Match ecological settings and training budgets; avoid
+  changing threats, sharing, and membership together.
+- [ ] **Measure active regrouping.** Use comparable starting states to test
+  whether agents separated from their band approach band-mates and rejoin them.
+  Report nearest-band-mate distance, time outside sharing range, and survival
+  alongside the regrouping measure. Proximity alone is insufficient evidence.
+- [ ] **Test policy limitations only after checking the incentive.** If regrouping
+  improves survival or reproduction but is not learned, compare the existing
+  policy with a band compass or memory under otherwise matched conditions.
+  The compass provides location information; memory addresses information over
+  time. Neither should be assumed to solve cohesion without testing.
+- [ ] **Defer further reputation tuning.** Retain the five-seed result as the
+  current evidence. Revisit reputation only with a specific new hypothesis and
+  a controlled comparison. Test longer training after establishing that the
+  selected task makes cohesion beneficial.
+
+This is planned work, not a record of completed experiments. The immediate next
+step is the experimental plan; no training is launched by this checklist.
+
 ## Running
 
 The example below starts a new calibration run; it does not reproduce the viable
