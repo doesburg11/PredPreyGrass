@@ -87,7 +87,7 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 `1.4/0.6` trough with 2-3 more seeds each to check whether they hold up.
 
 <p align="center">
-    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/base_environment_seasonal_trained_synced.gif" width="960" />
+    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/base_environment_seasonal_trained_legend.gif" width="960" />
 </p>
 
 *Trained seasonal predator and prey policies from the final checkpoint
@@ -95,7 +95,7 @@ matters for a firm conclusion, the next step is replicating at least the `1.3/0.
 `BASE_ENV_SEASONAL_HIGH1.5_LOW0.5_2026-08-07_05-26-24`, evaluated with seed 42
 and deterministic actions. Grass regrowth alternates between 1.5× and 0.5×
 every 40 steps. Every fourth simulation step is shown at 10 frames per second;
-the population chart uses actual simulation steps.*
+the population chart uses actual simulation steps, with red for predators and blue for prey.*
 
 ### Features base environment
 
