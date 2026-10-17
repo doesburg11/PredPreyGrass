@@ -1,9 +1,41 @@
 # predator_bands
 
-A clone of [`predator_complementary_diet`](../predator_complementary_diet/) (sexed predators, two-parent reproduction,
-fruit/meat stores with a complementary-diet requirement, scripted prey) with **band living** added. Earlier modules are
-unchanged. Non-evolutionary: PPO learning only. The design and its open questions are in
-[`../predator_complementary_diet/BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md).
+## Purpose and current outcome
+
+This module asks whether **food dependence and the benefits of group living can
+produce learned social cohesion** in a simplified human-like predator population.
+It extends [`predator_complementary_diet`](../predator_complementary_diet/README.md)
+with band membership, food sharing, kin restrictions, and marriage. Traits remain
+fixed; PPO learns predator movement and foraging. Prey are normally scripted.
+
+| Question | Outcome so far |
+| --- | --- |
+| Can populations survive while requiring both meat and fruit? | Yes, under calibrated sharing and food settings; the viable five-band configuration was repeated with two training seeds. |
+| Does differentiated foraging emerge? | Males hunt more; females gather fruit and receive most of their meat from others, under designed sex-specific hunting odds. |
+| Can pair-sized mammoth hunts increase? | Yes in tested configurations with ineffective solo hunting and a band compass; deliberate coordination has not been isolated. |
+| Do agents learn to keep bands together? | No convincing improvement in general spatial cohesion has been demonstrated. |
+| Does reputation improve cohesion? | The later five-seed comparison did not detect an effect; earlier positive single-seed claims were retracted. |
+
+**Designed rules versus learned behavior:** food sharing, mating restrictions,
+marriage, hunting odds, threat defense, and reputation consequences are implemented
+by the environment. Agents learn how to move and forage under those rules. A
+viable population receiving shared food does not demonstrate learned generosity;
+more pair hunts do not by themselves demonstrate general group attachment.
+
+**Defaults are not the demonstrated viable configuration.** The current
+[`config_env.py`](config_env.py) starts with 3 bands, a meat-cost share of 0.25,
+a common sharing rate of 0.3, and fruit regrowth of 0.04. The viable five-band
+runs instead used meat-cost share 0.10, meat sharing 0.6, fruit sharing 0.3, and
+fruit regrowth 0.08. The random-policy viewer and a default training launch
+should not be read as reproducing those results.
+
+Most configurations below have only one training seed and 100–300 training
+iterations. The main exceptions are the two-seed viability check and the later
+five-seed-per-condition reputation test. These results establish what occurred
+under the tested settings, not indefinite survival or a general model of human
+social organization. Designs and open questions are in
+[`BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md) and
+[`MAMMOTH_DESIGN.md`](MAMMOTH_DESIGN.md).
 
 Consolidated results: [`RESULTS.md`](RESULTS.md).
 ![Trained predator_bands policies](results_figures/trained_policies.gif)
@@ -13,7 +45,7 @@ Consolidated results: [`RESULTS.md`](RESULTS.md).
 actions. Right panel: population, per-sex food score (energy and items eaten) and energy-source pies. Re-create with
 `python -m predpreygrass.non_evolutionary.discrete_space.predator_bands.record_gif <checkpoint dir> --out results_figures/trained_policies.gif`.*
 
-## STATUS (2026-09-25): built, under calibration
+## Initial viability calibration (2026-09-25)
 
 Built and tested (113 tests; Codex review found 4 issues, all fixed). First calibration runs (seed 42, 100 iterations,
 5 s per iteration, 30 learning predators):
@@ -241,6 +273,9 @@ Read plainly: fixing the exposure rule to allow group credit did not noticeably 
 
 ## Running
 
+The example below starts a new calibration run; it does not reproduce the viable
+five-band configuration or enable every optional mechanic.
+
 ```text
 python -m predpreygrass.non_evolutionary.discrete_space.predator_bands.tune_ppo_predator_bands \
     --seed 42 --max-iters 100 --reward-per-energy 0.5 --penalty-combat-death 0.2 --minibatch-size 1024 \
@@ -253,6 +288,17 @@ Flags: `--num-bands`, `--band-share-rate`, `--band-share-range`, `--kin-exclusio
 `--band-meat-share-rate`, `--band-fruit-share-rate` (each defaults to the single rate), `--diet-meat-cost-share`, `--scripted-prey 0/1`,
 `--initial-num-fruit`, `--energy-gain-per-step-fruit`.
 
-## Not built
+## Implemented extensions and remaining questions
 
-Big game ("mammoths" needing several hunters, kill split by band strength): see the design draft.
+Mammoths, threats, the band compass, membership changes, and reputation are
+implemented and have been tested in the configurations logged above. Optional
+mechanics are not all enabled by default. Mammoths are no longer an unbuilt
+proposal.
+
+The next research question is why viable food-sharing bands do not consistently
+learn spatial cohesion. Useful follow-ups include matched training budgets,
+independent seeds for interventions other than reputation, and controls that
+separate deliberate coordination from opportunistic attacks when a band-mate is
+already nearby. Memory and communication remain possible extensions, not tested
+solutions. Preserve the five-seed reputation null result when interpreting new
+single-seed patterns.

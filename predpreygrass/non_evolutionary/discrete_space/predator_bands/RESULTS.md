@@ -1,8 +1,18 @@
-# predator_bands: results so far (2026-09-25 / 09-26)
+# predator_bands: results through the reputation replication (2026-09-27)
 
 A consolidated write-up of the `predator_bands` experiments. Details, exact settings and per-run tables are in [`README.md`](README.md); the
 designs are in [`BANDS_DESIGN.md`](../predator_complementary_diet/BANDS_DESIGN.md) and [`MAMMOTH_DESIGN.md`](MAMMOTH_DESIGN.md). Everything
-here is **one seed per configuration** unless stated, PPO training of 100-300 iterations, and descriptive: no causal claims.
+here is **one seed per configuration** unless stated, with PPO training of
+100–300 iterations. The viable sharing configuration was repeated with two seeds;
+the later reputation comparison used five seeds per condition. Most comparisons
+are descriptive and do not isolate a causal mechanism.
+
+**Current conclusion:** calibrated, mechanically shared food can sustain a
+sex-differentiated population, and some settings increase pair-sized mammoth
+hunts. Learned general band cohesion has not been demonstrated. The early
+reputation/cohesion improvements were retracted after the five-seed comparison
+reported below. Current default settings differ from the viable calibrated runs;
+see the opening summary in the [README](README.md).
 
 ## The question
 
@@ -71,23 +81,52 @@ late nearest same-band distance and within-range share. Control: 36% / 21% / 28%
 | **Membership rule** (not learned): fission above 8, fusion, drift-*out* after 50 steps (v1; had bugs found by a Codex review) | **Fragmented**: ~10 bands of mean size 1.3, extinction 74% | Worse (movers 59-74% out of range; late within-range 0.29 males) |
 | **Membership rule** (not learned): fission above 8, fusion, drift-*join* after 100 steps (v2, bugs fixed) | Viable (extinction 22-36%); ~5 bands of mean size ~3.6 with ~50 fissions per episode | Worse (founders 40%, born 33%, moved 30-51%; nearest band-mate 6.0 / 4.9; within-range 0.54 / 0.67) |
 
-## 4. What can and cannot be concluded
+## 4. Later reputation experiment: the apparent cohesion gain did not replicate
 
-- **Supported (within one seed per run):** a complementary diet is not sustainable for a pair-only design at any meat share tried, and is sustainable once meat is
-  shared widely within bands; a sex differentiation in foraging and a heavy reliance of females on shared meat emerge; a coordinated pair hunt of big
+The September 27 experiments added reputation consequences for defenders that
+benefit from group defense without being exposed to a threat. Reputation affects
+food received and effective defense strength; it is mechanically updated, not a
+learned sanction. An observation channel makes the score visible. A later rule
+credits predators connected to the attacked animal through a touching cluster.
+
+Initial single-seed runs appeared tighter than the no-reputation control. A
+follow-up trained **five seeds (42–46) per condition**, reputation off versus on,
+with the cluster-exposure rule, richer prey, six threats, and 150 iterations.
+Each checkpoint was summarized by mean Chebyshev distance to the rest-of-band
+centroid, pooled across membership categories and eight rollout episodes.
+
+| Condition | Seed 42 | Seed 43 | Seed 44 | Seed 45 | Seed 46 | Mean |
+| --- | --- | --- | --- | --- | --- | --- |
+| No reputation | 8.220 | 7.998 | 7.374 | 7.972 | 8.025 | 7.918 |
+| Reputation on | 7.573 | 8.082 | 8.085 | 8.220 | 7.687 | 7.929 |
+
+The reported two-sided Mann–Whitney test gives **U = 11.0, p = 0.84**.
+Reputation was tighter in only two of five seed pairs; group means were nearly
+identical. This test did not detect a cohesion improvement. It does not prove
+that every possible reputation design has zero effect, and it covers this
+particular metric, exposure rule, training budget, and ecology.
+
+The earlier positive single-seed claims in the README are explicitly retracted.
+The formal comparison tests the cluster rule; it does not separately establish
+a multi-seed null result for every earlier exposure variant. Full settings,
+training diagnostics, and checkpoint-compatibility caveats are in the
+[README's later reputation experiments](README.md).
+
+## 5. What can and cannot be concluded
+
+- **Supported (within one seed per run):** the tested pair-only configurations failed to sustain females, while calibrated band-sharing configurations sustained them; a sex differentiation in foraging and a heavy reliance of females on shared meat emerge; a coordinated pair hunt of big
   game increase when solo attempts are pointless and the band compass is on (the data do not show whether this is intentional coordination or attacking when a
   band-mate happens to be adjacent).
 - **Not found:** a learned pull toward band-mates. Across the compass, threats (several strengths), wider defense, costlier distance and mammoths of both sizes,
   none clearly improved a cohesion measure over the control (distance-scaled sharing made it worse). The one apparent improvement (threats that rest, first run) did not replicate in the
   two follow-up runs.
-- **Limits.** One seed per configuration and 100-300 training iterations, so small effects are not detectable and variation between runs of the same setting is
-  not measured. The control is a 150-iteration run while some tests trained for 300 (not perfectly matched). Threat and mammoth parameters were guesses and
+- **Limits.** Most configurations have one seed and 100–300 training iterations; the two-seed viability check and five-seed reputation comparison are exceptions. Small or setting-dependent effects remain unresolved, and between-run variation is unmeasured for most other interventions. The control is a 150-iteration run while some tests trained for 300 (not perfectly matched). Threat and mammoth parameters were guesses and
   were adjusted after seeing results. Rollout measures mix action preference with the states the policy creates and with selection (predators that stray may die
   before they are measured). Sharing, marriage, kin exclusion, threats and mammoths are designed rules, so results describe what these payoffs produce, not
   that the behaviors would emerge without them. Deaths carry no direct penalty in the reward, so avoidance must be learned from survival alone.
 - **Tried, no gain:** defining band membership by proximity with fission, fusion and drift rules (two versions; the second, after fixing bugs, was viable but
   produced smaller, churning bands and worse cohesion measures). These are designed membership rules, not learned behaviour.
-- **Untested:** memory or communication in the policy, several seeds, longer training (500+ iterations), requiring parties of three or more, and other
+- **Untested:** memory or communication in the policy, multi-seed replication of most other interventions, longer training (500+ iterations), requiring parties of three or more, and other
   proximity definitions (for example connected components of the within-range graph, which would remove scatter by construction).
 
 ## Sources of the numbers
