@@ -1,5 +1,12 @@
 # Reward shaping: sparse vs. dense rewards
 
+<p align="center">
+  <img src="../../../../assets/images/readme/reward_shaping_headline.png" alt="Reward-shaping comparison: the sparse reproduction-only baseline produces more predator and prey births than all four shaping variants" width="640" />
+</p>
+
+*Headline result: sparse rewards beat dense rewards in the reported experiments.
+See the [results table](#3-results-table) and [limitations](#7-open-questions-and-caveats) below.*
+
 This folder holds one connected line of investigation: starting from a
 single question ("is the base environment's sparse reward hurting
 training?"), it grew into five trained sibling environments and a headline
@@ -11,6 +18,12 @@ explanation, and what's still open.
 Each module below has its own README with implementation-level detail
 (exact reward mechanics, config). This file is the overview and the
 results log — read this first.
+
+All five variants derive from
+[`base_environment_discrete`](../base_environment_discrete/README.md).
+The [`base_environment_sparse_rewards`](base_environment_sparse_rewards/README.md)
+comparison baseline preserves its reward scheme: **+10 on reproduction, all other
+rewards zero**. This is the investigation behind the repository's headline result.
 
 ## 1. Motivating hypothesis
 
