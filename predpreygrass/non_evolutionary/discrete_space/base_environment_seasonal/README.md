@@ -1,8 +1,46 @@
 # Predator-Prey-Grass base environment — seasonal variant
 
-Same mechanics as [`base_environment_discrete`](../base_environment_discrete/), plus one addition: grass regrowth
-rate cycles between an "abundant" and a "scarce" phase over the course of an episode, instead of
-staying flat.
+A controlled experiment on **coexistence under fluctuating food supply**. This
+module keeps the ecology of [`base_environment_discrete`](../base_environment_discrete/README.md)
+and alternates grass regrowth between abundant and scarce phases. Traits remain
+fixed; predator and prey policies learn through PPO.
+
+**Status: the six-regime training sweep is complete.** Trained populations of both
+species can persist through the approximately 1,000-step episode limit under the
+current defaults. This makes the module useful as a robustness experiment. It does
+not yet establish that policies anticipate seasons, or that seasonality improves
+learning or ecological outcomes across independent training seeds.
+
+## Trained simulation
+
+<p align="center">
+    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/base_environment_seasonal_trained_legend.gif" width="960" />
+</p>
+
+*Trained seasonal predator and prey policies from the final checkpoint
+(`checkpoint_000049`, 500 training iterations) of
+`BASE_ENV_SEASONAL_HIGH1.5_LOW0.5_2026-08-07_05-26-24`, evaluated with seed 42
+and deterministic actions. Grass regrowth alternates between 1.5× and 0.5×
+every 40 steps. Every fourth simulation step is shown at 10 frames per second;
+the population chart uses actual simulation steps, with red for predators and blue for prey.*
+
+The displayed default-regime rollout reaches step 1,000 with **16 predators and
+38 prey** remaining. This is one deterministic evaluation with seed 42, separate
+from the aggregated training metrics below. Individual agents die and reproduce;
+coexistence refers to the populations, not survival of every starting agent.
+
+## What this experiment tests
+
+The question is whether a learned predator–prey ecosystem can remain viable when
+resource regeneration varies periodically. It extends the flat-food baseline with
+one environmental change, making it a useful starting point for studying
+predictable scarcity.
+
+All six tested multiplier pairs average to 1.0 over a complete 80-step cycle.
+This holds the nominal cycle-average regrowth rate constant while changing its
+amplitude. It does **not** guarantee identical food availability: grass energy is
+capped, grazing differs between policies, and a 1,000-step episode does not end
+on a complete cycle. Seasonal timing and realized resource supply both matter.
 
 ## Seasonal grass-regrowth cycle
 
@@ -36,133 +74,80 @@ an alternating cycle, just asymmetric (e.g. flat-then-scarce instead of constant
 Everything else — energy costs, reproduction thresholds, rewards, population sizes — is
 unchanged from `base_environment_discrete`.
 
-## Season-multiplier parameter sweep
+## Completed parameter sweep
 
-[`run_season_multiplier_sweep.sh`](run_season_multiplier_sweep.sh) trains 6 regimes
-sequentially (single GPU), 500 iterations each, sweeping `season_high_multiplier` /
-`season_low_multiplier` from `1.0/1.0` (no seasonality, equivalent to `base_environment_discrete` — see
-above) up to `1.5/0.5` (this module's committed default), in steps of `0.1`/`-0.1`:
-`1.0/1.0`, `1.1/0.9`, `1.2/0.8`, `1.3/0.7`, `1.4/0.6`, `1.5/0.5`.
+[`run_season_multiplier_sweep.sh`](run_season_multiplier_sweep.sh) trains six
+regimes sequentially, 500 PPO iterations each:
+`1.0/1.0`, `1.1/0.9`, `1.2/0.8`, `1.3/0.7`, `1.4/0.6`, and `1.5/0.5`.
+The archived runs are available locally under `runs/seasonal/`. There is one
+training run per regime; the comparison is not replicated across training seeds.
 
-```text
-bash predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/run_season_multiplier_sweep.sh
-```
-
-Each regime is launched via `tune_ppo_base_environment_seasonal.py --season-high H --season-low
-L --max-iters 500`, tagging the experiment name (`BASE_ENV_SEASONAL_HIGH<h>_LOW<l>_<timestamp>`)
-so results land in distinct `predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/runs` directories. The training script's `EpisodeReturn`
-callback also logs, per episode, via `metrics_logger`: `predator_births` / `prey_births` (read
-directly off the env's own `_next_predator_idx`/`_next_prey_idx` counters — the primary metric
-of interest for this sweep), plus `predator_count_end` / `prey_count_end` / `grass_count_end` /
-`grass_energy_mean_end` (end-of-episode population/resource snapshot).
-
-**Status: complete.** All 6 regimes finished (~44h total), zero crashes. Results are in
-`predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/runs/seasonal/`.
-
-**Final comparison**, last-50-of-500-iteration averages, single seed per regime (not
-replicated — see caveat below):
+The following summary was recomputed from each run's `result.json`, using
+training iterations **451–500** and excluding non-finite values separately for
+each metric. Values are means of logged iteration metrics, not a fresh evaluation
+of the final checkpoints. The current callback logs population and birth metrics
+with Ray's default smoothing, so they should not be read as raw episode counts or
+independent observations. The last row reports available population-metric
+records; an iteration with no finite metric is not counted as zero.
 
 | Metric | 1.0/1.0 | 1.1/0.9 | 1.2/0.8 | 1.3/0.7 | 1.4/0.6 | 1.5/0.5 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `predator_births` | 107.6±8.3 | 125.2±7.0 | 125.8±8.6 | **139.2±7.6** | 100.1±12.7 | 115.1±8.1 |
-| `prey_births` | 511.7±16.7 | 555.0±10.9 | 544.8±13.7 | **572.2±16.9** | 471.0±24.7 | 512.5±15.3 |
-| `predator_count_end` | 16.5±2.8 | 17.5±2.4 | 17.4±2.2 | **18.0±2.4** | 14.5±3.0 | 15.7±2.7 |
-| `prey_count_end` | 30.5±5.2 | 24.9±4.9 | 27.9±4.6 | 23.2±4.9 | **39.7±6.6** | 35.1±5.7 |
-| `grass_energy_mean_end` | 0.34±0.06 | 0.50±0.11 | 0.48±0.08 | **0.67±0.14** | 0.39±0.06 | 0.46±0.08 |
-| `episode_return_mean` | 6192.8±227.9 | 6802.6±152.8 | 6705.9±204.7 | **7113.9±211.9** | 5711.3±360.5 | 6275.9±211.8 |
+| `episode_len_mean` | 1001.0 | 1001.0 | 1001.0 | 995.8 | 1001.0 | 1001.0 |
+| `predator_count_end` | 16.3 | 17.6 | 17.8 | 18.1 | 13.7 | 15.7 |
+| `prey_count_end` | 30.5 | 24.6 | 27.7 | 21.6 | 40.8 | 35.2 |
+| `predator_births` | 105.9 | 126.4 | 123.1 | 140.3 | 98.8 | 115.0 |
+| `prey_births` | 510.1 | 556.4 | 540.7 | 572.5 | 467.2 | 512.6 |
+| Finite population-metric records | 38 | 32 | 27 | 31 | 40 | 33 |
 
-All 6 regimes converge to sustained, full-length (~1001-step) episodes equally fast (by
-iteration 10) — no regime destabilizes the ecosystem outright.
+All six runs support coexistence in the tested setting. The default `1.5/0.5`
+run's late-training episode-length metric reaches the limit, with positive
+predator and prey populations. The `1.3/0.7` run has the highest reported births,
+but its mean episode length falls slightly below the limit. Aggregated metrics
+do not establish that every episode avoided extinction.
 
-**Not a clean dose-response.** Nearly every metric rises steadily from `1.0/1.0` through
-`1.2/0.8`, peaks sharply at **`1.3/0.7`** (highest births, population, grass energy, and reward
-of the whole sweep), then **crashes at `1.4/0.6`** — below even the flat `1.0/1.0` baseline on
-`predator_births`, `episode_return_mean`, and population counts, with the widest variance in the
-sweep — before **partially recovering at `1.5/0.5`** (this module's original committed default),
-though still well below the `1.3/0.7` peak. A genuinely smooth underlying effect would not crash
-at `1.4/0.6` and then partially recover at the even-more-extreme `1.5/0.5`, so this zigzag is
-most likely single-seed training noise superimposed on a real but weaker trend, not a genuine
-"`1.4/0.6` is uniquely bad" effect. **Caveat: one seed per regime, not replicated** — if this
-matters for a firm conclusion, the next step is replicating at least the `1.3/0.7` peak and
-`1.4/0.6` trough with 2-3 more seeds each to check whether they hold up.
+## Interpretation and limits
 
-<p align="center">
-    <img alt="base environment seasonal illustration" align="center" src="../../../../assets/images/gifs/base_environment_seasonal_trained_legend.gif" width="960" />
-</p>
+- **Supported:** learned coexistence is possible with the tested seasonal
+  regrowth schedules, including the current `1.5/0.5` defaults.
+- **Useful role:** a completed robustness experiment extending the flat-resource
+  baseline with periodic scarcity.
+- **Not established:** a reliable benefit of seasonality or an optimal multiplier
+  pair. The birth counts peak at `1.3/0.7`, decline at `1.4/0.6`, then partially
+  recover at `1.5/0.5`. One run per regime cannot distinguish training variability
+  from a reproducible, potentially nonlinear ecological effect.
+- **Not established:** anticipation of seasons. Observations contain no explicit
+  season or phase signal. Agents may respond to local resource conditions, but
+  survival alone does not demonstrate learned seasonal timing.
+- **Not established:** indefinite coexistence, a classical Lotka–Volterra cycle,
+  or learned cooperation. The finite episodes and current metrics do not test
+  those claims.
 
-*Trained seasonal predator and prey policies from the final checkpoint
-(`checkpoint_000049`, 500 training iterations) of
-`BASE_ENV_SEASONAL_HIGH1.5_LOW0.5_2026-08-07_05-26-24`, evaluated with seed 42
-and deterministic actions. Grass regrowth alternates between 1.5× and 0.5×
-every 40 steps. Every fourth simulation step is shown at 10 frames per second;
-the population chart uses actual simulation steps, with red for predators and blue for prey.*
+Further work is most useful if the research question is adaptation to predictable
+scarcity. First replicate the flat baseline, default regime, and apparent
+`1.3/0.7` peak across independent training seeds. Evaluate final checkpoints over
+multiple episode seeds, recording extinction frequency and time to extinction.
+To test anticipation, compare phase-informed policies with policies lacking that
+signal, and test changed phase lengths or starting phases. Keep those extensions
+separate from the completed sweep.
 
-### Features base environment
+## Running the module
 
-- At startup Predators, Prey and Grass are randomly positioned on the gridworld.
+From the repository root, with the project environment installed:
 
-- Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
+```bash
+# Random-policy viewer; this does not demonstrate trained coexistence.
+python -m predpreygrass.non_evolutionary.discrete_space.base_environment_seasonal.random_policy
 
-  - **Predators** (human hunter icons)
-  - **Prey** (deer icons)
+# Train the default seasonal regime.
+python -m predpreygrass.non_evolutionary.discrete_space.base_environment_seasonal.tune_ppo_base_environment_seasonal --season-high 1.5 --season-low 0.5 --max-iters 500
 
-- **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
+# Repeat the six-regime sweep.
+bash predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/run_season_multiplier_sweep.sh
+```
 
-  - Predators and Prey **learn movement strategies** based on their **partial observations**.
-  - Both expend **energy** as they move around the grid and **replenish energy by eating**:
-
-    - **Prey** eat **Grass** (grass icons) by moving onto a grass-occupied cell.
-    - **Predators** eat **Prey** by moving onto the same grid cell.
-
-  - **Survival conditions**:
-
-    - Both Predators and Prey must act to prevent starvation (when energy runs out).
-    - Prey must act to prevent being eaten by a Predator
-
-  - **Reproduction conditions**:
-
-    - Both Predators and Prey reproduce **asexually** when their energy exceeds a threshold.
-    - New agents are spawned near their parent.
-- **Sparse rewards**: agents only receive a reward when reproducing in the base configuration. However, this can be expanded with other rewards in the [environment configuration](config_env.py). The sparse rewards configuration is to show that the ecological system is able to sustain with this minimalistic optimized incentive for both Predators and Prey.
-
-- Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
-
-## Training and evaluation results
-
-[Training](tune_ppo_base_environment_seasonal.py) the agents and [evaluating](evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://humanbehaviorpatterns.org/learning-selection-interaction/marl-challenges-predpreygrass#reward-design-sparse-and-why-magnitude-matters). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
-
-- Predators hunting Prey
-- Multiple Predators collaborating/competing hunting Prey; increasing the probability of Prey being caught
-- Prey finding and eating grass
-- Predators hovering around grass to ambush Prey
-- Prey trying to escape Predators
-
-Moreover, these learning behaviors lead to more complex emergent dynamics at the ecosystem level:
-
-- The trained policies make the ecosystem perpetuate much longer than a random policy.
-
-- The trained agents are displaying some sort of the classic [Lotka–Volterra](https://en.wikipedia.org/wiki/Lotka%E2%80%93Volterra_equations) pattern over time:
-
-<p align="center">
-    <img alt="base environment seasonal illustration" src="../../../../assets/images/readme/PredPreyPopulation_episode.png" width="450" height="270"/>
-</p>
-
-## Centralized versus decentralized training
-
-The described environment and training concept is implemented with separated (decentralized) training for both learning agent types utilizing the RLlib framework. To elaborate on the difference, we compare this approach with the [(legacy) centralized trained environment utilizing PettingZoo and Stable Baselines3 (SB3)](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo).
-
-### (Legacy) Configuration of centralized training
-
-The MARL environment [`predpreygrass_base.py`](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/envs/predpreygrass_base.py) is implemented using **PettingZoo**, and the agents are trained using **Stable-Baselines3 (SB3) PPO**. Essentially this solution demonstrates how SB3 can be adapted for MARL using parallel environments and centralized training. Rewards (stepping, eating, dying and reproducing) are aggregated and can be adjusted in the [environment configuration](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/blob/main/src/predpreygrass/pettingzoo/config/config_predpreygrass.py) file. Basically, Stable Baseline3 is originally designed for single-agent training. This means in this solution, training utilizes only one unified network for Predators as well Prey. See [here in more detail](https://github.com/doesburg11/PredPreyGrass-pettingzoo-legacy/tree/main/src/predpreygrass/pettingzoo#how-sb3-ppo-is-used-in-the-predator-prey-grass-multi-agent-setting) how SB3 PPO is used in the Predator-Prey-Grass multi-agent setting.
-
-### Decentralized training: Pred-Prey-Grass MARL with RLlib new API stack
-
-Obviously, using only one network has its limitations as Predators and Prey lack true specialization in their training. The RLlib new API stack framework is able to circumvent this limitation elegantly. The environment dynamics of the RLlib environments are largely the same as in the PettingZoo environment. However, newly spawned agents are placed in the vicinity of the parent, rather than randomly spawned in the entire gridworld. The implementation under-the-hood of the setup is somewhat different, utilizing array lists to store agent data rather than implementing a separate agent class (largely a result of attempting to optimize compute time of the `step` function). Similarly as in the PettingZoo environment, rewards can be adjusted in a separate environment [configuration file](config_env.py)
-
-Training is applied in accordance with the RLlib new API stack protocol. The training configuration is more out-of-the-box than the PettingZoo/SB3 solution, but nevertheless is much more applicable to MARL in general and especially decentralized training.
-
-<p align="center">
-    <img alt="base environment seasonal illustration" src="../../../../assets/images/readme/multi_agent_setup.png" width="400" height="150"/>
-</p>
-
-A key difference of the decentralized training solution with the centralized training solution is that the concurrent agents become part of the environment rather than being part of a combined single "super" agent. Since, the environment of the centralized training solution consists only of static grass objects, the environment complexity of the decentralized training solution is dramatically increased. This is probably one of the reasons that training time of the RLlib solution is a multiple of the PettingZoo/SB3 solution.
+New training output is stored under this module's `runs/` directory. The
+[interactive evaluator](evaluate_ppo_from_checkpoint_debug.py) loads the checkpoint
+selected in its `checkpoint_path`; choose a seasonal checkpoint with matching
+settings. The [environment configuration](config_env.py) defines the current
+defaults. For shared ecology and architecture, see the
+[base environment README](../base_environment_discrete/README.md).
