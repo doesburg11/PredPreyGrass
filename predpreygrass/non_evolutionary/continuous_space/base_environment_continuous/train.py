@@ -32,6 +32,7 @@ if __name__ == "__main__":
 import numpy as np
 import torch
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.core.rl_module.rl_module import RLModuleSpec
@@ -247,7 +248,7 @@ def main():
     policies, mapping_fn = build_policies(ppo.mode, env_config["predator_count"], env_config["prey_count"])
 
     config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(
             ENV_NAME,
             env_config=env_config,

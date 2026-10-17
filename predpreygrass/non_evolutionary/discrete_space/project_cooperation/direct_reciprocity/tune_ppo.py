@@ -12,6 +12,7 @@ from predpreygrass.non_evolutionary.discrete_space.project_cooperation.direct_re
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -117,7 +118,7 @@ if __name__ == "__main__":
 
     # Build config dictionary for Tune
     ppo_config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(

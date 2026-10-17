@@ -51,6 +51,7 @@ from pathlib import Path
 import ray
 import torch
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
 from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
@@ -228,7 +229,7 @@ if __name__ == "__main__":
     )
 
     ppo = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(

@@ -22,6 +22,7 @@ from pathlib import Path
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.rllib.policy.policy import PolicySpec
 from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.registry import register_env
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     del sample_env
 
     ppo_config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PackHunt", env_config=env_config)
         .framework("torch")
         .multi_agent(

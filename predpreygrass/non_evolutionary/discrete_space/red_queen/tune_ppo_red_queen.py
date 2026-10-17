@@ -22,6 +22,7 @@ from pathlib import Path
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.tune import CheckpointConfig, RunConfig, Tuner
 from ray.tune.registry import register_env
 
@@ -92,7 +93,7 @@ if __name__ == "__main__":
     policies = {pid: (None, obs_by_policy[pid], act_by_policy[pid], {}) for pid in obs_by_policy}
 
     ppo_config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=config_env)
         .framework("torch")
         .multi_agent(policies=policies, policy_mapping_fn=policy_mapping_fn)

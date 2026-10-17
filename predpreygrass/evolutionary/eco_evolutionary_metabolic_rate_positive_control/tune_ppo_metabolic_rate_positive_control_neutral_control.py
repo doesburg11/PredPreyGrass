@@ -22,6 +22,7 @@ from predpreygrass.evolutionary.eco_evolutionary_metabolic_rate_positive_control
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -130,7 +131,7 @@ if __name__ == "__main__":
 
     # Build config dictionary for Tune
     ppo_config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=config_env, disable_env_checking=True)
         .framework("torch")
         .multi_agent(

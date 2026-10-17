@@ -12,6 +12,7 @@ from predpreygrass.non_evolutionary.discrete_space.project_cooperation.shared_pr
 
 import ray
 from ray.rllib.algorithms.impala import ImpalaConfig
+from predpreygrass.training import LocalImpala
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -117,7 +118,7 @@ if __name__ == "__main__":
 
     # Build config dictionary for Tune
     impala_config = (
-        ImpalaConfig()
+        ImpalaConfig(algo_class=LocalImpala)
         .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(

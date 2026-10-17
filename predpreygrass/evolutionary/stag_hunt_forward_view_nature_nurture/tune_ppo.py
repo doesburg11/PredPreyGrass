@@ -37,6 +37,7 @@ from predpreygrass.evolutionary.stag_hunt_forward_view_nature_nurture.utils.netw
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.tune.registry import register_env
 from ray.tune import Tuner, RunConfig, CheckpointConfig
 
@@ -216,7 +217,7 @@ if __name__ == "__main__":
 
     # Build config dictionary for Tune
     ppo_config = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=env_config)
         .framework("torch")
         .multi_agent(

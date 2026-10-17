@@ -22,6 +22,7 @@ from predpreygrass.non_evolutionary.discrete_space.project_reward_shaping.base_e
 from datetime import datetime
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.rllib.callbacks.callbacks import RLlibCallback
 from ray.rllib.core.rl_module import RLModuleSpec
 from ray.rllib.core.rl_module.multi_rl_module import MultiRLModuleSpec
@@ -169,7 +170,7 @@ if __name__ == "__main__":
     print("Starting new training experiment.")
 
     ppo = (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass")
         .framework("torch")
         .multi_agent(

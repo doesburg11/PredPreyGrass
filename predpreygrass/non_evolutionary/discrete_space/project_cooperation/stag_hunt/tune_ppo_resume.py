@@ -12,6 +12,7 @@ import ray
 from ray.tune import Trainable, Tuner, RunConfig, CheckpointConfig
 from ray.tune.registry import register_env
 from ray.rllib.algorithms.ppo import PPOConfig
+from predpreygrass.training import LocalPPO
 from ray.rllib.algorithms.ppo.torch.ppo_torch_learner import PPOTorchLearner
 
 import torch
@@ -77,7 +78,7 @@ def build_ppo_config(env_cfg, config_ppo, obs_by_policy, act_by_policy, multi_mo
     }
 
     return (
-        PPOConfig()
+        PPOConfig(algo_class=LocalPPO)
         .environment(env="PredPreyGrass", env_config=env_cfg)
         .framework("torch")
         .multi_agent(
