@@ -415,7 +415,8 @@ class PyGameRenderer:
             self.screen.blit(label_surface, (label_x - label_width, y_pos - label_surface.get_height() // 2))
 
         # X ticks
-        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        axis_max_step = max(1000, max(self.population_history_steps, default=0))
+        x_tick_labels = [round(i * axis_max_step / 5) for i in range(6)]
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
@@ -427,8 +428,8 @@ class PyGameRenderer:
         # Draw line chart
         if self.population_history_steps:
             for i in range(1, len(self.population_history_steps)):
-                x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
-                x2 = chart_x + int(i / self.population_history_max_length * chart_width)
+                x1 = chart_x + int(self.population_history_steps[i - 1] / axis_max_step * chart_width)
+                x2 = chart_x + int(self.population_history_steps[i] / axis_max_step * chart_width)
                 y1p = chart_y + chart_height - int(self.population_history_predators[i - 1] / max_agents * chart_height)
                 y2p = chart_y + chart_height - int(self.population_history_predators[i] / max_agents * chart_height)
                 pygame.draw.line(self.screen, self.gui_style.predator_speed_1_color, (x1, y1p), (x2, y2p), 2)
@@ -463,7 +464,8 @@ class PyGameRenderer:
             self.screen.blit(label_surface, (label_x, y_pos - 6))
 
         # X ticks
-        x_tick_labels = [0, 200, 400, 600, 800, 1000]
+        axis_max_step = max(1000, max(self.population_history_steps, default=0))
+        x_tick_labels = [round(i * axis_max_step / 5) for i in range(6)]
         num_xticks = len(x_tick_labels)
         for i, label_value in enumerate(x_tick_labels):
             x_pos = chart_x + int(i / (num_xticks - 1) * chart_width)
@@ -473,8 +475,8 @@ class PyGameRenderer:
 
         # Draw lines
         for i in range(1, len(self.population_pct_speed2_predators)):
-            x1 = chart_x + int((i - 1) / self.population_history_max_length * chart_width)
-            x2 = chart_x + int(i / self.population_history_max_length * chart_width)
+            x1 = chart_x + int(self.population_history_steps[i - 1] / axis_max_step * chart_width)
+            x2 = chart_x + int(self.population_history_steps[i] / axis_max_step * chart_width)
 
             y1_pred = chart_y + chart_height - int(self.population_pct_speed2_predators[i - 1] * chart_height)
             y2_pred = chart_y + chart_height - int(self.population_pct_speed2_predators[i] * chart_height)
