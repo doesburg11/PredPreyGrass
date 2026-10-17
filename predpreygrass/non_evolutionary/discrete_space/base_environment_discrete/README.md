@@ -50,6 +50,25 @@ using the current human predator, deer, and grass icons.*
 
 - Grass gradually regenerates at the same spot after being eaten by Prey. Grass, as a non-learning agent, is being regarded by the model as part of the environment, not as an actor.
 
+## Headline result: sparse rewards beat dense rewards
+
+This base environment is the starting point for the
+[`project_reward_shaping`](../project_reward_shaping/README.md) investigation,
+which compared five trained sibling environments with different reward designs.
+Its [`base_environment_sparse_rewards`](../project_reward_shaping/base_environment_sparse_rewards/README.md)
+baseline uses the same reward scheme as this module: **+10 on successful
+reproduction, with all other rewards zero**.
+
+In the reported experiments, that sparse baseline outperformed all four shaping
+variants—sparse plus eating, sparse plus a grandparent kickback, dense energy-delta
+rewards, and dense energy-delta rewards plus the reproduction bonus—on reproduction
+counts for both species. The headline therefore comes from experiments derived
+from `base_environment_discrete`, rather than the movement-cost variant
+`base_environment_step_energy`.
+
+See the [full comparison, methodology, and limitations](../project_reward_shaping/README.md)
+for the results and replication caveats.
+
 ## Training and evaluation results
 
 [Training](tune_ppo_base_environment.py) the agents and [evaluating](evaluate_ppo_from_checkpoint_debug.py) the environment is an example of how elaborate behaviors can emerge from simple rules in MARL models. As pointed out earlier, rewards for learning agents are solely obtained by reproduction. So all other reward options are set to zero in the environment configuration. Find more background on this [reward shaping and scaling on our website](https://humanbehaviorpatterns.org/learning-selection-interaction/marl-challenges-predpreygrass#reward-design-sparse-and-why-magnitude-matters). Despite this relative sparse reward structure, maximizing these rewards results in elaborate emerging agents behaviors such as:
