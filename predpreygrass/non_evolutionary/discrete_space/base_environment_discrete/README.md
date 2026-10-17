@@ -12,7 +12,7 @@ remains `tune_ppo_base_environment.py`.
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/base_environment_discrete_trained.gif" width="960" />
+    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/base_environment_discrete_trained_synced.gif" width="960" />
 </p>
 
 *Trained predator and prey policies from the original 1,000-iteration run
