@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Callable
 import pygame
 from dataclasses import dataclass
@@ -23,8 +24,9 @@ class GuiStyle:
     predator_speed_2_color: tuple = (165, 0, 0)
     prey_speed_1_color: tuple = (0, 0, 255)  # Bright blue
     prey_speed_2_color: tuple = (100, 100, 255)
-    grid_color: tuple = (200, 200, 200)
+    grid_color: tuple = (255, 255, 255)
     background_color: tuple = (255, 255, 255)
+    grid_background_color: tuple = (172, 206, 231)
     halo_reproduction_color: tuple = (255, 0, 0)  # Gold
     halo_eating_color: tuple = (0, 128, 0)  # Bright green
     halo_reproduction_thickness: int = 3
@@ -43,6 +45,14 @@ class PyGameRenderer:
         pygame.init()
         self.screen = pygame.display.set_mode((window_width, window_height))
         pygame.display.set_caption("PredPreyGrass Live Viewer")
+        icon_path = Path(__file__).resolve().parents[5] / "assets/images/icons/predator_human_male.png"
+        self._predator_icon = pygame.image.load(str(icon_path)).convert_alpha()
+        self._predator_icon_cache = {}
+        prey_icon_path = icon_path.with_name("prey_deer.png")
+        self._prey_icon = pygame.image.load(str(prey_icon_path)).convert_alpha()
+        self._prey_icon_cache = {}
+        self._grass_icon = pygame.image.load(str(icon_path.with_name("grass.png"))).convert_alpha()
+        self._grass_icon_cache = {}
 
         self.font = pygame.font.SysFont(None, int(cell_size * 0.5))
         self.font_legend = pygame.font.SysFont(None, self.gui_style.legend_font_size)
@@ -117,6 +127,12 @@ class PyGameRenderer:
         pygame.display.flip()
 
     def _draw_grid(self):
+        pygame.draw.rect(
+            self.screen,
+            self.gui_style.grid_background_color,
+            pygame.Rect(self.gui_style.margin_left, self.gui_style.margin_top,
+                        self.grid_size[0] * self.cell_size, self.grid_size[1] * self.cell_size),
+        )
         for x in range(self.grid_size[0]):
             for y in range(self.grid_size[1]):
                 rect = pygame.Rect(
@@ -131,13 +147,45 @@ class PyGameRenderer:
         for grass_id, pos in grass_positions.items():
             x_pix = self.gui_style.margin_left + pos[0] * self.cell_size + self.cell_size // 2
             y_pix = self.gui_style.margin_top + pos[1] * self.cell_size + self.cell_size // 2
-            color = self.gui_style.grass_color
             energy = grass_energies.get(grass_id, 0) if grass_energies else 0
             size_factor = min(energy / self.reference_energy_grass, 1.0)
-            base_rect_size = self.cell_size * 0.8
+            base_rect_size = self.cell_size * 1.25
             rect_size = base_rect_size * size_factor
-            rect = pygame.Rect(x_pix - rect_size // 2, y_pix - rect_size // 2, rect_size, rect_size)
-            pygame.draw.rect(self.screen, color, rect)
+            if rect_size >= 1:
+                self._draw_grass_icon((x_pix, y_pix), rect_size)
+
+    def _draw_predator_icon(self, center, size):
+        size = max(int(size), 4)
+        if size not in self._predator_icon_cache:
+            source = self._predator_icon
+            scale = size / max(source.get_size())
+            dimensions = (max(1, round(source.get_width() * scale)),
+                          max(1, round(source.get_height() * scale)))
+            self._predator_icon_cache[size] = pygame.transform.smoothscale(source, dimensions)
+        icon = self._predator_icon_cache[size]
+        self.screen.blit(icon, icon.get_rect(center=center))
+
+    def _draw_prey_icon(self, center, size):
+        size = max(int(size), 4)
+        if size not in self._prey_icon_cache:
+            source = self._prey_icon
+            scale = size / max(source.get_size())
+            dimensions = (max(1, round(source.get_width() * scale)),
+                          max(1, round(source.get_height() * scale)))
+            self._prey_icon_cache[size] = pygame.transform.smoothscale(source, dimensions)
+        icon = self._prey_icon_cache[size]
+        self.screen.blit(icon, icon.get_rect(center=center))
+
+    def _draw_grass_icon(self, center, size):
+        size = max(int(size), 1)
+        if size not in self._grass_icon_cache:
+            source = self._grass_icon
+            scale = size / max(source.get_size())
+            dimensions = (max(1, round(source.get_width() * scale)),
+                          max(1, round(source.get_height() * scale)))
+            self._grass_icon_cache[size] = pygame.transform.smoothscale(source, dimensions)
+        icon = self._grass_icon_cache[size]
+        self.screen.blit(icon, icon.get_rect(center=center))
 
     def _draw_agents(self, agent_positions, agent_energies, agents_just_ate):
         for agent_id, pos in agent_positions.items():
@@ -172,7 +220,10 @@ class PyGameRenderer:
             radius = int(base_radius * size_factor)
 
             # Draw main body
-            pygame.draw.circle(self.screen, color, (x_pix, y_pix), max(radius, 2))
+            if "predator" in agent_id:
+                self._draw_predator_icon((x_pix, y_pix), max(4, round(1.25 * self.cell_size * size_factor)))
+            else:
+                self._draw_prey_icon((x_pix, y_pix), 2 * max(radius, 2))
 
             # Eating halo (green ring)
             if agent_id in agents_just_ate:
@@ -239,30 +290,30 @@ class PyGameRenderer:
 
         if is_speed_based:
             # Speed-specific predator colors
-            pygame.draw.circle(self.screen, self.gui_style.predator_speed_1_color, (x + r, y + r), r)
+            self._draw_predator_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Predator (Speed 1)", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.predator_speed_2_color, (x + r, y + r), r)
+            self._draw_predator_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Predator (Speed 2)", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
             # Speed-specific prey colors
-            pygame.draw.circle(self.screen, self.gui_style.prey_speed_1_color, (x + r, y + r), r)
+            self._draw_prey_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Prey (Speed 1)", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.prey_speed_2_color, (x + r, y + r), r)
+            self._draw_prey_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Prey (Speed 2)", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
         else:
             # Compact predator/prey legend
-            pygame.draw.circle(self.screen, self.gui_style.predator_color, (x + r, y + r), r)
+            self._draw_predator_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Predator", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
-            pygame.draw.circle(self.screen, self.gui_style.prey_color, (x + r, y + r), r)
+            self._draw_prey_icon((x + r, y + r), 2 * r)
             self.screen.blit(font.render("Prey", True, (0, 0, 0)), (x + 30, y))
             y += spacing
 
@@ -293,7 +344,7 @@ class PyGameRenderer:
         font = self.tooltip_font
 
         # Grass
-        pygame.draw.rect(self.screen, self.gui_style.grass_color, pygame.Rect(x + r - s // 2, y + r - s // 2, s, s))
+        self._draw_grass_icon((x + r, y + r), s)
         self.screen.blit(font.render("Grass", True, (0, 0, 0)), (x + 30, y))
         y += spacing
 
