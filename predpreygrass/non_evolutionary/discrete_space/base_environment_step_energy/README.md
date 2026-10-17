@@ -4,6 +4,18 @@ This module is a **follow-up to plain `base_environment_discrete`**, where no mo
 
 **See [`RESULTS.md`](RESULTS.md) for the full investigation log** -- the reasoning, a failed first design, and the sequence of runs that led to the current defaults below. This file just describes the current structure and how to run it.
 
+## Trained simulation
+
+<p align="center">
+  <img src="../../../../assets/images/gifs/base_environment_step_energy_trained_legend.gif" alt="Trained human predators, deer prey, and grass with a labeled population chart" width="960" />
+</p>
+
+*Final checkpoint (`checkpoint_000049`, 500 training iterations) of
+`PPO_STEP_ENERGY_ADDITIVE_PREDEASE_CONFIRM500_SEED42`, evaluated with seed 42
+and deterministic actions using the current default movement costs. Every fourth
+simulation step is shown at 10 frames per second. The population chart uses actual
+simulation steps: red = predators, blue = prey.*
+
 ## Purpose
 
 The per-step tax is split into two independent, additive costs instead of `base_environment_discrete`'s single flat one:

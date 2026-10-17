@@ -12,13 +12,14 @@ remains `tune_ppo_base_environment.py`.
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/base_environment_discrete_trained_synced.gif" width="960" />
+    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/base_environment_discrete_trained_legend.gif" width="960" />
 </p>
 
 *Trained predator and prey policies from the original 1,000-iteration run
 (`PPO_2026-06-17_22-06-02`, `checkpoint_000099`), evaluated with deterministic
 actions and seed 42. Every fourth simulation step is shown at 10 frames per second,
-using the current human predator, deer, and grass icons.*
+using the current human predator, deer, and grass icons. The chart legend identifies
+red as predators and blue as prey.*
 
 ## Features base environment
 

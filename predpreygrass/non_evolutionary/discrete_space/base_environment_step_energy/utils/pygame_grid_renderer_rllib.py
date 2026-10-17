@@ -387,15 +387,25 @@ class PyGameRenderer:
         chart_width = 260
         chart_height = 100
         chart_x = x + 30
-        chart_y = y + 40
+        chart_y = y + 60
         spacing = self.gui_style.legend_spacing
 
         # Chart title
         font_small = pygame.font.SysFont(None, int(self.gui_style.tooltip_font_size * 0.8), bold=False)
         title_surface = font_small.render("Total predator and prey population", True, (0, 0, 0))
         title_x = chart_x + chart_width // 2 - title_surface.get_width() // 2
-        title_y = chart_y - spacing // 2 - 10
+        title_y = chart_y - spacing // 2 - 30
         self.screen.blit(title_surface, (title_x, title_y))
+
+        # Match the legend swatches to the colors used by the population lines.
+        legend_y = chart_y - 20
+        for offset, label, color in (
+            (0, "Predators", self.gui_style.predator_speed_1_color),
+            (140, "Prey", self.gui_style.prey_speed_1_color),
+        ):
+            left = chart_x + offset
+            pygame.draw.line(self.screen, color, (left, legend_y + 7), (left + 20, legend_y + 7), 3)
+            self.screen.blit(font_small.render(label, True, (0, 0, 0)), (left + 26, legend_y))
 
         # Chart box
         pygame.draw.rect(self.screen, (230, 230, 230), pygame.Rect(chart_x, chart_y, chart_width, chart_height))
