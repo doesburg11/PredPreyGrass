@@ -12,8 +12,13 @@ remains `tune_ppo_base_environment.py`.
 <p align="center">
     <b>Evaluation of trained Predator-Prey-Grass base environment</b></p>
 <p align="center">
-    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/rllib_pygame_seed42_iter1000.gif" width="600" height="500" />
+    <img alt="base environment discrete illustration" align="center" src="../../../../assets/images/gifs/base_environment_discrete_trained.gif" width="960" />
 </p>
+
+*Trained predator and prey policies from the original 1,000-iteration run
+(`PPO_2026-06-17_22-06-02`, `checkpoint_000099`), evaluated with deterministic
+actions and seed 42. Every fourth simulation step is shown at 10 frames per second,
+using the current human predator, deer, and grass icons.*
 
 ## Features base environment
 
@@ -21,8 +26,8 @@ remains `tune_ppo_base_environment.py`.
 
 - Predators and Prey are independently (decentralized) trained via their own RLlib policy module.:
 
-  - **Predators** (red)
-  - **Prey** (blue)
+  - **Predators** (human hunter icons)
+  - **Prey** (deer icons)
 
 - **Energy-Based Life Cycle**: Movement, hunting, and grazing consume energy—agents must act to balance survival, reproduction, and exploration.
 
