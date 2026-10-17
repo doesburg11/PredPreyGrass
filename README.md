@@ -18,33 +18,13 @@
 - **Emergent cooperation, defection, reciprocity and coevolution**, studied under both evolving and fixed-trait agent populations
 - Built with Python, Gymnasium and RLlib 2.59's new API stack (`RLModule` / `Learner` / `EnvRunner`), with dynamic, lifecycle-changing agent populations
 
-**Start here:** [Quick start](#quick-start-run-a-demo-in-under-five-minutes) to run a demo in under five minutes, or the [headline result](#headline-result-sparse-rewards-beat-dense-rewards) below for the project's strongest empirical finding.
+**Start here:** [Quick start](#quick-start-run-a-demo-in-under-five-minutes) to run a demo in under five minutes, or [EXPERIMENTS.md](EXPERIMENTS.md) for the full catalogue of experiments.
 
 ## How it works
 
 This project explores whether cooperative behavior, coevolution, defection, and free-riding can emerge and stabilize in a spatial, resource-limited ecosystem, by combining within-lifetime multi-agent reinforcement learning with population-level ecological and evolutionary dynamics. It probes the interplay between **nature** (inherited traits via reproduction and mutation) and **nurture** (behavior learned via reinforcement learning) — including a direct test of the **Baldwin effect**: whether genetic selection and learned behavior actually shape each other, not just coexist. Agents differ by speed, vision, energy metabolism, and decision policies — offering ground for open-ended adaptation. At its core lies a gridworld simulation where agents are not just *trained* — they are *born*, *age*, *reproduce*, *die*, and even *mutate* in a continuously changing environment.
 
 Legacy snapshot: the pre-cleanup research codebase is archived at [PredPreyGrassLegacy](https://github.com/doesburg11/PredPreyGrassLegacy).
-
-## Headline result: sparse rewards beat dense rewards
-
-> In controlled reward-shaping experiments, a sparse, reproduction-only reward outperformed four denser alternatives across every tested ecological outcome — reproduction rate, final population balance, and extinction risk.
-
-<p align="center">
-    <img align="center" src="./assets/images/readme/reward_shaping_headline.png" width="640" />
-</p>
-
-Started from a simple question: the base environment's only nonzero reward anywhere is a flat
-`+10` bonus on successful reproduction — every other hook is `0.0`. Does that sparsity hurt
-training, and would a dense, per-step energy-delta reward fix it? Five trained environment
-variants and a full investigation later, the answer reversed the question: **sparse reward wins
-on every axis tested, and adding density hurts** — not because of the sparsity itself, but
-because a continuous signal layered into the same reward channel as reproduction adds noise that
-outweighs the benefit it was meant to provide.
-
-**Full writeup — motivation, methodology, every module's results, and open
-questions — lives in
-[`predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/README.md`](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping).**
 
 ## Start here
 
