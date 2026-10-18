@@ -224,3 +224,65 @@ mean catch-risk changes do not have this problem.
 (does the predators' decline come from their bodies or their behaviour?);
 a selection measure that includes survival to the next episode; repeats of
 each condition.
+
+## 3. Behaviour or bodies? Crossing policies and gene pools (CT-03 to CT-05)
+
+**Question.** In section 2's tournaments a checkpoint brings both its
+policy and its evolved gene pool, so "newer predators catch fixed prey less
+well" (CT-04, CT-05) could come from their behaviour, their bodies, or both.
+
+**Method.** [`analysis/cross_policy_bodies.py`](analysis/cross_policy_bodies.py):
+for each species, its policy from iteration 300, 1,500 or 2,990 crossed with
+its gene pool from the same three iterations (9 combinations), each against
+fixed opponents (the other species' policy and gene pool) from those
+iterations, 100 episodes per cell, seeds 10,000–10,099: 5,400 episodes per
+run. Effects are the change in catch risk that helps the species
+(predators: higher; prey: lower), newer minus older, averaged over ordered
+pairs of iterations, the other factor and the opponents, with paired-seed
+bootstrap 95% intervals: the *behaviour effect* compares policies on the
+same gene pool, the *body effect* gene pools under the same policy. Cells
+whose policy and gene pool come from the same checkpoint reproduce section
+2's tournament episodes exactly (checked). Results:
+[`analysis/results/cross_policy_bodies.json`](analysis/results/cross_policy_bodies.json).
+
+| Run | Species | Behaviour effect | Share helping | Body effect | Share helping |
+|---|---|---:|---:|---:|---:|
+| CT-03 (neutral) | predators | +0.59 (+0.45 to +0.72) | 67% | 0.00 | 50% |
+| | prey | +4.36 (+4.22 to +4.50) | 100% | 0.00 | 50% |
+| CT-04 (×0.5) | predators | −0.69 (−0.74 to −0.64) | 7% | −1.15 (−1.23 to −1.08) | 0% |
+| | prey | +0.96 (+0.91 to +1.02) | 100% | +0.01 (−0.06 to +0.07) | 56% |
+| CT-05 (×0.25) | predators | −0.18 (−0.23 to −0.13) | 33% | −0.07 (−0.15 to +0.01) | 59% |
+| | prey | +1.33 (+1.28 to +1.37) | 85% | −0.10 (−0.16 to −0.05) | 26% |
+
+CT-04's predators, catch risk by policy (rows) and gene pool (columns),
+averaged over opponents; the diagonal is the original checkpoints:
+
+| Policy \ gene pool | 300 | 1,500 | 2,990 |
+|---|---:|---:|---:|
+| 300 | **4.24** | 2.28 | 1.52 |
+| 1,500 | 3.08 | **1.96** | 1.49 |
+| 2,990 | 2.16 | 1.48 | **1.29** |
+
+**Results.**
+
+- **Control.** In CT-03, where genes have no effect, every gene-pool column
+  gives the same catch risk, so the body effect is exactly zero, as it must
+  be; both species' policies improve.
+- **CT-04's predators** catch less with both newer bodies and newer
+  policies; the body effect is the larger. Under the iteration-300 policy,
+  catch risk falls from 4.24 with the iteration-300 gene pool to 1.52 with
+  the iteration-2,990 one.
+- **CT-05's predators** decline only slightly, through behaviour; their
+  body effect is not distinguishable from zero.
+- **The prey's improvement is behaviour** in both runs: newer policies make
+  them harder to catch, while their evolved bodies make no difference
+  (CT-04) or make them slightly easier to catch (CT-05).
+
+**Caveats.** Catch risk measures hunting success, not predator fitness,
+which is offspring: CT-04's predators evolved cheaper bodies and stand
+still more, and their world was the most stable (section 2), so catching
+less may be part of an energy-saving, sit-and-wait way of life rather than
+a loss. Cells mixing a policy with a gene pool from another iteration never
+occurred in training, so a policy may handle unfamiliar bodies badly; the
+diagonal cells, the original checkpoints, show the same direction. One run
+per condition.

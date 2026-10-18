@@ -1,0 +1,312 @@
+{
+  "method": "In tournament.py a checkpoint plays with its own policy and its own evolved\ngene pool, so \"newer predators catch more\" mixes the two. Here the focal\nspecies' policy and gene pool are taken from different checkpoints: every\npolicy iteration crossed with every gene-pool iteration, each against fixed\nopponents (the other species' policy and gene pool from one checkpoint).\nEpisode k uses seed + k in every cell (common random numbers).",
+  "replicates": 10000,
+  "runs": {
+    "eco_evolutionary_continuous_traits_2026-10-16_20-52-50_092027": {
+      "iterations": [
+        300,
+        1500,
+        2990
+      ],
+      "episodes": 100,
+      "predator": {
+        "policy_effect": {
+          "estimate": 0.5858385749109454,
+          "ci95": [
+            0.45105363490724143,
+            0.7225249202845113
+          ]
+        },
+        "body_effect": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 0.6666666666666666,
+          "ci95": [
+            0.6666666666666666,
+            0.6666666666666666
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.5,
+          "ci95": [
+            0.5,
+            0.5
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            3.298,
+            3.298,
+            3.298
+          ],
+          [
+            3.5623,
+            3.5623,
+            3.5623
+          ],
+          [
+            4.1767,
+            4.1767,
+            4.1767
+          ]
+        ]
+      },
+      "prey": {
+        "policy_effect": {
+          "estimate": 4.359981680030582,
+          "ci95": [
+            4.218432746531288,
+            4.496453018593296
+          ]
+        },
+        "body_effect": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.5,
+          "ci95": [
+            0.5,
+            0.5
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            7.6926,
+            7.6926,
+            7.6926
+          ],
+          [
+            2.1917,
+            2.1917,
+            2.1917
+          ],
+          [
+            1.1527,
+            1.1527,
+            1.1527
+          ]
+        ]
+      }
+    },
+    "eco_evolutionary_continuous_traits_2026-10-16_20-53-10_085977": {
+      "iterations": [
+        300,
+        1500,
+        2990
+      ],
+      "episodes": 100,
+      "predator": {
+        "policy_effect": {
+          "estimate": -0.690662958264464,
+          "ci95": [
+            -0.7421562066405358,
+            -0.6425385483105714
+          ]
+        },
+        "body_effect": {
+          "estimate": -1.1521469487053584,
+          "ci95": [
+            -1.225482726500038,
+            -1.0828320919465115
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 0.07407407407407407,
+          "ci95": [
+            0.07407407407407407,
+            0.1111111111111111
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            4.2441,
+            2.2773,
+            1.516
+          ],
+          [
+            3.0797,
+            1.9646,
+            1.4899
+          ],
+          [
+            2.1563,
+            1.4835,
+            1.2896
+          ]
+        ]
+      },
+      "prey": {
+        "policy_effect": {
+          "estimate": 0.964042642622217,
+          "ci95": [
+            0.9104410524469895,
+            1.0192693487718223
+          ]
+        },
+        "body_effect": {
+          "estimate": 0.008987472633211988,
+          "ci95": [
+            -0.055567610789493085,
+            0.07317308386696686
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 1.0,
+          "ci95": [
+            0.9629629629629629,
+            1.0
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.5555555555555556,
+          "ci95": [
+            0.5555555555555556,
+            0.6666666666666666
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            3.5197,
+            3.1913,
+            3.2077
+          ],
+          [
+            2.0837,
+            2.0268,
+            2.249
+          ],
+          [
+            1.8455,
+            1.7833,
+            1.9517
+          ]
+        ]
+      }
+    },
+    "eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103": {
+      "iterations": [
+        300,
+        1500,
+        2990
+      ],
+      "episodes": 100,
+      "predator": {
+        "policy_effect": {
+          "estimate": -0.18040732947254803,
+          "ci95": [
+            -0.23478077370624595,
+            -0.12923976391049702
+          ]
+        },
+        "body_effect": {
+          "estimate": -0.06705141404467753,
+          "ci95": [
+            -0.15095778966706852,
+            0.014164296192975689
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 0.3333333333333333,
+          "ci95": [
+            0.25925925925925924,
+            0.4074074074074074
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.5925925925925926,
+          "ci95": [
+            0.5185185185185185,
+            0.6666666666666666
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            2.634,
+            1.7195,
+            1.8724
+          ],
+          [
+            2.1179,
+            1.953,
+            2.2741
+          ],
+          [
+            1.6841,
+            1.7423,
+            1.9877
+          ]
+        ]
+      },
+      "prey": {
+        "policy_effect": {
+          "estimate": 1.3293057597860998,
+          "ci95": [
+            1.2827782722883212,
+            1.3749106235870716
+          ]
+        },
+        "body_effect": {
+          "estimate": -0.10244592570302208,
+          "ci95": [
+            -0.15801313848894138,
+            -0.04755368317634878
+          ]
+        },
+        "policy_share_helping": {
+          "estimate": 0.8518518518518519,
+          "ci95": [
+            0.7777777777777778,
+            0.8888888888888888
+          ]
+        },
+        "body_share_helping": {
+          "estimate": 0.25925925925925924,
+          "ci95": [
+            0.18518518518518517,
+            0.4444444444444444
+          ]
+        },
+        "catch_risk_policy_by_pool": [
+          [
+            3.4159,
+            3.6001,
+            3.5067
+          ],
+          [
+            1.3827,
+            1.6258,
+            1.6347
+          ],
+          [
+            1.4148,
+            1.593,
+            1.5329
+          ]
+        ]
+      }
+    }
+  }
+}
