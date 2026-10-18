@@ -1,13 +1,17 @@
 # eco_evolutionary_continuous_traits
 
-**Status (2026-10-17): pilot and v2 round done** ([RESULTS.md](RESULTS.md)).
-With expensive capacity (pilot) the traits evolved by selection into cheap
-bodies and the ecosystem and the learning arms race collapsed. The two
-cheaper-capacity runs (v2: 2× and 4× cheaper, also with fixed observation
-scales) were stable (coexistence 50 of 50); both species traded view
-distance for a wide field of view, speed rose and fell again, and newer
-prey checkpoints did better while newer predator checkpoints mostly did
-worse. One run per condition.
+**Status (2026-10-18): pilot, v2 round and Baldwin-style branches done**
+([RESULTS.md](RESULTS.md)). With expensive capacity (pilot) the traits evolved
+by selection into cheap bodies and the ecosystem and the learning arms race
+collapsed. The two cheaper-capacity runs (v2: 2× and 4× cheaper, also with
+fixed observation scales) were stable (coexistence 50 of 50); both species
+traded view distance for a wide field of view, and speed rose and fell
+again; newer predators caught less, in CT-04 mostly through their evolved
+bodies, in CT-05 slightly and through behaviour, while the prey's gains came
+from behaviour. Branching CT-05 into learning and frozen arms, predator
+speed rose only where predators kept learning: consistent with learning
+altering selection on speed, but not larger than a rough drift reference,
+with one run per arm.
 
 Heritable body traits in the continuous Predator-Prey-Grass world: does an
 eco-evolutionary arms race appear when animals' bodies evolve while their
@@ -171,6 +175,11 @@ README).
 - [`analysis/v2_costs.py`](analysis/v2_costs.py): the v2 round's figure and
   results JSON (CT-03 to CT-05), with bootstrap intervals for the
   tournaments.
+- [`evolve_frozen.py`](evolve_frozen.py): evolution with both policies
+  frozen (RLlib cannot train nothing), for the Baldwin-style branches.
+- [`analysis/cross_policy_bodies.py`](analysis/cross_policy_bodies.py),
+  [`analysis/baldwin_branches.py`](analysis/baldwin_branches.py): behaviour
+  against bodies in the tournaments; the four branches.
 - [`analysis/final_check.py`](analysis/final_check.py),
   [`tournament.py`](tournament.py): evaluation with each checkpoint's
   evolved gene pool.

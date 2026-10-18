@@ -9,6 +9,10 @@
 | CT-03 | `2026-10-16_20-52-50_092027` | neutral control, fixed observation scales | 3,000 | 10 | 15.6 h | completed |
 | CT-04 | `2026-10-16_20-53-10_085977` | expressed, costs 0.5× the pilot's, fixed observation scales | 3,000 | 10 | 24.7 h | completed |
 | CT-05 | `2026-10-16_20-53-30_161103` | expressed, costs 0.25× the pilot's, fixed observation scales | 3,000 | 10 | 23.7 h | completed |
+| BL-1 | `2026-10-18_06-18-25_230954` | CT-05 from iteration 1,500, both species learning | 1,500 | 7 | 12.0 h | completed |
+| BL-2 | `bl2_frozen_both` (`evolve_frozen.py`) | CT-05 from iteration 1,500, both policies frozen | 1,500 (equivalent steps) | 7 islands | 2.6 h | completed |
+| BL-3 | `2026-10-18_06-18-45_270476` | CT-05 from iteration 1,500, predators frozen | 1,500 | 7 | 10.3 h | completed |
+| BL-4 | `2026-10-18_06-19-05_426648` | CT-05 from iteration 1,500, prey frozen | 1,500 | 7 | 6.7 h | completed |
 
 CT-01 and CT-02: every quirk fixed, cost coefficients speed 1.0, vision
 0.5, field of view 0.25 (SPEC.md section 11), trained side by side from
@@ -286,3 +290,89 @@ a loss. Cells mixing a policy with a gene pool from another iteration never
 occurred in training, so a policy may handle unfamiliar bodies badly; the
 diagonal cells, the original checkpoints, show the same direction. One run
 per condition.
+
+## 4. Does body evolution change course when behaviour stops learning? (BL-1 to BL-4)
+
+**Question.** A first Baldwin-style test: does learning change how bodies
+evolve? If behaviour adapts to the bodies it drives, a trait can become
+worth having only while behaviour keeps learning to use it.
+
+**Design.** Four branches from one point, CT-05 at iteration 1,500 (its
+policies and its gene pool, pooled over its 10 workers), each continuing
+for 1,500 iterations' worth of environment steps (4,800 decisions per
+iteration) on 7 workers or islands, with CT-05's settings: BL-1 both species
+learning, BL-2 both frozen, BL-3 predators frozen, BL-4 prey frozen. Frozen
+policies stay bit for bit unchanged (checked). RLlib cannot run with nothing
+to train, so BL-2 runs as [`evolve_frozen.py`](evolve_frozen.py): the same
+environment and action sampling, the same number of decisions, gene pools
+saved in the same layout. [`analysis/baldwin_branches.py`](analysis/baldwin_branches.py)
+measures every branch the same way, from the gene pools saved every 10
+iterations (mean gene of the animals alive in all workers), and writes
+[`analysis/results/baldwin_branches.json`](analysis/results/baldwin_branches.json)
+and the figure.
+
+![Four branches from CT-05: mean genes over 1,500 iterations](../../../assets/images/readme/continuous_traits_baldwin_branches.png)
+
+**Change from the branch point** to the mean of the last 300 iterations
+(speed / vision / field of view; start: predators +0.19 / −0.61 / +0.40,
+prey +0.23 / −0.52 / +0.53):
+
+| Branch | Predators learn | Prey learn | Predators | Prey |
+|---|---|---|---|---|
+| BL-1 | yes | yes | +0.12 / +0.02 / +0.14 | −0.08 / +0.04 / +0.02 |
+| BL-2 | no | no | −0.07 / +0.01 / +0.08 | −0.04 / 0.00 / +0.03 |
+| BL-3 | no | yes | −0.23 / 0.00 / +0.11 | −0.24 / −0.02 / +0.03 |
+| BL-4 | yes | no | +0.17 / +0.10 / −0.02 | +0.11 / +0.05 / +0.03 |
+
+**2 × 2 effects** on these changes, e.g. predator learning = ((BL-1 + BL-4)
+− (BL-2 + BL-3)) / 2. As a rough reference for how large drift can make
+such an effect: the same measure applied to genes without effect in the
+neutral runs CT-02 and CT-03 (180 changes from overlapping 1,500-iteration
+windows, combined four at a time like the effects) gives |effect| with
+median 0.10, 90th percentile 0.26 and 95th percentile 0.31. This is not a
+calibrated null distribution: it pools traits, species and runs, its windows
+overlap, and those runs had 14 and 10 workers against the branches' 7, so
+it probably understates the branches' drift.
+
+| Gene | Predator learning | Prey learning |
+|---|---:|---:|
+| Predator speed | **+0.29** | −0.10 |
+| Predator vision | +0.06 | −0.05 |
+| Predator field of view | −0.04 | +0.10 |
+| Prey speed | +0.16 | −0.19 |
+| Prey vision | +0.05 | −0.01 |
+| Prey field of view | −0.01 | 0.00 |
+
+**Results.**
+
+- **Predator speed rose where predators kept learning** (BL-1 +0.12, BL-4
+  +0.17) **and fell where their policy was frozen** (BL-2 −0.07, BL-3
+  −0.23), the same direction in both pairs. The predator-learning effect,
+  +0.29, lies between the 90th and 95th percentiles of the rough drift
+  reference, which probably understates drift: suggestive, not
+  established.
+- **Prey speed** rose most where predators learned and prey did not (BL-4
+  +0.11) and fell most where prey learned and predators did not (BL-3
+  −0.24); both effects (+0.16 for predator learning, −0.19 for prey
+  learning) are well within the drift reference.
+- **Vision and field of view barely changed** in any branch (all effects
+  0.13 or less), staying near the short-sighted, wide-angle state CT-05 had
+  reached; in BL-4, predators' view distance rose somewhat (+0.10).
+- The selection differentials for vision and field of view kept the signs
+  of CT-05 in all four branches (vision negative, field of view positive),
+  whether or not behaviour learned.
+
+**Interpretation and caveats.** One run per branch. The predator-speed
+contrast is consistent with learning altering selection on speed, as a
+Baldwin-style effect would, but these runs measure gene trajectories, not
+whether speed pays, and the contrast is not distinguishable from drift at
+this sample size: a hypothesis for replication, not a finding. BL-2 differs in code path and random seeding (seeded, not run
+through RLlib). All branches start from fresh draws from CT-05's pooled
+gene pool, not from its individual islands. Behaviour here is shared
+population-level learning, not individual lifetime learning, so even a
+replicated effect would be learning steering evolution in the broad sense,
+not the classic Baldwin effect.
+
+**Next.** Replicate the branches (several seeds per arm, starting from the
+same branch point), which would give run-level intervals; the predator-speed
+contrast is the pre-specified test.
