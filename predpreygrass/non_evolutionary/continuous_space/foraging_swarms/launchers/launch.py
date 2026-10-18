@@ -11,7 +11,9 @@ Conditions (prey manipulated first; predators keep full information):
 
 Everything else is config/config_env.py (the quirks-fixed milestone world)
 and config/config_ppo.py, with 14 simulation workers so that two runs can
-train side by side, as BE-04 and BE-05 did. Long runs (about 13-14 hours):
+train side by side, as BE-04 and BE-05 did. ITERATIONS is 2,000, not
+BE-04/05's 3,000: condition A is compared at their saved iteration-2,000
+checkpoints (README, "Stage 2"). Long runs (about 9.5 hours):
 start them with systemd-run --user so they survive the session, e.g.
 
     systemd-run --user --unit=sw-B-1 --working-directory=$PWD \\
@@ -21,6 +23,8 @@ import sys
 
 from predpreygrass.non_evolutionary.continuous_space.foraging_swarms import train
 from predpreygrass.non_evolutionary.continuous_space.foraging_swarms.config.config_ppo import RUNS_DIR
+
+ITERATIONS = 2000
 
 CONDITIONS = {
     "A": {},
@@ -37,7 +41,7 @@ if __name__ == "__main__":
     train.config_env.update(CONDITIONS[condition])
     run = f"{{run_name}}_{condition}_seed{seed}"
     train.config_ppo.update(
-        iterations=3000,
+        iterations=ITERATIONS,
         init_checkpoint=None,
         frozen_policies=[],
         num_env_runners=14,

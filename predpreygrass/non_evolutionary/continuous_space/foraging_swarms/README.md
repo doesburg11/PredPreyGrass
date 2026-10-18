@@ -260,34 +260,57 @@ is warranted.** The test-time ablations cannot replace it (Ct is far out of
 distribution). All of this is two training runs of one condition; it
 describes these policies, not the variation between training runs.
 
-## Stage 2: training comparison (prepared, not started)
+## Stage 2: training comparison (running since 2026-10-18)
 
 | Condition | Runs | |
 |---|---|---|
-| A | BE-04, BE-05 + 1 new | the new A run checks that this module at HEAD trains like BE-04/05 |
-| B | 3 | prey see other prey's positions only |
-| C | 3 | prey see no other prey |
+| A | BE-04, BE-05, at their iteration-2,000 checkpoints | the code is identical to this environment at its defaults (diffed) |
+| B | seeds 1, 2, 3 | prey see other prey's positions only |
+| C | seeds 1, 2, 3 | prey see no other prey |
+
+Each run trains for **2,000 iterations** rather than BE-04/05's 3,000, and
+A is measured at BE-04/05's iteration-2,000 checkpoints, so all
+conditions are compared at the same training length. The cut saves about
+a third of the time. In BE-04, coexistence and the swarm measurements were
+already stable by iteration 1,000 (Stage 0, "Over training"). The risk is
+a B or C run that settles late: BE-05 settled only at iteration 1,366. A
+new A run was planned, as a check that this module trains like BE-04/05,
+but was dropped to save about 10 hours; the diff of the environment code
+stands in for it.
+
+[`launchers/launch.py`](launchers/launch.py) `<A|B|C|BP|CP> <seed>`
+trains one run with 14 simulation workers, into
+`runs/foraging_swarms_<time>_<condition>_seed<seed>/`.
+[`launchers/queue_stage2.sh`](launchers/queue_stage2.sh) runs several one
+after another. Two queues run side by side on 32 cores, as BE-04 and BE-05
+did:
 
 ```bash
-systemd-run --user --unit=sw-B-1 --working-directory=$PWD \
-    .conda/bin/python predpreygrass/non_evolutionary/continuous_space/foraging_swarms/launchers/launch.py B 1
+systemd-run --user --unit=sw-lane1 --working-directory=$PWD \
+    bash predpreygrass/non_evolutionary/continuous_space/foraging_swarms/launchers/queue_stage2.sh "B 1" "C 2" "B 3"
+systemd-run --user --unit=sw-lane2 --working-directory=$PWD \
+    bash predpreygrass/non_evolutionary/continuous_space/foraging_swarms/launchers/queue_stage2.sh "C 1" "B 2" "C 3"
 ```
 
-[`launchers/launch.py`](launchers/launch.py) `<A|B|C|BP|CP> <seed>`: 3,000
-iterations, 14 simulation workers (two runs side by side on 32 cores, as
-BE-04 and BE-05), into `runs/foraging_swarms_<time>_<condition>_seed<seed>/`.
-BE-04 took 14.2 hours, so 7 runs two at a time take about 50 hours. Four at
-a time may be faster; measure that on the first iterations before relying
-on it. The `seed` setting (`config_ppo`) is recorded with the run, but
-training is **not** bit-reproducible with remote simulation workers: two
+Progress is in `runs/logs/queue.log` and `runs/logs/train_*.log`. A run
+takes about 9.5 hours (BE-04 needed 9.5 hours for its first 2,000
+iterations: about 10 s per iteration while populations are small, 18-21 s
+once both species coexist). Three rounds take about 28 hours. A first
+start with 3,000 iterations was stopped after about 300 iterations and
+restarted with 2,000; its partial runs are in `runs/aborted_3000iter/` and
+are not used.
+
+The `seed` setting (`config_ppo`) is recorded with the run, but training
+is **not** bit-reproducible with remote simulation workers: two
 1-iteration runs with the same seed collected different episodes.
 
-**Pre-specified outcomes:**
+**Pre-specified outcomes**, measured with `measure_swarms.py` at iteration
+2,000 for every condition (and every 300 iterations for the course of
+training):
 
 - **Primary:** coexistence (of 50 evaluation episodes, seeds 0-49), prey
   catch risk, prey grass intake.
-- **Secondary:** the swarm measurements above at the final checkpoint and
-  every 300 iterations.
+- **Secondary:** the swarm measurements above.
 - **Social information:** distance to grass after losing it, and time
   until it is seen again, in A against B and C. The velocity probe applies
   to A only: B and C policies never see a conspecific's velocity, so there
@@ -295,8 +318,8 @@ training is **not** bit-reproducible with remote simulation workers: two
   for them).
 
 Between-run variation is large: BE-04 settled at iteration 371 and BE-05
-at 1,366. With three runs per condition, report directions across runs
-and avoid causal claims beyond the manipulation itself.
+at 1,366. With two or three runs per condition, report directions across
+runs and avoid causal claims beyond the manipulation itself.
 
 ## Files
 
