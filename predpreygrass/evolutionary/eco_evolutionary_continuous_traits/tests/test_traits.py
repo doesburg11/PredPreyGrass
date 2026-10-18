@@ -329,3 +329,37 @@ def test_settings_without_the_key_keep_the_pilots_scaling():
     saved = {key: value for key, value in config_env.items() if key != "observation_fixed_scale"}
     assert PredPreyGrassContinuous(saved).fixed_scale is False
     assert PredPreyGrassContinuous(config_env).fixed_scale is True
+
+
+def _write_pools(path, predator, prey):
+    import json
+
+    workers = [
+        {
+            "predator": {"alive": predator, "pool": None, "archive": []},
+            "prey": {"alive": prey, "pool": None, "archive": []},
+        }
+    ]
+    path.write_text(json.dumps(workers))
+    return str(path)
+
+
+def test_initial_gene_pool_seeds_the_first_episode(tmp_path):
+    path = _write_pools(tmp_path / "gene_pools.json", [[0.3, -0.2, 0.1]], [[-0.1, 0.4, 0.2]])
+    env = PredPreyGrassContinuous({"trait_initial_gene_pool": path})
+    env.reset(seed=0)
+    assert all(np.array_equal(a.genome, [0.3, -0.2, 0.1]) for a in env.predators)
+    assert all(np.array_equal(a.genome, [-0.1, 0.4, 0.2]) for a in env.prey)
+    # Later episodes evolve on from the survivors as usual.
+    env.predators[0].genome = np.array([0.0, 0.0, 0.0])
+    env.predators = env.predators[:1]
+    env.reset(seed=1)
+    assert all(np.array_equal(a.genome, [0.0, 0.0, 0.0]) for a in env.predators)
+
+
+def test_invalid_initial_gene_pool_is_rejected(tmp_path):
+    with pytest.raises(ValueError):
+        PredPreyGrassContinuous({"trait_initial_gene_pool": str(tmp_path / "missing.json")})
+    bad = _write_pools(tmp_path / "bad.json", [[0.1, 0.2]], [[0.0, 0.0, 0.0]])
+    with pytest.raises(ValueError):
+        PredPreyGrassContinuous({"trait_initial_gene_pool": bad})

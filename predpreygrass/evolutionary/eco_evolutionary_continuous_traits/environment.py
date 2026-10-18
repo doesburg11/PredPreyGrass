@@ -22,9 +22,11 @@ Aquarium's quirks. Each quirk can be fixed with its own fix_* setting
 (SPEC.md, section 9); FIXES turns them all on.
 """
 
+import json
 import math
 import random
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 from gymnasium.spaces import Box, Dict, Discrete
@@ -136,6 +138,10 @@ DEFAULT_CONFIG = {
     # over the fastest possible top speed, so an input means the same
     # distance or speed whatever the observer's and observed animal's bodies.
     "observation_fixed_scale": False,
+    # A checkpoint's gene_pools.json to start from (None: founders from
+    # N(0, trait_founder_std)): the first episode's founders are drawn from
+    # its genomes, pooled over all of that run's simulation workers.
+    "trait_initial_gene_pool": None,
 }
 
 # Every fix on: the cleaned-up world.
@@ -293,6 +299,14 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         # (None: draw from N(0, trait_founder_std)), and recent births.
         self.gene_pool = {species: None for species in SPECIES}
         self.archive = {species: deque(maxlen=c["trait_archive_size"]) for species in SPECIES}
+        if c["trait_initial_gene_pool"] is not None:
+            if not isinstance(c["trait_initial_gene_pool"], str) or not Path(c["trait_initial_gene_pool"]).is_file():
+                raise ValueError("trait_initial_gene_pool must be the path of a gene_pools.json file")
+            loaded = pooled_gene_pool(c["trait_initial_gene_pool"])
+            for species, genomes in loaded.items():
+                if genomes is not None and (genomes.ndim != 2 or genomes.shape[1] != len(TRAITS) or not np.isfinite(genomes).all()):
+                    raise ValueError(f"trait_initial_gene_pool has malformed {species} genomes")
+            self.gene_pool = loaded
         self.freeze_gene_pool = False  # evaluation: keep the pool fixed
         self.gene_rng = np.random.default_rng()
         self.episode_trait_stats = None  # set when an episode ends
@@ -892,6 +906,21 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         grass = self.grass.observation(animal, animal.view_distance, animal.fov, scale)
         energy = np.float32(np.clip(animal.energy / self.max_energy[animal.species], 0.0, 1.0))
         return np.append(np.concatenate((obs, grass)), energy)
+
+
+def pooled_gene_pool(path):
+    """{species: (n, genes) array or None} from a gene_pools.json file: the
+    genomes alive in every simulation worker (a worker's founder pool, or
+    else its recent births, for a species with none alive)."""
+    workers = json.loads(Path(path).read_text())
+    pool = {}
+    for species in SPECIES:
+        genomes = []
+        for worker in workers:
+            entry = worker[species]
+            genomes += entry["alive"] or entry["pool"] or entry["archive"]
+        pool[species] = np.array(genomes, dtype=float) if genomes else None
+    return pool
 
 
 def register() -> None:

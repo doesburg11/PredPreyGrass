@@ -15,6 +15,7 @@ import numpy as np
 from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.environment import (
     DEFAULT_CONFIG,
     PredPreyGrassContinuous,
+    pooled_gene_pool,
 )
 
 SPECIES = ("predator", "prey")
@@ -190,15 +191,7 @@ def load_gene_pool(checkpoint):
     path = Path(checkpoint) / GENE_POOLS
     if not path.is_file():
         return None
-    workers = json.loads(path.read_text())
-    pool = {}
-    for species in ("predator", "prey"):
-        genomes = []
-        for worker in workers:
-            entry = worker[species]
-            genomes += entry["alive"] or entry["pool"] or entry["archive"]
-        pool[species] = np.array(genomes, dtype=float) if genomes else None
-    return pool
+    return pooled_gene_pool(path)
 
 
 def use_gene_pool(env, pool):
