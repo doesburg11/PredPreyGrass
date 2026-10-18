@@ -203,6 +203,19 @@ python -m pytest predpreygrass/evolutionary/eco_evolutionary_continuous_traits/t
 
 Runs are saved in the module's `runs/` folder (gitignored).
 
+## TODO: next experimental steps
+
+- [ ] **Replicate the Baldwin-style branches** (RESULTS.md section 4). From
+  the same branch point (CT-05 at iteration 1,500, its policies and pooled
+  gene pool), run several independent seeds per arm, e.g. 3 seeds × 4 arms
+  (both learning, both frozen, predators frozen, prey frozen), 1,500
+  iterations each on 7 workers or islands. The pre-specified test is the
+  predator-speed contrast: does predator learning raise predator speed
+  ((BL-1 + BL-4) − (BL-2 + BL-3)) / 2 across seeds, with run-level
+  intervals? Seed the RLlib arms as well, and add neutral 7-worker branches
+  as a matched drift control. Cost: about 7–12 hours per batch of four
+  RLlib runs; frozen-both arms (`evolve_frozen.py`) about 2.5 hours each.
+
 ## References
 
 - Banks, M. S., et al. (2015). "Why do animal eyes have pupils of different
