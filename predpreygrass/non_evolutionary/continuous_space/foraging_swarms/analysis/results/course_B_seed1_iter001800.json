@@ -1,0 +1,589 @@
+{
+ "episodes": 20,
+ "outcomes": {
+  "time_limit": 18,
+  "predators_extinct": 2
+ },
+ "coexisting": 18,
+ "catch_risk_per_prey_per_1000_steps": 1.5285332209631761,
+ "mean_predators": 9.73651540283084,
+ "mean_prey": 32.76921457661659,
+ "means": {
+  "predator/alignment": 0.17823722388251204,
+  "predator/alignment_shuffled": 0.01440674387086677,
+  "predator/alignment_target_in_view": 0.22622812196034559,
+  "predator/alignment_target_out_of_view": -0.029043792768358914,
+  "predator/clark_evans_R": 1.012621783418707,
+  "predator/clark_evans_R_all_ages": 0.9994176755224068,
+  "predator/conspecific_in_view_when_target_out": 0.7694307200825447,
+  "predator/group_share_64": 0.03912293576276297,
+  "predator/group_share_64_null": 0.021581025911681897,
+  "predator/group_share_96": 0.13782406910426914,
+  "predator/group_share_96_null": 0.09476723168870539,
+  "predator/largest_group_share_64": 0.19029997541053698,
+  "predator/largest_group_share_96": 0.25325785029982983,
+  "predator/mean_group_size_64": 1.2136904481032076,
+  "predator/mean_group_size_96": 1.573862090321956,
+  "predator/moving_share": 0.5997820524969203,
+  "predator/nn_distance": 127.04702180176109,
+  "predator/overlap_share": 0.017745794428410577,
+  "predator/polarization": 0.39317860569319063,
+  "predator/target_out_of_view": 0.2170731287096302,
+  "prey/alignment": 0.204428963941205,
+  "prey/alignment_shuffled": 0.013401840471676075,
+  "prey/alignment_target_in_view": 0.2396831689571726,
+  "prey/alignment_target_out_of_view": 0.17220843680653683,
+  "prey/caught_alone": 0.01617041025486767,
+  "prey/caught_in_group": 0.004112602486404529,
+  "prey/clark_evans_R": 0.9430858763404795,
+  "prey/clark_evans_R_all_ages": 0.9100173359503637,
+  "prey/conspecific_in_view_when_target_out": 0.9986494659518622,
+  "prey/grass_alone": 0.05894486246771719,
+  "prey/grass_in_group": 0.02887585943970447,
+  "prey/group_share_64": 0.2379489278607318,
+  "prey/group_share_64_null": 0.17625480691712445,
+  "prey/group_share_96": 0.5060529728001517,
+  "prey/group_share_96_null": 0.438308674370188,
+  "prey/largest_group_share_64": 0.15712001855485672,
+  "prey/largest_group_share_96": 0.2991209197669752,
+  "prey/mean_group_size_64": 2.084152105657007,
+  "prey/mean_group_size_96": 6.907614121018016,
+  "prey/moving_share": 0.9582607156176581,
+  "prey/nn_distance": 67.99182579318233,
+  "prey/overlap_share": 0.13196890032833072,
+  "prey/polarization": 0.21666730094661996,
+  "prey/target_out_of_view": 0.4942687027198811
+ },
+ "counts": {
+  "predator/moving_share": 232166,
+  "predator/clark_evans_R_all_ages": 23608,
+  "prey/moving_share": 689111,
+  "prey/clark_evans_R_all_ages": 24165,
+  "predator/nn_distance": 231599,
+  "predator/clark_evans_R": 23398,
+  "predator/overlap_share": 23398,
+  "predator/polarization": 22834,
+  "predator/group_share_64": 23398,
+  "predator/group_share_64_null": 23398,
+  "predator/mean_group_size_64": 23398,
+  "predator/largest_group_share_64": 23398,
+  "predator/group_share_96": 23398,
+  "predator/group_share_96_null": 23398,
+  "predator/mean_group_size_96": 23398,
+  "predator/largest_group_share_96": 23398,
+  "predator/target_out_of_view": 232166,
+  "predator/conspecific_in_view_when_target_out": 50397,
+  "prey/nn_distance": 689108,
+  "prey/clark_evans_R": 23962,
+  "prey/overlap_share": 23962,
+  "prey/polarization": 23962,
+  "prey/group_share_64": 23962,
+  "prey/group_share_64_null": 23962,
+  "prey/mean_group_size_64": 23962,
+  "prey/largest_group_share_64": 23962,
+  "prey/group_share_96": 23962,
+  "prey/group_share_96_null": 23962,
+  "prey/mean_group_size_96": 23962,
+  "prey/largest_group_share_96": 23962,
+  "prey/target_out_of_view": 689111,
+  "prey/caught_alone": 232709,
+  "prey/grass_alone": 232709,
+  "prey/alignment": 521817,
+  "prey/alignment_shuffled": 2609093,
+  "prey/alignment_target_in_view": 249178,
+  "prey/caught_in_group": 456402,
+  "prey/grass_in_group": 456402,
+  "prey/alignment_target_out_of_view": 272639,
+  "prey/conspecific_in_view_when_target_out": 340606,
+  "predator/alignment": 36814,
+  "predator/alignment_shuffled": 184075,
+  "predator/alignment_target_in_view": 29893,
+  "predator/alignment_target_out_of_view": 6921
+ },
+ "intervals": {
+  "predator/clark_evans_R": {
+   "estimate": 1.012621783418707,
+   "low": 1.001624052609597,
+   "high": 1.024676582053107
+  },
+  "predator/alignment_minus_shuffled": {
+   "estimate": 0.16383048001164527,
+   "low": 0.15081502300858737,
+   "high": 0.17857975695291403
+  },
+  "predator/alignment_target_out_of_view_minus_shuffled": {
+   "estimate": -0.043450536639225684,
+   "low": -0.06912480713359,
+   "high": -0.018924363938603746
+  },
+  "predator/group_share_96_minus_random": {
+   "estimate": 0.04305683741556375,
+   "low": 0.033532802253225504,
+   "high": 0.052179532253489674
+  },
+  "prey/clark_evans_R": {
+   "estimate": 0.9430858763404791,
+   "low": 0.9313783982979862,
+   "high": 0.9573304188535933
+  },
+  "prey/alignment_minus_shuffled": {
+   "estimate": 0.1910271234695289,
+   "low": 0.17757297583210813,
+   "high": 0.20588108731177363
+  },
+  "prey/alignment_target_out_of_view_minus_shuffled": {
+   "estimate": 0.15880659633486074,
+   "low": 0.14812426477680615,
+   "high": 0.17232160628398388
+  },
+  "prey/group_share_96_minus_random": {
+   "estimate": 0.06774429842996371,
+   "low": 0.059755109474473864,
+   "high": 0.075189754176554
+  },
+  "prey/caught_in_group_minus_alone": {
+   "estimate": -0.012057807768463139,
+   "low": -0.01303650923461677,
+   "high": -0.010897580946881799
+  }
+ },
+ "predator/pair_spells": {
+  "n": 6097,
+  "censored": 229,
+  "km_median": 5.0,
+  "km_share_at_least_10": 0.2877437000611357
+ },
+ "predator/group_lifetimes": {
+  "n": 1513,
+  "censored": 11,
+  "km_median": 4.0,
+  "km_share_at_least_10": 0.22647555218429977
+ },
+ "predator/target_loss": {
+  "with_conspecific": {
+   "events": 10813,
+   "followed_full_window": 10213,
+   "mean_distance_by_decision": [
+    153.86033545113935,
+    157.42585198126991,
+    155.55488851352078,
+    152.03726363840386,
+    148.22455812440938,
+    145.2910283651722,
+    142.84083415100713,
+    141.08199901796888,
+    139.31688032822316,
+    137.78378120260166,
+    136.85815863300982,
+    135.74359092944863,
+    135.01170861352838,
+    134.29138739206476,
+    133.52182841448877,
+    132.84506531010027,
+    132.23962582198843,
+    131.8345103833073,
+    131.71437597292459,
+    131.47577785393116,
+    131.43000357033785
+   ],
+   "reacquired_within_window": 0.984627435621267
+  },
+  "without_conspecific": {
+   "events": 3087,
+   "followed_full_window": 2915,
+   "mean_distance_by_decision": [
+    152.74355208394752,
+    154.2584937855713,
+    149.9068851054244,
+    144.43667160144187,
+    139.4739608026693,
+    134.53846304520223,
+    130.23517604644877,
+    127.22209696184417,
+    125.35668127095157,
+    123.51323696952504,
+    122.69719198393977,
+    121.3382237311232,
+    120.52488734680517,
+    119.83796061753219,
+    119.69165966166108,
+    120.0405369535037,
+    119.97665952720259,
+    119.04596625241909,
+    118.94074121083997,
+    118.6342582554961,
+    118.62730751940018
+   ],
+   "reacquired_within_window": 0.9948542024013722
+  }
+ },
+ "predator/probe_observations": 4424,
+ "predator/probe": {
+  "45": {
+   "tv_distance": 0.47951921820640564,
+   "stop_change": 0.0035759059246629477,
+   "mean_turn_degrees": 1.884748802211246,
+   "turn_resultant": 0.7013158854763528,
+   "concentrated_share": 0.8232368896925859
+  },
+  "90": {
+   "tv_distance": 0.6081569194793701,
+   "stop_change": -0.014921762980520725,
+   "mean_turn_degrees": -0.3758762335566729,
+   "turn_resultant": 0.557788807727392,
+   "concentrated_share": 0.8130650994575045
+  },
+  "135": {
+   "tv_distance": 0.6546657085418701,
+   "stop_change": -0.010661501437425613,
+   "mean_turn_degrees": 0.9535286843958545,
+   "turn_resultant": 0.5080875304667007,
+   "concentrated_share": 0.8110307414104883
+  },
+  "180": {
+   "tv_distance": 0.6743252277374268,
+   "stop_change": -0.018087808042764664,
+   "mean_turn_degrees": -1.1892991632114192,
+   "turn_resultant": 0.5012175392487359,
+   "concentrated_share": 0.8094484629294756
+  },
+  "225": {
+   "tv_distance": 0.6599950790405273,
+   "stop_change": -0.014092069119215012,
+   "mean_turn_degrees": -0.9901390226214271,
+   "turn_resultant": 0.5085787852644624,
+   "concentrated_share": 0.8139692585895117
+  },
+  "270": {
+   "tv_distance": 0.6171837449073792,
+   "stop_change": -0.014824179001152515,
+   "mean_turn_degrees": -1.8222536972369963,
+   "turn_resultant": 0.550869572360472,
+   "concentrated_share": 0.8164556962025317
+  },
+  "315": {
+   "tv_distance": 0.4881351888179779,
+   "stop_change": -0.004908344242721796,
+   "mean_turn_degrees": -1.3654882895363902,
+   "turn_resultant": 0.681542021723724,
+   "concentrated_share": 0.8157775768535263
+  },
+  "zeroed_conspecific_velocities": {
+   "tv_distance": 0.5320758819580078
+  },
+  "own_velocity_turned_90": {
+   "tv_distance": 0.24243006110191345
+  }
+ },
+ "prey/pair_spells": {
+  "n": 166055,
+  "censored": 6831,
+  "km_median": 3.0,
+  "km_share_at_least_10": 0.06213388441606978
+ },
+ "prey/group_lifetimes": {
+  "n": 20574,
+  "censored": 46,
+  "km_median": 2.0,
+  "km_share_at_least_10": 0.048600886120983594
+ },
+ "prey/target_loss": {
+  "with_conspecific": {
+   "events": 49414,
+   "followed_full_window": 41505,
+   "mean_distance_by_decision": [
+    232.95916822738639,
+    241.997336745737,
+    241.98365747000213,
+    235.9971457705994,
+    230.15440395451648,
+    225.00843486974566,
+    222.52980985232406,
+    219.35249081280872,
+    217.5212958328571,
+    216.0630206996221,
+    213.76223625263452,
+    211.7395087092789,
+    210.89893792724544,
+    211.45920039107875,
+    211.54286808483172,
+    211.7996670108786,
+    212.28865439595393,
+    212.3227003975697,
+    212.8635396108814,
+    213.19944413210078,
+    213.1346124708056
+   ],
+   "reacquired_within_window": 0.8986628117094326
+  },
+  "without_conspecific": {
+   "events": 123,
+   "followed_full_window": 83,
+   "mean_distance_by_decision": [
+    188.20811657022693,
+    211.2367012421577,
+    205.02326692002347,
+    202.590292248592,
+    197.32109758859318,
+    180.76960871354638,
+    172.87545002643398,
+    173.80973110571875,
+    167.58126794873755,
+    156.83533043058844,
+    153.5935657490675,
+    144.4261809505243,
+    137.65195489277696,
+    139.8315950574003,
+    139.933072769461,
+    130.07234028611182,
+    130.57142771894607,
+    126.82199641254697,
+    128.1025258201841,
+    128.7540977467224,
+    137.08546212383234
+   ],
+   "reacquired_within_window": 0.963855421686747
+  }
+ },
+ "prey/probe_observations": 0,
+ "label": "course_B_seed1_iter001800",
+ "checkpoint": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/continuous_space/foraging_swarms/runs/foraging_swarms_2026-10-18_22-24-04_582571_B_seed1/checkpoint/iter_001800",
+ "override": {},
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19
+ ],
+ "settings": {
+  "MIN_AGE": 10,
+  "MOVING_SPEED": 0.5,
+  "ALIGN_RADIUS": 96.0,
+  "LINKS": [
+   64.0,
+   96.0
+  ],
+  "GROUP_LINK": 96.0,
+  "MIN_GROUP": 3,
+  "LOSS_WINDOW": 20
+ },
+ "per_episode": [
+  {
+   "seed": 0,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1208,
+   "prey_caught": 238,
+   "prey_exposure": 475343.0,
+   "mean_predators": 4.3486875,
+   "mean_prey": 59.417875
+  },
+  {
+   "seed": 1,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1230,
+   "prey_caught": 350,
+   "prey_exposure": 332857.5,
+   "mean_predators": 8.0701875,
+   "mean_prey": 41.6071875
+  },
+  {
+   "seed": 2,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1232,
+   "prey_caught": 424,
+   "prey_exposure": 204303.0,
+   "mean_predators": 10.9029375,
+   "mean_prey": 25.537875
+  },
+  {
+   "seed": 3,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1242,
+   "prey_caught": 444,
+   "prey_exposure": 178707.0,
+   "mean_predators": 12.1734375,
+   "mean_prey": 22.338375
+  },
+  {
+   "seed": 4,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1257,
+   "prey_caught": 450,
+   "prey_exposure": 195622.0,
+   "mean_predators": 11.3789375,
+   "mean_prey": 24.45275
+  },
+  {
+   "seed": 5,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1239,
+   "prey_caught": 415,
+   "prey_exposure": 208714.0,
+   "mean_predators": 11.1973125,
+   "mean_prey": 26.08925
+  },
+  {
+   "seed": 6,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1248,
+   "prey_caught": 445,
+   "prey_exposure": 127096.0,
+   "mean_predators": 13.1701875,
+   "mean_prey": 15.887
+  },
+  {
+   "seed": 7,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1232,
+   "prey_caught": 396,
+   "prey_exposure": 233865.0,
+   "mean_predators": 10.346,
+   "mean_prey": 29.233125
+  },
+  {
+   "seed": 8,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1251,
+   "prey_caught": 417,
+   "prey_exposure": 250259.0,
+   "mean_predators": 10.10525,
+   "mean_prey": 31.282375
+  },
+  {
+   "seed": 9,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1245,
+   "prey_caught": 405,
+   "prey_exposure": 199827.5,
+   "mean_predators": 11.2008125,
+   "mean_prey": 24.9784375
+  },
+  {
+   "seed": 10,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1237,
+   "prey_caught": 397,
+   "prey_exposure": 267964.5,
+   "mean_predators": 9.289,
+   "mean_prey": 33.4955625
+  },
+  {
+   "seed": 11,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1255,
+   "prey_caught": 450,
+   "prey_exposure": 207805.5,
+   "mean_predators": 11.0565625,
+   "mean_prey": 25.9756875
+  },
+  {
+   "seed": 12,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1247,
+   "prey_caught": 446,
+   "prey_exposure": 153241.5,
+   "mean_predators": 12.6694375,
+   "mean_prey": 19.1551875
+  },
+  {
+   "seed": 13,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1252,
+   "prey_caught": 457,
+   "prey_exposure": 195189.0,
+   "mean_predators": 11.6610625,
+   "mean_prey": 24.398625
+  },
+  {
+   "seed": 14,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1240,
+   "prey_caught": 415,
+   "prey_exposure": 221316.0,
+   "mean_predators": 10.809,
+   "mean_prey": 27.6645
+  },
+  {
+   "seed": 15,
+   "outcome": "predators_extinct",
+   "physics_steps": 7215,
+   "decisions": 1073,
+   "prey_caught": 150,
+   "prey_exposure": 472764.5,
+   "mean_predators": 3.2753984753984753,
+   "mean_prey": 65.52522522522523
+  },
+  {
+   "seed": 16,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1236,
+   "prey_caught": 341,
+   "prey_exposure": 378347.0,
+   "mean_predators": 6.50425,
+   "mean_prey": 47.293375
+  },
+  {
+   "seed": 17,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1242,
+   "prey_caught": 446,
+   "prey_exposure": 137471.5,
+   "mean_predators": 12.8814375,
+   "mean_prey": 17.1839375
+  },
+  {
+   "seed": 18,
+   "outcome": "time_limit",
+   "physics_steps": 8000,
+   "decisions": 1260,
+   "prey_caught": 449,
+   "prey_exposure": 234221.5,
+   "mean_predators": 10.3189375,
+   "mean_prey": 29.2776875
+  },
+  {
+   "seed": 19,
+   "outcome": "predators_extinct",
+   "physics_steps": 4925,
+   "decisions": 739,
+   "prey_caught": 97,
+   "prey_exposure": 318107.0,
+   "mean_predators": 3.371472081218274,
+   "mean_prey": 64.59025380710659
+  }
+ ],
+ "wall_seconds": 32.5
+}

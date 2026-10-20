@@ -12,6 +12,16 @@ was out of sight. Agents trained without information about their neighbours did 
 questions in the Predator-Prey-Grass world, where the only reward is +10
 per birth and coexistence of the two species comes before reward.
 
+**Result (Stage 2, 2026-10-20).** Prey that cannot see other prey (C)
+group and align *more*, not less, than prey that can (A, B), in all three
+runs and from early in training. So the prey grouping in this world is not
+driven by social information. What prey seem to do with the sight of
+neighbours is keep their distance. Seeing neighbours' movement (A against
+B) makes no measurable difference, and neither seeing positions nor
+seeing movement helps prey find grass that is out of view. C runs were the
+slowest to reach coexistence, and one never did. Details and caveats:
+"Stage 2" below.
+
 **Environment.** A copy of
 [`base_environment_continuous`](../base_environment_continuous/) (torus,
 steering physics, view cones, energy, reproduction, moving grass clusters;
@@ -260,7 +270,7 @@ is warranted.** The test-time ablations cannot replace it (Ct is far out of
 distribution). All of this is two training runs of one condition; it
 describes these policies, not the variation between training runs.
 
-## Stage 2: training comparison (running since 2026-10-18)
+## Stage 2: training comparison (2026-10-18 to 2026-10-20)
 
 | Condition | Runs | |
 |---|---|---|
@@ -320,6 +330,103 @@ training):
 Between-run variation is large: BE-04 settled at iteration 371 and BE-05
 at 1,366. With two or three runs per condition, report directions across
 runs and avoid causal claims beyond the manipulation itself.
+
+### Results
+
+All runs at iteration 2,000, 50 episodes each (seeds 0-49). Outputs:
+`analysis/results/stage2_*`; course of training (20 episodes every 300
+iterations): `analysis/results/course_*`.
+
+| | A (BE-04) | A (BE-05) | B1 | B2 | B3 | C1 | C2 | C3 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Coexisting (of 50)** | **49** | **32** | **49** | **47** | **48** | **49** | **40** | **1** |
+| Prey extinct / predators extinct | 0 / 1 | 16 / 2 | 1 / 0 | 3 / 0 | 0 / 2 | 0 / 1 | 8 / 2 | 48 / 1 |
+| Catch risk | 2.06 | 2.15 | 1.68 | 2.19 | 1.81 | 1.78 | 1.85 | 3.01 |
+| Predators / prey alive | 11 / 26 | 11 / 24 | 10 / 30 | 11 / 24 | 10 / 29 | 11 / 29 | 11 / 27 | 11 / 20 |
+| **Prey R** | 0.92 | 0.93 | 0.93 | 0.92 | 0.93 | **0.81** | **0.82** | **0.81** |
+| **Prey alignment minus shuffled** | 0.18 | 0.19 | 0.21 | 0.20 | 0.21 | **0.29** | **0.29** | **0.32** |
+| Same, grass out of view | 0.14 | 0.15 | 0.18 | 0.17 | 0.18 | 0.21 | 0.21 | 0.23 |
+| **Prey in groups ≥3 minus random** | 0.082 | 0.072 | 0.082 | 0.090 | 0.078 | **0.200** | **0.192** | **0.187** |
+| Prey pairs lasting ≥10 decisions | 6.4% | 6.7% | 7.0% | 7.2% | 7.0% | 12.3% | 12.4% | 14.2% |
+| Grass per prey-decision (in group / alone) | 0.032 / 0.066 | 0.029 / 0.074 | 0.032 / 0.057 | 0.032 / 0.070 | 0.031 / 0.062 | 0.031 / 0.071 | 0.031 / 0.074 | 0.032 / 0.090 |
+| After losing grass: distance 0 → 20 | 227 → 203 | 230 → 211 | 231 → 209 | 229 → 206 | 230 → 207 | 235 → 206 | 236 → 204 | 225 → 196 |
+| After losing grass: back in view ≤20 | 92% | 87% | 92% | 91% | 90% | 92% | 90% | 83% |
+| Predator alignment minus shuffled | 0.20 | 0.21 | 0.15 | 0.18 | 0.17 | 0.17 | 0.20 | 0.25 |
+| Predators in groups ≥3 minus random | 0.029 | 0.036 | 0.058 | 0.053 | 0.039 | 0.066 | 0.049 | 0.044 |
+
+"After losing grass" uses the events with a conspecific in view in A and B
+and those without one in C (the only kind there).
+
+**Course of training** (prey; 20 episodes per checkpoint):
+
+| Iteration | Prey R: A | B | C | Groups ≥3 minus random: A | B | C | Coexisting (of 20): A | B | C |
+|---:|---|---|---|---|---|---|---|---|---|
+| 300 | 0.94, 0.90 | 0.89, 0.91, 0.95 | 0.80, 0.80, 0.77 | 0.09, 0.09 | 0.11, 0.07, 0.06 | 0.24, 0.19, 0.22 | 2, 0 | 4, 0, 1 | 0, 0, 0 |
+| 600 | 0.94, 0.90 | 0.94, 0.92, 0.96 | 0.82, 0.84, 0.82 | 0.07, 0.12 | 0.07, 0.08, 0.05 | 0.18, 0.16, 0.18 | 14, 0 | 20, 0, 18 | 0, 4, 0 |
+| 900 | 0.92, 0.92 | 0.94, 0.96, 0.96 | 0.82, 0.83, 0.81 | 0.09, 0.09 | 0.07, 0.05, 0.05 | 0.17, 0.17, 0.18 | 19, 1 | 20, 9, 20 | 5, 4, 0 |
+| 1,200 | 0.93, 0.94 | 0.93, 0.95, 0.93 | 0.84, 0.82, 0.80 | 0.08, 0.07 | 0.08, 0.06, 0.08 | 0.16, 0.18, 0.21 | 18, 3 | 19, 18, 19 | 8, 9, 0 |
+| 1,500 | 0.93, 0.93 | 0.94, 0.94, 0.93 | 0.82, 0.82, 0.80 | 0.08, 0.07 | 0.08, 0.06, 0.08 | 0.19, 0.19, 0.20 | 17, 7 | 20, 19, 20 | 14, 16, 0 |
+| 1,800 | 0.93, 0.94 | 0.94, 0.94, 0.93 | 0.81, 0.81, 0.80 | 0.08, 0.07 | 0.07, 0.07, 0.08 | 0.20, 0.20, 0.19 | 20, 16 | 18, 18, 20 | 16, 19, 1 |
+
+**Findings.** Runs are the unit of replication: 2 A, 3 B, 3 C. "Complete
+separation" means every run of one condition lies beyond every run of the
+other. For 3 against 2 runs, the one-sided Mann-Whitney p of complete
+separation is 0.1. For 3 against 3 it is 0.05. These are the smallest p
+values these numbers of runs allow, however large the effect.
+
+1. **Prey that cannot see each other group more (C > A, B).** On R,
+   alignment, group share and pair persistence, all three C runs lie
+   beyond all five A and B runs (C against B: p = 0.05; C against A:
+   p = 0.1). The difference is large: the excess of prey in groups over
+   random placement is about 0.19-0.20 in C against 0.07-0.09 in A and B.
+   The three C runs are nearly identical to each other. It holds from
+   iteration 300 to 2,000, before any C run coexisted. So it is not a
+   late-learned strategy. Grouping in this world therefore arises without
+   social information, from shared responses to grass and predators. What
+   A and B prey do with the sight of other prey reduces grouping: they
+   appear to keep apart (Boids' separation rather than cohesion). That
+   reading fits the numbers, but the mechanism was not tested directly.
+   For example, A prey avoiding the patch another prey is heading for
+   would produce it.
+2. **Seeing neighbours' movement adds nothing measurable (B ≈ A).** On
+   every measure the B runs fall within or next to the A runs. This agrees
+   with Stage 0: the A policies are sensitive to neighbour velocity, but
+   do not follow it.
+3. **No social foraging (Hahn et al.'s main effect is absent).** After
+   losing sight of grass, prey in all conditions get back to it about
+   equally well (83-92% within 20 decisions, the same distance curves).
+   Prey with no view of other prey (C) do not do worse. Grass intake per
+   decision is also similar.
+4. **Coexistence: C was slowest to settle.** First checkpoint with at
+   least 15 of 20 episodes coexisting: B at iterations 600, 600, 1,200; A at
+   900, 1,800; C at 1,500, 1,800 and never (C3: 1 of 50 at iteration 2,000,
+   prey extinct in 48). B against C is completely separated (p = 0.05); A
+   overlaps both. At iteration 2,000, B coexists in 47-49 of 50 episodes, A
+   in 32-49, C in 1-49. One possible reading: prey that cannot see each
+   other crowd together, which makes them easier for predators to exploit
+   while the two species are still co-adapting. Untested, and based on
+   three runs. C3 might settle with more training, as BE-05 did between
+   iterations 2,000 and 2,990 (32 → 46 of 50).
+5. **Predators are unaffected**, as intended (only the prey's information
+   changed): their alignment is driven by visible prey, and they hardly
+   group.
+
+**Answer to the question.** In this world, prey and predators do not
+develop swarming out of self-interest the way Hahn et al.'s foragers did.
+Prey grouping is real but weak, short-lived and not social: it gets
+stronger when social information is removed. The social information prey
+do use seems to serve spacing, and neighbours' movement plays no visible
+role. The difference from Hahn et al. is plausible given the setup. Their
+agents were rewarded every step for tracking a target that most of them
+could not see, so following neighbours was the only way to track it. Here
+grass is in view about half the time, the only reward is a birth, and
+predators add a cost to crowding.
+
+**What could change this** (not tested): make following neighbours pay,
+for example less visible food (shorter prey view distance or scarcer
+grass), or predators that are confused by groups, as in Hahn et al. (2019).
+More runs per condition, including new A runs, would make the coexistence
+result testable (5 against 5: smallest possible p 0.004).
 
 ## Files
 
