@@ -428,6 +428,65 @@ grass), or predators that are confused by groups, as in Hahn et al. (2019).
 More runs per condition, including new A runs, would make the coexistence
 result testable (5 against 5: smallest possible p 0.004).
 
+## Predator cooperation: restraint and group hunting (2026-10-20)
+
+**Question.** Prey grouping turned out not to be social (Stage 2). Do the
+predators cooperate instead? Ritz et al. (2021) found two forms among
+selfish PPO predators with no cooperation reward: restraint (not hunting
+the last prey, "herding") and group hunting. Both are measured here on the
+trained policies, without new training.
+
+[`measure_predators.py`](measure_predators.py) (18 checkpoints: BE-04 and
+BE-05 at iterations 100-2,000 and final, B1-3, C1-3; 20-50 episodes each;
+predators at least 10 decisions old):
+
+- **No consistent restraint.** With 6-15 prey alive instead of 16-30,
+  low-energy predators go for a prey 50-100 units away at most about 1
+  point less hard (BE-04 -1.2 points, interval -1.8 to -0.6; BE-05 +0.3,
+  -0.5 to +1.0), and the share of encounters ending in a catch does not
+  change. Predators do stop more often when prey are scarce, but the
+  hungriest stop most (42% against 26% when well fed): sit-and-wait energy
+  saving (75% of the energy cost is movement), not restraint. Unlike Ritz
+  et al.'s predators, these cannot see how many prey are left.
+- **An apparent group-hunting signal.** At encounters (a prey within 64
+  units) where another predator's chosen action heads for the same prey,
+  the prey is caught by anyone in 0.33 of cases against 0.19 alone, and by
+  the focal predator in 0.21 against 0.18, in all 8 trained runs; early in
+  training (iterations 100-300) the focal predator's rate was lower when
+  joined. This is an association: both predators may pick the same easy
+  prey.
+
+[`counterfactual_hunting.py`](counterfactual_hunting.py) removes that
+selection. At a joint encounter it copies the world and replays the same
+decision from the same state with the helper's action replaced (stop, or
+run away from the prey), following each branch for 3 decisions with the
+same random seed. The factual branch reproduced every real outcome
+(0 mismatches in about 19,000 replays). Placebo: stopping a nearby
+predator that was *not* heading for the prey.
+
+| Checkpoint | Prey caught by anyone | … by the helper | … by the focal predator | Placebo (focal) |
+|---|---:|---:|---:|---:|
+| BE-04 final | +0.063 (+0.052, +0.074) | +0.072 | **-0.009** (-0.016, -0.003) | +0.006 |
+| BE-05 final | +0.061 (+0.048, +0.075) | +0.077 | **-0.016** (-0.024, -0.008) | -0.002 |
+| BE-04 iter 600 | +0.064 (+0.051, +0.077) | +0.078 | **-0.014** (-0.024, -0.004) | +0.004 |
+| B1 | +0.047 (+0.037, +0.058) | +0.065 | **-0.018** (-0.026, -0.010) | -0.004 |
+| C1 | +0.050 (+0.039, +0.061) | +0.061 | **-0.011** (-0.017, -0.005) | +0.000 |
+
+Effect of the helper being there (factual minus helper stopped), within 3
+decisions, with 95% intervals over episodes; outputs `analysis/results/cf_*`.
+
+**Answer.** The helper does not help: it slightly lowers the focal
+predator's catch chance, and the extra catches are only its own (no
+synergy: the gain for "anyone" is the helper's catches minus what it takes
+from the focal predator). Joint pursuit here is scramble competition, and
+the earlier association was selection. This fits the ecology: the first
+predator to touch a prey gets all its energy, so nothing makes hunting
+together pay. With prey grouping (environmental), predator restraint
+(absent) and group hunting (competition) all tested, the current PPG
+world shows no emergent cooperation. Next: change the ecology so that
+cooperation can pay, as Ritz et al. did (shared carcass, harder solo
+catches), without rewarding it.
+
 ## Files
 
 | File | |
@@ -438,6 +497,8 @@ result testable (5 against 5: smallest possible p 0.004).
 | `swarm_metrics.py` | spacing, alignment, groups, pair and group persistence |
 | `measure_swarms.py` | Stage 0 / evaluation measurements and the counterfactual probe |
 | `launchers/launch.py` | Stage 2 training runs |
+| `measure_predators.py` | predator restraint and group-hunting measurements |
+| `counterfactual_hunting.py` | counterfactual replay test of group hunting |
 | `analysis/results/` | Stage 0 outputs (`stage0_<run>_<A|Bt|Ct>`, `_iter<n>`) |
 | `tests/` | the copied environment tests, plus the social-information settings and the metrics |
 
@@ -446,4 +507,6 @@ result testable (5 against 5: smallest possible p 0.004).
 - Hahn, C., Ritz, F., Wikidal, P., Phan, T., Gabor, T., & Linnhoff-Popien, C. (2020). Foraging swarms using multi-agent reinforcement learning. *ALIFE 2020: The 2020 Conference on Artificial Life*, 333–340.
 - Hahn, C., Phan, T., Gabor, T., Belzner, L., & Linnhoff-Popien, C. (2019). Emergent escape-based flocking behavior using multi-agent reinforcement learning. *ALIFE 2019*.
 - Reynolds, C. W. (1987). Flocks, herds and schools: A distributed behavioral model. *SIGGRAPH '87*, 25–34.
+- Ritz, F., Ratke, D., Phan, T., Belzner, L., & Linnhoff-Popien, C. (2021). A sustainable ecosystem through emergent cooperation in multi-agent reinforcement learning. *ALIFE 2021*, 74.
+- Hahn, C., Phan, T., Feld, S., Roch, C., Ritz, F., Sedlmeier, A., Gabor, T., & Linnhoff-Popien, C. (2020). Nash equilibria in multi-agent swarms. *ICAART 2020*, 234–241.
 - Clark, P. J., & Evans, F. C. (1954). Distance to nearest neighbor as a measure of spatial relationships in populations. *Ecology*, 35(4), 445–453.

@@ -1,0 +1,26 @@
+== cf_BE05_final: 50 episodes; determinism mismatches 0 of 3779
+   kind     horizon outcome  branch  factual  counterf.  difference (95% interval)  n
+   joint    h1      anyone   stop    0.321    0.294     +0.026 (+0.019 to +0.034)  1784
+   joint    h1      anyone   away    0.321    0.291     +0.030 (+0.022 to +0.038)  1784
+   joint    h1      self     stop    0.202    0.209     -0.007 (-0.011 to -0.003)  1784
+   joint    h1      self     away    0.202    0.209     -0.007 (-0.011 to -0.003)  1784
+   joint    h1      other    stop    0.118    0.085     +0.033 (+0.025 to +0.042)  1784
+   joint    h1      other    away    0.118    0.082     +0.036 (+0.029 to +0.044)  1784
+   joint    h3      anyone   stop    0.510    0.449     +0.061 (+0.048 to +0.075)  1784
+   joint    h3      anyone   away    0.510    0.445     +0.065 (+0.050 to +0.079)  1784
+   joint    h3      self     stop    0.306    0.322     -0.016 (-0.024 to -0.008)  1784
+   joint    h3      self     away    0.306    0.326     -0.020 (-0.027 to -0.012)  1784
+   joint    h3      other    stop    0.204    0.127     +0.077 (+0.064 to +0.092)  1784
+   joint    h3      other    away    0.204    0.119     +0.085 (+0.069 to +0.099)  1784
+   placebo  h1      anyone   stop    0.186    0.186     +0.001 (-0.001 to +0.002)  1995
+   placebo  h1      anyone   away    0.186    0.185     +0.002 (+0.000 to +0.004)  1995
+   placebo  h1      self     stop    0.171    0.171     +0.000 (+0.000 to +0.000)  1995
+   placebo  h1      self     away    0.171    0.171     +0.000 (+0.000 to +0.000)  1995
+   placebo  h1      other    stop    0.015    0.015     +0.001 (-0.001 to +0.003)  1995
+   placebo  h1      other    away    0.015    0.014     +0.002 (+0.000 to +0.004)  1995
+   placebo  h3      anyone   stop    0.331    0.330     +0.002 (-0.004 to +0.008)  1995
+   placebo  h3      anyone   away    0.331    0.330     +0.002 (-0.006 to +0.010)  1995
+   placebo  h3      self     stop    0.301    0.302     -0.002 (-0.007 to +0.004)  1995
+   placebo  h3      self     away    0.301    0.304     -0.003 (-0.010 to +0.005)  1995
+   placebo  h3      other    stop    0.031    0.028     +0.003 (-0.001 to +0.007)  1995
+   placebo  h3      other    away    0.031    0.026     +0.005 (+0.001 to +0.008)  1995
