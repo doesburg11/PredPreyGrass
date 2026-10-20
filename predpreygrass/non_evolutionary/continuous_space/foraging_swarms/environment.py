@@ -95,6 +95,12 @@ DEFAULT_CONFIG = {
     "energy_prey_speed_cost": 0.75 * 0.05 / 8 / 5,
     "energy_grass_gain": 2.0,
     "energy_catch_efficiency_predator": 0.5,
+    # Shared carcass (foraging_swarms, README): the catch's energy is split
+    # equally among the catcher (if alive) and every other living predator
+    # within this distance of the spot where the prey was caught, measured
+    # after the physics step's movement. 0: the catcher alone (as in
+    # base_environment_continuous).
+    "energy_catch_share_radius": 0.0,
     "reproduction_predator_threshold": 12.0,
     "reproduction_prey_threshold": 8.0,
     "reproduction_predator_reward": 10.0,
@@ -239,6 +245,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             self.pool[species] = c[f"reproduction_{species}_pool"]
         self.grass_gain = c["energy_grass_gain"]
         self.catch_efficiency = c["energy_catch_efficiency_predator"]
+        self.catch_share_radius = c["energy_catch_share_radius"]
+        self.catch_log = []
         for key in FIXES:
             if not isinstance(c[key], bool):
                 raise ValueError(f"{key} must be True or False")
@@ -326,6 +334,9 @@ class PredPreyGrassContinuous(MultiAgentEnv):
                 raise ValueError(f"{key} must be finite and nonnegative")
         if self.catch_efficiency > 1:
             raise ValueError("energy_catch_efficiency_predator must be in [0, 1]")
+        value = c["energy_catch_share_radius"]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not (math.isfinite(value) and value >= 0):
+            raise ValueError("energy_catch_share_radius must be finite and nonnegative")
 
     # --- Episode ---------------------------------------------------------
 
@@ -349,6 +360,7 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         self.births = {species: 0 for species in SPECIES}
         self.active = [a.id for a in self.predators + self.prey]
         self.agents = list(self.active)
+        self.catch_log = []
         obs = self._observations()
         return obs, {agent: {} for agent in self.active}
 
@@ -372,6 +384,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if missing:
             raise ValueError(f"no action for acting agents {missing}")
         obs, rewards, terminateds, truncateds, infos = {}, {}, {}, {}, {}
+        # This decision's catches: {"catcher", "prey", "fed", "gain"} (not part of the dynamics).
+        self.catch_log = []
         actions = {agent: action_dict[agent] for agent in self.active}
         totals = {"grass_eaten": {}, "births": {}}
         zeros = np.zeros(self.obs_size, dtype=np.float32)
@@ -410,7 +424,7 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         section 3). Returns (agents in this step, rewards, terminateds,
         truncateds, infos, whether anyone was born)."""
         agents = list(self.active)
-        catches = []  # (catching predator, prey energy at the catch)
+        catches = []  # (catching predator, prey energy at the catch, prey id, spot of the catch)
         if self.fix["simultaneous_movement"]:
             # Every contact from the positions at the start of the step,
             # then every move.
@@ -543,7 +557,7 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         desired = self._desired_velocity(action, animal)
         if catcher is not None:
             animal.alive = False
-            catches.append((catcher, animal.energy))
+            catches.append((catcher, animal.energy, animal.id, animal.position.copy()))
             if self.fix["caught_prey_does_not_move"]:
                 self.entities.remove(animal)
                 self.prey.remove(animal)
@@ -572,9 +586,18 @@ class PredPreyGrassContinuous(MultiAgentEnv):
 
     def _energy(self, catches, eaten, terminateds, truncateds, infos):
         """Food, metabolic costs and starvation (SPEC.md, section 5)."""
-        for predator, prey_energy in catches:
-            if predator.alive:
-                self._gain(predator, self.catch_efficiency * prey_energy)
+        for predator, prey_energy, prey_id, spot in catches:
+            fed = [predator] if predator.alive else []
+            if self.catch_share_radius > 0:
+                fed += [
+                    other
+                    for other in self.predators
+                    if other is not predator and self.torus.distance(other.position, spot) <= self.catch_share_radius
+                ]
+            gain = self.catch_efficiency * prey_energy / len(fed) if fed else 0.0
+            for animal in fed:
+                self._gain(animal, gain)
+            self.catch_log.append({"catcher": predator.id, "prey": prey_id, "fed": [a.id for a in fed], "gain": gain})
         for prey in self.prey:
             count = eaten.get(prey.id, 0)
             if count:

@@ -74,6 +74,10 @@ config_env = {
     "energy_grass_gain": 2.0,
     # Share of a caught prey's energy the catching predator gains.
     "energy_catch_efficiency_predator": 0.5,
+    # Shared carcass: split a catch's energy among the catcher and every
+    # living predator within this distance of the catch (README, "Shared
+    # carcass"). 0: the catcher alone; the launchers set it.
+    "energy_catch_share_radius": 0.0,
     # Reproduction: at the threshold an animal has one offspring with the
     # initial energy, paid by the parent, and is rewarded (the only reward).
     "reproduction_predator_threshold": 12.0,

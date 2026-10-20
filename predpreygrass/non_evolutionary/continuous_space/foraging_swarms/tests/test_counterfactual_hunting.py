@@ -27,6 +27,8 @@ def test_factual_branch_reproduces_the_episode():
             if key.count("|") == 2:
                 assert e["sums"].get(f"{key}|anyone", 0) == e["sums"].get(f"{key}|self", 0) + e["sums"].get(f"{key}|other", 0)
                 assert e["sums"].get(f"{key}|anyone", 0) <= n
+                # without sharing, being fed from the prey is the same as catching it
+                assert e["sums"].get(f"{key}|fed", 0) == e["sums"].get(f"{key}|self", 0)
     summary = ch.paired_differences(episodes, np.random.default_rng(0), resamples=50)
     assert summary
     ch.format_summary("test", {"episodes": 2, "determinism_checked": checked, "determinism_mismatch": 0, "differences": summary})

@@ -8,6 +8,8 @@ Conditions (prey manipulated first; predators keep full information):
     C   prey see no other prey (own-species slots empty)
     BP  predators see other predators' positions only
     CP  predators see no other predators
+    S1  shared carcass: a catch's energy split among predators within 96 units
+    S2  shared carcass and slower predators (4.5 instead of 5)
 
 Everything else is config/config_env.py (the quirks-fixed milestone world)
 and config/config_ppo.py, with 14 simulation workers so that two runs can
@@ -32,6 +34,12 @@ CONDITIONS = {
     "C": {"prey_observe_neighbors": False},
     "BP": {"predator_observe_neighbor_movement": False},
     "CP": {"predator_observe_neighbors": False},
+    # Shared carcass (README, "Shared carcass"): a catch's energy split among
+    # the catcher and every predator within 96 units; S2 also makes solo
+    # catches harder with slower predators (top speed 4.5 instead of 5;
+    # prey 6.0).
+    "S1": {"energy_catch_share_radius": 96.0},
+    "S2": {"energy_catch_share_radius": 96.0, "predator_max_velocity": 4.5},
 }
 
 if __name__ == "__main__":

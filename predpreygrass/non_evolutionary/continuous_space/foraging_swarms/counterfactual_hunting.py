@@ -13,7 +13,9 @@ in three branches,
 - helper turns away: the helper(s) run straight away from the prey;
 
 and records whether the prey is caught, by anyone and by the focal
-predator, within 1 and within HORIZON decisions (helpers keep the
+predator, and whether the focal predator is fed from it (the same as
+catching it, unless the environment shares a catch's energy:
+energy_catch_share_radius), within 1 and within HORIZON decisions (helpers keep the
 replacement action throughout; everyone else samples from the policy with
 the same seed in every branch). If the focal predator catches the prey
 less often without its helper, the helper causally helps it: group
@@ -90,7 +92,7 @@ def away_action(env, helper, prey_position):
 def rollout(env, modules, actions, overrides, target, seed, horizon=HORIZON):
     """Replay from a copy of env: actions for the first decision, with the
     overridden agents fixed for every decision. Returns (catcher id or
-    None, decision index of the catch or None)."""
+    None, decision index of the catch or None, ids fed from the catch)."""
     sim = copy.deepcopy(env)
     sim.__dict__.pop("_move", None)  # drop any recording wrapper of the original
     move = sim._move
@@ -110,9 +112,12 @@ def rollout(env, modules, actions, overrides, target, seed, horizon=HORIZON):
         step_actions.update({a: v for a, v in overrides.items() if a in sim.active})
         step_actions = {a: step_actions[a] for a in sim.active}
         obs, _, terms, truncs, _ = sim.step(step_actions)
-        if target in caught or terms["__all__"] or truncs["__all__"]:
+        if target in caught:
+            fed = next((c["fed"] for c in sim.catch_log if c["prey"] == target), [])
+            return (*caught[target], fed)
+        if terms["__all__"] or truncs["__all__"]:
             break
-    return caught.get(target, (None, None))
+    return None, None, []
 
 
 def find_encounters(env, obs, actions, born_at, decision, lay):
@@ -196,18 +201,19 @@ def play(env, modules, seed):
             obs, _, terms, truncs, _ = env.step(actions)
             decision += 1
             for kind, focal, target, outcome in pending:
-                fact_catcher, fact_k = outcome["factual"]
+                fact_catcher, fact_k, _ = outcome["factual"]
                 real = real_catches.get(target)
                 counts["determinism_checked"] += 1
                 if (fact_catcher if fact_k == 0 else None) != real:
                     counts["determinism_mismatch"] += 1
-                for b, (catcher, k) in outcome.items():
+                for b, (catcher, k, fed) in outcome.items():
                     for horizon in (1, HORIZON):
                         within = k is not None and k < horizon
                         key = f"{kind}|{b}|h{horizon}"
                         sums[f"{key}|anyone"] += within
                         sums[f"{key}|self"] += within and catcher == focal
                         sums[f"{key}|other"] += within and catcher != focal
+                        sums[f"{key}|fed"] += within and focal in fed
                         counts[key] += 1
             if terms["__all__"] or truncs["__all__"]:
                 break
@@ -226,7 +232,7 @@ def paired_differences(episodes, rng, resamples=BOOTSTRAP):
     out = {}
     for kind in ("joint", "placebo"):
         for horizon in (1, HORIZON):
-            for outcome in ("anyone", "self", "other"):
+            for outcome in ("anyone", "self", "other", "fed"):
                 for branch in ("stop", "away"):
                     fk, ck = f"{kind}|factual|h{horizon}", f"{kind}|{branch}|h{horizon}"
                     fs = np.array([e["sums"].get(f"{fk}|{outcome}", 0.0) for e in episodes])

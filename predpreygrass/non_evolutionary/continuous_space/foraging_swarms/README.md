@@ -487,6 +487,41 @@ world shows no emergent cooperation. Next: change the ecology so that
 cooperation can pay, as Ritz et al. did (shared carcass, harder solo
 catches), without rewarding it.
 
+## Shared carcass: can cooperation pay? (running since 2026-10-20)
+
+**Question.** In the current world the first predator to touch a prey
+gets all its energy, so hunting together cannot pay, and it does not
+emerge (counterfactual test above). Does predator cooperation emerge when
+the ecology lets it pay, still with no reward for it? After Ritz et al.
+(2021), who found group hunting when the catch was shared among predators
+nearby and solo catches were made hard.
+
+**Change** (`energy_catch_share_radius`, default 0 = unchanged; SPEC.md
+section 5): a catch's energy (0.5 × the prey's energy) is split equally
+among the catcher and every living predator within the radius of the
+catch spot. This is an ecological rule (shared kills), not a reward: the
+only reward is still +10 per birth. It also creates a free-rider dilemma:
+a predator can be fed by staying near a hunt without chasing.
+
+| Condition | Change | Runs |
+|---|---|---|
+| Baseline | none: BE-04 and BE-05 at iteration 2,000 | 2 (existing) |
+| S1 | shared carcass, radius 96 | seeds 1, 2 |
+| S2 | shared carcass, radius 96, and slower predators (top speed 4.5 instead of 5; prey 6.0): solo catches harder | seeds 1, 2 |
+
+2,000 iterations each (as Stage 2), launched with `launchers/launch.py
+<S1|S2> <seed>` in two queues side by side. Risk: in S2, slower predators
+that also share food may starve (Ritz et al. found that too much pressure
+stopped learning altogether); baseline against S1 stands on its own.
+
+**Measures** (pre-specified): the counterfactual test (`counterfactual_hunting.py`)
+on the final checkpoints, with the new outcome "focal predator fed from the
+prey" (catches by others count when the focal predator is within the
+radius); group hunting means the helper raises the focal predator's chance
+to be fed. Free-riding: predators near catches that were not heading for
+the prey. Coexistence and catch risk (as in Stage 2), since better hunting
+could also drive prey extinct.
+
 ## Files
 
 | File | |
