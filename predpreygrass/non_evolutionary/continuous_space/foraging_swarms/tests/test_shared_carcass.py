@@ -118,3 +118,6 @@ def test_launch_conditions_change_only_what_they_name():
     assert conditions["S1"] == {"energy_catch_share_radius": 96.0}
     assert conditions["S2"] == {"energy_catch_share_radius": 96.0, "predator_max_velocity": 4.5}
     PredPreyGrassContinuous(dict(FIXES, **conditions["S2"]))  # a valid world
+    assert conditions["K"] == {"capture_assist_radius": 128.0, "capture_assist_threshold": 6.0}
+    assert conditions["W"] == {}
+    PredPreyGrassContinuous(dict(FIXES, **conditions["K"]))

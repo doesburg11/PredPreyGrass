@@ -73,7 +73,6 @@ from predpreygrass.non_evolutionary.continuous_space.foraging_swarms.checkpoints
 )
 from predpreygrass.non_evolutionary.continuous_space.foraging_swarms.environment import (
     DIRECTIONS,
-    SLOT_SIZE,
     SPEEDS,
     PredPreyGrassContinuous,
 )
@@ -95,6 +94,7 @@ PREY_EDGES = (5, 15, 30)  # global prey alive: <=5, 6-15, 16-30, >30
 PREY_BIN_NAMES = ("<=5", "6-15", "16-30", ">30")
 ENERGY_EDGES = (0.25, 0.4)  # own energy / cap (reproduction at 0.5): low, mid, high
 BOOTSTRAP = 2000
+LARGE_ENERGY = 6.0  # prey with at least this energy count as large (README, "Large prey": the K threshold)
 STOP = SPEEDS.index(0.0)
 
 _ANGLES = np.radians(np.arange(DIRECTIONS) * 360 / DIRECTIONS)
@@ -161,7 +161,7 @@ def play(env, modules, seed):
                     continue
                 a = int(actions[p.id])
                 e = bin_of(float(o[-1]), ENERGY_EDGES)
-                n_vis = sum(o[start + SLOT_SIZE * k] > 0 for k in range(n_slots))
+                n_vis = sum(o[start + lay["slot"] * k] > 0 for k in range(n_slots))
                 stopped = a // DIRECTIONS == STOP
                 acc.add(f"stop|nvis{n_vis}", stopped)
                 acc.add(f"stop|g{g}", stopped)
@@ -178,10 +178,18 @@ def play(env, modules, seed):
                 acc.add(f"approach|d{db}|e{e}|g{g}", approach)
                 acc.add(f"stop_seeing_prey|g{g}", stopped)
                 acc.add(f"stop_seeing_prey|e{e}", stopped)
+                px, py = p.position.x + dx, p.position.y + dy
+                spot = Vector(px % env.width, py % env.height)
+                target = min(env.prey, key=lambda q: env.torus.distance(spot, q.position))
+                if env.torus.distance(spot, target.position) > 1.0:
+                    acc.add("enc_target_ambiguous", 1)  # reconstruction failed: leave out
+                    continue
+                large = int(target.energy >= LARGE_ENERGY)
+                acc.add(f"approach|d{db}|size{large}", approach)
+                acc.add(f"stop_seeing_prey|size{large}", stopped)
                 if d > ENCOUNTER:
                     continue
                 # Encounter: who else is near, and is anyone else pursuing this prey?
-                px, py = p.position.x + dx, p.position.y + dy
                 near = {r: False for r in NEAR}
                 joint = joint_v = False
                 for q in env.predators:
@@ -198,12 +206,7 @@ def play(env, modules, seed):
                         if qa is not None:
                             joint |= toward(*intended_velocity(int(qa)), tx, ty) >= APPROACHING
                         joint_v |= toward(q.velocity.x, q.velocity.y, tx, ty) >= APPROACHING * q.max_speed
-                spot = Vector(px % env.width, py % env.height)
-                target = min(env.prey, key=lambda q: env.torus.distance(spot, q.position))
-                if env.torus.distance(spot, target.position) > 1.0:
-                    acc.add("enc_target_ambiguous", 1)  # reconstruction failed: leave out
-                    continue
-                encounters.append((p.id, g, e, bin_of(d, (32.0,)), near, joint, joint_v, target.id))
+                encounters.append((p.id, g, e, bin_of(d, (32.0,)), near, joint, joint_v, target.id, large))
 
             catches_seen.clear()
             obs, _, terms, truncs, _ = env.step(actions)
@@ -237,7 +240,7 @@ def play(env, modules, seed):
                     acc.add(f"catch_near{int(r)}", near[r])
                 acc.add("catch_joint", joint)
                 acc.add(f"catch|g{g}", 1)
-            for pid, g_, e_, db_, near, joint, joint_v, target in encounters:
+            for pid, g_, e_, db_, near, joint, joint_v, target, large in encounters:
                 by = catcher_of.get(target)
                 success = by == pid
                 j = int(joint)
@@ -254,6 +257,9 @@ def play(env, modules, seed):
                     acc.add(f"enc_near{int(r)}", near[r])
                 acc.add("enc_joint", joint)
                 acc.add("enc_joint_v", joint_v)
+                acc.add(f"enc_joint|size{large}", joint)
+                acc.add(f"enc_target_caught|size{large}|joint{j}", by is not None)
+                acc.add(f"enc_target_by_self|size{large}|joint{j}", success)
             if terms["__all__"] or truncs["__all__"]:
                 break
     finally:
@@ -272,6 +278,8 @@ def play(env, modules, seed):
 
 # (name, key, key subtracted from it): differences with episode-bootstrap intervals.
 INTERVALS = [
+    ("joint_pursuit_share_large_minus_small", "enc_joint|size1", "enc_joint|size0"),
+    ("large_prey_caught_by_anyone_joint_minus_alone", "enc_target_caught|size1|joint1", "enc_target_caught|size1|joint0"),
     ("encounter_prey_caught_by_anyone_joint_minus_alone", "enc_target_caught|joint1", "enc_target_caught|joint0"),
     ("  same, prey within 32", "enc_target_caught|joint1|d0", "enc_target_caught|joint0|d0"),
     ("  same, prey 32-64", "enc_target_caught|joint1|d1", "enc_target_caught|joint0|d1"),
@@ -352,6 +360,14 @@ def format_summary(label, s):
     lines.append("   approach by prey in view 1/2/3:")
     for d in range(2):
         lines.append(f"     d{d}: " + "  ".join(cell(f"approach|d{d}|nvis{n}") for n in (1, 2, 3)))
+    lines.append(f"   by prey size (large: energy >= {LARGE_ENERGY:g}), small / large:")
+    lines.append("     joint pursuit share: " + "  ".join(cell(f"enc_joint|size{z}") for z in (0, 1)))
+    for z, name in ((0, "small"), (1, "large")):
+        lines.append(f"     {name}: caught by anyone alone / joint " + "  ".join(cell(f"enc_target_caught|size{z}|joint{j}") for j in (0, 1))
+                     + "; by self alone / joint " + "  ".join(cell(f"enc_target_by_self|size{z}|joint{j}") for j in (0, 1)))
+    lines.append("     approach d0/d1, small: " + "  ".join(cell(f"approach|d{d}|size0") for d in (0, 1))
+                 + "  large: " + "  ".join(cell(f"approach|d{d}|size1") for d in (0, 1)))
+    lines.append("     stop share seeing prey, small / large: " + "  ".join(cell(f"stop_seeing_prey|size{z}") for z in (0, 1)))
     lines.append("   stop share by prey in view 0-3: " + "  ".join(cell(f"stop|nvis{n}") for n in range(4)))
     lines.append("   stop share by prey alive:      " + "  ".join(cell(f"stop|g{g}") for g in range(4)))
     lines.append("   stop share seeing prey, by prey alive: " + "  ".join(cell(f"stop_seeing_prey|g{g}") for g in range(4)))

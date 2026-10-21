@@ -62,7 +62,6 @@ from predpreygrass.non_evolutionary.continuous_space.foraging_swarms.checkpoints
 from predpreygrass.non_evolutionary.continuous_space.foraging_swarms.environment import (
     DIRECTIONS,
     SELF_SIZE,
-    SLOT_SIZE,
     SPEEDS,
     PredPreyGrassContinuous,
 )
@@ -92,8 +91,9 @@ def layout(env):
     n_pred, n_prey = env.observe_count["predator"], env.observe_count["prey"]
     return {
         "predator": SELF_SIZE,
-        "prey": SELF_SIZE + SLOT_SIZE * n_pred,
-        "grass": SELF_SIZE + SLOT_SIZE * (n_pred + n_prey),
+        "prey": SELF_SIZE + env.slot_size * n_pred,
+        "grass": SELF_SIZE + env.slot_size * (n_pred + n_prey),
+        "slot": env.slot_size,
         "count": {"predator": n_pred, "prey": n_prey},
     }
 
@@ -110,7 +110,7 @@ def conspecific_in_view(obs, species, lay):
 def moving_conspecific_in_view(obs, species, lay):
     start = lay[species]
     for k in range(lay["count"][species]):
-        slot = obs[start + SLOT_SIZE * k : start + SLOT_SIZE * (k + 1)]
+        slot = obs[start + lay["slot"] * k : start + lay["slot"] * (k + 1)]
         if slot[0] > 0 and math.hypot(slot[4], slot[5]) > 0:
             return True
     return False
@@ -369,7 +369,7 @@ def rotate_conspecific_velocities(batch, species, lay, degrees):
     c, s = math.cos(math.radians(degrees)), math.sin(math.radians(degrees))
     start = lay[species]
     for k in range(lay["count"][species]):
-        vx, vy = start + SLOT_SIZE * k + 4, start + SLOT_SIZE * k + 5
+        vx, vy = start + lay["slot"] * k + 4, start + lay["slot"] * k + 5
         x, y = batch[:, vx].copy(), batch[:, vy].copy()
         out[:, vx], out[:, vy] = c * x - s * y, s * x + c * y
     return out
@@ -406,7 +406,7 @@ def run_probe(module, batch, species, lay):
     zeroed = batch.copy()
     own = batch.copy()
     for k in range(lay["count"][species]):
-        v = lay[species] + SLOT_SIZE * k + 4
+        v = lay[species] + lay["slot"] * k + 4
         zeroed[:, v : v + 2] = 0.0
     own[:, 0], own[:, 1] = -batch[:, 1], batch[:, 0]
     for name, changed in (("zeroed_conspecific_velocities", zeroed), ("own_velocity_turned_90", own)):

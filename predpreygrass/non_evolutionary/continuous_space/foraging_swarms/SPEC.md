@@ -199,6 +199,13 @@ dispersal distance 24, overgrazing on with threshold 0 and delay 400.
    predator within that distance of the spot where the prey was caught,
    positions after this physics step's movement; each share is capped
    separately. Default 0: the catcher alone.)
+   (foraging_swarms only: with `capture_assist_radius` > 0, a prey with at
+   least `capture_assist_threshold` energy is caught only if another predator
+   is within that radius of it, found from the same positions as the
+   contact; the energy is then split among the catcher and those helpers,
+   plus any `energy_catch_share_radius` predators, each counted once.
+   `observe_energy_in_slots` adds the observed animal's energy / its cap as a
+   seventh value to every slot.)
 2. Each prey gains 2.0 per patch eaten (capped).
 3. Each living animal pays `resting + speed cost × |v|`, with `v` its
    velocity after movement.

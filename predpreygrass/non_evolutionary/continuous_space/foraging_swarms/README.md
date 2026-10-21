@@ -577,6 +577,56 @@ that only two predators together can catch (an imposed capture rule, as in
 the discrete `mammoths` modules, but coordination would still have to be
 learned without a reward for it).
 
+## Large prey: when lone hunting fails (running since 2026-10-21)
+
+**Question.** Shared carcass and solo-catchable prey gave no reason to
+coordinate. Does cooperation emerge when lone predators *cannot* catch
+some prey, still with no reward for it?
+
+**Rule** (`capture_assist_radius`, `capture_assist_threshold`; default
+off; SPEC.md): a prey with at least the threshold energy is caught only
+if, besides the predator touching it, another predator is within the
+radius of it; the catch's energy is then shared with those helpers.
+Smaller prey are caught as before. An imposed capture rule (as in the
+discrete `mammoths` modules), but how to coordinate (finding a partner,
+waiting, choosing large or small prey) has to be learned. Also available,
+unused here: `observe_energy_in_slots` (each slot carries the observed
+animal's energy).
+
+**Why warm-started and mild.** From scratch, random predators catch so
+little under the rule that they never reproduce (0 births per episode
+against 1.5 in the current world), and the only reward is a birth, so
+there would be no learning signal. Even predators trained in the current
+world (BE-04 at iteration 2,000) die out when the rule is switched on,
+unless it is mild (12 episodes each):
+
+| Rule (warm-started predators, untrained for it) | Predator births / episode | Coexisting (of 12) |
+|---|---:|---:|
+| none | 34 | 12 |
+| energy ≥ 5, helper within 64 or 96 | 0 | 0 |
+| energy ≥ 6, helper within 96 | 3 | 1 |
+| **energy ≥ 6, helper within 128** | **12** | **6** |
+| every prey, helper within 96 or 128 | 0 | 0 |
+
+A threshold of 5 fails because escaped prey keep grazing and an adult
+prey drops back to energy 5 after each birth: nearly every adult becomes
+large. The mild rule (energy ≥ 6, about 16% of living prey; helper within
+128) is used.
+
+| Condition | World | Start | Runs |
+|---|---|---|---|
+| K | large prey (energy ≥ 6) need a helper within 128 | BE-04 (seed 1) / BE-05 (seed 2) at iteration 2,000 (weights only) | 2 |
+| W | unchanged (control) | the same | 2 |
+
+1,000 iterations each (`launchers/launch.py <K|W> <seed>`). W separates
+the rule from the effect of the warm start itself (fresh optimizer).
+
+**Learned cooperation would show as**, in K against W:
+(1) predators heading for *large* prey together more often than for
+small prey (`measure_predators.py`, joint pursuit by prey size), (2) the
+share of large-prey encounters ending in a catch rising over training,
+(3) K predators recovering from the crash (6 of 12 coexisting untrained).
+
 ## Files
 
 | File | |
