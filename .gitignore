@@ -197,6 +197,7 @@ ray_results_failed/
 predpreygrass/non_evolutionary/discrete_space/base_environment_discrete/runs/
 predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/runs/
 predpreygrass/non_evolutionary/continuous_space/foraging_swarms/runs/
+predpreygrass/non_evolutionary/continuous_space/selfish_flocking/runs/
 predpreygrass/evolutionary/eco_evolutionary_continuous_traits/runs/
 predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/runs/
 ray_results_archive/

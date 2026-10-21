@@ -34,7 +34,9 @@ non_evolutionary/
 │   ├── random_source.py
 │   └── tests/
 └── continuous_space/
-    └── base_environment_continuous/
+    ├── base_environment_continuous/
+    ├── foraging_swarms/
+    └── selfish_flocking/
 ```
 
 Use the full spatial grouping in new imports and module commands:
@@ -104,7 +106,12 @@ This is the project's main line for the human-cooperation research angle (predat
   dense reward shaping on `base_environment_discrete`; five trained sibling environments; headline result: reward shaping
   should be minimized here, not maximized.
 
-## Continuous-space environment
+## Continuous-space experiments
+
+[`continuous_space/selfish_flocking/`](continuous_space/selfish_flocking/README.md)
+is a separate reproduction of Hahn et al.'s SELFish predator-escape task:
+fixed-population prey learn to survive one pursuing predator, with no grass,
+reproduction, or energy mechanics.
 
 [`continuous_space/base_environment_continuous/`](continuous_space/base_environment_continuous/README.md)
 is a standalone RLlib environment with steering physics on a torus, direction and
@@ -113,3 +120,7 @@ Aquarium-based implementation. Its training runs show a Red Queen arms race betw
 predators and prey; see [`RESULTS.md`](continuous_space/base_environment_continuous/RESULTS.md)
 for the experiments and [`SPEC.md`](continuous_space/base_environment_continuous/SPEC.md)
 for the environment rules.
+
+[`continuous_space/foraging_swarms/`](continuous_space/foraging_swarms/README.md)
+studies whether social movement emerges in the Predator-Prey-Grass ecology; it is
+not an implementation of either SELFish paper.
