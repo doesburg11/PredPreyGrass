@@ -1,0 +1,329 @@
+{
+ "label": "cf_S2_seed2",
+ "checkpoint": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/continuous_space/foraging_swarms/runs/foraging_swarms_2026-10-21_07-52-58_102764_S2_seed2/checkpoint",
+ "override": {},
+ "episodes": 50,
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49
+ ],
+ "determinism_checked": 3638,
+ "determinism_mismatch": 0,
+ "differences": {
+  "joint|h1|anyone|factual_minus_stop": {
+   "factual": 0.31042796865581673,
+   "counterfactual": 0.2845087402049427,
+   "difference": 0.02591922845087402,
+   "low": 0.0185935508613288,
+   "high": 0.03362443407316023,
+   "n": 1659
+  },
+  "joint|h1|anyone|factual_minus_away": {
+   "factual": 0.31042796865581673,
+   "counterfactual": 0.28028933092224234,
+   "difference": 0.030138637733574444,
+   "low": 0.02195839774457021,
+   "high": 0.03742960342031548,
+   "n": 1659
+  },
+  "joint|h1|self|factual_minus_stop": {
+   "factual": 0.2121760096443641,
+   "counterfactual": 0.21518987341772153,
+   "difference": -0.0030138637733574444,
+   "low": -0.005984929510158178,
+   "high": 0.0,
+   "n": 1659
+  },
+  "joint|h1|self|factual_minus_away": {
+   "factual": 0.2121760096443641,
+   "counterfactual": 0.21518987341772153,
+   "difference": -0.0030138637733574444,
+   "low": -0.0059704333146664715,
+   "high": 0.0,
+   "n": 1659
+  },
+  "joint|h1|other|factual_minus_stop": {
+   "factual": 0.09825195901145269,
+   "counterfactual": 0.06931886678722121,
+   "difference": 0.028933092224231464,
+   "low": 0.02195382988407272,
+   "high": 0.036501738487902495,
+   "n": 1659
+  },
+  "joint|h1|other|factual_minus_away": {
+   "factual": 0.09825195901145269,
+   "counterfactual": 0.0650994575045208,
+   "difference": 0.033152501506931886,
+   "low": 0.026170444738124625,
+   "high": 0.04021662094917122,
+   "n": 1659
+  },
+  "joint|h1|fed|factual_minus_stop": {
+   "factual": 0.31042796865581673,
+   "counterfactual": 0.2845087402049427,
+   "difference": 0.02591922845087402,
+   "low": 0.017803890302755105,
+   "high": 0.03384554191830638,
+   "n": 1659
+  },
+  "joint|h1|fed|factual_minus_away": {
+   "factual": 0.31042796865581673,
+   "counterfactual": 0.28028933092224234,
+   "difference": 0.030138637733574444,
+   "low": 0.022800501127536957,
+   "high": 0.037787786061051536,
+   "n": 1659
+  },
+  "joint|h3|anyone|factual_minus_stop": {
+   "factual": 0.5033152501506932,
+   "counterfactual": 0.4460518384569018,
+   "difference": 0.05726341169379144,
+   "low": 0.046318223211223745,
+   "high": 0.06929554391955019,
+   "n": 1659
+  },
+  "joint|h3|anyone|factual_minus_away": {
+   "factual": 0.5033152501506932,
+   "counterfactual": 0.44002411091018684,
+   "difference": 0.06329113924050633,
+   "low": 0.04947602988596044,
+   "high": 0.07872163199653974,
+   "n": 1659
+  },
+  "joint|h3|self|factual_minus_stop": {
+   "factual": 0.33152501506931886,
+   "counterfactual": 0.3357444243520193,
+   "difference": -0.004219409282700422,
+   "low": -0.011379266750948167,
+   "high": 0.002720366710340284,
+   "n": 1659
+  },
+  "joint|h3|self|factual_minus_away": {
+   "factual": 0.33152501506931886,
+   "counterfactual": 0.3399638336347197,
+   "difference": -0.008438818565400843,
+   "low": -0.016450218939397424,
+   "high": -0.0011501582555370486,
+   "n": 1659
+  },
+  "joint|h3|other|factual_minus_stop": {
+   "factual": 0.1717902350813743,
+   "counterfactual": 0.11030741410488246,
+   "difference": 0.06148282097649186,
+   "low": 0.05033624058931595,
+   "high": 0.07336167971905055,
+   "n": 1659
+  },
+  "joint|h3|other|factual_minus_away": {
+   "factual": 0.1717902350813743,
+   "counterfactual": 0.10006027727546715,
+   "difference": 0.07172995780590717,
+   "low": 0.058504011948483085,
+   "high": 0.08464805452804555,
+   "n": 1659
+  },
+  "joint|h3|fed|factual_minus_stop": {
+   "factual": 0.5015069318866787,
+   "counterfactual": 0.4436407474382158,
+   "difference": 0.05786618444846293,
+   "low": 0.04599837273803053,
+   "high": 0.06919196464201423,
+   "n": 1659
+  },
+  "joint|h3|fed|factual_minus_away": {
+   "factual": 0.5015069318866787,
+   "counterfactual": 0.4370102471368294,
+   "difference": 0.0644966847498493,
+   "low": 0.050387483906727426,
+   "high": 0.07983753451273136,
+   "n": 1659
+  },
+  "placebo|h1|anyone|factual_minus_stop": {
+   "factual": 0.19454269833249116,
+   "counterfactual": 0.19403739262253664,
+   "difference": 0.0005053057099545225,
+   "low": 0.0,
+   "high": 0.0015274949083503055,
+   "n": 1979
+  },
+  "placebo|h1|anyone|factual_minus_away": {
+   "factual": 0.19454269833249116,
+   "counterfactual": 0.1935320869125821,
+   "difference": 0.001010611419909045,
+   "low": 0.0,
+   "high": 0.0025265285497726125,
+   "n": 1979
+  },
+  "placebo|h1|self|factual_minus_stop": {
+   "factual": 0.1844365841334007,
+   "counterfactual": 0.1844365841334007,
+   "difference": 0.0,
+   "low": 0.0,
+   "high": 0.0,
+   "n": 1979
+  },
+  "placebo|h1|self|factual_minus_away": {
+   "factual": 0.1844365841334007,
+   "counterfactual": 0.1844365841334007,
+   "difference": 0.0,
+   "low": 0.0,
+   "high": 0.0,
+   "n": 1979
+  },
+  "placebo|h1|other|factual_minus_stop": {
+   "factual": 0.01010611419909045,
+   "counterfactual": 0.009600808489135927,
+   "difference": 0.0005053057099545225,
+   "low": 0.0,
+   "high": 0.0015298317185109638,
+   "n": 1979
+  },
+  "placebo|h1|other|factual_minus_away": {
+   "factual": 0.01010611419909045,
+   "counterfactual": 0.009095502779181405,
+   "difference": 0.001010611419909045,
+   "low": 0.0,
+   "high": 0.0025497195308516064,
+   "n": 1979
+  },
+  "placebo|h1|fed|factual_minus_stop": {
+   "factual": 0.19454269833249116,
+   "counterfactual": 0.19403739262253664,
+   "difference": 0.0005053057099545225,
+   "low": 0.0,
+   "high": 0.0015298317185109638,
+   "n": 1979
+  },
+  "placebo|h1|fed|factual_minus_away": {
+   "factual": 0.19454269833249116,
+   "counterfactual": 0.1935320869125821,
+   "difference": 0.001010611419909045,
+   "low": 0.0,
+   "high": 0.0025265285497726125,
+   "n": 1979
+  },
+  "placebo|h3|anyone|factual_minus_stop": {
+   "factual": 0.3410813542193027,
+   "counterfactual": 0.33855482566953005,
+   "difference": 0.0025265285497726125,
+   "low": -0.0045,
+   "high": 0.00958627648839556,
+   "n": 1979
+  },
+  "placebo|h3|anyone|factual_minus_away": {
+   "factual": 0.3410813542193027,
+   "counterfactual": 0.33451237998989386,
+   "difference": 0.006568974229408792,
+   "low": -0.002504324956358236,
+   "high": 0.016525408724922887,
+   "n": 1979
+  },
+  "placebo|h3|self|factual_minus_stop": {
+   "factual": 0.3193532086912582,
+   "counterfactual": 0.3168266801414856,
+   "difference": 0.0025265285497726125,
+   "low": -0.0035972611514494017,
+   "high": 0.009081735620585268,
+   "n": 1979
+  },
+  "placebo|h3|self|factual_minus_away": {
+   "factual": 0.3193532086912582,
+   "counterfactual": 0.3158160687215765,
+   "difference": 0.0035371399696816574,
+   "low": -0.005155719941208776,
+   "high": 0.0129681230871203,
+   "n": 1979
+  },
+  "placebo|h3|other|factual_minus_stop": {
+   "factual": 0.021728145528044467,
+   "counterfactual": 0.021728145528044467,
+   "difference": 0.0,
+   "low": -0.0025227043390514633,
+   "high": 0.0025037556334501754,
+   "n": 1979
+  },
+  "placebo|h3|other|factual_minus_away": {
+   "factual": 0.021728145528044467,
+   "counterfactual": 0.01869631126831733,
+   "difference": 0.003031834259727135,
+   "low": 0.000500751126690035,
+   "high": 0.006054490413723511,
+   "n": 1979
+  },
+  "placebo|h3|fed|factual_minus_stop": {
+   "factual": 0.34007074279939364,
+   "counterfactual": 0.3370389085396665,
+   "difference": 0.003031834259727135,
+   "low": -0.0035317860746720484,
+   "high": 0.00969671086180516,
+   "n": 1979
+  },
+  "placebo|h3|fed|factual_minus_away": {
+   "factual": 0.34007074279939364,
+   "counterfactual": 0.33400707427993936,
+   "difference": 0.00606366851945427,
+   "low": -0.0030094825343841814,
+   "high": 0.015185675501317114,
+   "n": 1979
+  }
+ },
+ "settings": {
+  "HORIZON": 3,
+  "PLACEBO_RADIUS": 200.0,
+  "CAP": 40,
+  "REPLAY_SHARE": 0.25,
+  "ENCOUNTER": 64.0,
+  "JOIN_RADIUS": 96.0,
+  "APPROACHING": 0.3,
+  "MIN_AGE": 10
+ },
+ "wall_seconds": 83.3
+}

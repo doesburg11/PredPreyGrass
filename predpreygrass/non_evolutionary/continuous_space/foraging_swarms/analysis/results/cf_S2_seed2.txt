@@ -1,0 +1,34 @@
+== cf_S2_seed2: 50 episodes; determinism mismatches 0 of 3638
+   kind     horizon outcome  branch  factual  counterf.  difference (95% interval)  n
+   joint    h1      anyone   stop    0.310    0.285     +0.026 (+0.019 to +0.034)  1659
+   joint    h1      anyone   away    0.310    0.280     +0.030 (+0.022 to +0.037)  1659
+   joint    h1      self     stop    0.212    0.215     -0.003 (-0.006 to +0.000)  1659
+   joint    h1      self     away    0.212    0.215     -0.003 (-0.006 to +0.000)  1659
+   joint    h1      other    stop    0.098    0.069     +0.029 (+0.022 to +0.037)  1659
+   joint    h1      other    away    0.098    0.065     +0.033 (+0.026 to +0.040)  1659
+   joint    h1      fed      stop    0.310    0.285     +0.026 (+0.018 to +0.034)  1659
+   joint    h1      fed      away    0.310    0.280     +0.030 (+0.023 to +0.038)  1659
+   joint    h3      anyone   stop    0.503    0.446     +0.057 (+0.046 to +0.069)  1659
+   joint    h3      anyone   away    0.503    0.440     +0.063 (+0.049 to +0.079)  1659
+   joint    h3      self     stop    0.332    0.336     -0.004 (-0.011 to +0.003)  1659
+   joint    h3      self     away    0.332    0.340     -0.008 (-0.016 to -0.001)  1659
+   joint    h3      other    stop    0.172    0.110     +0.061 (+0.050 to +0.073)  1659
+   joint    h3      other    away    0.172    0.100     +0.072 (+0.059 to +0.085)  1659
+   joint    h3      fed      stop    0.502    0.444     +0.058 (+0.046 to +0.069)  1659
+   joint    h3      fed      away    0.502    0.437     +0.064 (+0.050 to +0.080)  1659
+   placebo  h1      anyone   stop    0.195    0.194     +0.001 (+0.000 to +0.002)  1979
+   placebo  h1      anyone   away    0.195    0.194     +0.001 (+0.000 to +0.003)  1979
+   placebo  h1      self     stop    0.184    0.184     +0.000 (+0.000 to +0.000)  1979
+   placebo  h1      self     away    0.184    0.184     +0.000 (+0.000 to +0.000)  1979
+   placebo  h1      other    stop    0.010    0.010     +0.001 (+0.000 to +0.002)  1979
+   placebo  h1      other    away    0.010    0.009     +0.001 (+0.000 to +0.003)  1979
+   placebo  h1      fed      stop    0.195    0.194     +0.001 (+0.000 to +0.002)  1979
+   placebo  h1      fed      away    0.195    0.194     +0.001 (+0.000 to +0.003)  1979
+   placebo  h3      anyone   stop    0.341    0.339     +0.003 (-0.004 to +0.010)  1979
+   placebo  h3      anyone   away    0.341    0.335     +0.007 (-0.003 to +0.017)  1979
+   placebo  h3      self     stop    0.319    0.317     +0.003 (-0.004 to +0.009)  1979
+   placebo  h3      self     away    0.319    0.316     +0.004 (-0.005 to +0.013)  1979
+   placebo  h3      other    stop    0.022    0.022     +0.000 (-0.003 to +0.003)  1979
+   placebo  h3      other    away    0.022    0.019     +0.003 (+0.001 to +0.006)  1979
+   placebo  h3      fed      stop    0.340    0.337     +0.003 (-0.004 to +0.010)  1979
+   placebo  h3      fed      away    0.340    0.334     +0.006 (-0.003 to +0.015)  1979

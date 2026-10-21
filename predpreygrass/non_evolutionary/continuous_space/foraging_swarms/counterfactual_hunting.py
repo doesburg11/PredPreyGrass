@@ -287,9 +287,12 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--workers", type=int, default=min(25, os.cpu_count() or 1))
     parser.add_argument("--out-dir", default=str(HERE / "analysis" / "results"))
+    parser.add_argument("--override", type=json.loads, default={},
+                        help="environment settings changed at test time, e.g. a shared carcass for policies trained without one")
     args = parser.parse_args()
     checkpoint = str(Path(args.checkpoint).expanduser().resolve())
     env_config = checkpoint_env_config(checkpoint)
+    env_config.update(args.override)
     start = time.time()
     seeds = list(range(args.seed, args.seed + args.episodes))
     with get_context("spawn").Pool(min(args.workers, len(seeds)), initializer=_init, initargs=(checkpoint, env_config)) as pool:
@@ -297,6 +300,7 @@ def main():
     summary = {
         "label": args.label,
         "checkpoint": checkpoint,
+        "override": args.override,
         "episodes": len(episodes),
         "seeds": seeds,
         "determinism_checked": sum(e["counts"].get("determinism_checked", 0) for e in episodes),

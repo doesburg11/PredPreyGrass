@@ -487,7 +487,7 @@ world shows no emergent cooperation. Next: change the ecology so that
 cooperation can pay, as Ritz et al. did (shared carcass, harder solo
 catches), without rewarding it.
 
-## Shared carcass: can cooperation pay? (running since 2026-10-20)
+## Shared carcass: can cooperation pay? (2026-10-20 to 2026-10-21)
 
 **Question.** In the current world the first predator to touch a prey
 gets all its energy, so hunting together cannot pay, and it does not
@@ -521,6 +521,61 @@ radius); group hunting means the helper raises the focal predator's chance
 to be fed. Free-riding: predators near catches that were not heading for
 the prey. Coexistence and catch risk (as in Stage 2), since better hunting
 could also drive prey extinct.
+
+### Results
+
+All at iteration 2,000, 50 episodes each (seeds 0-49). Counterfactual: the
+helper's effect (factual minus helper stopped) on the focal predator within
+3 decisions, 95% intervals over episodes. "Fed" means the focal predator
+received energy from the prey (catcher, or within 96 units of a catch
+when the carcass is shared). Outputs: `analysis/results/cf_*`,
+`pred_*`, `stage3_*`.
+
+| Run | Coexisting (of 50) | Catch risk | Predators / prey alive | Helper effect: focal fed | Helper effect: focal's own catches | Placebo | Joint pursuit share | Predators in groups ≥3 minus random |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| A (BE-04) | 49 | 2.06 | 11 / 26 | -0.012 (-0.022, -0.003) | -0.012 (-0.022, -0.002) | +0.003 | 0.19 | 0.029 |
+| A (BE-05) | 32 | 2.15 | 11 / 24 | -0.001 (-0.008, +0.007) | -0.001 (-0.008, +0.008) | -0.001 | 0.21 | 0.036 |
+| S1 seed 1 | 46 | 1.61 | 10 / 32 | +0.062 (+0.049, +0.075) | -0.011 (-0.019, -0.003) | +0.003 | 0.15 | 0.034 |
+| S1 seed 2 | 42 | 1.93 | 11 / 28 | +0.049 (+0.037, +0.062) | -0.013 (-0.020, -0.005) | -0.005 | 0.18 | 0.026 |
+| S2 seed 1 | 50 | 1.72 | 11 / 30 | +0.049 (+0.038, +0.060) | -0.010 (-0.017, -0.003) | +0.007 | 0.15 | 0.015 |
+| S2 seed 2 | 43 | 1.21 | 10 / 38 | +0.058 (+0.046, +0.069) | -0.004 (-0.011, +0.003) | +0.003 | 0.15 | 0.025 |
+
+**Control: the rule alone.** The baseline policies (BE-04 and BE-05 at
+iteration 2,000), which never trained with sharing, run in a world with a
+shared carcass at test time: helper effect on "focal fed" +0.054
+(+0.042, +0.067) and +0.055 (+0.043, +0.067); on the focal predator's own
+catches -0.008 and -0.012. All replays reproduced the real outcome
+(0 mismatches).
+
+**Findings.**
+
+1. **No learned cooperation.** With a shared carcass the helper raises
+   the focal predator's chance of being fed by about 5-6 points in all four
+   runs, but so does a helper running the baseline policies, which never
+   trained with sharing. The gain is the sharing rule (a catch nearby feeds
+   the focal predator), not behaviour learned to exploit it. The helper
+   still slightly lowers the focal predator's own catch chance (no
+   synergy), predators do not group more (excess over random 0.015-0.034
+   against 0.029-0.036), and joint pursuit is, if anything, less common
+   (0.15-0.18 of encounters against 0.19-0.21; all four S runs below both
+   baseline runs, one-sided p = 0.07 for 4 against 2 runs).
+2. **The ecology shifts: fewer catches, more prey.** Catch risk 1.21-1.93
+   against 2.06-2.15 and prey alive 28-38 against 24-26: in both, all four
+   S runs lie beyond both baseline runs (p = 0.07). One reading, not
+   tested: sharing takes energy from the catcher, which slows predator
+   reproduction and lets prey numbers rise. Coexistence overlaps (S 42-50,
+   baseline 32-49 of 50).
+3. **Slower predators (S2) did not starve and did not change the
+   picture**: lone predators still catch about 19% of encounters. Solo
+   catches stayed easy, so hunting together was never needed.
+
+**Answer.** Sharing the carcass makes being *near* a catch pay, not
+*helping* with it, and lone predators still succeed often. Neither creates
+a reason to coordinate, and none emerged. Following Ritz et al., group
+hunting needs lone predators to rarely succeed. A next step would be prey
+that only two predators together can catch (an imposed capture rule, as in
+the discrete `mammoths` modules, but coordination would still have to be
+learned without a reward for it).
 
 ## Files
 
