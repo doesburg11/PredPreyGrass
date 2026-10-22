@@ -1,0 +1,49 @@
+== pred_W1: 50 episodes, 42 coexisting {'prey_extinct': 2, 'time_limit': 42, 'predators_extinct': 6}; 17976 catches
+   approach toward nearest visible prey (share of top speed), rows distance 0-50/50-100/100-150/150-200,
+   columns prey alive <=5 / 6-15 / 16-30 / >30  [n]:
+     d0: 0.707 (98)  0.696 (5696)  0.710 (16347)  0.731 (14721)
+     d1: 0.652 (450)  0.669 (23037)  0.674 (62161)  0.688 (55300)
+     d2: 0.241 (585)  0.279 (24211)  0.270 (59850)  0.242 (49388)
+     d3: 0.063 (748)  0.083 (29040)  0.079 (56383)  0.065 (36494)
+   approach at low energy (<0.25), by prey alive:
+     d0: 0.685 (54)  0.696 (3145)  0.699 (8705)  0.722 (7659)
+     d1: 0.576 (231)  0.630 (12416)  0.640 (32725)  0.650 (28471)
+     d2: 0.218 (324)  0.251 (14107)  0.240 (34524)  0.214 (28559)
+     d3: 0.052 (463)  0.072 (17322)  0.069 (32595)  0.059 (21787)
+   approach by own energy low/mid/high (<0.25 / 0.25-0.4 / >0.4; reproduction at 0.5):
+     d0: 0.708 (19563)  0.726 (14314)  0.730 (2985)
+     d1: 0.642 (73843)  0.714 (55720)  0.746 (11385)
+   approach by prey in view 1/2/3:
+     d0: 0.670 (5180)  0.710 (7926)  0.729 (23756)
+     d1: 0.626 (24626)  0.679 (32450)  0.694 (83872)
+   by prey size (large: energy >= 6), small / large:
+     joint pursuit share: 0.162 (57660)  0.198 (20411)
+     small: caught by anyone alone / joint 0.198 (48342)  0.318 (9318); by self alone / joint 0.187 (48342)  0.201 (9318)
+     large: caught by anyone alone / joint 0.171 (16361)  0.309 (4050); by self alone / joint 0.156 (16361)  0.193 (4050)
+     approach d0/d1, small: 0.724 (27197)  0.677 (106464)  large: 0.695 (9665)  0.685 (34484)
+     stop share seeing prey, small / large: 0.383 (344062)  0.317 (90447)
+   stop share by prey in view 0-3: 0.616 (117131)  0.531 (136759)  0.381 (110598)  0.244 (187152)
+   stop share by prey alive:      0.701 (6620)  0.512 (136995)  0.412 (242262)  0.348 (165763)
+   stop share seeing prey, by prey alive: 0.531 (1881)  0.420 (81984)  0.370 (194741)  0.339 (155903)
+   stop share seeing prey, by energy:     0.411 (243087)  0.325 (160849)  0.272 (30573)
+   encounter -> catch, by prey alive: 0.167 (233)  0.187 (12108)  0.183 (34426)  0.180 (31304)
+   encounter -> catch, by energy:     0.185 (40824)  0.180 (30853)  0.173 (6394)
+   encounter (alone): target caught by anyone 0.191 (64703), by self 0.179 (64703), by another 0.013 (64703)
+   encounter (joint): target caught by anyone 0.316 (13368), by self 0.198 (13368), by another 0.117 (13368)
+   encounters with joint pursuit: by action 0.171 (78071), by current velocity 0.197 (78071); ambiguous targets left out: 0
+   descriptive (no fair null), other predator near the catcher at catches: within 64 0.166 (17515)  within 96 0.370 (17515)  within 200 0.843 (17515)  joint 0.263 (17515); catches by young predators left out: 461
+   95% intervals over episodes:
+     joint_pursuit_share_large_minus_small: 0.0368 (0.0261 to 0.0475) n=[20411, 57660]
+     large_prey_caught_by_anyone_joint_minus_alone: 0.1382 (0.1148 to 0.1629) n=[4050, 16361]
+     encounter_prey_caught_by_anyone_joint_minus_alone: 0.1241 (0.1121 to 0.1373) n=[13368, 64703]
+       same, prey within 32: 0.0000 (0.0000 to 0.0000) n=[812, 2641]
+       same, prey 32-64: 0.1142 (0.1024 to 0.1267) n=[12556, 62062]
+       same, joint by current velocity: 0.1068 (0.0961 to 0.1177) n=[15372, 62699]
+     encounter_caught_by_self_joint_minus_alone: 0.0196 (0.0116 to 0.0272) n=[13368, 64703]
+     encounter_success_low_energy_prey6-15_minus_16-30: 0.0046 (-0.0065 to 0.0162) n=[6618, 18006]
+     approach_d50-100_low_energy_prey6-15_minus_16-30: -0.0096 (-0.0207 to 0.0022) n=[12416, 32725]
+     encounter_success_prey<=5_minus_16-30: -0.0152 (-0.0717 to 0.0469) n=[233, 34426]
+     encounter_success_prey6-15_minus_16-30: 0.0048 (-0.0044 to 0.0140) n=[12108, 34426]
+     approach_d50-100_prey<=5_minus_16-30: -0.0224 (-0.0788 to 0.0434) n=[450, 62161]
+     approach_d50-100_prey6-15_minus_16-30: -0.0056 (-0.0142 to 0.0021) n=[23037, 62161]
+     approach_d0-50_prey6-15_minus_16-30: -0.0143 (-0.0287 to 0.0012) n=[5696, 16347]

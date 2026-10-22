@@ -1,0 +1,49 @@
+== pred_untrainedW2: 50 episodes, 32 coexisting {'time_limit': 32, 'prey_extinct': 16, 'predators_extinct': 2}; 17704 catches
+   approach toward nearest visible prey (share of top speed), rows distance 0-50/50-100/100-150/150-200,
+   columns prey alive <=5 / 6-15 / 16-30 / >30  [n]:
+     d0: 0.729 (1016)  0.711 (13835)  0.709 (11124)  0.732 (9937)
+     d1: 0.741 (4234)  0.729 (52181)  0.726 (39930)  0.732 (37235)
+     d2: 0.372 (3452)  0.375 (42726)  0.356 (30443)  0.315 (26396)
+     d3: 0.128 (4704)  0.128 (47665)  0.125 (26646)  0.095 (18556)
+   approach at low energy (<0.25), by prey alive:
+     d0: 0.730 (638)  0.704 (7670)  0.707 (5877)  0.729 (5118)
+     d1: 0.705 (2344)  0.688 (27670)  0.686 (20298)  0.691 (18818)
+     d2: 0.321 (2055)  0.319 (24829)  0.305 (16922)  0.269 (15247)
+     d3: 0.114 (3000)  0.105 (28785)  0.102 (15543)  0.078 (11492)
+   approach by own energy low/mid/high (<0.25 / 0.25-0.4 / >0.4; reproduction at 0.5):
+     d0: 0.712 (19303)  0.722 (13938)  0.722 (2671)
+     d1: 0.689 (69130)  0.766 (53816)  0.805 (10634)
+   approach by prey in view 1/2/3:
+     d0: 0.713 (7826)  0.717 (9090)  0.718 (18996)
+     d1: 0.717 (33881)  0.734 (34565)  0.733 (65134)
+   by prey size (large: energy >= 6), small / large:
+     joint pursuit share: 0.196 (55744)  0.241 (19756)
+     small: caught by anyone alone / joint 0.201 (44837)  0.346 (10907); by self alone / joint 0.187 (44837)  0.220 (10907)
+     large: caught by anyone alone / joint 0.182 (14998)  0.306 (4758); by self alone / joint 0.164 (14998)  0.190 (4758)
+     approach d0/d1, small: 0.723 (26379)  0.728 (99987)  large: 0.698 (9533)  0.731 (33593)
+     stop share seeing prey, small / large: 0.339 (286614)  0.277 (83466)
+   stop share by prey in view 0-3: 0.658 (172481)  0.460 (143026)  0.299 (95244)  0.197 (131810)
+   stop share by prey alive:      0.626 (47083)  0.471 (264480)  0.364 (133257)  0.317 (97741)
+   stop share seeing prey, by prey alive: 0.378 (13406)  0.344 (156407)  0.310 (108143)  0.302 (92124)
+   stop share seeing prey, by energy:     0.383 (206306)  0.263 (137921)  0.191 (25853)
+   encounter -> catch, by prey alive: 0.189 (2263)  0.193 (29053)  0.189 (23061)  0.177 (21123)
+   encounter -> catch, by energy:     0.189 (39947)  0.184 (29794)  0.193 (5759)
+   encounter (alone): target caught by anyone 0.196 (59835), by self 0.181 (59835), by another 0.015 (59835)
+   encounter (joint): target caught by anyone 0.334 (15665), by self 0.211 (15665), by another 0.123 (15665)
+   encounters with joint pursuit: by action 0.207 (75500), by current velocity 0.232 (75500); ambiguous targets left out: 0
+   descriptive (no fair null), other predator near the catcher at catches: within 64 0.200 (17235)  within 96 0.419 (17235)  within 200 0.862 (17235)  joint 0.309 (17235); catches by young predators left out: 469
+   95% intervals over episodes:
+     joint_pursuit_share_large_minus_small: 0.0452 (0.0350 to 0.0553) n=[19756, 55744]
+     large_prey_caught_by_anyone_joint_minus_alone: 0.1245 (0.1055 to 0.1433) n=[4758, 14998]
+     encounter_prey_caught_by_anyone_joint_minus_alone: 0.1371 (0.1259 to 0.1482) n=[15665, 59835]
+       same, prey within 32: 0.0000 (0.0000 to 0.0000) n=[903, 2451]
+       same, prey 32-64: 0.1307 (0.1204 to 0.1412) n=[14762, 57384]
+       same, joint by current velocity: 0.1247 (0.1143 to 0.1349) n=[17510, 57990]
+     encounter_caught_by_self_joint_minus_alone: 0.0296 (0.0205 to 0.0383) n=[15665, 59835]
+     encounter_success_low_energy_prey6-15_minus_16-30: 0.0097 (-0.0007 to 0.0207) n=[15763, 12024]
+     approach_d50-100_low_energy_prey6-15_minus_16-30: 0.0021 (-0.0066 to 0.0103) n=[27670, 20298]
+     encounter_success_prey<=5_minus_16-30: -0.0001 (-0.0161 to 0.0171) n=[2263, 23061]
+     encounter_success_prey6-15_minus_16-30: 0.0047 (-0.0020 to 0.0122) n=[29053, 23061]
+     approach_d50-100_prey<=5_minus_16-30: 0.0154 (-0.0033 to 0.0311) n=[4234, 39930]
+     approach_d50-100_prey6-15_minus_16-30: 0.0030 (-0.0031 to 0.0085) n=[52181, 39930]
+     approach_d0-50_prey6-15_minus_16-30: 0.0023 (-0.0076 to 0.0125) n=[13835, 11124]

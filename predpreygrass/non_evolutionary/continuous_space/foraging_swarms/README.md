@@ -577,7 +577,7 @@ that only two predators together can catch (an imposed capture rule, as in
 the discrete `mammoths` modules, but coordination would still have to be
 learned without a reward for it).
 
-## Large prey: when lone hunting fails (running since 2026-10-21)
+## Large prey: when lone hunting fails (2026-10-21 to 2026-10-22)
 
 **Question.** Shared carcass and solo-catchable prey gave no reason to
 coordinate. Does cooperation emerge when lone predators *cannot* catch
@@ -626,6 +626,60 @@ the rule from the effect of the warm start itself (fresh optimizer).
 small prey (`measure_predators.py`, joint pursuit by prey size), (2) the
 share of large-prey encounters ending in a catch rising over training,
 (3) K predators recovering from the crash (6 of 12 coexisting untrained).
+
+### Results
+
+All after 1,000 iterations from the warm start (K, W), 50 episodes each;
+"untrained in K" = the starting policies (BE-04 / BE-05 at iteration
+2,000) run in the large-prey world without training for it. Large prey:
+energy ≥ 6. Joint pursuit: another predator's chosen action heads for the
+same prey at an encounter. Outputs: `analysis/results/pred_K*`,
+`pred_W*`, `pred_untrained*`, `cf_K*`, `cf_W*`, `cf_untrainedK*`,
+`stage4_*`.
+
+| | Coexisting (of 50) | Joint pursuit: small / large prey | Large minus small (95%) | Large prey caught by anyone: alone / joint | Helper effect on focal fed (counterfactual) |
+|---|---:|---:|---:|---:|---:|
+| Untrained in K, from BE-04 | 18 | 0.120 / 0.127 | +0.007 (-0.008, +0.024) | 0.073 / 0.290 | +0.002 (-0.012, +0.019) |
+| Untrained in K, from BE-05 | 17 | 0.141 / 0.147 | +0.006 (-0.011, +0.022) | 0.073 / 0.275 | +0.000 (-0.013, +0.014) |
+| K seed 1 | 45 | 0.187 / 0.200 | +0.013 (+0.002, +0.025) | 0.110 / 0.295 | +0.007 (-0.005, +0.019) |
+| K seed 2 | 34 | 0.161 / 0.162 | +0.001 (-0.010, +0.012) | 0.101 / 0.331 | +0.011 (+0.001, +0.021) |
+| W seed 1 | 42 | 0.162 / 0.198 | +0.037 (+0.026, +0.047) | 0.171 / 0.309 | -0.015 (-0.023, -0.008) |
+| W seed 2 | 45 | 0.180 / 0.225 | +0.044 (+0.035, +0.054) | 0.186 / 0.318 | -0.021 (-0.030, -0.013) |
+
+Over training (K, 20 episodes per checkpoint), joint pursuit of large
+minus small prey: seed 1 +0.004, +0.026, +0.009, +0.013 at iterations
+50, 200, 500, 1,000; seed 2 +0.020, +0.018, +0.014, +0.001. Coexistence
+stayed at 15-18 of 20 throughout. Predators in groups of 3 or more minus
+random: K 0.025 / 0.033, W 0.034 / 0.047. All replays reproduced the real
+outcome (0 mismatches); placebos about 0.
+
+**Findings.**
+
+1. **The predators adapted to the rule.** Untrained, they coexist in 17-18
+   of 50 episodes in the large-prey world; after 1,000 iterations in it, 34
+   and 45, close to W (42, 45). A lone predator's chance with a large prey
+   rose from 0.073 to 0.10-0.11 (W, where large prey are no harder: 0.17-0.19).
+2. **But not by hunting together.** Predators do not head for large prey
+   together more than for small ones: the large-minus-small difference in
+   joint pursuit is +0.001 and +0.013 in K, about the same as untrained
+   (+0.006, +0.007) and *smaller* than in W (+0.037, +0.044), where large
+   prey draw more joint pursuit without any rule. They do not group more
+   either. Over training the difference does not grow.
+3. **A helper is no longer a competitor, which is the rule.** In W a
+   helper lowers the focal predator's chance of being fed (-0.015, -0.021);
+   in K it is about neutral (+0.007, +0.011), as it already is untrained
+   (+0.002, +0.000): helpers make large-prey catches possible, which offsets
+   the competition. Training moved this by at most about 0.01.
+
+**Answer.** Even when lone predators fail at large prey, the predators
+adapted without learning to hunt together: the recovery came from somewhere
+else (one possible reading, not tested: hunting small prey more and taking
+large prey only when another predator happens to be near). As with the shared
+carcass, the benefit of a second predator is what the rule makes it, not
+learned coordination. Caveat: predators cannot see a prey's energy here
+(the warm start needed the old observation shape), so they cannot tell
+which prey need a partner; `observe_energy_in_slots` exists for a version
+trained from scratch, which in turn needs a way past the zero-birth start.
 
 ## Files
 

@@ -1,0 +1,869 @@
+{
+ "episodes": 50,
+ "outcomes": {
+  "time_limit": 34,
+  "predators_extinct": 11,
+  "prey_extinct": 5
+ },
+ "coexisting": 34,
+ "catches": 15714,
+ "means": {
+  "approach|d0|e0": 0.6618058037210677,
+  "approach|d0|e0|g0": 0.5333836605233173,
+  "approach|d0|e0|g1": 0.6485695385638431,
+  "approach|d0|e0|g2": 0.6432441374622653,
+  "approach|d0|e0|g3": 0.6815881592937669,
+  "approach|d0|e1": 0.6846492344824999,
+  "approach|d0|e1|g0": 0.7284898462220456,
+  "approach|d0|e1|g1": 0.6739414886859917,
+  "approach|d0|e1|g2": 0.679317325352987,
+  "approach|d0|e1|g3": 0.6939366588117917,
+  "approach|d0|e2": 0.6853935958491881,
+  "approach|d0|e2|g0": 0.3865091179545431,
+  "approach|d0|e2|g1": 0.6948912528429849,
+  "approach|d0|e2|g2": 0.6829254270293474,
+  "approach|d0|e2|g3": 0.6899728788331049,
+  "approach|d0|g0": 0.5969900157636739,
+  "approach|d0|g1": 0.6624380496598593,
+  "approach|d0|g2": 0.6617577917012971,
+  "approach|d0|g3": 0.6871281964715414,
+  "approach|d0|nvis1": 0.6384923100437835,
+  "approach|d0|nvis2": 0.6739349384475611,
+  "approach|d0|nvis3": 0.6809314603682578,
+  "approach|d0|size0": 0.6804368559342271,
+  "approach|d0|size1": 0.6561775548628271,
+  "approach|d1|e0": 0.5915773622869379,
+  "approach|d1|e0|g0": 0.5339561848241781,
+  "approach|d1|e0|g1": 0.5815309202213287,
+  "approach|d1|e0|g2": 0.5902378379964988,
+  "approach|d1|e0|g3": 0.5988897052223924,
+  "approach|d1|e1": 0.6994384160626821,
+  "approach|d1|e1|g0": 0.7093105999041817,
+  "approach|d1|e1|g1": 0.7070849087121548,
+  "approach|d1|e1|g2": 0.6880600301149551,
+  "approach|d1|e1|g3": 0.7030586126947023,
+  "approach|d1|e2": 0.7498974690626453,
+  "approach|d1|e2|g0": 0.8173989147202498,
+  "approach|d1|e2|g1": 0.7445967593656989,
+  "approach|d1|e2|g2": 0.7514264944757788,
+  "approach|d1|e2|g3": 0.7500865623584223,
+  "approach|d1|g0": 0.6312797179427305,
+  "approach|d1|g1": 0.6454059316953296,
+  "approach|d1|g2": 0.6457729428800337,
+  "approach|d1|g3": 0.6528459324854441,
+  "approach|d1|nvis1": 0.6001876539691028,
+  "approach|d1|nvis2": 0.6528137825884014,
+  "approach|d1|nvis3": 0.6629418648006765,
+  "approach|d1|size0": 0.646647463455931,
+  "approach|d1|size1": 0.6552763087252929,
+  "approach|d2|e0": 0.21213879624045043,
+  "approach|d2|e0|g0": 0.26551922812000067,
+  "approach|d2|e0|g1": 0.2234912920601323,
+  "approach|d2|e0|g2": 0.224287435716871,
+  "approach|d2|e0|g3": 0.19568317322119255,
+  "approach|d2|e1": 0.3051047428412157,
+  "approach|d2|e1|g0": 0.33463020114774544,
+  "approach|d2|e1|g1": 0.3190794051491049,
+  "approach|d2|e1|g2": 0.3149579290914138,
+  "approach|d2|e1|g3": 0.2849786352124541,
+  "approach|d2|e2": 0.3910512464755973,
+  "approach|d2|e2|g0": 0.34401499244909073,
+  "approach|d2|e2|g1": 0.4029936128459297,
+  "approach|d2|e2|g2": 0.4027881829916362,
+  "approach|d2|e2|g3": 0.374536770021604,
+  "approach|d2|g0": 0.296135906140995,
+  "approach|d2|g1": 0.27035977927203186,
+  "approach|d2|g2": 0.2719786886133617,
+  "approach|d2|g3": 0.23663038553795737,
+  "approach|d2|nvis1": 0.225910961099383,
+  "approach|d2|nvis2": 0.2603648551232705,
+  "approach|d2|nvis3": 0.27578066490118613,
+  "approach|d2|size0": 0.24769131451642656,
+  "approach|d2|size1": 0.29933495887956607,
+  "approach|d3|e0": 0.06993264838430066,
+  "approach|d3|e0|g0": 0.07038971722402278,
+  "approach|d3|e0|g1": 0.07333603901493958,
+  "approach|d3|e0|g2": 0.0744764362434851,
+  "approach|d3|e0|g3": 0.06128566029012101,
+  "approach|d3|e1": 0.10255952980398815,
+  "approach|d3|e1|g0": 0.1073064713031439,
+  "approach|d3|e1|g1": 0.11116273046363656,
+  "approach|d3|e1|g2": 0.10158042277291184,
+  "approach|d3|e1|g3": 0.09006517929209522,
+  "approach|d3|e2": 0.13941272401490812,
+  "approach|d3|e2|g0": 0.08783562296807206,
+  "approach|d3|e2|g1": 0.1548274229942928,
+  "approach|d3|e2|g2": 0.13900082205452405,
+  "approach|d3|e2|g3": 0.12229870535185444,
+  "approach|d3|g0": 0.08366369299234136,
+  "approach|d3|g1": 0.09185165475824315,
+  "approach|d3|g2": 0.08899857739674509,
+  "approach|d3|g3": 0.07390439245898665,
+  "approach|d3|nvis1": 0.07688941411699414,
+  "approach|d3|nvis2": 0.09299692241359904,
+  "approach|d3|nvis3": 0.10914418379391781,
+  "approach|d3|size0": 0.08091651080857012,
+  "approach|d3|size1": 0.10790599738388171,
+  "catch_by_young": 1.0,
+  "catch_joint": 0.2687158825058487,
+  "catch_near200": 0.848518325968287,
+  "catch_near64": 0.18397452560436703,
+  "catch_near96": 0.40512087340785025,
+  "catch|g0": 1.0,
+  "catch|g1": 1.0,
+  "catch|g2": 1.0,
+  "catch|g3": 1.0,
+  "enc_joint": 0.16148784230406044,
+  "enc_joint_v": 0.18266052880075542,
+  "enc_joint|size0": 0.16131214761660687,
+  "enc_joint|size1": 0.16193884532393032,
+  "enc_near200": 0.7975537063267233,
+  "enc_near64": 0.1421152030217186,
+  "enc_near96": 0.29793732294617564,
+  "enc_success|e0": 0.1709797750189427,
+  "enc_success|e0|g0": 0.2205128205128205,
+  "enc_success|e0|g1": 0.18919245647969052,
+  "enc_success|e0|g2": 0.17854275391409072,
+  "enc_success|e0|g3": 0.15614178681609267,
+  "enc_success|e1": 0.18232738501310544,
+  "enc_success|e1|g0": 0.22340425531914893,
+  "enc_success|e1|g1": 0.1966406023747466,
+  "enc_success|e1|g2": 0.18739195574507317,
+  "enc_success|e1|g3": 0.16986754966887418,
+  "enc_success|e2": 0.1855284263054714,
+  "enc_success|e2|g0": 0.2037037037037037,
+  "enc_success|e2|g1": 0.2143467122117848,
+  "enc_success|e2|g2": 0.18753781004234724,
+  "enc_success|e2|g3": 0.17160629345042078,
+  "enc_success|g0": 0.21967963386727687,
+  "enc_success|g1": 0.19414031439231758,
+  "enc_success|g2": 0.1830590322262738,
+  "enc_success|g3": 0.16292025019546522,
+  "enc_target_by_other|joint0": 0.014076824268445039,
+  "enc_target_by_other|joint1": 0.12306989492919142,
+  "enc_target_by_self|joint0": 0.16807728176523376,
+  "enc_target_by_self|joint0|d0": 0.6245922208281054,
+  "enc_target_by_self|joint0|d1": 0.1336524997161564,
+  "enc_target_by_self|joint1": 0.22238465052535406,
+  "enc_target_by_self|joint1|d0": 0.9813829787234043,
+  "enc_target_by_self|joint1|d1": 0.16638869812616502,
+  "enc_target_by_self|size0|joint0": 0.20028357004913586,
+  "enc_target_by_self|size0|joint1": 0.2275038129130656,
+  "enc_target_by_self|size1|joint0": 0.08534287867370008,
+  "enc_target_by_self|size1|joint1": 0.20929476763080923,
+  "enc_target_caught|joint0": 0.1821541060336788,
+  "enc_target_caught|joint0|d0": 0.6271016311166876,
+  "enc_target_caught|joint0|d1": 0.1486015970934413,
+  "enc_target_caught|joint1": 0.34545454545454546,
+  "enc_target_caught|joint1|d0": 1.0,
+  "enc_target_caught|joint1|d1": 0.29716472088688317,
+  "enc_target_caught|jointv0": 0.1806989674344718,
+  "enc_target_caught|jointv1": 0.33303715670436185,
+  "enc_target_caught|size0|joint0": 0.21392426724032562,
+  "enc_target_caught|size0|joint1": 0.35104219623792576,
+  "enc_target_caught|size1|joint0": 0.10054006531022357,
+  "enc_target_caught|size1|joint1": 0.3311667208319792,
+  "stop_seeing_prey|e0": 0.44051005639566804,
+  "stop_seeing_prey|e1": 0.32256907856222927,
+  "stop_seeing_prey|e2": 0.2485400075843762,
+  "stop_seeing_prey|g0": 0.48195149464185,
+  "stop_seeing_prey|g1": 0.43530320946732337,
+  "stop_seeing_prey|g2": 0.38080124775567203,
+  "stop_seeing_prey|g3": 0.34075163007927073,
+  "stop_seeing_prey|size0": 0.39700793065998036,
+  "stop_seeing_prey|size1": 0.327288775814847,
+  "stop|g0": 0.7138382291521649,
+  "stop|g1": 0.5621620212238938,
+  "stop|g2": 0.4405121949459005,
+  "stop|g3": 0.3519867238205297,
+  "stop|nvis0": 0.7114991469019475,
+  "stop|nvis1": 0.530588146622114,
+  "stop|nvis2": 0.40937647774099845,
+  "stop|nvis3": 0.25251822206755214
+ },
+ "counts": {
+  "catch_by_young": 326,
+  "stop|nvis1": 119409,
+  "stop|g2": 138541,
+  "approach|d2|g2": 34171,
+  "approach|d2|e0": 65613,
+  "approach|d2|nvis1": 32554,
+  "approach|d2|e0|g2": 18597,
+  "stop_seeing_prey|g2": 110278,
+  "stop_seeing_prey|e0": 200370,
+  "approach|d2|size0": 92581,
+  "stop_seeing_prey|size0": 286357,
+  "stop|nvis3": 155169,
+  "approach|d0|g2": 10149,
+  "approach|d0|e1": 13779,
+  "approach|d0|nvis3": 21652,
+  "approach|d0|e1|g2": 4277,
+  "stop_seeing_prey|e1": 136656,
+  "approach|d0|size1": 10376,
+  "stop_seeing_prey|size1": 77039,
+  "stop|nvis0": 130114,
+  "approach|d0|e0": 17387,
+  "approach|d0|nvis1": 5134,
+  "approach|d0|e0|g2": 5025,
+  "approach|d0|size0": 23651,
+  "stop|nvis2": 88818,
+  "approach|d1|g2": 35189,
+  "approach|d1|e0": 59846,
+  "approach|d1|nvis2": 26850,
+  "approach|d1|e0|g2": 17155,
+  "approach|d1|size1": 28113,
+  "enc_target_caught|joint0": 56831,
+  "enc_target_caught|joint0|d1": 52846,
+  "enc_target_by_self|joint0": 56831,
+  "enc_target_by_self|joint0|d1": 52846,
+  "enc_target_by_other|joint0": 56831,
+  "enc_target_caught|jointv0": 55396,
+  "enc_success|g2": 20294,
+  "enc_success|e1": 27851,
+  "enc_success|e1|g2": 8677,
+  "enc_near64": 67776,
+  "enc_near96": 67776,
+  "enc_near200": 67776,
+  "enc_joint": 67776,
+  "enc_joint_v": 67776,
+  "enc_joint|size1": 19001,
+  "enc_target_caught|size1|joint0": 15924,
+  "enc_target_by_self|size1|joint0": 15924,
+  "enc_success|e0": 34314,
+  "enc_success|e0|g2": 9964,
+  "enc_joint|size0": 48775,
+  "enc_target_caught|size0|joint0": 40907,
+  "enc_target_by_self|size0|joint0": 40907,
+  "approach|d3|g2": 30769,
+  "approach|d3|e0": 57524,
+  "approach|d3|nvis1": 59394,
+  "approach|d3|e0|g2": 17188,
+  "approach|d3|size0": 80674,
+  "approach|d2|nvis3": 50207,
+  "approach|d1|nvis3": 68387,
+  "catch_near64": 15388,
+  "catch_near96": 15388,
+  "catch_near200": 15388,
+  "catch_joint": 15388,
+  "catch|g2": 4825,
+  "enc_target_caught|joint0|d0": 3985,
+  "enc_target_by_self|joint0|d0": 3985,
+  "approach|d3|size1": 17362,
+  "approach|d2|nvis2": 31008,
+  "approach|d2|size1": 21188,
+  "approach|d1|size0": 89451,
+  "stop|g3": 148838,
+  "approach|d2|g3": 46487,
+  "approach|d2|e0|g3": 28245,
+  "stop_seeing_prey|g3": 142171,
+  "approach|d1|g3": 52147,
+  "approach|d1|e0|g3": 27229,
+  "approach|d3|g3": 28101,
+  "approach|d3|nvis2": 23719,
+  "approach|d3|e0|g3": 17667,
+  "catch|g3": 6252,
+  "approach|d2|e1": 40452,
+  "approach|d2|e1|g3": 15176,
+  "approach|d2|e1|g2": 13097,
+  "approach|d3|e1": 34444,
+  "approach|d3|e1|g2": 11477,
+  "approach|d1|e1": 47981,
+  "approach|d1|e1|g2": 15034,
+  "approach|d1|e1|g3": 20283,
+  "approach|d0|g3": 15436,
+  "approach|d0|nvis2": 7241,
+  "approach|d0|e0|g3": 8063,
+  "approach|d3|nvis3": 14923,
+  "approach|d3|e1|g3": 8749,
+  "approach|d1|nvis1": 22327,
+  "approach|d0|e1|g3": 5978,
+  "enc_success|g3": 30696,
+  "enc_success|e0|g3": 15883,
+  "enc_target_caught|joint1": 10945,
+  "enc_target_caught|joint1|d1": 10193,
+  "enc_target_by_self|joint1": 10945,
+  "enc_target_by_self|joint1|d1": 10193,
+  "enc_target_by_other|joint1": 10945,
+  "enc_success|e1|g3": 12080,
+  "enc_target_caught|size1|joint1": 3077,
+  "enc_target_by_self|size1|joint1": 3077,
+  "enc_target_caught|size0|joint1": 7868,
+  "enc_target_by_self|size0|joint1": 7868,
+  "enc_target_caught|jointv1": 12380,
+  "approach|d3|e2": 6068,
+  "approach|d3|e2|g3": 1685,
+  "stop_seeing_prey|e2": 26370,
+  "approach|d2|e2": 7704,
+  "approach|d2|e2|g3": 3066,
+  "approach|d1|e2": 9737,
+  "approach|d1|e2|g3": 4635,
+  "approach|d2|e2|g2": 2477,
+  "approach|d1|e2|g2": 3000,
+  "enc_success|e2": 5611,
+  "enc_success|e2|g3": 2733,
+  "approach|d0|e2": 2861,
+  "approach|d0|e2|g3": 1395,
+  "enc_target_caught|joint1|d0": 752,
+  "enc_target_by_self|joint1|d0": 752,
+  "approach|d3|e2|g2": 2104,
+  "approach|d0|e2|g2": 847,
+  "enc_success|e2|g2": 1653,
+  "stop|g1": 191765,
+  "approach|d2|g1": 32028,
+  "approach|d2|e1|g1": 11781,
+  "stop_seeing_prey|g1": 107401,
+  "approach|d3|g1": 37783,
+  "approach|d3|e2|g1": 2198,
+  "approach|d3|e1|g1": 13759,
+  "approach|d3|e0|g1": 21826,
+  "approach|d2|e0|g1": 18158,
+  "approach|d1|g1": 29354,
+  "approach|d1|e1|g1": 12305,
+  "approach|d1|e0|g1": 15025,
+  "approach|d0|g1": 8236,
+  "approach|d0|e1|g1": 3432,
+  "catch|g1": 4194,
+  "enc_success|g1": 16349,
+  "enc_success|e1|g1": 6906,
+  "enc_success|e0|g1": 8272,
+  "approach|d2|e2|g1": 2089,
+  "approach|d0|e0|g1": 4218,
+  "approach|d1|e2|g1": 2024,
+  "enc_success|e2|g1": 1171,
+  "approach|d0|e2|g1": 586,
+  "stop|g0": 14366,
+  "approach|d3|g0": 1383,
+  "approach|d3|e0|g0": 843,
+  "stop_seeing_prey|g0": 3546,
+  "approach|d2|g0": 1083,
+  "approach|d2|e1|g0": 398,
+  "approach|d1|g0": 874,
+  "approach|d1|e1|g0": 359,
+  "approach|d1|e0|g0": 437,
+  "catch|g0": 117,
+  "approach|d3|e1|g0": 459,
+  "approach|d0|g0": 206,
+  "approach|d0|e1|g0": 92,
+  "approach|d2|e0|g0": 613,
+  "enc_success|g0": 437,
+  "enc_success|e1|g0": 188,
+  "approach|d2|e2|g0": 72,
+  "approach|d1|e2|g0": 78,
+  "approach|d3|e2|g0": 81,
+  "enc_success|e0|g0": 195,
+  "approach|d0|e0|g0": 81,
+  "approach|d0|e2|g0": 33,
+  "enc_success|e2|g0": 54
+ },
+ "intervals": {
+  "joint_pursuit_share_large_minus_small": {
+   "estimate": 0.0006266977073234592,
+   "low": -0.01011025410995367,
+   "high": 0.011509958268070768,
+   "n": [
+    19001,
+    48775
+   ]
+  },
+  "large_prey_caught_by_anyone_joint_minus_alone": {
+   "estimate": 0.2306266555217556,
+   "low": 0.21247675823060586,
+   "high": 0.2522481187986115,
+   "n": [
+    3077,
+    15924
+   ]
+  },
+  "encounter_prey_caught_by_anyone_joint_minus_alone": {
+   "estimate": 0.16330043942086667,
+   "low": 0.1521818406950178,
+   "high": 0.17448599878752408,
+   "n": [
+    10945,
+    56831
+   ]
+  },
+  "  same, prey within 32": {
+   "estimate": 0.3728983688833124,
+   "low": 0.35098342459869236,
+   "high": 0.39783365495129486,
+   "n": [
+    752,
+    3985
+   ]
+  },
+  "  same, prey 32-64": {
+   "estimate": 0.14856312379344186,
+   "low": 0.13768456219452702,
+   "high": 0.16022934119939647,
+   "n": [
+    10193,
+    52846
+   ]
+  },
+  "  same, joint by current velocity": {
+   "estimate": 0.15233818926989004,
+   "low": 0.14182521155360936,
+   "high": 0.16329045956697652,
+   "n": [
+    12380,
+    55396
+   ]
+  },
+  "encounter_caught_by_self_joint_minus_alone": {
+   "estimate": 0.054307368760120295,
+   "low": 0.04691701226158288,
+   "high": 0.062694216215887,
+   "n": [
+    10945,
+    56831
+   ]
+  },
+  "encounter_success_low_energy_prey6-15_minus_16-30": {
+   "estimate": 0.0106497025655998,
+   "low": -0.003424586190678018,
+   "high": 0.02524471024846453,
+   "n": [
+    8272,
+    9964
+   ]
+  },
+  "approach_d50-100_low_energy_prey6-15_minus_16-30": {
+   "estimate": -0.008706917775170075,
+   "low": -0.021482996824301347,
+   "high": 0.00269529862031302,
+   "n": [
+    15025,
+    17155
+   ]
+  },
+  "encounter_success_prey<=5_minus_16-30": {
+   "estimate": 0.03662060164100309,
+   "low": -0.014496944622408909,
+   "high": 0.08982905523435598,
+   "n": [
+    437,
+    20294
+   ]
+  },
+  "encounter_success_prey6-15_minus_16-30": {
+   "estimate": 0.011081282166043788,
+   "low": 0.0009358522447696792,
+   "high": 0.021507340001647838,
+   "n": [
+    16349,
+    20294
+   ]
+  },
+  "approach_d50-100_prey<=5_minus_16-30": {
+   "estimate": -0.014493224937303206,
+   "low": -0.04664994830165183,
+   "high": 0.014896111944522266,
+   "n": [
+    874,
+    35189
+   ]
+  },
+  "approach_d50-100_prey6-15_minus_16-30": {
+   "estimate": -0.00036701118470416905,
+   "low": -0.008251786218501169,
+   "high": 0.00799433436088055,
+   "n": [
+    29354,
+    35189
+   ]
+  },
+  "approach_d0-50_prey6-15_minus_16-30": {
+   "estimate": 0.0006802579585621915,
+   "low": -0.010039628677586687,
+   "high": 0.011366608765100946,
+   "n": [
+    8236,
+    10149
+   ]
+  }
+ },
+ "label": "pred_K2",
+ "checkpoint": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/continuous_space/foraging_swarms/runs/foraging_swarms_2026-10-22_01-42-40_170560_K_seed2/checkpoint",
+ "override": {},
+ "seeds": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49
+ ],
+ "settings": {
+  "MIN_AGE": 10,
+  "ENCOUNTER": 64.0,
+  "NEAR": [
+   64.0,
+   96.0,
+   200.0
+  ],
+  "JOIN_RADIUS": 96.0,
+  "APPROACHING": 0.3,
+  "DIST_EDGES": [
+   50.0,
+   100.0,
+   150.0
+  ],
+  "PREY_EDGES": [
+   5,
+   15,
+   30
+  ],
+  "ENERGY_EDGES": [
+   0.25,
+   0.4
+  ]
+ },
+ "per_episode": [
+  {
+   "seed": 0,
+   "outcome": "time_limit",
+   "catches": 386,
+   "decisions": 1244
+  },
+  {
+   "seed": 1,
+   "outcome": "predators_extinct",
+   "catches": 30,
+   "decisions": 350
+  },
+  {
+   "seed": 2,
+   "outcome": "time_limit",
+   "catches": 449,
+   "decisions": 1258
+  },
+  {
+   "seed": 3,
+   "outcome": "time_limit",
+   "catches": 184,
+   "decisions": 1209
+  },
+  {
+   "seed": 4,
+   "outcome": "predators_extinct",
+   "catches": 48,
+   "decisions": 585
+  },
+  {
+   "seed": 5,
+   "outcome": "time_limit",
+   "catches": 466,
+   "decisions": 1269
+  },
+  {
+   "seed": 6,
+   "outcome": "time_limit",
+   "catches": 460,
+   "decisions": 1256
+  },
+  {
+   "seed": 7,
+   "outcome": "time_limit",
+   "catches": 481,
+   "decisions": 1259
+  },
+  {
+   "seed": 8,
+   "outcome": "time_limit",
+   "catches": 460,
+   "decisions": 1277
+  },
+  {
+   "seed": 9,
+   "outcome": "time_limit",
+   "catches": 437,
+   "decisions": 1269
+  },
+  {
+   "seed": 10,
+   "outcome": "prey_extinct",
+   "catches": 317,
+   "decisions": 982
+  },
+  {
+   "seed": 11,
+   "outcome": "predators_extinct",
+   "catches": 75,
+   "decisions": 666
+  },
+  {
+   "seed": 12,
+   "outcome": "predators_extinct",
+   "catches": 37,
+   "decisions": 380
+  },
+  {
+   "seed": 13,
+   "outcome": "time_limit",
+   "catches": 420,
+   "decisions": 1246
+  },
+  {
+   "seed": 14,
+   "outcome": "predators_extinct",
+   "catches": 136,
+   "decisions": 860
+  },
+  {
+   "seed": 15,
+   "outcome": "time_limit",
+   "catches": 95,
+   "decisions": 1195
+  },
+  {
+   "seed": 16,
+   "outcome": "predators_extinct",
+   "catches": 24,
+   "decisions": 400
+  },
+  {
+   "seed": 17,
+   "outcome": "time_limit",
+   "catches": 409,
+   "decisions": 1227
+  },
+  {
+   "seed": 18,
+   "outcome": "predators_extinct",
+   "catches": 37,
+   "decisions": 392
+  },
+  {
+   "seed": 19,
+   "outcome": "time_limit",
+   "catches": 444,
+   "decisions": 1243
+  },
+  {
+   "seed": 20,
+   "outcome": "time_limit",
+   "catches": 479,
+   "decisions": 1255
+  },
+  {
+   "seed": 21,
+   "outcome": "time_limit",
+   "catches": 457,
+   "decisions": 1246
+  },
+  {
+   "seed": 22,
+   "outcome": "time_limit",
+   "catches": 434,
+   "decisions": 1250
+  },
+  {
+   "seed": 23,
+   "outcome": "time_limit",
+   "catches": 463,
+   "decisions": 1269
+  },
+  {
+   "seed": 24,
+   "outcome": "predators_extinct",
+   "catches": 75,
+   "decisions": 954
+  },
+  {
+   "seed": 25,
+   "outcome": "time_limit",
+   "catches": 332,
+   "decisions": 1236
+  },
+  {
+   "seed": 26,
+   "outcome": "time_limit",
+   "catches": 452,
+   "decisions": 1253
+  },
+  {
+   "seed": 27,
+   "outcome": "time_limit",
+   "catches": 477,
+   "decisions": 1252
+  },
+  {
+   "seed": 28,
+   "outcome": "time_limit",
+   "catches": 457,
+   "decisions": 1240
+  },
+  {
+   "seed": 29,
+   "outcome": "time_limit",
+   "catches": 427,
+   "decisions": 1253
+  },
+  {
+   "seed": 30,
+   "outcome": "prey_extinct",
+   "catches": 290,
+   "decisions": 819
+  },
+  {
+   "seed": 31,
+   "outcome": "time_limit",
+   "catches": 346,
+   "decisions": 1246
+  },
+  {
+   "seed": 32,
+   "outcome": "time_limit",
+   "catches": 387,
+   "decisions": 1262
+  },
+  {
+   "seed": 33,
+   "outcome": "prey_extinct",
+   "catches": 190,
+   "decisions": 519
+  },
+  {
+   "seed": 34,
+   "outcome": "time_limit",
+   "catches": 472,
+   "decisions": 1261
+  },
+  {
+   "seed": 35,
+   "outcome": "time_limit",
+   "catches": 320,
+   "decisions": 1244
+  },
+  {
+   "seed": 36,
+   "outcome": "prey_extinct",
+   "catches": 303,
+   "decisions": 825
+  },
+  {
+   "seed": 37,
+   "outcome": "time_limit",
+   "catches": 461,
+   "decisions": 1256
+  },
+  {
+   "seed": 38,
+   "outcome": "time_limit",
+   "catches": 468,
+   "decisions": 1250
+  },
+  {
+   "seed": 39,
+   "outcome": "time_limit",
+   "catches": 114,
+   "decisions": 1197
+  },
+  {
+   "seed": 40,
+   "outcome": "predators_extinct",
+   "catches": 63,
+   "decisions": 653
+  },
+  {
+   "seed": 41,
+   "outcome": "prey_extinct",
+   "catches": 377,
+   "decisions": 1008
+  },
+  {
+   "seed": 42,
+   "outcome": "time_limit",
+   "catches": 451,
+   "decisions": 1236
+  },
+  {
+   "seed": 43,
+   "outcome": "time_limit",
+   "catches": 448,
+   "decisions": 1240
+  },
+  {
+   "seed": 44,
+   "outcome": "time_limit",
+   "catches": 463,
+   "decisions": 1258
+  },
+  {
+   "seed": 45,
+   "outcome": "predators_extinct",
+   "catches": 47,
+   "decisions": 687
+  },
+  {
+   "seed": 46,
+   "outcome": "time_limit",
+   "catches": 121,
+   "decisions": 1179
+  },
+  {
+   "seed": 47,
+   "outcome": "predators_extinct",
+   "catches": 46,
+   "decisions": 533
+  },
+  {
+   "seed": 48,
+   "outcome": "time_limit",
+   "catches": 424,
+   "decisions": 1261
+  },
+  {
+   "seed": 49,
+   "outcome": "time_limit",
+   "catches": 475,
+   "decisions": 1267
+  }
+ ],
+ "wall_seconds": 42.6
+}

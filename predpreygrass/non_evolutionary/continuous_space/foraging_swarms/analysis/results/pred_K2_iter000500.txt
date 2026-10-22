@@ -1,0 +1,49 @@
+== pred_K2_iter000500: 20 episodes, 16 coexisting {'time_limit': 16, 'predators_extinct': 2, 'prey_extinct': 2}; 6999 catches
+   approach toward nearest visible prey (share of top speed), rows distance 0-50/50-100/100-150/150-200,
+   columns prey alive <=5 / 6-15 / 16-30 / >30  [n]:
+     d0: 0.603 (144)  0.666 (3522)  0.675 (5249)  0.705 (6204)
+     d1: 0.674 (582)  0.644 (12276)  0.646 (17635)  0.649 (20623)
+     d2: 0.268 (671)  0.268 (13792)  0.266 (17433)  0.231 (19276)
+     d3: 0.097 (867)  0.092 (16630)  0.089 (15551)  0.070 (11473)
+   approach at low energy (<0.25), by prey alive:
+     d0: 0.585 (90)  0.649 (1743)  0.652 (2563)  0.682 (3252)
+     d1: 0.647 (347)  0.582 (6272)  0.590 (8342)  0.589 (10706)
+     d2: 0.217 (396)  0.225 (8107)  0.222 (9218)  0.190 (11688)
+     d3: 0.091 (534)  0.078 (9768)  0.070 (8397)  0.061 (7129)
+   approach by own energy low/mid/high (<0.25 / 0.25-0.4 / >0.4; reproduction at 0.5):
+     d0: 0.663 (7648)  0.708 (6223)  0.695 (1248)
+     d1: 0.588 (25667)  0.699 (21445)  0.747 (4004)
+   approach by prey in view 1/2/3:
+     d0: 0.636 (2433)  0.683 (3308)  0.698 (9378)
+     d1: 0.618 (10226)  0.650 (11861)  0.656 (29029)
+   by prey size (large: energy >= 6), small / large:
+     joint pursuit share: 0.161 (21191)  0.175 (8809)
+     small: caught by anyone alone / joint 0.217 (17787)  0.363 (3404); by self alone / joint 0.204 (17787)  0.230 (3404)
+     large: caught by anyone alone / joint 0.099 (7270)  0.325 (1539); by self alone / joint 0.085 (7270)  0.216 (1539)
+     approach d0/d1, small: 0.694 (10330)  0.645 (38150)  large: 0.664 (4789)  0.653 (12966)
+     stop share seeing prey, small / large: 0.409 (125744)  0.334 (36184)
+   stop share by prey in view 0-3: 0.721 (61073)  0.532 (55112)  0.395 (39797)  0.276 (67019)
+   stop share by prey alive:      0.708 (8628)  0.573 (83341)  0.442 (70649)  0.371 (60383)
+   stop share seeing prey, by prey alive: 0.460 (2264)  0.440 (46220)  0.383 (55868)  0.360 (57576)
+   stop share seeing prey, by energy:     0.450 (88552)  0.334 (62181)  0.260 (11195)
+   encounter -> catch, by prey alive: 0.207 (294)  0.201 (7045)  0.183 (10335)  0.162 (12326)
+   encounter -> catch, by energy:     0.178 (14934)  0.179 (12604)  0.185 (2462)
+   encounter (alone): target caught by anyone 0.183 (25057), by self 0.170 (25057), by another 0.013 (25057)
+   encounter (joint): target caught by anyone 0.351 (4943), by self 0.226 (4943), by another 0.125 (4943)
+   encounters with joint pursuit: by action 0.165 (30000), by current velocity 0.184 (30000); ambiguous targets left out: 0
+   descriptive (no fair null), other predator near the catcher at catches: within 64 0.187 (6843)  within 96 0.408 (6843)  within 200 0.855 (6843)  joint 0.284 (6843); catches by young predators left out: 156
+   95% intervals over episodes:
+     joint_pursuit_share_large_minus_small: 0.0141 (-0.0007 to 0.0297) n=[8809, 21191]
+     large_prey_caught_by_anyone_joint_minus_alone: 0.2258 (0.1976 to 0.2556) n=[1539, 7270]
+     encounter_prey_caught_by_anyone_joint_minus_alone: 0.1686 (0.1475 to 0.1902) n=[4943, 25057]
+       same, prey within 32: 0.4263 (0.3880 to 0.4679) n=[361, 1804]
+       same, prey 32-64: 0.1479 (0.1261 to 0.1684) n=[4582, 23253]
+       same, joint by current velocity: 0.1649 (0.1443 to 0.1861) n=[5526, 24474]
+     encounter_caught_by_self_joint_minus_alone: 0.0564 (0.0393 to 0.0755) n=[4943, 25057]
+     encounter_success_low_energy_prey6-15_minus_16-30: 0.0174 (0.0035 to 0.0326) n=[3471, 4951]
+     approach_d50-100_low_energy_prey6-15_minus_16-30: -0.0078 (-0.0252 to 0.0080) n=[6272, 8342]
+     encounter_success_prey<=5_minus_16-30: 0.0246 (-0.0073 to 0.0664) n=[294, 10335]
+     encounter_success_prey6-15_minus_16-30: 0.0184 (0.0079 to 0.0310) n=[7045, 10335]
+     approach_d50-100_prey<=5_minus_16-30: 0.0281 (0.0077 to 0.0468) n=[582, 17635]
+     approach_d50-100_prey6-15_minus_16-30: -0.0016 (-0.0142 to 0.0094) n=[12276, 17635]
+     approach_d0-50_prey6-15_minus_16-30: -0.0091 (-0.0340 to 0.0154) n=[3522, 5249]

@@ -1,0 +1,33 @@
+== stage4_W2: 50 episodes, 45 coexisting {'time_limit': 45, 'prey_extinct': 2, 'predators_extinct': 3}
+   catch risk 2.08 per prey per 1,000 steps; predators/prey alive 10.9/25.9
+   predator:
+     moving 0.566  NN 122  R 1.017 (all ages 1.004)  overlapping 0.021
+     alignment 0.219 vs shuffled 0.019; target in view 0.283, out 0.017; polarization 0.384
+     groups>=3 at 64: 0.050 vs random 0.027; mean size 1.26; largest 0.182
+     groups>=3 at 96: 0.162 vs random 0.115; mean size 1.64; largest 0.244
+     pair spells (Kaplan-Meier) median 5.0 (n 17373 + 711 censored, >=10: 0.296); group lifetimes median 4.0 (n 4403 + 37 censored, >=10: 0.242)
+     target out of view 0.299; then conspecific in view 0.684
+     lost target with_conspecific: 28730 events; distance t0 163 t5 158 t10 150 t20 143; back in view within 20: 0.963
+     lost target without_conspecific: 11667 events; distance t0 161 t5 146 t10 133 t20 129; back in view within 20: 0.982
+     probe (15168 obs): 90deg TV 0.616 turn 1 (R 0.62, clear 0.87); 180deg TV 0.652 turn 1 (R 0.58, clear 0.88); 270deg TV 0.615 turn 0 (R 0.62, clear 0.88); references: zeroed TV 0.543, own velocity 90deg TV 0.306
+   prey:
+     moving 0.973  NN 74  R 0.919 (all ages 0.861)  overlapping 0.121
+     alignment 0.172 vs shuffled 0.011; target in view 0.210, out 0.132; polarization 0.249
+     groups>=3 at 64: 0.197 vs random 0.119; mean size 1.92; largest 0.186
+     groups>=3 at 96: 0.412 vs random 0.323; mean size 4.87; largest 0.302
+     pair spells (Kaplan-Meier) median 3.0 (n 282169 + 12694 censored, >=10: 0.061); group lifetimes median 2.0 (n 35102 + 50 censored, >=10: 0.059)
+     target out of view 0.442; then conspecific in view 0.996
+     lost target with_conspecific: 86512 events; distance t0 227 t5 225 t10 211 t20 207; back in view within 20: 0.908
+     lost target without_conspecific: 628 events; distance t0 187 t5 181 t10 157 t20 148; back in view within 20: 0.992
+     probe (73798 obs): 90deg TV 0.664 turn -1 (R 0.67, clear 0.95); 180deg TV 0.724 turn -0 (R 0.63, clear 0.95); 270deg TV 0.663 turn 1 (R 0.67, clear 0.95); references: zeroed TV 0.587, own velocity 90deg TV 0.608
+   prey caught per decision: in group 0.0043 (n 768054), alone 0.0206; grass per decision: in group 0.0303, alone 0.0708
+   95% intervals over episodes:
+     predator/clark_evans_R: 1.0170 (1.0078 to 1.0255)
+     predator/alignment_minus_shuffled: 0.1999 (0.1932 to 0.2064)
+     predator/alignment_target_out_of_view_minus_shuffled: -0.0015 (-0.0126 to 0.0088)
+     predator/group_share_96_minus_random: 0.0466 (0.0400 to 0.0533)
+     prey/clark_evans_R: 0.9190 (0.9145 to 0.9238)
+     prey/alignment_minus_shuffled: 0.1610 (0.1501 to 0.1716)
+     prey/alignment_target_out_of_view_minus_shuffled: 0.1215 (0.1113 to 0.1328)
+     prey/group_share_96_minus_random: 0.0890 (0.0846 to 0.0933)
+     prey/caught_in_group_minus_alone: -0.0163 (-0.0168 to -0.0157)

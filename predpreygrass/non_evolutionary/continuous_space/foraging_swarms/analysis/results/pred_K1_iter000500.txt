@@ -1,0 +1,49 @@
+== pred_K1_iter000500: 20 episodes, 17 coexisting {'predators_extinct': 3, 'time_limit': 17}; 7978 catches
+   approach toward nearest visible prey (share of top speed), rows distance 0-50/50-100/100-150/150-200,
+   columns prey alive <=5 / 6-15 / 16-30 / >30  [n]:
+     d0: 0.681 (66)  0.640 (4152)  0.661 (6966)  0.693 (5542)
+     d1: 0.600 (339)  0.650 (15457)  0.662 (24312)  0.697 (18612)
+     d2: 0.273 (434)  0.286 (16886)  0.288 (22579)  0.279 (14958)
+     d3: 0.084 (653)  0.088 (19876)  0.089 (21033)  0.072 (8320)
+   approach at low energy (<0.25), by prey alive:
+     d0: 0.689 (36)  0.627 (2170)  0.651 (3619)  0.694 (2800)
+     d1: 0.531 (182)  0.608 (8083)  0.628 (13122)  0.658 (9127)
+     d2: 0.257 (223)  0.248 (9415)  0.258 (13101)  0.240 (7970)
+     d3: 0.078 (325)  0.074 (11586)  0.076 (12474)  0.062 (4736)
+   approach by own energy low/mid/high (<0.25 / 0.25-0.4 / >0.4; reproduction at 0.5):
+     d0: 0.659 (8625)  0.674 (6703)  0.677 (1398)
+     d1: 0.631 (30514)  0.706 (23361)  0.740 (4845)
+   approach by prey in view 1/2/3:
+     d0: 0.627 (2658)  0.649 (3719)  0.683 (10349)
+     d1: 0.600 (11541)  0.656 (14530)  0.700 (32649)
+   by prey size (large: energy >= 6), small / large:
+     joint pursuit share: 0.167 (24527)  0.176 (9163)
+     small: caught by anyone alone / joint 0.225 (20431)  0.339 (4096); by self alone / joint 0.212 (20431)  0.220 (4096)
+     large: caught by anyone alone / joint 0.107 (7551)  0.328 (1612); by self alone / joint 0.095 (7551)  0.214 (1612)
+     approach d0/d1, small: 0.675 (11945)  0.669 (44237)  large: 0.646 (4781)  0.670 (14483)
+     stop share seeing prey, small / large: 0.383 (140405)  0.325 (39780)
+   stop share by prey in view 0-3: 0.700 (67327)  0.546 (63122)  0.358 (46136)  0.222 (70927)
+   stop share by prey alive:      0.668 (4556)  0.551 (97781)  0.436 (95696)  0.307 (49479)
+   stop share seeing prey, by prey alive: 0.519 (1492)  0.431 (56371)  0.369 (74890)  0.295 (47432)
+   stop share seeing prey, by energy:     0.415 (98969)  0.323 (67456)  0.278 (13760)
+   encounter -> catch, by prey alive: 0.131 (145)  0.194 (8450)  0.189 (14007)  0.179 (11088)
+   encounter -> catch, by energy:     0.186 (17302)  0.188 (13599)  0.190 (2789)
+   encounter (alone): target caught by anyone 0.193 (27982), by self 0.181 (27982), by another 0.012 (27982)
+   encounter (joint): target caught by anyone 0.336 (5708), by self 0.218 (5708), by another 0.118 (5708)
+   encounters with joint pursuit: by action 0.169 (33690), by current velocity 0.192 (33690); ambiguous targets left out: 0
+   descriptive (no fair null), other predator near the catcher at catches: within 64 0.181 (7778)  within 96 0.393 (7778)  within 200 0.849 (7778)  joint 0.270 (7778); catches by young predators left out: 200
+   95% intervals over episodes:
+     joint_pursuit_share_large_minus_small: 0.0089 (-0.0062 to 0.0275) n=[9163, 24527]
+     large_prey_caught_by_anyone_joint_minus_alone: 0.2204 (0.1917 to 0.2511) n=[1612, 7551]
+     encounter_prey_caught_by_anyone_joint_minus_alone: 0.1429 (0.1255 to 0.1586) n=[5708, 27982]
+       same, prey within 32: 0.3319 (0.3096 to 0.3573) n=[368, 1898]
+       same, prey 32-64: 0.1317 (0.1113 to 0.1492) n=[5340, 26084]
+       same, joint by current velocity: 0.1355 (0.1184 to 0.1526) n=[6479, 27211]
+     encounter_caught_by_self_joint_minus_alone: 0.0376 (0.0277 to 0.0470) n=[5708, 27982]
+     encounter_success_low_energy_prey6-15_minus_16-30: 0.0095 (-0.0068 to 0.0256) n=[4381, 7323]
+     approach_d50-100_low_energy_prey6-15_minus_16-30: -0.0199 (-0.0376 to -0.0039) n=[8083, 13122]
+     encounter_success_prey<=5_minus_16-30: -0.0582 (-0.0961 to 0.0060) n=[145, 14007]
+     encounter_success_prey6-15_minus_16-30: 0.0051 (-0.0056 to 0.0167) n=[8450, 14007]
+     approach_d50-100_prey<=5_minus_16-30: -0.0620 (-0.1225 to 0.0341) n=[339, 24312]
+     approach_d50-100_prey6-15_minus_16-30: -0.0128 (-0.0233 to -0.0016) n=[15457, 24312]
+     approach_d0-50_prey6-15_minus_16-30: -0.0210 (-0.0381 to -0.0049) n=[4152, 6966]

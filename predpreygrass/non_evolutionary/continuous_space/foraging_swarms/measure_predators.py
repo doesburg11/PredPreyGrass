@@ -409,9 +409,12 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--workers", type=int, default=min(25, os.cpu_count() or 1))
     parser.add_argument("--out-dir", default=str(HERE / "analysis" / "results"))
+    parser.add_argument("--override", type=json.loads, default={},
+                        help="environment settings changed at test time (the policy is the checkpoint's)")
     args = parser.parse_args()
     checkpoint = str(Path(args.checkpoint).expanduser().resolve())
     env_config = checkpoint_env_config(checkpoint)
+    env_config.update(args.override)
     start = time.time()
     seeds = list(range(args.seed, args.seed + args.episodes))
     with get_context("spawn").Pool(min(args.workers, len(seeds)), initializer=_init, initargs=(checkpoint, env_config)) as pool:
@@ -420,6 +423,7 @@ def main():
     summary.update(
         label=args.label,
         checkpoint=checkpoint,
+        override=args.override,
         seeds=seeds,
         settings=dict(MIN_AGE=MIN_AGE, ENCOUNTER=ENCOUNTER, NEAR=NEAR, JOIN_RADIUS=JOIN_RADIUS, APPROACHING=APPROACHING,
                       DIST_EDGES=DIST_EDGES, PREY_EDGES=PREY_EDGES, ENERGY_EDGES=ENERGY_EDGES),
