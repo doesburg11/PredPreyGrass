@@ -53,32 +53,49 @@ def turn_away_action(observation, discrete: bool):
     return int(np.argmin(np.abs(DISCRETE_TURNS - desired_turn)))
 
 
-def boids_action(observation, neighbors: int, discrete: bool):
+BOIDS_WEIGHTS = {"cohesion": 1.0, "separation": 1.5, "alignment": 1.0, "predator_avoidance": 2.0}
+BOIDS_SEPARATION_RADIUS = 3.0
+BOIDS_FLEE_RADIUS = 10.0
+
+
+def _unit(vector):
+    norm = float(np.hypot(*vector))
+    return vector / norm if norm > 1e-8 else np.zeros(2)
+
+
+def boids_action(observation, neighbors: int, discrete: bool, arena_side: float = 40.0):
+    """Reynolds-style flocking plus predator avoidance, in the prey's own frame.
+
+    Every vector is expressed relative to the prey's heading (x axis = straight
+    ahead), so the resulting bearing is directly a turn. Each rule is a unit
+    vector, so the weights alone set their balance.
+    """
     predator = observation[:3]
+    own_heading = float(observation[5]) * 360.0
     rows = observation[6:].reshape(neighbors, 3)
-    vectors = []
+    positions = []
+    relative_headings = []
     for distance, relative_bearing, orientation in rows:
         radians = np.deg2rad(relative_bearing * 360.0 - 180.0)
-        vectors.append(
-            (
-                float(distance) * np.array([np.cos(radians), np.sin(radians)]),
-                float(orientation) * 360.0,
-            )
-        )
-    if vectors:
-        positions = np.stack([entry[0] for entry in vectors])
-        headings = np.deg2rad([entry[1] for entry in vectors])
-        cohesion = positions.mean(axis=0)
-        separation = -np.sum(
-            [position / max(float(np.dot(position, position)), 1e-4) for position in positions],
-            axis=0,
-        )
-        alignment = np.array([np.cos(headings).mean(), np.sin(headings).mean()])
-    else:
-        cohesion = separation = alignment = np.zeros(2)
-    predator_angle = np.deg2rad(predator[1] * 360.0 - 180.0)
-    predator_away = -np.array([np.cos(predator_angle), np.sin(predator_angle)])
-    force = 1.0 * cohesion + 1.5 * separation + 0.5 * alignment + 2.0 * predator_away
+        positions.append(float(distance) * arena_side * np.array([np.cos(radians), np.sin(radians)]))
+        relative_headings.append(np.deg2rad(float(orientation) * 360.0 - own_heading))
+    positions = np.stack(positions)
+    relative_headings = np.asarray(relative_headings)
+    cohesion = _unit(positions.mean(axis=0))
+    close = positions[np.hypot(positions[:, 0], positions[:, 1]) < BOIDS_SEPARATION_RADIUS]
+    separation = _unit(-np.sum([_unit(position) for position in close], axis=0)) if len(close) else np.zeros(2)
+    alignment = _unit(np.array([np.cos(relative_headings).mean(), np.sin(relative_headings).mean()]))
+    predator_away = np.zeros(2)
+    if float(predator[0]) * arena_side < BOIDS_FLEE_RADIUS:
+        predator_angle = np.deg2rad(predator[1] * 360.0 - 180.0)
+        predator_away = -np.array([np.cos(predator_angle), np.sin(predator_angle)])
+    w = BOIDS_WEIGHTS
+    force = (
+        w["cohesion"] * cohesion
+        + w["separation"] * separation
+        + w["alignment"] * alignment
+        + w["predator_avoidance"] * predator_away
+    )
     if np.hypot(*force) < 1e-8:
         desired_turn = 0.0
     else:
@@ -199,6 +216,11 @@ def main():
     parser.add_argument("--cluster-radius", type=float, default=4.0)
     parser.add_argument("--out", type=Path, default=Path("selfish_flocking_eval.json"))
     parser.add_argument("--device", default="cpu")
+    parser.add_argument(
+        "--policies",
+        default="random,turn_away,boids,learned",
+        help="comma-separated subset of random,turn_away,boids,learned",
+    )
     args = parser.parse_args()
     if args.episodes < 1:
         parser.error("--episodes must be positive")
@@ -216,15 +238,19 @@ def main():
             else (lambda obs: int(np.random.randint(5)))
         ),
         "turn_away": lambda obs: turn_away_action(obs, discrete=args.algo != "ddpg"),
-        "boids": lambda obs: boids_action(obs, neighbors, discrete=args.algo != "ddpg"),
+        "boids": lambda obs: boids_action(
+            obs, neighbors, discrete=args.algo != "ddpg", arena_side=max(settings.width, settings.height)
+        ),
     }
     if learned is not None:
         policies[f"selfish_{args.algo}"] = lambda obs: learned_action(
             learned, args.algo, obs, args.device
         )
+    wanted = set(args.policies.split(","))
     results = [
         evaluate(name, fn, args.algo, args.episodes, settings, args.seed, args.cluster_radius)
         for name, fn in policies.items()
+        if name in wanted or (name.startswith("selfish_") and "learned" in wanted)
     ]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
@@ -236,7 +262,9 @@ def main():
                 "results": results,
                 "assumptions": {
                     "cluster_radius": args.cluster_radius,
-                    "boids_weights": {"cohesion": 1.0, "separation": 1.5, "alignment": 0.5, "predator_avoidance": 2.0},
+                    "boids_weights": BOIDS_WEIGHTS,
+                    "boids_separation_radius": BOIDS_SEPARATION_RADIUS,
+                    "boids_flee_radius": BOIDS_FLEE_RADIUS,
                     "evaluation_episodes": args.episodes,
                     "predator_parameters_not_reported_in_paper": {
                         "target_radius": settings.predator_target_radius,
