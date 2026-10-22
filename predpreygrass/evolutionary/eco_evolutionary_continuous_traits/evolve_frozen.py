@@ -34,10 +34,15 @@ def island(task):
     from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.environment import PredPreyGrassContinuous
     from predpreygrass.evolutionary.eco_evolutionary_continuous_traits.tournament import sample_actions
 
-    k, checkpoint, out, steps_per_snapshot, snapshots, seed = task
+    k, checkpoint, out, steps_per_snapshot, snapshots, seed, neutral = task
     torch.set_num_threads(1)
     config = checkpoint_env_config(checkpoint)
     config["trait_initial_gene_pool"] = str(Path(checkpoint) / "gene_pools.json")
+    if neutral:
+        # Neutral control: genes are inherited and mutate as usual but have no
+        # effect on movement, vision or costs. Every animal gets the species
+        # base body, so the ecology (and so drift) is not matched to CT-05.
+        config["trait_expression"] = False
     env = PredPreyGrassContinuous(config)
     modules = load_modules(checkpoint)
     generator = torch.Generator().manual_seed(seed)
@@ -69,6 +74,12 @@ def main():
     parser.add_argument("--train-batch-size", type=int, default=4800)
     parser.add_argument("--checkpoint-every", type=int, default=10)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--neutral",
+        action="store_true",
+        help="genes have no effect (trait_expression=False): genetic neutrality, every animal "
+        "with the species base body, so its demography differs from the expressed arms",
+    )
     args = parser.parse_args()
     out = Path(args.out)
     (out / "islands").mkdir(parents=True, exist_ok=True)
@@ -76,7 +87,7 @@ def main():
     steps_per_snapshot = args.checkpoint_every * args.train_batch_size / args.islands
     (out / "settings.json").write_text(json.dumps(vars(args), indent=2) + "\n")
     tasks = [
-        (k, str(Path(args.checkpoint).resolve()), str(out), steps_per_snapshot, snapshots, args.seed + 1_000_000 * k)
+        (k, str(Path(args.checkpoint).resolve()), str(out), steps_per_snapshot, snapshots, args.seed + 1_000_000 * k, args.neutral)
         for k in range(args.islands)
     ]
     start = time.time()

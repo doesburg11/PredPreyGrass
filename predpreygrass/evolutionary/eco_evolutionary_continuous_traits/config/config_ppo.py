@@ -36,4 +36,7 @@ config_ppo = {
     # Policies kept as loaded and not trained, e.g. ["prey_policy"] to train
     # predators against fixed prey. Requires init_checkpoint and mode "ps".
     "frozen_policies": [],
+    # RLlib seed (PPOConfig.debugging); None leaves RLlib unseeded. With
+    # remote workers a seeded run is still not bit-reproducible.
+    "seed": None,
 }

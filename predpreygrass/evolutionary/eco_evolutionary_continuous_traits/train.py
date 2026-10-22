@@ -166,6 +166,9 @@ def load_settings():
     if ppo["checkpoint_every"] and not ppo["checkpoint_dir"]:
         raise ValueError("checkpoint_every requires checkpoint_dir")
     ppo.setdefault("init_checkpoint", None)
+    ppo.setdefault("seed", None)
+    if ppo["seed"] is not None and (isinstance(ppo["seed"], bool) or not isinstance(ppo["seed"], int)):
+        raise ValueError("seed must be an integer or None")
     ppo["frozen_policies"] = list(ppo.get("frozen_policies") or [])
     if ppo["init_checkpoint"]:
         ppo["init_checkpoint"] = os.path.abspath(os.path.expanduser(os.fspath(ppo["init_checkpoint"])))
@@ -322,6 +325,8 @@ def main():
         )
     )
 
+    if ppo.seed is not None:
+        config = config.debugging(seed=ppo.seed)
     algo = config.build_algo()
     writer = SummaryWriter(ppo.tensorboard_dir) if ppo.tensorboard_dir else None
     try:
