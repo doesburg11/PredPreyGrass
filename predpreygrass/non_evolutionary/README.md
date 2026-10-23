@@ -34,8 +34,7 @@ non_evolutionary/
 │   ├── random_source.py
 │   └── tests/
 └── continuous_space/
-    ├── base_environment_continuous/
-    └── selfish_flocking/
+    └── base_environment_continuous/
 ```
 
 Use the full spatial grouping in new imports and module commands:
@@ -107,11 +106,6 @@ This is the project's main line for the human-cooperation research angle (predat
 
 ## Continuous-space experiments
 
-[`continuous_space/selfish_flocking/`](continuous_space/selfish_flocking/README.md)
-is a separate reproduction of Hahn et al.'s SELFish predator-escape task:
-fixed-population prey learn to survive one pursuing predator, with no grass,
-reproduction, or energy mechanics.
-
 [`continuous_space/base_environment_continuous/`](continuous_space/base_environment_continuous/README.md)
 is a standalone RLlib environment with steering physics on a torus, direction and
 speed actions, movement energy costs, and moving grass clusters. It replaces the
@@ -125,3 +119,8 @@ emerge in this ecology, was closed with no evidence of learned cooperation and
 moved on 2026-10-23 to
 [PredPreyGrass-archive/foraging_swarms](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/foraging_swarms)
 (write-up: [Searching for Emergent Cooperation](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/emergent-cooperation)).
+
+`selfish_flocking`, a reproduction of Hahn et al.'s SELFish predator-escape task
+outside the Predator-Prey-Grass ecology, was removed on 2026-10-23 as a duplicate
+of the [Hahn2019](https://github.com/doesburg11/Hahn2019) repository; its code and
+its mixed-population Nash test remain in commit `5ae60b4`.
