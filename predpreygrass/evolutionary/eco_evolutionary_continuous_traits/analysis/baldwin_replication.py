@@ -12,8 +12,12 @@ with each arm's mean over its seeds. Runs are the unit of replication.
 Reported for every gene, with the predator-speed row the confirmatory one:
 
 - the effect and a 95% t interval from the pooled within-arm variance;
-- a randomization p value: arm labels shuffled across the runs of the four
-  arms (two-sided, and one-sided in the pre-specified direction, > 0).
+- an exact randomization p value (two-sided, and one-sided in the
+  pre-specified direction, > 0) over every reallocation (400 with 3 runs per
+  arm): the tested factor's level is reassigned among runs within
+  each level of the other factor (e.g. for predator learning, both_learn vs
+  pred_frozen runs among themselves, prey_frozen vs both_frozen among
+  themselves), so the other factor's effect does not enter the null.
 
 neutral_frozen (genes without effect, base bodies) gives the spread of the
 same change under pure drift, as a reference only: its ecology differs from
@@ -24,6 +28,7 @@ Runs that have not finished are skipped and listed.
     python -m predpreygrass.evolutionary.eco_evolutionary_continuous_traits.analysis.baldwin_replication
 """
 
+import itertools
 import json
 
 import numpy as np
@@ -46,7 +51,6 @@ ARMS = ("both_learn", "prey_frozen", "both_frozen", "pred_frozen")
 PREDATOR_LEARNING = {"both_learn": 1, "prey_frozen": 1, "both_frozen": -1, "pred_frozen": -1}
 PREY_LEARNING = {"both_learn": 1, "pred_frozen": 1, "both_frozen": -1, "prey_frozen": -1}
 SEEDS = (1, 2, 3)
-PERMUTATIONS = 20_000
 
 
 def finished(run_dir):
@@ -70,28 +74,38 @@ def effect(groups, signs):
     return sum(sign * np.mean(groups[arm]) for arm, sign in signs.items()) / 2
 
 
-def test(groups, signs, rng):
-    """Effect, pooled-variance 95% t interval, randomization p values."""
+def test(groups, factor):
+    """Effect of factor ("predator" or "prey" learning), pooled-variance 95% t
+    interval, and exact randomization p values over every reallocation of
+    the tested factor's level within each level of the other factor."""
+    signs, other = (PREDATOR_LEARNING, PREY_LEARNING) if factor == "predator" else (PREY_LEARNING, PREDATOR_LEARNING)
     estimate = effect(groups, signs)
     sizes = {arm: len(groups[arm]) for arm in signs}
     df = sum(n - 1 for n in sizes.values())
     pooled = sum(np.var(groups[arm], ddof=1) * (sizes[arm] - 1) for arm in signs) / df
     se = 0.5 * np.sqrt(pooled * sum(1 / n for n in sizes.values()))
     half = stats.t.ppf(0.975, df) * se
-    values = np.concatenate([groups[arm] for arm in signs])
-    labels = np.concatenate([[arm] * sizes[arm] for arm in signs])
-    null = []
-    for _ in range(PERMUTATIONS):
-        shuffled = rng.permutation(labels)
-        null.append(effect({arm: values[shuffled == arm] for arm in signs}, signs))
-    null = np.asarray(null)
+    # Strata: the two arms sharing the other factor's level (one +1, one -1).
+    strata = [[arm for arm in signs if other[arm] == level] for level in (1, -1)]
+    allocations = []
+    for first, second in strata:
+        runs = np.concatenate([groups[first], groups[second]])
+        options = []
+        for picked in itertools.combinations(range(len(runs)), sizes[first]):
+            mask = np.zeros(len(runs), dtype=bool)
+            mask[list(picked)] = True
+            options.append({first: runs[mask], second: runs[~mask]})
+        allocations.append(options)
+    null = np.array([effect({**a, **b}, signs) for a, b in itertools.product(*allocations)])
+    tolerance = 1e-12
     return {
         "effect": float(estimate),
         "ci95": [float(estimate - half), float(estimate + half)],
         "se": float(se),
         "df": int(df),
-        "p_two_sided": float((np.sum(np.abs(null) >= abs(estimate) - 1e-12) + 1) / (PERMUTATIONS + 1)),
-        "p_positive": float((np.sum(null >= estimate - 1e-12) + 1) / (PERMUTATIONS + 1)),
+        "allocations": int(len(null)),
+        "p_two_sided": float(np.mean(np.abs(null) >= abs(estimate) - tolerance)),
+        "p_positive": float(np.mean(null >= estimate - tolerance)),
     }
 
 
@@ -110,16 +124,21 @@ def main():
     genes = [f"{species}_{trait}" for species in SPECIES for trait in TRAITS]
     output = {"runs": changes, "missing": missing}
     if all(len(changes.get(arm, {})) >= 2 for arm in ARMS):
-        rng = np.random.default_rng(0)
         output["effects"] = {}
         for gene in genes:
             groups = {arm: np.array([c[gene] for c in changes[arm].values()]) for arm in ARMS}
             output["effects"][gene] = {
-                "predator_learning": test(groups, PREDATOR_LEARNING, rng),
-                "prey_learning": test(groups, PREY_LEARNING, rng),
+                "predator_learning": test(groups, "predator"),
+                "prey_learning": test(groups, "prey"),
                 "arm_means": {arm: float(groups[arm].mean()) for arm in ARMS},
             }
-        output["confirmatory"] = {"gene": "predator_speed", **output["effects"]["predator_speed"]["predator_learning"]}
+        complete = all(len(changes[arm]) == len(SEEDS) for arm in ARMS)
+        output["confirmatory"] = {
+            "gene": "predator_speed",
+            "complete_design": complete,
+            "status": "confirmatory" if complete else "exploratory (not all planned seeds finished)",
+            **output["effects"]["predator_speed"]["predator_learning"],
+        }
     if len(changes.get("neutral_frozen", {})) >= 2:
         output["neutral_sd"] = {
             gene: float(np.std([c[gene] for c in changes["neutral_frozen"].values()], ddof=1)) for gene in genes

@@ -13,6 +13,7 @@
 | BL-2 | `bl2_frozen_both` (`evolve_frozen.py`) | CT-05 from iteration 1,500, both policies frozen | 1,500 (equivalent steps) | 7 islands | 2.6 h | completed |
 | BL-3 | `2026-10-18_06-18-45_270476` | CT-05 from iteration 1,500, predators frozen | 1,500 | 7 | 10.3 h | completed |
 | BL-4 | `2026-10-18_06-19-05_426648` | CT-05 from iteration 1,500, prey frozen | 1,500 | 7 | 6.7 h | completed |
+| BR (15 runs) | `blrep_<arm>_s<seed>` | replication of BL-1 to BL-4 (section 5): 3 seeds each of both learning, predators frozen, prey frozen (RLlib, seeded), both frozen and neutral frozen (`evolve_frozen.py`) | 1,500 | 7 | 6.0–15.4 h (RLlib), 1.0–2.8 h (frozen) | completed |
 
 CT-01 and CT-02: every quirk fixed, cost coefficients speed 1.0, vision
 0.5, field of view 0.25 (SPEC.md section 11), trained side by side from
@@ -376,3 +377,77 @@ not the classic Baldwin effect.
 **Next.** Replicate the branches (several seeds per arm, starting from the
 same branch point), which would give run-level intervals; the predator-speed
 contrast is the pre-specified test.
+
+## 5. Replication: does predator learning raise predator speed? (BR, 3 seeds per arm)
+
+**Question.** The pre-specified test from section 4: across independent
+runs, does predator learning raise predator speed, measured as
+((both learning + prey frozen) − (both frozen + predators frozen)) / 2?
+
+**Design.** Section 4's four branches, each run with 3 new seeds (RLlib
+arms seeded through `config_ppo["seed"]`; frozen arms seeds 1–3), from the
+same branch point (CT-05 at iteration 1,500, its policies and pooled gene
+pool), 1,500 iterations' worth of steps on 7 workers or islands
+([`launchers/baldwin_replication.py`](launchers/baldwin_replication.py),
+[`launchers/queue_baldwin_replication.sh`](launchers/queue_baldwin_replication.sh)).
+A fifth arm, neutral frozen, ran `evolve_frozen.py --neutral`: genes
+inherited but without effect. The measure is section 4's (change of the mean
+gene from the start to the mean of the last 300 iterations).
+[`analysis/baldwin_replication.py`](analysis/baldwin_replication.py) treats
+runs as the unit: the effect with a 95% t interval from the pooled
+within-arm variance (8 degrees of freedom), and an exact randomization p
+value over all 400 ways to reassign the tested factor among runs within each
+level of the other factor (smallest possible two-sided p: 0.005). Results:
+[`analysis/results/baldwin_replication.json`](analysis/results/baldwin_replication.json).
+Five RLlib runs first crashed at start-up when a fourth GPU learner ran out of
+memory; they were rerun unchanged and are the runs reported here.
+
+**Predator speed, change per run:**
+
+| Arm | Predators learn | Prey learn | Seed 1 | Seed 2 | Seed 3 | Mean |
+|---|---|---|---:|---:|---:|---:|
+| both learning | yes | yes | +0.086 | +0.047 | +0.110 | +0.081 |
+| prey frozen | yes | no | +0.057 | +0.062 | +0.127 | +0.082 |
+| both frozen | no | no | −0.066 | −0.004 | −0.061 | −0.044 |
+| predators frozen | no | yes | −0.144 | −0.171 | −0.150 | −0.155 |
+
+**Confirmatory result.** Learning-versus-frozen contrast for predator
+speed: **+0.18** (95% CI +0.14 to +0.22; exact randomization p = 0.005 two-sided,
+0.0025 in the pre-specified direction). All six runs in which predators
+learned gained speed and all six in which they were frozen lost speed. The
+effect holds within each level of prey learning: +0.24 where prey learned
+(both learning vs predators frozen, both RLlib) and +0.13 where prey were
+frozen (prey frozen vs both frozen, which also differ in code path). It is
+smaller than section 4's single-run estimate (+0.29).
+
+**Other genes (exploratory; 11 further tests, no correction for multiple
+comparisons):** prey learning lowered prey speed (−0.15, CI −0.20 to
+−0.11), predator learning raised predator view distance slightly (+0.04)
+and prey speed (+0.06), and prey learning widened predators' field of view
+(+0.06) and shortened their view distance slightly (−0.03). Prey vision
+showed no effect and prey field of view changed by 0.01 at most.
+
+**Neutral arm.** With genes switched off every animal has the species' base
+body, populations were smaller (prey about 50–90 against 180–310 in the
+frozen arm), gene means left their starting values within the first 100
+iterations (saved gene pools) and ended up to 0.66 away from them, against
+the near-constant means of the expressed arms. Its
+ecology is not matched to the other arms, so it is not used as a drift
+yardstick; the confirmatory test relies on the variation between seeds
+within arms instead.
+
+**Interpretation and caveats.** Across these 12 runs from one branch point,
+predator speed increased in every arm where the predator policy kept
+learning and decreased in every arm where it was frozen. Freezing is an
+intervention, but in one stratum it comes with a different code path
+(`evolve_frozen.py`), and the contrast is +0.13 there against +0.24 within
+RLlib. This is consistent
+with learning changing selection on a body trait, the broad Baldwin-style
+claim; the runs measure gene trajectories, not which mechanism produces
+them (for example, whether faster bodies pay only once behaviour adapts to
+use them, or whether frozen and learning predators differ in demography
+in ways that shift selection). One branch point only, so how general the
+effect is across starting states is untested. Learning is shared
+population-level PPO, not individual lifetime learning, so this is learning
+steering evolution in the broad sense, not the classic Baldwin effect.
+

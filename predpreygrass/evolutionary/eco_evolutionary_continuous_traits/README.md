@@ -205,16 +205,15 @@ Runs are saved in the module's `runs/` folder (gitignored).
 
 ## TODO: next experimental steps
 
-- [ ] **Replicate the Baldwin-style branches** (RESULTS.md section 4). From
-  the same branch point (CT-05 at iteration 1,500, its policies and pooled
-  gene pool), run several independent seeds per arm, e.g. 3 seeds × 4 arms
-  (both learning, both frozen, predators frozen, prey frozen), 1,500
-  iterations each on 7 workers or islands. The pre-specified test is the
-  predator-speed contrast: does predator learning raise predator speed
-  ((BL-1 + BL-4) − (BL-2 + BL-3)) / 2 across seeds, with run-level
-  intervals? Seed the RLlib arms as well, and add neutral 7-worker branches
-  as a matched drift control. Cost: about 7–12 hours per batch of four
-  RLlib runs; frozen-both arms (`evolve_frozen.py`) about 2.5 hours each.
+- [x] **Replicate the Baldwin-style branches** (RESULTS.md section 5, done
+  2026-10-24): 3 seeds × 4 arms plus a neutral arm. The pre-specified
+  contrast was positive: runs with predator learning had a +0.18 larger
+  predator-speed change than runs with frozen predators (95% CI +0.14 to
+  +0.22, exact p = 0.005), in the same direction in all 12 runs.
+- [ ] **Mechanism of the predator-speed effect**: does speed pay only once
+  the policy adapts to it (e.g. score frozen vs learned policies on bodies
+  of different speed), or do frozen and learning predators differ in
+  demography? And does it hold from other branch points?
 
 ## References
 
