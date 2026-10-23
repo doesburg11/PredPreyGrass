@@ -35,7 +35,6 @@ non_evolutionary/
 │   └── tests/
 └── continuous_space/
     ├── base_environment_continuous/
-    ├── foraging_swarms/
     └── selfish_flocking/
 ```
 
@@ -121,6 +120,8 @@ predators and prey; see [`RESULTS.md`](continuous_space/base_environment_continu
 for the experiments and [`SPEC.md`](continuous_space/base_environment_continuous/SPEC.md)
 for the environment rules.
 
-[`continuous_space/foraging_swarms/`](continuous_space/foraging_swarms/README.md)
-studies whether social movement emerges in the Predator-Prey-Grass ecology; it is
-not an implementation of either SELFish paper.
+`foraging_swarms`, which studied whether social movement and cooperative hunting
+emerge in this ecology, was closed with no evidence of learned cooperation and
+moved on 2026-10-23 to
+[PredPreyGrass-archive/foraging_swarms](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/foraging_swarms)
+(write-up: [Searching for Emergent Cooperation](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/emergent-cooperation)).
