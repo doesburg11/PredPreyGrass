@@ -469,3 +469,62 @@ effect is across starting states is untested. Learning is shared
 population-level PPO, not individual lifetime learning, so this is learning
 steering evolution in the broad sense, not the classic Baldwin effect.
 
+### 5.1 Ecology check: do frozen and learning arms differ in numbers?
+
+**Question.** Freezing the predator policy could change predator and prey
+numbers, and that alone could shift selection on predator speed. Do the
+arms differ in numbers, and does selection on speed line up with predator
+learning or with prey numbers?
+
+**Measures.** No new runs; the last 300 iterations of each run (as in
+section 5), mean of 3 seeds
+([`analysis/baldwin_ecology.py`](analysis/baldwin_ecology.py), per-seed
+values and whole-run means in
+[`analysis/results/baldwin_ecology.json`](analysis/results/baldwin_ecology.json)).
+Numbers alive are counted in the saved gene pools (every 10 iterations,
+mid-episode, mean per worker or island; the same code in both paths).
+Selection on predator speed is the per-episode differential
+cov(offspring / mean offspring, gene). The RLlib arms log it only as
+RLlib's moving average over episodes (coefficient 0.01, `log_value`'s
+default), so the frozen arm's per-episode values were passed through the
+same moving average per island before averaging; how RLlib merges its
+workers' averages is not reproduced exactly, and late values still weight
+in earlier episodes.
+
+| Arm | Predators learn | Prey learn | Predators alive | Prey alive | Selection on predator speed | Predator speed change |
+| --- | --- | --- | ---: | ---: | ---: | ---: |
+| both learning | yes | yes | 13.3 | 38.9 | +0.0019 | +0.081 |
+| prey frozen | yes | no | 13.4 | 27.7 | +0.0023 | +0.082 |
+| predators frozen | no | yes | 13.7 | 45.7 | +0.0007 | −0.155 |
+| both frozen | no | no | 13.5 | 40.6 | +0.0009 | −0.044 |
+
+(Speed change from the table above.)
+
+**Result.**
+
+- Predator numbers are about the same in every arm (13.3 to 13.7 per
+  worker; 34–36 births per episode).
+- Prey numbers are not: arms where predators learned had about 10 fewer
+  prey per worker (−9.8, about 23% of the frozen-predator arms' 43.1), so
+  the arms are not ecologically matched.
+- The four arm means line up more closely with predator learning than with
+  prey numbers. Both learning and both frozen have similar prey numbers
+  (38.9 and 40.6), yet selection on speed is 2.2 times stronger where
+  predators learn; within each predator condition, prey numbers differ
+  (27.7 against 38.9 with learning predators, 40.6 against 45.7 with frozen
+  ones) while selection changes less. Every one of the six
+  predator-learning runs had stronger selection on speed than every one of
+  the six frozen-predator runs, though only just (lowest 0.0013 against
+  highest 0.0012); within arms, selection varies between seeds (for example
+  0.0013 to 0.0027 in both learning), more than the numbers alive do.
+
+**Caveats.** The comparison at similar prey numbers (both learning against
+both frozen) crosses code paths, with selection computed in the two ways
+described above. The comparisons within RLlib (both learning or prey frozen
+against predators frozen) agree in direction but come with 7 to 18 fewer
+prey where predators learn. The selection differential counts offspring
+only: it is positive in the frozen arms too, where predator speed fell, so
+it misses the survival cost of speed (founders are drawn from survivors).
+Four arm means and no model of selection against both learning and prey
+numbers: this is an association. The demographic explanation is weakened,
+not ruled out; the mechanism test (README, TODO) is the direct test.
