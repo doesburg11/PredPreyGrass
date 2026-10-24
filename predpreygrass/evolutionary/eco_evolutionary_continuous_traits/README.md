@@ -1,17 +1,18 @@
 # eco_evolutionary_continuous_traits
 
-**Status (2026-10-18): pilot, v2 round and Baldwin-style branches done**
-([RESULTS.md](RESULTS.md)). With expensive capacity (pilot) the traits evolved
-by selection into cheap bodies and the ecosystem and the learning arms race
-collapsed. The two cheaper-capacity runs (v2: 2× and 4× cheaper, also with
-fixed observation scales) were stable (coexistence 50 of 50); both species
-traded view distance for a wide field of view, and speed rose and fell
-again; newer predators caught less, in CT-04 mostly through their evolved
-bodies, in CT-05 slightly and through behaviour, while the prey's gains came
-from behaviour. Branching CT-05 into learning and frozen arms, predator
-speed rose only where predators kept learning: consistent with learning
-altering selection on speed, but not larger than a rough drift reference,
-with one run per arm.
+**Status (2026-10-24): pilot, v2 round, Baldwin-style branches and their
+replication done** ([RESULTS.md](RESULTS.md)). With expensive capacity
+(pilot) the traits evolved by selection into cheap bodies and the ecosystem
+and the learning arms race collapsed. The two cheaper-capacity runs (v2: 2×
+and 4× cheaper, also with fixed observation scales) were stable (coexistence
+50 of 50); both species traded view distance for a wide field of view, and
+speed rose and fell again; newer predators caught less, in CT-04 mostly
+through their evolved bodies, in CT-05 slightly and through behaviour, while
+the prey's gains came from behaviour. Branching CT-05 into learning and
+frozen arms, predator speed rose only where predators kept learning; the
+replication with 3 seeds per arm confirmed it (+0.18, 95% CI +0.14 to
++0.22, exact p = 0.005, same direction in all 12 runs, RESULTS.md section
+5). Write-up: [Learning Steers Body Evolution](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/evolving-bodies).
 
 Heritable body traits in the continuous Predator-Prey-Grass world: does an
 eco-evolutionary arms race appear when animals' bodies evolve while their
