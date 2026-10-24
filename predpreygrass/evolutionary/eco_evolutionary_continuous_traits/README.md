@@ -211,10 +211,20 @@ Runs are saved in the module's `runs/` folder (gitignored).
   contrast was positive: runs with predator learning had a +0.18 larger
   predator-speed change than runs with frozen predators (95% CI +0.14 to
   +0.22, exact p = 0.005), in the same direction in all 12 runs.
-- [ ] **Mechanism of the predator-speed effect**: does speed pay only once
-  the policy adapts to it (e.g. score frozen vs learned policies on bodies
-  of different speed), or do frozen and learning predators differ in
-  demography? And does it hold from other branch points?
+- [ ] **Mechanism of the predator-speed effect** (RESULTS.md section 5).
+  Does extra speed pay only once the policy has adapted to it? Score the
+  frozen branch-point predator policy and the end-of-branch learned ones on
+  predators whose speed gene is set to fixed values (for example −0.2, 0,
+  +0.2, +0.4 around the branch point's +0.19), against the same prey, and
+  compare offspring and survival, not only catches. If speed pays more under
+  learned policies, adaptation of behaviour to bodies is the likely route;
+  if not, check whether frozen and learning arms differ in predator and prey
+  numbers enough to change selection on speed.
+- [ ] **Other branch points.** Repeat the four arms (3 seeds each) from a
+  different CT-05 iteration (for example 1,000 or 2,500) or from CT-04, to
+  test whether the effect depends on the state the branches start from.
+  Same queue (`launchers/queue_baldwin_replication.sh`, at most 3 RLlib
+  runs on the GPU at once); about 20 hours for the RLlib arms.
 
 ## References
 
