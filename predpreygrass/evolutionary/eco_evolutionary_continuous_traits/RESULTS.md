@@ -1,5 +1,23 @@
 # eco_evolutionary_continuous_traits: results
 
+## Key message (2026-10-24)
+
+**Learning changes how bodies evolve, and the effect replicates.** From
+one branch point (CT-05 at iteration 1,500), predator speed rose in all six
+runs where the predator policy kept learning and fell in all six where it
+was frozen: the pre-specified contrast is +0.18 (95% CI +0.14 to +0.22,
+exact p = 0.005, the smallest the design allows; section 5). This answers
+the module's third question (a Baldwin-style interaction) positively.
+
+It is not yet the full Darwin/Baldwin coevolution loop: why it happens is
+untested, it comes from one branch point, and learning is one shared PPO
+policy per species, not individual lifetime learning. Earlier results:
+expensive bodies went with a collapsing ecosystem in the single pilot run
+(section 1); with cheaper bodies both species traded view distance for
+field of view and speed rose and fell, with no escalation in body traits
+(section 2); the prey's gains came from behaviour (section 3). Next steps:
+README, TODO.
+
 ## Runs
 
 | Run | Folder (`runs/eco_evolutionary_continuous_traits_...`) | Traits | Iterations | Simulation workers | Wall time | Status |
