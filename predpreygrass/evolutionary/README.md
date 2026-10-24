@@ -33,6 +33,32 @@ population-census rule — no individual agent can sense a population-wide ratio
 reproduction caps keyed on one are rejected even when they produce better raw
 sustainability numbers.
 
+## Layout
+
+Modules are grouped by the kind of world they run in, as in
+[`non_evolutionary/`](../non_evolutionary/README.md):
+
+```text
+evolutionary/
+├── discrete_space/
+│   ├── eco_evolutionary_erl_baldwin/
+│   ├── eco_evolutionary_erl_coevolution/
+│   ├── eco_evolutionary_metabolic_rate_positive_control/
+│   └── stag_hunt_forward_view_nature_nurture/
+├── continuous_space/
+│   └── eco_evolutionary_continuous_traits/
+├── legacy_paths.py
+├── model_selection.py
+├── README.md
+└── RESULTS.md
+```
+
+Imports and module commands use the full path, e.g.
+`predpreygrass.evolutionary.discrete_space.eco_evolutionary_erl_baldwin`. The
+modules moved here on 2026-10-24; pickles saved before that (ERL checkpoints)
+record the old module paths and load through `legacy_paths.load`, which the
+checkpoint loaders use.
+
 ## Modules
 
 * **[eco_evolutionary](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary)**
@@ -78,7 +104,7 @@ sustainability numbers.
   closed and its code, tests, and detailed [README](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_erl_flagship/README.md)
   moved to the archive. The positive reward-design finding is retained; this
   does not rule out a materially different evolutionary design.
-* **[eco_evolutionary_erl_baldwin](eco_evolutionary_erl_baldwin)** — *closed comparative
+* **[eco_evolutionary_erl_baldwin](discrete_space/eco_evolutionary_erl_baldwin)** — *closed comparative
   learner investigation; original learner retained.* Implements private
   genome-initialized lifetime learning in World AL. Five replacement learners
   (Hebbian plasticity, SARSA, actor-critic, Double DQN, and clipped PPO) were
@@ -86,11 +112,11 @@ sustainability numbers.
   controlled lifetime assays to held-out learning-off comparisons and independent
   replication. None produced a reproducible learning-specific advantage; the existing
   REINFORCE-style update remains the only validated option. See the consolidated
-  [comparison and conclusion](eco_evolutionary_erl_baldwin/README.md#comparative-lifetime-learning-investigation-closed-2026-10-03).
+  [comparison and conclusion](discrete_space/eco_evolutionary_erl_baldwin/README.md#comparative-lifetime-learning-investigation-closed-2026-10-03).
   Failed implementations and raw evidence are preserved in the separate
   [`PredPreyGrass-archive`](https://github.com/doesburg11/PredPreyGrass-archive)
   repository.
-* **[eco_evolutionary_erl_coevolution](eco_evolutionary_erl_coevolution)** (Trial 14) —
+* **[eco_evolutionary_erl_coevolution](discrete_space/eco_evolutionary_erl_coevolution)** (Trial 14) —
   *closed, POSITIVE result; stays in this repo, not an archive candidate.* Forks
   `eco_evolutionary_erl_baldwin` step by step toward predator–prey coevolution
   (prey-regulated carnivores, evolving carnivore genomes, ERL carnivores). **Key message:
@@ -100,14 +126,14 @@ sustainability numbers.
   in an easier one (carnivores die out with L prey, never with ERL prey: 16/229 vs.
   0/230). Also documents a predator-side fitness plateau (persistent search) and a
   heritability → spatial-refuge mechanism. See its
-  [RESULTS.md](eco_evolutionary_erl_coevolution/RESULTS.md).
-* **[eco_evolutionary_continuous_traits](eco_evolutionary_continuous_traits)** (Trial 15) —
+  [RESULTS.md](discrete_space/eco_evolutionary_erl_coevolution/RESULTS.md).
+* **[eco_evolutionary_continuous_traits](continuous_space/eco_evolutionary_continuous_traits)** (Trial 15) —
   *replication complete 2026-10-24, POSITIVE; stays in this repo.* Heritable top speed,
   view distance and field of view with shared PPO in the continuous world. **Key message:
   learning changes how bodies evolve, and the effect replicates**: predator speed rose in
   all six branch runs where predators kept learning and fell in all six where they were
   frozen (+0.18, 95% CI +0.14 to +0.22, exact p = 0.005). Mechanism and other branch points
-  open; no arms race in bodies. See its [RESULTS.md](eco_evolutionary_continuous_traits/RESULTS.md).
+  open; no arms race in bodies. See its [RESULTS.md](continuous_space/eco_evolutionary_continuous_traits/RESULTS.md).
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.

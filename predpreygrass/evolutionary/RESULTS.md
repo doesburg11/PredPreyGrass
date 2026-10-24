@@ -41,11 +41,11 @@ Everything built on top of or alongside that result has come back null or unreso
   subtler traits above show nothing.
 - **Cooperation, kin selection, and alarm-call communication** (built on top of Trial
   11's ERL architecture — see
-  `predpreygrass/evolutionary/eco_evolutionary_erl_baldwin/RESULTS.md` §10-16): all
+  `predpreygrass/evolutionary/discrete_space/eco_evolutionary_erl_baldwin/RESULTS.md` §10-16): all
   three closed as dead ends, each for a specific, understood reason, not an ambiguous
   null.
 - **Genetic-assimilation timing**
-  (`predpreygrass/evolutionary/eco_evolutionary_erl_baldwin/RESULTS.md` §15): the
+  (`predpreygrass/evolutionary/discrete_space/eco_evolutionary_erl_baldwin/RESULTS.md` §15): the
   paper's specific crossover signature wasn't found; genuinely open whether that's a
   real absence or a metric problem.
 

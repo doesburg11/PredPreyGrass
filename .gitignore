@@ -196,7 +196,7 @@ ray_results/
 ray_results_failed/
 predpreygrass/non_evolutionary/discrete_space/base_environment_discrete/runs/
 predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/runs/
-predpreygrass/evolutionary/eco_evolutionary_continuous_traits/runs/
+predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/
 predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/runs/
 ray_results_archive/
 **/ray_results/
@@ -231,7 +231,7 @@ ray_results_archive/
 # here without a deliberate decision (e.g. Git LFS) for ones that are used.
 assets/images/video/*.mp4
 
-predpreygrass/evolutionary/eco_evolutionary_metabolic_rate_positive_control/runs/
+predpreygrass/evolutionary/discrete_space/eco_evolutionary_metabolic_rate_positive_control/runs/
 
 predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal/runs/
 
