@@ -50,6 +50,40 @@ evolved per-agent networks with a weak lifetime learner on a grid and
 produced no arms race. Here the learner is the PPO policy that does produce
 one, and evolution acts on bodies.
 
+## Origin and relation to ERL
+
+The module was started on 2026-10-15 (commit 956e5d0) as the next step
+toward the Darwin/Baldwin goal, from two earlier results. First,
+`base_environment_continuous` had just shown a learning arms race in the
+continuous world, but with learning only. Second, ERL coevolution (Trial
+14) had evolving per-agent networks on a grid, but a lifetime learner too
+weak to produce an arms race. Rather than port the ERL design to the
+continuous world, the choice was to keep the strong PPO learner and let
+evolution act on bodies. The module is a copy of
+`base_environment_continuous` with genes added, every quirk of SPEC.md
+section 9 fixed and a neutral control.
+
+It is a sibling of the ERL line, not a continuous version of it:
+
+| | ERL (Trials 11, 12, 14) | This module (Trial 15) |
+| --- | --- | --- |
+| World | discrete grid | continuous space |
+| What the genes encode | behaviour (each agent's own network) | body: speed, view distance, field of view |
+| Who learns | each agent, during its own life | one shared PPO policy per species |
+| Learner | weak | strong (produces the learning arms race) |
+| Parent module | `eco_evolutionary_erl_baldwin` → `eco_evolutionary_erl_coevolution` | `base_environment_continuous` |
+
+Trials 1 to 10 also used one shared policy per species and gave null
+results, because the genome could reach behaviour only indirectly. ERL
+solved this by giving each agent its own genome-driven network. This module
+solves it differently: the genes change the body itself, and the policy
+sees each animal's genes and can learn to use the body it has. Each design
+has what the other lacks. ERL has heritable behaviour and individual
+lifetime learning, but no arms race. This module has the arms race and an
+effect of learning on how genes evolve, but its learning is done by the
+whole species, not by each animal during its life. Joining the two, with
+per-agent learning in the continuous world, has not been built yet.
+
 ## Design
 
 Full rules in [SPEC.md](SPEC.md), section 11.
