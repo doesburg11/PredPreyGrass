@@ -6,7 +6,18 @@ tracks the sequence of attempts against that goal: what was tried, why each pivo
 happened, and the current state of the search. Each module below (`eco_evolutionary_*`)
 also has its own detailed RESULTS.md with full data. Read top to bottom.
 
-## Where things stand (2026-10-03)
+## Where things stand (2026-10-24)
+
+**New (Trial 15, 2026-10-24): learning steers body evolution, replicated.** In
+`eco_evolutionary_continuous_traits` (heritable speed, view distance and field of view
+with shared PPO, in the continuous world), predator speed rose in all six branch runs
+where the predator policy kept learning and fell in all six where it was frozen
+(+0.18, 95% CI +0.14 to +0.22, exact p = 0.005, pre-specified). It is the first
+replicated learning → evolution leg in this project's continuous world; its mechanism and
+generality across branch points are open, and there is no arms race in bodies. Details
+under Trial 15 below.
+
+### As of 2026-10-03
 
 One thing is established with real statistical power: **nature and nurture combined
 beats either alone.** Trial 11 (`eco_evolutionary_erl_baldwin`) found ERL agents (genome
@@ -924,6 +935,53 @@ Against the three criteria: sustainability met; Darwin/Baldwin loop met for the 
 coevolution not reached. Predators can evolve and headroom exists, but neither
 evolution from near zero nor paper-style learning got them there in these tests. Open: whether a stronger,
 long-horizon learner produces a predator-side Baldwin effect on exactly this plateau.
+
+---
+
+## Trial 15 — `eco_evolutionary_continuous_traits` — heritable bodies, learned behaviour, continuous world
+
+**Status: replication COMPLETE (2026-10-24), POSITIVE on its pre-specified test; module
+stays in this repo, not an archive candidate.** Full results in
+`eco_evolutionary_continuous_traits/RESULTS.md` (key message at the top, sections 1–5);
+site write-up: [Learning Steers Body Evolution](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/evolving-bodies).
+
+**Key message: learning changes how bodies evolve, and the effect replicates.** Branching
+one run (CT-05 at iteration 1,500) into four arms (both species learning, both frozen,
+predators frozen, prey frozen), 3 seeds each, predator speed rose in all six runs with
+learning predators and fell in all six with frozen ones. The learning-versus-frozen
+contrast is +0.18 on the log-ratio scale (95% CI +0.14 to +0.22; exact stratified
+randomization p = 0.005, the smallest the design allows). A single exploratory run per
+arm (+0.29) had suggested it; the contrast was fixed as the test before the replication.
+
+Design: a copy of `non_evolutionary/continuous_space/base_environment_continuous` (the
+continuous world whose shared PPO produced a learning arms race in five runs) with three
+genes per animal (top speed, view distance, field of view, as log-ratios ×0.5 to ×2), a
+resting-cost penalty for capacity, asexual inheritance with mutation, founders drawn
+from the previous episode's survivors, and a policy that sees the animal's own genes.
+
+- **Pilot (CT-01 vs. neutral CT-02).** Expensive capacity: selection (one-sign
+  differentials, 5–30× the neutral control) into cheap, slow, short-sighted predators;
+  coexistence fell to 13/50 test episodes (control 46/50) and the learning arms race
+  disappeared. One run per condition.
+- **Cheaper capacity (CT-04, CT-05; neutral CT-03).** Coexistence 50/50 in both; both
+  species traded view distance for a wide field of view (selection one-signed in 84–100%
+  of iterations); speed rose and then fell; no escalation in body traits.
+- **Behaviour or bodies (crossing policies × gene pools).** Prey gains came from
+  behaviour; CT-04's predator decline mostly from evolved bodies, CT-05's slightly from
+  behaviour.
+- **Baldwin-style branches and replication.** As above. Exploratory: prey learning
+  lowered the prey-speed change (−0.15). A neutral arm (genes switched off) drifted far
+  more than the expressed arms (base bodies, smaller populations) and was not usable as
+  a drift yardstick.
+
+Against the three criteria: sustainability and coexistence met with cheaper capacity
+(not in the expensive pilot); Darwin/Baldwin loop met for the learning → evolution leg
+(selection-driven gene change, and its course set by whether the shared policy learns),
+with the reverse leg partly shown (evolved predator bodies changed catch risk in CT-04).
+Coevolution in bodies not reached: no predator–prey escalation of traits. Open: why the
+speed effect arises (does speed pay only once behaviour adapts, or do learning and frozen
+arms differ in demography?) and whether it holds from other branch points; both are in
+the module README's TODO.
 
 ---
 
