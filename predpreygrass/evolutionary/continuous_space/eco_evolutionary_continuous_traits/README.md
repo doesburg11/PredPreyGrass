@@ -1,5 +1,18 @@
 # eco_evolutionary_continuous_traits
 
+## Key message (2026-10-24)
+
+**Learning changes how bodies evolve.** Predator speed rose in all 6 runs
+where the predators kept learning and fell in all 6 where their behaviour
+was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
+
+- **Found:** a replicated Baldwin-style effect (criterion 3 below).
+- **Not found:** a body arms race between predators and prey (criterion 2).
+  Both species evolved the same way: shorter view distance, wider field of
+  view.
+- **Still open:** *why* learning raises speed, and whether the effect holds
+  from other starting points (see TODO).
+
 **Status (2026-10-24): pilot, v2 round, Baldwin-style branches and their
 replication done** ([RESULTS.md](RESULTS.md)). With expensive capacity
 (pilot) the traits evolved by selection into cheap bodies and the ecosystem
@@ -13,6 +26,8 @@ frozen arms, predator speed rose only where predators kept learning; the
 replication with 3 seeds per arm confirmed it (+0.18, 95% CI +0.14 to
 +0.22, exact p = 0.005, same direction in all 12 runs, RESULTS.md section
 5). Write-up: [Learning Steers Body Evolution](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/evolving-bodies).
+
+## About this module
 
 Heritable body traits in the continuous Predator-Prey-Grass world: does an
 eco-evolutionary arms race appear when animals' bodies evolve while their
