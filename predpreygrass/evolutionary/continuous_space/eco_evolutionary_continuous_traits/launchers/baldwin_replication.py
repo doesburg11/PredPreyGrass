@@ -1,7 +1,8 @@
 """Replication of the Baldwin-style branches (RESULTS.md section 4).
 
 Every arm starts from CT-05 at iteration 1,500 (its policies and pooled gene
-pool) and runs 1,500 iterations' worth of environment steps on 7 workers or
+pool; another iteration with the environment variable BLREP_BRANCH, e.g.
+2500, writing runs/blrep<BRANCH>_<ARM>_s<SEED>/) and runs 1,500 iterations' worth of environment steps on 7 workers or
 islands, with CT-05's environment settings. Seeds are new (the exploratory
 BL-1..4 runs were unseeded RLlib runs and BL-2 used seed 0).
 
@@ -18,6 +19,7 @@ Output: runs/blrep_<ARM>_s<SEED>/ (or <SEED>_smoke with ITERATIONS given).
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -25,7 +27,9 @@ from pathlib import Path
 MODULE = Path(__file__).resolve().parents[1]
 RUNS = MODULE / "runs"
 CT05 = RUNS / "eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103"
-START = CT05 / "checkpoint" / "iter_001500"
+BRANCH = int(os.environ.get("BLREP_BRANCH", "1500"))
+START = CT05 / "checkpoint" / f"iter_{BRANCH:06d}"
+PREFIX = "blrep" if BRANCH == 1500 else f"blrep{BRANCH}"
 WORKERS = 7
 RLLIB_ARMS = {"both_learn": [], "pred_frozen": ["predator_policy"], "prey_frozen": ["prey_policy"]}
 FROZEN_ARMS = {"both_frozen": False, "neutral_frozen": True}
@@ -36,7 +40,7 @@ def main():
     iterations = int(sys.argv[3]) if len(sys.argv) > 3 else 1500
     if arm not in RLLIB_ARMS and arm not in FROZEN_ARMS:
         raise SystemExit(f"unknown arm {arm!r}")
-    name = f"blrep_{arm}_s{seed}" + ("" if len(sys.argv) <= 3 else "_smoke")
+    name = f"{PREFIX}_{arm}_s{seed}" + ("" if len(sys.argv) <= 3 else "_smoke")
     out = RUNS / name
     if (out / "checkpoint").exists():
         raise SystemExit(f"{out} already has a checkpoint folder; refusing to overwrite")

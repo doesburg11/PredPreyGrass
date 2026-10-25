@@ -6,6 +6,8 @@
 # interleaved by seed so an early stop still leaves complete replicates.
 # A job that fails within 5 minutes stops further launches (no cascade).
 # Optional arguments replace the job list, e.g. "both_learn 3" "pred_frozen 2".
+# BLREP_BRANCH=2500 branches from that CT-05 iteration instead of 1,500
+# (runs and logs named blrep2500_...).
 # Start from the repository root:
 #   systemd-run --user --unit=blrep_queue --working-directory=$PWD \
 #       bash predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/launchers/queue_baldwin_replication.sh
@@ -14,7 +16,10 @@ PY=.conda/bin/python
 M=predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.launchers.baldwin_replication
 LOGS=predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/logs
 mkdir -p "$LOGS"
-QLOG=$LOGS/blrep_queue.log
+BRANCH=${BLREP_BRANCH:-1500}
+if [ "$BRANCH" = 1500 ]; then PREFIX=blrep; else PREFIX=blrep$BRANCH; fi
+export BLREP_BRANCH=$BRANCH
+QLOG=$LOGS/${PREFIX}_queue.log
 RL_JOBS=()
 FROZEN_JOBS=()
 if [ $# -gt 0 ]; then
@@ -48,7 +53,7 @@ trap cleanup INT TERM
 
 start() {  # "arm seed" -> sets STARTED to the pid (no subshell, so wait can reap it)
   set -- $1
-  local log="$LOGS/blrep_${1}_s${2}.log"
+  local log="$LOGS/${PREFIX}_${1}_s${2}.log"
   OMP_NUM_THREADS=1 $PY -m $M "$1" "$2" > "$log" 2>&1 &
   STARTED=$!
   STARTED_AT[$STARTED]=$(date +%s)

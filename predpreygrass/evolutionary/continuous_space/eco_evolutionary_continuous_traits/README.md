@@ -14,9 +14,13 @@ was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
   the learned predator policies as under the frozen one, against the same
   prey (+0.46, 95% interval +0.24 to +0.68, all 6 runs; RESULTS.md
   section 6).
-- **Still open:** whether that is adaptation to speed itself, why speed
-  fell in the frozen arms although it still pays under the frozen policy,
-  and whether the effect holds from other starting points (see TODO).
+- **Frozen arms (2026-10-25):** with both policies frozen, faster
+  predators' extra births are largely offset by lower survival of their
+  lineages; net selection on speed is small and inconsistent, in line with
+  the small fall there (RESULTS.md section 7).
+- **Still open:** whether the mechanism is adaptation to speed itself, why
+  speed fell when only predators were frozen, and whether the effect holds
+  from other starting points (see TODO).
 
 **Status (2026-10-24): pilot, v2 round, Baldwin-style branches and their
 replication done** ([RESULTS.md](RESULTS.md)). With expensive capacity
@@ -241,6 +245,10 @@ README).
   [`analysis/mechanism_speed.py`](analysis/mechanism_speed.py): the
   mechanism test, predators with fixed speed genes under frozen and learned
   policies (RESULTS.md section 6).
+- [`analysis/frozen_trajectory.py`](analysis/frozen_trajectory.py),
+  [`decompose_frozen.py`](decompose_frozen.py),
+  [`analysis/decompose_frozen.py`](analysis/decompose_frozen.py): why speed
+  fell in the frozen arms (RESULTS.md section 7).
 - [`analysis/final_check.py`](analysis/final_check.py),
   [`tournament.py`](tournament.py): evaluation with each checkpoint's
   evolved gene pool.
@@ -284,10 +292,19 @@ Runs are saved in the module's `runs/` folder (gitignored).
   the learned policies (+0.46, all 6 runs, from the same starting prey), at
   this branch point; prey numbers within an episode still differ between
   predator policies.
-- [ ] **Why speed fell in the frozen arms** (RESULTS.md section 6). Speed
+- [x] **Why speed fell in the frozen arms** (raised in RESULTS.md section 6;
+  done 2026-10-25 for the both-frozen arm, section 7). Speed
   still pays under the frozen policy in the one-episode test. Score the
   frozen policy against later frozen-arm gene pools, and split lineage
   fitness into births and survival, to see where its advantage goes.
+  Result: later gene pools did not remove the advantage; in an evolving
+  both-frozen population faster lineages' extra births are largely offset
+  by lower survival, so net selection on speed is small and inconsistent.
+- [ ] **Why speed fell when only predators were frozen** (RESULTS.md
+  section 7). Its fall (−0.16) held in all three seeds and is not explained;
+  there the prey kept learning. Re-run that arm with lineages tracked
+  (`decompose_frozen.py` with the prey learning, or with each saved prey
+  policy in turn).
 - [ ] **Other branch points.** Repeat the four arms (3 seeds each) from a
   different CT-05 iteration (for example 1,000 or 2,500) or from CT-04, to
   test whether the effect depends on the state the branches start from.

@@ -40,8 +40,22 @@ lineage births (the fecundity measure logged in training) and catches, and
 the own-prey conditions (each learned run against frozen predators facing
 the same prey).
 
-Writes one JSON line per episode to runs/mechanism_speed/<condition>.jsonl;
-analysis/mechanism_speed.py analyses them.
+Condition set "frozen_trajectory" (--set frozen_trajectory, 2026-10-25):
+why did predator speed fall in the frozen arms, although speed pays under
+the frozen policy at the branch point? The frozen branch-point predator
+policy faces the gene pools (both species; predator speed overridden as
+above) that each frozen arm (both frozen and predators frozen, seeds 1-3)
+had at iterations 500, 1,000 and 1,500, and that arm's prey policy at that
+iteration. Pre-specified: the same slope (measure "alive"); primary, its
+mean over the 6 runs at iteration 1,500 minus the branch-point frozen slope
+on the same seeds, with a run-level 95% t interval and a paired bootstrap
+over seeds. If evolving gene pools and prey removed the advantage of speed,
+this difference is negative and the slope near or below zero.
+
+Writes one JSON line per episode to runs/mechanism_speed/<condition>.jsonl
+(condition set "main"; analysed by analysis/mechanism_speed.py) or
+runs/mechanism_speed_frozen_trajectory/<condition>.jsonl (analysed by
+analysis/frozen_trajectory.py).
 
     python -m predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.mechanism_speed --episodes 400
 """
@@ -62,19 +76,41 @@ LEARNED = {f"{arm}_s{seed}": RUNS / f"blrep_{arm}_s{seed}" / "checkpoint" for ar
 SPEEDS = (-0.2, 0.0, 0.2, 0.4)
 OUT = RUNS / "mechanism_speed"
 CHUNK = 25  # episodes per task
+# Frozen trajectory (RESULTS.md section 7): the frozen branch-point predator
+# policy with the gene pools the frozen arms had evolved by these iterations.
+FROZEN_RUNS = {f"{arm}_s{seed}": RUNS / f"blrep_{arm}_s{seed}" / "checkpoint" for arm in ("both_frozen", "pred_frozen") for seed in (1, 2, 3)}
+TRAJECTORY_ITERATIONS = (500, 1000, 1500)
 
 
-def conditions():
-    """{name: (predator checkpoint, prey checkpoint)}."""
-    out = {"frozen__same_prey": (BRANCH_POINT, BRANCH_POINT)}
+def output_dir(condition_set):
+    return OUT if condition_set == "main" else RUNS / f"mechanism_speed_{condition_set}"
+
+
+def conditions(condition_set="main"):
+    """{name: (predator policy, prey policy, predator gene pool, prey gene
+    pool)}, each a checkpoint."""
+    if condition_set == "frozen_trajectory":
+        # both_frozen islands save gene pools only (their prey policy is the
+        # branch point's); pred_frozen checkpoints hold the learned prey policy.
+        out = {}
+        for run, checkpoint in FROZEN_RUNS.items():
+            for iteration in TRAJECTORY_ITERATIONS:
+                at = checkpoint / f"iter_{iteration:06d}" if iteration < 1500 else checkpoint
+                prey_policy = BRANCH_POINT if run.startswith("both_frozen") else at
+                out[f"frozen__{run}_it{iteration}"] = (BRANCH_POINT, prey_policy, at, at)
+        return out
+    out = {"frozen__same_prey": (BRANCH_POINT, BRANCH_POINT, BRANCH_POINT, BRANCH_POINT)}
     for run, checkpoint in LEARNED.items():
-        out[f"{run}__same_prey"] = (checkpoint, BRANCH_POINT)
-        out[f"{run}__own_prey"] = (checkpoint, checkpoint)
-        out[f"frozen__prey_of_{run}"] = (BRANCH_POINT, checkpoint)
+        out[f"{run}__same_prey"] = (checkpoint, BRANCH_POINT, BRANCH_POINT, BRANCH_POINT)
+        out[f"{run}__own_prey"] = (checkpoint, checkpoint, BRANCH_POINT, checkpoint)
+        out[f"frozen__prey_of_{run}"] = (BRANCH_POINT, checkpoint, BRANCH_POINT, checkpoint)
     return out
 
 
-def make_env(predator_checkpoint, prey_checkpoint):
+def make_env(predator_pool_checkpoint, prey_pool_checkpoint, fixed_speeds=True):
+    """The environment with lineages tracked; with fixed_speeds, predator
+    founders get speed genes from SPEEDS and the gene pools stay fixed,
+    otherwise founders are drawn as usual and the pools evolve."""
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.checkpoints import (
         checkpoint_env_config,
         load_gene_pool,
@@ -96,7 +132,7 @@ def make_env(predator_checkpoint, prey_checkpoint):
 
         def _founder_genomes(self, species, count):
             genomes = super()._founder_genomes(species, count)
-            if species == "predator":
+            if species == "predator" and fixed_speeds:
                 extra = self.speed_rng.choice(SPEEDS, size=count - len(SPEEDS), replace=count - len(SPEEDS) > len(SPEEDS))
                 speeds = np.concatenate([SPEEDS, extra])[self.speed_rng.permutation(count)]
                 genomes = [np.concatenate([[s], g[1:]]) for s, g in zip(speeds, genomes)]
@@ -119,8 +155,9 @@ def make_env(predator_checkpoint, prey_checkpoint):
     config = checkpoint_env_config(BRANCH_POINT)
     config["trait_initial_gene_pool"] = None
     env = FixedSpeedEnv(config)
-    predator_pool, prey_pool = load_gene_pool(BRANCH_POINT), load_gene_pool(prey_checkpoint)
+    predator_pool, prey_pool = load_gene_pool(predator_pool_checkpoint), load_gene_pool(prey_pool_checkpoint)
     use_gene_pool(env, {"predator": predator_pool["predator"], "prey": prey_pool["prey"]})
+    env.freeze_gene_pool = fixed_speeds
     return env
 
 
@@ -130,10 +167,10 @@ def run_chunk(task):
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.checkpoints import load_module
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.tournament import sample_actions
 
-    name, predator_checkpoint, prey_checkpoint, seeds = task
+    name, predator_policy, prey_policy, predator_pool, prey_pool, seeds = task
     torch.set_num_threads(1)
-    env = make_env(predator_checkpoint, prey_checkpoint)
-    modules = {"predator": load_module(predator_checkpoint, "predator"), "prey": load_module(prey_checkpoint, "prey")}
+    env = make_env(predator_pool, prey_pool)
+    modules = {"predator": load_module(predator_policy, "predator"), "prey": load_module(prey_policy, "prey")}
     records = []
     for seed in seeds:
         generator = torch.Generator().manual_seed(seed)
@@ -172,15 +209,19 @@ def main():
     parser.add_argument("--episodes", type=int, default=400)
     parser.add_argument("--workers", type=int, default=28)
     parser.add_argument("--only", nargs="*", help="condition names (default: all)")
+    parser.add_argument("--set", default="main", choices=("main", "frozen_trajectory"), help="condition set")
     args = parser.parse_args()
-    OUT.mkdir(parents=True, exist_ok=True)
-    chosen = {k: v for k, v in conditions().items() if not args.only or k in args.only}
+    out = output_dir(args.set)
+    out.mkdir(parents=True, exist_ok=True)
+    chosen = {k: v for k, v in conditions(args.set).items() if not args.only or k in args.only}
     tasks = [
-        (name, str(pred), str(prey), list(range(start, min(start + CHUNK, args.episodes))))
-        for name, (pred, prey) in chosen.items()
+        (name, *map(str, checkpoints), list(range(start, min(start + CHUNK, args.episodes))))
+        for name, checkpoints in chosen.items()
         for start in range(0, args.episodes, CHUNK)
     ]
-    (OUT / "settings.json").write_text(json.dumps({"episodes": args.episodes, "speeds": SPEEDS, "conditions": {k: [str(p), str(q)] for k, (p, q) in chosen.items()}}, indent=2) + "\n")
+    (out / "settings.json").write_text(
+        json.dumps({"episodes": args.episodes, "speeds": SPEEDS, "conditions": {k: list(map(str, v)) for k, v in chosen.items()}}, indent=2) + "\n"
+    )
     results = {name: [] for name in chosen}
     start, done = time.time(), 0
     with ProcessPoolExecutor(args.workers, mp_context=get_context("spawn")) as pool:
@@ -190,8 +231,8 @@ def main():
             print(f"{done}/{len(tasks)} chunks, {(time.time() - start) / 60:.1f} min", flush=True)
     for name, records in results.items():
         records.sort(key=lambda r: r["seed"])
-        (OUT / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
-    print(f"written {len(results)} conditions to {OUT}", flush=True)
+        (out / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+    print(f"written {len(results)} conditions to {out}", flush=True)
 
 
 if __name__ == "__main__":

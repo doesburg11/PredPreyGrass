@@ -1,0 +1,552 @@
+{
+  "episodes": 400,
+  "bootstrap": 20000,
+  "speeds": [
+    -0.2,
+    0.0,
+    0.2,
+    0.4
+  ],
+  "conditions": {
+    "frozen__both_frozen_s1_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint/iter_000500"
+    ],
+    "frozen__both_frozen_s1_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint/iter_001000"
+    ],
+    "frozen__both_frozen_s1_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s1/checkpoint"
+    ],
+    "frozen__both_frozen_s2_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint/iter_000500"
+    ],
+    "frozen__both_frozen_s2_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint/iter_001000"
+    ],
+    "frozen__both_frozen_s2_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s2/checkpoint"
+    ],
+    "frozen__both_frozen_s3_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint/iter_000500"
+    ],
+    "frozen__both_frozen_s3_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint/iter_001000"
+    ],
+    "frozen__both_frozen_s3_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_both_frozen_s3/checkpoint"
+    ],
+    "frozen__pred_frozen_s1_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_000500"
+    ],
+    "frozen__pred_frozen_s1_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint/iter_001000"
+    ],
+    "frozen__pred_frozen_s1_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s1/checkpoint"
+    ],
+    "frozen__pred_frozen_s2_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_000500"
+    ],
+    "frozen__pred_frozen_s2_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint/iter_001000"
+    ],
+    "frozen__pred_frozen_s2_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s2/checkpoint"
+    ],
+    "frozen__pred_frozen_s3_it500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_000500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_000500"
+    ],
+    "frozen__pred_frozen_s3_it1000": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_001000",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint/iter_001000"
+    ],
+    "frozen__pred_frozen_s3_it1500": [
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint",
+      "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep_pred_frozen_s3/checkpoint"
+    ]
+  },
+  "births_and_survival_branch_point": {
+    "frozen": {
+      "-0.2": {
+        "births": 4.545758928571429,
+        "alive": 2.3404017857142856,
+        "share_alive": 0.42201650231434895
+      },
+      "0.0": {
+        "births": 5.5974914481185865,
+        "alive": 2.6670467502850626,
+        "share_alive": 0.40425164189422746
+      },
+      "0.2": {
+        "births": 6.5,
+        "alive": 2.913186813186813,
+        "share_alive": 0.3884249084249084
+      },
+      "0.4": {
+        "births": 7.553980370774264,
+        "alive": 2.9378407851690294,
+        "share_alive": 0.3434472208057114
+      }
+    },
+    "learned_mean_of_runs": {
+      "-0.2": {
+        "births": 4.010788690476191,
+        "alive": 2.0688244047619047,
+        "share_alive": 0.4131632629064191
+      },
+      "0.0": {
+        "births": 4.989547700494108,
+        "alive": 2.4667426833903456,
+        "share_alive": 0.41216737811757476
+      },
+      "0.2": {
+        "births": 6.126923076923077,
+        "alive": 2.8311355311355313,
+        "share_alive": 0.3977400292999647
+      },
+      "0.4": {
+        "births": 8.081606688476919,
+        "alive": 3.4200290803344235,
+        "share_alive": 0.37745614076089257
+      }
+    }
+  },
+  "measures": {
+    "alive": {
+      "branch_point_slope": 0.4189750240139088,
+      "slopes": {
+        "frozen__both_frozen_s1_it500": -0.2078596432015541,
+        "frozen__both_frozen_s1_it1000": 0.2243845631627679,
+        "frozen__both_frozen_s1_it1500": 0.7268227699020552,
+        "frozen__both_frozen_s2_it500": 2.13445238603653,
+        "frozen__both_frozen_s2_it1000": 0.33159191650369385,
+        "frozen__both_frozen_s2_it1500": 0.1847926977058044,
+        "frozen__both_frozen_s3_it500": 0.1852826590976776,
+        "frozen__both_frozen_s3_it1000": 0.6400315917419181,
+        "frozen__both_frozen_s3_it1500": 0.4533653886236434,
+        "frozen__pred_frozen_s1_it500": 0.7301966419505886,
+        "frozen__pred_frozen_s1_it1000": -0.35305653410573384,
+        "frozen__pred_frozen_s1_it1500": 1.3259031478189185,
+        "frozen__pred_frozen_s2_it500": 0.47150978264364085,
+        "frozen__pred_frozen_s2_it1000": -1.1842176822038664,
+        "frozen__pred_frozen_s2_it1500": 0.7305802757666882,
+        "frozen__pred_frozen_s3_it500": 0.13784019341831277,
+        "frozen__pred_frozen_s3_it1000": 0.19518173206813624,
+        "frozen__pred_frozen_s3_it1500": 0.3015130059407538
+      },
+      "mean_slope_by_iteration": {
+        "500": 0.5752370033241992,
+        "1000": -0.024347402138847365,
+        "1500": 0.6204962142929773
+      },
+      "by_arm_it1500_minus_branch_point": {
+        "both_frozen": 0.03601859472992553,
+        "pred_frozen": 0.36702378582821144
+      },
+      "primary": {
+        "estimate": 0.20152119027906848,
+        "ci95_bootstrap": [
+          -0.0747789291507809,
+          0.47196811279152995
+        ],
+        "run_level": {
+          "mean": 0.20152119027906848,
+          "ci95": [
+            -0.2287585135359743,
+            0.6318008940941112
+          ],
+          "positive": 4,
+          "runs": 6
+        }
+      }
+    },
+    "births": {
+      "branch_point_slope": 0.7328863117865374,
+      "slopes": {
+        "frozen__both_frozen_s1_it500": 0.18566947689402843,
+        "frozen__both_frozen_s1_it1000": 0.5480777294719856,
+        "frozen__both_frozen_s1_it1500": 0.9656500414627166,
+        "frozen__both_frozen_s2_it500": 2.2160596267135477,
+        "frozen__both_frozen_s2_it1000": 0.6377431200631037,
+        "frozen__both_frozen_s2_it1500": 0.49617762808886723,
+        "frozen__both_frozen_s3_it500": 0.5135092665408418,
+        "frozen__both_frozen_s3_it1000": 0.9197389359242208,
+        "frozen__both_frozen_s3_it1500": 0.707956728757165,
+        "frozen__pred_frozen_s1_it500": 0.9588790285357703,
+        "frozen__pred_frozen_s1_it1000": 0.1649988031831997,
+        "frozen__pred_frozen_s1_it1500": 1.7290859601422217,
+        "frozen__pred_frozen_s2_it500": 0.8437922832379284,
+        "frozen__pred_frozen_s2_it1000": -0.6601082341467398,
+        "frozen__pred_frozen_s2_it1500": 0.9836064169861154,
+        "frozen__pred_frozen_s3_it500": 0.5126593665673125,
+        "frozen__pred_frozen_s3_it1000": 0.6192153271974455,
+        "frozen__pred_frozen_s3_it1500": 0.7301276636770634
+      },
+      "mean_slope_by_iteration": {
+        "500": 0.8717615080815716,
+        "1000": 0.3716109469488693,
+        "1500": 0.9354340731856915
+      },
+      "by_arm_it1500_minus_branch_point": {
+        "both_frozen": -0.009624845683621134,
+        "pred_frozen": 0.4147203684819294
+      },
+      "primary": {
+        "estimate": 0.20254776139915412,
+        "ci95_bootstrap": [
+          -0.033226054296709454,
+          0.43742847979196703
+        ],
+        "run_level": {
+          "mean": 0.20254776139915412,
+          "ci95": [
+            -0.24760013888922203,
+            0.6526956616875302
+          ],
+          "positive": 3,
+          "runs": 6
+        }
+      }
+    }
+  },
+  "relative_fitness_by_speed_alive": {
+    "both_frozen_it500": {
+      "-0.2": 0.8159932459840554,
+      "0.0": 0.889940611781145,
+      "0.2": 1.055094844916282,
+      "0.4": 1.2299042540926275
+    },
+    "both_frozen_it1000": {
+      "-0.2": 0.8347155894495132,
+      "0.0": 0.9983837769337089,
+      "0.2": 1.093486679418584,
+      "0.4": 1.0696732344604423
+    },
+    "both_frozen_it1500": {
+      "-0.2": 0.844536503505386,
+      "0.0": 0.9419234527940353,
+      "0.2": 1.1178626624559513,
+      "0.4": 1.09007064684218
+    },
+    "pred_frozen_it500": {
+      "-0.2": 0.9206686479646139,
+      "0.0": 0.8988139046545612,
+      "0.2": 0.9856187359747465,
+      "0.4": 1.1884206510263577
+    },
+    "pred_frozen_it1000": {
+      "-0.2": 1.1291923560916912,
+      "0.0": 1.069288273582358,
+      "0.2": 0.9301672187052757,
+      "0.4": 0.8770888088456177
+    },
+    "pred_frozen_it1500": {
+      "-0.2": 0.8193291036740914,
+      "0.0": 0.8980404934379229,
+      "0.2": 0.948255357596138,
+      "0.4": 1.3248902210137832
+    }
+  },
+  "prey_alive_at_end": {
+    "frozen__both_frozen_s1_it500": 25.245,
+    "frozen__both_frozen_s1_it1000": 25.2125,
+    "frozen__both_frozen_s1_it1500": 26.1,
+    "frozen__both_frozen_s2_it500": 24.1625,
+    "frozen__both_frozen_s2_it1000": 25.725,
+    "frozen__both_frozen_s2_it1500": 27.4475,
+    "frozen__both_frozen_s3_it500": 23.6675,
+    "frozen__both_frozen_s3_it1000": 26.5825,
+    "frozen__both_frozen_s3_it1500": 27.4475,
+    "frozen__pred_frozen_s1_it500": 26.875,
+    "frozen__pred_frozen_s1_it1000": 28.1,
+    "frozen__pred_frozen_s1_it1500": 23.9325,
+    "frozen__pred_frozen_s2_it500": 25.7325,
+    "frozen__pred_frozen_s2_it1000": 28.2525,
+    "frozen__pred_frozen_s2_it1500": 25.725,
+    "frozen__pred_frozen_s3_it500": 28.97,
+    "frozen__pred_frozen_s3_it1000": 28.105,
+    "frozen__pred_frozen_s3_it1500": 27.5625
+  },
+  "mean_genes": {
+    "branch_point": {
+      "predator": [
+        0.19380728251288296,
+        -0.610626341647644,
+        0.4005901766452657
+      ],
+      "prey": [
+        0.22774641274558424,
+        -0.5171732022583824,
+        0.5341205603867942
+      ]
+    },
+    "frozen__both_frozen_s1_it500": {
+      "predator": [
+        0.08929756267735711,
+        -0.6015720297695902,
+        0.5247682476111474
+      ],
+      "prey": [
+        0.29943023936295465,
+        -0.48893293375521124,
+        0.5383162731420025
+      ]
+    },
+    "frozen__both_frozen_s1_it1000": {
+      "predator": [
+        0.0951344916771215,
+        -0.5751018998262019,
+        0.50706459512877
+      ],
+      "prey": [
+        0.2161350423317817,
+        -0.5208677193001636,
+        0.5053535408219267
+      ]
+    },
+    "frozen__both_frozen_s1_it1500": {
+      "predator": [
+        0.1903997405975215,
+        -0.6085705471982004,
+        0.4108999353852066
+      ],
+      "prey": [
+        0.14459773828398287,
+        -0.5540970437852826,
+        0.5687249696441444
+      ]
+    },
+    "frozen__both_frozen_s2_it500": {
+      "predator": [
+        0.05122689159585238,
+        -0.5891975972073208,
+        0.46888681597198795
+      ],
+      "prey": [
+        0.008249180622208266,
+        -0.5099811924397462,
+        0.5539907027682092
+      ]
+    },
+    "frozen__both_frozen_s2_it1000": {
+      "predator": [
+        0.20803715232820705,
+        -0.5188492913059621,
+        0.42837993135035735
+      ],
+      "prey": [
+        0.2249624927304112,
+        -0.48834965118820045,
+        0.5633051115254927
+      ]
+    },
+    "frozen__both_frozen_s2_it1500": {
+      "predator": [
+        0.09161835489495486,
+        -0.6027261853717222,
+        0.5513276912433162
+      ],
+      "prey": [
+        0.23200288186915927,
+        -0.5124785598879403,
+        0.5978777422357968
+      ]
+    },
+    "frozen__both_frozen_s3_it500": {
+      "predator": [
+        0.23070038188971434,
+        -0.5524289117338959,
+        0.482450899202739
+      ],
+      "prey": [
+        0.2798755163782297,
+        -0.4909355081390471,
+        0.5440263903363317
+      ]
+    },
+    "frozen__both_frozen_s3_it1000": {
+      "predator": [
+        0.14273892001598362,
+        -0.5925467776007679,
+        0.44804482444959903
+      ],
+      "prey": [
+        0.16453830455110036,
+        -0.4766363524294763,
+        0.5952519311718362
+      ]
+    },
+    "frozen__both_frozen_s3_it1500": {
+      "predator": [
+        0.2492212097635834,
+        -0.6139966596665705,
+        0.4918596900588723
+      ],
+      "prey": [
+        0.16324489573774595,
+        -0.5385047098581419,
+        0.583888393064153
+      ]
+    },
+    "frozen__pred_frozen_s1_it500": {
+      "predator": [
+        0.08478627418511764,
+        -0.6339346778515675,
+        0.5012696295804911
+      ],
+      "prey": [
+        0.05742653628378428,
+        -0.5540430192596858,
+        0.5966640653980805
+      ]
+    },
+    "frozen__pred_frozen_s1_it1000": {
+      "predator": [
+        0.27674471932530764,
+        -0.5968173079409146,
+        0.592898167369287
+      ],
+      "prey": [
+        0.1381054839088724,
+        -0.4711829816772109,
+        0.587685117460356
+      ]
+    },
+    "frozen__pred_frozen_s1_it1500": {
+      "predator": [
+        -0.23822078822934495,
+        -0.5933597578693554,
+        0.5681111974766322
+      ],
+      "prey": [
+        -0.09522384970521906,
+        -0.44386328269209474,
+        0.5882712348657961
+      ]
+    },
+    "frozen__pred_frozen_s2_it500": {
+      "predator": [
+        -0.1455291415285108,
+        -0.6181014876349813,
+        0.48859427311822357
+      ],
+      "prey": [
+        0.06897569149113468,
+        -0.5268712531114397,
+        0.5832776386483046
+      ]
+    },
+    "frozen__pred_frozen_s2_it1000": {
+      "predator": [
+        0.18913538978414463,
+        -0.5922205126391769,
+        0.5150711527893814
+      ],
+      "prey": [
+        0.22142571847469128,
+        -0.5676591587237293,
+        0.6085667738410316
+      ]
+    },
+    "frozen__pred_frozen_s2_it1500": {
+      "predator": [
+        0.02493042036009559,
+        -0.6353874416085203,
+        0.5204404138608967
+      ],
+      "prey": [
+        0.07742362811163539,
+        -0.5010984920195527,
+        0.5760173456235135
+      ]
+    },
+    "frozen__pred_frozen_s3_it500": {
+      "predator": [
+        0.0698963357931352,
+        -0.6325992188600794,
+        0.3713141283300429
+      ],
+      "prey": [
+        0.0907275657464727,
+        -0.4573949928979601,
+        0.5841632343016613
+      ]
+    },
+    "frozen__pred_frozen_s3_it1000": {
+      "predator": [
+        -0.2627920164911253,
+        -0.6251803285951544,
+        0.5273965017987142
+      ],
+      "prey": [
+        0.09586032539299114,
+        -0.46395550636332905,
+        0.5582053821087518
+      ]
+    },
+    "frozen__pred_frozen_s3_it1500": {
+      "predator": [
+        0.058923012761812825,
+        -0.6271813907455196,
+        0.6066809761538381
+      ],
+      "prey": [
+        0.10241852769683808,
+        -0.48529605640051726,
+        0.5518195125805849
+      ]
+    }
+  }
+}

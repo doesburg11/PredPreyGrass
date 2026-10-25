@@ -621,3 +621,127 @@ over many episodes; mutation; speed linked with vision and field-of-view
 genes in real genomes, which this test separates; and changing ecology
 along the trajectory. Checking the frozen policy against later frozen-arm
 gene pools would test the last.
+
+## 7. Why did predator speed fall in the frozen arms? (2026-10-25)
+
+**Question.** Under the frozen branch-point policy extra speed still pays in
+the one-episode test (section 6, slope +0.40; +0.42 on the 400 seeds used
+in 7.2), yet in the evolving frozen
+arms predator speed fell (section 5: −0.04 with both policies frozen, −0.16
+with predators frozen). Three checks, all with the frozen branch-point
+predator policy.
+
+### 7.1 Births against survival (section 6's episodes)
+
+Per founder's lineage, same prey
+([`analysis/frozen_trajectory.py`](analysis/frozen_trajectory.py), results
+[`analysis/results/frozen_trajectory.json`](analysis/results/frozen_trajectory.json)):
+
+| Speed gene | −0.2 | 0 | +0.2 | +0.4 |
+| --- | ---: | ---: | ---: | ---: |
+| Frozen policy: births | 4.55 | 5.60 | 6.50 | 7.55 |
+| Frozen policy: alive at the end | 2.34 | 2.67 | 2.91 | 2.94 |
+| Frozen policy: pooled share of lineage alive | 0.42 | 0.40 | 0.39 | 0.34 |
+| Learned policies: births | 4.01 | 4.99 | 6.13 | 8.08 |
+| Learned policies: alive at the end | 2.07 | 2.47 | 2.83 | 3.42 |
+| Learned policies: pooled share of lineage alive | 0.41 | 0.41 | 0.40 | 0.38 |
+
+(Learned: mean over the 6 runs.) Faster lineages have more births under
+both, but under the frozen policy a smaller share of them survives, and from
++0.2 to +0.4 the extra births no longer add survivors (2.91 against 2.94).
+Under the learned policies births rise more and survival falls less.
+
+### 7.2 The frozen policy in the frozen arms' later states
+
+**Design** (`mechanism_speed.py --set frozen_trajectory`, pre-specified in
+its docstring). As section 6, but with the gene pools each frozen arm (both
+frozen and predators frozen, seeds 1–3) had at iterations 500, 1,000 and
+1,500, and that arm's prey policy at that iteration; 400 episodes per
+condition, seeds paired with section 6's. Prediction: if the evolving gene
+pools and prey removed the advantage of speed, the slope at iteration 1,500
+is lower than at the branch point.
+
+**Result: the prediction is not supported.** Mean slope at iteration 1,500
+minus the branch-point slope on the same seeds: +0.20 (bootstrap over seeds
+−0.07 to +0.47; run level −0.23 to +0.63; 4 of 6 runs above zero), +0.04 in
+the both-frozen arm and +0.37 in the predators-frozen arm. Slopes vary a lot
+between conditions (−1.18 to +2.13); mean over runs +0.58 at iteration 500,
+−0.02 at 1,000, +0.62 at 1,500. Relative fitness by speed gene (mean over
+seeds, in the JSON as `relative_fitness_by_speed_alive`; mean speed gene of
+the arm's predator gene pool):
+
+| Arm, iteration | −0.2 | 0 | +0.2 | +0.4 | Pool mean |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| both frozen, 500 | 0.82 | 0.89 | 1.06 | 1.23 | +0.12 |
+| both frozen, 1,000 | 0.83 | 1.00 | 1.09 | 1.07 | +0.15 |
+| both frozen, 1,500 | 0.84 | 0.94 | 1.12 | 1.09 | +0.18 |
+| predators frozen, 500 | 0.92 | 0.90 | 0.99 | 1.19 | +0.00 |
+| predators frozen, 1,000 | 1.13 | 1.07 | 0.93 | 0.88 | +0.07 |
+| predators frozen, 1,500 | 0.82 | 0.90 | 0.95 | 1.32 | −0.05 |
+
+### 7.3 Splitting the change in an evolving both-frozen population
+
+In the both-frozen replication runs the logged (offspring-based) selection
+differential on predator speed summed to +0.5 to +0.9 per island over about
+850 episodes, while mean speed changed by −0.01 to +0.07. To see what
+offsets it, [`decompose_frozen.py`](decompose_frozen.py) re-runs that setup
+(both policies frozen at the branch point, gene pools evolving from the
+branch point's, as in `evolve_frozen.py`; actions are sampled with a fresh
+seed per episode, so it is a re-run, not a replay of those runs' episodes)
+on 4 islands for 300 episodes each, tracks every predator lineage, and
+splits each episode's change in mean speed exactly (Price equation over the
+6 founders: selection among lineages by members alive at the end, split
+into a fecundity term, with lineage size 1 + births, and a survival term,
+the rest; the within-lineage term, mutation and selection among
+descendants; founder sampling into the next episode). Analysis
+[`analysis/decompose_frozen.py`](analysis/decompose_frozen.py), results
+[`analysis/results/decompose_frozen.json`](analysis/results/decompose_frozen.json).
+Sums are over the 299 episode transitions per island; the islands are the
+independent replicates.
+
+| Term | Sum, mean of 4 islands | Per transition | Islands above zero | Per island |
+| --- | ---: | ---: | ---: | --- |
+| fecundity | +1.22 | +0.0041 | 4 of 4 | +1.13, +1.16, +2.34, +0.27 |
+| survival | −0.97 | −0.0032 | 0 of 4 | −0.74, −0.77, −0.87, −1.49 |
+| net selection (sum of both) | +0.26 | +0.0009 | 3 of 4 | +0.39, +0.39, +1.47, −1.22 |
+| within lineages | −0.28 | −0.0009 | 1 of 4 | −0.35, −0.23, −0.83, +0.31 |
+| founder sampling | +0.13 | +0.0004 | 1 of 4 | −0.20, −0.12, −0.30, +1.13 |
+| after predator extinctions | +0.01 | 0.0000 | 2 of 4 | +0.06, 0.00, 0.00, −0.02 |
+| change in founders' mean speed (total) | +0.12 | | 3 of 4 | −0.10, +0.05, +0.33, +0.20 |
+| logged offspring-based differential (other measure) | +0.35 | +0.0012 | 4 of 4 | +0.37, +0.43, +0.33, +0.26 |
+
+**Interpretation.**
+
+- In every island, faster founders' lineages had more births (fecundity
+  term positive) and a smaller share of them alive at the end (survival
+  term negative), and the two largely offset each other. Net selection was
+  small and inconsistent between islands (+0.39, +0.39, +1.47, −1.22), and
+  founder sampling (drift through the 6-founder bottleneck) and the
+  within-lineage term (mutation and selection among descendants) were of
+  similar size. Founder speed is not manipulated here, so these
+  terms are associations with founder speed (other genes vary too); 7.1,
+  where speed is set, shows the same pattern for speed itself: more births,
+  a smaller surviving share, and no more survivors from +0.2 to +0.4.
+- So with both policies frozen, the gain from speed seems largely used up
+  by a lower survival of fast lineages, which fits the small and
+  inconsistent fall of speed in that arm (section 5: −0.04). The training
+  logs' differential counts offspring only (of every animal, a different
+  quantity from the fecundity term here) and does not see survival, which
+  is why it showed selection for speed in the frozen arms too.
+- The one-episode slope from section 6 (+0.40) times the founders' mean
+  variance in speed (0.0077) would predict about +0.003 per transition,
+  against +0.0009 seen here; the slope fitted over −0.2 to +0.4 probably
+  overstates the gradient near the population's own speed, where 7.1 and
+  7.2 show a flat curve. With 4 islands this comparison is rough.
+- Under the learned policies the fitness curve keeps rising past +0.2 and
+  the surviving share falls less (7.1), consistent with directional
+  selection for speed where predators learn (section 5).
+
+**Caveats and what stays open.** The re-run covers the both-frozen setup
+only, from one branch point, 4 islands × 300 episodes (fewer than the arm's
+850 per island). The predators-frozen arm's fall (−0.16, in all three
+seeds) is not explained: in 7.2 speed pays there more than at the branch
+point at iterations 500 and 1,500 but is selected against at 1,000, so
+selection there changes over time, and its prey kept learning, which the
+re-run does not include. A re-run of that arm needs the prey to keep
+learning (RLlib), or a re-run with each saved prey policy in turn.
