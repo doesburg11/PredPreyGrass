@@ -10,8 +10,13 @@ was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
 - **Not found:** a body arms race between predators and prey (criterion 2).
   Both species evolved the same way: shorter view distance, wider field of
   view.
-- **Still open:** *why* learning raises speed, and whether the effect holds
-  from other starting points (see TODO).
+- **Mechanism (2026-10-25):** extra speed pays about twice as much under
+  the learned predator policies as under the frozen one, against the same
+  prey (+0.46, 95% interval +0.24 to +0.68, all 6 runs; RESULTS.md
+  section 6).
+- **Still open:** whether that is adaptation to speed itself, why speed
+  fell in the frozen arms although it still pays under the frozen policy,
+  and whether the effect holds from other starting points (see TODO).
 
 **Status (2026-10-24): pilot, v2 round, Baldwin-style branches and their
 replication done** ([RESULTS.md](RESULTS.md)). With expensive capacity
@@ -230,6 +235,12 @@ README).
 - [`analysis/cross_policy_bodies.py`](analysis/cross_policy_bodies.py),
   [`analysis/baldwin_branches.py`](analysis/baldwin_branches.py): behaviour
   against bodies in the tournaments; the four branches.
+- [`analysis/baldwin_ecology.py`](analysis/baldwin_ecology.py): numbers
+  and selection in the replication's arms (RESULTS.md section 5.1).
+- [`mechanism_speed.py`](mechanism_speed.py),
+  [`analysis/mechanism_speed.py`](analysis/mechanism_speed.py): the
+  mechanism test, predators with fixed speed genes under frozen and learned
+  policies (RESULTS.md section 6).
 - [`analysis/final_check.py`](analysis/final_check.py),
   [`tournament.py`](tournament.py): evaluation with each checkpoint's
   evolved gene pool.
@@ -260,7 +271,8 @@ Runs are saved in the module's `runs/` folder (gitignored).
   contrast was positive: runs with predator learning had a +0.18 larger
   predator-speed change than runs with frozen predators (95% CI +0.14 to
   +0.22, exact p = 0.005), in the same direction in all 12 runs.
-- [ ] **Mechanism of the predator-speed effect** (RESULTS.md section 5).
+- [x] **Mechanism of the predator-speed effect** (RESULTS.md section 5;
+  done 2026-10-25, section 6).
   Does extra speed pay only once the policy has adapted to it? Score the
   frozen branch-point predator policy and the end-of-branch learned ones on
   predators whose speed gene is set to fixed values (for example −0.2, 0,
@@ -268,7 +280,14 @@ Runs are saved in the module's `runs/` folder (gitignored).
   compare offspring and survival, not only catches. If speed pays more under
   learned policies, adaptation of behaviour to bodies is the likely route;
   if not, check whether frozen and learning arms differ in predator and prey
-  numbers enough to change selection on speed.
+  numbers enough to change selection on speed. Result: speed pays more under
+  the learned policies (+0.46, all 6 runs, from the same starting prey), at
+  this branch point; prey numbers within an episode still differ between
+  predator policies.
+- [ ] **Why speed fell in the frozen arms** (RESULTS.md section 6). Speed
+  still pays under the frozen policy in the one-episode test. Score the
+  frozen policy against later frozen-arm gene pools, and split lineage
+  fitness into births and survival, to see where its advantage goes.
 - [ ] **Other branch points.** Repeat the four arms (3 seeds each) from a
   different CT-05 iteration (for example 1,000 or 2,500) or from CT-04, to
   test whether the effect depends on the state the branches start from.

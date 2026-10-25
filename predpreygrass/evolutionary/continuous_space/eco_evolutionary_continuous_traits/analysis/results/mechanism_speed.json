@@ -1,0 +1,588 @@
+{
+  "episodes": 600,
+  "speeds": [
+    -0.2,
+    0.0,
+    0.2,
+    0.4
+  ],
+  "bootstrap": 20000,
+  "measures": {
+    "alive": {
+      "slopes": {
+        "frozen__same_prey": 0.39768772155822674,
+        "both_learn_s1__same_prey": 1.0590840870726579,
+        "both_learn_s1__own_prey": 0.053514954259932364,
+        "frozen__prey_of_both_learn_s1": -1.0892529186263036,
+        "both_learn_s2__same_prey": 0.5812640718020186,
+        "both_learn_s2__own_prey": -0.4653349254807303,
+        "frozen__prey_of_both_learn_s2": -1.030507426349279,
+        "both_learn_s3__same_prey": 0.6858339042582822,
+        "both_learn_s3__own_prey": -0.1740949405384826,
+        "frozen__prey_of_both_learn_s3": -0.8823193708666568,
+        "prey_frozen_s1__same_prey": 1.041372891077321,
+        "prey_frozen_s1__own_prey": 1.2995393251901002,
+        "frozen__prey_of_prey_frozen_s1": 0.6204418789233103,
+        "prey_frozen_s2__same_prey": 1.0248341403087666,
+        "prey_frozen_s2__own_prey": 1.1136536014845804,
+        "frozen__prey_of_prey_frozen_s2": 0.4510371688969276,
+        "prey_frozen_s3__same_prey": 0.7338819825995714,
+        "prey_frozen_s3__own_prey": -1.050055539667805,
+        "frozen__prey_of_prey_frozen_s3": -0.9827581944654449
+      },
+      "contrasts": {
+        "same_prey_mean": {
+          "estimate": 0.45669079129487616,
+          "ci95": [
+            0.24441000771076077,
+            0.6686498431663037
+          ]
+        },
+        "own_prey_mean": {
+          "estimate": 0.6150968896225067,
+          "ci95": [
+            0.49835864968736,
+            0.7299788456847411
+          ]
+        },
+        "same_prey_both_learn_s1": {
+          "estimate": 0.6613963655144312,
+          "ci95": [
+            0.3914153130015346,
+            0.9315727098855877
+          ]
+        },
+        "same_prey_both_learn_s2": {
+          "estimate": 0.18357635024379182,
+          "ci95": [
+            -0.07785375715152335,
+            0.4443092264611503
+          ]
+        },
+        "same_prey_both_learn_s3": {
+          "estimate": 0.28814618270005543,
+          "ci95": [
+            0.013304807682642857,
+            0.5646406268842432
+          ]
+        },
+        "same_prey_prey_frozen_s1": {
+          "estimate": 0.6436851695190943,
+          "ci95": [
+            0.3745455001578799,
+            0.9119911588721074
+          ]
+        },
+        "same_prey_prey_frozen_s2": {
+          "estimate": 0.6271464187505399,
+          "ci95": [
+            0.3490302327950234,
+            0.9032007979575588
+          ]
+        },
+        "same_prey_prey_frozen_s3": {
+          "estimate": 0.33619426104134464,
+          "ci95": [
+            0.05748282722705688,
+            0.6196130914875787
+          ]
+        },
+        "own_prey_both_learn_s1": {
+          "estimate": 1.142767872886236,
+          "ci95": [
+            0.8405695349965241,
+            1.4433911090474918
+          ]
+        },
+        "own_prey_both_learn_s2": {
+          "estimate": 0.5651725008685488,
+          "ci95": [
+            0.28336498203082505,
+            0.8415341678750774
+          ]
+        },
+        "own_prey_both_learn_s3": {
+          "estimate": 0.7082244303281742,
+          "ci95": [
+            0.42156573147297716,
+            0.9996313609323116
+          ]
+        },
+        "own_prey_prey_frozen_s1": {
+          "estimate": 0.6790974462667899,
+          "ci95": [
+            0.3872717301128008,
+            0.9668723443464734
+          ]
+        },
+        "own_prey_prey_frozen_s2": {
+          "estimate": 0.6626164325876528,
+          "ci95": [
+            0.3794715406935005,
+            0.9436922921647195
+          ]
+        },
+        "own_prey_prey_frozen_s3": {
+          "estimate": -0.06729734520236019,
+          "ci95": [
+            -0.32898515488506974,
+            0.1963407064830635
+          ]
+        }
+      },
+      "run_level": {
+        "same_prey": {
+          "mean": 0.45669079129487616,
+          "ci95": [
+            0.23484268471614309,
+            0.6785388978736092
+          ],
+          "positive": 6,
+          "runs": 6
+        },
+        "own_prey": {
+          "mean": 0.6150968896225067,
+          "ci95": [
+            0.20551628385532456,
+            1.0246774953896889
+          ],
+          "positive": 5,
+          "runs": 6
+        }
+      },
+      "episodes_kept": {
+        "frozen__same_prey": 600,
+        "both_learn_s1__same_prey": 599,
+        "both_learn_s1__own_prey": 600,
+        "frozen__prey_of_both_learn_s1": 599,
+        "both_learn_s2__same_prey": 600,
+        "both_learn_s2__own_prey": 600,
+        "frozen__prey_of_both_learn_s2": 599,
+        "both_learn_s3__same_prey": 599,
+        "both_learn_s3__own_prey": 600,
+        "frozen__prey_of_both_learn_s3": 600,
+        "prey_frozen_s1__same_prey": 599,
+        "prey_frozen_s1__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s1": 598,
+        "prey_frozen_s2__same_prey": 600,
+        "prey_frozen_s2__own_prey": 598,
+        "frozen__prey_of_prey_frozen_s2": 599,
+        "prey_frozen_s3__same_prey": 600,
+        "prey_frozen_s3__own_prey": 599,
+        "frozen__prey_of_prey_frozen_s3": 600
+      },
+      "by_speed": {
+        "frozen__same_prey": {
+          "-0.2": 0.8563783549917223,
+          "0.0": 0.9846334700630978,
+          "0.2": 1.058320718423549,
+          "0.4": 1.0971533117956929
+        },
+        "learned__same_prey_mean_of_runs": {
+          "-0.2": 0.758042652961863,
+          "0.0": 0.9076895127313757,
+          "0.2": 1.043026775392539,
+          "0.4": 1.2821189357785772
+        }
+      }
+    },
+    "births": {
+      "slopes": {
+        "frozen__same_prey": 0.7382810454183573,
+        "both_learn_s1__same_prey": 1.1940210155707787,
+        "both_learn_s1__own_prey": 0.38210352487048543,
+        "frozen__prey_of_both_learn_s1": -0.5042736147662099,
+        "both_learn_s2__same_prey": 0.8207829598899331,
+        "both_learn_s2__own_prey": -0.051847324028351814,
+        "frozen__prey_of_both_learn_s2": -0.41241626398557163,
+        "both_learn_s3__same_prey": 0.956820905638495,
+        "both_learn_s3__own_prey": 0.2397287738161251,
+        "frozen__prey_of_both_learn_s3": -0.3680520173353512,
+        "prey_frozen_s1__same_prey": 1.2509306923842407,
+        "prey_frozen_s1__own_prey": 1.4457184319196152,
+        "frozen__prey_of_prey_frozen_s1": 0.9286726234175615,
+        "prey_frozen_s2__same_prey": 1.2074899943101502,
+        "prey_frozen_s2__own_prey": 1.2330781443966712,
+        "frozen__prey_of_prey_frozen_s2": 0.7810497307530782,
+        "prey_frozen_s3__same_prey": 1.0105376128091108,
+        "prey_frozen_s3__own_prey": -0.4931357554506986,
+        "frozen__prey_of_prey_frozen_s3": -0.4384208670090447
+      },
+      "contrasts": {
+        "same_prey_mean": {
+          "estimate": 0.33514948468209416,
+          "ci95": [
+            0.15760474634845073,
+            0.5135725193870118
+          ]
+        },
+        "own_prey_mean": {
+          "estimate": 0.4615143674082307,
+          "ci95": [
+            0.3566412741440672,
+            0.5660372217419035
+          ]
+        },
+        "same_prey_both_learn_s1": {
+          "estimate": 0.4557399701524214,
+          "ci95": [
+            0.21743684537620336,
+            0.6928952471496401
+          ]
+        },
+        "same_prey_both_learn_s2": {
+          "estimate": 0.08250191447157584,
+          "ci95": [
+            -0.1416639382564449,
+            0.3128859521314503
+          ]
+        },
+        "same_prey_both_learn_s3": {
+          "estimate": 0.21853986022013772,
+          "ci95": [
+            -0.015467713132099868,
+            0.45301829595594184
+          ]
+        },
+        "same_prey_prey_frozen_s1": {
+          "estimate": 0.5126496469658834,
+          "ci95": [
+            0.280678926230455,
+            0.7457014114976204
+          ]
+        },
+        "same_prey_prey_frozen_s2": {
+          "estimate": 0.469208948891793,
+          "ci95": [
+            0.23471087045309252,
+            0.7053583254885638
+          ]
+        },
+        "same_prey_prey_frozen_s3": {
+          "estimate": 0.27225656739075355,
+          "ci95": [
+            0.03696620423477767,
+            0.5107481747413338
+          ]
+        },
+        "own_prey_both_learn_s1": {
+          "estimate": 0.8863771396366953,
+          "ci95": [
+            0.6022142647373022,
+            1.1687935531203568
+          ]
+        },
+        "own_prey_both_learn_s2": {
+          "estimate": 0.36056893995721984,
+          "ci95": [
+            0.10229871181333555,
+            0.6149978244708071
+          ]
+        },
+        "own_prey_both_learn_s3": {
+          "estimate": 0.6077807911514763,
+          "ci95": [
+            0.3478414109528083,
+            0.8659505055237554
+          ]
+        },
+        "own_prey_prey_frozen_s1": {
+          "estimate": 0.5170458085020537,
+          "ci95": [
+            0.2662579448539964,
+            0.7602166208903632
+          ]
+        },
+        "own_prey_prey_frozen_s2": {
+          "estimate": 0.45202841364359303,
+          "ci95": [
+            0.20702654567271975,
+            0.6986911367479941
+          ]
+        },
+        "own_prey_prey_frozen_s3": {
+          "estimate": -0.0547148884416539,
+          "ci95": [
+            -0.2788910419092948,
+            0.16884036071572026
+          ]
+        }
+      },
+      "run_level": {
+        "same_prey": {
+          "mean": 0.33514948468209416,
+          "ci95": [
+            0.15618797789134645,
+            0.5141109914728419
+          ],
+          "positive": 6,
+          "runs": 6
+        },
+        "own_prey": {
+          "mean": 0.4615143674082307,
+          "ci95": [
+            0.13576353015125164,
+            0.7872652046652098
+          ],
+          "positive": 5,
+          "runs": 6
+        }
+      },
+      "episodes_kept": {
+        "frozen__same_prey": 600,
+        "both_learn_s1__same_prey": 600,
+        "both_learn_s1__own_prey": 600,
+        "frozen__prey_of_both_learn_s1": 600,
+        "both_learn_s2__same_prey": 600,
+        "both_learn_s2__own_prey": 600,
+        "frozen__prey_of_both_learn_s2": 599,
+        "both_learn_s3__same_prey": 600,
+        "both_learn_s3__own_prey": 600,
+        "frozen__prey_of_both_learn_s3": 600,
+        "prey_frozen_s1__same_prey": 600,
+        "prey_frozen_s1__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s1": 599,
+        "prey_frozen_s2__same_prey": 600,
+        "prey_frozen_s2__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s2": 600,
+        "prey_frozen_s3__same_prey": 600,
+        "prey_frozen_s3__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s3": 600
+      },
+      "by_speed": {
+        "frozen__same_prey": {
+          "-0.2": 0.7686204889945794,
+          "0.0": 0.9419270071882488,
+          "0.2": 1.061110607291757,
+          "0.4": 1.2209764492053041
+        },
+        "learned__same_prey_mean_of_runs": {
+          "-0.2": 0.7070658881201362,
+          "0.0": 0.8691269106765027,
+          "0.2": 1.0499190930411124,
+          "0.4": 1.3618520053583998
+        }
+      }
+    },
+    "catches": {
+      "slopes": {
+        "frozen__same_prey": 0.9588634754081441,
+        "both_learn_s1__same_prey": 1.3120559422702704,
+        "both_learn_s1__own_prey": 0.5642307284821204,
+        "frozen__prey_of_both_learn_s1": -0.1887943671014903,
+        "both_learn_s2__same_prey": 0.916768109863874,
+        "both_learn_s2__own_prey": 0.1718827775794215,
+        "frozen__prey_of_both_learn_s2": -0.10578258808904688,
+        "both_learn_s3__same_prey": 1.0954529689207768,
+        "both_learn_s3__own_prey": 0.42996560532510175,
+        "frozen__prey_of_both_learn_s3": -0.05687210088364095,
+        "prey_frozen_s1__same_prey": 1.360157990873851,
+        "prey_frozen_s1__own_prey": 1.5369010640137657,
+        "frozen__prey_of_prey_frozen_s1": 1.0813217072724606,
+        "prey_frozen_s2__same_prey": 1.3322353492185761,
+        "prey_frozen_s2__own_prey": 1.3605114276945978,
+        "frozen__prey_of_prey_frozen_s2": 0.9810460395525874,
+        "prey_frozen_s3__same_prey": 1.129195110053729,
+        "prey_frozen_s3__own_prey": -0.14476577964826084,
+        "frozen__prey_of_prey_frozen_s3": -0.108974295792437
+      },
+      "contrasts": {
+        "same_prey_mean": {
+          "estimate": 0.23211410312536884,
+          "ci95": [
+            0.07467708580836604,
+            0.3894260388475203
+          ]
+        },
+        "own_prey_mean": {
+          "estimate": 0.3861302380813855,
+          "ci95": [
+            0.2927410434086359,
+            0.4792867725246893
+          ]
+        },
+        "same_prey_both_learn_s1": {
+          "estimate": 0.35319246686212635,
+          "ci95": [
+            0.14262422970361552,
+            0.559398022563084
+          ]
+        },
+        "same_prey_both_learn_s2": {
+          "estimate": -0.04209536554427007,
+          "ci95": [
+            -0.24341282382045631,
+            0.16294321576923343
+          ]
+        },
+        "same_prey_both_learn_s3": {
+          "estimate": 0.13658949351263272,
+          "ci95": [
+            -0.07298634579820204,
+            0.3444491994689239
+          ]
+        },
+        "same_prey_prey_frozen_s1": {
+          "estimate": 0.40129451546570694,
+          "ci95": [
+            0.19654362319596047,
+            0.6059446078511275
+          ]
+        },
+        "same_prey_prey_frozen_s2": {
+          "estimate": 0.373371873810432,
+          "ci95": [
+            0.16573772389189292,
+            0.581682098272093
+          ]
+        },
+        "same_prey_prey_frozen_s3": {
+          "estimate": 0.17033163464558487,
+          "ci95": [
+            -0.039777787119431925,
+            0.3835447910736663
+          ]
+        },
+        "own_prey_both_learn_s1": {
+          "estimate": 0.7530250955836107,
+          "ci95": [
+            0.49890273996149026,
+            1.0078550013252097
+          ]
+        },
+        "own_prey_both_learn_s2": {
+          "estimate": 0.2776653656684684,
+          "ci95": [
+            0.04697715876907277,
+            0.5049169545335213
+          ]
+        },
+        "own_prey_both_learn_s3": {
+          "estimate": 0.48683770620874267,
+          "ci95": [
+            0.25130047895194874,
+            0.7225526426632926
+          ]
+        },
+        "own_prey_prey_frozen_s1": {
+          "estimate": 0.4555793567413051,
+          "ci95": [
+            0.22982621762855493,
+            0.6751739148814859
+          ]
+        },
+        "own_prey_prey_frozen_s2": {
+          "estimate": 0.37946538814201036,
+          "ci95": [
+            0.16303140492090504,
+            0.5964751230969528
+          ]
+        },
+        "own_prey_prey_frozen_s3": {
+          "estimate": -0.03579148385582384,
+          "ci95": [
+            -0.24039976422779968,
+            0.1680268512579336
+          ]
+        }
+      },
+      "run_level": {
+        "same_prey": {
+          "mean": 0.23211410312536884,
+          "ci95": [
+            0.04951917932012989,
+            0.4147090269306078
+          ],
+          "positive": 5,
+          "runs": 6
+        },
+        "own_prey": {
+          "mean": 0.3861302380813855,
+          "ci95": [
+            0.11271086417987436,
+            0.6595496119828967
+          ],
+          "positive": 5,
+          "runs": 6
+        }
+      },
+      "episodes_kept": {
+        "frozen__same_prey": 600,
+        "both_learn_s1__same_prey": 600,
+        "both_learn_s1__own_prey": 600,
+        "frozen__prey_of_both_learn_s1": 600,
+        "both_learn_s2__same_prey": 600,
+        "both_learn_s2__own_prey": 600,
+        "frozen__prey_of_both_learn_s2": 600,
+        "both_learn_s3__same_prey": 600,
+        "both_learn_s3__own_prey": 600,
+        "frozen__prey_of_both_learn_s3": 600,
+        "prey_frozen_s1__same_prey": 600,
+        "prey_frozen_s1__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s1": 600,
+        "prey_frozen_s2__same_prey": 600,
+        "prey_frozen_s2__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s2": 600,
+        "prey_frozen_s3__same_prey": 600,
+        "prey_frozen_s3__own_prey": 600,
+        "frozen__prey_of_prey_frozen_s3": 600
+      },
+      "by_speed": {
+        "frozen__same_prey": {
+          "-0.2": 0.7102087642318811,
+          "0.0": 0.9095827254401265,
+          "0.2": 1.0766046790199142,
+          "0.4": 1.2936081124636003
+        },
+        "learned__same_prey_mean_of_runs": {
+          "-0.2": 0.6769636603276422,
+          "0.0": 0.8496016681562747,
+          "0.2": 1.059560325422756,
+          "0.4": 1.400370775614691
+        }
+      }
+    }
+  },
+  "prey_alive_at_end": {
+    "frozen__same_prey": 27.37,
+    "both_learn_s1__same_prey": 31.776666666666667,
+    "both_learn_s1__own_prey": 35.641666666666666,
+    "frozen__prey_of_both_learn_s1": 31.895,
+    "both_learn_s2__same_prey": 29.393333333333334,
+    "both_learn_s2__own_prey": 29.533333333333335,
+    "frozen__prey_of_both_learn_s2": 27.441666666666666,
+    "both_learn_s3__same_prey": 24.803333333333335,
+    "both_learn_s3__own_prey": 28.148333333333333,
+    "frozen__prey_of_both_learn_s3": 30.173333333333332,
+    "prey_frozen_s1__same_prey": 20.168333333333333,
+    "prey_frozen_s1__own_prey": 22.133333333333333,
+    "frozen__prey_of_prey_frozen_s1": 27.581666666666667,
+    "prey_frozen_s2__same_prey": 21.088333333333335,
+    "prey_frozen_s2__own_prey": 20.863333333333333,
+    "frozen__prey_of_prey_frozen_s2": 28.488333333333333,
+    "prey_frozen_s3__same_prey": 20.525,
+    "prey_frozen_s3__own_prey": 20.42,
+    "frozen__prey_of_prey_frozen_s3": 24.761666666666667
+  },
+  "predators_alive_at_end": {
+    "frozen__same_prey": 16.301666666666666,
+    "both_learn_s1__same_prey": 15.535,
+    "both_learn_s1__own_prey": 15.81,
+    "frozen__prey_of_both_learn_s1": 16.031666666666666,
+    "both_learn_s2__same_prey": 15.813333333333333,
+    "both_learn_s2__own_prey": 16.65,
+    "frozen__prey_of_both_learn_s2": 16.811666666666667,
+    "both_learn_s3__same_prey": 16.695,
+    "both_learn_s3__own_prey": 16.933333333333334,
+    "frozen__prey_of_both_learn_s3": 16.313333333333333,
+    "prey_frozen_s1__same_prey": 16.791666666666668,
+    "prey_frozen_s1__own_prey": 16.685,
+    "frozen__prey_of_prey_frozen_s1": 15.971666666666666,
+    "prey_frozen_s2__same_prey": 16.48,
+    "prey_frozen_s2__own_prey": 16.533333333333335,
+    "frozen__prey_of_prey_frozen_s2": 15.965,
+    "prey_frozen_s3__same_prey": 15.98,
+    "prey_frozen_s3__own_prey": 16.533333333333335,
+    "frozen__prey_of_prey_frozen_s3": 16.601666666666667
+  }
+}

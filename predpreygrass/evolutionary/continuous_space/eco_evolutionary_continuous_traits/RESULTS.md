@@ -10,7 +10,9 @@ exact p = 0.005, the smallest the design allows; section 5). This answers
 the module's third question (a Baldwin-style interaction) positively.
 
 It is not yet the full Darwin/Baldwin coevolution loop: why it happens is
-untested, it comes from one branch point, and learning is one shared PPO
+only partly tested (section 6: extra speed pays about twice as much under
+the learned predator policies as under the frozen one), it comes from one
+branch point, and learning is one shared PPO
 policy per species, not individual lifetime learning. Earlier results:
 expensive bodies went with a collapsing ecosystem in the single pilot run
 (section 1); with cheaper bodies both species traded view distance for
@@ -528,3 +530,94 @@ it misses the survival cost of speed (founders are drawn from survivors).
 Four arm means and no model of selection against both learning and prey
 numbers: this is an association. The demographic explanation is weakened,
 not ruled out; the mechanism test (README, TODO) is the direct test.
+
+## 6. Mechanism: does speed pay more under learned predator policies? (MS, 2026-10-25)
+
+**Question.** Section 5 shows that predator speed rises where predators keep
+learning; section 5.1 that the arms differ in prey numbers. Does extra speed
+pay more under the policies predators learned than under the frozen
+branch-point policy, with the same founders and the same starting prey?
+
+**Design.** Evaluation only, no training
+([`mechanism_speed.py`](mechanism_speed.py), analysis
+[`analysis/mechanism_speed.py`](analysis/mechanism_speed.py), results
+[`analysis/results/mechanism_speed.json`](analysis/results/mechanism_speed.json)).
+Every episode starts from the branch point's gene pools (CT-05 at iteration
+1,500), but the 6 predator founders get fixed speed genes from −0.2, 0, +0.2
+and +0.4, mixed within the episode (every value once, two drawn per episode
+twice, random order); their vision and field-of-view genes are the branch
+point's. The predators act with the frozen branch-point policy or with one
+of the 6 learned end-of-branch policies (both learning and prey frozen,
+seeds 1–3). The prey act with the branch-point prey policy and gene pool
+("same prey"), or with those at the end of the tested run ("own prey"; the
+frozen predators then face that run's prey too). Lineages are tracked
+through births. 600 episodes per condition, 19 conditions, the same seeds
+in every condition (same founders, speed assignments and spawn positions).
+
+**Pre-specified outcome** (written into `mechanism_speed.py` before the
+run): per condition, the least-squares slope of relative lineage fitness
+(members alive at the end of the episode, the share of the next episode's
+founders, divided by the episode's mean over founders) on founder speed.
+Primary contrast: mean slope over the 6 learned runs minus the frozen slope,
+same prey, with a 95% interval from a bootstrap over episode seeds (20,000
+resamples, paired across conditions). Because that interval covers
+evaluation episodes for these checkpoints, not training runs, a run-level
+95% t interval over the 6 runs is reported too.
+
+**Relative fitness by speed gene** (same prey; mean over runs for learned):
+
+| Predator policy | −0.2 | 0 | +0.2 | +0.4 | Slope |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| frozen (branch point) | 0.86 | 0.98 | 1.06 | 1.10 | +0.40 |
+| learned (6 runs) | 0.76 | 0.91 | 1.04 | 1.28 | +0.85 |
+
+**Primary result.** Learned minus frozen: **+0.46** (episode bootstrap 95%
+interval +0.24 to +0.67; run level +0.24 to +0.68), above zero in all 6
+runs:
+
+| Learned run | Slope | Learned − frozen, same prey (95% interval) | Own prey | Births | Catches |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| both learning, seed 1 | 1.06 | +0.66 (+0.39 to +0.93) | +1.14 | +0.46 | +0.35 |
+| both learning, seed 2 | 0.58 | +0.18 (−0.08 to +0.44) | +0.57 | +0.08 | −0.04 |
+| both learning, seed 3 | 0.69 | +0.29 (+0.01 to +0.56) | +0.71 | +0.22 | +0.14 |
+| prey frozen, seed 1 | 1.04 | +0.64 (+0.37 to +0.91) | +0.68 | +0.51 | +0.40 |
+| prey frozen, seed 2 | 1.02 | +0.63 (+0.35 to +0.90) | +0.66 | +0.47 | +0.37 |
+| prey frozen, seed 3 | 0.73 | +0.34 (+0.06 to +0.62) | −0.07 | +0.27 | +0.17 |
+
+(Own prey, births and catches: learned minus frozen slopes.)
+
+**Secondary results.** With lineage births (the fecundity measure of
+training) the contrast is +0.34 (run level +0.16 to +0.51, 6 of 6 runs);
+with catches +0.23 (+0.05 to +0.42, 5 of 6). Against each run's own prey it
+is larger, +0.62 (run level +0.21 to +1.03), but in 5 of 6 runs: prey frozen
+seed 3 is about zero. At most 2 of 600 episodes per condition were left out
+(no surviving predators).
+
+**Interpretation.**
+
+- Extra speed pays about twice as much under the learned predator policies
+  as under the frozen one, with the prey held identical. Under the frozen
+  policy the gain levels off above +0.2, about where the population was at
+  the branch point (+0.19); under the learned policies it keeps rising.
+  This is what adaptation of behaviour to faster bodies would produce, and
+  it appears with the same starting prey policy and gene pool, rather than
+  the arms' evolved prey numbers (section 5.1). Prey numbers within an
+  episode still differ between predator policies (next point), so
+  mediation by prey numbers during the episode is not excluded.
+- The learned policies differ from the frozen one in everything they
+  learned, not only in how they use speed, so this shows that the later
+  policies make speed pay more, not that they adapted to the speed gene
+  specifically. Prey numbers within an episode also still differ between
+  predator policies (about 20 to 32 at the end against 27 under frozen
+  predators), as the policies hunt differently.
+
+**Caveats and an open question.** One branch point; one-episode tests from
+its gene pools, not the evolving populations of the arms. Speed also pays
+under the frozen policy (+0.40), yet in the evolving frozen arms predator
+speed fell (section 5); this test does not explain that. Candidate reasons
+(Codex review): births favour speed more than final survival does (+0.74
+against +0.40 under the frozen policy), so survival costs may weigh more
+over many episodes; mutation; speed linked with vision and field-of-view
+genes in real genomes, which this test separates; and changing ecology
+along the trajectory. Checking the frozen policy against later frozen-arm
+gene pools would test the last.
