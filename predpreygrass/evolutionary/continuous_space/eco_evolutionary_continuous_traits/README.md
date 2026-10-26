@@ -335,6 +335,9 @@ Runs are saved in the module's `runs/` folder (gitignored).
   observation slots in front; see "Vision and energy" above), so that
   predators can evolve "hunting eyes" and prey "panoramic eyes", and test
   whether the two species' bodies then change in response to each other.
+  Design approved 2026-10-26 (binocular overlap: monocular distances are
+  noisy; new module `eco_evolutionary_continuous_fov`):
+  [DESIGN_fov_tradeoff.md](DESIGN_fov_tradeoff.md).
 - [ ] **Toward a classic Baldwin effect: per-agent learning.** Learning here
   is one shared PPO policy per species. Combine this module with the ERL
   design (per-agent, genome-driven networks with lifetime learning; see
