@@ -23,13 +23,18 @@ neutral_frozen (genes without effect, base bodies) gives the spread of the
 same change under pure drift, as a reference only: its ecology differs from
 the expressed arms.
 
-Runs that have not finished are skipped and listed.
+Runs that have not finished are skipped and listed. With the environment
+variable BLREP_BRANCH (e.g. 2500) the runs branched from that CT-05
+iteration (runs/blrep<BRANCH>_*, launchers/baldwin_replication.py) are
+analysed instead, against that iteration's gene pool, into
+results/baldwin_replication_<BRANCH>.json.
 
     python -m predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.analysis.baldwin_replication
 """
 
 import itertools
 import json
+import os
 
 import numpy as np
 from scipy import stats
@@ -51,6 +56,9 @@ ARMS = ("both_learn", "prey_frozen", "both_frozen", "pred_frozen")
 PREDATOR_LEARNING = {"both_learn": 1, "prey_frozen": 1, "both_frozen": -1, "pred_frozen": -1}
 PREY_LEARNING = {"both_learn": 1, "pred_frozen": 1, "both_frozen": -1, "prey_frozen": -1}
 SEEDS = (1, 2, 3)
+BRANCH = int(os.environ.get("BLREP_BRANCH", "1500"))
+BRANCH_POINT = START if BRANCH == 1500 else START.parent / f"iter_{BRANCH:06d}"
+PREFIX = "blrep" if BRANCH == 1500 else f"blrep{BRANCH}"
 
 
 def finished(run_dir):
@@ -110,12 +118,12 @@ def test(groups, factor):
 
 
 def main():
-    start_pool = load_gene_pool(START)
+    start_pool = load_gene_pool(BRANCH_POINT)
     start = {species: start_pool[species].mean(0) for species in SPECIES}
     changes, missing = {}, []
     for arm in ARMS + ("neutral_frozen",):
         for seed in SEEDS:
-            run = RUNS / f"blrep_{arm}_s{seed}"
+            run = RUNS / f"{PREFIX}_{arm}_s{seed}"
             if finished(run):
                 changes.setdefault(arm, {})[seed] = change(run, start)
             else:
@@ -144,7 +152,7 @@ def main():
             gene: float(np.std([c[gene] for c in changes["neutral_frozen"].values()], ddof=1)) for gene in genes
         }
 
-    path = MODULE / "analysis" / "results" / "baldwin_replication.json"
+    path = MODULE / "analysis" / "results" / ("baldwin_replication.json" if BRANCH == 1500 else f"baldwin_replication_{BRANCH}.json")
     path.write_text(json.dumps(output, indent=2) + "\n")
     print(f"written {path}")
     if missing:

@@ -18,9 +18,12 @@ was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
   predators' extra births are largely offset by lower survival of their
   lineages; net selection on speed is small and inconsistent, in line with
   the small fall there (RESULTS.md section 7).
+- **Second branch point (2026-10-26):** from CT-05 at iteration 2,500 the
+  same contrast is +0.19 (95% CI +0.09 to +0.28, p = 0.005), against +0.18
+  from iteration 1,500 (RESULTS.md section 8).
 - **Still open:** whether the mechanism is adaptation to speed itself, why
   speed fell when only predators were frozen, and whether the effect holds
-  from other starting points (see TODO).
+  beyond CT-05's trajectory (see TODO).
 
 **Status (2026-10-24): pilot, v2 round, Baldwin-style branches and their
 replication done** ([RESULTS.md](RESULTS.md)). With expensive capacity
@@ -305,11 +308,19 @@ Runs are saved in the module's `runs/` folder (gitignored).
   there the prey kept learning. Re-run that arm with lineages tracked
   (`decompose_frozen.py` with the prey learning, or with each saved prey
   policy in turn).
-- [ ] **Other branch points.** Repeat the four arms (3 seeds each) from a
+- [x] **Other branch points** (done 2026-10-26 for CT-05 at iteration
+  2,500, RESULTS.md section 8). Repeat the four arms (3 seeds each) from a
   different CT-05 iteration (for example 1,000 or 2,500) or from CT-04, to
   test whether the effect depends on the state the branches start from.
   Same queue (`launchers/queue_baldwin_replication.sh`, at most 3 RLlib
-  runs on the GPU at once); about 20 hours for the RLlib arms.
+  runs on the GPU at once); about 20 hours for the RLlib arms. Result: the
+  contrast replicated (+0.19, p = 0.005), from a state with much slower
+  predators (+0.06 against +0.19). It took 34 hours (11:38 to 21:46 the
+  next day) on 3 GPU slots.
+- [ ] **A branch point outside CT-05.** CT-04 (costs 0.5× the pilot's,
+  against CT-05's 0.25×) would test whether the effect depends on the cost
+  of capacity, not only on the starting state: `BLREP_BRANCH` only selects
+  CT-05 iterations, so the launcher needs a run option first.
 
 ## References
 

@@ -11,8 +11,8 @@ the module's third question (a Baldwin-style interaction) positively.
 
 It is not yet the full Darwin/Baldwin coevolution loop: why it happens is
 only partly tested (section 6: extra speed pays about twice as much under
-the learned predator policies as under the frozen one), it comes from one
-branch point, and learning is one shared PPO
+the learned predator policies as under the frozen one), it comes from two
+branch points (CT-05 at iterations 1,500 and 2,500; section 8), and learning is one shared PPO
 policy per species, not individual lifetime learning. Earlier results:
 expensive bodies went with a collapsing ecosystem in the single pilot run
 (section 1); with cheaper bodies both species traded view distance for
@@ -745,3 +745,64 @@ point at iterations 500 and 1,500 but is selected against at 1,000, so
 selection there changes over time, and its prey kept learning, which the
 re-run does not include. A re-run of that arm needs the prey to keep
 learning (RLlib), or a re-run with each saved prey policy in turn.
+
+## 8. A second branch point: CT-05 at iteration 2,500 (BR2500, 2026-10-26)
+
+**Question.** Does the predator-learning effect on predator speed (section
+5) depend on the state the branches start from?
+
+**Design.** Section 5's design from CT-05 at iteration 2,500 instead of
+1,500: both learning, predators frozen, prey frozen (RLlib, seeds 1–3) and
+both frozen (`evolve_frozen.py`, seeds 1–3), 1,500 iterations' worth of
+steps on 7 workers or islands, launched with `BLREP_BRANCH=2500`
+([`launchers/baldwin_replication.py`](launchers/baldwin_replication.py),
+[`launchers/queue_baldwin_replication.sh`](launchers/queue_baldwin_replication.sh);
+runs `runs/blrep2500_<arm>_s<seed>`, 2026-10-25 11:38 to 2026-10-26 21:46,
+no failures). No neutral arm (section 5 found it unusable as a drift
+yardstick). The state differs from iteration 1,500's: predator speed gene
++0.06 against +0.19, field of view +0.62 against +0.40, prey speed −0.03
+against +0.23. Same measure and the same contrast as section 5, which
+[`analysis/baldwin_replication.py`](analysis/baldwin_replication.py) fixes
+(`BLREP_BRANCH=2500`, results
+[`analysis/results/baldwin_replication_2500.json`](analysis/results/baldwin_replication_2500.json)).
+
+**Predator speed, change per run:**
+
+| Arm | Predators learn | Prey learn | Seed 1 | Seed 2 | Seed 3 | Mean |
+|---|---|---|---:|---:|---:|---:|
+| both learning | yes | yes | +0.340 | +0.119 | +0.266 | +0.242 |
+| prey frozen | yes | no | +0.248 | +0.257 | +0.292 | +0.266 |
+| both frozen | no | no | +0.106 | +0.110 | +0.091 | +0.102 |
+| predators frozen | no | yes | +0.091 | +0.060 | −0.049 | +0.034 |
+
+**Confirmatory result.** Learning-versus-frozen contrast for predator
+speed: **+0.19** (95% CI +0.09 to +0.28; exact randomization p = 0.005
+two-sided, 0.0025 in the pre-specified direction), against +0.18 from
+iteration 1,500. All six runs with learning predators gained more speed
+than all six with frozen predators, though narrowly (lowest +0.119 against
+highest +0.110). The effect holds within each level of prey learning:
++0.21 where prey learned (both learning against predators frozen, both
+RLlib) and +0.16 where prey were frozen (against both frozen, which also
+differs in code path); section 5 had +0.24 and +0.13.
+
+**Unlike section 5, speed rose in the frozen arms too** (both frozen +0.10,
+predators frozen +0.03 on average), from a much lower start; learning
+predators gained more. This fits section 7's reading that under the frozen
+policy speed pays below about +0.2 and the gain levels off above it, but
+it was not tested here.
+
+**Other genes (exploratory; 11 further tests, no correction):** as from
+iteration 1,500, predator learning raised predator view distance (+0.04,
+CI +0.03 to +0.05) and prey speed (+0.12, against +0.06), and prey learning
+lowered prey speed (−0.06, against −0.15). Predator learning also raised
+prey view distance slightly (+0.04, against +0.01). Field-of-view effects
+were small and their intervals include zero.
+
+**Interpretation and caveats.** The predator-learning effect on predator
+speed has now been found from two branch points of CT-05 with different
+gene pools, with nearly the same size; how general it is beyond CT-05's
+trajectory (for example CT-04's cheaper costs) is untested. The caveats of
+section 5 apply: freezing comes with a different code path in one stratum,
+the measure is gene trajectories, not mechanism (sections 6 and 7 address
+that from iteration 1,500 only), and learning is shared PPO, not
+individual lifetime learning.
