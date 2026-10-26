@@ -38,7 +38,7 @@ def social_scores(observation, predator_slots):
 
 def biased_logits(logits, observation, preference, strength, predator_slots):
     """Add per-agent social action bias, without changing action space."""
-    if not -1 <= preference <= 1 or strength < 0:
+    if not np.isfinite(preference) or not np.isfinite(strength) or not -1 <= preference <= 1 or strength < 0:
         raise ValueError("preference must be in [-1,1], strength nonnegative")
     values = np.asarray(logits, dtype=float)
     if values.shape != (DIRECTIONS * len(SPEEDS),):

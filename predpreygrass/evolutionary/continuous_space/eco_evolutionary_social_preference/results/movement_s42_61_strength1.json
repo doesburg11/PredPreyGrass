@@ -1,0 +1,3462 @@
+{
+  "checkpoint": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s1/checkpoint",
+  "strength": 1.0,
+  "seed": 42,
+  "validation": {
+    "predator": {
+      "class": "DefaultPPOTorchRLModule",
+      "saved_constructor_config_equal": true,
+      "saved_tensors_equal": 14,
+      "checkpoint_state_sha256": "0e6fbd8bc1324cc156f578c2c4328e8b30550107b1521483dac80f3ba9aada5f",
+      "independent_actor_max_abs_error": 0.0,
+      "probe_observations": 70
+    },
+    "prey": {
+      "class": "DefaultPPOTorchRLModule",
+      "saved_constructor_config_equal": true,
+      "saved_tensors_equal": 14,
+      "checkpoint_state_sha256": "aaa0cd348850d4318afe83c69189be3d5fbd7bd43995ef2ee408a64f8c7db055",
+      "independent_actor_max_abs_error": 0.0,
+      "probe_observations": 72
+    }
+  },
+  "validation_after": {
+    "predator": {
+      "class": "DefaultPPOTorchRLModule",
+      "saved_constructor_config_equal": true,
+      "saved_tensors_equal": 14,
+      "checkpoint_state_sha256": "0e6fbd8bc1324cc156f578c2c4328e8b30550107b1521483dac80f3ba9aada5f",
+      "independent_actor_max_abs_error": 0.0,
+      "probe_observations": 70
+    },
+    "prey": {
+      "class": "DefaultPPOTorchRLModule",
+      "saved_constructor_config_equal": true,
+      "saved_tensors_equal": 14,
+      "checkpoint_state_sha256": "aaa0cd348850d4318afe83c69189be3d5fbd7bd43995ef2ee408a64f8c7db055",
+      "independent_actor_max_abs_error": 0.0,
+      "probe_observations": 72
+    }
+  },
+  "summary": {
+    "seeds": [
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61
+    ],
+    "replicate_unit": "episode seed",
+    "interval_method": "paired percentile bootstrap, 10000 resamples; exploratory, no multiplicity adjustment",
+    "metrics": {
+      "visible_target_projection_per_tick": {
+        "paired_seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "condition_means": {
+          "-1.0": 0.047310151012707385,
+          "0.0": 0.10062659303387637,
+          "1.0": 0.15232711127634846
+        },
+        "differences_from_neutral": {
+          "-1.0": {
+            "mean": -0.05331644202116899,
+            "seed_differences": [
+              -0.0012107009931440135,
+              0.01583421604592772,
+              -0.02064024462799131,
+              -0.16155208568797566,
+              0.06215379400488305,
+              -0.027276976761757818,
+              0.043617639006153466,
+              -0.06695265462473646,
+              -0.0005031341954500335,
+              -0.162933639407126,
+              -0.19635226852518647,
+              -0.1474123599287456,
+              -0.06732324883410021,
+              0.037465398589127966,
+              -0.09409173727710665,
+              -0.11611706030687982,
+              -0.0818665985427735,
+              -0.09999685079244447,
+              0.07908544360192646,
+              -0.06025577116598044
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.08762343252741484,
+              -0.019719744435053276
+            ]
+          },
+          "1.0": {
+            "mean": 0.05170051824247207,
+            "seed_differences": [
+              0.0956175527884904,
+              0.19484946850696583,
+              0.038494907769589276,
+              0.09285723117292155,
+              0.023092011520713898,
+              0.01392673033866381,
+              0.02991715525626333,
+              0.03987714065375224,
+              0.1114046904862504,
+              -0.0017125719109915838,
+              -0.07836693717995785,
+              0.07491570752120824,
+              -0.04260413283344991,
+              0.10584612268554082,
+              0.01846300329936082,
+              0.06077506893219925,
+              -0.04688349772411577,
+              0.1052701024100714,
+              0.19305203110453015,
+              0.005218580051435245
+            ],
+            "bootstrap_95_percent_interval": [
+              0.021618991853165685,
+              0.08309621356363872
+            ]
+          }
+        }
+      },
+      "visible_target_displacement_alignment_when_moving": {
+        "paired_seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "condition_means": {
+          "-1.0": 0.0008867191504621598,
+          "0.0": 0.04428242110502676,
+          "1.0": 0.08483772984978434
+        },
+        "differences_from_neutral": {
+          "-1.0": {
+            "mean": -0.04339570195456462,
+            "seed_differences": [
+              -0.014087090660380263,
+              -0.0024848240150162357,
+              -0.006280051994439685,
+              -0.11534876911959219,
+              0.016520800914949292,
+              -0.032393463591313974,
+              0.02571972546080313,
+              -0.04609024474071251,
+              -0.03486082734742104,
+              -0.08656600868702613,
+              -0.12982701157664817,
+              -0.09529963663100993,
+              -0.057776535092111836,
+              0.01346549366000019,
+              -0.07888206351275832,
+              -0.07530039530257196,
+              -0.06959825334352783,
+              -0.08346047480618735,
+              0.005041238677649537,
+              -0.00040564738397683153
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.06322792669282916,
+              -0.023866615153962625
+            ]
+          },
+          "1.0": {
+            "mean": 0.040555308744757566,
+            "seed_differences": [
+              0.07884502020873446,
+              0.09687174079158868,
+              0.05687832994891697,
+              0.06267397617706869,
+              0.016685082339544417,
+              0.03477864941629756,
+              0.01861416541903818,
+              0.03410832159905993,
+              0.08031156345063777,
+              0.01615501678379544,
+              -0.013277683448190844,
+              0.022052447760338476,
+              0.006749353100843486,
+              0.0734307607487605,
+              0.001235308745044239,
+              0.030671841173234994,
+              -0.0042434451289753775,
+              0.07244092229408733,
+              0.09091385952907395,
+              0.03521094398625248
+            ],
+            "bootstrap_95_percent_interval": [
+              0.026494864476901043,
+              0.05516151983413513
+            ]
+          }
+        }
+      },
+      "visible_pair_closing_per_tick": {
+        "paired_seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "condition_means": {
+          "-1.0": -0.34050024486712466,
+          "0.0": -0.2690914299990542,
+          "1.0": -0.24487368509088797
+        },
+        "differences_from_neutral": {
+          "-1.0": {
+            "mean": -0.07140881486807049,
+            "seed_differences": [
+              -0.061384078209607396,
+              -0.1187396068377149,
+              -0.026109422427222306,
+              0.001684884531150177,
+              -0.024121687781598705,
+              0.09109136107485927,
+              -0.018047260481674016,
+              0.006250920181575997,
+              -0.2079808884624968,
+              -0.14453807884596392,
+              -0.24547058957105206,
+              -0.10328754737890183,
+              -0.029271521594369965,
+              -0.03468784413553305,
+              -0.11306829538771432,
+              -0.11458172446656806,
+              -0.17878274005029993,
+              -0.11922734617817948,
+              -0.06762420495100799,
+              0.07971937361090947
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.10892608447935793,
+              -0.03472476583025551
+            ]
+          },
+          "1.0": {
+            "mean": 0.024217744908166264,
+            "seed_differences": [
+              0.1523074228254704,
+              -0.11244597472716605,
+              0.07584974562998442,
+              0.1330083529570297,
+              -0.09951728568306659,
+              0.2164910015049982,
+              -0.012391093655379132,
+              -0.037477687872328636,
+              0.048426328934949914,
+              0.0727059171972709,
+              0.045164752149855686,
+              -0.0688264311538368,
+              0.016814797285683136,
+              0.043936045410193164,
+              -0.08171953223609232,
+              -0.056556603958147156,
+              -0.018191375722978048,
+              -0.0014498774709323925,
+              0.06225484997984501,
+              0.10597154676797188
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.01223105268925265,
+              0.06249258299187255
+            ]
+          }
+        }
+      },
+      "all_predator_nearest_neighbor_distance_normalized": {
+        "paired_seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "condition_means": {
+          "-1.0": 0.2873855251952532,
+          "0.0": 0.27654340321976684,
+          "1.0": 0.27418237343385743
+        },
+        "differences_from_neutral": {
+          "-1.0": {
+            "mean": 0.010842121975486351,
+            "seed_differences": [
+              0.010321768874883785,
+              0.01653243777315483,
+              -0.015434627514817778,
+              -0.006126974372368144,
+              0.020826931795443926,
+              0.006859820671385908,
+              0.010375089414089433,
+              0.0027652437885073433,
+              0.027419956535164602,
+              -0.009651199850646996,
+              0.008129433187019475,
+              0.03966388341808169,
+              0.006749178750989293,
+              0.019900726205233754,
+              0.014858963597458308,
+              0.02317419450747693,
+              0.022156165091427094,
+              0.01320139109095153,
+              0.005636292648756924,
+              -0.0005162361024648732
+            ],
+            "bootstrap_95_percent_interval": [
+              0.0053134562699677906,
+              0.016426358023009378
+            ]
+          },
+          "1.0": {
+            "mean": -0.002361029785909477,
+            "seed_differences": [
+              -0.008039543305235708,
+              0.030487138530299995,
+              -0.014351168723750085,
+              -0.015054941518182374,
+              0.006215853506228219,
+              -0.03537910050665011,
+              0.01943751554208223,
+              -0.014223831148508947,
+              0.005565609809997318,
+              -0.0182288849688369,
+              -0.01605726404111041,
+              0.02105730334899336,
+              0.007982507832144659,
+              -0.0037467997421177235,
+              0.010353823315953636,
+              0.0037929310101065816,
+              0.003099695302297756,
+              0.010121919468381979,
+              -0.017337098776666005,
+              -0.022916260653617015
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.009516539225866765,
+              0.00484830898803853
+            ]
+          }
+        }
+      },
+      "predator_population": {
+        "paired_seeds": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61
+        ],
+        "condition_means": {
+          "-1.0": 13.193658316190048,
+          "0.0": 13.564893281606652,
+          "1.0": 13.104555011525596
+        },
+        "differences_from_neutral": {
+          "-1.0": {
+            "mean": -0.3712349654166028,
+            "seed_differences": [
+              -0.13499590945492201,
+              0.027128680177836983,
+              0.34625714568123556,
+              0.6227493508640034,
+              -1.4449847718653022,
+              0.45734648444746817,
+              -0.8030715614641064,
+              -0.8758116883116873,
+              -2.4653911486195668,
+              1.3292905383958633,
+              0.8147857258317561,
+              -1.170191377958968,
+              -1.8443293961011502,
+              -0.3668752300331253,
+              -0.29108580228674796,
+              -1.2709029272436378,
+              -1.1171860751192284,
+              -0.6504777005817957,
+              0.39562751128785045,
+              1.0174188440221688
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.8053511677370541,
+              0.054116426592108635
+            ]
+          },
+          "1.0": {
+            "mean": -0.460338270081054,
+            "seed_differences": [
+              0.6090941954141691,
+              -3.2096395922079157,
+              1.0495532087733555,
+              1.3998124554045468,
+              -1.759570129870129,
+              0.759592758317071,
+              -2.022131533409304,
+              -1.0036730029746774,
+              -1.0974100496277917,
+              0.8425420564594184,
+              0.46278021999240515,
+              -1.612596015619296,
+              -1.2902016418329456,
+              -0.5128717579579263,
+              -1.3308496410928257,
+              -1.1962157208102067,
+              -0.31507739709814153,
+              -0.16452007256092926,
+              0.9796974150578741,
+              0.20491884402216876
+            ],
+            "bootstrap_95_percent_interval": [
+              -0.9949362248990508,
+              0.05895459412997581
+            ]
+          }
+        }
+      }
+    }
+  },
+  "results": {
+    "-1.0": [
+      {
+        "episode": 0,
+        "seed": 42,
+        "steps": 1231,
+        "predator_decisions": 16099,
+        "movement": {
+          "means": {
+            "predator_population": 13.060926076360682,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2919090209230253,
+            "visible_target_projection_per_tick": 0.04114977820749821,
+            "visible_target_displacement_per_tick": 1.5512641981609414,
+            "visible_target_stationary_fraction": 0.4760902830910482,
+            "visible_target_displacement_alignment_when_moving": -0.0046101178453835205,
+            "visible_pair_closing_per_tick": -0.39197737999844456
+          },
+          "samples": {
+            "predator_population": 1231,
+            "all_predator_nearest_neighbor_distance_normalized": 16078,
+            "visible_target_projection_per_tick": 5228,
+            "visible_target_displacement_per_tick": 5228,
+            "visible_target_stationary_fraction": 5228,
+            "visible_target_displacement_alignment_when_moving": 2739,
+            "visible_pair_closing_per_tick": 5221
+          },
+          "counts": {
+            "decision_intervals": 1231,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5236,
+            "target_death_intervals_with_focal_surviving": 7,
+            "focal_death_intervals": 8
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19057440228413042,
+        "visible_decisions": 5236,
+        "visible_decision_fraction": 0.3252375923970433,
+        "mean_alignment_per_predator_decision": -0.04705022836521777,
+        "moving_action_fraction": 0.3384061121808808,
+        "visible_moving_decisions": 2090,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4327292488262889,
+          "0.0": -0.32701158548953446,
+          "1.0": -0.202385558472875
+        },
+        "mean_alignment_given_visible_and_moving": -0.3624218308381057,
+        "moving_fraction_given_visible": 0.39915966386554624,
+        "mean_expected_alignment_given_visible_and_moving": -0.43272925064203965,
+        "mean_expected_moving_probability_given_visible": 0.39735500714683186
+      },
+      {
+        "episode": 1,
+        "seed": 43,
+        "steps": 1237,
+        "predator_decisions": 16980,
+        "movement": {
+          "means": {
+            "predator_population": 13.70735650767987,
+            "all_predator_nearest_neighbor_distance_normalized": 0.3006589626500732,
+            "visible_target_projection_per_tick": 0.045585197694145665,
+            "visible_target_displacement_per_tick": 1.674546439140136,
+            "visible_target_stationary_fraction": 0.42083333333333334,
+            "visible_target_displacement_alignment_when_moving": 0.005684264309836499,
+            "visible_pair_closing_per_tick": -0.33756363973663295
+          },
+          "samples": {
+            "predator_population": 1237,
+            "all_predator_nearest_neighbor_distance_normalized": 16956,
+            "visible_target_projection_per_tick": 6240,
+            "visible_target_displacement_per_tick": 6240,
+            "visible_target_stationary_fraction": 6240,
+            "visible_target_displacement_alignment_when_moving": 3614,
+            "visible_pair_closing_per_tick": 6235
+          },
+          "counts": {
+            "decision_intervals": 1237,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6248,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 5
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.2077570854144817,
+        "visible_decisions": 6248,
+        "visible_decision_fraction": 0.367962308598351,
+        "mean_alignment_per_predator_decision": -0.0658384284555548,
+        "moving_action_fraction": 0.3618374558303887,
+        "visible_moving_decisions": 2816,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44126715788442966,
+          "0.0": -0.3412030125190486,
+          "1.0": -0.22241696675826822
+        },
+        "mean_alignment_given_visible_and_moving": -0.39699450112759965,
+        "moving_fraction_given_visible": 0.4507042253521127,
+        "mean_expected_alignment_given_visible_and_moving": -0.44126715827773877,
+        "mean_expected_moving_probability_given_visible": 0.4530792744693222
+      },
+      {
+        "episode": 2,
+        "seed": 44,
+        "steps": 1241,
+        "predator_decisions": 15007,
+        "movement": {
+          "means": {
+            "predator_population": 12.075745366639806,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2830204577364777,
+            "visible_target_projection_per_tick": 0.007054074807995236,
+            "visible_target_displacement_per_tick": 1.5402214387117514,
+            "visible_target_stationary_fraction": 0.4936240990574755,
+            "visible_target_displacement_alignment_when_moving": -0.017288823539311778,
+            "visible_pair_closing_per_tick": -0.4270173421866682
+          },
+          "samples": {
+            "predator_population": 1241,
+            "all_predator_nearest_neighbor_distance_normalized": 14986,
+            "visible_target_projection_per_tick": 5411,
+            "visible_target_displacement_per_tick": 5411,
+            "visible_target_stationary_fraction": 5411,
+            "visible_target_displacement_alignment_when_moving": 2740,
+            "visible_pair_closing_per_tick": 5405
+          },
+          "counts": {
+            "decision_intervals": 1241,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5418,
+            "focal_death_intervals": 7,
+            "target_death_intervals_with_focal_surviving": 6
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17928206037156538,
+        "visible_decisions": 5418,
+        "visible_decision_fraction": 0.36103151862464183,
+        "mean_alignment_per_predator_decision": -0.04924756735127875,
+        "moving_action_fraction": 0.33511028186846137,
+        "visible_moving_decisions": 2101,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43895298756585666,
+          "0.0": -0.32556928242761246,
+          "1.0": -0.18505891322884455
+        },
+        "mean_alignment_given_visible_and_moving": -0.35176498964333186,
+        "moving_fraction_given_visible": 0.387781469176818,
+        "mean_expected_alignment_given_visible_and_moving": -0.4389529874720694,
+        "mean_expected_moving_probability_given_visible": 0.3888464491068112
+      },
+      {
+        "episode": 3,
+        "seed": 45,
+        "steps": 1212,
+        "predator_decisions": 16057,
+        "movement": {
+          "means": {
+            "predator_population": 13.229372937293729,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28084396846658,
+            "visible_target_projection_per_tick": -0.054626955150116084,
+            "visible_target_displacement_per_tick": 0.9891709301443463,
+            "visible_target_stationary_fraction": 0.5684485006518905,
+            "visible_target_displacement_alignment_when_moving": -0.06790664179587484,
+            "visible_pair_closing_per_tick": -0.27647535716413635
+          },
+          "samples": {
+            "predator_population": 1212,
+            "all_predator_nearest_neighbor_distance_normalized": 16034,
+            "visible_target_projection_per_tick": 5369,
+            "visible_target_displacement_per_tick": 5369,
+            "visible_target_stationary_fraction": 5369,
+            "visible_target_displacement_alignment_when_moving": 2317,
+            "visible_pair_closing_per_tick": 5356
+          },
+          "counts": {
+            "decision_intervals": 1212,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5379,
+            "focal_death_intervals": 10,
+            "target_death_intervals_with_focal_surviving": 13
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17470431120051264,
+        "visible_decisions": 5379,
+        "visible_decision_fraction": 0.334994083577256,
+        "mean_alignment_per_predator_decision": -0.03710496207546306,
+        "moving_action_fraction": 0.2665504141495921,
+        "visible_moving_decisions": 1704,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.3934642897413529,
+          "0.0": -0.278100992684062,
+          "1.0": -0.14030216778120563
+        },
+        "mean_alignment_given_visible_and_moving": -0.3496445868812854,
+        "moving_fraction_given_visible": 0.31678750697155605,
+        "mean_expected_alignment_given_visible_and_moving": -0.39346428844827513,
+        "mean_expected_moving_probability_given_visible": 0.3199207761120573
+      },
+      {
+        "episode": 4,
+        "seed": 46,
+        "steps": 1243,
+        "predator_decisions": 15863,
+        "movement": {
+          "means": {
+            "predator_population": 12.747385358004827,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28548386332076464,
+            "visible_target_projection_per_tick": 0.14433780834251328,
+            "visible_target_displacement_per_tick": 1.704949137647852,
+            "visible_target_stationary_fraction": 0.45756584610087797,
+            "visible_target_displacement_alignment_when_moving": 0.053222734397458324,
+            "visible_pair_closing_per_tick": -0.24826655671733527
+          },
+          "samples": {
+            "predator_population": 1243,
+            "all_predator_nearest_neighbor_distance_normalized": 15845,
+            "visible_target_projection_per_tick": 5809,
+            "visible_target_displacement_per_tick": 5809,
+            "visible_target_stationary_fraction": 5809,
+            "visible_target_displacement_alignment_when_moving": 3151,
+            "visible_pair_closing_per_tick": 5803
+          },
+          "counts": {
+            "decision_intervals": 1243,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5817,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 6
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19230272442112678,
+        "visible_decisions": 5817,
+        "visible_decision_fraction": 0.36670238920758996,
+        "mean_alignment_per_predator_decision": -0.04817441787542186,
+        "moving_action_fraction": 0.3510054844606947,
+        "visible_moving_decisions": 2472,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.38942804210090287,
+          "0.0": -0.28757021510171055,
+          "1.0": -0.17505537010518613
+        },
+        "mean_alignment_given_visible_and_moving": -0.30913866940041135,
+        "moving_fraction_given_visible": 0.42496132026817945,
+        "mean_expected_alignment_given_visible_and_moving": -0.3894280443764556,
+        "mean_expected_moving_probability_given_visible": 0.41801137850540837
+      },
+      {
+        "episode": 5,
+        "seed": 47,
+        "steps": 1236,
+        "predator_decisions": 17476,
+        "movement": {
+          "means": {
+            "predator_population": 14.12135922330097,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28767875237182344,
+            "visible_target_projection_per_tick": 0.028170409474477708,
+            "visible_target_displacement_per_tick": 1.3204679219064839,
+            "visible_target_stationary_fraction": 0.5301127214170692,
+            "visible_target_displacement_alignment_when_moving": -0.015618381738151008,
+            "visible_pair_closing_per_tick": -0.3006066995048668
+          },
+          "samples": {
+            "predator_population": 1236,
+            "all_predator_nearest_neighbor_distance_normalized": 17454,
+            "visible_target_projection_per_tick": 6210,
+            "visible_target_displacement_per_tick": 6210,
+            "visible_target_stationary_fraction": 6210,
+            "visible_target_displacement_alignment_when_moving": 2918,
+            "visible_pair_closing_per_tick": 6205
+          },
+          "counts": {
+            "decision_intervals": 1236,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6216,
+            "target_death_intervals_with_focal_surviving": 5,
+            "focal_death_intervals": 6
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1920997550090154,
+        "visible_decisions": 6216,
+        "visible_decision_fraction": 0.3556878004119936,
+        "mean_alignment_per_predator_decision": -0.0439856972309245,
+        "moving_action_fraction": 0.3018997482261387,
+        "visible_moving_decisions": 2177,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4362248584041175,
+          "0.0": -0.3326680883013686,
+          "1.0": -0.21032116430828496
+        },
+        "mean_alignment_given_visible_and_moving": -0.3530978616479727,
+        "moving_fraction_given_visible": 0.3502252252252252,
+        "mean_expected_alignment_given_visible_and_moving": -0.43622485938568234,
+        "mean_expected_moving_probability_given_visible": 0.35180468094288325
+      },
+      {
+        "episode": 6,
+        "seed": 48,
+        "steps": 1254,
+        "predator_decisions": 17763,
+        "movement": {
+          "means": {
+            "predator_population": 14.141148325358852,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27651141232061477,
+            "visible_target_projection_per_tick": 0.13699948370611478,
+            "visible_target_displacement_per_tick": 1.472076006086254,
+            "visible_target_stationary_fraction": 0.5261735419630157,
+            "visible_target_displacement_alignment_when_moving": 0.07090532238040179,
+            "visible_pair_closing_per_tick": -0.2547507403990452
+          },
+          "samples": {
+            "predator_population": 1254,
+            "all_predator_nearest_neighbor_distance_normalized": 17733,
+            "visible_target_projection_per_tick": 7030,
+            "visible_target_displacement_per_tick": 7030,
+            "visible_target_stationary_fraction": 7030,
+            "visible_target_displacement_alignment_when_moving": 3331,
+            "visible_pair_closing_per_tick": 7016
+          },
+          "counts": {
+            "decision_intervals": 1254,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7042,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 14
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18886085268526898,
+        "visible_decisions": 7042,
+        "visible_decision_fraction": 0.39644204244778475,
+        "mean_alignment_per_predator_decision": -0.04861804452584568,
+        "moving_action_fraction": 0.3312503518549795,
+        "visible_moving_decisions": 2524,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4012414877924642,
+          "0.0": -0.2830398281533163,
+          "1.0": -0.15187073576128374
+        },
+        "mean_alignment_given_visible_and_moving": -0.34215623015554547,
+        "moving_fraction_given_visible": 0.3584209031525135,
+        "mean_expected_alignment_given_visible_and_moving": -0.4012414886165155,
+        "mean_expected_moving_probability_given_visible": 0.3601000031663614
+      },
+      {
+        "episode": 7,
+        "seed": 49,
+        "steps": 1232,
+        "predator_decisions": 16285,
+        "movement": {
+          "means": {
+            "predator_population": 13.200487012987013,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2695610334040273,
+            "visible_target_projection_per_tick": 0.014350238334568178,
+            "visible_target_displacement_per_tick": 1.0708875876209534,
+            "visible_target_stationary_fraction": 0.5565886967891908,
+            "visible_target_displacement_alignment_when_moving": -0.007922580791038403,
+            "visible_pair_closing_per_tick": -0.22053633771238143
+          },
+          "samples": {
+            "predator_population": 1232,
+            "all_predator_nearest_neighbor_distance_normalized": 16263,
+            "visible_target_projection_per_tick": 6883,
+            "visible_target_displacement_per_tick": 6883,
+            "visible_target_stationary_fraction": 6883,
+            "visible_target_displacement_alignment_when_moving": 3052,
+            "visible_pair_closing_per_tick": 6873
+          },
+          "counts": {
+            "decision_intervals": 1232,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6889,
+            "target_death_intervals_with_focal_surviving": 10,
+            "focal_death_intervals": 6
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18190750349672627,
+        "visible_decisions": 6889,
+        "visible_decision_fraction": 0.42302732575990176,
+        "mean_alignment_per_predator_decision": -0.04928360489222163,
+        "moving_action_fraction": 0.3169788148603009,
+        "visible_moving_decisions": 2256,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4482907613751089,
+          "0.0": -0.34011286147644326,
+          "1.0": -0.20436779825109727
+        },
+        "mean_alignment_given_visible_and_moving": -0.3557551000309527,
+        "moving_fraction_given_visible": 0.32747858905501526,
+        "mean_expected_alignment_given_visible_and_moving": -0.4482907619521066,
+        "mean_expected_moving_probability_given_visible": 0.32680289620885944
+      },
+      {
+        "episode": 8,
+        "seed": 50,
+        "steps": 1251,
+        "predator_decisions": 13708,
+        "movement": {
+          "means": {
+            "predator_population": 10.936051159072742,
+            "all_predator_nearest_neighbor_distance_normalized": 0.3084277016155113,
+            "visible_target_projection_per_tick": 0.18674991761963491,
+            "visible_target_displacement_per_tick": 2.128682063129078,
+            "visible_target_stationary_fraction": 0.4026381909547739,
+            "visible_target_displacement_alignment_when_moving": 0.05861026126887308,
+            "visible_pair_closing_per_tick": -0.4580845258648754
+          },
+          "samples": {
+            "predator_population": 1251,
+            "all_predator_nearest_neighbor_distance_normalized": 13681,
+            "visible_target_projection_per_tick": 4776,
+            "visible_target_displacement_per_tick": 4776,
+            "visible_target_stationary_fraction": 4776,
+            "visible_target_displacement_alignment_when_moving": 2853,
+            "visible_pair_closing_per_tick": 4771
+          },
+          "counts": {
+            "decision_intervals": 1251,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 4787,
+            "focal_death_intervals": 11,
+            "target_death_intervals_with_focal_surviving": 5
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.20738887260056113,
+        "visible_decisions": 4787,
+        "visible_decision_fraction": 0.34921213889699443,
+        "mean_alignment_per_predator_decision": -0.05403214577091568,
+        "moving_action_fraction": 0.42252699153778817,
+        "visible_moving_decisions": 2274,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.38635417216868506,
+          "0.0": -0.27424353592635575,
+          "1.0": -0.1463296309826837
+        },
+        "mean_alignment_given_visible_and_moving": -0.3257135682619667,
+        "moving_fraction_given_visible": 0.4750365573428034,
+        "mean_expected_alignment_given_visible_and_moving": -0.3863541729158326,
+        "mean_expected_moving_probability_given_visible": 0.4783434243117583
+      },
+      {
+        "episode": 9,
+        "seed": 51,
+        "steps": 1234,
+        "predator_decisions": 17447,
+        "movement": {
+          "means": {
+            "predator_population": 14.114262560777957,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2781537837424073,
+            "visible_target_projection_per_tick": -0.012089579599758673,
+            "visible_target_displacement_per_tick": 1.533414363823594,
+            "visible_target_stationary_fraction": 0.5166666666666667,
+            "visible_target_displacement_alignment_when_moving": -0.023338541714179095,
+            "visible_pair_closing_per_tick": -0.4574047665213487
+          },
+          "samples": {
+            "predator_population": 1234,
+            "all_predator_nearest_neighbor_distance_normalized": 17417,
+            "visible_target_projection_per_tick": 6180,
+            "visible_target_displacement_per_tick": 6180,
+            "visible_target_stationary_fraction": 6180,
+            "visible_target_displacement_alignment_when_moving": 2987,
+            "visible_pair_closing_per_tick": 6167
+          },
+          "counts": {
+            "decision_intervals": 1234,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6192,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 13
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1823556965411922,
+        "visible_decisions": 6192,
+        "visible_decision_fraction": 0.354903421791712,
+        "mean_alignment_per_predator_decision": -0.046774838111943044,
+        "moving_action_fraction": 0.3029174070040695,
+        "visible_moving_decisions": 2225,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44496968876291887,
+          "0.0": -0.3297553158727453,
+          "1.0": -0.19153980398781223
+        },
+        "mean_alignment_given_visible_and_moving": -0.36677779799508775,
+        "moving_fraction_given_visible": 0.3593346253229974,
+        "mean_expected_alignment_given_visible_and_moving": -0.44496968898103634,
+        "mean_expected_moving_probability_given_visible": 0.3569804625097974
+      },
+      {
+        "episode": 10,
+        "seed": 52,
+        "steps": 1257,
+        "predator_decisions": 16647,
+        "movement": {
+          "means": {
+            "predator_population": 13.221957040572793,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2859459762495546,
+            "visible_target_projection_per_tick": 0.008373095597685,
+            "visible_target_displacement_per_tick": 1.6342156051820729,
+            "visible_target_stationary_fraction": 0.4922130359546241,
+            "visible_target_displacement_alignment_when_moving": -0.032897020581650005,
+            "visible_pair_closing_per_tick": -0.5352819486628512
+          },
+          "samples": {
+            "predator_population": 1257,
+            "all_predator_nearest_neighbor_distance_normalized": 16620,
+            "visible_target_projection_per_tick": 5201,
+            "visible_target_displacement_per_tick": 5201,
+            "visible_target_stationary_fraction": 5201,
+            "visible_target_displacement_alignment_when_moving": 2641,
+            "visible_pair_closing_per_tick": 5192
+          },
+          "counts": {
+            "decision_intervals": 1257,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5211,
+            "focal_death_intervals": 10,
+            "target_death_intervals_with_focal_surviving": 9
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17967093048709823,
+        "visible_decisions": 5211,
+        "visible_decision_fraction": 0.3130293746621013,
+        "mean_alignment_per_predator_decision": -0.04656599730611418,
+        "moving_action_fraction": 0.31026611401453713,
+        "visible_moving_decisions": 1993,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.45336415620390436,
+          "0.0": -0.3360386252971117,
+          "1.0": -0.1988164915752846
+        },
+        "mean_alignment_given_visible_and_moving": -0.3889534155318027,
+        "moving_fraction_given_visible": 0.3824601803876415,
+        "mean_expected_alignment_given_visible_and_moving": -0.45336415813103564,
+        "mean_expected_moving_probability_given_visible": 0.3836616766790086
+      },
+      {
+        "episode": 11,
+        "seed": 53,
+        "steps": 1229,
+        "predator_decisions": 15937,
+        "movement": {
+          "means": {
+            "predator_population": 12.947925142392188,
+            "all_predator_nearest_neighbor_distance_normalized": 0.29554916011558574,
+            "visible_target_projection_per_tick": -0.0030025234548241566,
+            "visible_target_displacement_per_tick": 1.3252381681983858,
+            "visible_target_stationary_fraction": 0.5583476764199655,
+            "visible_target_displacement_alignment_when_moving": -0.021079293196517437,
+            "visible_pair_closing_per_tick": -0.3919740799728909
+          },
+          "samples": {
+            "predator_population": 1229,
+            "all_predator_nearest_neighbor_distance_normalized": 15913,
+            "visible_target_projection_per_tick": 5810,
+            "visible_target_displacement_per_tick": 5810,
+            "visible_target_stationary_fraction": 5810,
+            "visible_target_displacement_alignment_when_moving": 2566,
+            "visible_pair_closing_per_tick": 5800
+          },
+          "counts": {
+            "decision_intervals": 1229,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5817,
+            "target_death_intervals_with_focal_surviving": 10,
+            "focal_death_intervals": 7
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19341086125481943,
+        "visible_decisions": 5817,
+        "visible_decision_fraction": 0.3649996862646671,
+        "mean_alignment_per_predator_decision": -0.04346864838412488,
+        "moving_action_fraction": 0.29183660663863964,
+        "visible_moving_decisions": 1904,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4550434974310916,
+          "0.0": -0.33444534331127584,
+          "1.0": -0.19813774868645198
+        },
+        "mean_alignment_given_visible_and_moving": -0.36384445866481,
+        "moving_fraction_given_visible": 0.32731648616125153,
+        "mean_expected_alignment_given_visible_and_moving": -0.4550434983070555,
+        "mean_expected_moving_probability_given_visible": 0.3290023051387568
+      },
+      {
+        "episode": 12,
+        "seed": 54,
+        "steps": 1246,
+        "predator_decisions": 15573,
+        "movement": {
+          "means": {
+            "predator_population": 12.47752808988764,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28235474367560115,
+            "visible_target_projection_per_tick": 0.0910058661474003,
+            "visible_target_displacement_per_tick": 1.4744123114552783,
+            "visible_target_stationary_fraction": 0.5043010752688172,
+            "visible_target_displacement_alignment_when_moving": 0.0071233371511938825,
+            "visible_pair_closing_per_tick": -0.3055892978455014
+          },
+          "samples": {
+            "predator_population": 1246,
+            "all_predator_nearest_neighbor_distance_normalized": 15547,
+            "visible_target_projection_per_tick": 5580,
+            "visible_target_displacement_per_tick": 5580,
+            "visible_target_stationary_fraction": 5580,
+            "visible_target_displacement_alignment_when_moving": 2766,
+            "visible_pair_closing_per_tick": 5570
+          },
+          "counts": {
+            "decision_intervals": 1246,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5589,
+            "target_death_intervals_with_focal_surviving": 10,
+            "focal_death_intervals": 9
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1897575204599083,
+        "visible_decisions": 5589,
+        "visible_decision_fraction": 0.3588903872086303,
+        "mean_alignment_per_predator_decision": -0.049288693749373,
+        "moving_action_fraction": 0.33172799075322673,
+        "visible_moving_decisions": 2086,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43145097294972123,
+          "0.0": -0.30994617852826783,
+          "1.0": -0.16632894115557958
+        },
+        "mean_alignment_given_visible_and_moving": -0.3679639634510958,
+        "moving_fraction_given_visible": 0.37323313651816065,
+        "mean_expected_alignment_given_visible_and_moving": -0.43145097258278176,
+        "mean_expected_moving_probability_given_visible": 0.3727990286534339
+      },
+      {
+        "episode": 13,
+        "seed": 55,
+        "steps": 1254,
+        "predator_decisions": 17982,
+        "movement": {
+          "means": {
+            "predator_population": 14.320574162679426,
+            "all_predator_nearest_neighbor_distance_normalized": 0.29248073605153363,
+            "visible_target_projection_per_tick": 0.03982365625594844,
+            "visible_target_displacement_per_tick": 1.4803592416889646,
+            "visible_target_stationary_fraction": 0.4747605908131797,
+            "visible_target_displacement_alignment_when_moving": 0.006343725156182262,
+            "visible_pair_closing_per_tick": -0.3249029451514132
+          },
+          "samples": {
+            "predator_population": 1254,
+            "all_predator_nearest_neighbor_distance_normalized": 17958,
+            "visible_target_projection_per_tick": 6161,
+            "visible_target_displacement_per_tick": 6161,
+            "visible_target_stationary_fraction": 6161,
+            "visible_target_displacement_alignment_when_moving": 3236,
+            "visible_pair_closing_per_tick": 6156
+          },
+          "counts": {
+            "decision_intervals": 1254,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6168,
+            "target_death_intervals_with_focal_surviving": 5,
+            "focal_death_intervals": 7
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.202301357198753,
+        "visible_decisions": 6168,
+        "visible_decision_fraction": 0.34300967634300966,
+        "mean_alignment_per_predator_decision": -0.04761954243194269,
+        "moving_action_fraction": 0.3215993771549327,
+        "visible_moving_decisions": 2421,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44209400214116856,
+          "0.0": -0.34126747595092904,
+          "1.0": -0.22356854445014793
+        },
+        "mean_alignment_given_visible_and_moving": -0.35369459397405756,
+        "moving_fraction_given_visible": 0.39250972762645914,
+        "mean_expected_alignment_given_visible_and_moving": -0.44209400270839094,
+        "mean_expected_moving_probability_given_visible": 0.39380339101926476
+      },
+      {
+        "episode": 14,
+        "seed": 56,
+        "steps": 1262,
+        "predator_decisions": 17292,
+        "movement": {
+          "means": {
+            "predator_population": 13.680665610142631,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2841275380360962,
+            "visible_target_projection_per_tick": 0.0591373396140894,
+            "visible_target_displacement_per_tick": 1.5910186452687867,
+            "visible_target_stationary_fraction": 0.49173752607091287,
+            "visible_target_displacement_alignment_when_moving": 0.00584432311087732,
+            "visible_pair_closing_per_tick": -0.33785793251042007
+          },
+          "samples": {
+            "predator_population": 1262,
+            "all_predator_nearest_neighbor_distance_normalized": 17265,
+            "visible_target_projection_per_tick": 6233,
+            "visible_target_displacement_per_tick": 6233,
+            "visible_target_stationary_fraction": 6233,
+            "visible_target_displacement_alignment_when_moving": 3168,
+            "visible_pair_closing_per_tick": 6219
+          },
+          "counts": {
+            "decision_intervals": 1262,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6245,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 14
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1844160722981724,
+        "visible_decisions": 6245,
+        "visible_decision_fraction": 0.3611496645847791,
+        "mean_alignment_per_predator_decision": -0.04651385031719948,
+        "moving_action_fraction": 0.32645153828359935,
+        "visible_moving_decisions": 2408,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43578244031079805,
+          "0.0": -0.322828103522847,
+          "1.0": -0.1925217876150571
+        },
+        "mean_alignment_given_visible_and_moving": -0.3340188952180288,
+        "moving_fraction_given_visible": 0.3855884707766213,
+        "mean_expected_alignment_given_visible_and_moving": -0.43578244260268817,
+        "mean_expected_moving_probability_given_visible": 0.38817369479423885
+      },
+      {
+        "episode": 15,
+        "seed": 57,
+        "steps": 1234,
+        "predator_decisions": 15579,
+        "movement": {
+          "means": {
+            "predator_population": 12.59967585089141,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2920418485353064,
+            "visible_target_projection_per_tick": -0.04334887736392559,
+            "visible_target_displacement_per_tick": 1.345885136128237,
+            "visible_target_stationary_fraction": 0.5002168570189388,
+            "visible_target_displacement_alignment_when_moving": -0.04085290805072413,
+            "visible_pair_closing_per_tick": -0.36547005119128456
+          },
+          "samples": {
+            "predator_population": 1234,
+            "all_predator_nearest_neighbor_distance_normalized": 15548,
+            "visible_target_projection_per_tick": 6917,
+            "visible_target_displacement_per_tick": 6917,
+            "visible_target_stationary_fraction": 6917,
+            "visible_target_displacement_alignment_when_moving": 3457,
+            "visible_pair_closing_per_tick": 6899
+          },
+          "counts": {
+            "decision_intervals": 1234,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6934,
+            "focal_death_intervals": 17,
+            "target_death_intervals_with_focal_surviving": 18
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19907410086666075,
+        "visible_decisions": 6934,
+        "visible_decision_fraction": 0.44508633416779,
+        "mean_alignment_per_predator_decision": -0.05506666551185653,
+        "moving_action_fraction": 0.3525258360613647,
+        "visible_moving_decisions": 2584,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4038591142434617,
+          "0.0": -0.2953569805300302,
+          "1.0": -0.1730792105685859
+        },
+        "mean_alignment_given_visible_and_moving": -0.3319982902512434,
+        "moving_fraction_given_visible": 0.3726564753389097,
+        "mean_expected_alignment_given_visible_and_moving": -0.4038591144906945,
+        "mean_expected_moving_probability_given_visible": 0.37721035074548237
+      },
+      {
+        "episode": 16,
+        "seed": 58,
+        "steps": 1233,
+        "predator_decisions": 17055,
+        "movement": {
+          "means": {
+            "predator_population": 13.811841038118411,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28340667253925084,
+            "visible_target_projection_per_tick": 0.02625002884402543,
+            "visible_target_displacement_per_tick": 1.539287358228543,
+            "visible_target_stationary_fraction": 0.50357199555485,
+            "visible_target_displacement_alignment_when_moving": -0.008967081095372717,
+            "visible_pair_closing_per_tick": -0.38444039473006203
+          },
+          "samples": {
+            "predator_population": 1233,
+            "all_predator_nearest_neighbor_distance_normalized": 17030,
+            "visible_target_projection_per_tick": 6299,
+            "visible_target_displacement_per_tick": 6299,
+            "visible_target_stationary_fraction": 6299,
+            "visible_target_displacement_alignment_when_moving": 3127,
+            "visible_pair_closing_per_tick": 6291
+          },
+          "counts": {
+            "decision_intervals": 1233,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6310,
+            "target_death_intervals_with_focal_surviving": 8,
+            "focal_death_intervals": 11
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19160638358872,
+        "visible_decisions": 6310,
+        "visible_decision_fraction": 0.3699794781588977,
+        "mean_alignment_per_predator_decision": -0.048879486246787084,
+        "moving_action_fraction": 0.3046613896218118,
+        "visible_moving_decisions": 2335,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43647458247649573,
+          "0.0": -0.327995887549085,
+          "1.0": -0.20057998048149078
+        },
+        "mean_alignment_given_visible_and_moving": -0.3570191168903442,
+        "moving_fraction_given_visible": 0.37004754358161646,
+        "mean_expected_alignment_given_visible_and_moving": -0.4364745846691357,
+        "mean_expected_moving_probability_given_visible": 0.3696114451930911
+      },
+      {
+        "episode": 17,
+        "seed": 59,
+        "steps": 1212,
+        "predator_decisions": 15360,
+        "movement": {
+          "means": {
+            "predator_population": 12.657590759075907,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2894842261921749,
+            "visible_target_projection_per_tick": -0.09931101783129152,
+            "visible_target_displacement_per_tick": 1.0786504906990195,
+            "visible_target_stationary_fraction": 0.5165562913907285,
+            "visible_target_displacement_alignment_when_moving": -0.09004776520435948,
+            "visible_pair_closing_per_tick": -0.3276036631761476
+          },
+          "samples": {
+            "predator_population": 1212,
+            "all_predator_nearest_neighbor_distance_normalized": 15341,
+            "visible_target_projection_per_tick": 5889,
+            "visible_target_displacement_per_tick": 5889,
+            "visible_target_stationary_fraction": 5889,
+            "visible_target_displacement_alignment_when_moving": 2847,
+            "visible_pair_closing_per_tick": 5884
+          },
+          "counts": {
+            "decision_intervals": 1212,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5892,
+            "focal_death_intervals": 3,
+            "target_death_intervals_with_focal_surviving": 5
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18574904481003418,
+        "visible_decisions": 5892,
+        "visible_decision_fraction": 0.38359375,
+        "mean_alignment_per_predator_decision": -0.052205797911792,
+        "moving_action_fraction": 0.31276041666666665,
+        "visible_moving_decisions": 2110,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.40864922859011704,
+          "0.0": -0.28835143485068837,
+          "1.0": -0.15288361948910223
+        },
+        "mean_alignment_given_visible_and_moving": -0.38003841513039105,
+        "moving_fraction_given_visible": 0.35811269517990496,
+        "mean_expected_alignment_given_visible_and_moving": -0.4086492291436747,
+        "mean_expected_moving_probability_given_visible": 0.3627985855050811
+      },
+      {
+        "episode": 18,
+        "seed": 60,
+        "steps": 1248,
+        "predator_decisions": 16033,
+        "movement": {
+          "means": {
+            "predator_population": 12.821314102564102,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2958593301417486,
+            "visible_target_projection_per_tick": 0.17926301965481356,
+            "visible_target_displacement_per_tick": 1.895701273222431,
+            "visible_target_stationary_fraction": 0.3881068658431485,
+            "visible_target_displacement_alignment_when_moving": 0.057256052987851,
+            "visible_pair_closing_per_tick": -0.28363926363797176
+          },
+          "samples": {
+            "predator_population": 1248,
+            "all_predator_nearest_neighbor_distance_normalized": 16001,
+            "visible_target_projection_per_tick": 6962,
+            "visible_target_displacement_per_tick": 6962,
+            "visible_target_stationary_fraction": 6962,
+            "visible_target_displacement_alignment_when_moving": 4260,
+            "visible_pair_closing_per_tick": 6944
+          },
+          "counts": {
+            "decision_intervals": 1248,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6979,
+            "target_death_intervals_with_focal_surviving": 18,
+            "focal_death_intervals": 17
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.20645407815670017,
+        "visible_decisions": 6979,
+        "visible_decision_fraction": 0.43528971496288904,
+        "mean_alignment_per_predator_decision": -0.06151871700467817,
+        "moving_action_fraction": 0.415705108214308,
+        "visible_moving_decisions": 3234,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.3686014238466572,
+          "0.0": -0.2698745791892842,
+          "1.0": -0.15898778808194683
+        },
+        "mean_alignment_given_visible_and_moving": -0.30498750455658785,
+        "moving_fraction_given_visible": 0.4633901705115346,
+        "mean_expected_alignment_given_visible_and_moving": -0.36860142455610967,
+        "mean_expected_moving_probability_given_visible": 0.46054104954733743
+      },
+      {
+        "episode": 19,
+        "seed": 61,
+        "steps": 1221,
+        "predator_decisions": 17119,
+        "movement": {
+          "means": {
+            "predator_population": 14.0,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2842113158169072,
+            "visible_target_projection_per_tick": 0.15033205935315355,
+            "visible_target_displacement_per_tick": 1.3306611091010683,
+            "visible_target_stationary_fraction": 0.5294633461943178,
+            "visible_target_displacement_alignment_when_moving": 0.08327351779913146,
+            "visible_pair_closing_per_tick": -0.18056197465821677
+          },
+          "samples": {
+            "predator_population": 1221,
+            "all_predator_nearest_neighbor_distance_normalized": 17094,
+            "visible_target_projection_per_tick": 5702,
+            "visible_target_displacement_per_tick": 5702,
+            "visible_target_stationary_fraction": 5702,
+            "visible_target_displacement_alignment_when_moving": 2683,
+            "visible_pair_closing_per_tick": 5695
+          },
+          "counts": {
+            "decision_intervals": 1221,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5710,
+            "target_death_intervals_with_focal_surviving": 7,
+            "focal_death_intervals": 8
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19513295732288508,
+        "visible_decisions": 5710,
+        "visible_decision_fraction": 0.3335475202990829,
+        "mean_alignment_per_predator_decision": -0.04771270597562493,
+        "moving_action_fraction": 0.2953443542262983,
+        "visible_moving_decisions": 2080,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4601564125195012,
+          "0.0": -0.3554097656693541,
+          "1.0": -0.23767399795181915
+        },
+        "mean_alignment_given_visible_and_moving": -0.39268933345996304,
+        "moving_fraction_given_visible": 0.36427320490367776,
+        "mean_expected_alignment_given_visible_and_moving": -0.4601564134943871,
+        "mean_expected_moving_probability_given_visible": 0.3648112465677342
+      }
+    ],
+    "0.0": [
+      {
+        "episode": 0,
+        "seed": 42,
+        "steps": 1128,
+        "predator_decisions": 14907,
+        "movement": {
+          "means": {
+            "predator_population": 13.195921985815604,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2815872520481415,
+            "visible_target_projection_per_tick": 0.042360479200642225,
+            "visible_target_displacement_per_tick": 1.5388531233092426,
+            "visible_target_stationary_fraction": 0.5094047925792321,
+            "visible_target_displacement_alignment_when_moving": 0.009476972814996742,
+            "visible_pair_closing_per_tick": -0.33059330178883717
+          },
+          "samples": {
+            "predator_population": 1128,
+            "all_predator_nearest_neighbor_distance_normalized": 14885,
+            "visible_target_projection_per_tick": 7762,
+            "visible_target_displacement_per_tick": 7762,
+            "visible_target_stationary_fraction": 7762,
+            "visible_target_displacement_alignment_when_moving": 3808,
+            "visible_pair_closing_per_tick": 7750
+          },
+          "counts": {
+            "decision_intervals": 1128,
+            "physics_ticks": 7229,
+            "visible_target_intervals": 7774,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 12
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.2003008159992108,
+        "visible_decisions": 7774,
+        "visible_decision_fraction": 0.5214999664587107,
+        "mean_alignment_per_predator_decision": -0.04269595478058931,
+        "moving_action_fraction": 0.3484269135305561,
+        "visible_moving_decisions": 2787,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4195905682458293,
+          "0.0": -0.3048055714107035,
+          "1.0": -0.17660393873025704
+        },
+        "mean_alignment_given_visible_and_moving": -0.22837050517195723,
+        "moving_fraction_given_visible": 0.35850270131206585,
+        "mean_expected_alignment_given_visible_and_moving": -0.3048055722597537,
+        "mean_expected_moving_probability_given_visible": 0.3595662805487623
+      },
+      {
+        "episode": 1,
+        "seed": 43,
+        "steps": 1229,
+        "predator_decisions": 16836,
+        "movement": {
+          "means": {
+            "predator_population": 13.680227827502033,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28412652487691836,
+            "visible_target_projection_per_tick": 0.029750981648217944,
+            "visible_target_displacement_per_tick": 1.144551247544378,
+            "visible_target_stationary_fraction": 0.5644528411568086,
+            "visible_target_displacement_alignment_when_moving": 0.008169088324852735,
+            "visible_pair_closing_per_tick": -0.21882403289891805
+          },
+          "samples": {
+            "predator_population": 1229,
+            "all_predator_nearest_neighbor_distance_normalized": 16813,
+            "visible_target_projection_per_tick": 6881,
+            "visible_target_displacement_per_tick": 6881,
+            "visible_target_stationary_fraction": 6881,
+            "visible_target_displacement_alignment_when_moving": 2997,
+            "visible_pair_closing_per_tick": 6876
+          },
+          "counts": {
+            "decision_intervals": 1229,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6890,
+            "target_death_intervals_with_focal_surviving": 5,
+            "focal_death_intervals": 9
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.1860319751332391,
+        "visible_decisions": 6890,
+        "visible_decision_fraction": 0.4092421002613447,
+        "mean_alignment_per_predator_decision": -0.034704005202150584,
+        "moving_action_fraction": 0.3121287716797339,
+        "visible_moving_decisions": 2194,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4459763324954559,
+          "0.0": -0.3362906952692495,
+          "1.0": -0.21247281638769547
+        },
+        "mean_alignment_given_visible_and_moving": -0.26630657774995775,
+        "moving_fraction_given_visible": 0.3184325108853411,
+        "mean_expected_alignment_given_visible_and_moving": -0.33629069600043454,
+        "mean_expected_moving_probability_given_visible": 0.3193079592920685
+      },
+      {
+        "episode": 2,
+        "seed": 44,
+        "steps": 1231,
+        "predator_decisions": 14462,
+        "movement": {
+          "means": {
+            "predator_population": 11.72948822095857,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2984550852512955,
+            "visible_target_projection_per_tick": 0.027694319435986547,
+            "visible_target_displacement_per_tick": 1.6009529465006467,
+            "visible_target_stationary_fraction": 0.5149724192277384,
+            "visible_target_displacement_alignment_when_moving": -0.011008771544872092,
+            "visible_pair_closing_per_tick": -0.4009079197594459
+          },
+          "samples": {
+            "predator_population": 1231,
+            "all_predator_nearest_neighbor_distance_normalized": 14439,
+            "visible_target_projection_per_tick": 5076,
+            "visible_target_displacement_per_tick": 5076,
+            "visible_target_stationary_fraction": 5076,
+            "visible_target_displacement_alignment_when_moving": 2462,
+            "visible_pair_closing_per_tick": 5066
+          },
+          "counts": {
+            "decision_intervals": 1231,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5087,
+            "focal_death_intervals": 11,
+            "target_death_intervals_with_focal_surviving": 10
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18430577893581235,
+        "visible_decisions": 5087,
+        "visible_decision_fraction": 0.35174941225280043,
+        "mean_alignment_per_predator_decision": -0.03341817651468951,
+        "moving_action_fraction": 0.3110911353892961,
+        "visible_moving_decisions": 1889,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43802683437779255,
+          "0.0": -0.3354182748237257,
+          "1.0": -0.21012883445195135
+        },
+        "mean_alignment_given_visible_and_moving": -0.2558463042643937,
+        "moving_fraction_given_visible": 0.37133870650678197,
+        "mean_expected_alignment_given_visible_and_moving": -0.3354182747728729,
+        "mean_expected_moving_probability_given_visible": 0.3679471800862937
+      },
+      {
+        "episode": 3,
+        "seed": 45,
+        "steps": 1238,
+        "predator_decisions": 15627,
+        "movement": {
+          "means": {
+            "predator_population": 12.606623586429725,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28697094283894814,
+            "visible_target_projection_per_tick": 0.10692513053785957,
+            "visible_target_displacement_per_tick": 1.5570293093506573,
+            "visible_target_stationary_fraction": 0.45600423205783813,
+            "visible_target_displacement_alignment_when_moving": 0.04744212732371734,
+            "visible_pair_closing_per_tick": -0.2781602416952865
+          },
+          "samples": {
+            "predator_population": 1238,
+            "all_predator_nearest_neighbor_distance_normalized": 15607,
+            "visible_target_projection_per_tick": 5671,
+            "visible_target_displacement_per_tick": 5671,
+            "visible_target_stationary_fraction": 5671,
+            "visible_target_displacement_alignment_when_moving": 3085,
+            "visible_pair_closing_per_tick": 5665
+          },
+          "counts": {
+            "decision_intervals": 1238,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5680,
+            "target_death_intervals_with_focal_surviving": 6,
+            "focal_death_intervals": 9
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.19061320544364796,
+        "visible_decisions": 5680,
+        "visible_decision_fraction": 0.3634734753951494,
+        "mean_alignment_per_predator_decision": -0.036769250180229224,
+        "moving_action_fraction": 0.3516349907211877,
+        "visible_moving_decisions": 2329,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.417606614367787,
+          "0.0": -0.3064991544273043,
+          "1.0": -0.17996282677692063
+        },
+        "mean_alignment_given_visible_and_moving": -0.2467123540431267,
+        "moving_fraction_given_visible": 0.4100352112676056,
+        "mean_expected_alignment_given_visible_and_moving": -0.3064991560371741,
+        "mean_expected_moving_probability_given_visible": 0.4102820476838249
+      },
+      {
+        "episode": 4,
+        "seed": 46,
+        "steps": 1232,
+        "predator_decisions": 17509,
+        "movement": {
+          "means": {
+            "predator_population": 14.19237012987013,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2646569315253207,
+            "visible_target_projection_per_tick": 0.08218401433763023,
+            "visible_target_displacement_per_tick": 1.2401702966979313,
+            "visible_target_stationary_fraction": 0.5370370370370371,
+            "visible_target_displacement_alignment_when_moving": 0.03670193348250903,
+            "visible_pair_closing_per_tick": -0.22414486893573657
+          },
+          "samples": {
+            "predator_population": 1232,
+            "all_predator_nearest_neighbor_distance_normalized": 17485,
+            "visible_target_projection_per_tick": 8370,
+            "visible_target_displacement_per_tick": 8370,
+            "visible_target_stationary_fraction": 8370,
+            "visible_target_displacement_alignment_when_moving": 3875,
+            "visible_pair_closing_per_tick": 8358
+          },
+          "counts": {
+            "decision_intervals": 1232,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 8381,
+            "target_death_intervals_with_focal_surviving": 12,
+            "focal_death_intervals": 11
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18880324354605293,
+        "visible_decisions": 8381,
+        "visible_decision_fraction": 0.47866811354160715,
+        "mean_alignment_per_predator_decision": -0.04180236614752245,
+        "moving_action_fraction": 0.3285167628076989,
+        "visible_moving_decisions": 2856,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4205190216878938,
+          "0.0": -0.31498739351322746,
+          "1.0": -0.19422061239172855
+        },
+        "mean_alignment_given_visible_and_moving": -0.25627367957877123,
+        "moving_fraction_given_visible": 0.3407707910750507,
+        "mean_expected_alignment_given_visible_and_moving": -0.31498739435460454,
+        "mean_expected_moving_probability_given_visible": 0.3407391502688326
+      },
+      {
+        "episode": 5,
+        "seed": 47,
+        "steps": 1256,
+        "predator_decisions": 17184,
+        "movement": {
+          "means": {
+            "predator_population": 13.664012738853502,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28081893170043754,
+            "visible_target_projection_per_tick": 0.055447386236235525,
+            "visible_target_displacement_per_tick": 1.558718213962822,
+            "visible_target_stationary_fraction": 0.5041518386714117,
+            "visible_target_displacement_alignment_when_moving": 0.016775081853162965,
+            "visible_pair_closing_per_tick": -0.39169806057972606
+          },
+          "samples": {
+            "predator_population": 1256,
+            "all_predator_nearest_neighbor_distance_normalized": 17162,
+            "visible_target_projection_per_tick": 7587,
+            "visible_target_displacement_per_tick": 7587,
+            "visible_target_stationary_fraction": 7587,
+            "visible_target_displacement_alignment_when_moving": 3762,
+            "visible_pair_closing_per_tick": 7582
+          },
+          "counts": {
+            "decision_intervals": 1256,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7597,
+            "focal_death_intervals": 10,
+            "target_death_intervals_with_focal_surviving": 5
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18253781086102872,
+        "visible_decisions": 7597,
+        "visible_decision_fraction": 0.44209729981378026,
+        "mean_alignment_per_predator_decision": -0.04289077433573773,
+        "moving_action_fraction": 0.3438663873370577,
+        "visible_moving_decisions": 2801,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.41600228610118895,
+          "0.0": -0.2998220878101233,
+          "1.0": -0.1704808210420705
+        },
+        "mean_alignment_given_visible_and_moving": -0.2631328333399919,
+        "moving_fraction_given_visible": 0.3686981703303936,
+        "mean_expected_alignment_given_visible_and_moving": -0.29982208820109596,
+        "mean_expected_moving_probability_given_visible": 0.3689243321604603
+      },
+      {
+        "episode": 6,
+        "seed": 48,
+        "steps": 1237,
+        "predator_decisions": 18516,
+        "movement": {
+          "means": {
+            "predator_population": 14.944219886822959,
+            "all_predator_nearest_neighbor_distance_normalized": 0.26613632290652534,
+            "visible_target_projection_per_tick": 0.09338184469996132,
+            "visible_target_displacement_per_tick": 1.2818552505733156,
+            "visible_target_stationary_fraction": 0.5440477806434098,
+            "visible_target_displacement_alignment_when_moving": 0.045185596919598656,
+            "visible_pair_closing_per_tick": -0.2367034799173712
+          },
+          "samples": {
+            "predator_population": 1237,
+            "all_predator_nearest_neighbor_distance_normalized": 18486,
+            "visible_target_projection_per_tick": 7367,
+            "visible_target_displacement_per_tick": 7367,
+            "visible_target_stationary_fraction": 7367,
+            "visible_target_displacement_alignment_when_moving": 3359,
+            "visible_pair_closing_per_tick": 7357
+          },
+          "counts": {
+            "decision_intervals": 1237,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7379,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 10
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18366082848533977,
+        "visible_decisions": 7379,
+        "visible_decision_fraction": 0.3985201987470296,
+        "mean_alignment_per_predator_decision": -0.036259432360237556,
+        "moving_action_fraction": 0.29082955281918343,
+        "visible_moving_decisions": 2446,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4399294378192989,
+          "0.0": -0.3275927069063239,
+          "1.0": -0.19710962924599756
+        },
+        "mean_alignment_given_visible_and_moving": -0.2744806416934418,
+        "moving_fraction_given_visible": 0.3314812305190405,
+        "mean_expected_alignment_given_visible_and_moving": -0.32759270718033245,
+        "mean_expected_moving_probability_given_visible": 0.3276710537674314
+      },
+      {
+        "episode": 7,
+        "seed": 49,
+        "steps": 1232,
+        "predator_decisions": 17360,
+        "movement": {
+          "means": {
+            "predator_population": 14.0762987012987,
+            "all_predator_nearest_neighbor_distance_normalized": 0.26679578961552,
+            "visible_target_projection_per_tick": 0.08130289295930464,
+            "visible_target_displacement_per_tick": 1.2430649658335096,
+            "visible_target_stationary_fraction": 0.5690213869086196,
+            "visible_target_displacement_alignment_when_moving": 0.0381676639496741,
+            "visible_pair_closing_per_tick": -0.22678725789395743
+          },
+          "samples": {
+            "predator_population": 1232,
+            "all_predator_nearest_neighbor_distance_normalized": 17342,
+            "visible_target_projection_per_tick": 7715,
+            "visible_target_displacement_per_tick": 7715,
+            "visible_target_stationary_fraction": 7715,
+            "visible_target_displacement_alignment_when_moving": 3325,
+            "visible_pair_closing_per_tick": 7706
+          },
+          "counts": {
+            "decision_intervals": 1232,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7722,
+            "focal_death_intervals": 7,
+            "target_death_intervals_with_focal_surviving": 9
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18784805550342495,
+        "visible_decisions": 7722,
+        "visible_decision_fraction": 0.44481566820276497,
+        "mean_alignment_per_predator_decision": -0.03319409451849147,
+        "moving_action_fraction": 0.2960253456221198,
+        "visible_moving_decisions": 2435,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4584451866591996,
+          "0.0": -0.34630663985894944,
+          "1.0": -0.21566208581727375
+        },
+        "mean_alignment_given_visible_and_moving": -0.2366527642057544,
+        "moving_fraction_given_visible": 0.3153328153328153,
+        "mean_expected_alignment_given_visible_and_moving": -0.3463066402120316,
+        "mean_expected_moving_probability_given_visible": 0.31694455793994725
+      },
+      {
+        "episode": 8,
+        "seed": 50,
+        "steps": 1248,
+        "predator_decisions": 16754,
+        "movement": {
+          "means": {
+            "predator_population": 13.401442307692308,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2810077450803467,
+            "visible_target_projection_per_tick": 0.18725305181508495,
+            "visible_target_displacement_per_tick": 1.6946867743350875,
+            "visible_target_stationary_fraction": 0.49169651579290136,
+            "visible_target_displacement_alignment_when_moving": 0.09347108861629412,
+            "visible_pair_closing_per_tick": -0.2501036374023786
+          },
+          "samples": {
+            "predator_population": 1248,
+            "all_predator_nearest_neighbor_distance_normalized": 16725,
+            "visible_target_projection_per_tick": 6142,
+            "visible_target_displacement_per_tick": 6142,
+            "visible_target_stationary_fraction": 6142,
+            "visible_target_displacement_alignment_when_moving": 3122,
+            "visible_pair_closing_per_tick": 6131
+          },
+          "counts": {
+            "decision_intervals": 1248,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6151,
+            "focal_death_intervals": 9,
+            "target_death_intervals_with_focal_surviving": 11
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18410144104749337,
+        "visible_decisions": 6151,
+        "visible_decision_fraction": 0.36713620627909754,
+        "mean_alignment_per_predator_decision": -0.035437116671539204,
+        "moving_action_fraction": 0.33430822490151607,
+        "visible_moving_decisions": 2379,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4103356008545761,
+          "0.0": -0.29810576924853927,
+          "1.0": -0.17301787378994998
+        },
+        "mean_alignment_given_visible_and_moving": -0.24956429286043205,
+        "moving_fraction_given_visible": 0.38676637945049586,
+        "mean_expected_alignment_given_visible_and_moving": -0.298105770044225,
+        "mean_expected_moving_probability_given_visible": 0.3882922081179606
+      },
+      {
+        "episode": 9,
+        "seed": 51,
+        "steps": 1251,
+        "predator_decisions": 16021,
+        "movement": {
+          "means": {
+            "predator_population": 12.784972022382094,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2878049835930543,
+            "visible_target_projection_per_tick": 0.15084405980736731,
+            "visible_target_displacement_per_tick": 1.722565245328824,
+            "visible_target_stationary_fraction": 0.4605802327487297,
+            "visible_target_displacement_alignment_when_moving": 0.06322746697284704,
+            "visible_pair_closing_per_tick": -0.3128666876753848
+          },
+          "samples": {
+            "predator_population": 1251,
+            "all_predator_nearest_neighbor_distance_normalized": 15994,
+            "visible_target_projection_per_tick": 6101,
+            "visible_target_displacement_per_tick": 6101,
+            "visible_target_stationary_fraction": 6101,
+            "visible_target_displacement_alignment_when_moving": 3291,
+            "visible_pair_closing_per_tick": 6084
+          },
+          "counts": {
+            "decision_intervals": 1251,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6118,
+            "focal_death_intervals": 17,
+            "target_death_intervals_with_focal_surviving": 17
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18656886565849434,
+        "visible_decisions": 6118,
+        "visible_decision_fraction": 0.38187379064977217,
+        "mean_alignment_per_predator_decision": -0.03506188856917539,
+        "moving_action_fraction": 0.3653330004369265,
+        "visible_moving_decisions": 2466,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.41055771863297724,
+          "0.0": -0.30419540885969504,
+          "1.0": -0.18455175780977262
+        },
+        "mean_alignment_given_visible_and_moving": -0.22778853072455754,
+        "moving_fraction_given_visible": 0.4030728996404054,
+        "mean_expected_alignment_given_visible_and_moving": -0.3041954101514155,
+        "mean_expected_moving_probability_given_visible": 0.4066449654171373
+      },
+      {
+        "episode": 10,
+        "seed": 52,
+        "steps": 1255,
+        "predator_decisions": 15599,
+        "movement": {
+          "means": {
+            "predator_population": 12.407171314741037,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2778165430625351,
+            "visible_target_projection_per_tick": 0.20472536412287148,
+            "visible_target_displacement_per_tick": 1.6421015928223668,
+            "visible_target_stationary_fraction": 0.4996258885147774,
+            "visible_target_displacement_alignment_when_moving": 0.09692999099499817,
+            "visible_pair_closing_per_tick": -0.2898113590917991
+          },
+          "samples": {
+            "predator_population": 1255,
+            "all_predator_nearest_neighbor_distance_normalized": 15571,
+            "visible_target_projection_per_tick": 5346,
+            "visible_target_displacement_per_tick": 5346,
+            "visible_target_stationary_fraction": 5346,
+            "visible_target_displacement_alignment_when_moving": 2675,
+            "visible_pair_closing_per_tick": 5336
+          },
+          "counts": {
+            "decision_intervals": 1255,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5358,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 10
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.17001148028316246,
+        "visible_decisions": 5358,
+        "visible_decision_fraction": 0.34348355663824603,
+        "mean_alignment_per_predator_decision": -0.029635448506448663,
+        "moving_action_fraction": 0.3338675556125393,
+        "visible_moving_decisions": 2018,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.40181123745198716,
+          "0.0": -0.29279721485792226,
+          "1.0": -0.16464917282072422
+        },
+        "mean_alignment_given_visible_and_moving": -0.22907996097725108,
+        "moving_fraction_given_visible": 0.3766330720418066,
+        "mean_expected_alignment_given_visible_and_moving": -0.29279721493106825,
+        "mean_expected_moving_probability_given_visible": 0.376107113590521
+      },
+      {
+        "episode": 11,
+        "seed": 53,
+        "steps": 1253,
+        "predator_decisions": 17722,
+        "movement": {
+          "means": {
+            "predator_population": 14.118116520351156,
+            "all_predator_nearest_neighbor_distance_normalized": 0.25588527669750405,
+            "visible_target_projection_per_tick": 0.14440983647392144,
+            "visible_target_displacement_per_tick": 1.4979304419084856,
+            "visible_target_stationary_fraction": 0.5378385925719072,
+            "visible_target_displacement_alignment_when_moving": 0.07422034343449249,
+            "visible_pair_closing_per_tick": -0.2886865325939891
+          },
+          "samples": {
+            "predator_population": 1253,
+            "all_predator_nearest_neighbor_distance_normalized": 17690,
+            "visible_target_projection_per_tick": 7162,
+            "visible_target_displacement_per_tick": 7162,
+            "visible_target_stationary_fraction": 7162,
+            "visible_target_displacement_alignment_when_moving": 3310,
+            "visible_pair_closing_per_tick": 7147
+          },
+          "counts": {
+            "decision_intervals": 1253,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7174,
+            "target_death_intervals_with_focal_surviving": 15,
+            "focal_death_intervals": 12
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.1759164639810167,
+        "visible_decisions": 7174,
+        "visible_decision_fraction": 0.40480758379415416,
+        "mean_alignment_per_predator_decision": -0.031189616883612607,
+        "moving_action_fraction": 0.2994583004175601,
+        "visible_moving_decisions": 2495,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.42663550431724756,
+          "0.0": -0.3107085154498033,
+          "1.0": -0.17630001315168992
+        },
+        "mean_alignment_given_visible_and_moving": -0.22154003623702712,
+        "moving_fraction_given_visible": 0.3477836632283245,
+        "mean_expected_alignment_given_visible_and_moving": -0.31070851563787283,
+        "mean_expected_moving_probability_given_visible": 0.34916746294781464
+      },
+      {
+        "episode": 12,
+        "seed": 54,
+        "steps": 1249,
+        "predator_decisions": 17910,
+        "movement": {
+          "means": {
+            "predator_population": 14.32185748598879,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27560556492461186,
+            "visible_target_projection_per_tick": 0.1583291149815005,
+            "visible_target_displacement_per_tick": 1.4922850862710269,
+            "visible_target_stationary_fraction": 0.5018461084034854,
+            "visible_target_displacement_alignment_when_moving": 0.06489987224330572,
+            "visible_pair_closing_per_tick": -0.2763177762511314
+          },
+          "samples": {
+            "predator_population": 1249,
+            "all_predator_nearest_neighbor_distance_normalized": 17888,
+            "visible_target_projection_per_tick": 6771,
+            "visible_target_displacement_per_tick": 6771,
+            "visible_target_stationary_fraction": 6771,
+            "visible_target_displacement_alignment_when_moving": 3373,
+            "visible_pair_closing_per_tick": 6760
+          },
+          "counts": {
+            "decision_intervals": 1249,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6778,
+            "target_death_intervals_with_focal_surviving": 11,
+            "focal_death_intervals": 7
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18101829522822188,
+        "visible_decisions": 6778,
+        "visible_decision_fraction": 0.37844779452819655,
+        "mean_alignment_per_predator_decision": -0.037758894023950766,
+        "moving_action_fraction": 0.3104969290898939,
+        "visible_moving_decisions": 2551,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.42008013881239814,
+          "0.0": -0.3159015191686036,
+          "1.0": -0.19536205638146717
+        },
+        "mean_alignment_given_visible_and_moving": -0.2650967432257775,
+        "moving_fraction_given_visible": 0.3763647093537917,
+        "mean_expected_alignment_given_visible_and_moving": -0.3159015192975641,
+        "mean_expected_moving_probability_given_visible": 0.37406573049396297
+      },
+      {
+        "episode": 13,
+        "seed": 55,
+        "steps": 1235,
+        "predator_decisions": 18163,
+        "movement": {
+          "means": {
+            "predator_population": 14.687449392712551,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2725800098462999,
+            "visible_target_projection_per_tick": 0.0023582576668204763,
+            "visible_target_displacement_per_tick": 1.2036630627757168,
+            "visible_target_stationary_fraction": 0.5562293274531422,
+            "visible_target_displacement_alignment_when_moving": -0.007121768503817928,
+            "visible_pair_closing_per_tick": -0.29021510101588016
+          },
+          "samples": {
+            "predator_population": 1235,
+            "all_predator_nearest_neighbor_distance_normalized": 18139,
+            "visible_target_projection_per_tick": 7256,
+            "visible_target_displacement_per_tick": 7256,
+            "visible_target_stationary_fraction": 7256,
+            "visible_target_displacement_alignment_when_moving": 3220,
+            "visible_pair_closing_per_tick": 7242
+          },
+          "counts": {
+            "decision_intervals": 1235,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7267,
+            "focal_death_intervals": 11,
+            "target_death_intervals_with_focal_surviving": 14
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18833462119185013,
+        "visible_decisions": 7267,
+        "visible_decision_fraction": 0.40009910257116116,
+        "mean_alignment_per_predator_decision": -0.039367014510369704,
+        "moving_action_fraction": 0.2861311457358366,
+        "visible_moving_decisions": 2349,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4553807970714248,
+          "0.0": -0.3437879284978837,
+          "1.0": -0.20303129871808404
+        },
+        "mean_alignment_given_visible_and_moving": -0.3043946720101511,
+        "moving_fraction_given_visible": 0.3232420531168295,
+        "mean_expected_alignment_given_visible_and_moving": -0.3437879292864871,
+        "mean_expected_moving_probability_given_visible": 0.3237310619422842
+      },
+      {
+        "episode": 14,
+        "seed": 56,
+        "steps": 1239,
+        "predator_decisions": 17335,
+        "movement": {
+          "means": {
+            "predator_population": 13.971751412429379,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2692685744386379,
+            "visible_target_projection_per_tick": 0.15322907689119605,
+            "visible_target_displacement_per_tick": 1.345040746693922,
+            "visible_target_stationary_fraction": 0.5616919617762788,
+            "visible_target_displacement_alignment_when_moving": 0.08472638662363564,
+            "visible_pair_closing_per_tick": -0.22478963712270575
+          },
+          "samples": {
+            "predator_population": 1239,
+            "all_predator_nearest_neighbor_distance_normalized": 17311,
+            "visible_target_projection_per_tick": 7116,
+            "visible_target_displacement_per_tick": 7116,
+            "visible_target_stationary_fraction": 7116,
+            "visible_target_displacement_alignment_when_moving": 3119,
+            "visible_pair_closing_per_tick": 7106
+          },
+          "counts": {
+            "decision_intervals": 1239,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7124,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 10
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.1808780258663803,
+        "visible_decisions": 7124,
+        "visible_decision_fraction": 0.4109604845687915,
+        "mean_alignment_per_predator_decision": -0.027210259247368362,
+        "moving_action_fraction": 0.30925872512258434,
+        "visible_moving_decisions": 2304,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4004002682324291,
+          "0.0": -0.2817785634734841,
+          "1.0": -0.14479545678524852
+        },
+        "mean_alignment_given_visible_and_moving": -0.20472649481472682,
+        "moving_fraction_given_visible": 0.32341381246490736,
+        "mean_expected_alignment_given_visible_and_moving": -0.2817785648090927,
+        "mean_expected_moving_probability_given_visible": 0.3332593421189237
+      },
+      {
+        "episode": 15,
+        "seed": 57,
+        "steps": 1244,
+        "predator_decisions": 17285,
+        "movement": {
+          "means": {
+            "predator_population": 13.870578778135048,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2688676540278295,
+            "visible_target_projection_per_tick": 0.07276818294295423,
+            "visible_target_displacement_per_tick": 1.2302031257348653,
+            "visible_target_stationary_fraction": 0.5763373190685966,
+            "visible_target_displacement_alignment_when_moving": 0.03444748725184784,
+            "visible_pair_closing_per_tick": -0.2508883267247165
+          },
+          "samples": {
+            "predator_population": 1244,
+            "all_predator_nearest_neighbor_distance_normalized": 17255,
+            "visible_target_projection_per_tick": 7945,
+            "visible_target_displacement_per_tick": 7945,
+            "visible_target_stationary_fraction": 7945,
+            "visible_target_displacement_alignment_when_moving": 3366,
+            "visible_pair_closing_per_tick": 7933
+          },
+          "counts": {
+            "decision_intervals": 1244,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7953,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 12
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18548437467812892,
+        "visible_decisions": 7953,
+        "visible_decision_fraction": 0.4601099218975991,
+        "mean_alignment_per_predator_decision": -0.03473426619011094,
+        "moving_action_fraction": 0.31420306624240674,
+        "visible_moving_decisions": 2469,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.46346261531630056,
+          "0.0": -0.34798179071095975,
+          "1.0": -0.20314325599729097
+        },
+        "mean_alignment_given_visible_and_moving": -0.24316799963388722,
+        "moving_fraction_given_visible": 0.3104488872123727,
+        "mean_expected_alignment_given_visible_and_moving": -0.34798179194351714,
+        "mean_expected_moving_probability_given_visible": 0.3083812707372471
+      },
+      {
+        "episode": 16,
+        "seed": 58,
+        "steps": 1254,
+        "predator_decisions": 18752,
+        "movement": {
+          "means": {
+            "predator_population": 14.92902711323764,
+            "all_predator_nearest_neighbor_distance_normalized": 0.26125050744782374,
+            "visible_target_projection_per_tick": 0.10811662738679893,
+            "visible_target_displacement_per_tick": 1.151097212990177,
+            "visible_target_stationary_fraction": 0.5866685862366829,
+            "visible_target_displacement_alignment_when_moving": 0.06063117224815512,
+            "visible_pair_closing_per_tick": -0.2056576546797621
+          },
+          "samples": {
+            "predator_population": 1254,
+            "all_predator_nearest_neighbor_distance_normalized": 18721,
+            "visible_target_projection_per_tick": 6946,
+            "visible_target_displacement_per_tick": 6946,
+            "visible_target_stationary_fraction": 6946,
+            "visible_target_displacement_alignment_when_moving": 2871,
+            "visible_pair_closing_per_tick": 6933
+          },
+          "counts": {
+            "decision_intervals": 1254,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6959,
+            "focal_death_intervals": 13,
+            "target_death_intervals_with_focal_surviving": 13
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.172956340720486,
+        "visible_decisions": 6959,
+        "visible_decision_fraction": 0.3711070819112628,
+        "mean_alignment_per_predator_decision": -0.027842112596730858,
+        "moving_action_fraction": 0.26055887372013653,
+        "visible_moving_decisions": 2061,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4414213548030483,
+          "0.0": -0.3094900644576834,
+          "1.0": -0.15325357794546512
+        },
+        "mean_alignment_given_visible_and_moving": -0.25332134663459344,
+        "moving_fraction_given_visible": 0.2961632418450927,
+        "mean_expected_alignment_given_visible_and_moving": -0.30949006487680925,
+        "mean_expected_moving_probability_given_visible": 0.2957434319330482
+      },
+      {
+        "episode": 17,
+        "seed": 59,
+        "steps": 1227,
+        "predator_decisions": 16356,
+        "movement": {
+          "means": {
+            "predator_population": 13.308068459657703,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27628283510122337,
+            "visible_target_projection_per_tick": 0.0006858329611529473,
+            "visible_target_displacement_per_tick": 0.9916427451487559,
+            "visible_target_stationary_fraction": 0.5936874518860662,
+            "visible_target_displacement_alignment_when_moving": -0.006587290398172135,
+            "visible_pair_closing_per_tick": -0.2083763169979681
+          },
+          "samples": {
+            "predator_population": 1227,
+            "all_predator_nearest_neighbor_distance_normalized": 16329,
+            "visible_target_projection_per_tick": 6495,
+            "visible_target_displacement_per_tick": 6495,
+            "visible_target_stationary_fraction": 6495,
+            "visible_target_displacement_alignment_when_moving": 2639,
+            "visible_pair_closing_per_tick": 6484
+          },
+          "counts": {
+            "decision_intervals": 1227,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6508,
+            "focal_death_intervals": 13,
+            "target_death_intervals_with_focal_surviving": 11
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.18122390502423835,
+        "visible_decisions": 6508,
+        "visible_decision_fraction": 0.3978967962827097,
+        "mean_alignment_per_predator_decision": -0.02630227085048576,
+        "moving_action_fraction": 0.2637564196625092,
+        "visible_moving_decisions": 1913,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4275325850046943,
+          "0.0": -0.3190130321448779,
+          "1.0": -0.1951474548985415
+        },
+        "mean_alignment_given_visible_and_moving": -0.22488235338763465,
+        "moving_fraction_given_visible": 0.2939459127228027,
+        "mean_expected_alignment_given_visible_and_moving": -0.31901303304542905,
+        "mean_expected_moving_probability_given_visible": 0.2958549872320595
+      },
+      {
+        "episode": 18,
+        "seed": 60,
+        "steps": 1238,
+        "predator_decisions": 15407,
+        "movement": {
+          "means": {
+            "predator_population": 12.425686591276252,
+            "all_predator_nearest_neighbor_distance_normalized": 0.29022303749299166,
+            "visible_target_projection_per_tick": 0.1001775760528871,
+            "visible_target_displacement_per_tick": 1.582807173036619,
+            "visible_target_stationary_fraction": 0.4165396869372489,
+            "visible_target_displacement_alignment_when_moving": 0.05221481431020146,
+            "visible_pair_closing_per_tick": -0.21601505868696377
+          },
+          "samples": {
+            "predator_population": 1238,
+            "all_predator_nearest_neighbor_distance_normalized": 15383,
+            "visible_target_projection_per_tick": 7219,
+            "visible_target_displacement_per_tick": 7219,
+            "visible_target_stationary_fraction": 7219,
+            "visible_target_displacement_alignment_when_moving": 4212,
+            "visible_pair_closing_per_tick": 7206
+          },
+          "counts": {
+            "decision_intervals": 1238,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7233,
+            "focal_death_intervals": 14,
+            "target_death_intervals_with_focal_surviving": 13
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.205235920792898,
+        "visible_decisions": 7233,
+        "visible_decision_fraction": 0.4694619328876485,
+        "mean_alignment_per_predator_decision": -0.04867037729616966,
+        "moving_action_fraction": 0.40728240410203154,
+        "visible_moving_decisions": 3149,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.40592711295265677,
+          "0.0": -0.3023058845755552,
+          "1.0": -0.18056839318282994
+        },
+        "mean_alignment_given_visible_and_moving": -0.23812781930837915,
+        "moving_fraction_given_visible": 0.4353656850546108,
+        "mean_expected_alignment_given_visible_and_moving": -0.3023058850300863,
+        "mean_expected_moving_probability_given_visible": 0.4388025421954881
+      },
+      {
+        "episode": 19,
+        "seed": 61,
+        "steps": 1263,
+        "predator_decisions": 16432,
+        "movement": {
+          "means": {
+            "predator_population": 12.982581155977831,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28472755191937205,
+            "visible_target_projection_per_tick": 0.210587830519134,
+            "visible_target_displacement_per_tick": 1.8571474149070557,
+            "visible_target_stationary_fraction": 0.4107555262289673,
+            "visible_target_displacement_alignment_when_moving": 0.08367916518310829,
+            "visible_pair_closing_per_tick": -0.26028134826912624
+          },
+          "samples": {
+            "predator_population": 1263,
+            "all_predator_nearest_neighbor_distance_normalized": 16397,
+            "visible_target_projection_per_tick": 6062,
+            "visible_target_displacement_per_tick": 6062,
+            "visible_target_stationary_fraction": 6062,
+            "visible_target_displacement_alignment_when_moving": 3572,
+            "visible_pair_closing_per_tick": 6043
+          },
+          "counts": {
+            "decision_intervals": 1263,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6080,
+            "focal_death_intervals": 18,
+            "target_death_intervals_with_focal_surviving": 19
+          }
+        },
+        "neutral_original_actions_verified": true,
+        "mean_visible_conspecific_distance_normalized": 0.20301080417274006,
+        "visible_decisions": 6080,
+        "visible_decision_fraction": 0.37000973709834467,
+        "mean_alignment_per_predator_decision": -0.043283973950857126,
+        "moving_action_fraction": 0.3692794547224927,
+        "visible_moving_decisions": 2698,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4407761060207396,
+          "0.0": -0.34587124852919454,
+          "1.0": -0.23186494739737035
+        },
+        "mean_alignment_given_visible_and_moving": -0.26361833208320395,
+        "moving_fraction_given_visible": 0.44375,
+        "mean_expected_alignment_given_visible_and_moving": -0.3458712495539481,
+        "mean_expected_moving_probability_given_visible": 0.4397500350378963
+      }
+    ],
+    "1.0": [
+      {
+        "episode": 0,
+        "seed": 42,
+        "steps": 1236,
+        "predator_decisions": 17086,
+        "movement": {
+          "means": {
+            "predator_population": 13.805016181229773,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2735477087429058,
+            "visible_target_projection_per_tick": 0.13797803198913264,
+            "visible_target_displacement_per_tick": 1.2906502963101023,
+            "visible_target_stationary_fraction": 0.5496774193548387,
+            "visible_target_displacement_alignment_when_moving": 0.0883219930237312,
+            "visible_pair_closing_per_tick": -0.17828587896336676
+          },
+          "samples": {
+            "predator_population": 1236,
+            "all_predator_nearest_neighbor_distance_normalized": 17063,
+            "visible_target_projection_per_tick": 6975,
+            "visible_target_displacement_per_tick": 6975,
+            "visible_target_stationary_fraction": 6975,
+            "visible_target_displacement_alignment_when_moving": 3141,
+            "visible_pair_closing_per_tick": 6966
+          },
+          "counts": {
+            "decision_intervals": 1236,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6987,
+            "focal_death_intervals": 12,
+            "target_death_intervals_with_focal_surviving": 9
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18597086780045155,
+        "visible_decisions": 6987,
+        "visible_decision_fraction": 0.4089312887744352,
+        "mean_alignment_per_predator_decision": -0.022334483280521743,
+        "moving_action_fraction": 0.30094814467985487,
+        "visible_moving_decisions": 2262,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4728187156780365,
+          "0.0": -0.37054518130360065,
+          "1.0": -0.23886181104974136
+        },
+        "mean_alignment_given_visible_and_moving": -0.1687033516052142,
+        "moving_fraction_given_visible": 0.32374409617861744,
+        "mean_expected_alignment_given_visible_and_moving": -0.2388618134758307,
+        "mean_expected_moving_probability_given_visible": 0.32421265192224197
+      },
+      {
+        "episode": 1,
+        "seed": 43,
+        "steps": 595,
+        "predator_decisions": 6236,
+        "movement": {
+          "means": {
+            "predator_population": 10.470588235294118,
+            "all_predator_nearest_neighbor_distance_normalized": 0.31461366340721836,
+            "visible_target_projection_per_tick": 0.22460045015518376,
+            "visible_target_displacement_per_tick": 2.0029879670131474,
+            "visible_target_stationary_fraction": 0.38455772113943026,
+            "visible_target_displacement_alignment_when_moving": 0.10504082911644141,
+            "visible_pair_closing_per_tick": -0.3312700076260841
+          },
+          "samples": {
+            "predator_population": 595,
+            "all_predator_nearest_neighbor_distance_normalized": 6230,
+            "visible_target_projection_per_tick": 2668,
+            "visible_target_displacement_per_tick": 2668,
+            "visible_target_stationary_fraction": 2668,
+            "visible_target_displacement_alignment_when_moving": 1642,
+            "visible_pair_closing_per_tick": 2666
+          },
+          "counts": {
+            "decision_intervals": 595,
+            "physics_ticks": 3819,
+            "visible_target_intervals": 2672,
+            "focal_death_intervals": 4,
+            "target_death_intervals_with_focal_surviving": 2
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.2091592766684731,
+        "visible_decisions": 2672,
+        "visible_decision_fraction": 0.4284797947402181,
+        "mean_alignment_per_predator_decision": -0.031790117316398865,
+        "moving_action_fraction": 0.42703656189865297,
+        "visible_moving_decisions": 1292,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.43436448103975256,
+          "0.0": -0.3414016345438247,
+          "1.0": -0.2320827483728447
+        },
+        "mean_alignment_given_visible_and_moving": -0.15343898729494065,
+        "moving_fraction_given_visible": 0.48353293413173654,
+        "mean_expected_alignment_given_visible_and_moving": -0.23208274643978918,
+        "mean_expected_moving_probability_given_visible": 0.48488401365494394
+      },
+      {
+        "episode": 2,
+        "seed": 44,
+        "steps": 1231,
+        "predator_decisions": 15750,
+        "movement": {
+          "means": {
+            "predator_population": 12.779041429731926,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2841039165275454,
+            "visible_target_projection_per_tick": 0.06618922720557582,
+            "visible_target_displacement_per_tick": 1.3085455590701365,
+            "visible_target_stationary_fraction": 0.5766386554621848,
+            "visible_target_displacement_alignment_when_moving": 0.04586955840404488,
+            "visible_pair_closing_per_tick": -0.3250581741294615
+          },
+          "samples": {
+            "predator_population": 1231,
+            "all_predator_nearest_neighbor_distance_normalized": 15731,
+            "visible_target_projection_per_tick": 5950,
+            "visible_target_displacement_per_tick": 5950,
+            "visible_target_stationary_fraction": 5950,
+            "visible_target_displacement_alignment_when_moving": 2519,
+            "visible_pair_closing_per_tick": 5946
+          },
+          "counts": {
+            "decision_intervals": 1231,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5958,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 4
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17470104128813865,
+        "visible_decisions": 5958,
+        "visible_decision_fraction": 0.3782857142857143,
+        "mean_alignment_per_predator_decision": -0.018399880910626165,
+        "moving_action_fraction": 0.2796190476190476,
+        "visible_moving_decisions": 1839,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.46410040287407056,
+          "0.0": -0.35135995283738625,
+          "1.0": -0.22147080682306142
+        },
+        "mean_alignment_given_visible_and_moving": -0.15758462443847857,
+        "moving_fraction_given_visible": 0.30866062437059416,
+        "mean_expected_alignment_given_visible_and_moving": -0.22147080666793043,
+        "mean_expected_moving_probability_given_visible": 0.3081714264416213
+      },
+      {
+        "episode": 3,
+        "seed": 45,
+        "steps": 1243,
+        "predator_decisions": 17435,
+        "movement": {
+          "means": {
+            "predator_population": 14.006436041834272,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27191600132076577,
+            "visible_target_projection_per_tick": 0.19978236171078112,
+            "visible_target_displacement_per_tick": 1.4565646957698746,
+            "visible_target_stationary_fraction": 0.5145494916442679,
+            "visible_target_displacement_alignment_when_moving": 0.11011610350078602,
+            "visible_pair_closing_per_tick": -0.14515188873825682
+          },
+          "samples": {
+            "predator_population": 1243,
+            "all_predator_nearest_neighbor_distance_normalized": 17410,
+            "visible_target_projection_per_tick": 8557,
+            "visible_target_displacement_per_tick": 8557,
+            "visible_target_stationary_fraction": 8557,
+            "visible_target_displacement_alignment_when_moving": 4154,
+            "visible_pair_closing_per_tick": 8544
+          },
+          "counts": {
+            "decision_intervals": 1243,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 8573,
+            "focal_death_intervals": 16,
+            "target_death_intervals_with_focal_surviving": 13
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.20269192539029032,
+        "visible_decisions": 8573,
+        "visible_decision_fraction": 0.49171207341554346,
+        "mean_alignment_per_predator_decision": -0.020624954325488394,
+        "moving_action_fraction": 0.3331230283911672,
+        "visible_moving_decisions": 3042,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4201112988908972,
+          "0.0": -0.31627980256800997,
+          "1.0": -0.19785991383765328
+        },
+        "mean_alignment_given_visible_and_moving": -0.11821041376229131,
+        "moving_fraction_given_visible": 0.35483494692639683,
+        "mean_expected_alignment_given_visible_and_moving": -0.19785991388737525,
+        "mean_expected_moving_probability_given_visible": 0.3529217922762332
+      },
+      {
+        "episode": 4,
+        "seed": 46,
+        "steps": 1250,
+        "predator_decisions": 15564,
+        "movement": {
+          "means": {
+            "predator_population": 12.4328,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27087278503154893,
+            "visible_target_projection_per_tick": 0.10527602585834413,
+            "visible_target_displacement_per_tick": 1.6678836831634052,
+            "visible_target_stationary_fraction": 0.46516556291390726,
+            "visible_target_displacement_alignment_when_moving": 0.05338701582205345,
+            "visible_pair_closing_per_tick": -0.32366215461880316
+          },
+          "samples": {
+            "predator_population": 1250,
+            "all_predator_nearest_neighbor_distance_normalized": 15541,
+            "visible_target_projection_per_tick": 7550,
+            "visible_target_displacement_per_tick": 7550,
+            "visible_target_stationary_fraction": 7550,
+            "visible_target_displacement_alignment_when_moving": 4038,
+            "visible_pair_closing_per_tick": 7538
+          },
+          "counts": {
+            "decision_intervals": 1250,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7559,
+            "target_death_intervals_with_focal_surviving": 12,
+            "focal_death_intervals": 9
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18317173022191854,
+        "visible_decisions": 7559,
+        "visible_decision_fraction": 0.4856720637368286,
+        "mean_alignment_per_predator_decision": -0.028578192747943054,
+        "moving_action_fraction": 0.3856977640709329,
+        "visible_moving_decisions": 2982,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4307377912351007,
+          "0.0": -0.33199004025786544,
+          "1.0": -0.21714317422105275
+        },
+        "mean_alignment_given_visible_and_moving": -0.14915861567035069,
+        "moving_fraction_given_visible": 0.39449662653790185,
+        "mean_expected_alignment_given_visible_and_moving": -0.21714317276575498,
+        "mean_expected_moving_probability_given_visible": 0.39446499987817224
+      },
+      {
+        "episode": 5,
+        "seed": 47,
+        "steps": 1237,
+        "predator_decisions": 17876,
+        "movement": {
+          "means": {
+            "predator_population": 14.423605497170573,
+            "all_predator_nearest_neighbor_distance_normalized": 0.24543983119378743,
+            "visible_target_projection_per_tick": 0.06937411657489934,
+            "visible_target_displacement_per_tick": 1.0967510912469507,
+            "visible_target_stationary_fraction": 0.5512112676056338,
+            "visible_target_displacement_alignment_when_moving": 0.05155373126946052,
+            "visible_pair_closing_per_tick": -0.17520705907472786
+          },
+          "samples": {
+            "predator_population": 1237,
+            "all_predator_nearest_neighbor_distance_normalized": 17842,
+            "visible_target_projection_per_tick": 8875,
+            "visible_target_displacement_per_tick": 8875,
+            "visible_target_stationary_fraction": 8875,
+            "visible_target_displacement_alignment_when_moving": 3983,
+            "visible_pair_closing_per_tick": 8859
+          },
+          "counts": {
+            "decision_intervals": 1237,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 8891,
+            "target_death_intervals_with_focal_surviving": 16,
+            "focal_death_intervals": 16
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.16969897170568823,
+        "visible_decisions": 8891,
+        "visible_decision_fraction": 0.4973707764600582,
+        "mean_alignment_per_predator_decision": -0.023624913485823403,
+        "moving_action_fraction": 0.309800850302081,
+        "visible_moving_decisions": 2835,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4221898812760021,
+          "0.0": -0.30539050424612046,
+          "1.0": -0.16805104464529347
+        },
+        "mean_alignment_given_visible_and_moving": -0.1489661211543489,
+        "moving_fraction_given_visible": 0.3188617703295467,
+        "mean_expected_alignment_given_visible_and_moving": -0.16805104462759082,
+        "mean_expected_moving_probability_given_visible": 0.3186755275718017
+      },
+      {
+        "episode": 6,
+        "seed": 48,
+        "steps": 1245,
+        "predator_decisions": 16114,
+        "movement": {
+          "means": {
+            "predator_population": 12.922088353413654,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28557383844860756,
+            "visible_target_projection_per_tick": 0.12329899995622465,
+            "visible_target_displacement_per_tick": 1.4620544936595339,
+            "visible_target_stationary_fraction": 0.4974935439769102,
+            "visible_target_displacement_alignment_when_moving": 0.06379976233863684,
+            "visible_pair_closing_per_tick": -0.24909457357275033
+          },
+          "samples": {
+            "predator_population": 1245,
+            "all_predator_nearest_neighbor_distance_normalized": 16088,
+            "visible_target_projection_per_tick": 6583,
+            "visible_target_displacement_per_tick": 6583,
+            "visible_target_stationary_fraction": 6583,
+            "visible_target_displacement_alignment_when_moving": 3308,
+            "visible_pair_closing_per_tick": 6568
+          },
+          "counts": {
+            "decision_intervals": 1245,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6595,
+            "target_death_intervals_with_focal_surviving": 15,
+            "focal_death_intervals": 12
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1869208269462362,
+        "visible_decisions": 6595,
+        "visible_decision_fraction": 0.40927144098299617,
+        "mean_alignment_per_predator_decision": -0.026126343894026963,
+        "moving_action_fraction": 0.3599975176864838,
+        "visible_moving_decisions": 2501,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4560903900215458,
+          "0.0": -0.3503178598511633,
+          "1.0": -0.22515790976286673
+        },
+        "mean_alignment_given_visible_and_moving": -0.1683326291516795,
+        "moving_fraction_given_visible": 0.379226686884003,
+        "mean_expected_alignment_given_visible_and_moving": -0.22515790960373233,
+        "mean_expected_moving_probability_given_visible": 0.3793489226040233
+      },
+      {
+        "episode": 7,
+        "seed": 49,
+        "steps": 1253,
+        "predator_decisions": 16405,
+        "movement": {
+          "means": {
+            "predator_population": 13.072625698324023,
+            "all_predator_nearest_neighbor_distance_normalized": 0.252571958467011,
+            "visible_target_projection_per_tick": 0.12118003361305688,
+            "visible_target_displacement_per_tick": 1.3436247679684066,
+            "visible_target_stationary_fraction": 0.5387087758524315,
+            "visible_target_displacement_alignment_when_moving": 0.07227598554873403,
+            "visible_pair_closing_per_tick": -0.26426494576628606
+          },
+          "samples": {
+            "predator_population": 1253,
+            "all_predator_nearest_neighbor_distance_normalized": 16380,
+            "visible_target_projection_per_tick": 7156,
+            "visible_target_displacement_per_tick": 7156,
+            "visible_target_stationary_fraction": 7156,
+            "visible_target_displacement_alignment_when_moving": 3301,
+            "visible_pair_closing_per_tick": 7144
+          },
+          "counts": {
+            "decision_intervals": 1253,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7165,
+            "focal_death_intervals": 9,
+            "target_death_intervals_with_focal_surviving": 12
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1651942294964467,
+        "visible_decisions": 7165,
+        "visible_decision_fraction": 0.4367570862541908,
+        "mean_alignment_per_predator_decision": -0.019695701515609183,
+        "moving_action_fraction": 0.31935385553185003,
+        "visible_moving_decisions": 2366,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4462753597989249,
+          "0.0": -0.3452862023046167,
+          "1.0": -0.21987658851548028
+        },
+        "mean_alignment_given_visible_and_moving": -0.1365629684545937,
+        "moving_fraction_given_visible": 0.3302163293789253,
+        "mean_expected_alignment_given_visible_and_moving": -0.219876589278972,
+        "mean_expected_moving_probability_given_visible": 0.32662229580404334
+      },
+      {
+        "episode": 8,
+        "seed": 50,
+        "steps": 1240,
+        "predator_decisions": 15281,
+        "movement": {
+          "means": {
+            "predator_population": 12.304032258064517,
+            "all_predator_nearest_neighbor_distance_normalized": 0.286573354890344,
+            "visible_target_projection_per_tick": 0.29865774230133535,
+            "visible_target_displacement_per_tick": 1.501227305345576,
+            "visible_target_stationary_fraction": 0.5132947976878612,
+            "visible_target_displacement_alignment_when_moving": 0.1737826520669319,
+            "visible_pair_closing_per_tick": -0.2016773084674287
+          },
+          "samples": {
+            "predator_population": 1240,
+            "all_predator_nearest_neighbor_distance_normalized": 15257,
+            "visible_target_projection_per_tick": 5190,
+            "visible_target_displacement_per_tick": 5190,
+            "visible_target_stationary_fraction": 5190,
+            "visible_target_displacement_alignment_when_moving": 2526,
+            "visible_pair_closing_per_tick": 5183
+          },
+          "counts": {
+            "decision_intervals": 1240,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5197,
+            "target_death_intervals_with_focal_surviving": 7,
+            "focal_death_intervals": 7
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17083959575338917,
+        "visible_decisions": 5197,
+        "visible_decision_fraction": 0.340095543485374,
+        "mean_alignment_per_predator_decision": -0.01786469961399085,
+        "moving_action_fraction": 0.3155552647078071,
+        "visible_moving_decisions": 1806,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44404832452935944,
+          "0.0": -0.33804502128441405,
+          "1.0": -0.20630791211011199
+        },
+        "mean_alignment_given_visible_and_moving": -0.15115751650132567,
+        "moving_fraction_given_visible": 0.3475081777948817,
+        "mean_expected_alignment_given_visible_and_moving": -0.20630791177658322,
+        "mean_expected_moving_probability_given_visible": 0.34481608478212855
+      },
+      {
+        "episode": 9,
+        "seed": 51,
+        "steps": 1243,
+        "predator_decisions": 16966,
+        "movement": {
+          "means": {
+            "predator_population": 13.627514078841513,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2695760986242174,
+            "visible_target_projection_per_tick": 0.14913148789637573,
+            "visible_target_displacement_per_tick": 1.499629115913326,
+            "visible_target_stationary_fraction": 0.509367681498829,
+            "visible_target_displacement_alignment_when_moving": 0.07938248375664247,
+            "visible_pair_closing_per_tick": -0.24016077047811388
+          },
+          "samples": {
+            "predator_population": 1243,
+            "all_predator_nearest_neighbor_distance_normalized": 16939,
+            "visible_target_projection_per_tick": 8540,
+            "visible_target_displacement_per_tick": 8540,
+            "visible_target_stationary_fraction": 8540,
+            "visible_target_displacement_alignment_when_moving": 4190,
+            "visible_pair_closing_per_tick": 8522
+          },
+          "counts": {
+            "decision_intervals": 1243,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 8556,
+            "target_death_intervals_with_focal_surviving": 18,
+            "focal_death_intervals": 16
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19433636551086328,
+        "visible_decisions": 8556,
+        "visible_decision_fraction": 0.5043027230932453,
+        "mean_alignment_per_predator_decision": -0.02408798803640484,
+        "moving_action_fraction": 0.3487563362018154,
+        "visible_moving_decisions": 3098,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.454600753667376,
+          "0.0": -0.3508027781193313,
+          "1.0": -0.23165669957063564
+        },
+        "mean_alignment_given_visible_and_moving": -0.131916334740363,
+        "moving_fraction_given_visible": 0.36208508648901355,
+        "mean_expected_alignment_given_visible_and_moving": -0.2316566996688473,
+        "mean_expected_moving_probability_given_visible": 0.3600775530556863
+      },
+      {
+        "episode": 10,
+        "seed": 52,
+        "steps": 1238,
+        "predator_decisions": 15965,
+        "movement": {
+          "means": {
+            "predator_population": 12.869951534733442,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2617592790214247,
+            "visible_target_projection_per_tick": 0.12635842694291363,
+            "visible_target_displacement_per_tick": 1.2190892471289436,
+            "visible_target_stationary_fraction": 0.5887096774193549,
+            "visible_target_displacement_alignment_when_moving": 0.08365230754680733,
+            "visible_pair_closing_per_tick": -0.24464660694194343
+          },
+          "samples": {
+            "predator_population": 1238,
+            "all_predator_nearest_neighbor_distance_normalized": 15933,
+            "visible_target_projection_per_tick": 7688,
+            "visible_target_displacement_per_tick": 7688,
+            "visible_target_stationary_fraction": 7688,
+            "visible_target_displacement_alignment_when_moving": 3162,
+            "visible_pair_closing_per_tick": 7669
+          },
+          "counts": {
+            "decision_intervals": 1238,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7703,
+            "focal_death_intervals": 15,
+            "target_death_intervals_with_focal_surviving": 19
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17627765858407102,
+        "visible_decisions": 7703,
+        "visible_decision_fraction": 0.48249295333542125,
+        "mean_alignment_per_predator_decision": -0.020934867719539712,
+        "moving_action_fraction": 0.3087378640776699,
+        "visible_moving_decisions": 2250,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4494881572382856,
+          "0.0": -0.3349683421937865,
+          "1.0": -0.19827692562616106
+        },
+        "mean_alignment_given_visible_and_moving": -0.14854451695220067,
+        "moving_fraction_given_visible": 0.29209398935479686,
+        "mean_expected_alignment_given_visible_and_moving": -0.19827692729727553,
+        "mean_expected_moving_probability_given_visible": 0.2908609240212988
+      },
+      {
+        "episode": 11,
+        "seed": 53,
+        "steps": 1268,
+        "predator_decisions": 15886,
+        "movement": {
+          "means": {
+            "predator_population": 12.50552050473186,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2769425800464974,
+            "visible_target_projection_per_tick": 0.21932554399512968,
+            "visible_target_displacement_per_tick": 1.7298952974511173,
+            "visible_target_stationary_fraction": 0.4668192219679634,
+            "visible_target_displacement_alignment_when_moving": 0.09627279119483097,
+            "visible_pair_closing_per_tick": -0.3575129637478259
+          },
+          "samples": {
+            "predator_population": 1268,
+            "all_predator_nearest_neighbor_distance_normalized": 15857,
+            "visible_target_projection_per_tick": 5244,
+            "visible_target_displacement_per_tick": 5244,
+            "visible_target_stationary_fraction": 5244,
+            "visible_target_displacement_alignment_when_moving": 2796,
+            "visible_pair_closing_per_tick": 5236
+          },
+          "counts": {
+            "decision_intervals": 1268,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5253,
+            "target_death_intervals_with_focal_surviving": 8,
+            "focal_death_intervals": 9
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.17237748836259173,
+        "visible_decisions": 5253,
+        "visible_decision_fraction": 0.3306685131562382,
+        "mean_alignment_per_predator_decision": -0.02574519999746763,
+        "moving_action_fraction": 0.33029082210751604,
+        "visible_moving_decisions": 2038,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.45813280654579236,
+          "0.0": -0.34148008600968727,
+          "1.0": -0.20655165138952056
+        },
+        "mean_alignment_given_visible_and_moving": -0.20068118113825847,
+        "moving_fraction_given_visible": 0.3879687797449077,
+        "mean_expected_alignment_given_visible_and_moving": -0.2065516513779368,
+        "mean_expected_moving_probability_given_visible": 0.3861135464841559
+      },
+      {
+        "episode": 12,
+        "seed": 54,
+        "steps": 1232,
+        "predator_decisions": 16081,
+        "movement": {
+          "means": {
+            "predator_population": 13.031655844155845,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2835880727567565,
+            "visible_target_projection_per_tick": 0.1157249821480506,
+            "visible_target_displacement_per_tick": 1.3019349648338432,
+            "visible_target_stationary_fraction": 0.5544277213860693,
+            "visible_target_displacement_alignment_when_moving": 0.0716492253441492,
+            "visible_pair_closing_per_tick": -0.25950297896544827
+          },
+          "samples": {
+            "predator_population": 1232,
+            "all_predator_nearest_neighbor_distance_normalized": 16055,
+            "visible_target_projection_per_tick": 5714,
+            "visible_target_displacement_per_tick": 5714,
+            "visible_target_stationary_fraction": 5714,
+            "visible_target_displacement_alignment_when_moving": 2546,
+            "visible_pair_closing_per_tick": 5701
+          },
+          "counts": {
+            "decision_intervals": 1232,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 5728,
+            "target_death_intervals_with_focal_surviving": 13,
+            "focal_death_intervals": 14
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18058413036369886,
+        "visible_decisions": 5728,
+        "visible_decision_fraction": 0.3561967539332131,
+        "mean_alignment_per_predator_decision": -0.017486662930363047,
+        "moving_action_fraction": 0.29500652944468625,
+        "visible_moving_decisions": 1875,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.47580047878006365,
+          "0.0": -0.3685457451278287,
+          "1.0": -0.2377865562609882
+        },
+        "mean_alignment_given_visible_and_moving": -0.149974947511023,
+        "moving_fraction_given_visible": 0.32733938547486036,
+        "mean_expected_alignment_given_visible_and_moving": -0.23778655726982398,
+        "mean_expected_moving_probability_given_visible": 0.3253042287018128
+      },
+      {
+        "episode": 13,
+        "seed": 55,
+        "steps": 1243,
+        "predator_decisions": 17644,
+        "movement": {
+          "means": {
+            "predator_population": 14.174577634754625,
+            "all_predator_nearest_neighbor_distance_normalized": 0.26883321010418215,
+            "visible_target_projection_per_tick": 0.1082043803523613,
+            "visible_target_displacement_per_tick": 1.28088352017909,
+            "visible_target_stationary_fraction": 0.552,
+            "visible_target_displacement_alignment_when_moving": 0.06630899224494256,
+            "visible_pair_closing_per_tick": -0.246279055605687
+          },
+          "samples": {
+            "predator_population": 1243,
+            "all_predator_nearest_neighbor_distance_normalized": 17619,
+            "visible_target_projection_per_tick": 7375,
+            "visible_target_displacement_per_tick": 7375,
+            "visible_target_stationary_fraction": 7375,
+            "visible_target_displacement_alignment_when_moving": 3304,
+            "visible_pair_closing_per_tick": 7369
+          },
+          "counts": {
+            "decision_intervals": 1243,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7385,
+            "focal_death_intervals": 10,
+            "target_death_intervals_with_focal_surviving": 6
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1760603064937251,
+        "visible_decisions": 7385,
+        "visible_decision_fraction": 0.4185558830197234,
+        "mean_alignment_per_predator_decision": -0.02343103474845586,
+        "moving_action_fraction": 0.3137610519156654,
+        "visible_moving_decisions": 2375,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4706611245726979,
+          "0.0": -0.36676519735827523,
+          "1.0": -0.2340234685155403
+        },
+        "mean_alignment_given_visible_and_moving": -0.17407039035863375,
+        "moving_fraction_given_visible": 0.32159783344617465,
+        "mean_expected_alignment_given_visible_and_moving": -0.23402346774989102,
+        "mean_expected_moving_probability_given_visible": 0.3239351755981667
+      },
+      {
+        "episode": 14,
+        "seed": 56,
+        "steps": 1242,
+        "predator_decisions": 15722,
+        "movement": {
+          "means": {
+            "predator_population": 12.640901771336553,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2796223977545915,
+            "visible_target_projection_per_tick": 0.17169208019055687,
+            "visible_target_displacement_per_tick": 1.7130792999943534,
+            "visible_target_stationary_fraction": 0.46673270596004623,
+            "visible_target_displacement_alignment_when_moving": 0.08596169536867988,
+            "visible_pair_closing_per_tick": -0.3065091693587981
+          },
+          "samples": {
+            "predator_population": 1242,
+            "all_predator_nearest_neighbor_distance_normalized": 15700,
+            "visible_target_projection_per_tick": 6057,
+            "visible_target_displacement_per_tick": 6057,
+            "visible_target_stationary_fraction": 6057,
+            "visible_target_displacement_alignment_when_moving": 3230,
+            "visible_pair_closing_per_tick": 6046
+          },
+          "counts": {
+            "decision_intervals": 1242,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6070,
+            "target_death_intervals_with_focal_surviving": 11,
+            "focal_death_intervals": 13
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.18384356625574522,
+        "visible_decisions": 6070,
+        "visible_decision_fraction": 0.3860831955221982,
+        "mean_alignment_per_predator_decision": -0.025900338484985713,
+        "moving_action_fraction": 0.35561633379977103,
+        "visible_moving_decisions": 2385,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44957580314525064,
+          "0.0": -0.3450846507366933,
+          "1.0": -0.22351638827138454
+        },
+        "mean_alignment_given_visible_and_moving": -0.17073590006748235,
+        "moving_fraction_given_visible": 0.3929159802306425,
+        "mean_expected_alignment_given_visible_and_moving": -0.22351638794866205,
+        "mean_expected_moving_probability_given_visible": 0.38904517559226776
+      },
+      {
+        "episode": 15,
+        "seed": 57,
+        "steps": 1256,
+        "predator_decisions": 15950,
+        "movement": {
+          "means": {
+            "predator_population": 12.674363057324841,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27266058503793605,
+            "visible_target_projection_per_tick": 0.13354325187515348,
+            "visible_target_displacement_per_tick": 1.624168300316271,
+            "visible_target_stationary_fraction": 0.49517923362175525,
+            "visible_target_displacement_alignment_when_moving": 0.06511932842508283,
+            "visible_pair_closing_per_tick": -0.30744493068286366
+          },
+          "samples": {
+            "predator_population": 1256,
+            "all_predator_nearest_neighbor_distance_normalized": 15919,
+            "visible_target_projection_per_tick": 8090,
+            "visible_target_displacement_per_tick": 8090,
+            "visible_target_stationary_fraction": 8090,
+            "visible_target_displacement_alignment_when_moving": 4084,
+            "visible_pair_closing_per_tick": 8078
+          },
+          "counts": {
+            "decision_intervals": 1256,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 8106,
+            "focal_death_intervals": 16,
+            "target_death_intervals_with_focal_surviving": 12
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.19497662002292904,
+        "visible_decisions": 8106,
+        "visible_decision_fraction": 0.5082131661442006,
+        "mean_alignment_per_predator_decision": -0.021324056952903823,
+        "moving_action_fraction": 0.355423197492163,
+        "visible_moving_decisions": 2977,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.42400064003949123,
+          "0.0": -0.3226033306868936,
+          "1.0": -0.20501571538199445
+        },
+        "mean_alignment_given_visible_and_moving": -0.11424881034558816,
+        "moving_fraction_given_visible": 0.3672588206266963,
+        "mean_expected_alignment_given_visible_and_moving": -0.20501571462668933,
+        "mean_expected_moving_probability_given_visible": 0.36732335980862085
+      },
+      {
+        "episode": 16,
+        "seed": 58,
+        "steps": 1233,
+        "predator_decisions": 18041,
+        "movement": {
+          "means": {
+            "predator_population": 14.613949716139498,
+            "all_predator_nearest_neighbor_distance_normalized": 0.2643502027501215,
+            "visible_target_projection_per_tick": 0.06123312966268316,
+            "visible_target_displacement_per_tick": 1.1009965254296974,
+            "visible_target_stationary_fraction": 0.5757875406130809,
+            "visible_target_displacement_alignment_when_moving": 0.05638772711917974,
+            "visible_pair_closing_per_tick": -0.22384903040274015
+          },
+          "samples": {
+            "predator_population": 1233,
+            "all_predator_nearest_neighbor_distance_normalized": 18019,
+            "visible_target_projection_per_tick": 7079,
+            "visible_target_displacement_per_tick": 7079,
+            "visible_target_stationary_fraction": 7079,
+            "visible_target_displacement_alignment_when_moving": 3003,
+            "visible_pair_closing_per_tick": 7074
+          },
+          "counts": {
+            "decision_intervals": 1233,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7087,
+            "focal_death_intervals": 8,
+            "target_death_intervals_with_focal_surviving": 5
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.16479985609690562,
+        "visible_decisions": 7087,
+        "visible_decision_fraction": 0.39282744858932434,
+        "mean_alignment_per_predator_decision": -0.022857761276558756,
+        "moving_action_fraction": 0.28895294052436116,
+        "visible_moving_decisions": 2131,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.46816716824265653,
+          "0.0": -0.33913628512181704,
+          "1.0": -0.19163964675662676
+        },
+        "mean_alignment_given_visible_and_moving": -0.19351331355720156,
+        "moving_fraction_given_visible": 0.3006914068011853,
+        "mean_expected_alignment_given_visible_and_moving": -0.19163964726466007,
+        "mean_expected_moving_probability_given_visible": 0.3001593185014059
+      },
+      {
+        "episode": 17,
+        "seed": 59,
+        "steps": 1240,
+        "predator_decisions": 16321,
+        "movement": {
+          "means": {
+            "predator_population": 13.143548387096773,
+            "all_predator_nearest_neighbor_distance_normalized": 0.28640475456960535,
+            "visible_target_projection_per_tick": 0.10595593537122434,
+            "visible_target_displacement_per_tick": 1.3320702533766948,
+            "visible_target_stationary_fraction": 0.5032903756512201,
+            "visible_target_displacement_alignment_when_moving": 0.0658536318959152,
+            "visible_pair_closing_per_tick": -0.2098261944689005
+          },
+          "samples": {
+            "predator_population": 1240,
+            "all_predator_nearest_neighbor_distance_normalized": 16298,
+            "visible_target_projection_per_tick": 7294,
+            "visible_target_displacement_per_tick": 7294,
+            "visible_target_stationary_fraction": 7294,
+            "visible_target_displacement_alignment_when_moving": 3623,
+            "visible_pair_closing_per_tick": 7277
+          },
+          "counts": {
+            "decision_intervals": 1240,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7306,
+            "target_death_intervals_with_focal_surviving": 17,
+            "focal_death_intervals": 12
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1857054346840693,
+        "visible_decisions": 7306,
+        "visible_decision_fraction": 0.44764413945223946,
+        "mean_alignment_per_predator_decision": -0.02486805805849937,
+        "moving_action_fraction": 0.35163286563323326,
+        "visible_moving_decisions": 2715,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44214713718069354,
+          "0.0": -0.3322732032356531,
+          "1.0": -0.20598770597875216
+        },
+        "mean_alignment_given_visible_and_moving": -0.14949229302864392,
+        "moving_fraction_given_visible": 0.3716123733917328,
+        "mean_expected_alignment_given_visible_and_moving": -0.20598770619780438,
+        "mean_expected_moving_probability_given_visible": 0.36993085424043265
+      },
+      {
+        "episode": 18,
+        "seed": 60,
+        "steps": 1263,
+        "predator_decisions": 16956,
+        "movement": {
+          "means": {
+            "predator_population": 13.405384006334126,
+            "all_predator_nearest_neighbor_distance_normalized": 0.27288593871632566,
+            "visible_target_projection_per_tick": 0.29322960715741725,
+            "visible_target_displacement_per_tick": 1.680653803359146,
+            "visible_target_stationary_fraction": 0.47475027746947834,
+            "visible_target_displacement_alignment_when_moving": 0.1431286738392754,
+            "visible_pair_closing_per_tick": -0.15376020870711876
+          },
+          "samples": {
+            "predator_population": 1263,
+            "all_predator_nearest_neighbor_distance_normalized": 16931,
+            "visible_target_projection_per_tick": 7208,
+            "visible_target_displacement_per_tick": 7208,
+            "visible_target_stationary_fraction": 7208,
+            "visible_target_displacement_alignment_when_moving": 3786,
+            "visible_pair_closing_per_tick": 7201
+          },
+          "counts": {
+            "decision_intervals": 1263,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 7219,
+            "target_death_intervals_with_focal_surviving": 7,
+            "focal_death_intervals": 11
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.1834765528344843,
+        "visible_decisions": 7219,
+        "visible_decision_fraction": 0.42574899740504835,
+        "mean_alignment_per_predator_decision": -0.02005520244346565,
+        "moving_action_fraction": 0.3557442793111583,
+        "visible_moving_decisions": 2842,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.4068771621811312,
+          "0.0": -0.3039802038200127,
+          "1.0": -0.1810409640293405
+        },
+        "mean_alignment_given_visible_and_moving": -0.11965376939880491,
+        "moving_fraction_given_visible": 0.3936833356420557,
+        "mean_expected_alignment_given_visible_and_moving": -0.18104096414724596,
+        "mean_expected_moving_probability_given_visible": 0.3912359889527695
+      },
+      {
+        "episode": 19,
+        "seed": 61,
+        "steps": 1248,
+        "predator_decisions": 16480,
+        "movement": {
+          "means": {
+            "predator_population": 13.1875,
+            "all_predator_nearest_neighbor_distance_normalized": 0.26181129126575503,
+            "visible_target_projection_per_tick": 0.21580641057056923,
+            "visible_target_displacement_per_tick": 1.329334210243582,
+            "visible_target_stationary_fraction": 0.513441700531416,
+            "visible_target_displacement_alignment_when_moving": 0.11889010916936077,
+            "visible_pair_closing_per_tick": -0.15430980150115436
+          },
+          "samples": {
+            "predator_population": 1248,
+            "all_predator_nearest_neighbor_distance_normalized": 16458,
+            "visible_target_projection_per_tick": 6398,
+            "visible_target_displacement_per_tick": 6398,
+            "visible_target_stationary_fraction": 6398,
+            "visible_target_displacement_alignment_when_moving": 3113,
+            "visible_pair_closing_per_tick": 6391
+          },
+          "counts": {
+            "decision_intervals": 1248,
+            "physics_ticks": 8000,
+            "visible_target_intervals": 6403,
+            "focal_death_intervals": 5,
+            "target_death_intervals_with_focal_surviving": 7
+          }
+        },
+        "neutral_original_actions_verified": false,
+        "mean_visible_conspecific_distance_normalized": 0.16678362025153667,
+        "visible_decisions": 6403,
+        "visible_decision_fraction": 0.3885315533980582,
+        "mean_alignment_per_predator_decision": -0.016254647204039085,
+        "moving_action_fraction": 0.32682038834951455,
+        "visible_moving_decisions": 2271,
+        "same_observation_expected_alignment_given_moving": {
+          "-1.0": -0.44171996179077716,
+          "0.0": -0.33626098673878224,
+          "1.0": -0.21493647699588503
+        },
+        "mean_alignment_given_visible_and_moving": -0.11795534386726733,
+        "moving_fraction_given_visible": 0.35467749492425427,
+        "mean_expected_alignment_given_visible_and_moving": -0.2149364764882851,
+        "mean_expected_moving_probability_given_visible": 0.3527529091424213
+      }
+    ]
+  }
+}

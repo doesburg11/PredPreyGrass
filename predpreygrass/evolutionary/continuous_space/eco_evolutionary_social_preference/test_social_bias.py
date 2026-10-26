@@ -36,3 +36,29 @@ def test_invalid_inputs():
     import pytest
     with pytest.raises(ValueError):
         biased_logits(np.zeros(48), observation(), 2, 1, 1)
+
+
+def test_directional_effect_conditional_on_movement_on_same_observation():
+    raw = np.linspace(-2, 2, 48)
+    scores = social_scores(observation(), 1)
+    conditional = []
+    for preference in (-1, 0, 1):
+        p = probabilities(biased_logits(raw, observation(), preference, 1, 1))
+        conditional.append(p @ scores / p[:32].sum())
+    assert conditional[0] < conditional[1] < conditional[2]
+
+
+def test_nearest_visible_slot_controls_direction():
+    obs = np.zeros(SELF_SIZE + 12)
+    obs[SELF_SIZE:SELF_SIZE+6] = [1, 0, -0.5, 0.5, 0, 0]
+    obs[SELF_SIZE+6:SELF_SIZE+12] = [1, 0.1, 0, 0.1, 0, 0]
+    scores = social_scores(obs, 2)
+    assert scores[4] > 0.99
+    assert abs(scores[0]) < 1e-12
+
+
+def test_nonfinite_strength_rejected():
+    import pytest
+    for strength in (np.nan, np.inf, -np.inf):
+        with pytest.raises(ValueError):
+            biased_logits(np.zeros(48), observation(), 0, strength, 1)
