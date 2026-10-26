@@ -1,0 +1,71 @@
+# eco_evolutionary_continuous_fov
+
+**Status (2026-10-26): implemented and tested, not yet run.** Next: Codex
+review, then the calibration of the distance noise and a pilot (design note,
+plan).
+
+Can predators and prey evolve different eyes? A copy of
+[`eco_evolutionary_continuous_traits`](../eco_evolutionary_continuous_traits/)
+(Trial 15) with one change: a wide field of view now costs depth vision
+instead of energy. In that module both species evolved the same way,
+shorter view distance and a wider field of view, partly because a wider
+field only ever cost energy and never lost anything. Here a narrow,
+forward field gives accurate distances in front, as binocular vision does
+in animals, so predators might evolve "hunting eyes" and prey "panoramic
+eyes", the precondition for the two species' bodies to respond to each
+other. Design, predictions and the pre-specified tests:
+[DESIGN_fov_tradeoff.md](../eco_evolutionary_continuous_traits/DESIGN_fov_tradeoff.md).
+
+## The change
+
+- **Binocular overlap.** Each eye covers `fov_monocular_field` degrees
+  (150). For an animal with expressed field of view F the overlap in front
+  is clip(2 × 150 − F, 0, F): the predator's base field (150°) is fully
+  binocular, the prey's (240°) has 60° of overlap.
+- **Monocular distances are noisy.** An animal or grass patch seen outside
+  the overlap is observed in the right direction but with its offset and
+  distance multiplied by exp(0.3 × N(0, 1)) (`fov_monocular_distance_noise`),
+  capped at the observation scale. The noise has its own random generator,
+  so it changes observations only, never the world.
+- **No energy cost for field of view** (`trait_cost_fov` 0); speed and
+  vision cost as in CT-05 (0.25 and 0.125).
+- **Per-species gene-pool freeze** (`trait_frozen_species`): a listed
+  species' founders are drawn from its initial gene pool every episode, for
+  the coevolution branches (the design note's test 2).
+
+With the noise at 0 the environment is that of
+`eco_evolutionary_continuous_traits`, bit for bit (`tests/test_fov.py`).
+Everything else, rules, logging and checkpoints, is unchanged; see that
+module's README and [SPEC.md](SPEC.md) (sections 1 to 11; the change above
+is not in SPEC.md).
+
+## Files
+
+As in `eco_evolutionary_continuous_traits`: [`environment.py`](environment.py)
+(the change is in `_monocular_factor`, `_slots`, `_observe` and
+`_update_gene_pool`), [`train.py`](train.py), [`callbacks.py`](callbacks.py),
+[`checkpoints.py`](checkpoints.py), [`evolve_frozen.py`](evolve_frozen.py),
+[`tournament.py`](tournament.py), [`eval.py`](eval.py), [`config/`](config/)
+(the experiment's settings in `config_env.py`), [`tests/`](tests/)
+(`test_fov.py` for the trade-off). Not copied: that module's analyses,
+launchers and results.
+
+## Usage
+
+From the repository root:
+
+```bash
+python predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/train.py
+python -m pytest predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/tests
+```
+
+Runs are saved in the module's `runs/` folder (gitignored).
+
+## TODO
+
+- [ ] Codex review of the implementation.
+- [ ] Calibrate the noise (design note, step 1): catches per predator
+  against fixed prey with noise 0, 0.15, 0.3 and 0.5, frozen CT-05
+  policies, prey in front against to the side.
+- [ ] Pilot (step 2): one run with the trade-off and one with noise 0, 3,000
+  iterations side by side; pre-specified test 1 (divergence).
