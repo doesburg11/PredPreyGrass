@@ -2,9 +2,11 @@
 
 ## Key message (2026-10-24)
 
-**Learning changes how bodies evolve.** Predator speed rose in all 6 runs
-where the predators kept learning and fell in all 6 where their behaviour
-was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
+**Learning changes how bodies evolve.** From CT-05 at iteration 1,500,
+predator speed rose in all 6 runs where the predators kept learning and
+fell in all 6 where their behaviour was frozen (+0.18, 95% CI +0.14 to
++0.22, p = 0.005); from iteration 2,500 it rose more in all 6 learning runs
+than in all 6 frozen ones (+0.19, p = 0.005).
 
 - **Found:** a replicated Baldwin-style effect (criterion 3 below).
 - **Not found:** a body arms race between predators and prey (criterion 2).
@@ -21,6 +23,15 @@ was frozen (+0.18, 95% CI +0.14 to +0.22, p = 0.005).
 - **Second branch point (2026-10-26):** from CT-05 at iteration 2,500 the
   same contrast is +0.19 (95% CI +0.09 to +0.28, p = 0.005), against +0.18
   from iteration 1,500 (RESULTS.md section 8).
+- **Overall (2026-10-26):** learning robustly changes the direction in
+  which predator speed evolves, most likely because learned behaviour lets
+  faster predators turn extra births into survivors. Not shown: an arms
+  race in bodies between the species, adaptation to speed specifically
+  (the learned policies differ in everything they learned), a classic
+  Baldwin effect (learning is shared per species), or generality beyond
+  CT-05. For the project's goal this is the learning-to-body half of the
+  loop, running one way; the coevolution half is missing (TODO: field-of-
+  view trade-off, per-agent learning). Details: RESULTS.md, key message.
 - **Still open:** whether the mechanism is adaptation to speed itself, why
   speed fell when only predators were frozen, and whether the effect holds
   beyond CT-05's trajectory (see TODO).
@@ -317,6 +328,18 @@ Runs are saved in the module's `runs/` folder (gitignored).
   contrast replicated (+0.19, p = 0.005), from a state with much slower
   predators (+0.06 against +0.19). It took 34 hours (11:38 to 21:46 the
   next day) on 3 GPU slots.
+- [ ] **Toward coevolution: a field-of-view trade-off.** Both species now
+  evolve the same way (shorter view distance, wider field of view), so
+  there is no body arms race. Give a narrow, forward field of view its own
+  advantage (for example more precise distance information or more
+  observation slots in front; see "Vision and energy" above), so that
+  predators can evolve "hunting eyes" and prey "panoramic eyes", and test
+  whether the two species' bodies then change in response to each other.
+- [ ] **Toward a classic Baldwin effect: per-agent learning.** Learning here
+  is one shared PPO policy per species. Combine this module with the ERL
+  design (per-agent, genome-driven networks with lifetime learning; see
+  "Origin and relation to ERL"), keeping a learner strong enough for the
+  learning arms race. A much bigger build than the item above.
 - [ ] **A branch point outside CT-05.** CT-04 (costs 0.5× the pilot's,
   against CT-05's 0.25×) would test whether the effect depends on the cost
   of capacity, not only on the starting state: `BLREP_BRANCH` only selects

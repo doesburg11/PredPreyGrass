@@ -11,14 +11,44 @@ the module's third question (a Baldwin-style interaction) positively.
 
 It is not yet the full Darwin/Baldwin coevolution loop: why it happens is
 only partly tested (section 6: extra speed pays about twice as much under
-the learned predator policies as under the frozen one), it comes from two
-branch points (CT-05 at iterations 1,500 and 2,500; section 8), and learning is one shared PPO
+the learned predator policies as under the frozen one), both branch points
+come from one training run (CT-05 at iterations 1,500 and 2,500; section
+8), and learning is one shared PPO
 policy per species, not individual lifetime learning. Earlier results:
 expensive bodies went with a collapsing ecosystem in the single pilot run
 (section 1); with cheaper bodies both species traded view distance for
 field of view and speed rose and fell, with no escalation in body traits
 (section 2); the prey's gains came from behaviour (section 3). Next steps:
 README, TODO.
+
+**Update (2026-10-26): conclusion so far.** In this model, learning changes
+the direction in which a body trait evolves, and the effect is robust: from
+two branch points with different gene pools the predator-learning contrast
+on predator speed is +0.18 and +0.19 (each p = 0.005, all 12 runs ordered
+the same way both times; sections 5 and 8). The likely route is that
+learned behaviour makes speed pay: with speeds fixed and the same starting
+prey, extra speed pays about twice as much under the learned predator
+policies as under the frozen one (section 6), because under the frozen
+policy faster lineages' extra births are largely offset by lower survival,
+while the learned predators turn more of them into survivors (section 7).
+With both policies frozen, net selection on speed was small and
+inconsistent, so speed mostly drifted (section 7).
+
+What it does not show: no arms race in bodies between predators and prey
+(both evolved shorter view distance and wider field of view; the prey's
+gains came from behaviour); not that the learned policies adapted to speed
+specifically, since they differ from the frozen one in everything they
+learned and prey numbers within episodes differ too; not a classic Baldwin
+effect, since learning is one shared policy per species; not beyond
+CT-05's trajectory; and the fall of speed when only predators were frozen
+(−0.16, 3 of 3 seeds) is unexplained.
+
+Against the project's goal, a sustainable and significant Darwin/Baldwin
+coevolution loop: the ecosystems are sustainable and the learning-to-body
+effect is significant and replicated, but it runs one way, from one
+species' learning to its own body. The coevolution half, bodies of the two
+species changing in response to each other, has not appeared. README, TODO,
+lists the two changes that could produce it.
 
 ## Runs
 
