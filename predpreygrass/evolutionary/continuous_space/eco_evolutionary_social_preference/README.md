@@ -186,3 +186,24 @@ but its effects on pair closing and overall spacing remain uncertain. Avoidance
 increases separation more consistently. Sixteen tests pass, and all 20 neutral
 episodes matched original inference throughout. Checkpoint validation remained
 unchanged at the end of the run.
+
+## Stronger attraction sweep
+
+Attraction strengths 2 and 4 were evaluated on seeds 42–61, using the same
+frozen checkpoint and physical metrics. Strength 2 gives about 5.7% closer
+nearest-neighbor spacing than neutral; strength 4 gives a stronger directional
+effect but less consistent spacing and a lower mean predator population.
+See [ATTRACTION_STRENGTH_RESULTS.md](ATTRACTION_STRENGTH_RESULTS.md) for
+paired intervals, episode-length sensitivity, plots and provenance. Twenty
+tests pass, and the independent runner re-review found no remaining material
+correctness concerns.
+
+## Fresh-seed persistence and matched replays
+
+The neutral-versus-attraction-2 comparison is complete on fresh seeds 62–81.
+Close encounters lasting at least 100 physics ticks increased from 15.4% to
+19.7%, and fresh nearest-neighbor spacing was about 5.5% closer. Keeping the
+same nearest neighbor remains inconclusive. See
+[PERSISTENCE_RESULTS.md](PERSISTENCE_RESULTS.md) for censoring definitions,
+paired intervals, raw data and matched videos for preselected seeds 62 and 63.
+Twenty-seven local tests pass. No stable-group or fitness claim follows yet.

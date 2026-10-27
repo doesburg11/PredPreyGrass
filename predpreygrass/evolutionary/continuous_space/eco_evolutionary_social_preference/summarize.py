@@ -10,7 +10,7 @@ METRICS = (
 )
 
 
-def summarize(results, bootstrap_samples=10000):
+def summarize(results, bootstrap_samples=10000, metrics=METRICS):
     by_seed = {condition: {row['seed']: row for row in rows} for condition, rows in results.items()}
     if any(len(by_seed[k]) != len(rows) for k, rows in results.items()):
         raise ValueError('duplicate seeds')
@@ -22,7 +22,7 @@ def summarize(results, bootstrap_samples=10000):
     summary = {'seeds': seeds, 'replicate_unit': 'episode seed',
                'interval_method': f'paired percentile bootstrap, {bootstrap_samples} resamples; exploratory, no multiplicity adjustment',
                'metrics': {}}
-    for metric in METRICS:
+    for metric in metrics:
         arrays = {key: np.array([rows[seed]['movement']['means'][metric] for seed in seeds], dtype=float)
                   for key, rows in by_seed.items()}
         # Omit a seed for this metric across all conditions if any value is missing.
@@ -34,7 +34,7 @@ def summarize(results, bootstrap_samples=10000):
                  'differences_from_neutral': {}}
         if n:
             draws = indices if n == len(seeds) else rng.integers(0, n, size=(bootstrap_samples, n))
-            for key in ('-1.0', '1.0'):
+            for key in (condition for condition in arrays if condition != '0.0'):
                 delta = arrays[key] - arrays['0.0']
                 entry['differences_from_neutral'][key] = {
                     'mean': float(delta.mean()),

@@ -21,15 +21,24 @@ from .summarize import summarize
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.eval import select_actions
 
 
-def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_episode=None):
+def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_episode=None, observer=None):
     modules = load_modules(checkpoint) if modules is None else modules
     config = checkpoint_env_config(checkpoint)
     env = PredPreyGrassContinuous(config)
     use_gene_pool(env, load_gene_pool(checkpoint))
     results = []
+    if observer is not None:
+        original_physics_step = env._physics_step
+        def observed_physics_step(*args, **kwargs):
+            transition = original_physics_step(*args, **kwargs)
+            observer.sample(env)
+            return transition
+        env._physics_step = observed_physics_step
     for episode in range(episodes):
         generator = torch.Generator().manual_seed(seed + episode)
         obs, _ = env.reset(seed=seed + episode)
+        if observer is not None:
+            observer.reset(env, seed + episode)
         approach, visible, distances, actions, decisions = 0.0, 0, [], 0, 0
         counterfactual = {str(p): [] for p in (-1.0, 0.0, 1.0)}
         visible_moves, expected_alignment, expected_moving, steps = 0, [], [], 0
@@ -112,6 +121,8 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
             "mean_expected_alignment_given_visible_and_moving": float(np.mean(expected_alignment)) if expected_alignment else None,
             "mean_expected_moving_probability_given_visible": float(np.mean(expected_moving)) if expected_moving else None,
         })
+        if observer is not None:
+            results[-1]["persistence"] = observer.finish(env)
         print(f"preference={preference:+g} seed={seed + episode} steps={steps} complete", file=sys.stderr, flush=True)
         if on_episode is not None:
             on_episode(preference, results[-1])

@@ -56,3 +56,46 @@ review transcript. The raw CLI transcript is `/tmp/social_movement_review_fixed.
 No experiment-code changes were made as part of the CLI repair. The confirmed
 follow-ups above remain open; fixing model access does not automatically fix
 the reviewed code.
+
+
+## Persistence review, finalized 2026-10-27
+
+The independent review of `persistence.py`, its tests and the observer hook
+found no correctness defects. I agree with its checks of interval exposure,
+continuous pair identity, birth/initial/terminal censoring, directed nearest
+neighbors and unchanged inference/RNG/physics. Local tests pass (27 tests),
+and an observer-enabled two-condition seed-42 smoke run reproduces prior
+movement and action metrics.
+
+The first runner/replay review was interrupted by CLI usage limits. A fresh
+review completed before this commit. It confirmed that the paired statistics
+are correctly keyed by seed and reported these open follow-ups:
+
+1. **Trace-to-run binding:** the runner records input/source hashes but no
+   per-trace hashes; the replay trusts filenames and matching initial frames.
+   Record trace hashes with condition/seed/checkpoint provenance at evaluation
+   completion, and verify them before replay. The reviewer rates this high.
+   I agree it is a reproducibility hardening gap for mixed or substituted
+   artifacts, rather than evidence that the known traces generated in this
+   session are wrong. This commit freezes raw results, traces and rendered
+   videos together, but does not retroactively add a recording-time binding.
+2. **Treatment validation:** the summarizer checks matching provenance and
+   condition labels but does not explicitly require preference 0 versus 1
+   and strength 2. Add those checks before accepting arbitrary inputs.
+   The reviewer rates this medium. I verified those fields directly in the
+   actual two raw files; the intended contrast is correct for these results.
+3. **Ambiguous input selection:** `next(glob(...))` silently selects the first
+   file when a directory contains multiple runs. Require one match or explicit
+   input paths. The reviewer rates this low. I verified exactly one input per
+   condition in this experiment directory.
+
+A minor visualization limitation is that trails crossing a torus seam are
+omitted rather than split and wrapped. The plotted positions and green
+proximity edges are correct. No inference or numerical result depends on
+trail rendering.
+
+These follow-ups remain open; the completed report does not claim that
+arbitrary external or mixed artifacts are fully validated. The raw transcripts
+are `/tmp/social_persistence_review.log` and
+`/tmp/persistence_commit_review.log`. Some reviewer test commands used the
+system environment without pytest; all 27 tests pass in the project's `.conda`.
