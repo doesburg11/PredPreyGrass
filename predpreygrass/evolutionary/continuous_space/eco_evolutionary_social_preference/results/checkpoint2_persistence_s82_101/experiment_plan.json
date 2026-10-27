@@ -1,0 +1,59 @@
+{
+  "checkpoint": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/checkpoint",
+  "training_seed": 2,
+  "evaluation_seeds": [
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101
+  ],
+  "conditions": {
+    "neutral": {
+      "preference": 0,
+      "strength": 2
+    },
+    "attraction2": {
+      "preference": 1,
+      "strength": 2
+    }
+  },
+  "primary_threshold_world_units": 100,
+  "horizon_ticks": 100,
+  "sensitivity_thresholds_world_units": [
+    75,
+    125
+  ],
+  "primary_metrics": [
+    "pair_100_retention_probability_among_known",
+    "mean_nn_distance_world"
+  ],
+  "same_environment_settings_as_training_seed1": true,
+  "different_weights_verified": {
+    "predator": {
+      "training_seed_1": "0e6fbd8bc1324cc156f578c2c4328e8b30550107b1521483dac80f3ba9aada5f",
+      "training_seed_2": "db40642b3794f933be1886ab605bdc2c59f842ca85da4cbbde80dbd7dd9a7d2d"
+    },
+    "prey": {
+      "training_seed_1": "aaa0cd348850d4318afe83c69189be3d5fbd7bd43995ef2ee408a64f8c7db055",
+      "training_seed_2": "e5fa8558d9381834e6b0bee807044ee6555228065cde80948c76a69b1871a6b1"
+    }
+  },
+  "founder_pool": "own saved checkpoint pool, matched within conditions; not held fixed across training runs",
+  "notes": "repeat existing reviewed measurement pipeline; no retraining or inheritance changes"
+}

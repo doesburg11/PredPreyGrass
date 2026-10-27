@@ -1,0 +1,11 @@
+{
+  "purpose": "Document separate complete-control verification, not the original mixed runner main()",
+  "verification_driver": "uniform_verification_driver.py",
+  "driver_sha256": "6d63b9d016ff9cc788755fa06b742fd7a024f87851e42af2cfb55c2ac63c6f45",
+  "verified_result_file": "uniform_verification.json",
+  "verification_sha256": "e04722a998929a0bb394393d77b1e8b795cb4332180199c83df7b553a58093fa",
+  "episode_journal_sha256": "994e8518305b0b3684aa3fa5961f91306485564c920f77155fd13314ad72c9aa",
+  "observed_matches": 40,
+  "historical_main": "mixed_evaluate_recorded_source.py",
+  "explanation": "Original main performed two smoke episodes. A separate Python driver then invoked evaluate for 20 neutral and 20 attraction episodes, comparing all baseline fields. mixed_evaluate was imported only for canonical(), not run as main. Source hashes identify dependency files, not the entrypoint. This supplementary driver archive was saved after verification; original data/proof files are unchanged."
+}
