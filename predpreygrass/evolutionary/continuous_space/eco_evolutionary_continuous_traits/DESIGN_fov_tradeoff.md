@@ -1,6 +1,6 @@
 # Design note: a field-of-view trade-off (2026-10-26)
 
-Status: **approved 2026-10-26, nothing built yet.** Decisions taken: no
+Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum).** Decisions taken: no
 energy cost for field of view, a new module, noisy monocular distance, and
 the parameters proposed below.
 
@@ -113,6 +113,39 @@ ecosystem collapses (guard 3), lower σ once, then stop.
   hunting and grazing).
 - Parameters as proposed: `M` = 150°, σ = 0.3 (to be checked in the
   calibration step), CT-05's costs of speed and vision.
+
+## Addendum (2026-10-27): strike catching
+
+**Why.** The calibration (eco_evolutionary_continuous_fov, RESULTS.md
+section 1) found that noisy monocular distances barely hurt the predators
+(at most 3–4% fewer catches per opportunity at σ = 0.5, about equally in
+front and to the side), while they clearly hurt the prey. A catch was a
+contact, which needs the direction to the prey but no judged distance, so
+the premise for predators ("a predator closing on prey needs accurate
+distance in front") did not hold in the model. Decision by the user: add a
+strike.
+
+**Rule** (`strike_catching`). Each physics step, a predator that is not
+cooling down strikes at the nearest prey in its view when it perceives that
+prey within reach (sum of radii plus `strike_reach`, 0). The perceived
+distance is exact inside the binocular overlap and noisy outside it, with
+the same σ as the observation but its own random draws. A strike at prey
+truly within reach catches it; a premature strike misses, and the predator
+cannot strike for `strike_cooldown` physics steps (16, two decisions).
+Without noise a strike catches exactly the prey in view that contact would
+catch; prey touching a predator from outside its view are no longer caught.
+
+**Why a reflex, not an action.** The strike is triggered by perception, not
+chosen by the policy, so the action and observation spaces stay as they are
+and the CT-05 policies can calibrate it at once; a strike action would need
+new policies before any calibration. The policy can still adapt how it
+approaches (from the front, more slowly). A strike action, or observing the
+cooldown, remains an option for later.
+
+**Calibration** (the same design as section 1, `calibrate_noise.py
+--strike`), with a contact-catching σ = 0 condition for the change of
+ecology from strikes alone. Pilot only if predators then clearly lose
+catches to noise, more to the side than in front.
 
 ## References
 

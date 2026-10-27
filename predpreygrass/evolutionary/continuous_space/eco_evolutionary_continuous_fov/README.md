@@ -1,8 +1,11 @@
 # eco_evolutionary_continuous_fov
 
-**Status (2026-10-27): implemented, tested and reviewed, not yet run.**
-Next: the calibration of the distance noise, then a pilot (design note,
-plan).
+**Status (2026-10-27): implemented, tested, reviewed and calibrated, no
+training run yet.** The first calibration showed that noisy distances barely
+hurt predators that catch by contact (RESULTS.md section 1), so predators
+now catch by strikes; with strikes, noise costs them 41% of catches to the
+side and 6% in front at σ = 0.3 (section 2). Next: the pilot (design note,
+plan step 2).
 
 Can predators and prey evolve different eyes? A copy of
 [`eco_evolutionary_continuous_traits`](../eco_evolutionary_continuous_traits/)
@@ -27,6 +30,12 @@ other. Design, predictions and the pre-specified tests:
   distance multiplied by exp(0.3 × N(0, 1)) (`fov_monocular_distance_noise`),
   capped at the observation scale. The noise has its own random generator,
   so it changes observations only, never the world.
+- **Strike catching** (`strike_catching`, design note addendum): a
+  predator strikes at the nearest prey in view when it perceives it within
+  reach (sum of radii), with the same noisy distance outside the overlap;
+  a premature strike misses and the predator cannot strike for 16 physics
+  steps. Without noise it catches the in-view prey contact would (at most
+  one per step).
 - **No energy cost for field of view** (`trait_cost_fov` 0); speed and
   vision cost as in CT-05 (0.25 and 0.125).
 - **Per-species gene-pool freeze** (`trait_frozen_species`): a listed
@@ -54,8 +63,10 @@ As in `eco_evolutionary_continuous_traits`: [`environment.py`](environment.py)
 [`checkpoints.py`](checkpoints.py), [`evolve_frozen.py`](evolve_frozen.py),
 [`tournament.py`](tournament.py), [`eval.py`](eval.py), [`config/`](config/)
 (the experiment's settings in `config_env.py`), [`tests/`](tests/)
-(`test_fov.py` for the trade-off). Not copied: that module's analyses,
-launchers and results.
+(`test_fov.py` for the trade-off). New here:
+[`calibrate_noise.py`](calibrate_noise.py) (the calibration) and
+[`RESULTS.md`](RESULTS.md). Not copied: that module's analyses, launchers and
+results.
 
 ## Usage
 
@@ -74,8 +85,9 @@ Runs are saved in the module's `runs/` folder (gitignored).
   itself correct; two bugs in the gene-pool freeze fixed (without an initial
   pool it resampled every episode; a checkpoint restored the living, not
   the frozen pool), tests added.
-- [ ] Calibrate the noise (design note, step 1): catches per predator
-  against fixed prey with noise 0, 0.15, 0.3 and 0.5, frozen CT-05
-  policies, prey in front against to the side.
-- [ ] Pilot (step 2): one run with the trade-off and one with noise 0, 3,000
-  iterations side by side; pre-specified test 1 (divergence).
+- [x] Calibrate the noise (design note, step 1; RESULTS.md sections 1
+  and 2): contact catching gave predators almost no cost of noise; with
+  strike catching σ = 0.3 costs them 41% of side catches, 6% in front.
+- [ ] Pilot (step 2): one run with the trade-off and one with noise 0 (both
+  with strikes), 3,000 iterations side by side; pre-specified test 1
+  (divergence).

@@ -20,6 +20,17 @@ scale. With the noise at 0 the environment is that of
 eco_evolutionary_continuous_traits. trait_frozen_species keeps a species'
 gene pool fixed across episodes (the coevolution branches).
 
+Strike catching (strike_catching, the design note's addendum): instead of
+catching any prey it touches, a predator strikes, once per physics step, at
+the nearest prey in its view when it perceives that prey within reach (sum
+of radii plus strike_reach). The perceived distance is exact inside the
+binocular overlap and noisy outside it, as in the observation, with its own
+draws. A strike at prey truly within reach catches it; a premature one
+misses, and the predator cannot strike for strike_cooldown physics steps.
+Without noise a strike catches prey in view that contact would catch, but at
+most one per predator and physics step (the nearest), where contact could
+catch several.
+
 Predators and prey move on a torus with steering physics, prey graze grass
 clusters that move as they are grazed, both species pay energy to live and
 move, starve at zero energy and give birth at an energy threshold. Each
@@ -160,6 +171,10 @@ DEFAULT_CONFIG = {
     # drawn from the initial pool every episode (offspring still mutate);
     # without trait_initial_gene_pool, from the first episode's founders.
     "trait_frozen_species": [],
+    # Strike catching (module docstring): off is contact catching.
+    "strike_catching": False,
+    "strike_reach": 0.0,
+    "strike_cooldown": 16,
 }
 
 # Every fix on: the cleaned-up world.
@@ -339,6 +354,19 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         if not isinstance(frozen, list) or any(species not in SPECIES for species in frozen) or len(set(frozen)) < len(frozen):
             raise ValueError(f"trait_frozen_species must be a list of distinct species from {SPECIES}")
         self.frozen_species = frozenset(frozen)
+        if not isinstance(c["strike_catching"], bool):
+            raise ValueError("strike_catching must be true or false")
+        if isinstance(c["strike_reach"], bool) or not isinstance(c["strike_reach"], (int, float)) or not (math.isfinite(c["strike_reach"]) and c["strike_reach"] >= 0):
+            raise ValueError("strike_reach must be finite and nonnegative")
+        if isinstance(c["strike_cooldown"], bool) or not isinstance(c["strike_cooldown"], int) or c["strike_cooldown"] < 0:
+            raise ValueError("strike_cooldown must be a nonnegative integer")
+        if c["strike_catching"] and not self.fix["simultaneous_movement"]:
+            raise ValueError("strike_catching needs fix_simultaneous_movement")
+        self.strike = c["strike_catching"]
+        self.strike_reach = float(c["strike_reach"])
+        self.strike_cooldown = c["strike_cooldown"]
+        self.ready_at, self.strike_counts = {}, {"strikes": 0, "misses": 0}
+        self.strike_rng = np.random.default_rng()
         self.obs_rng = np.random.default_rng()
         self.gene_rng = np.random.default_rng()
         self.episode_trait_stats = None  # set when an episode ends
@@ -430,6 +458,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             self._update_gene_pool()
         self.gene_rng = np.random.default_rng(None if seed is None else seed + 2)
         self.obs_rng = np.random.default_rng(None if seed is None else seed + 3)
+        self.strike_rng = np.random.default_rng(None if seed is None else seed + 4)
+        self.ready_at, self.strike_counts = {}, {"strikes": 0, "misses": 0}
         self.birth_rng = random.Random(None if seed is None else seed + 1)
         self.grass.reset(seed)
         spawn = random.Random(seed)
@@ -625,6 +655,9 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             # Every contact from the positions at the start of the step,
             # then every move.
             moves = self._all_contacts()
+            if self.strike:
+                struck = self._strikes()
+                moves = [(animal, struck.get(id(animal)), aways) for animal, _, aways in moves]
             for animal, catcher, aways in moves:
                 self._move(animal, actions[animal.id], catcher, aways, catches)
         else:
@@ -926,10 +959,11 @@ class PredPreyGrassContinuous(MultiAgentEnv):
             ]
         return values + [0.0] * (SLOT_SIZE * count - len(values))
 
-    def _monocular_factor(self, observer, dx, dy, scaled_distance):
+    def _monocular_factor(self, observer, dx, dy, scaled_distance, rng=None):
         """1 inside the observer's binocular overlap (or without noise);
         outside it a lognormal factor for the offset and distance, capped so
-        the scaled distance stays at most 1."""
+        the scaled distance stays at most 1. Drawn from rng (default: the
+        observation generator)."""
         if self.monocular_noise == 0 or scaled_distance <= 0:
             return 1.0
         overlap = min(max(2 * self.monocular_field - observer.fov, 0.0), observer.fov)
@@ -937,7 +971,38 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         bearing = abs((angle - observer.orientation + 180) % 360 - 180)
         if bearing <= overlap / 2:
             return 1.0
-        return min(math.exp(self.monocular_noise * self.obs_rng.standard_normal()), 1.0 / scaled_distance)
+        rng = self.obs_rng if rng is None else rng
+        return min(math.exp(self.monocular_noise * rng.standard_normal()), 1.0 / scaled_distance)
+
+    def _strikes(self):
+        """{id(prey): predator} for this physics step's successful strikes,
+        from the current positions (module docstring). Predators strike in
+        list order, each at most once, and a struck prey is not struck
+        again; a miss starts the predator's cooldown."""
+        struck = {}
+        for predator in self.predators:
+            if self.ready_at.get(predator.id, 0) > self.time_step:
+                continue
+            seen = []
+            for prey in self.prey:
+                if id(prey) in struck or not self.torus.in_view(predator, prey.position, predator.view_distance, predator.fov):
+                    continue
+                dx, dy = self.torus.offset(predator.position, prey.position)
+                seen.append((math.hypot(dx, dy), dx, dy, prey))
+            if not seen:
+                continue
+            distance, dx, dy, prey = min(seen, key=lambda entry: entry[0])
+            reach = predator.radius + prey.radius + self.strike_reach
+            factor = self._monocular_factor(predator, dx, dy, distance / predator.view_distance, rng=self.strike_rng)
+            if distance * factor >= reach:
+                continue
+            self.strike_counts["strikes"] += 1
+            if distance < reach:
+                struck[id(prey)] = predator
+            else:
+                self.strike_counts["misses"] += 1
+                self.ready_at[predator.id] = self.time_step + 1 + self.strike_cooldown
+        return struck
 
     def _observe(self, animal):
         """SPEC.md, section 7.1."""

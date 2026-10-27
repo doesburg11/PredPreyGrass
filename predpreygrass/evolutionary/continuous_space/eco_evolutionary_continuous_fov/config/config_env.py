@@ -108,4 +108,9 @@ config_env = {
     "fov_monocular_field": 150.0,
     "fov_monocular_distance_noise": 0.3,
     "trait_frozen_species": [],
+    # Predators catch by strikes (design note, addendum; RESULTS.md section
+    # 2): a premature strike misses and costs 16 physics steps.
+    "strike_catching": True,
+    "strike_reach": 0.0,
+    "strike_cooldown": 16,
 }

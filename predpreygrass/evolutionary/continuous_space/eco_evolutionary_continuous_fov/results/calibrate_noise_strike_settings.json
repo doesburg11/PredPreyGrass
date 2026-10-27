@@ -1,0 +1,83 @@
+{
+  "episodes": 400,
+  "branch_point": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/eco_evolutionary_continuous_traits_2026-10-16_20-53-30_161103/checkpoint/iter_001500",
+  "cooldown": 16,
+  "conditions": {
+    "sigma0": [
+      0.0,
+      [],
+      true
+    ],
+    "sigma0.15_predator": [
+      0.15,
+      [
+        "predator"
+      ],
+      true
+    ],
+    "sigma0.3_predator": [
+      0.3,
+      [
+        "predator"
+      ],
+      true
+    ],
+    "sigma0.5_predator": [
+      0.5,
+      [
+        "predator"
+      ],
+      true
+    ],
+    "sigma0.15_prey": [
+      0.15,
+      [
+        "prey"
+      ],
+      true
+    ],
+    "sigma0.3_prey": [
+      0.3,
+      [
+        "prey"
+      ],
+      true
+    ],
+    "sigma0.5_prey": [
+      0.5,
+      [
+        "prey"
+      ],
+      true
+    ],
+    "sigma0.15_both": [
+      0.15,
+      [
+        "predator",
+        "prey"
+      ],
+      true
+    ],
+    "sigma0.3_both": [
+      0.3,
+      [
+        "predator",
+        "prey"
+      ],
+      true
+    ],
+    "sigma0.5_both": [
+      0.5,
+      [
+        "predator",
+        "prey"
+      ],
+      true
+    ],
+    "contact_sigma0": [
+      0.0,
+      [],
+      false
+    ]
+  }
+}

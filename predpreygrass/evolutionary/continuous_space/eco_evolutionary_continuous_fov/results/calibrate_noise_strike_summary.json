@@ -1,0 +1,277 @@
+{
+  "sigma0": {
+    "episodes": 400,
+    "catch_rate": 23.74469439202251,
+    "catch_rate_vs_sigma0": 1.0,
+    "catch_rate_vs_sigma0_95": [
+      1.0,
+      1.0
+    ],
+    "front_rate": 104.35122949894249,
+    "front_rate_vs_sigma0": 1.0,
+    "front_rate_vs_sigma0_95": [
+      1.0,
+      1.0
+    ],
+    "side_rate": 83.77776602696058,
+    "side_rate_vs_sigma0": 1.0,
+    "side_rate_vs_sigma0_95": [
+      1.0,
+      1.0
+    ],
+    "side_share": 0.5613851926374468,
+    "miss_share": 0.0,
+    "predators_survive": 1.0,
+    "prey_survive": 0.9825
+  },
+  "sigma0.15_predator": {
+    "episodes": 400,
+    "catch_rate": 25.487683677797637,
+    "catch_rate_vs_sigma0": 1.073405420891023,
+    "catch_rate_vs_sigma0_95": [
+      1.0608654879989445,
+      1.086198975945376
+    ],
+    "front_rate": 101.76101864857561,
+    "front_rate_vs_sigma0": 0.9751779556138999,
+    "front_rate_vs_sigma0_95": [
+      0.9582363538019228,
+      0.993287911476135
+    ],
+    "side_rate": 59.50192472126937,
+    "side_rate_vs_sigma0": 0.7102352753369076,
+    "side_rate_vs_sigma0_95": [
+      0.692371302036745,
+      0.7284753286403618
+    ],
+    "side_share": 0.3693370146630407,
+    "miss_share": 0.21862479521160116,
+    "predators_survive": 0.985,
+    "prey_survive": 1.0
+  },
+  "sigma0.3_predator": {
+    "episodes": 400,
+    "catch_rate": 25.831131419128745,
+    "catch_rate_vs_sigma0": 1.0878696096340248,
+    "catch_rate_vs_sigma0_95": [
+      1.0720509884240692,
+      1.1041081908634034
+    ],
+    "front_rate": 98.2030405918808,
+    "front_rate_vs_sigma0": 0.9410817779859124,
+    "front_rate_vs_sigma0_95": [
+      0.9230954191507773,
+      0.9593051257395228
+    ],
+    "side_rate": 49.475073128705056,
+    "side_rate_vs_sigma0": 0.5905513535987991,
+    "side_rate_vs_sigma0_95": [
+      0.5731435570497687,
+      0.6081983319877616
+    ],
+    "side_share": 0.2632363965764978,
+    "miss_share": 0.3581056356737194,
+    "predators_survive": 0.95,
+    "prey_survive": 0.9975
+  },
+  "sigma0.5_predator": {
+    "episodes": 400,
+    "catch_rate": 25.614691546679513,
+    "catch_rate_vs_sigma0": 1.0787543155444976,
+    "catch_rate_vs_sigma0_95": [
+      1.0619251060748778,
+      1.0948972908722936
+    ],
+    "front_rate": 95.12327175529967,
+    "front_rate_vs_sigma0": 0.9115682892482226,
+    "front_rate_vs_sigma0_95": [
+      0.8945715462236004,
+      0.9298369430112186
+    ],
+    "side_rate": 45.47062477119693,
+    "side_rate_vs_sigma0": 0.5427528916987832,
+    "side_rate_vs_sigma0_95": [
+      0.5260922608034511,
+      0.5599188272030984
+    ],
+    "side_share": 0.19884876557089534,
+    "miss_share": 0.49609328970386957,
+    "predators_survive": 0.905,
+    "prey_survive": 1.0
+  },
+  "sigma0.15_prey": {
+    "episodes": 400,
+    "catch_rate": 23.442027305811177,
+    "catch_rate_vs_sigma0": 0.9872532751437298,
+    "catch_rate_vs_sigma0_95": [
+      0.9777780266854373,
+      0.9967136578040612
+    ],
+    "front_rate": 106.17858118304426,
+    "front_rate_vs_sigma0": 1.017511549148736,
+    "front_rate_vs_sigma0_95": [
+      0.9996147480497178,
+      1.0364865554378353
+    ],
+    "side_rate": 85.46367772845639,
+    "side_rate_vs_sigma0": 1.0201236172966617,
+    "side_rate_vs_sigma0_95": [
+      0.9965588624222314,
+      1.0442877834346371
+    ],
+    "side_share": 0.569946233236512,
+    "miss_share": 0.0,
+    "predators_survive": 1.0,
+    "prey_survive": 0.97
+  },
+  "sigma0.3_prey": {
+    "episodes": 400,
+    "catch_rate": 22.496336703589503,
+    "catch_rate_vs_sigma0": 0.947425826257321,
+    "catch_rate_vs_sigma0_95": [
+      0.9388586387968356,
+      0.9555644124775852
+    ],
+    "front_rate": 115.31816475230917,
+    "front_rate_vs_sigma0": 1.1050963683516333,
+    "front_rate_vs_sigma0_95": [
+      1.0853242333107913,
+      1.1250173131879382
+    ],
+    "side_rate": 91.02493262215405,
+    "side_rate_vs_sigma0": 1.0865046531899796,
+    "side_rate_vs_sigma0_95": [
+      1.0615187495968466,
+      1.110791001272632
+    ],
+    "side_share": 0.5558428225336948,
+    "miss_share": 0.0,
+    "predators_survive": 0.995,
+    "prey_survive": 0.9225
+  },
+  "sigma0.5_prey": {
+    "episodes": 400,
+    "catch_rate": 21.627357201247428,
+    "catch_rate_vs_sigma0": 0.9108290401292155,
+    "catch_rate_vs_sigma0_95": [
+      0.90228732673944,
+      0.9197387336736506
+    ],
+    "front_rate": 131.99274664050319,
+    "front_rate_vs_sigma0": 1.2648892329710482,
+    "front_rate_vs_sigma0_95": [
+      1.2419930310319445,
+      1.2891301957612817
+    ],
+    "side_rate": 105.10374807148769,
+    "side_rate_vs_sigma0": 1.25455419803942,
+    "side_rate_vs_sigma0_95": [
+      1.2267859903232912,
+      1.2818598723853651
+    ],
+    "side_share": 0.5571410726488504,
+    "miss_share": 0.0,
+    "predators_survive": 0.995,
+    "prey_survive": 0.6975
+  },
+  "sigma0.15_both": {
+    "episodes": 400,
+    "catch_rate": 25.165627426269626,
+    "catch_rate_vs_sigma0": 1.0598421277102015,
+    "catch_rate_vs_sigma0_95": [
+      1.0484444179132715,
+      1.070929789527006
+    ],
+    "front_rate": 104.31854463744473,
+    "front_rate_vs_sigma0": 0.999686780293297,
+    "front_rate_vs_sigma0_95": [
+      0.9827457689646492,
+      1.0170993923266336
+    ],
+    "side_rate": 61.395125080179604,
+    "side_rate_vs_sigma0": 0.7328331607746857,
+    "side_rate_vs_sigma0_95": [
+      0.71470849334318,
+      0.750390818029837
+    ],
+    "side_share": 0.3680496808428824,
+    "miss_share": 0.21181599139259177,
+    "predators_survive": 0.99,
+    "prey_survive": 0.995
+  },
+  "sigma0.3_both": {
+    "episodes": 400,
+    "catch_rate": 24.997867169163687,
+    "catch_rate_vs_sigma0": 1.0527769596210177,
+    "catch_rate_vs_sigma0_95": [
+      1.0408297213542306,
+      1.0651494200835392
+    ],
+    "front_rate": 108.46675039753598,
+    "front_rate_vs_sigma0": 1.0394391222638655,
+    "front_rate_vs_sigma0_95": [
+      1.021080604212317,
+      1.0586228824781974
+    ],
+    "side_rate": 55.71533242012042,
+    "side_rate_vs_sigma0": 0.665037217657375,
+    "side_rate_vs_sigma0_95": [
+      0.646266220426238,
+      0.6836733367697155
+    ],
+    "side_share": 0.272303217891151,
+    "miss_share": 0.34380734038683947,
+    "predators_survive": 0.9925,
+    "prey_survive": 0.98
+  },
+  "sigma0.5_both": {
+    "episodes": 400,
+    "catch_rate": 24.319429787093963,
+    "catch_rate_vs_sigma0": 1.0242047922614892,
+    "catch_rate_vs_sigma0_95": [
+      1.0125722094235392,
+      1.035792843137051
+    ],
+    "front_rate": 120.4996686636614,
+    "front_rate_vs_sigma0": 1.1547508279706715,
+    "front_rate_vs_sigma0_95": [
+      1.133834339252758,
+      1.176652797302113
+    ],
+    "side_rate": 58.6170198271464,
+    "side_rate_vs_sigma0": 0.6996727485939744,
+    "side_rate_vs_sigma0_95": [
+      0.681361940949439,
+      0.7200681908688916
+    ],
+    "side_share": 0.23608748407080185,
+    "miss_share": 0.4788961967400629,
+    "predators_survive": 0.985,
+    "prey_survive": 0.9375
+  },
+  "contact_sigma0": {
+    "episodes": 400,
+    "catch_rate": 23.4320723285876,
+    "catch_rate_vs_sigma0": 0.9868340245499247,
+    "catch_rate_vs_sigma0_95": [
+      0.9781173176824555,
+      0.9951505984510812
+    ],
+    "front_rate": 103.49394293963897,
+    "front_rate_vs_sigma0": 0.9917846050935872,
+    "front_rate_vs_sigma0_95": [
+      0.9745529698829583,
+      1.009394200521509
+    ],
+    "side_rate": 90.02466962156187,
+    "side_rate_vs_sigma0": 1.0745651727284178,
+    "side_rate_vs_sigma0_95": [
+      1.0516268926553427,
+      1.0986765578045081
+    ],
+    "side_share": 0.5529108512511002,
+    "miss_share": null,
+    "predators_survive": 1.0,
+    "prey_survive": 0.99
+  }
+}

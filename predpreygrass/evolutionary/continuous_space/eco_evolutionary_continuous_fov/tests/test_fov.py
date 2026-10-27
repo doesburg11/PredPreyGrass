@@ -9,6 +9,7 @@ import pytest
 
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.config.config_env import config_env
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.environment import (
+    DIRECTIONS,
     FIXES,
     TRAITS,
     PredPreyGrassContinuous,
@@ -20,7 +21,7 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_tra
     PredPreyGrassContinuous as TraitsEnvironment,
 )
 
-TRADE_OFF_KEYS = ("fov_monocular_field", "fov_monocular_distance_noise", "trait_frozen_species")
+TRADE_OFF_KEYS = ("fov_monocular_field", "fov_monocular_distance_noise", "trait_frozen_species", "strike_catching", "strike_reach", "strike_cooldown")
 PREDATOR_SLOT = 4 + len(TRAITS)  # prey observer: the first slot is the nearest predator
 
 
@@ -55,9 +56,10 @@ def test_without_noise_it_is_the_continuous_traits_environment(seed):
 
 def test_noise_changes_observations_only():
     """The noise draws from its own generator: under the same actions the
-    world evolves exactly as without it."""
-    noisy = PredPreyGrassContinuous({**config_env, "fov_monocular_distance_noise": 0.3})
-    clean = PredPreyGrassContinuous({**config_env, "fov_monocular_distance_noise": 0.0})
+    world evolves exactly as without it (contact catching; with strikes,
+    noise changes which strikes hit)."""
+    noisy = PredPreyGrassContinuous({**config_env, "fov_monocular_distance_noise": 0.3, "strike_catching": False})
+    clean = PredPreyGrassContinuous({**config_env, "fov_monocular_distance_noise": 0.0, "strike_catching": False})
     for env in (noisy, clean):
         env.reset(seed=3)
     rng = np.random.default_rng(3)
@@ -309,6 +311,7 @@ def test_module_config_is_the_planned_experiment():
     assert config_env["fov_monocular_distance_noise"] == 0.3
     assert config_env["trait_cost_fov"] == 0.0
     assert (config_env["trait_cost_speed"], config_env["trait_cost_vision"]) == (0.25, 0.125)
+    assert (config_env["strike_catching"], config_env["strike_reach"], config_env["strike_cooldown"]) == (True, 0.0, 16)
     PredPreyGrassContinuous(config_env)
 
 
@@ -333,3 +336,128 @@ def test_workers_keep_their_own_frozen_founders(tmp_path):
     saved = tmp_path / "gene_pools.json"
     saved.write_text(json.dumps([env.gene_pool_state() for env in workers]))
     assert rows(pooled_gene_pool(saved)["prey"]) == sorted(founders[0] + founders[1])
+
+
+def strike_scene(bearing, distance, predator_fov_gene=0.0, noise=0.0, cooldown=16):
+    """One predator at the centre facing orientation 0 (field of view gene
+    as given) and one prey at the given bearing and distance; returns
+    (env, predator, prey)."""
+    env = PredPreyGrassContinuous(
+        {**FIXES, "prey_count": 1, "predator_count": 1, "strike_catching": True, "strike_cooldown": cooldown, "fov_monocular_distance_noise": noise}
+    )
+    env.reset(seed=0)
+    predator, prey = env.predators[0], env.prey[0]
+    genome = np.array([0.0, 0.0, predator_fov_gene])
+    predator.genome = genome
+    settings, predator.cost_multiplier = env._phenotype("predator", genome)
+    _, _, predator.max_speed, _, _, predator.view_distance, predator.fov = settings
+    predator.position, predator.orientation = Vector(400.0, 400.0), 0.0
+    radians = math.radians(bearing)
+    prey.position = Vector(400.0 + distance * math.cos(radians), 400.0 - distance * math.sin(radians))
+    return env, predator, prey
+
+
+def test_without_noise_a_strike_catches_prey_in_view_within_reach():
+    reach = 16 + 16
+    env, predator, prey = strike_scene(bearing=10.0, distance=reach - 2)
+    assert env._strikes() == {id(prey): predator}
+    env, _, _ = strike_scene(bearing=10.0, distance=reach + 2)
+    assert env._strikes() == {} and env.strike_counts == {"strikes": 0, "misses": 0}
+    # Touching but behind the predator: not seen, not struck.
+    env, _, _ = strike_scene(bearing=180.0, distance=reach - 2)
+    assert env._strikes() == {}
+
+
+def test_noisy_monocular_strikes_miss_and_cool_down():
+    """Field of view gene 0.5 (247 degrees, 53 degrees of overlap): prey
+    just out of reach to the side is sometimes struck at too early, which
+    misses and blocks striking for the cooldown; in front, never."""
+    reach = 16 + 16
+    env, predator, prey = strike_scene(bearing=80.0, distance=reach + 4, predator_fov_gene=0.5, noise=0.5, cooldown=5)
+    misses = 0
+    for _ in range(200):
+        assert env._strikes() == {}
+        if env.strike_counts["misses"] > misses:
+            misses = env.strike_counts["misses"]
+            # Cooling down: no strike for 5 steps, even within reach.
+            prey.position = Vector(400.0 + 10.0 * math.cos(math.radians(80.0)), 400.0 - 10.0 * math.sin(math.radians(80.0)))
+            for _ in range(5):
+                env.time_step += 1
+                assert env._strikes() == {}
+            env.time_step += 1
+            prey.position = Vector(400.0 + (reach + 4) * math.cos(math.radians(80.0)), 400.0 - (reach + 4) * math.sin(math.radians(80.0)))
+        env.time_step += 1
+    assert misses > 5
+    env, _, _ = strike_scene(bearing=10.0, distance=reach + 4, predator_fov_gene=0.5, noise=0.5)
+    for _ in range(200):
+        assert env._strikes() == {}
+        env.time_step += 1
+    assert env.strike_counts["strikes"] == 0
+
+
+def test_strikes_leave_the_observation_noise_alone():
+    env, _, _ = strike_scene(bearing=80.0, distance=40.0, predator_fov_gene=0.5, noise=0.5)
+    before = env.obs_rng.bit_generator.state
+    for _ in range(50):
+        env._strikes()
+    assert env.obs_rng.bit_generator.state == before
+
+
+def test_strike_catching_runs_and_catches():
+    env = PredPreyGrassContinuous({**config_env, "strike_catching": True, "max_time_steps": 3000})
+    obs, _ = env.reset(seed=1)
+    rng = np.random.default_rng(1)
+    while True:
+        obs, _, terms, truncs, _ = env.step(random_actions(rng, obs))
+        if terms["__all__"] or truncs["__all__"]:
+            break
+        obs = {a: o for a, o in obs.items() if not (terms.get(a) or truncs.get(a))}
+    assert env.strike_counts["strikes"] > 0  # founders near 150 degrees: all binocular, so no misses
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [{"strike_catching": 1}, {"strike_reach": -1}, {"strike_reach": float("inf")}, {"strike_cooldown": 1.5}, {"strike_cooldown": -1}],
+)
+def test_invalid_strike_settings(bad):
+    with pytest.raises(ValueError):
+        PredPreyGrassContinuous({**FIXES, **bad})
+
+
+def test_strike_catching_needs_simultaneous_movement():
+    with pytest.raises(ValueError):
+        PredPreyGrassContinuous({**FIXES, "fix_simultaneous_movement": False, "strike_catching": True})
+
+
+def test_a_strike_takes_only_the_nearest_prey():
+    """Two prey within reach in front: one strike, the nearer one; contact
+    would have caught both."""
+    env, predator, prey = strike_scene(bearing=0.0, distance=20.0)
+    other = env._animal("prey", 1, Vector(400.0 + 28.0 * math.cos(math.radians(20.0)), 400.0 - 28.0 * math.sin(math.radians(20.0))), np.zeros(len(TRAITS)))
+    env.prey.append(other)
+    env.entities.append(other)
+    assert env._strikes() == {id(prey): predator}
+
+
+def test_a_successful_strike_removes_the_prey_and_feeds_the_predator():
+    env, predator, prey = strike_scene(bearing=0.0, distance=20.0)
+    extra = env._animal("prey", 1, Vector(100.0, 100.0), np.zeros(len(TRAITS)))
+    env.prey.append(extra)
+    env.entities.append(extra)
+    env.active.append(extra.id)
+    predator.energy, prey.energy = 5.0, 4.0
+    agents = list(env.active)
+    actions = {agent: 2 * DIRECTIONS for agent in agents}
+    _, _, terminateds, *_ = env._physics_step(actions)
+    assert prey not in env.prey and terminateds[prey.id]
+    assert extra in env.prey and not terminateds[extra.id]
+    expected = 5.0 + env.catch_efficiency * 4.0
+    assert expected - 0.05 < predator.energy < expected
+
+
+def test_strike_runs_are_reproducible():
+    traces = []
+    for _ in range(2):
+        env = PredPreyGrassContinuous({**config_env, "strike_catching": True, "fov_monocular_distance_noise": 0.5, "max_time_steps": 1500})
+        traces.append((run(env, seed=4), dict(env.strike_counts)))
+    assert traces[0] == traces[1]

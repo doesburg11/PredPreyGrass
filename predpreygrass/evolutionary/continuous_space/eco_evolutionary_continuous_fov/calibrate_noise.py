@@ -8,6 +8,10 @@ pools, held fixed (founders drawn from them every episode). Its own settings
 otherwise, field-of-view energy cost included, so that only the noise
 differs between conditions. Conditions: sigma in SIGMAS, applied to the
 predators only, the prey only, or both (sigma 0 is the common baseline).
+With --strike, predators catch by strikes (strike_catching, cooldown
+--cooldown physics steps) in every condition, and one more condition,
+contact_sigma0, catches by contact as CT-05 did (the change of ecology
+from strikes alone); results then go to runs/calibrate_noise_strike.
 Episode seeds are common to all conditions, and so are the noise draws:
 every monocular observation draws its factor, also for a species whose noise
 is switched off (the factor is then not applied).
@@ -52,16 +56,18 @@ TARGETS = ("predator", "prey", "both")
 CHUNK = 20  # episodes per task
 
 
-def conditions():
-    """{name: (sigma, noisy species)}."""
-    out = {"sigma0": (0.0, ())}
+def conditions(strike=False):
+    """{name: (sigma, noisy species, strike catching)}."""
+    out = {"sigma0": (0.0, (), strike)}
     for target in TARGETS:
         for sigma in SIGMAS:
-            out[f"sigma{sigma}_{target}"] = (sigma, ("predator", "prey") if target == "both" else (target,))
+            out[f"sigma{sigma}_{target}"] = (sigma, ("predator", "prey") if target == "both" else (target,), strike)
+    if strike:
+        out["contact_sigma0"] = (0.0, (), False)
     return out
 
 
-def make_env(branch_point, sigma, noisy):
+def make_env(branch_point, sigma, noisy, strike=False, cooldown=16):
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.checkpoints import (
         checkpoint_env_config,
         load_gene_pool,
@@ -77,8 +83,8 @@ def make_env(branch_point, sigma, noisy):
             self.tally = {"front": 0, "side": 0, "front_seen": 0, "side_seen": 0, "predator_steps": 0, "prey_steps": 0}
             return super().reset(seed=seed, options=options)
 
-        def _monocular_factor(self, observer, dx, dy, scaled_distance):
-            factor = super()._monocular_factor(observer, dx, dy, scaled_distance)
+        def _monocular_factor(self, observer, dx, dy, scaled_distance, rng=None):
+            factor = super()._monocular_factor(observer, dx, dy, scaled_distance, rng=rng)
             return factor if observer.species in noisy else 1.0
 
         def _zone(self, predator, prey):
@@ -107,6 +113,7 @@ def make_env(branch_point, sigma, noisy):
 
     config = checkpoint_env_config(branch_point)
     config.update(trait_initial_gene_pool=None, fov_monocular_field=150.0, fov_monocular_distance_noise=sigma)
+    config.update(strike_catching=strike, strike_reach=0.0, strike_cooldown=cooldown)
     env = CalibrationEnv(config)
     use_gene_pool(env, load_gene_pool(branch_point))
     env.freeze_gene_pool = True
@@ -119,9 +126,9 @@ def run_chunk(task):
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.checkpoints import load_module
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.tournament import sample_actions
 
-    name, branch_point, sigma, noisy, seeds = task
+    name, branch_point, sigma, noisy, strike, cooldown, seeds = task
     torch.set_num_threads(1)
-    env = make_env(branch_point, sigma, noisy)
+    env = make_env(branch_point, sigma, noisy, strike, cooldown)
     modules = {species: load_module(branch_point, species) for species in ("predator", "prey")}
     records = []
     for seed in seeds:
@@ -139,6 +146,7 @@ def run_chunk(task):
                 "seed": seed,
                 "steps": steps,
                 **env.tally,
+                **env.strike_counts,
                 "catches": env.tally["front"] + env.tally["side"],
                 "births": dict(env.births),
                 "predators_alive": len(env.predators),
@@ -186,6 +194,8 @@ def summarize(results, boots=2000):
             entry[f"{rate}_vs_sigma0_95"] = [float(x) for x in np.nanpercentile(ratios, [2.5, 97.5])]
         catches = sum(r["catches"] for r in records)
         entry["side_share"] = sum(r["side"] for r in records) / catches if catches else None
+        strikes = sum(r.get("strikes", 0) for r in records)
+        entry["miss_share"] = sum(r.get("misses", 0) for r in records) / strikes if strikes else None
         entry["predators_survive"] = float(np.mean([r["predators_alive"] > 0 for r in records]))
         entry["prey_survive"] = float(np.mean([r["prey_alive"] > 0 for r in records]))
         out[name] = entry
@@ -197,20 +207,34 @@ def main():
     parser.add_argument("--episodes", type=int, default=200)
     parser.add_argument("--workers", type=int, default=28)
     parser.add_argument("--branch-point", default=str(BRANCH_POINT), help="CT-05 checkpoint (iteration 1,500)")
+    parser.add_argument("--strike", action="store_true", help="predators catch by strikes")
+    parser.add_argument("--cooldown", type=int, default=16, help="physics steps without striking after a miss")
     args = parser.parse_args()
     if args.episodes < 1:
         parser.error("--episodes must be at least 1")
+    if args.cooldown < 0:
+        parser.error("--cooldown must be nonnegative")
     if not (Path(args.branch_point) / "gene_pools.json").is_file():
         parser.error(f"no CT-05 checkpoint at {args.branch_point} (pass --branch-point)")
-    OUT.mkdir(parents=True, exist_ok=True)
-    chosen = conditions()
+    out = OUT.with_name(OUT.name + "_strike") if args.strike else OUT
+    out.mkdir(parents=True, exist_ok=True)
+    chosen = conditions(args.strike)
     tasks = [
-        (name, args.branch_point, sigma, noisy, list(range(start, min(start + CHUNK, args.episodes))))
-        for name, (sigma, noisy) in chosen.items()
+        (name, args.branch_point, sigma, noisy, strike, args.cooldown, list(range(start, min(start + CHUNK, args.episodes))))
+        for name, (sigma, noisy, strike) in chosen.items()
         for start in range(0, args.episodes, CHUNK)
     ]
-    (OUT / "settings.json").write_text(
-        json.dumps({"episodes": args.episodes, "branch_point": args.branch_point, "conditions": {k: [s, list(n)] for k, (s, n) in chosen.items()}}, indent=2) + "\n"
+    (out / "settings.json").write_text(
+        json.dumps(
+            {
+                "episodes": args.episodes,
+                "branch_point": args.branch_point,
+                "cooldown": args.cooldown if args.strike else None,
+                "conditions": {k: [s, list(n), strike] for k, (s, n, strike) in chosen.items()},
+            },
+            indent=2,
+        )
+        + "\n"
     )
     results = {name: [] for name in chosen}
     start, done = time.time(), 0
@@ -221,10 +245,10 @@ def main():
             print(f"{done}/{len(tasks)} chunks, {(time.time() - start) / 60:.1f} min", flush=True)
     for name, records in results.items():
         records.sort(key=lambda r: r["seed"])
-        (OUT / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
+        (out / f"{name}.jsonl").write_text("".join(json.dumps(r) + "\n" for r in records))
     summary = summarize(results)
-    (OUT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    print(f"{'condition':22s}" + "".join(f" {rate + ' (vs 0, 95%)':>30s}" for rate in RATES) + f" {'pred ok':>8s} {'prey ok':>8s}")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    print(f"{'condition':22s}" + "".join(f" {rate + ' (vs 0, 95%)':>30s}" for rate in RATES) + f" {'misses':>7s} {'pred ok':>8s} {'prey ok':>8s}")
     for name, s in summary.items():
         cells = ""
         for rate in RATES:
@@ -233,7 +257,8 @@ def main():
             else:
                 lo, hi = s[f"{rate}_vs_sigma0_95"]
                 cells += f" {s[rate]:8.2f} ({s[rate + '_vs_sigma0']:.2f}, {lo:.2f}-{hi:.2f})"
-        print(f"{name:22s}{cells} {s['predators_survive']:8.2f} {s['prey_survive']:8.2f}")
+        misses = "-" if s["miss_share"] is None else f"{s['miss_share']:.2f}"
+        print(f"{name:22s}{cells} {misses:>7s} {s['predators_survive']:8.2f} {s['prey_survive']:8.2f}")
 
 
 if __name__ == "__main__":
