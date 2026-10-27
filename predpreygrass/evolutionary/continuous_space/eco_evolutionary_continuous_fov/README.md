@@ -1,7 +1,7 @@
 # eco_evolutionary_continuous_fov
 
-**Status (2026-10-26): implemented and tested, not yet run.** Next: Codex
-review, then the calibration of the distance noise and a pilot (design note,
+**Status (2026-10-27): implemented, tested and reviewed, not yet run.**
+Next: the calibration of the distance noise, then a pilot (design note,
 plan).
 
 Can predators and prey evolve different eyes? A copy of
@@ -30,8 +30,15 @@ other. Design, predictions and the pre-specified tests:
 - **No energy cost for field of view** (`trait_cost_fov` 0); speed and
   vision cost as in CT-05 (0.25 and 0.125).
 - **Per-species gene-pool freeze** (`trait_frozen_species`): a listed
-  species' founders are drawn from its initial gene pool every episode, for
-  the coevolution branches (the design note's test 2).
+  species' founders are drawn from its initial gene pool every episode
+  (without `trait_initial_gene_pool`, from the first episode's founders),
+  for the coevolution branches (the design note's test 2). Checkpoints
+  mark the pool as frozen, so a run resumed from one starts from the
+  frozen pool, not from the mutated offspring alive at the time.
+
+As for the other random generators, the noise generator's state is not
+saved in checkpoints: a resumed run reseeds it at the next episode, so it
+continues the experiment but not the exact noise draws.
 
 With the noise at 0 the environment is that of
 `eco_evolutionary_continuous_traits`, bit for bit (`tests/test_fov.py`).
@@ -63,7 +70,10 @@ Runs are saved in the module's `runs/` folder (gitignored).
 
 ## TODO
 
-- [ ] Codex review of the implementation.
+- [x] Codex review of the implementation (2026-10-27): the trade-off
+  itself correct; two bugs in the gene-pool freeze fixed (without an initial
+  pool it resampled every episode; a checkpoint restored the living, not
+  the frozen pool), tests added.
 - [ ] Calibrate the noise (design note, step 1): catches per predator
   against fixed prey with noise 0, 0.15, 0.3 and 0.5, frozen CT-05
   policies, prey in front against to the side.

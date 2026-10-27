@@ -12,6 +12,7 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov
     FIXES,
     TRAITS,
     PredPreyGrassContinuous,
+    pooled_gene_pool,
 )
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.geometry import Vector
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.tests.compare import random_actions, snapshot
@@ -74,9 +75,9 @@ def test_noise_changes_observations_only():
     assert differ
 
 
-def scene(bearing, prey_fov_gene=0.0, noise=0.3):
-    """A prey at the centre facing orientation 0 and one predator 100 units
-    away at the given bearing; returns (env, prey, predator)."""
+def scene(bearing, prey_fov_gene=0.0, noise=0.3, orientation=0.0):
+    """A prey at the centre facing the given orientation and one predator 100
+    units away at the given bearing from it; returns (env, prey, predator)."""
     env = PredPreyGrassContinuous({**FIXES, "prey_count": 1, "predator_count": 1, "fov_monocular_distance_noise": noise})
     env.reset(seed=0)
     prey, predator = env.prey[0], env.predators[0]
@@ -84,16 +85,16 @@ def scene(bearing, prey_fov_gene=0.0, noise=0.3):
     prey.genome = genome
     settings, prey.cost_multiplier = env._phenotype("prey", genome)
     _, _, prey.max_speed, _, _, prey.view_distance, prey.fov = settings
-    prey.position, prey.orientation = Vector(400.0, 400.0), 0.0
+    prey.position, prey.orientation = Vector(400.0, 400.0), orientation
     # Orientation and bearing as in geometry.in_view: angle = -atan2(dy, dx).
-    radians = math.radians(bearing)
+    radians = math.radians(orientation + bearing)
     predator.position = Vector(400.0 + 100.0 * math.cos(radians), 400.0 - 100.0 * math.sin(radians))
     return env, prey, predator
 
 
-def predator_slot(env, prey):
+def predator_slot(env, prey, fields=4):
     obs = env._observe(prey)
-    return obs[PREDATOR_SLOT : PREDATOR_SLOT + 4]
+    return obs[PREDATOR_SLOT : PREDATOR_SLOT + fields]
 
 
 def test_overlap_formula():
@@ -139,6 +140,48 @@ def test_monocular_distances_are_noisy_but_point_the_right_way():
         ratios.append(slot[3] / truth[3])
     log_ratios = np.log(ratios)
     assert abs(log_ratios.mean()) < 0.06 and log_ratios.std() == pytest.approx(0.3, abs=0.05)
+
+
+@pytest.mark.parametrize("orientation", [0.0, 170.0, -100.0])
+@pytest.mark.parametrize("bearing, binocular", [(20.0, True), (-20.0, True), (70.0, False), (-70.0, False)])
+def test_both_sides_and_any_orientation(orientation, bearing, binocular):
+    """The overlap is symmetric about the heading, also where the bearing
+    wraps around 180 degrees; velocities are never noisy."""
+    env, prey, predator = scene(bearing=bearing, orientation=orientation)
+    clean, clean_prey, clean_predator = scene(bearing=bearing, orientation=orientation, noise=0.0)
+    for animal in (predator, clean_predator):
+        animal.velocity = Vector(1.5, -0.5)
+    truth = predator_slot(clean, clean_prey, fields=6)
+    assert truth[0] == 1.0
+    slots = [predator_slot(env, prey, fields=6) for _ in range(20)]
+    assert all(np.array_equal(slot[4:], truth[4:]) for slot in slots)
+    exact = [np.array_equal(slot, truth) for slot in slots]
+    assert all(exact) if binocular else not any(exact)
+
+
+def test_noise_is_capped_at_the_observation_scale():
+    """A predator near the edge of view: draws that would push its distance
+    beyond the view distance are capped at 1."""
+    env, prey, predator = scene(bearing=70.0, noise=2.0)
+    radians = math.radians(70.0)
+    reach = 0.95 * prey.view_distance
+    predator.position = Vector(400.0 + reach * math.cos(radians), 400.0 - reach * math.sin(radians))
+    distances = [predator_slot(env, prey)[3] for _ in range(200)]
+    assert max(distances) == pytest.approx(1.0) and all(d <= 1.0 for d in distances)
+
+
+def test_noise_is_reproducible_under_a_seed():
+    a, b = (PredPreyGrassContinuous({**config_env, "fov_monocular_distance_noise": 0.3}) for _ in range(2))
+    obs_a, _ = a.reset(seed=5)
+    obs_b, _ = b.reset(seed=5)
+    assert all(np.array_equal(obs_a[agent], obs_b[agent]) for agent in obs_a)
+    rng = np.random.default_rng(5)
+    for _ in range(50):
+        actions = random_actions(rng, obs_a)
+        obs_a, *_ = a.step(actions)
+        obs_b, *_ = b.step(actions)
+        assert obs_a.keys() == obs_b.keys()
+        assert all(np.array_equal(obs_a[agent], obs_b[agent]) for agent in obs_a)
 
 
 def test_a_narrow_field_is_all_binocular():
@@ -192,6 +235,55 @@ def test_frozen_species_keeps_its_gene_pool(tmp_path):
     assert not np.array_equal(env.gene_pool["predator"], start["predator"])
 
 
+def play(env, episodes, rng):
+    founders = []
+    for episode in range(episodes):
+        obs, _ = env.reset(seed=episode)
+        founders.append(env.trait_values("prey").copy())
+        while True:
+            obs, _, terms, truncs, _ = env.step(random_actions(rng, obs))
+            if terms["__all__"] or truncs["__all__"]:
+                break
+            obs = {a: o for a, o in obs.items() if not (terms.get(a) or truncs.get(a))}
+    return founders
+
+
+def rows(genomes):
+    return sorted(map(tuple, np.asarray(genomes).tolist()))
+
+
+def test_frozen_species_without_an_initial_pool_keeps_its_first_founders():
+    """No trait_initial_gene_pool: the first episode's founders become the
+    frozen pool, not a fresh N(0, founder_std) draw each episode."""
+    env = PredPreyGrassContinuous({**FIXES, "trait_frozen_species": ["prey"], "max_time_steps": 300, "trait_founder_std": 0.3})
+    founders = play(env, 3, np.random.default_rng(1))
+    assert all(rows(f) == rows(founders[0]) for f in founders)
+
+
+def test_a_frozen_pool_survives_a_checkpoint(tmp_path):
+    """gene_pool_state and pooled_gene_pool: a frozen species restarts from
+    its frozen pool, not from its (mutated) living animals or recent births;
+    an evolving species from its living animals."""
+    start = np.random.default_rng(0).normal(0.0, 0.3, size=(12, len(TRAITS)))
+    path = tmp_path / "gene_pools.json"
+    path.write_text(json.dumps([{"predator": {"alive": [], "pool": None, "archive": []}, "prey": {"alive": start.tolist(), "pool": None, "archive": []}}]))
+    config = {**FIXES, "trait_initial_gene_pool": str(path), "trait_frozen_species": ["prey"], "max_time_steps": 300, "trait_mutation_std": 0.2}
+    env = PredPreyGrassContinuous(config)
+    play(env, 2, np.random.default_rng(2))
+    saved = tmp_path / "saved.json"
+    saved.write_text(json.dumps([env.gene_pool_state(), env.gene_pool_state()]))
+    pool = pooled_gene_pool(saved)
+    assert rows(pool["prey"]) == rows(np.concatenate([start, start]))
+    assert rows(pool["predator"]) == rows(np.concatenate([env.trait_values("predator")] * 2))
+    # After the species died out: still the frozen pool, not the archive.
+    env.prey, env.archive["prey"] = [], [np.full(len(TRAITS), 0.5)]
+    saved.write_text(json.dumps([env.gene_pool_state()]))
+    assert rows(pooled_gene_pool(saved)["prey"]) == rows(start)
+    # And the branch continues from it.
+    resumed = PredPreyGrassContinuous({**config, "trait_initial_gene_pool": str(saved)})
+    assert rows(resumed.gene_pool["prey"]) == rows(start)
+
+
 @pytest.mark.parametrize(
     "bad",
     [
@@ -201,6 +293,10 @@ def test_frozen_species_keeps_its_gene_pool(tmp_path):
         {"fov_monocular_distance_noise": float("nan")},
         {"trait_frozen_species": "prey"},
         {"trait_frozen_species": ["wolf"]},
+        {"trait_frozen_species": None},
+        {"trait_frozen_species": ("prey",)},
+        {"trait_frozen_species": ["prey", "prey"]},
+        {"trait_frozen_species": [1]},
     ],
 )
 def test_invalid_settings(bad):
@@ -214,3 +310,26 @@ def test_module_config_is_the_planned_experiment():
     assert config_env["trait_cost_fov"] == 0.0
     assert (config_env["trait_cost_speed"], config_env["trait_cost_vision"]) == (0.25, 0.125)
     PredPreyGrassContinuous(config_env)
+
+
+def test_workers_keep_their_own_frozen_founders(tmp_path):
+    """Two simulation workers without an initial pool: each keeps its own
+    first founders, and a checkpoint pools both."""
+    config = {**FIXES, "trait_frozen_species": ["prey"], "max_time_steps": 200, "trait_founder_std": 0.3}
+    workers = [PredPreyGrassContinuous(config) for _ in range(2)]
+    founders = []
+    for k, env in enumerate(workers):
+        rng = np.random.default_rng(k)
+        seen = []
+        for episode in range(2):
+            obs, _ = env.reset(seed=100 * k + episode)
+            seen.append(rows(env.trait_values("prey")))
+            for _ in range(20):
+                obs, _, terms, truncs, _ = env.step(random_actions(rng, obs))
+                obs = {a: o for a, o in obs.items() if not (terms.get(a) or truncs.get(a))}
+        assert seen[0] == seen[1]
+        founders.append(seen[0])
+    assert founders[0] != founders[1]
+    saved = tmp_path / "gene_pools.json"
+    saved.write_text(json.dumps([env.gene_pool_state() for env in workers]))
+    assert rows(pooled_gene_pool(saved)["prey"]) == sorted(founders[0] + founders[1])

@@ -157,7 +157,8 @@ DEFAULT_CONFIG = {
     "fov_monocular_field": 150.0,
     "fov_monocular_distance_noise": 0.0,
     # Species whose gene pool is not updated between episodes: founders are
-    # drawn from the initial pool every episode (offspring still mutate).
+    # drawn from the initial pool every episode (offspring still mutate);
+    # without trait_initial_gene_pool, from the first episode's founders.
     "trait_frozen_species": [],
 }
 
@@ -335,8 +336,8 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         self.monocular_field = float(c["fov_monocular_field"])
         self.monocular_noise = float(c["fov_monocular_distance_noise"])
         frozen = c["trait_frozen_species"]
-        if isinstance(frozen, str) or not all(species in SPECIES for species in frozen):
-            raise ValueError(f"trait_frozen_species must be a list of {SPECIES}")
+        if not isinstance(frozen, list) or any(species not in SPECIES for species in frozen) or len(set(frozen)) < len(frozen):
+            raise ValueError(f"trait_frozen_species must be a list of distinct species from {SPECIES}")
         self.frozen_species = frozenset(frozen)
         self.obs_rng = np.random.default_rng()
         self.gene_rng = np.random.default_rng()
@@ -433,6 +434,9 @@ class PredPreyGrassContinuous(MultiAgentEnv):
         self.grass.reset(seed)
         spawn = random.Random(seed)
         founders = {species: self._founder_genomes(species, self.count[species]) for species in SPECIES}
+        for species in self.frozen_species:
+            if self.gene_pool[species] is None or len(self.gene_pool[species]) == 0:
+                self.gene_pool[species] = np.array(founders[species])
         self.family = {}  # agent id -> [species, genome, offspring this episode]
         self.prey = []
         for i in range(self.count["prey"]):
@@ -550,12 +554,15 @@ class PredPreyGrassContinuous(MultiAgentEnv):
 
     def gene_pool_state(self):
         """What a checkpoint keeps of this environment's evolution: the
-        genomes alive now, the founder pool and the recent births."""
+        genomes alive now, the founder pool and the recent births, and whether
+        the species' pool is frozen (then the pool, not the living, is what
+        the next episode starts from)."""
         return {
             species: {
                 "alive": self.trait_values(species).tolist(),
                 "pool": None if self.gene_pool[species] is None else np.asarray(self.gene_pool[species]).tolist(),
                 "archive": [g.tolist() for g in self.archive[species]],
+                "frozen": species in self.frozen_species,
             }
             for species in SPECIES
         }
@@ -962,14 +969,18 @@ class PredPreyGrassContinuous(MultiAgentEnv):
 def pooled_gene_pool(path):
     """{species: (n, genes) array or None} from a gene_pools.json file: the
     genomes alive in every simulation worker (a worker's founder pool, or
-    else its recent births, for a species with none alive)."""
+    else its recent births, for a species with none alive); for a species
+    whose pool was frozen, every worker's founder pool."""
     workers = json.loads(Path(path).read_text())
     pool = {}
     for species in SPECIES:
         genomes = []
         for worker in workers:
             entry = worker[species]
-            genomes += entry["alive"] or entry["pool"] or entry["archive"]
+            if entry.get("frozen") and entry["pool"]:
+                genomes += entry["pool"]
+            else:
+                genomes += entry["alive"] or entry["pool"] or entry["archive"]
         pool[species] = np.array(genomes, dtype=float) if genomes else None
     return pool
 
