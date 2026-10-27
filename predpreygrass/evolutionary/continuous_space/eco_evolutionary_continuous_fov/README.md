@@ -99,3 +99,14 @@ Runs are saved in the module's `runs/` folder (gitignored).
 - [ ] Pilot (step 2): one run with the trade-off and one with noise 0 (both
   with strikes), 3,000 iterations side by side; pre-specified test 1
   (divergence).
+- [ ] Beside test 1 (start to end), descriptive analyses after Olson et al.
+  (2016), who found predator view angle and prey swarming cycling: both
+  species' field of view over the whole run, a prey-grouping measure
+  (nearest-neighbour distance, not logged yet) and its correlation with the
+  predators' field of view over time.
+- [ ] Before test 2: consider a confusion effect in the strike (hit
+  probability 1 / number of prey near the target in the predator's view),
+  so that prey grouping protects and the predators' best field of view
+  depends on prey behaviour, the coupling behind Olson et al.'s cycle; the
+  geometric trade-off alone may give divergence but no reciprocal response.
+  Calibrate as in RESULTS.md section 2 first; decide after the pilot.
