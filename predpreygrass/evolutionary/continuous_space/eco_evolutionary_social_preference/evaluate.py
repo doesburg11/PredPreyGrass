@@ -21,22 +21,28 @@ from .summarize import summarize
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_traits.eval import select_actions
 
 
-def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_episode=None, observer=None):
+def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_episode=None, observer=None, individual_preferences=None):
     modules = load_modules(checkpoint) if modules is None else modules
     config = checkpoint_env_config(checkpoint)
     env = PredPreyGrassContinuous(config)
     use_gene_pool(env, load_gene_pool(checkpoint))
     results = []
-    if observer is not None:
+    neutral_reference_check = preference == 0 if individual_preferences is None else individual_preferences.is_uniform_neutral
+    if observer is not None or individual_preferences is not None:
         original_physics_step = env._physics_step
         def observed_physics_step(*args, **kwargs):
             transition = original_physics_step(*args, **kwargs)
-            observer.sample(env)
+            if individual_preferences is not None:
+                individual_preferences.register(env)
+            if observer is not None:
+                observer.sample(env)
             return transition
         env._physics_step = observed_physics_step
     for episode in range(episodes):
         generator = torch.Generator().manual_seed(seed + episode)
         obs, _ = env.reset(seed=seed + episode)
+        if individual_preferences is not None:
+            individual_preferences.start_episode(env, seed + episode)
         if observer is not None:
             observer.reset(env, seed + episode)
         approach, visible, distances, actions, decisions = 0.0, 0, [], 0, 0
@@ -47,7 +53,7 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
             before = capture(env)
             start_tick = env.time_step
             chosen = {}
-            if preference == 0:
+            if neutral_reference_check:
                 reference_generator = torch.Generator()
                 reference_generator.set_state(generator.get_state())
                 reference_actions = select_actions(modules, obs, reference_generator, True)
@@ -63,7 +69,8 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
                     score = np.asarray(raw, dtype=float)
                     if species == "predator":
                         slots = config.get("predator_observe_count", 1)
-                        score = biased_logits(score, obs[agent], preference, strength, slots)
+                        active_preference = preference if individual_preferences is None else individual_preferences.get(agent)
+                        score = biased_logits(score, obs[agent], active_preference, strength, slots)
                         adjusted[index] = score
                         for j in range(slots):
                             slot = np.asarray(obs[agent])[SELF_SIZE + j * SLOT_SIZE: SELF_SIZE + (j + 1) * SLOT_SIZE]
@@ -93,7 +100,7 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
                             moving_mass = probability[:32].sum()
                             expected_moving.append(float(moving_mass))
                             expected_alignment.append(float(probability @ alignment / moving_mass) if moving_mass > 0 else 0.0)
-            if preference == 0:
+            if neutral_reference_check:
                 assert chosen == reference_actions, "neutral actions differ from original evaluator"
                 assert torch.equal(generator.get_state(), reference_generator.get_state())
             steps += 1
@@ -106,7 +113,7 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
             "episode": episode, "seed": seed + episode, "steps": steps,
             "predator_decisions": decisions,
             "movement": movement.result(),
-            "neutral_original_actions_verified": preference == 0,
+            "neutral_original_actions_verified": neutral_reference_check,
             "mean_visible_conspecific_distance_normalized": float(np.mean(distances)) if distances else None,
             "visible_decisions": visible,
             "visible_decision_fraction": visible / max(decisions, 1),
@@ -123,7 +130,10 @@ def evaluate(checkpoint, preference, episodes, strength, seed, modules=None, on_
         })
         if observer is not None:
             results[-1]["persistence"] = observer.finish(env)
-        print(f"preference={preference:+g} seed={seed + episode} steps={steps} complete", file=sys.stderr, flush=True)
+        if individual_preferences is not None:
+            results[-1]["individual_preferences"] = individual_preferences.result(env)
+        preference_label = f"{preference:+g}" if individual_preferences is None else individual_preferences.mode
+        print(f"preference={preference_label} seed={seed + episode} steps={steps} complete", file=sys.stderr, flush=True)
         if on_episode is not None:
             on_episode(preference, results[-1])
     env.close()

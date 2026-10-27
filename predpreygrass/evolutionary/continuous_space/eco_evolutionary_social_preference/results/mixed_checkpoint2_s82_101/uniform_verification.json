@@ -1,0 +1,293 @@
+{
+  "verified_episodes": 40,
+  "all_fields_match": true,
+  "source_sha256": {
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/social_bias.py": "81ba539ee27ae2669c1cef9158b33061131eef38109c83340c1d823a6014e902",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/mixed_evaluate.py": "7ca94974eca37a441e8f5effd7ad96c8dca1e3655d662c54f1429bd1376de00f",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/movement_metrics.py": "fa86a5f6e79727de589c536e0e4b439bbc37bdbccd2edc68d48e4243fa45e737",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/persistence_summary.py": "e78c1a10fb9b742795bd439833831643ac7245864c854f948c6a7293d1c4b688",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/evaluate.py": "153506bc10d934bab12203f29c6d3d1e70fb03a77c59c7dfd293b42bfdcbf180",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/individual_preferences.py": "cf436eed4e2511660ac4215f3c08e95ad9ad3ee4cdd708c82fe8d72849f27ef6",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_summarize.py": "12af2be1481bfc75fdc832447f0d42c07a61e6968f75749d1fcc8ead97f48821",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_strength_sweep.py": "89a6b073f648c28579616976eeb729fb73ca6b4861e63c0ca4f856f9fb10dd19",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/summarize.py": "d7c4f5209dccad482f613a1525d22f5b335f0480ff909b9353c9d88f84c765bf",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/preference_metrics.py": "5a3397ddc10f1378d05d8591e35366e605b6abcb8af4090c1fc2438ad33ae107",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/validation.py": "51a2f3dff3303a9619692802c29f02e12cc1233fc873d745a80870bf54723f8a",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_individual_preferences.py": "7f74f568ec90f11bc10364f5f72ccb281205f83d8def240550c6634bdcfdf155",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_movement_metrics.py": "ac5c3f87607f72fd213b9f387662b69b2a57cd28c162f1814e271119952689c8",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/replay_persistence.py": "8dd9cdf3fefad4bfb526f339a0e14c77deea5e92a1b648db4a9309af3eaec3e7",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/persistence.py": "b0538f0cc343f0adb7d03434a628fffc95f47c20cb4c78753e7a12f2e82c227e",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_persistence.py": "4c7c507ff5d5d6162fca91e80ddbe296654cfb302821eef7c186a0877857e3f8",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/persistence_evaluate.py": "b0b684041ed38640b041da4f9b2c50c9f60645072e2bb3faedcf07acae3f64ba",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/strength_sweep.py": "1d58a99939ea1fd28ed26fe7783c7a4f7110156a3633f5620ea2625220e2bdf0",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/test_social_bias.py": "7e2977added16288af4e57033fe272e5ff2e105267359cd07b3820ce37cad98d",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/decompose_frozen.py": "347c4c6304d20fb833a4dd0d427617840090bd2ba3eb3db960c52d95c8542903",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/tournament.py": "d58f3f298e1dd896752d224ef93f1e5f54845d7173ba9c4650282c631ddf678b",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/geometry.py": "6ece92f7cd6568f20370ba08dbd6c384e78f72b840a0435595d2a8019c130c10",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/grass.py": "96478665034a58a5edcbf705ec6bb85701a71d64ec9de574b489fb609e0de8c1",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/checkpoints.py": "867c91cae3d273cb1cf08be8a7b4314a2b16bc9c0a6b8c8be4263a014648aa63",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/callbacks.py": "78585ca27174643aaabdd8a8093dbc3074c10c213cb95fad90a2d2e162844afc",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/train.py": "5817c340df1f29a3f8be00093f81b9fafcd09bf125e268ec379a5a1d83ff8449",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/evolve_frozen.py": "3283cf195526c85e0ac6fa771640138c57de02e00d584448f23eec1de05aaa96",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/mechanism_speed.py": "5eee3d823f44b0571556c2deadb928eb86e352122cd245075f736b3715c16500",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/render.py": "8ef1e44669593d8b13bc57166b0358d5dd93ff15b0010eeb7eb23b8e29dc9a78",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/environment.py": "2721697a5aae6e18c6d855d0ebdf5db97c8a36dd4ff1f0f6dc51799e50d2ef3a",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/eval.py": "d59d6fb5ba6e74d2a0a2d77dc90f2695306b6a19ede9f45f1aa75a65af400fe3"
+  },
+  "input_sha256": {
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/checkpoint/gene_pools.json": "f42bb4b434f2f5cbfeb4acfaaecd1af2b02658258461d73eb46adf8dd31c4847",
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/source_code/settings.json": "aa9b90a41a746eb4062ef45477c2f4a187f6cf760ad44aafd0b5a3a7b64b993f",
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/source_code/settings.json": null,
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/checkpoint/class_and_ctor_args.pkl": "0621f4bc2dcfc8ef760875a903497602832742557e3837064444c821daabe912",
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/checkpoint/learner_group/learner/rl_module/predator_policy/module_state.pkl": "db40642b3794f933be1886ab605bdc2c59f842ca85da4cbbde80dbd7dd9a7d2d",
+    "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/blrep2500_both_learn_s2/checkpoint/learner_group/learner/rl_module/prey_policy/module_state.pkl": "e5fa8558d9381834e6b0bee807044ee6555228065cde80948c76a69b1871a6b1"
+  },
+  "baseline_files": {
+    "neutral": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/results/checkpoint2_persistence_s82_101/neutral_s82_101.json",
+    "attraction2": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/results/checkpoint2_persistence_s82_101/attraction2_s82_101.json"
+  },
+  "checks": [
+    {
+      "condition": "neutral",
+      "seed": 82,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "b8d986a4e79a44839e9947c7e474d1670a64dab3782f09c42736a4e012eaaa36"
+    },
+    {
+      "condition": "neutral",
+      "seed": 83,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "1d4275d7c5bc522d4857f9595c23a28fd4cf3769cba43cfe5014ace45f525354"
+    },
+    {
+      "condition": "neutral",
+      "seed": 84,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "efa45745db510a1768f49c6a0b2b74de32d3285db0147847f44e95e92a4b21cc"
+    },
+    {
+      "condition": "neutral",
+      "seed": 85,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "9bd566cc8a5aa893e33887975860aec4664363c614778af6f2a9fa2a4904e789"
+    },
+    {
+      "condition": "neutral",
+      "seed": 86,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "8cf5bfe46604fc1ac8dea524a561a21ce30a5f82c731d10ab2d9b0d43d75d421"
+    },
+    {
+      "condition": "neutral",
+      "seed": 87,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "b8498b45be246c1eaf1be810a6f5c88c02bd46b116056a8bacbfc1c41855c613"
+    },
+    {
+      "condition": "neutral",
+      "seed": 88,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "fad279d0aba04125d50d70760cabf2d194f9094f833ecd1614f555f710f8a2ca"
+    },
+    {
+      "condition": "neutral",
+      "seed": 89,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "b940d316d98aea204f82de81ed8d55de7b1f87b48e7a433895c95f022c84ed22"
+    },
+    {
+      "condition": "neutral",
+      "seed": 90,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "521994139137c8aec636af702d2a04474b9bb4ea34e3cb4da683940050f1ef2a"
+    },
+    {
+      "condition": "neutral",
+      "seed": 91,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "de699df635deec9152a970b4ec63bdaf9612fa00c57db39b9eebba6fa47f2803"
+    },
+    {
+      "condition": "neutral",
+      "seed": 92,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "4aa7148630c28660052255ade2133dff0f90de1f9d046b7201b3b34952698de0"
+    },
+    {
+      "condition": "neutral",
+      "seed": 93,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "22db578a83b861d5ae7a41f628744073e724e9a643d94343889b7febcea0f551"
+    },
+    {
+      "condition": "neutral",
+      "seed": 94,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "89af4a225ab9131b14e04529526a301a42a70ff19d87eab835fa6b01b3873b23"
+    },
+    {
+      "condition": "neutral",
+      "seed": 95,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "a45be0682942834bbc21c79bfd683f4957dcd4286240833d901c445836a212e7"
+    },
+    {
+      "condition": "neutral",
+      "seed": 96,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "5f9fd5bc4da0d92bfa3c54c817281cca3794f3c7408f22e21c07e94936da9af3"
+    },
+    {
+      "condition": "neutral",
+      "seed": 97,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "95d8359861a19406130ad6f6ac109810afd1f32ec07f0e4fd3115fca5002d491"
+    },
+    {
+      "condition": "neutral",
+      "seed": 98,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "87c4724ebbfd1470c3da51059d4c14c21e9ce59ace58011788e3effce7efcb33"
+    },
+    {
+      "condition": "neutral",
+      "seed": 99,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "640ef83653e49ddac4cb3fa0e2c9689aee8f115a8542bdf2a2fc3b18f1887f27"
+    },
+    {
+      "condition": "neutral",
+      "seed": 100,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "0041013ddd2704c07b12c5a4215e179fb68e6ba5a5b48b969b28884d1bfda070"
+    },
+    {
+      "condition": "neutral",
+      "seed": 101,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "1809215605e520bb8367e079a12dbe3575ace893ae5b9f43adf8c998b8e4478e"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 82,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "4f6e81c927f7117fb5908c4f51f6bcb927341e18e670c0d1d5bb80517b7204e4"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 83,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "bcd1a5a71b6513bcaada6d5b97bc7bf9b88761a0a16b920c04ae527de0098379"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 84,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "65c62081ffb71cb7c0ee878f6650e09bc7a52f3ae1f8486f3f8ee5da8054f757"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 85,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "09ff54b9f2b3f1a8524450410c3232cf28126efe802702c348ddffdf71f1e3bc"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 86,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "8e2668e53fdaf1911cb51179ec13bddf5436ba9e6850ac3f12ac78b7f86db78f"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 87,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "59788514eca58bdaeb636bc00af0cf8d106ab85e907fba5267cd6fe596b7d2ef"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 88,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "1f5e8c566bb299f6929cb4cb8f8bf3760de6acdd3d8282e7b5b1fe81a5e58418"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 89,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "62901e275a882c07a804b96126a5be8b3a9b517d766e3a21b715453146bfadde"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 90,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "4382c3f7e690d14c4b172447041b1b92a0572ef698a484c0200ff648c1ed3983"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 91,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "d387094046843c7845d413da7181e606cf69978e14e8a0edc3b6ff0ed76d783d"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 92,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "f7c99610b13f501eb89cb2d45802fa5be57b82b61dc80168c9838c008ca7a41e"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 93,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "e8ea943fa386860b2aa31aee1bf97f068fac30cc8415616b6cfac77e5be2c543"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 94,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "78dbd9bd80c188875d82b2cb06296dd63e5544893b7b83e2da23ec36e7a7b85a"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 95,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "0917181292588fd29e65d9c56fac0c02b611c725b019b1faec490cc54c54d650"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 96,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "6e1e3986b13acebece60c6663c436575ee3fc675131781251276f69d7b513292"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 97,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "ef5c9b8a2fe33931f5ce36719dbd7d4359d3fac5543ee072d1ea882995ec904b"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 98,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "5496df143532154ba6f82e869ac08104ce52acc85704492cad7dab70ae1cd308"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 99,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "868fb41258450c1e1ab9fc8baa63125bea150b9f12c12f1252f78d0da4891b20"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 100,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "c6a4f4004d287a6fe20d22d58c46fed0291a365b512bb59415c348b5e17072f3"
+    },
+    {
+      "condition": "attraction2",
+      "seed": 101,
+      "matches_all_saved_fields": true,
+      "canonical_episode_sha256": "1fcb96be6bce11929d8e6e61442a703e96aca5e1f7a23b1754fff02efe2ca104"
+    }
+  ]
+}

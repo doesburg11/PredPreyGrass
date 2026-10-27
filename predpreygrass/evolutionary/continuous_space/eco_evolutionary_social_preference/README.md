@@ -207,3 +207,30 @@ same nearest neighbor remains inconclusive. See
 [PERSISTENCE_RESULTS.md](PERSISTENCE_RESULTS.md) for censoring definitions,
 paired intervals, raw data and matched videos for preselected seeds 62 and 63.
 Twenty-seven local tests pass. No stable-group or fitness claim follows yet.
+
+
+## Second-checkpoint replication
+
+Neutral versus strength-2 attraction was repeated with
+`blrep2500_both_learn_s2/checkpoint` on fresh seeds 82–101. Close-pair
+100-tick retention increased from 15.8% to 21.1%, and nearest-neighbor
+spacing was about 6.7% closer. Both primary effects replicate the first
+checkpoint result; keeping the same nearest neighbor remains inconclusive.
+See [SECOND_CHECKPOINT_RESULTS.md](SECOND_CHECKPOINT_RESULTS.md) for paired
+intervals, provenance, limitations and an across-checkpoint comparison plot.
+No training, reward or inheritance changes were made.
+
+## Fixed individual preferences
+
+Predators can now receive different non-heritable lifetime preferences.
+`mixed_evaluate` assigns shuffled ID blocks of -1, 0 and +1, including newborns,
+without ancestry or simulation-RNG input. Six founders give two of each type.
+The runner verifies every saved neutral and attraction control episode through
+the per-agent path before testing uniform avoidance and a mixed population.
+
+On checkpoint 2, seeds 82–101, the balanced mixed population remained close
+to neutral overall; attraction/attraction pairs had longer encounters than
+avoidance/avoidance pairs within it. See
+[MIXED_PREFERENCES_RESULTS.md](MIXED_PREFERENCES_RESULTS.md) for methods,
+paired intervals, assignment audits, review assessment and source history.
+All 34 final local tests pass. Values are still externally assigned, not genes.
