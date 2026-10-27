@@ -154,7 +154,12 @@ catches to noise, more to the side than in front.
   together with each robot's camera view angle and range, and found that
   the two species evolved different, task-dependent visual morphologies:
   the nearest precedent for test 1, there with evolved network weights
-  instead of a learned policy and without a binocular trade-off. Olson et
+  instead of a learned policy and without a binocular trade-off. There
+  (one predator, one prey robot; angle and range coupled) the prey evolved
+  to circle the arena whatever the predator did (Smith 2004): prey that
+  ignore predators cannot evolve eyes in response to them, so check that
+  our prey's behaviour depends on seeing a predator. Coupling angle and
+  range is the fallback trade-off ("acuity spread over the field" above). Olson et
   al. (2016) found a coevolutionary cycle between the predator's visual
   system and prey behaviour (a focused predator view selected for
   dispersing prey, a broad one for swarming), and suggested that predators
@@ -192,8 +197,8 @@ added references are from abstract pages and still to be checked.
   G. D. (2015). Why do animal eyes have pupils of different shapes?
   *Science Advances*, 1(7), e1500391.
 - Buason, G., and Ziemke, T. (2003). Co-evolving task-dependent visual
-  morphologies in predator-prey experiments. *GECCO 2003*, LNCS 2723, from p.
-  458.
+  morphologies in predator-prey experiments. *GECCO 2003*, LNCS 2723,
+  458–469.
 - Cliff, D., and Miller, G. F. (1996). Co-evolution of pursuit and evasion
   II: simulation methods and results. *From Animals to Animats 4*.
 - Georgiev, M., Tanev, I., and Shimohara, K. (2019). Coevolution of the
@@ -211,5 +216,7 @@ added references are from abstract pages and still to be checked.
 - Olson, R. S., Hintze, A., Dyer, F. C., Moore, J. H., and Adami, C. (2016).
   Exploring the coevolution of predator and prey morphology and behavior.
   *Proceedings of ALIFE 2016*; arXiv:1602.08802.
+- Smith, N. W. (2004). Evolving a vision-based predator-and-prey system for
+  two robots with a learning classifier system. GECCO 2004 workshop paper.
 - Tiwary, K., et al. (2025). What if Eye...? Computationally recreating
   vision evolution. *Science Advances*, 11(51); arXiv:2501.15001.
