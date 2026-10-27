@@ -5,10 +5,12 @@
 **Learning changes how bodies evolve.** From CT-05 at iteration 1,500,
 predator speed rose in all 6 runs where the predators kept learning and
 fell in all 6 where their behaviour was frozen (+0.18, 95% CI +0.14 to
-+0.22, p = 0.005); from iteration 2,500 it rose more in all 6 learning runs
-than in all 6 frozen ones (+0.19, p = 0.005).
++0.22, p = 0.005, 3 seeds per arm); from iteration 2,500 it rose more in
+all 6 learning runs than in all 6 frozen ones (+0.19, p = 0.005). Both
+branch points come from one training run.
 
-- **Found:** a replicated Baldwin-style effect (criterion 3 below).
+- **Found:** a Baldwin-style effect, reproduced at a second branch point
+  of the same run (criterion 3 below).
 - **Not found:** a body arms race between predators and prey (criterion 2).
   Both species evolved the same way: shorter view distance, wider field of
   view.
@@ -23,9 +25,10 @@ than in all 6 frozen ones (+0.19, p = 0.005).
 - **Second branch point (2026-10-26):** from CT-05 at iteration 2,500 the
   same contrast is +0.19 (95% CI +0.09 to +0.28, p = 0.005), against +0.18
   from iteration 1,500 (RESULTS.md section 8).
-- **Overall (2026-10-26):** learning robustly changes the direction in
-  which predator speed evolves, most likely because learned behaviour lets
-  faster predators turn extra births into survivors. Not shown: an arms
+- **Overall (2026-10-26):** predator learning makes predator speed evolve
+  upward more (from iteration 1,500 it changed the direction, from 2,500 it
+  made a rise larger), consistent with learned behaviour letting faster
+  predators turn extra births into survivors. Not shown: an arms
   race in bodies between the species, adaptation to speed specifically
   (the learned policies differ in everything they learned), a classic
   Baldwin effect (learning is shared per species), or generality beyond
@@ -325,7 +328,7 @@ Runs are saved in the module's `runs/` folder (gitignored).
   test whether the effect depends on the state the branches start from.
   Same queue (`launchers/queue_baldwin_replication.sh`, at most 3 RLlib
   runs on the GPU at once); about 20 hours for the RLlib arms. Result: the
-  contrast replicated (+0.19, p = 0.005), from a state with much slower
+  contrast held (+0.19, p = 0.005), from a state with much slower
   predators (+0.06 against +0.19). It took 34 hours (11:38 to 21:46 the
   next day) on 3 GPU slots.
 - [ ] **Toward coevolution: a field-of-view trade-off.** Both species now

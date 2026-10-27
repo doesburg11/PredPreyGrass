@@ -2,11 +2,13 @@
 
 ## Key message (2026-10-24)
 
-**Learning changes how bodies evolve, and the effect replicates.** From
+**Learning changes how bodies evolve, and the effect holds at a second
+branch point of the same run.** From
 one branch point (CT-05 at iteration 1,500), predator speed rose in all six
 runs where the predator policy kept learning and fell in all six where it
 was frozen: the pre-specified contrast is +0.18 (95% CI +0.14 to +0.22,
-exact p = 0.005, the smallest the design allows; section 5). This answers
+3 seeds per arm, exact stratified randomization p = 0.005 two-sided, the
+smallest the design allows; section 5). This answers
 the module's third question (a Baldwin-style interaction) positively.
 
 It is not yet the full Darwin/Baldwin coevolution loop: why it happens is
@@ -21,11 +23,16 @@ field of view and speed rose and fell, with no escalation in body traits
 (section 2); the prey's gains came from behaviour (section 3). Next steps:
 README, TODO.
 
-**Update (2026-10-26): conclusion so far.** In this model, learning changes
-the direction in which a body trait evolves, and the effect is robust: from
-two branch points with different gene pools the predator-learning contrast
-on predator speed is +0.18 and +0.19 (each p = 0.005, all 12 runs ordered
-the same way both times; sections 5 and 8). The likely route is that
+**Update (2026-10-26): conclusion so far.** In this model, predator
+learning makes predator speed evolve upward more: from the first branch
+point it changed the direction (speed rose with learning and fell
+without), from the second it made a rise larger (sections 5 and 8). The two
+branch points have different gene pools but come from one training run
+(CT-05 at iterations 1,500 and 2,500), so this is a reproduction within one
+trajectory, not an independent replication. The predator-learning contrast
+on predator speed is +0.18 and +0.19 (3 seeds per arm, exact p = 0.005 at
+each; at each branch point all six runs with learning predators exceeded
+all six with frozen ones). A route consistent with the data is that
 learned behaviour makes speed pay: with speeds fixed and the same starting
 prey, extra speed pays about twice as much under the learned predator
 policies as under the frozen one (section 6), because under the frozen
@@ -45,7 +52,8 @@ CT-05's trajectory; and the fall of speed when only predators were frozen
 
 Against the project's goal, a sustainable and significant Darwin/Baldwin
 coevolution loop: the ecosystems are sustainable and the learning-to-body
-effect is significant and replicated, but it runs one way, from one
+effect is significant and holds at two branch points of one run, but it
+runs one way, from one
 species' learning to its own body. The coevolution half, bodies of the two
 species changing in response to each other, has not appeared. README, TODO,
 lists the two changes that could produce it.
