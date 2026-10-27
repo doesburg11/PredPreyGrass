@@ -19,6 +19,14 @@ eyes", the precondition for the two species' bodies to respond to each
 other. Design, predictions and the pre-specified tests:
 [DESIGN_fov_tradeoff.md](../eco_evolutionary_continuous_traits/DESIGN_fov_tradeoff.md).
 
+Closest related work: simulated predator and prey robots co-evolving their
+camera view angle and range with their controllers evolved different eyes
+(Buason and Ziemke 2003), and a predator's visual system and prey swarming
+coevolved in a cycle (Olson et al. 2016); what is new here is learned
+behaviour (shared PPO policies) together with heritable bodies and a
+depth-against-coverage trade-off. Details and references: the design
+note's "Related work".
+
 ## The change
 
 - **Binocular overlap.** Each eye covers `fov_monocular_field` degrees

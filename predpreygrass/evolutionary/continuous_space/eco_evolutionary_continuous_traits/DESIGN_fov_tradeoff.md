@@ -147,11 +147,69 @@ cooldown, remains an option for later.
 ecology from strikes alone. Pilot only if predators then clearly lose
 catches to noise, more to the side than in front.
 
+## Related work (2026-10-27, from abstracts and summaries)
+
+- **Coevolved vision in predator and prey simulations.** Buason and Ziemke
+  (2003) co-evolved the controllers of simulated predator and prey robots
+  together with each robot's camera view angle and range, and found that
+  the two species evolved different, task-dependent visual morphologies:
+  the nearest precedent for test 1, there with evolved network weights
+  instead of a learned policy and without a binocular trade-off. Olson et
+  al. (2016) found a coevolutionary cycle between the predator's visual
+  system and prey behaviour (a focused predator view selected for
+  dispersing prey, a broad one for swarming), and suggested that predators
+  would gain from a hybrid of narrow, high-acuity tracking vision and broad
+  vision for finding prey, close to this design's binocular centre and
+  monocular periphery; a cycle, not a steady state, is a possible outcome
+  of test 2. Georgiev et al. (2019) co-evolved predator behaviour with an
+  asymmetric sensor offset (predators only).
+- **Learning and evolution of eyes.** Tiwary et al. (2025) evolved eye
+  shape, optics and neural processing while agents learned tasks by deep
+  reinforcement learning: navigation tasks gave compound-like eyes,
+  object discrimination high-acuity camera-like eyes. No predators and
+  prey, no coevolution.
+- **Biology.** Cartmill's visual predation hypothesis links forward-facing
+  eyes and binocular overlap to visually guided predation; comparative
+  tests are mixed (some find no association between orbit convergence and
+  predation across mammals; the arboreal hypothesis competes), while
+  side-facing eyes for panoramic vision are better supported (Heesy 2004).
+  This design builds the predation link in, so a positive result shows that
+  the mechanism can produce divergence, not that it did in animals.
+- **Background.** Pursuit and evasion as a coevolutionary arms race (Miller
+  and Cliff 1994; Cliff and Miller 1996); evolution of visual sensor
+  morphology with the controller (Husbands et al. 1997); Aquarium (2024),
+  the reinforcement-learning predator-prey framework this world reproduces,
+  does not evolve sensors.
+
+Not found: a study in which learned behaviour and heritable bodies
+interact while predator and prey eyes face a depth-against-coverage
+trade-off. Full papers not yet read; the bibliographic details of the
+added references are from abstract pages and still to be checked.
+
 ## References
 
 - Banks, M. S., Sprague, W. W., Schmoll, J., Parnell, J. A. Q., and Love,
   G. D. (2015). Why do animal eyes have pupils of different shapes?
   *Science Advances*, 1(7), e1500391.
+- Buason, G., and Ziemke, T. (2003). Co-evolving task-dependent visual
+  morphologies in predator-prey experiments. *GECCO 2003*, LNCS 2723, from p.
+  458.
+- Cliff, D., and Miller, G. F. (1996). Co-evolution of pursuit and evasion
+  II: simulation methods and results. *From Animals to Animats 4*.
+- Georgiev, M., Tanev, I., and Shimohara, K. (2019). Coevolution of the
+  asymmetric morphology and the behaviour of simple predator agents in
+  predator-prey pursuit problem. *Information*, 10(2), 72.
 - Heesy, C. P. (2004). On the relationship between orbit orientation and
   binocular visual field overlap in mammals. *The Anatomical Record Part A*,
   281A(1), 1104–1110.
+- Husbands, P., Harvey, I., Cliff, D., and Miller, G. (1997). Artificial
+  evolution: a new path for artificial intelligence? *Brain and Cognition*,
+  34, 130–159.
+- Miller, G. F., and Cliff, D. (1994). Co-evolution of pursuit and evasion
+  I: biological and game-theoretic foundations. CSRP 311, University of
+  Sussex.
+- Olson, R. S., Hintze, A., Dyer, F. C., Moore, J. H., and Adami, C. (2016).
+  Exploring the coevolution of predator and prey morphology and behavior.
+  *Proceedings of ALIFE 2016*; arXiv:1602.08802.
+- Tiwary, K., et al. (2025). What if Eye...? Computationally recreating
+  vision evolution. *Science Advances*, 11(51); arXiv:2501.15001.
