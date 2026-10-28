@@ -147,6 +147,37 @@ cooldown, remains an option for later.
 ecology from strikes alone. Pilot only if predators then clearly lose
 catches to noise, more to the side than in front.
 
+## Addendum (2026-10-28): pilot 2, monocular field 120°, re-registered
+
+**Why.** Pilot 1 failed test 1 (eco_evolutionary_continuous_fov
+RESULTS.md section 3): with the trade-off the predators' field-of-view
+gene stayed near its start (+0.05) instead of falling, while without it it
+rose to +0.57. With M = 150° the predators' starting field, 150°, is
+already fully binocular, so narrowing it gains no overlap: the prediction
+"falls" did not fit the geometry. Written before pilot 2 is started.
+
+**Change.** M = 120° (`fov_monocular_field`), nothing else (σ 0.3, strikes,
+CT-05 settings). The predators then start at 150° with 90° overlap (60%
+binocular); narrowing to 120° (gene −0.22) makes them fully binocular, so
+narrowing now gains depth vision. The prey start at 240° with no overlap.
+The σ = 0 control does not depend on M (without noise M is never used),
+so pilot 1's control is pilot 2's control.
+
+**Runs.** `launchers/pilot.py tradeoff_m120` (seed 1) and
+`tradeoff_m120_seed2` (seed 2), 3,000 iterations, 10 workers each, side by
+side; no new control.
+
+**Test 1, re-registered.** Change in the mean field-of-view gene from the
+founders of every worker's first episode to the mean of the gene-pool
+snapshots over the last 300 iterations (`analyze_pilot.py`):
+negative for predators and non-negative for prey, in both runs. The
+control's part (both rise) is already met by pilot 1's control. Secondary,
+also stated now: the predators' end gene is below pilot 1's trade-off run
+(+0.07) in both runs. Test 3 (coexistence in at least 45 of 50 final-check
+episodes) as before. Not calibrated again: M changes only where the noise
+applies; a collapse of either population would show in the first hours
+and stop the run.
+
 ## Related work (2026-10-27, from abstracts and summaries)
 
 - **Coevolved vision in predator and prey simulations.** Buason and Ziemke
