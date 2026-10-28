@@ -1,0 +1,10 @@
+{
+  "episode_count": 100,
+  "unique_planned_seeds_verified": true,
+  "journal_hashes_verified": true,
+  "source_and_pilot_hashes_verified": true,
+  "complete_checkpoint_hashes_verified": true,
+  "pilot_replay_verified": true,
+  "serial_parallel_fidelity_verified": true,
+  "social_preference_tests_passed": 46
+}

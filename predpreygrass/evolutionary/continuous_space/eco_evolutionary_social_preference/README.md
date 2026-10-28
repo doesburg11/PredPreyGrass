@@ -234,3 +234,25 @@ avoidance/avoidance pairs within it. See
 [MIXED_PREFERENCES_RESULTS.md](MIXED_PREFERENCES_RESULTS.md) for methods,
 paired intervals, assignment audits, review assessment and source history.
 All 34 final local tests pass. Values are still externally assigned, not genes.
+
+## Survival, offspring and energy
+
+The same 20 mixed-population seeds were replayed with per-animal lifetime,
+offspring and 1,000-tick energy measurements. Every prior saved field matched.
+Attraction founders averaged longer observed lives and more offspring, but
+paired uncertainty intervals include zero: a fitness benefit is not established.
+See [FITNESS_RESULTS.md](FITNESS_RESULTS.md) for censoring, tables, energy curves,
+raw data and review. All 38 tests pass; policies, rewards and preference
+inheritance remain unchanged.
+
+## Fresh 100-episode fitness confirmation
+
+The fixed mixed-preference experiment was repeated on fresh seeds 102–201.
+Attraction's pilot advantage was not confirmed: attraction minus neutral was
+−217 observed ticks alive (adjusted 97.5% interval −785 to +356) and +0.195
+offspring per founder (−0.315 to +0.710). One early episode leaves four
+founders censored, so alive time is reported as observed time. All seeds were
+retained and the pilot was not pooled. Pilot/serial replay fidelity and
+checkpoint/source checks passed; 46 tests pass. See
+[FITNESS_CONFIRMATION_RESULTS.md](FITNESS_CONFIRMATION_RESULTS.md) for the
+predeclared design, tables, energy curves, artifacts and independent review.
