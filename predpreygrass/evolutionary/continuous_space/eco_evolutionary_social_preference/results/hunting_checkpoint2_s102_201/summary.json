@@ -1,0 +1,540 @@
+{
+  "summary": {
+    "seeds": [
+      102,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125,
+      126,
+      127,
+      128,
+      129,
+      130,
+      131,
+      132,
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156,
+      157,
+      158,
+      159,
+      160,
+      161,
+      162,
+      163,
+      164,
+      165,
+      166,
+      167,
+      168,
+      169,
+      170,
+      171,
+      172,
+      173,
+      174,
+      175,
+      176,
+      177,
+      178,
+      179,
+      180,
+      181,
+      182,
+      183,
+      184,
+      185,
+      186,
+      187,
+      188,
+      189,
+      190,
+      191,
+      192,
+      193,
+      194,
+      195,
+      196,
+      197,
+      198,
+      199,
+      200,
+      201
+    ],
+    "replicate_unit": "episode seed",
+    "interval_method": "paired percentile bootstrap, 10000 resamples; exploratory, no multiplicity adjustment",
+    "metrics": {
+      "all_captures_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 3.780752272006394,
+          "avoidance": 3.7333754162790678,
+          "attraction": 3.7717681975849473
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.0473768557273265,
+            "bootstrap_95_percent_interval": [
+              -0.18048220394127668,
+              0.09386696844133266
+            ]
+          },
+          "attraction": {
+            "mean": -0.008984074421446988,
+            "bootstrap_95_percent_interval": [
+              -0.12559153061819592,
+              0.1069563868969049
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_retained_hunting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 8.806295772017911,
+          "avoidance": 8.723498202339119,
+          "attraction": 8.86295554395927
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.08279756967879218,
+            "bootstrap_95_percent_interval": [
+              -0.4118583865569477,
+              0.2614852074801425
+            ]
+          },
+          "attraction": {
+            "mean": 0.0566597719413585,
+            "bootstrap_95_percent_interval": [
+              -0.23283514204722056,
+              0.343021277724507
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_movement_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 3.396072902523909,
+          "avoidance": 3.344449078044482,
+          "attraction": 3.342469107498094
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.05162382447942679,
+            "bootstrap_95_percent_interval": [
+              -0.17219196208020404,
+              0.06511499550034325
+            ]
+          },
+          "attraction": {
+            "mean": -0.053603795025814735,
+            "bootstrap_95_percent_interval": [
+              -0.1569074260501583,
+              0.05062238658852295
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_resting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 5.008000541939406,
+          "avoidance": 4.998795640790469,
+          "attraction": 5.010795558399965
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.009204901148937052,
+            "bootstrap_95_percent_interval": [
+              -0.026607985201733707,
+              0.008405084883855952
+            ]
+          },
+          "attraction": {
+            "mean": 0.0027950164605588324,
+            "bootstrap_95_percent_interval": [
+              -0.015995471787761922,
+              0.02199515742836426
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_offered_hunting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 8.80629577201791,
+          "avoidance": 8.723498202339119,
+          "attraction": 8.86295554395927
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.08279756967879205,
+            "bootstrap_95_percent_interval": [
+              -0.4118583865569476,
+              0.26148520748014276
+            ]
+          },
+          "attraction": {
+            "mean": 0.056659771941358496,
+            "bootstrap_95_percent_interval": [
+              -0.23283514204722078,
+              0.34302127772450686
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_net_hunting_minus_metabolism_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 0.4022223275545969,
+          "avoidance": 0.3802534835041687,
+          "attraction": 0.5096908780612114
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.02196884405042822,
+            "bootstrap_95_percent_interval": [
+              -0.2842085648067432,
+              0.24984076874232686
+            ]
+          },
+          "attraction": {
+            "mean": 0.10746855050661441,
+            "bootstrap_95_percent_interval": [
+              -0.11673189142518398,
+              0.33957901480973535
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "all_retained_hunting_energy_per_metabolic_energy": {
+        "condition_means": {
+          "0.0": 1.0460644256201834,
+          "avoidance": 1.0448120763394904,
+          "attraction": 1.0607952487406231
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.0012523492806932302,
+            "bootstrap_95_percent_interval": [
+              -0.03182261824792931,
+              0.030345136881694573
+            ]
+          },
+          "attraction": {
+            "mean": 0.014730823120440035,
+            "bootstrap_95_percent_interval": [
+              -0.012601575099403678,
+              0.043252387346802694
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_captures_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 3.971545116765172,
+          "avoidance": 3.830481368920551,
+          "attraction": 4.039731788720562
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.14106374784462164,
+            "bootstrap_95_percent_interval": [
+              -0.5101546378382974,
+              0.22728593342751754
+            ]
+          },
+          "attraction": {
+            "mean": 0.06818667195538987,
+            "bootstrap_95_percent_interval": [
+              -0.28963412494633295,
+              0.40115135785030237
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_retained_hunting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 9.279608980035535,
+          "avoidance": 8.95178699326945,
+          "attraction": 9.516510091656576
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.3278219867660856,
+            "bootstrap_95_percent_interval": [
+              -1.218503536198115,
+              0.5698149405267592
+            ]
+          },
+          "attraction": {
+            "mean": 0.23690111162104052,
+            "bootstrap_95_percent_interval": [
+              -0.6424359048213777,
+              1.0459634241754163
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_movement_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 3.5571797066766813,
+          "avoidance": 3.333800560716065,
+          "attraction": 3.6170029739491234
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.2233791459606166,
+            "bootstrap_95_percent_interval": [
+              -0.5561485393525695,
+              0.10294869023436914
+            ]
+          },
+          "attraction": {
+            "mean": 0.05982326727244237,
+            "bootstrap_95_percent_interval": [
+              -0.2385032396382903,
+              0.3488729141439074
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_resting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 4.960957958830686,
+          "avoidance": 4.937894543405427,
+          "attraction": 4.978367397037337
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.023063415425258266,
+            "bootstrap_95_percent_interval": [
+              -0.07339289858401352,
+              0.027094504238143136
+            ]
+          },
+          "attraction": {
+            "mean": 0.01740943820665157,
+            "bootstrap_95_percent_interval": [
+              -0.03760185133541897,
+              0.07096684878595186
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_offered_hunting_energy_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 9.279608980035535,
+          "avoidance": 8.951786993269447,
+          "attraction": 9.516510091656576
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.3278219867660857,
+            "bootstrap_95_percent_interval": [
+              -1.2185035361981151,
+              0.5698149405267587
+            ]
+          },
+          "attraction": {
+            "mean": 0.2369011116210406,
+            "bootstrap_95_percent_interval": [
+              -0.6424359048213776,
+              1.0459634241754163
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_net_hunting_minus_metabolism_per_1000_predator_ticks": {
+        "condition_means": {
+          "0.0": 0.7614713145281669,
+          "avoidance": 0.6800918891479562,
+          "attraction": 0.9211397206701136
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.08137942538021069,
+            "bootstrap_95_percent_interval": [
+              -0.7355618612451867,
+              0.5645737294055726
+            ]
+          },
+          "attraction": {
+            "mean": 0.15966840614194677,
+            "bootstrap_95_percent_interval": [
+              -0.5256001554671103,
+              0.8222893081343307
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      },
+      "founders_retained_hunting_energy_per_metabolic_energy": {
+        "condition_means": {
+          "0.0": 1.0781300859624807,
+          "avoidance": 1.0684387418203758,
+          "attraction": 1.09642286584624
+        },
+        "differences_from_neutral": {
+          "avoidance": {
+            "mean": -0.00969134414210485,
+            "bootstrap_95_percent_interval": [
+              -0.09175709307504844,
+              0.07302640634346569
+            ]
+          },
+          "attraction": {
+            "mean": 0.0182927798837592,
+            "bootstrap_95_percent_interval": [
+              -0.06700609981786253,
+              0.1011375464022909
+            ]
+          }
+        },
+        "paired_episode_count": 100
+      }
+    }
+  },
+  "totals": {
+    "0.0": {
+      "all": {
+        "predator_ticks": 3790380,
+        "captures": 14378,
+        "offered_hunting_energy": 33600.48520473222,
+        "retained_hunting_energy": 33600.48520473222,
+        "movement_energy": 12798.365378334931,
+        "resting_energy": 18953.71668759542,
+        "reproduction_energy": 6170.0
+      },
+      "founders": {
+        "predator_ticks": 898751,
+        "captures": 3716,
+        "offered_hunting_energy": 8772.30461887604,
+        "retained_hunting_energy": 8772.30461887604,
+        "movement_energy": 3231.431897974045,
+        "resting_energy": 4450.893998282968,
+        "reproduction_energy": 1855.0
+      },
+      "born": {
+        "predator_ticks": 2891629,
+        "captures": 10662,
+        "offered_hunting_energy": 24828.180585856193,
+        "retained_hunting_energy": 24828.180585856193,
+        "movement_energy": 9566.93348036089,
+        "resting_energy": 14502.822689312452,
+        "reproduction_energy": 4315.0
+      }
+    },
+    "avoidance": {
+      "all": {
+        "predator_ticks": 3711361,
+        "captures": 13825,
+        "offered_hunting_energy": 32378.86476089178,
+        "retained_hunting_energy": 32378.86476089178,
+        "movement_energy": 12316.807876382234,
+        "resting_energy": 18531.1942229411,
+        "reproduction_energy": 5870.0
+      },
+      "founders": {
+        "predator_ticks": 834561,
+        "captures": 3386,
+        "offered_hunting_energy": 7983.107326855276,
+        "retained_hunting_energy": 7983.107326855275,
+        "movement_energy": 2822.209024267532,
+        "resting_energy": 4106.208945993558,
+        "reproduction_energy": 1840.0
+      },
+      "born": {
+        "predator_ticks": 2876800,
+        "captures": 10439,
+        "offered_hunting_energy": 24395.75743403651,
+        "retained_hunting_energy": 24395.757434036506,
+        "movement_energy": 9494.598852114703,
+        "resting_energy": 14424.985276947547,
+        "reproduction_energy": 4030.0
+      }
+    },
+    "attraction": {
+      "all": {
+        "predator_ticks": 3839111,
+        "captures": 14518,
+        "offered_hunting_energy": 34156.543400704584,
+        "retained_hunting_energy": 34156.543400704584,
+        "movement_energy": 12774.557740970984,
+        "resting_energy": 19217.165507296653,
+        "reproduction_energy": 6445.0
+      },
+      "founders": {
+        "predator_ticks": 855318,
+        "captures": 3627,
+        "offered_hunting_energy": 8619.43243857919,
+        "retained_hunting_energy": 8619.43243857919,
+        "movement_energy": 3103.7568198786025,
+        "resting_energy": 4242.767102546601,
+        "reproduction_energy": 2050.0
+      },
+      "born": {
+        "predator_ticks": 2983793,
+        "captures": 10891,
+        "offered_hunting_energy": 25537.11096212537,
+        "retained_hunting_energy": 25537.110962125374,
+        "movement_energy": 9670.80092109238,
+        "resting_energy": 14974.398404750043,
+        "reproduction_energy": 4395.0
+      }
+    }
+  },
+  "max_abs_individual_energy_balance_error": 9.36317690047872e-12,
+  "early_episode_seeds": [
+    133
+  ],
+  "interpretation": "Exploratory paired episode-mean rates, 95% intervals without multiplicity adjustment. Same seeds replayed, not independent replication. Capture credit is the environment original catcher, not evidence of cooperative hunting. Exposure and age/body composition differ across preferences."
+}

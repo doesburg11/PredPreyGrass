@@ -1,8 +1,53 @@
 # Social preference: fixed-policy proof of concept
 
-**Status: checkpoint fidelity and neutral inference validated; small matched-seed evaluation completed (2026-10-26).**
-Isolated sibling module. The existing continuous-traits code, checkpoints,
-training and RESULTS.md are untouched.
+**Status: closed (2026-10-28). Behavioral proof of concept demonstrated;
+no survival, reproductive or hunting benefit established in the tested settings.**
+
+The completed work shows that fixed attraction can change predator movement,
+spacing and encounter duration. The larger mixed-population evaluation did
+not confirm the pilot's apparent performance advantage. The final controlled
+hunt was dominated by early prey births and does not settle longer pursuit
+performance. This is not proof that attraction can never help.
+
+Read [RESULTS.md](RESULTS.md) for the final assessment, evidence by phase,
+limitations and closure decision. Code, checkpoints and existing result
+artifacts are retained as a reproducible baseline. No further strength sweeps,
+seed extensions, social inheritance or PPO training are planned for this phase.
+Reopening it would require a separately specified mechanism and evaluation
+protocol, including explicit handling of reproduction in isolated hunts.
+
+This module is an isolated sibling of the continuous-traits environment.
+Its training, checkpoints and existing environment rules were preserved.
+The social preference remains externally assigned and non-heritable; existing
+body-trait inheritance was not changed. The broader learning/evolution and
+cooperation objectives remain open, including the separate
+[field-of-view experiment](../eco_evolutionary_continuous_fov/README.md).
+
+## Final findings
+
+- **Behavior:** strength-2 uniform attraction produced closer spacing and
+  longer local encounters in both evaluated checkpoints. These checkpoints
+  share an ancestral training run, so this is not independent replication
+  across training histories. Stable group membership was not established.
+- **Performance:** in 100 fresh mixed episodes, attraction minus neutral was
+  −217 observed founder ticks alive and +0.195 offspring per founder; adjusted
+  97.5% intervals include zero for both. One early-ending episode limits
+  full-horizon survival interpretation. Hunting rates and energy costs also
+  showed no clear attraction advantage.
+- **Controlled hunts:** captures were 4/100 with one neutral predator,
+  11/100 with two neutral predators, and 9/100 with two attracted predators.
+  Births ended 89–95% of trials, usually around tick 37 of a planned maximum
+  of 256. This birth-limited diagnostic does not establish cooperation or
+  longer-chase performance.
+- **Verification:** checkpoint tensors and actor logits were validated,
+  neutral inference and matched replays checked, and energy ledgers balanced.
+  The latest verification passed 65 current top-level tests. This closure
+  changes documentation only; it introduces no new runs or analysis.
+
+The sections below preserve the chronological implementation and experimental
+record. Test counts, go/no-go criteria and proposed next steps in that record
+refer to their respective stages; the closure decision above and
+[final results](RESULTS.md) supersede earlier follow-up suggestions.
 
 ## Question
 
@@ -35,7 +80,7 @@ Uses one frozen PPO checkpoint, matched episode seeds, and the same initial
 gene pool for -1, 0, +1 preferences. A stochastic run may still diverge
 quickly; replicate across independent seeds before drawing conclusions.
 
-## Go / no-go
+## Original go / no-go criteria (historical)
 
 1. Unit tests: neutrality, no visibility, opposite directional effects.
 2. Frozen checkpoint: positive versus negative preference should shift
@@ -256,3 +301,24 @@ retained and the pilot was not pooled. Pilot/serial replay fidelity and
 checkpoint/source checks passed; 46 tests pass. See
 [FITNESS_CONFIRMATION_RESULTS.md](FITNESS_CONFIRMATION_RESULTS.md) for the
 predeclared design, tables, energy curves, artifacts and independent review.
+
+## Hunting efficiency diagnostics
+
+The same 100 mixed episodes now include credited captures, actual retained
+hunting energy, and movement/resting energy charges. Every prior saved field
+matched. Attraction versus neutral showed no clear difference in captures,
+feeding return or movement cost; all exploratory paired 95% intervals include
+zero. Per-animal energy conservation passed for 4,297 predators, and all 51
+current top-level tests pass. See [HUNTING_RESULTS.md](HUNTING_RESULTS.md) for
+definitions, tables, caveats, plots, data and independent review.
+
+## Controlled one-versus-two predator hunts
+
+A short pilot ran 100 matched situations with one neutral, two neutral or two
+attracted predators. Captures were 4, 11 and 9 respectively. Attraction added
+no captures over the neutral pair. However, 89–95% of trials stopped at a prey
+birth, generally around tick 37, so this is a birth-limited endpoint rather
+than a full 256-tick chase test. Frozen policies and existing rules were kept.
+All 65 current tests pass. See [CONTROLLED_HUNT_RESULTS.md](CONTROLLED_HUNT_RESULTS.md)
+for stopping limitations, paired uncertainty, energy costs, source provenance,
+review and data.

@@ -1,0 +1,12 @@
+{
+  "matched_situations": 100,
+  "trials": 300,
+  "all_initial_states_matched": true,
+  "checkpoint_validation_and_hashes_verified": true,
+  "complete_core_source_set_matches_validated_baseline": true,
+  "archived_run_sources_match_original_plan": true,
+  "journal_hash_verified": true,
+  "maximum_individual_energy_balance_error": 8.237854842718662e-14,
+  "current_top_level_tests_passed": 65,
+  "postrun_only_change": "Strengthened source-set guard and its test; recorded separately from archived run sources."
+}
