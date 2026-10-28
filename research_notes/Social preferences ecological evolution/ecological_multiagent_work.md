@@ -1,7 +1,7 @@
 # Related work: social preferences in ecological multi-agent evolution
 
 **Research date:** 2026-10-27  
-**Target:** `predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference`
+**Target:** `predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference` (closed and moved to [PredPreyGrass-archive](https://github.com/doesburg11/PredPreyGrass-archive/tree/main/eco_evolutionary_social_preference) on 2026-10-28)
 
 ## Bottom line
 
@@ -30,9 +30,9 @@ proof of concept. It adds a fixed action-logit bias toward or away from the
 nearest visible predator conspecific, evaluates uniform and mixed non-heritable
 preferences, and does not change policy training, reward, genes, or
 inheritance. It is not yet a simulation of preference evolution
-([module README](../../predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/README.md);
-[social bias implementation](../../predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/social_bias.py);
-[individual preference assignment](../../predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/individual_preferences.py)).
+([module README](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/eco_evolutionary_social_preference/README.md);
+[social bias implementation](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/eco_evolutionary_social_preference/social_bias.py);
+[individual preference assignment](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/eco_evolutionary_social_preference/individual_preferences.py)).
 
 ## Closest computational studies
 

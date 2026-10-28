@@ -1,9 +1,0 @@
-Two remaining issues:
-
-1. **High — `summary.json` still stores per-episode detail outside the four JSONL journals.**  
-   `confirmation_summary()` embeds the full `build_summary()` result at [fitness_confirmation.py:56](/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/fitness_confirmation.py:56). That result includes `paired_seeds` and `seed_differences` for every metric ([summarize.py:27-42](/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/summarize.py:27)). This conflicts with the stated artifact boundary that detail lives only in the four JSONL journals. Tests do not enforce compact summary/manifest schemas.
-
-2. **Medium — full checkpoint-file integrity is not checked inside workers.**  
-   The parent computes full-file hashes only before and after the parallel run ([fitness_confirmation.py:120](/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/fitness_confirmation.py:120), [169](/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/fitness_confirmation.py:169)). Workers check only `validate_checkpoint()` ([64-76](/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_social_preference/fitness_confirmation.py:64)), so a constructor-metadata or other non-validation file could be transiently changed while a worker loads it, then restored before the parent’s post-hash. The serial replay would not necessarily expose this if it uses the restored state.
-
-The focused test suite passes: **6 passed** using `.conda/bin/python`. I did not inspect any results JSONs or modify files.
