@@ -1,6 +1,6 @@
 # Design note: a field-of-view trade-off (2026-10-26)
 
-Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum).** Decisions taken: no
+Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum); pilot 2026-10-28: test 1 failed (predators stayed at the fully binocular corner instead of narrowing), see that module's RESULTS.md section 3.** Decisions taken: no
 energy cost for field of view, a new module, noisy monocular distance, and
 the parameters proposed below.
 

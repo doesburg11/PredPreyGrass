@@ -92,3 +92,70 @@ prey keep their cost of noise. σ = 0.3 gives a large asymmetry for
 predators (front −6%, side −41%) and a viable ecosystem with noise on both;
 it stays the pilot's setting. Caveats as in section 1: policies trained
 without noise or strikes, one branch point, end-to-end rates.
+
+## 3. Pilot: does the trade-off make the species' eyes diverge? (2026-10-28)
+
+**Question** (design note, plan step 2, pre-specified test 1). With the
+trade-off (σ 0.3), does the predators' field-of-view gene fall from start
+to end while the prey's does not, when without it (σ 0) both rise?
+
+**Design.** [`launchers/pilot.py`](launchers/pilot.py): one run per arm, σ
+0.3 (trade-off) and σ 0 (control), both with strike catching, otherwise the
+CT-05 settings (`config/config_env.py`); 10 workers, seed 1, 3,000
+iterations, run side by side (2026-10-27 12:41 to 2026-10-28 about 05:20).
+Analysis: [`analyze_pilot.py`](analyze_pilot.py), from the gene-pool
+snapshots saved every 10 iterations (not the EMA-smoothed TensorBoard
+means). Start: the founders of every worker's first episode, rebuilt
+exactly from the run's seeds (identical in both arms); end: mean of the
+snapshots over the last 300 iterations (2,710 to 3,000). Sustainability
+guard (test 3): [`final_check.py`](final_check.py), 50 episodes from each
+final checkpoint, gene pools held fixed. Summary:
+`results/pilot_summary.json`; figure: `assets/pilot_traits.png`.
+
+| Arm | Species | fov gene, start | end | change | Workers with change > 0 | Field of view at end | Binocular overlap |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| trade-off (σ 0.3) | predator | +0.02 | +0.07 | **+0.05** | 10 of 10 (+0.01 to +0.09) | 161° | 139° |
+|  | prey | −0.04 | +0.55 | +0.59 | 10 of 10 | 360° (capped) | 0° |
+| control (σ 0) | predator | +0.02 | +0.59 | +0.57 | 10 of 10 | 272° | 28° |
+|  | prey | −0.04 | +0.56 | +0.60 | 10 of 10 | 360° (capped) | 0° |
+
+| Arm | Coexisting (of 50) | Catch risk | Mean predators | Mean prey |
+| --- | --- | --- | --- | --- |
+| trade-off | 50 | 1.08 | 14.7 | 44.0 |
+| control | 48 (2 prey extinct) | 1.98 | 13.6 | 26.6 |
+
+(Catch risk: prey caught per prey per 1,000 physics steps.)
+
+**Result.** Test 1 fails as pre-specified: the predators' field-of-view
+gene did not fall, it rose slightly (+0.05; in every worker). The other two
+parts hold: the prey's rose (+0.59), and in the control both rose (+0.57,
++0.60), as in CT-04 and CT-05. The guard (test 3) passes in both arms (50
+and 48 of 50, threshold 45). Measured from the first snapshot (iteration
+10) instead of the founders, the predators' change is −0.02; the
+pre-specified baseline is the start, so this does not change the verdict.
+
+**What happened instead.** The trade-off made a large difference to the
+predators, not in the predicted direction but in size: their gene stayed
+near 0 (field 161°, 86% of it binocular) for the whole run, while in the
+control it rose to 0.59 within 30 iterations (272°, 11% binocular). The
+prey reached the full 360° in both arms. So in the trade-off run the two
+species ended with different eyes, a narrow mostly binocular predator field
+and a panoramic prey field, while in the control both ended wide.
+
+**Reading (post hoc, one seed per arm).** The pre-specified direction did
+not fit the geometry. With the monocular field M at 150°, the predators'
+starting field (150°, gene 0) is already fully binocular: narrowing it
+adds no binocular overlap and only loses field, so the trade-off can hold
+the predators' gene at 0 but has no reason to push it below. The predators
+stayed just above that corner, which is what a fitness optimum at the
+corner would look like; it is not a test of it. Likewise, above gene 0.405
+the prey's field is capped at 360° and the gene costs nothing, so the
+prey's level above that is not under selection. Prey in the trade-off run
+first narrowed their field (gene −0.56 around iteration 80, about 137°,
+fully binocular) and switched to panoramic only from about iteration 640;
+the control's prey did so by iteration 100. Why is open. Other
+differences between the arms: predator speed gene −0.13 against +0.38,
+and fewer catches (catch risk 1.08 against 1.98) with more prey (44 against
+27). Caveats: one seed per arm, workers share policies (not independent
+replicates), and the size of the difference from the control was not
+the pre-specified criterion.

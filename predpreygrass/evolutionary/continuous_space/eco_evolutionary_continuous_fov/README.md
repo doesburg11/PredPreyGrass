@@ -1,11 +1,14 @@
 # eco_evolutionary_continuous_fov
 
-**Status (2026-10-27): implemented, tested, reviewed and calibrated, no
-training run yet.** The first calibration showed that noisy distances barely
-hurt predators that catch by contact (RESULTS.md section 1), so predators
-now catch by strikes; with strikes, noise costs them 41% of catches to the
-side and 6% in front at σ = 0.3 (section 2). Next: the pilot (design note,
-plan step 2).
+**Status (2026-10-28): pilot done; pre-specified test 1 failed, with a
+large difference all the same.** With the trade-off the predators' field
+of view stayed at its start (gene +0.05, field 161°, mostly binocular)
+instead of falling, while without it it widened to 272° as the prey's did;
+the prey went to 360° in both (RESULTS.md section 3). Post hoc: the
+predators' start, 150°, is already fully binocular, so the geometry gives
+no reason to narrow below it, and the predicted fall did not fit the
+design. Both arms sustainable (50 and 48 of 50). Next: decide how to go on
+(TODO).
 
 Can predators and prey evolve different eyes? A copy of
 [`eco_evolutionary_continuous_traits`](../eco_evolutionary_continuous_traits/)
@@ -72,7 +75,10 @@ As in `eco_evolutionary_continuous_traits`: [`environment.py`](environment.py)
 [`tournament.py`](tournament.py), [`eval.py`](eval.py), [`config/`](config/)
 (the experiment's settings in `config_env.py`), [`tests/`](tests/)
 (`test_fov.py` for the trade-off). New here:
-[`calibrate_noise.py`](calibrate_noise.py) (the calibration) and
+[`calibrate_noise.py`](calibrate_noise.py) (the calibration),
+[`launchers/pilot.py`](launchers/pilot.py) (the pilot),
+[`analyze_pilot.py`](analyze_pilot.py) (test 1 from the gene-pool
+snapshots), [`final_check.py`](final_check.py) (test 3) and
 [`RESULTS.md`](RESULTS.md). Not copied: that module's analyses, launchers and
 results.
 
@@ -96,9 +102,13 @@ Runs are saved in the module's `runs/` folder (gitignored).
 - [x] Calibrate the noise (design note, step 1; RESULTS.md sections 1
   and 2): contact catching gave predators almost no cost of noise; with
   strike catching σ = 0.3 costs them 41% of side catches, 6% in front.
-- [ ] Pilot (step 2): one run with the trade-off and one with noise 0 (both
-  with strikes), 3,000 iterations side by side; pre-specified test 1
-  (divergence).
+- [x] Pilot (step 2, 2026-10-28; RESULTS.md section 3): test 1 failed on
+  the predators (+0.05 instead of < 0) but the arms differ widely
+  (predators +0.05 against +0.57); test 3 passed.
+- [ ] Decide how to go on: (a) re-specify and replicate with the contrast
+  to the control as the test (3 seeds per arm), or (b) move the predators'
+  start off the corner (e.g. monocular field M below 150°, so that
+  narrowing gains overlap) and pre-register the fall again.
 - [ ] Beside test 1 (start to end), descriptive analyses after Olson et al.
   (2016), who found predator view angle and prey swarming cycling: both
   species' field of view over the whole run, a prey-grouping measure

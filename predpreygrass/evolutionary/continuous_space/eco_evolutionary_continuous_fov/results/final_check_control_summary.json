@@ -1,0 +1,13 @@
+{
+ "checkpoint": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/runs/pilot_control/checkpoint",
+ "episodes": 50,
+ "coexisting": 48,
+ "prey_extinct": 2,
+ "predators_extinct": 0,
+ "both_extinct": 0,
+ "catch_risk": 1.982553302804338,
+ "mean_predators": 13.6394,
+ "mean_prey": 26.621800000000004,
+ "predator_births": 34.32,
+ "prey_births": 439.18
+}
