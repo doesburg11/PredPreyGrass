@@ -78,7 +78,8 @@ As in `eco_evolutionary_continuous_traits`: [`environment.py`](environment.py)
 [`calibrate_noise.py`](calibrate_noise.py) (the calibration),
 [`launchers/pilot.py`](launchers/pilot.py) (the pilot),
 [`analyze_pilot.py`](analyze_pilot.py) (test 1 from the gene-pool
-snapshots), [`final_check.py`](final_check.py) (test 3) and
+snapshots), [`final_check.py`](final_check.py) (test 3),
+[`prey_behaviour.py`](prey_behaviour.py) (prey reaction and grouping) and
 [`RESULTS.md`](RESULTS.md). Not copied: that module's analyses, launchers and
 results.
 
@@ -105,15 +106,17 @@ Runs are saved in the module's `runs/` folder (gitignored).
 - [x] Pilot (step 2, 2026-10-28; RESULTS.md section 3): test 1 failed on
   the predators (+0.05 instead of < 0) but the arms differ widely
   (predators +0.05 against +0.57); test 3 passed.
-- [ ] Decide how to go on: (a) re-specify and replicate with the contrast
-  to the control as the test (3 seeds per arm), or (b) move the predators'
-  start off the corner (e.g. monocular field M below 150°, so that
-  narrowing gains overlap) and pre-register the fall again.
-- [ ] Beside test 1 (start to end), descriptive analyses after Olson et al.
-  (2016), who found predator view angle and prey swarming cycling: both
-  species' field of view over the whole run, a prey-grouping measure
-  (nearest-neighbour distance, not logged yet) and its correlation with the
-  predators' field of view over time.
+- [x] Decided (2026-10-28): pilot 2 with the monocular field at 120°, so
+  that the predators' 150° start is no longer fully binocular; test 1
+  re-registered before launch (design note, addendum of 2026-10-28).
+- [ ] Pilot 2: `launchers/pilot.py tradeoff_m120` and
+  `tradeoff_m120_seed2`, running since 2026-10-28 10:22; pilot 1's control
+  is its control (without noise M has no effect). Then
+  `analyze_pilot.py` (needs the new arms added) and `final_check.py`.
+- [x] Descriptive analyses after Olson et al. (2016) and Buason and Ziemke
+  (2003) on pilot 1 (RESULTS.md section 4, `prey_behaviour.py`): prey do
+  flee predators they see (both arms); no cycle of predator field of view
+  and prey grouping within 3,000 iterations (r about 0).
 - [ ] Before test 2: consider a confusion effect in the strike (hit
   probability 1 / number of prey near the target in the predator's view),
   so that prey grouping protects and the predators' best field of view

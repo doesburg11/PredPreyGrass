@@ -159,3 +159,60 @@ and fewer catches (catch risk 1.08 against 1.98) with more prey (44 against
 27). Caveats: one seed per arm, workers share policies (not independent
 replicates), and the size of the difference from the control was not
 the pre-specified criterion.
+
+## 4. Pilot 1: do prey react to predators they see, and do eyes and grouping cycle? (2026-10-28)
+
+**Questions** (descriptive, not pre-specified; design note, related work).
+(a) Buason and Ziemke's (2003) prey evolved to circle whatever the
+predator did; a prey that ignores predators cannot coevolve its eyes with
+them. Do our prey react to a predator in view? (b) Olson et al. (2016)
+found predators' view angle and prey swarming cycling together. Do they
+here?
+
+**Design.** [`prey_behaviour.py`](prey_behaviour.py): pilot 1's checkpoints
+every 100 iterations, both arms, 8 episodes each (seeds 0 to 7, gene pools
+held fixed). (a) At every decision of a prey with a predator in its
+observation, the prey policy's action distribution from the observation as
+it is and with the predator slot blanked (as when none is in view): the
+total-variation distance between them, and the expected velocity away from
+that predator (true offset, in units of top speed) under each. Placebo:
+blanking another prey instead. (b) The prey's Clark-Evans ratio R (mean
+nearest-neighbour distance over its value for the same number of prey
+placed at random on the same torus; R < 1: grouped) at every decision,
+correlated over checkpoints with the predators' mean field-of-view gene
+(section 3), as levels and as changes. Summary:
+`results/prey_behaviour_summary.json`; figure: `assets/prey_behaviour.png`.
+
+| Arm | Iteration | Velocity away, predator seen | predator blanked | Gain | Action change (TV), predator blanked | other prey blanked | Prey R |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| trade-off | 100 | −0.20 | −0.42 | +0.22 | 0.34 | 0.26 | 0.75 |
+|  | 700 | +0.24 | −0.22 | +0.45 | 0.68 | 0.43 | 0.81 |
+|  | 3,000 | +0.31 | −0.16 | +0.48 | 0.81 | 0.52 | 0.89 |
+| control | 100 | +0.34 | −0.16 | +0.50 | 0.68 | 0.25 | 0.86 |
+|  | 3,000 | +0.24 | −0.13 | +0.37 | 0.83 | 0.54 | 0.88 |
+
+**Result.** (a) Yes. In both arms, from early on, a predator in view moves
+the prey's actions away from it: at the end the expected velocity away
+from the predator is 0.31 (trade-off) and 0.24 (control) of top speed, and
+−0.16 and −0.13 with the predator blanked; blanking the predator changes
+the action distribution more than blanking another prey (TV 0.81 against
+0.52, 0.83 against 0.54). (Blanked, prey move slightly towards predators
+they would see, probably because what is in view tends to lie ahead of a
+moving prey.) The trade-off run's prey learned this later: at iteration
+100 to 400 they still moved towards seen predators (−0.20 to −0.06) and
+saw few (3,000 to 5,000 decisions with a predator in view against 60,000
+to 70,000 in the control); flight appeared between iterations 400 and
+700, about when their field of view widened from about 137° to 360°
+(section 3, from about iteration 640). Which came first, and whether
+either caused the other, these data cannot say. (b) No cycle within 3,000
+iterations: the predators' gene changed little after the first 30 to 100
+iterations in either arm, prey were mildly grouped throughout (R 0.75 to
+0.89, drifting up), and the two were uncorrelated (r 0.04 and −0.05 for
+levels, −0.15 and −0.11 for changes).
+
+**Reading.** The prey in this world do use vision against predators, so
+the failure mode of Buason and Ziemke's prey does not apply. Olson et
+al.'s cycle took thousands of generations in 30 replicates; one run per
+arm of 3,000 iterations shows none, which does not rule one out. Without
+a confusion effect (README TODO) prey grouping gives no protection the
+predators' eyes would respond to, so no coupling is expected yet.
