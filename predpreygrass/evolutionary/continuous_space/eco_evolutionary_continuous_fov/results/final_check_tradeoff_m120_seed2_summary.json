@@ -1,0 +1,13 @@
+{
+ "checkpoint": "predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/runs/pilot_tradeoff_m120_seed2/checkpoint",
+ "episodes": 50,
+ "coexisting": 50,
+ "prey_extinct": 0,
+ "predators_extinct": 0,
+ "both_extinct": 0,
+ "catch_risk": 1.1582865214587819,
+ "mean_predators": 15.201000000000004,
+ "mean_prey": 43.9208,
+ "predator_births": 40.64,
+ "prey_births": 444.28
+}

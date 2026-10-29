@@ -1,14 +1,16 @@
 # eco_evolutionary_continuous_fov
 
-**Status (2026-10-28): pilot done; pre-specified test 1 failed, with a
-large difference all the same.** With the trade-off the predators' field
-of view stayed at its start (gene +0.05, field 161°, mostly binocular)
-instead of falling, while without it it widened to 272° as the prey's did;
-the prey went to 360° in both (RESULTS.md section 3). Post hoc: the
-predators' start, 150°, is already fully binocular, so the geometry gives
-no reason to narrow below it, and the predicted fall did not fit the
-design. Both arms sustainable (50 and 48 of 50). Next: decide how to go on
-(TODO).
+**Status (2026-10-29): pilot 2 passed.** With the monocular field at
+120° (pilot 2, re-registered) the predators' field of view narrowed in
+both seeds (gene −0.22 and −0.13, every worker; end fields 122° and 129°,
+86 to 96% binocular) while the prey's went to 360°, against +0.57 for the
+predators without the trade-off: the re-registered prediction holds,
+narrow mostly binocular predator eyes and panoramic prey eyes (RESULTS.md
+section 5; two seeds, a pilot).
+Pilot 1 (monocular field 150°, section 3) had failed because the
+predators started fully binocular. All runs sustainable (50 of 50).
+Divergence, not yet coevolution: that is test 2. Next: confusion effect,
+replication seeds, test 2 (TODO).
 
 Can predators and prey evolve different eyes? A copy of
 [`eco_evolutionary_continuous_traits`](../eco_evolutionary_continuous_traits/)
@@ -109,10 +111,12 @@ Runs are saved in the module's `runs/` folder (gitignored).
 - [x] Decided (2026-10-28): pilot 2 with the monocular field at 120°, so
   that the predators' 150° start is no longer fully binocular; test 1
   re-registered before launch (design note, addendum of 2026-10-28).
-- [ ] Pilot 2: `launchers/pilot.py tradeoff_m120` and
-  `tradeoff_m120_seed2`, running since 2026-10-28 10:22; pilot 1's control
-  is its control (without noise M has no effect). Then
-  `analyze_pilot.py` (needs the new arms added) and `final_check.py`.
+- [x] Pilot 2 (2026-10-28/29; RESULTS.md section 5): `tradeoff_m120` and
+  `tradeoff_m120_seed2`, pilot 1's control as control (without noise M has
+  no effect). Re-registered test 1 passed in both seeds (predators −0.22
+  and −0.13, prey +0.59), secondary passed, test 3 passed (50 and 50).
+- [ ] Replication (plan step 3): more seeds per condition, M 120°, with a
+  σ 0 control per seed.
 - [x] Descriptive analyses after Olson et al. (2016) and Buason and Ziemke
   (2003) on pilot 1 (RESULTS.md section 4, `prey_behaviour.py`): prey do
   flee predators they see (both arms); no cycle of predator field of view

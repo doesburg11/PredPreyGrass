@@ -1,8 +1,10 @@
-"""Pre-specified test 1 of the pilot (DESIGN_fov_tradeoff.md in
+"""Pre-specified test 1 of the pilots (DESIGN_fov_tradeoff.md in
 eco_evolutionary_continuous_traits): the change in the mean field-of-view
 gene from start to end (mean over the last 300 iterations), negative for
 predators and non-negative for prey in the trade-off run, rising for both in
-the sigma 0 control.
+the sigma 0 control. Pilot 2 (the addendum: monocular field 120, two seeds,
+pilot 1's control reused) asks the same of both of its runs, and a predator
+end gene below +0.07, pilot 1's trade-off end, as secondary.
 
 End: the gene-pool snapshots saved with every checkpoint (every 10
 iterations; the last one, at the final iteration, in checkpoint/ itself),
@@ -45,7 +47,14 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov
 
 MODULE = Path(__file__).resolve().parent
 RUNS = MODULE / "runs"
-ARMS = ("tradeoff", "control")
+ARMS = ("tradeoff", "control", "tradeoff_m120", "tradeoff_m120_seed2")
+PILOT_2 = ("tradeoff_m120", "tradeoff_m120_seed2")
+TITLES = {
+    "tradeoff": "pilot 1, sigma 0.3, field 150",
+    "control": "control, sigma 0",
+    "tradeoff_m120": "pilot 2, sigma 0.3, field 120, seed 1",
+    "tradeoff_m120_seed2": "pilot 2, sigma 0.3, field 120, seed 2",
+}
 LAST = 300  # iterations at the end that make up "end"
 FOV = TRAITS.index("fov")
 
@@ -124,6 +133,11 @@ def verdict(results):
         "tradeoff_predator_negative": trade["predator"]["fov_change"] < 0,
         "tradeoff_prey_non_negative": trade["prey"]["fov_change"] >= 0,
         "control_both_rise": control["predator"]["fov_change"] > 0 and control["prey"]["fov_change"] > 0,
+        "pilot_2_predator_negative": all(results[arm]["species"]["predator"]["fov_change"] < 0 for arm in PILOT_2),
+        "pilot_2_prey_non_negative": all(results[arm]["species"]["prey"]["fov_change"] >= 0 for arm in PILOT_2),
+        "pilot_2_predator_end_below_pilot_1": all(
+            results[arm]["species"]["predator"]["end_mean"]["fov"] < trade["predator"]["end_mean"]["fov"] for arm in PILOT_2
+        ),
     }
 
 
@@ -133,7 +147,7 @@ def plot(results, path):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(len(TRAITS) + 1, 2, figsize=(11, 11), sharex=True)
+    fig, axes = plt.subplots(len(TRAITS) + 1, len(ARMS), figsize=(5.5 * len(ARMS), 11), sharex=True)
     colors = {"predator": "#c0392b", "prey": "#2471a3"}
     for col, arm in enumerate(ARMS):
         res = results[arm]
@@ -146,7 +160,7 @@ def plot(results, path):
             ax.axhline(0, color="grey", lw=0.6)
             ax.set_ylabel(f"{trait} gene")
             if row == 0:
-                ax.set_title(f"{arm} (sigma {'0.3' if arm == 'tradeoff' else '0'})")
+                ax.set_title(TITLES[arm])
                 ax.legend(frameon=False, fontsize=8)
         ax = axes[-1, col]
         for species in SPECIES:
@@ -154,9 +168,9 @@ def plot(results, path):
         ax.set_ylabel("alive (all workers)")
         ax.set_xlabel("iteration")
     for row in range(len(TRAITS)):
-        lo = min(axes[row, c].get_ylim()[0] for c in range(2))
-        hi = max(axes[row, c].get_ylim()[1] for c in range(2))
-        for c in range(2):
+        lo = min(axes[row, c].get_ylim()[0] for c in range(len(ARMS)))
+        hi = max(axes[row, c].get_ylim()[1] for c in range(len(ARMS)))
+        for c in range(len(ARMS)):
             axes[row, c].set_ylim(lo, hi)
     for c, arm in enumerate(ARMS):
         last = max(results[arm]["iterations"])

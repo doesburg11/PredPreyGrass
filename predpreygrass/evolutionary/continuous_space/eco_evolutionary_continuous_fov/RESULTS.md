@@ -216,3 +216,80 @@ al.'s cycle took thousands of generations in 30 replicates; one run per
 arm of 3,000 iterations shows none, which does not rule one out. Without
 a confusion effect (README TODO) prey grouping gives no protection the
 predators' eyes would respond to, so no coupling is expected yet.
+
+## 5. Pilot 2: monocular field 120°, re-registered test 1 (2026-10-29)
+
+**Question** (design note, addendum of 2026-10-28, written before the
+runs). With the monocular field M lowered from 150° to 120°, the
+predators' starting field (about 150°) is only about 60% binocular, so
+narrowing it now gains depth vision. Does the predators' field-of-view
+gene fall from the founders to the end, and the prey's not fall, in both
+of two runs? Secondary: the predators' end gene is below pilot 1's
+trade-off run (+0.07) in both. Test 3 as before.
+
+**Design.** [`launchers/pilot.py`](launchers/pilot.py), arms
+`tradeoff_m120` (seed 1) and `tradeoff_m120_seed2` (seed 2): σ 0.3, M
+120°, strike catching, otherwise as pilot 1; 10 workers, 3,000
+iterations, run side by side (2026-10-28 about 10:20 to 2026-10-29 12:48
+and 15:24). Seed 1 has the same seeds, and so the same founders, as both
+pilot-1 arms: it differs from pilot 1's trade-off run only in M. The σ 0
+control is pilot 1's (without noise M has no effect). Analysis as in §3
+([`analyze_pilot.py`](analyze_pilot.py), now with all four runs);
+summary: `results/pilot_summary.json`; figure: `assets/pilot_traits.png`;
+test 3: `results/final_check_tradeoff_m120[_seed2]_summary.json`.
+
+| Run | Species | fov gene, start | end | change | Workers with change < 0 | Field of view at end | Binocular overlap |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| seed 1 | predator | +0.02 | −0.20 | **−0.22** | 10 of 10 (−0.26 to −0.16) | 122° | 118° (96%) |
+|  | prey | −0.04 | +0.54 | +0.59 | 0 of 10 | 360° (capped) | 0° |
+| seed 2 | predator | −0.03 | −0.15 | **−0.13** | 10 of 10 (−0.17 to −0.08) | 129° | 111° (86%) |
+|  | prey | −0.03 | +0.55 | +0.59 | 0 of 10 | 360° (capped) | 0° |
+| *pilot 1, M 150° (§3)* | predator | +0.02 | +0.07 | +0.05 | 0 of 10 | 161° | 139° |
+| *control, σ 0 (§3)* | predator | +0.02 | +0.59 | +0.57 | 0 of 10 | 272° | 28° |
+
+(Founders' field: 153° with 87° binocular, 57%, for seed 1; 146° with
+94°, 64%, for seed 2.)
+
+| Run | Coexisting (of 50) | Catch risk | Mean predators | Mean prey |
+| --- | --- | --- | --- | --- |
+| seed 1 | 50 | 1.06 | 14.4 | 47.9 |
+| seed 2 | 50 | 1.16 | 15.2 | 43.9 |
+| *pilot 1 trade-off* | 50 | 1.08 | 14.7 | 44.0 |
+| *control* | 48 | 1.98 | 13.6 | 26.6 |
+
+**Result.** Test 1, re-registered, passes in both runs: the predators'
+gene fell (−0.22 and −0.13, in every worker of both), the prey's rose
+(+0.59 in both). The secondary criterion holds (end −0.20 and −0.15,
+below +0.07). Test 3 passes (50 and 50 of 50). Measured from the first
+snapshot (iteration 10) the predators' change is −0.23 and −0.11.
+
+**Course.** The predators' gene fell below −0.1 within 30 iterations in
+both runs and then stayed in a narrow band (iterations 300 to 3,000: mean
+−0.17 and −0.16, SD 0.03 in both), close to but on average above the
+corner at −0.22 (field 120°, fully binocular); single snapshots reached
+−0.27 and −0.26. The prey's field passed 360° (gene 0.405) by iteration
+190 and 120, without the detour through a narrow field that pilot 1's
+trade-off prey took (until about iteration 640, §3).
+
+**Reading.** For seed 1, whose founders and seeds match pilot 1's and
+which differs from pilot 1's trade-off run only in M, the M 150° run
+stayed near 0 while the M 120° run ended near the new corner, and the σ 0
+control rose to +0.59. Seed 2, with other founders and no matched M 150°
+run, reproduced the narrowing at M 120°. This satisfies the re-registered
+directional prediction: predators narrowed, to mostly binocular fields,
+while prey became panoramic and monocular. It is consistent with selection
+towards a nearly fully binocular predator field, but two seeds and two
+values of M do not establish that the predators follow the corner wherever
+it is. Nor do these data tell an optimum at the corner itself from an
+interior optimum that trades a little overlap for field; one possible
+explanation for a mean slightly above the corner, untested, is that a
+mutating population around a kinked optimum spreads mostly to the side
+where fitness falls more slowly. Caveats: two seeds, the control from one
+seed (pilot 1's), workers share the policy and are not independent
+replicates. Other differences, not pre-specified: seed 1's predators also
+ended slower (speed gene −0.24, against −0.13 in pilot 1's trade-off run
+and +0.38 in the control; seed 2: −0.10); vision fell to about −0.55 to
+−0.6 in both species in all four runs, the control included, so it is not
+an effect of the trade-off. This is divergence, not coevolution: test 2
+(does one species' field evolve differently when the other's gene pool is
+held fixed) is still to come.
