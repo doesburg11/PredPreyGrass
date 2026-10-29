@@ -115,6 +115,12 @@ Runs are saved in the module's `runs/` folder (gitignored).
   `tradeoff_m120_seed2`, pilot 1's control as control (without noise M has
   no effect). Re-registered test 1 passed in both seeds (predators −0.22
   and −0.13, prey +0.59), secondary passed, test 3 passed (50 and 50).
+- [ ] Test 2, coevolution branches (pre-registered 2026-10-29, design
+  note addendum; chosen before replication): `launchers/coevolution.py`,
+  queue `launchers/queue_coevolution.sh`, six 1,000-iteration runs from
+  iteration 10 of both pilot-2 runs (`both`, `prey_frozen`,
+  `predator_frozen`), two at a time, about 34 h. Then an analysis script
+  for the contrasts and `final_check.py` on all six.
 - [ ] Replication (plan step 3): more seeds per condition, M 120°, with a
   σ 0 control per seed.
 - [x] Descriptive analyses after Olson et al. (2016) and Buason and Ziemke

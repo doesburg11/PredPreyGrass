@@ -178,6 +178,88 @@ episodes) as before. Not calibrated again: M changes only where the noise
 applies; a collapse of either population would show in the first hours
 and stop the run.
 
+## Addendum (2026-10-29): test 2, coevolution branches, pre-registered
+
+**Why now.** Pilot 2 passed test 1 in both seeds (eco_evolutionary_continuous_fov
+RESULTS.md section 5). The plan put replication (step 3) before test 2; the
+user chose test 2 first. Written before any branch run; the branch and
+freeze code (`trait_initial_gene_pool`, `trait_frozen_species`,
+`init_checkpoint`) exists, was reviewed on 2026-10-27, and a 3-iteration
+smoke test confirmed that a frozen species keeps exactly the branch point's
+pooled genomes in every worker.
+
+**Design.** [`launchers/coevolution.py`](../eco_evolutionary_continuous_fov/launchers/coevolution.py).
+Branch points: iteration 10 of each pilot-2 run (seed 1 and seed 2), where
+both species' genes are still near the founders' (predator fov gene +0.03
+and −0.05, prey +0.00 and +0.19), so that both arms of a contrast see the
+whole move; this point was chosen after seeing the pilot trajectories.
+From each branch point three new runs, initialised from the iteration-10
+policy weights (fresh PPO optimizer state; both policies keep learning)
+and the iteration-10 gene pool pooled over the 10 workers (fresh episodes;
+every worker draws from the same pool, not the original islands), with
+the source run's seed and settings (σ 0.3, M 120°, strike catching; the
+launcher aborts if any other setting differs from the source run's saved
+settings): `both` (both gene pools carried over between episodes),
+`prey_frozen`, `predator_frozen`. Freezing stops inheritance between
+episodes only: the frozen species' founders are drawn from the branch
+point's pool every episode, but its offspring still mutate and are
+selected within an episode. So the contrast is "with against without
+between-episode inheritance of the other species' genes", not "with
+against without any evolution of it"; within-episode change may shrink a
+contrast. Manipulation check: the frozen species' living genes at each
+snapshot, reported. 1,000
+iterations each (pilot 2's predators settled within 30 iterations, prey
+reached 360° within 190); 6 runs, two at a time (the GPU fits two), about
+34 h. Founders' start is the same for all arms of a branch point, so a
+contrast is a difference of end values.
+
+**Measures** (from the gene-pool snapshots, end = mean of the last 300
+iterations, as in test 1):
+
+- Predator: mean field-of-view gene.
+- Prey: mean expressed field of view in degrees, min(240° × exp(gene),
+  360°) averaged over genomes, because above gene 0.405 the prey's gene is
+  capped and not under selection.
+- Prey, secondary (uncapped, for the ceiling): the mean expressed field
+  over iterations 0 to 300 (how fast prey widen), and the end gene.
+
+**Test 2, pre-specified.**
+
+1. Predators respond to prey evolution: C_pred = predator end gene in
+   `both` minus in `prey_frozen`. Supported if |C_pred| ≥ 0.05 with the
+   same sign at both branch points. (0.05 is the difference between pilot
+   2's two seeds' predator end genes, −0.20 and −0.15: a between-history
+   scale, fixed now.)
+2. Prey respond to predator evolution (mirror): C_prey = prey end expressed
+   field in `both` minus in `predator_frozen`. Supported if |C_prey| ≥ 10°
+   with the same sign at both branch points. (10° is fixed now without a
+   noise reference; pilot 2's prey ended at 360° in both seeds.)
+   Secondary, interpretive only: the same contrast on the prey's
+   0-to-300 mean expressed field and on the end gene, same thresholds
+   (10°; 0.05 for the gene).
+3. Coevolution in bodies (reciprocal) if 1 and 2 are both supported; a
+   one-sided response if only one is; otherwise none detected.
+4. Guard (test 3) for every arm: coexistence in at least 45 of 50
+   final-check episodes; an arm that fails is reported but its contrast is
+   flagged.
+
+Raw contrasts are reported with per-worker values (workers share the
+policy and are not independent replicates), the snapshot SD over the end
+window, and which nearby thresholds would change a verdict. The thresholds
+are pre-committed smallest effects, not significance tests; with two
+histories a result is scoped to them.
+
+**Expectation, stated before the runs.** A null is likely and would be
+informative. Predators narrowed within 30 iterations in both pilot-2 runs,
+fast enough to be driven by their own geometry; the prey reached the 360°
+cap in all four pilot runs whatever the predators did, and a capped trait
+can hardly respond (a ceiling on test 2.2: a null there says little,
+the secondary prey measures are the check). The coupling through which prey
+eyes could change the predators' best field is behavioural (prey that see
+predators earlier flee earlier), which §4 found real but did not link to
+predator eyes. The confusion effect (README TODO) is the stronger coupling
+and stays open.
+
 ## Related work (2026-10-27, from abstracts and summaries)
 
 - **Coevolved vision in predator and prey simulations.** Buason and Ziemke
