@@ -293,3 +293,118 @@ and +0.38 in the control; seed 2: −0.10); vision fell to about −0.55 to
 an effect of the trade-off. This is divergence, not coevolution: test 2
 (does one species' field evolve differently when the other's gene pool is
 held fixed) is still to come.
+
+## 6. Test 2: coevolution branches (2026-10-29 to 2026-10-30)
+
+**Question** (design note, addendum of 2026-10-29, written before the
+runs). Does one species' field of view evolve differently when the other
+species' gene pool is held fixed? Predator: C_pred = end field-of-view
+gene in `both` minus in `prey_frozen`. Prey: C_prey = end expressed field,
+min(240° e^gene, 360°), in `both` minus in `predator_frozen`. Each is
+supported if its magnitude is at least 0.05 (gene) or 10° (field) with the
+same sign at both branch points; secondary prey measures: mean expressed
+field over iterations 0 to 300 (10°) and end gene (0.05). Guard: both
+species coexist in at least 45 of 50 episodes in every arm. Expected
+beforehand: a null was likely, because the prey's field is capped at 360°.
+
+**Design.** [`launchers/coevolution.py`](launchers/coevolution.py),
+queued by [`launchers/queue_coevolution.sh`](launchers/queue_coevolution.sh):
+from iteration 10 of each pilot-2 run (§5; seed 1 and seed 2), three runs
+of 1,000 iterations from that iteration's policy weights (fresh optimizer
+state) and its gene pool pooled over workers, with the source run's
+settings and seed: `both` (both gene pools evolve), `prey_frozen`,
+`predator_frozen`. Freezing draws a species' founders from the branch
+point's pool every episode; offspring still mutate within an episode, and
+it freezes all three of that species' genes (speed, vision, field of
+view), not only the field. Policies keep learning in every arm. Run two
+at a time from 2026-10-29 16:38 to 2026-10-30 09:55. End = mean of the
+gene-pool snapshots over the last 300 iterations. Analysis:
+[`analyze_coevolution.py`](analyze_coevolution.py); summary:
+`results/coevolution_summary.json`; figure:
+`assets/coevolution_traits.png`; guard:
+`results/final_check_coevolution_<branch>_<arm>_summary.json`.
+
+| Branch | Arm | Predator fov gene, end (SD) | Prey field, start → end | Prey field, iterations 0–300 | Prey gene, end |
+| --- | --- | --- | --- | --- | --- |
+| seed 1 | both | −0.181 (0.033) | 242° → 357° | 297° | +0.559 |
+|  | prey_frozen | −0.171 (0.036) | 242° (living animals 265°) | 242° | +0.003 (living +0.105) |
+|  | predator_frozen | +0.031 (living −0.003) | 242° → 356° | 230° | +0.554 |
+| seed 2 | both | −0.178 (0.028) | 293° → 357° | 253° | +0.561 |
+|  | prey_frozen | −0.151 (0.047) | 293° (living animals 306°) | 293° | +0.193 (living +0.265) |
+|  | predator_frozen | −0.047 (living −0.061) | 293° → 356° | 269° | +0.545 |
+
+| Pre-specified contrast | Seed 1 | Seed 2 | Per worker (seed 1; seed 2) | Threshold | Supported | Supported up to | Guard |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| C_pred, fov gene | −0.010 | −0.028 | −0.045 to +0.045; −0.056 to −0.001 | 0.05 | no | 0.010 | **flagged** |
+| C_prey, end field | +0.6° | +0.9° | −0.8° to +1.7°; −5.1° to +2.7° | 10° | no | 0.6° | passed |
+| Prey secondary, field over iterations 0–300 | +67.4° | −16.5° | | 10° | no (opposite signs) | none | passed |
+| Prey secondary, end gene | +0.005 | +0.015 | −0.023 to +0.016; −0.018 to +0.032 | 0.05 | no | 0.005 | passed |
+
+(Per worker: each worker's end in `both` minus the other arm's pooled end;
+workers share the policy and are not independent replicates. "Supported
+up to": the largest threshold at which the contrast would have passed; no
+nearby threshold changes a verdict. Test 2 overall, by the addendum's
+rule: no coevolution detected.)
+
+| Branch | Arm | Coexisting (of 50) | Prey extinct | Catch risk | Mean predators | Mean prey |
+| --- | --- | --- | --- | --- | --- | --- |
+| seed 1 | both | 50 | 0 | 0.86 | 15.0 | 52.9 |
+|  | prey_frozen | **12** | 38 | 5.41 | 11.3 | 11.0 |
+|  | predator_frozen | 50 | 0 | 0.98 | 12.1 | 50.6 |
+| seed 2 | both | 49 | 1 | 1.81 | 15.0 | 28.8 |
+|  | prey_frozen | **0** | 50 | 7.17 | 10.8 | 9.8 |
+|  | predator_frozen | 50 | 0 | 1.51 | 13.6 | 35.4 |
+
+**Result.** Neither pre-specified contrast is supported. The prey's field
+reached the 360° cap whether or not the predators evolved, and the
+early-field secondary changes sign between branch points. The predators'
+field ended at about −0.15 to −0.18 in both `both` and `prey_frozen`
+(per-worker ends overlap), but see the guard below. The manipulation was
+strong: the prey's field differed between `both` and `prey_frozen` by
+115° and 64°, and the frozen pools held (living frozen animals within
+about 0.1 of the frozen pool's gene). The guard fails in both
+`prey_frozen` arms (12 and 0 of 50, prey extinct); all four other arms
+pass. By the pre-registered rule the predator contrast is therefore flagged: it
+compares a sustainable world with a collapsing one, and we do not
+interpret it, neither as a response nor as its absence. The prey contrast
+uses only arms that pass, and is null.
+
+**Not pre-specified (exploratory, seen after the data).** Other genes
+differ between the arms, in the same direction at both branch points
+(end, mean of the last 300 iterations; snapshot SD 0.02 to 0.08):
+
+| Gene | both | other species frozen | Frozen minus both |
+| --- | --- | --- | --- |
+| Predator speed (prey frozen) | −0.32 / −0.11 | +0.33 / +0.26 | +0.65 / +0.37 |
+| Predator vision (prey frozen) | −0.57 / −0.58 | −0.41 / −0.33 | +0.16 / +0.25 |
+| Prey speed (predators frozen) | +0.02 / +0.14 | +0.19 / +0.30 | +0.17 / +0.16 |
+| Prey vision (predators frozen) | −0.57 / −0.58 | −0.60 / −0.57 | about 0 |
+
+The training logs agree with the guard: over iterations 700 to 1,000 the
+`prey_frozen` runs averaged 6.4 and 16.8 episodes per iteration (an
+episode ends when the prey are extinct), against 3.9 to 4.0 in the other
+four runs, and their prey returns were about 70% and 30% of `both`'s. In
+the first 100 iterations all arms had short episodes (9 to 29 per
+iteration); the arms whose prey evolved recovered, the `prey_frozen` arms
+did not, or (seed 2) hardly.
+
+**Reading.** No response of the prey's field to predator evolution was
+detected; the prey's field sits at the 360° cap in every arm, as expected
+beforehand. Whether the predators' field responds to prey evolution this
+test cannot say, because its comparison arm collapsed. Other trait
+endpoints differed between the arms, in the same direction at both branch
+points. With prey frozen,
+predators ended faster and with longer vision, catch risk rose 4 to 6
+times, and the prey collapsed; with predators frozen, prey ended
+somewhat faster and coexistence held. This is consistent with prey
+having to keep evolving to persist against evolving predators, but it
+does not show that. The frozen prey pool is the one from iteration 10,
+early in the pilot-2 runs, when every arm was still unstable; it carries
+costly genes (vision −0.15 and +0.02 against −0.57 in `both`; seed 1
+speed +0.33) that the evolving prey shed, so the frozen prey may be
+poorly adapted to the environment in general, not only to the
+predators. And freezing all three genes at once does not say which
+trait matters. Two branch points; workers share a policy and are not
+independent replicates. A test that separates these would freeze the
+prey at a late, adapted pool (e.g. `both`'s end) and ask whether
+predators then overtake them, pre-registered.

@@ -1,6 +1,6 @@
 # Design note: a field-of-view trade-off (2026-10-26)
 
-Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum); pilot 2026-10-28: test 1 failed (predators stayed at the fully binocular corner instead of narrowing), see that module's RESULTS.md section 3; pilot 2 (monocular field 120°, re-registered) 2026-10-29: test 1 passed in both seeds (predators narrowed, prey panoramic), test 3 passed, RESULTS.md section 5.** Decisions taken: no
+Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum); pilot 2026-10-28: test 1 failed (predators stayed at the fully binocular corner instead of narrowing), see that module's RESULTS.md section 3; pilot 2 (monocular field 120°, re-registered) 2026-10-29: test 1 passed in both seeds (predators narrowed, prey panoramic), test 3 passed, RESULTS.md section 5; test 2 (coevolution branches) 2026-10-30: no coevolution detected: prey contrast null, predator contrast flagged because the guard failed in both prey_frozen arms (prey extinct), RESULTS.md section 6.** Decisions taken: no
 energy cost for field of view, a new module, noisy monocular distance, and
 the parameters proposed below.
 
