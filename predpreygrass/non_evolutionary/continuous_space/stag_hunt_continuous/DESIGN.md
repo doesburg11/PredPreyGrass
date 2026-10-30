@@ -1,6 +1,6 @@
 # stag_hunt_continuous: design
 
-Status: **draft 2, 2026-10-30; not built.** Draft 1 was revised after a
+Status: **draft 2, 2026-10-30; decisions taken (section 6); not built.** Draft 1 was revised after a
 Codex review (decisive test, timing, mammoth economics, grass, action
 space, party geometry, control arm, facts). Decisions marked *(open)*
 are for the user before building; values marked *(calibrate)* are set in
@@ -227,13 +227,26 @@ Every rate has an explicit denominator.
    reputation (stag_hunt_reputation), where free-riding becomes a band
    problem.
 
-## 6. Open decisions
+## 6. Decisions (2026-10-30)
 
-1. Mammoth top speed: 4 (slower than hunters, default) or 5 (equal).
-2. A separate steppe layer for mammoths (default) or shared grass.
-3. No hunter death in hunts in the first version (default), or death by
-   party size from the start.
-4. A memory (LSTM) for hunters, or not (default not): joint arrival
-   needs hunters to wait for or track partners they may lose from view.
-5. The summed-energy capture rule of the discrete module as an extra arm,
-   or not (default not).
+Taken as best guesses at the user's request; each can be revisited.
+
+1. **Mammoth top speed 4**, slower than hunters (5). A lone hunter can
+   reach a mammoth easily, so the only obstacle is the kill: the design
+   then isolates cooperation in killing, not in chasing.
+2. **A separate steppe layer** for mammoths. It keeps the rabbits, the
+   hunters' safety net while they learn, independent of mammoth numbers;
+   shared grass is a later variant once the world is viable.
+3. **No hunter death in hunts** in the first version. Deaths early in
+   training can make the world non-viable before anything is learned
+   (predator_bands' first mammoth pilot); death by party size is a later
+   variant once cooperation is seen.
+4. **No memory (LSTM)** in the first version. The base world's arms race
+   was learned without it, a hunter sees 4 others, and memory roughly
+   doubles training cost. If joint arrivals stay at chance, memory is
+   the first lever to try.
+5. **No summed-energy arm.** The GPU fits two or three learners: three
+   arms × three seeds is already the budget.
+
+In the text above, the *(open)* marks on these points are settled by
+this section.

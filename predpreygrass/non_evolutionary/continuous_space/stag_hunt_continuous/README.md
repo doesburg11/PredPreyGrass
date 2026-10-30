@@ -24,7 +24,7 @@ found no learned cooperation (DESIGN.md, section 2).
 
 ## TODO
 
-- [ ] Decide the open points (DESIGN.md, section 6).
+- [x] Decide the open points (DESIGN.md, section 6; 2026-10-30).
 - [ ] Build: environment, three policies, hunt rule, observations,
   metrics, tests; Codex review.
 - [ ] Calibrate viability from scratch.
