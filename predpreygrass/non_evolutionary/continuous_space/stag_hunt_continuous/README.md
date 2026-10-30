@@ -37,10 +37,21 @@ found no learned cooperation (DESIGN.md, section 2).
   [`callbacks.py`](callbacks.py).
 - [`calibrate.py`](calibrate.py): the hunt's expected-value table for the
   current settings.
+- [`evaluate.py`](evaluate.py): plays seeded episodes of a checkpoint (or
+  untrained policies): coexistence of the three species, hunt counters,
+  and joint arrivals per mammoth encounter episode against a
+  density-matched chance level (each predator's track shifted on the
+  torus).
+- [`watch.py`](watch.py) with [`render.py`](render.py): one episode in a
+  pygame window or as an mp4 (orange ring: a predator whose join is on).
+- [`checkpoints.py`](checkpoints.py): a checkpoint's settings and
+  policies, and untrained policies.
 - [`tests/`](tests/): spaces, determinism, catching, food layers, episode
   ends and the hunt rule.
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.train
+    python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.evaluate <checkpoint | untrained> 50 out.json
+    python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.watch <checkpoint | untrained> --seed 0
     python -m pytest predpreygrass/non_evolutionary/continuous_space/stag_hunt_continuous/tests
 
 ## TODO
@@ -48,9 +59,8 @@ found no learned cooperation (DESIGN.md, section 2).
 - [x] Decide the open points (DESIGN.md, section 6; 2026-10-30).
 - [x] Build: environment, three policies, hunt rule, observations,
   metrics, tests; Codex review (2026-10-30).
-- [ ] Evaluation tools: final check (coexistence), the density-matched
-  chance level for joint arrivals (the joint arrivals themselves are
-  counted by the environment), viewer.
+- [x] Evaluation tools: evaluate.py (coexistence, hunt counters, joint
+  arrivals against a chance level), watch.py and render.py (2026-10-30).
 - [ ] Calibrate viability from scratch.
 - [ ] Pre-register and run the main test (hunt arm against a solo
   control and untrained policies, joint arrivals above chance).

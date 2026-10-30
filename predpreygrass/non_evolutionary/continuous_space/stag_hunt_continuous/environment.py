@@ -344,6 +344,7 @@ class StagHuntContinuous(MultiAgentEnv):
         # Open mammoth encounter episodes: {mammoth id: {predator id: decision
         # of its first touch}}.
         self.encounters = {}
+        self.last_joins = {}
         # The last finished episode's counters, kept until the next one
         # ends, so a callback can read them after an automatic reset.
         self.episode_hunt_stats = None
@@ -427,6 +428,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.births = {s: 0 for s in SPECIES}
         self.hunt_stats = new_hunt_stats()
         self.encounters = {}
+        self.last_joins = {}
         self.active = [a.id for a in self.living()]
         self.agents = list(self.active)
         return self._observations(), {agent: {} for agent in self.active}
@@ -463,6 +465,7 @@ class StagHuntContinuous(MultiAgentEnv):
         parsed = {agent: self._parse(agent, action_dict[agent]) for agent in self.active}
         moves = {agent: move for agent, (move, _) in parsed.items()}
         joins = {agent: join for agent, (_, join) in parsed.items() if species_of(agent) == "predator"}
+        self.last_joins = joins  # for viewers
         obs, rewards, terminateds, truncateds, infos = {}, {}, {}, {}, {}
         totals = {"grass_eaten": {}, "births": {}}
         zeros = {s: np.zeros(self.obs_size[s], dtype=np.float32) for s in SPECIES}
