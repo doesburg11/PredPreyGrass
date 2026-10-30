@@ -43,7 +43,8 @@ found no learned cooperation (DESIGN.md, section 2).
   density-matched chance level (each predator's track shifted on the
   torus).
 - [`watch.py`](watch.py) with [`render.py`](render.py): one episode in a
-  pygame window or as an mp4 (orange ring: a predator whose join is on).
+  pygame window or as an mp4 (orange ring: a predator whose join is on;
+  the rabbit sprite, `assets/rabbit.png`, was drawn for this module).
 - [`checkpoints.py`](checkpoints.py): a checkpoint's settings and
   policies, and untrained policies.
 - [`tests/`](tests/): spaces, determinism, catching, food layers, episode

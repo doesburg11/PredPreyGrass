@@ -1,9 +1,8 @@
 """A pygame viewer for StagHuntContinuous, adapted from
 base_environment_continuous's.
 
-Draws the arena (grass and, tinted, the mammoths' steppe; predators and
-mammoths as sprites facing their direction of movement, rabbits as small
-discs; a ring around every predator whose last join decision was on; the
+Draws the arena (grass and, tinted, the mammoths' steppe; the animals as
+sprites facing their direction of movement; a ring around every predator whose last join decision was on; the
 view cones of one predator and one mammoth), with the three populations
 over the episode to its right. It only reads the environment's state and
 never draws random numbers, so watching an episode does not change it.
@@ -24,17 +23,16 @@ BACKGROUND = (172, 206, 231)
 CONE_COLOR = {"predator": (82, 117, 172), "mammoth": (167, 98, 88)}
 CONE_ALPHA = 80
 POPULATION_COLOR = {"predator": (200, 60, 50), "rabbit": (90, 90, 90), "mammoth": (150, 100, 40)}
-RABBIT_COLOR = (235, 235, 225)
 JOIN_COLOR = (230, 160, 20)
 STEPPE_TINT = (215, 160, 60)
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
 MIN_SPRITE = 36  # Arena units; keeps small animals recognizable.
 GRASS_SPRITE = 24  # Arena units.
-# The sprites' own facing: the mammoth looks right, the hunter (predator)
-# holds its spear to the left.
-SPRITE_FACES_RIGHT = {"predator": False, "mammoth": True}
+# The sprites' own facing: the mammoth and the rabbit (drawn for this
+# module) look right, the hunter (predator) holds its spear to the left.
+SPRITE_FACES_RIGHT = {"predator": False, "rabbit": True, "mammoth": True}
 # Degrees a sprite leans up or down with its movement, at most.
-MAX_TILT = {"predator": 20.0, "mammoth": 8.0}
+MAX_TILT = {"predator": 20.0, "rabbit": 15.0, "mammoth": 8.0}
 TITLE_BAR = 40  # Room left for the window's title bar, in pixels.
 
 
@@ -120,7 +118,7 @@ class Viewer:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, max(16, self.arena_px[1] // 40))
         self.title_font = pygame.font.Font(None, max(20, self.arena_px[1] // 28))
-        self.sprites = {species: self._sprite(species) for species in ("predator", "mammoth")}
+        self.sprites = {species: self._sprite(species) for species in ("predator", "rabbit", "mammoth")}
         grass = pygame.image.load(str(ASSETS / "grass-transparent.png")).convert_alpha()
         grass = grass.subsurface(grass.get_bounding_rect(min_alpha=1))
         height = max(1, round(GRASS_SPRITE * grass.get_height() / grass.get_width()))
@@ -217,11 +215,6 @@ class Viewer:
     def _draw_animal(self, animal):
         pygame = self.pygame
         species = animal.species
-        if species == "rabbit":
-            for x, y in self._copies(animal.position.x, animal.position.y):
-                pygame.draw.circle(self.canvas, RABBIT_COLOR, (round(x), round(y)), round(animal.radius * 0.8))
-                pygame.draw.circle(self.canvas, (120, 120, 110), (round(x), round(y)), round(animal.radius * 0.8), 2)
-            return
         if species == "predator" and self.env.last_joins.get(animal.id):
             for x, y in self._copies(animal.position.x, animal.position.y):
                 pygame.draw.circle(self.canvas, JOIN_COLOR, (round(x), round(y)), round(animal.radius * 1.6), 3)
