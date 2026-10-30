@@ -1,6 +1,6 @@
 # Design note: a field-of-view trade-off (2026-10-26)
 
-Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum); pilot 2026-10-28: test 1 failed (predators stayed at the fully binocular corner instead of narrowing), see that module's RESULTS.md section 3; pilot 2 (monocular field 120°, re-registered) 2026-10-29: test 1 passed in both seeds (predators narrowed, prey panoramic), test 3 passed, RESULTS.md section 5; test 2 (coevolution branches) 2026-10-30: no coevolution detected: prey contrast null, predator contrast flagged because the guard failed in both prey_frozen arms (prey extinct), RESULTS.md section 6.** Decisions taken: no
+Status: **approved 2026-10-26; built in eco_evolutionary_continuous_fov; strike catching added 2026-10-27 (addendum); pilot 2026-10-28: test 1 failed (predators stayed at the fully binocular corner instead of narrowing), see that module's RESULTS.md section 3; pilot 2 (monocular field 120°, re-registered) 2026-10-29: test 1 passed in both seeds (predators narrowed, prey panoramic), test 3 passed, RESULTS.md section 5; test 2 (coevolution branches) 2026-10-30: no coevolution detected: prey contrast null, predator contrast flagged because the guard failed in both prey_frozen arms (prey extinct), RESULTS.md section 6; follow-up (late branch point) pre-registered 2026-10-30, addendum below.** Decisions taken: no
 energy cost for field of view, a new module, noisy monocular distance, and
 the parameters proposed below.
 
@@ -259,6 +259,93 @@ eyes could change the predators' best field is behavioural (prey that see
 predators earlier flee earlier), which §4 found real but did not link to
 predator eyes. The confusion effect (README TODO) is the stronger coupling
 and stays open.
+
+## Addendum (2026-10-30): follow-up to test 2, freezing at a late branch point, pre-registered
+
+**Why.** In test 2 (eco_evolutionary_continuous_fov RESULTS.md section 6)
+both `prey_frozen` arms collapsed (12 and 0 of 50 coexisting, prey
+extinct) while predators evolved faster (speed gene +0.33 and +0.26
+against −0.32 and −0.11 in `both`); every arm whose prey evolved
+coexisted. Two readings: prey have to keep evolving to persist against
+evolving predators (an arms race), or the iteration-10 prey pool that was
+frozen was poorly adapted to the world in general (early, unstable, with
+costly long vision). This follow-up helps distinguish them by freezing a
+species at a pool that is already adapted and coexisting. It was chosen after
+seeing test 2's data, as a test of a pattern found there; written before
+any follow-up run, and revised before launch after a Codex review (guard
+wired into the verdicts, coexistence pooled over four checkpoints instead
+of the final one only, wording). A 3-iteration smoke test confirmed that
+the frozen prey keep exactly the late branch point's pool.
+
+**Design.** [`launchers/coevolution.py`](../eco_evolutionary_continuous_fov/launchers/coevolution.py)
+with `late`; queue `launchers/queue_coevolution.sh late`. Branch points:
+the end (iteration 1,000) of test 2's two `both` runs (seed 1 and seed
+2), where both species coexist (50 and 49 of 50) and have evolved for
+1,010 iterations together: predator genes (speed / vision / field of
+view) −0.31 / −0.56 / −0.13 and −0.06 / −0.52 / −0.18, prey +0.02 / −0.55
+/ +0.57 and +0.31 / −0.58 / +0.47. Otherwise as test 2: policy weights
+from the branch point (fresh optimizer state; both policies keep
+learning), its pooled gene pool, the source run's seed and settings
+(checked by the launcher), arms `both`, `prey_frozen`, `predator_frozen`,
+1,000 iterations each, two at a time (about 17 h). Freezing stops
+inheritance between episodes only and freezes all three of a species'
+genes. Output: runs/coevolution_late_<source>_<arm>/.
+
+**Measures.** Coexistence: final_check.py, 50 episodes each, at
+iterations 700, 800, 900 and 1,000 of each run
+([`launchers/final_check_coevolution_late.sh`](../eco_evolutionary_continuous_fov/launchers/final_check_coevolution_late.sh);
+policies and gene pool of that checkpoint, which for a frozen species is
+the branch point's pool), pooled to 200 episodes per run, so that one
+noisy endpoint does not decide; also prey-extinct and predator-extinct
+counts, catch risk, per-checkpoint counts and a 95% Wilson interval.
+Genes: end = mean of the gene-pool snapshots over the last 300
+iterations. The checks are an assay of the late part of each run with
+policies held fixed, not of persistence throughout it.
+
+**Pre-specified.**
+
+1. Prey must keep evolving (A): `prey_frozen` coexists in at least 40
+   fewer of 200 episodes than `both` (20 percentage points), at both
+   branch points. "Sustainable despite freezing" if `prey_frozen`
+   coexists in at least 180 of 200 (90%, test 3's 45 of 50) at both
+   branch points; otherwise inconclusive. (Test 2's differences were 76%
+   and 98%; 20 points is a judgement, fixed now, of the smallest drop in
+   sustainability worth calling a collapse, about three times the
+   half-width of a 95% interval on 200 episodes near 50%, 7 points.)
+2. Secondary to A, interpretive: predator end speed gene in `prey_frozen`
+   minus in `both` ≥ +0.15 at both branch points (about twice test 2's
+   end-window snapshot SD, 0.05 to 0.08).
+3. Mirror (B): `predator_frozen` coexists in at least 40 fewer of 200
+   episodes than `both`, at both branch points; "sustainable despite
+   freezing" if it coexists in at least 180 of 200 at both; otherwise
+   inconclusive. Secondary: prey end
+   speed gene in `predator_frozen` minus in `both`, |difference| ≥ 0.15
+   with the same sign at both branch points.
+4. Guard: `both` coexists in at least 180 of 200 at both branch points;
+   if not, A and B are flagged and not interpreted.
+
+Reading, fixed now: A supported means an early, poorly adapted pool is
+not needed for the collapse: with these two histories, freezing an
+adapted prey pool also undermines coexistence. That is consistent with
+prey having to keep evolving to persist against evolving predators, but
+other routes give the same result: loss of the prey's changing genetic
+variation, a mismatch between a frozen gene pool and a prey policy that
+keeps learning, or a different predator trajectory; and all three genes
+are frozen together. A "sustainable despite freezing" makes the early-pool
+reading the more likely one for test 2, by this endpoint criterion; it
+would not show that prey evolution has no effect. A and B both supported
+would mean that, in these two histories and by this assay, each
+species' coexistence depends on its own continued evolution while the
+other evolves; which trait carries it would then be the next question
+(freezing one gene at a time). Raw differences, per-checkpoint counts and
+which nearby thresholds would change a verdict are reported.
+
+**Expectation, stated before the runs.** No confident one. The late prey
+are slow and short-sighted (cheap), so the cost argument for test 2's
+collapse is weaker; if predators still outpace frozen prey within 1,000
+iterations, A is supported. Predators settled early in test 2, so frozen
+adapted predators may stay sustainable (B "sustainable despite
+freezing").
 
 ## Related work (2026-10-27, from abstracts and summaries)
 

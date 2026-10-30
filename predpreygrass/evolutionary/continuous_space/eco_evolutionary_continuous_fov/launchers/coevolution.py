@@ -7,7 +7,7 @@ differ only in which species' gene pool is carried over between episodes.
 Policies keep learning in every arm. The source run's saved settings are
 checked against this module's config before launch.
 
-    python -m predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.launchers.coevolution SOURCE ARM [ITERATIONS]
+    python -m predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.launchers.coevolution [late] SOURCE ARM [ITERATIONS]
 
 SOURCE is a pilot-2 run, tradeoff_m120 (seed 1) or tradeoff_m120_seed2
 (seed 2); the branch keeps its seed and settings (noise 0.3, monocular
@@ -17,9 +17,18 @@ field 120). ARM is one of
                 every episode (offspring still mutate within an episode)
   predator_frozen  the same for the predators
 Output: runs/coevolution_<SOURCE>_<ARM>/ (or ..._smoke with ITERATIONS
-given). Pre-specified contrasts: predator field-of-view gene, both minus
-prey_frozen; prey expressed field of view, both minus predator_frozen (mean
-of the last 300 iterations; the design note's addendum).
+given). Test 2's pre-specified contrasts: predator field-of-view gene,
+both minus prey_frozen; prey expressed field of view, both minus
+predator_frozen (mean of the last 300 iterations; the design note's
+addendum of 2026-10-29).
+
+With `late` (the follow-up, design note addendum of 2026-10-30): the
+branch point is instead the end (iteration 1,000) of test 2's `both` run
+from SOURCE, whose settings are checked; output
+runs/coevolution_late_<SOURCE>_<ARM>/. Its pre-specified outcomes are
+coexistence (final_check.py at iterations 700 to 1,000) of each frozen arm
+against `both`, with speed-gene secondaries, not the field-of-view
+contrasts above.
 """
 
 import sys
@@ -37,35 +46,50 @@ OWN_PPO = {"checkpoint_dir", "tensorboard_dir", "iterations", "init_checkpoint"}
 OWN_ENV = {"trait_initial_gene_pool", "trait_frozen_species"}
 
 
-def check_settings(source, config_env, config_ppo):
-    """Abort unless every other setting equals the source run's."""
+def check_settings(start, config_env, config_ppo):
+    """Abort unless every other setting equals those of the run that saved
+    the branch point `start`."""
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.checkpoints import run_settings
 
-    saved = run_settings(RUNS / f"pilot_{source}" / "checkpoint")
+    saved = run_settings(start)
     if saved is None:
-        raise SystemExit(f"no saved settings for {source}")
+        raise SystemExit(f"no saved settings for {start}")
     for name, current, own in (("config_env", config_env, OWN_ENV), ("config_ppo", config_ppo, OWN_PPO)):
         keys = (set(saved[name]) | set(current)) - own
         differ = sorted(k for k in keys if saved[name].get(k, "<missing>") != current.get(k, "<missing>"))
         if differ:
-            raise SystemExit(f"{name} differs from {source}'s settings: " + ", ".join(f"{k}={current.get(k)!r} (source {saved[name].get(k)!r})" for k in differ))
+            raise SystemExit(f"{name} differs from {start}'s settings: " + ", ".join(f"{k}={current.get(k)!r} (source {saved[name].get(k)!r})" for k in differ))
 
 
-def branch_point(source):
+def branch_point(source, late=False):
+    if late:
+        return RUNS / f"coevolution_{source}_both" / "checkpoint"
     return RUNS / f"pilot_{source}" / "checkpoint" / f"iter_{BRANCH_ITERATION:06d}"
 
 
+def run_name(source, arm, late=False):
+    return f"coevolution_{'late_' if late else ''}{source}_{arm}"
+
+
 def main():
-    source, arm = sys.argv[1], sys.argv[2]
+    args = sys.argv[1:]
+    late = bool(args) and args[0] == "late"
+    if late:
+        args = args[1:]
+    if len(args) not in (2, 3):
+        raise SystemExit("usage: coevolution [late] SOURCE ARM [ITERATIONS]")
+    source, arm = args[0], args[1]
     if source not in SOURCES:
         raise SystemExit(f"unknown source {source!r}")
     if arm not in ARMS:
         raise SystemExit(f"unknown arm {arm!r}")
-    iterations = int(sys.argv[3]) if len(sys.argv) > 3 else ITERATIONS
-    out = RUNS / (f"coevolution_{source}_{arm}" + ("" if len(sys.argv) <= 3 else "_smoke"))
+    iterations = int(args[2]) if len(args) > 2 else ITERATIONS
+    out = RUNS / (run_name(source, arm, late) + ("" if len(args) <= 2 else "_smoke"))
     if out.exists():
         raise SystemExit(f"{out} already exists; refusing to overwrite")
-    start = branch_point(source)
+    start = branch_point(source, late)
+    if not (start / "gene_pools.json").is_file():
+        raise SystemExit(f"no branch point at {start}")
 
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov import train
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.checkpoints import GENE_POOLS
@@ -84,7 +108,7 @@ def main():
         checkpoint_dir=str(out / "checkpoint"),
         tensorboard_dir=str(out / "tensorboard"),
     )
-    check_settings(source, train.config_env, train.config_ppo)
+    check_settings(start, train.config_env, train.config_ppo)
     train.main()
 
 

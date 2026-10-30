@@ -129,7 +129,10 @@ Runs are saved in the module's `runs/` folder (gitignored).
 - [ ] Follow-up to test 2: freeze the prey at a late, adapted pool (e.g.
   `both`'s end) and ask whether evolving predators then overtake them;
   separates "prey must keep evolving" from "the iteration-10 prey pool is
-  maladapted". Pre-register first.
+  maladapted". Pre-registered 2026-10-30 (design note addendum):
+  `launchers/queue_coevolution.sh late`, then
+  `launchers/final_check_coevolution_late.sh`, then
+  `analyze_coevolution.py late`.
 - [ ] Replication (plan step 3): more seeds per condition, M 120°, with a
   σ 0 control per seed.
 - [x] Descriptive analyses after Olson et al. (2016) and Buason and Ziemke

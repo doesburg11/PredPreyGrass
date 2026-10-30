@@ -4,8 +4,16 @@
 # seed 1 both + prey_frozen, seed 2 both + prey_frozen, then both
 # predator_frozen. Refuses to start if any run's folder or log exists; if a
 # run fails, stops its partner and the queue.
+# With the argument `late`, the follow-up's six runs instead (branch point:
+# the end of test 2's `both` runs; design note addendum of 2026-10-30).
 # Run from the repository root, e.g. under systemd-run --user.
 set -u
+STAGE=${1:-}
+case "$STAGE" in
+  "") PREFIX=coevolution_ ;;
+  late) PREFIX=coevolution_late_ ;;
+  *) echo "unknown stage: $STAGE"; exit 1 ;;
+esac
 PYTHON=/home/doesburg/Projects/PredPreyGrass/.conda/bin/python
 LAUNCHER=predpreygrass.evolutionary.continuous_space.eco_evolutionary_continuous_fov.launchers.coevolution
 RUNS=predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/runs
@@ -16,7 +24,7 @@ PAIRS=(
 )
 for pair in "${PAIRS[@]}"; do
   for job in $pair; do
-    name="coevolution_${job%%:*}_${job##*:}"
+    name="${PREFIX}${job%%:*}_${job##*:}"
     if [ -e "$RUNS/$name" ] || [ -e "$RUNS/$name.log" ]; then
       echo "refusing: $RUNS/$name or its log exists"
       exit 1
@@ -28,7 +36,7 @@ for pair in "${PAIRS[@]}"; do
   for job in $pair; do
     source=${job%%:*} arm=${job##*:}
     echo "$(date '+%F %T') start $source $arm"
-    "$PYTHON" -m "$LAUNCHER" "$source" "$arm" > "$RUNS/coevolution_${source}_${arm}.log" 2>&1 &
+    "$PYTHON" -m "$LAUNCHER" $STAGE "$source" "$arm" > "$RUNS/${PREFIX}${source}_${arm}.log" 2>&1 &
     pids+=($!)
   done
   running=("${pids[@]}")
