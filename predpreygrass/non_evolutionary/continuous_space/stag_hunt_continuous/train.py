@@ -226,6 +226,12 @@ def main():
         .environment(
             ENV_NAME,
             env_config=env_config,
+            # RLlib's check steps once with random actions and rejects the
+            # final observation of an agent that died in that step (it is no
+            # longer in env.agents, as RLlib's own convention requires), so
+            # it fails whenever a rabbit happens to be caught in that step.
+            # tests/test_environment.py covers the invariants instead.
+            disable_env_checking=True,
         )
         .callbacks(HuntLogger)
         .resources(num_cpus_for_main_process=1)
