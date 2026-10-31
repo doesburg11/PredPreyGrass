@@ -1,20 +1,20 @@
 # eco_evolutionary_continuous_fov
 
-**Status (2026-10-30): test 2, no coevolution detected; prey-frozen arms
-collapsed.** Pilot 2 (monocular field 120°, re-registered, RESULTS.md
+**Status (2026-10-31): divergence, no coevolution detected; follow-up
+closed.** Pilot 2 (monocular field 120°, re-registered, RESULTS.md
 section 5) passed: predators narrowed to mostly binocular fields (gene
 −0.22 and −0.13), prey went panoramic (360°), all runs sustainable.
-Test 2 (coevolution branches, section 6): no coevolution detected. The
-prey's field did not respond to predator evolution (+0.6°/+0.9°,
-threshold 10°). The predator contrast (−0.010/−0.028, threshold 0.05) is
-flagged and not interpreted: the guard failed in both `prey_frozen` arms
-(12 and 0 of 50, prey extinct). Exploratory, not pre-specified: with prey
-frozen, predators evolved faster (speed gene +0.33/+0.26 against
-−0.32/−0.11) and the prey collapsed; consistent with prey having to keep
-evolving to persist, but confounded (the frozen prey pool is an early,
-costly one, and all three genes are frozen together). Next: freeze the
-prey at a late, adapted pool (pre-register first); confusion effect;
-replication seeds.
+Test 2 (coevolution branches, section 6): no coevolution detected; the
+predator contrast was flagged because both `prey_frozen` arms collapsed.
+Follow-up (section 7): freezing the prey at a late, adapted pool did not
+undermine coexistence (200 of 200 in both `prey_frozen` arms, against 198
+and 199 in `both`; pre-registered verdict "sustainable despite
+freezing"), and predators did not speed up against frozen prey (−0.05,
+−0.08). By the pre-registered reading, this makes the early-pool
+explanation (an early, poorly adapted frozen pool) the more likely one
+for test 2's collapse, by this assay. The mirror test (predators frozen) was
+stopped early and has no result. Open: confusion effect; replication
+seeds.
 
 Can predators and prey evolve different eyes? A copy of
 [`eco_evolutionary_continuous_traits`](../eco_evolutionary_continuous_traits/)
@@ -126,13 +126,12 @@ Runs are saved in the module's `runs/` folder (gitignored).
   16:38 to 2026-10-30 09:55. Prey contrast null; predator contrast
   flagged (guard failed in both `prey_frozen` arms, prey extinct); exploratory speed and
   vision differences (RESULTS.md section 6).
-- [ ] Follow-up to test 2: freeze the prey at a late, adapted pool (e.g.
-  `both`'s end) and ask whether evolving predators then overtake them;
-  separates "prey must keep evolving" from "the iteration-10 prey pool is
-  maladapted". Pre-registered 2026-10-30 (design note addendum):
-  `launchers/queue_coevolution.sh late`, then
-  `launchers/final_check_coevolution_late.sh`, then
-  `analyze_coevolution.py late`.
+- [x] Follow-up to test 2: freeze the prey at a late, adapted pool
+  (pre-registered 2026-10-30, design note addendum). Runs 2026-10-30
+  12:34 to 2026-10-31 09:13; A "sustainable despite freezing" (200 of 200
+  at both branch points), secondary predator speed not supported; B
+  (predators frozen) stopped at iteration 50, not run (RESULTS.md
+  section 7).
 - [ ] Replication (plan step 3): more seeds per condition, M 120°, with a
   σ 0 control per seed.
 - [x] Descriptive analyses after Olson et al. (2016) and Buason and Ziemke

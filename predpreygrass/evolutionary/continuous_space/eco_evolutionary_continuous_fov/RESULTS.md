@@ -408,3 +408,98 @@ trait matters. Two branch points; workers share a policy and are not
 independent replicates. A test that separates these would freeze the
 prey at a late, adapted pool (e.g. `both`'s end) and ask whether
 predators then overtake them, pre-registered.
+
+## 7. Follow-up to test 2: freezing at a late, adapted pool (2026-10-30 to 2026-10-31)
+
+**Question** (design note, addendum of 2026-10-30, written before the
+runs). In test 2 (§6) both `prey_frozen` arms collapsed, but the frozen
+prey pool was an early one (iteration 10). Does freezing the prey at a
+late pool, one that has evolved for 1,010 iterations alongside evolving
+predators and coexists with them, also undermine coexistence? A
+(primary): `prey_frozen` coexists in at least 40 fewer of 200 pooled
+check episodes than `both`, at both branch points; "sustainable despite
+freezing" if `prey_frozen` coexists in at least 180 of 200 at both;
+otherwise inconclusive. Secondary to A: predator end speed gene in
+`prey_frozen` minus in `both` at least +0.15 at both. B: the mirror test
+with `predator_frozen`. Guard: `both` coexists in at least 180 of 200 at
+both branch points.
+
+**Design.** As test 2, branching from the end (iteration 1,000) of test
+2's two `both` runs: `launchers/coevolution.py late`, queued by
+`launchers/queue_coevolution.sh late`. Coexistence: final_check.py, 50
+episodes each at iterations 700, 800, 900 and 1,000, pooled to 200 per
+run (`launchers/final_check_coevolution_late.sh`). Genes: end = mean of
+the gene-pool snapshots over the last 300 iterations. Analysis:
+`analyze_coevolution.py late`; summary:
+`results/coevolution_late_summary.json`; figure:
+`assets/coevolution_late_traits.png`; checks:
+`results/final_check_coevolution_late_<branch>_<arm>_iter<n>_summary.json`.
+
+**Deviation from the pre-registration: B was not run.** The `both` and
+`prey_frozen` runs ran 2026-10-30 12:34 to 2026-10-31 09:13. On
+2026-10-31, before any coexistence check, we looked at their training logs
+(episodes per iteration, predator speed gene), judged A very likely not
+supported, and stopped the queue at iteration 50 of the two
+`predator_frozen` runs, to free the machine for other work (the
+stag_hunt_continuous module). This was an unplanned interim look at A's
+data, and the decision to drop B was taken after it. B therefore has no
+result; its partial runs are not analysed. The checks and A's verdict
+below are as pre-registered.
+
+| Branch | Arm | Coexisting (of 200) | 95% interval | Per checkpoint 700/800/900/1,000 | Prey extinct | Mean catch risk |
+| --- | --- | --- | --- | --- | --- | --- |
+| seed 1 | both | 198 | 96.4–99.7% | 49/50/50/49 | 2 | 1.06 |
+|  | prey_frozen | 200 | 98.1–100% | 50/50/50/50 | 0 | 0.80 |
+| seed 2 | both | 199 | 97.2–99.9% | 50/49/50/50 | 1 | 1.13 |
+|  | prey_frozen | 200 | 98.1–100% | 50/50/50/50 | 0 | 1.09 |
+
+| Pre-specified | Seed 1 | Seed 2 | Criterion | Outcome |
+| --- | --- | --- | --- | --- |
+| Guard: `both` coexists | 198 | 199 | ≥ 180 at both | passed |
+| A: drop in coexistence, `both` minus `prey_frozen` | −2 | −1 | ≥ 40 at both | not supported |
+| A: `prey_frozen` coexists | 200 | 200 | ≥ 180 at both | **sustainable despite freezing** |
+| A secondary: predator speed gene, `prey_frozen` minus `both` | −0.051 | −0.076 | ≥ +0.15 at both | not supported |
+| B (mirror, `predator_frozen`) | | | | not run |
+
+(No nearby threshold changes A's verdict: `prey_frozen` would count as
+sustainable up to a criterion of 200 of 200, and the drop is negative.
+The predator speed difference has the opposite sign to the criterion.
+Snapshot SD of the predator speed gene in the end window: 0.03 to 0.09.)
+
+| Branch | Arm | Predator genes, end (speed / vision / fov) | Prey genes, end (speed / vision / fov) | Prey field, start → end |
+| --- | --- | --- | --- | --- |
+| seed 1 | both | −0.25 / −0.60 / −0.17 | −0.11 / −0.52 / +0.56 | 358° → 357° |
+|  | prey_frozen | −0.30 / −0.59 / −0.18 | +0.02 / −0.55 / +0.57 (frozen) | 358° |
+| seed 2 | both | −0.18 / −0.57 / −0.18 | +0.12 / −0.57 / +0.57 | 341° → 358° |
+|  | prey_frozen | −0.25 / −0.59 / −0.16 | +0.31 / −0.58 / +0.47 (frozen) | 341° |
+
+The training logs agree with the checks: over iterations 900 to 1,000
+the four runs averaged 3.89 to 3.96 episodes per iteration (episodes run
+to the time limit unless a species dies out), against 6.4 and 16.8 in
+test 2's collapsing `prey_frozen` arms.
+
+**Result.** Freezing the prey at a late, adapted pool did not undermine
+coexistence: both `prey_frozen` arms coexisted in all 200 check
+episodes, at least as often as `both` (198 and 199). By the
+pre-registered rule, A is "sustainable despite freezing". The predators
+did not speed up against the frozen prey either: their end speed gene
+was 0.05 and 0.08 lower than in `both`, where in test 2 it was 0.65 and
+0.37 higher. The predators' field of view ended at about −0.16 to −0.18
+in every arm.
+
+**Reading.** By the reading fixed beforehand, this makes the early-pool
+explanation the more likely one for test 2's collapse: freezing an
+early, poorly adapted prey pool was followed by collapse, freezing a late
+one was not (other routes listed in the addendum, such as a mismatch
+between a frozen pool and a learning policy, are not excluded). In these two histories and by this endpoint assay, the prey did
+not need to keep evolving to persist against evolving predators. It does
+not show that prey evolution has no effect: 1,000 iterations may be too
+short for the predators to overtake a frozen pool, the checks assay the
+late part of each run with policies held fixed, and there are two branch
+points with workers that share a policy. Not pre-specified: the evolving
+prey lost speed after branching (+0.02 → −0.11 and +0.31 → +0.12), while
+the frozen ones kept theirs; the evolving-prey arms ended slower, not
+faster, which does not fit an arms race in speed.
+Without B, nothing is said about whether the predators need to keep
+evolving. Together with §6, the module shows divergence of the two
+species' eyes (§5) but no evidence of coevolution in bodies.
