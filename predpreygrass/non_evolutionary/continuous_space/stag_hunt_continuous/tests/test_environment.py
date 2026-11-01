@@ -679,3 +679,101 @@ def test_counters_without_burrows_and_extinction_time():
     assert stats["predator_steps"] == 4 * env.action_repeat and stats["rabbit_steps"] == 1
     assert stats["rabbit_steps_inside"] == 0 and env.rabbit_burrow_steps == {}
     assert env.extinct_at == {"rabbit": 1}
+
+
+class FixedDraw:
+    """A hunt_rng whose random() returns a given value."""
+
+    def __init__(self, value):
+        self.value = value
+
+    def random(self):
+        return self.value
+
+
+@pytest.mark.parametrize("energy, draw, killed", [(24.0, 0.15, True), (24.0, 0.25, False), (12.0, 0.55, True), (12.0, 0.65, False), (48.0, 0.25, False), (0.0, 0.95, True)])
+def test_well_fed_mammoths_are_harder_to_kill(energy, draw, killed):
+    """Success probability 1 x (1 - 0.8 x min(1, energy / 24))."""
+    env = world(hunt_success_by_party=(1.0, 1.0, 1.0, 1.0), hunt_condition_factor=0.8, energy_mammoth_max=48.0)
+    env.mammoths[0].energy = energy
+    env.hunt_rng = FixedDraw(draw)
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert bool(te.get("mammoth_0")) == killed
+    condition = min(1.0, energy / 24.0)
+    assert env.hunt_stats["hunted_condition_total"] == pytest.approx(condition)
+    assert env.hunt_stats["killed_condition_total"] == pytest.approx(condition if killed else 0.0)
+
+
+def test_condition_observed_and_off_by_default():
+    assert StagHuntContinuous().obs_size["predator"] == 58
+    with pytest.raises(ValueError, match="hunt_condition_factor"):
+        StagHuntContinuous({"hunt_condition_factor": 1.5})
+    env = world(hunt_condition_factor=0.5)
+    assert env.obs_size == {"predator": 60, "rabbit": 45, "mammoth": 39}
+    me = env.predators[0]
+    place(env, {"predator_0": (400, 400), "mammoth_0": (400, 300), "mammoth_1": (400, 600)})
+    env.mammoths[0].energy = 6.0
+    me.orientation = heading_degrees(Vector(0, -1))  # sees mammoth_0 only
+    obs = env._observe(me)
+    np.testing.assert_allclose(obs[58:60], [6.0 / 24.0, 0.0])
+    # With burrows too: condition first, then the burrow features.
+    both = world(hunt_condition_factor=0.5, burrow_count=1)
+    assert both.obs_size["predator"] == 58 + 2 + 4 + 2
+
+
+def test_condition_factor_zero_keeps_the_hunts():
+    a, b = StagHuntContinuous(), StagHuntContinuous({"hunt_condition_factor": 0.0})
+    a.reset(seed=4)
+    b.reset(seed=4)
+    ra, rb = np.random.default_rng(4), np.random.default_rng(4)
+    for _ in range(40):
+        sa, sb = a.step(random_actions(a, ra)), b.step(random_actions(b, rb))
+        assert sa[1] == sb[1]
+        if sa[2]["__all__"] or sa[3]["__all__"]:
+            break
+    assert a.hunt_stats == b.hunt_stats
+
+
+class CountingDraw:
+    def __init__(self, value):
+        self.value, self.calls = value, 0
+
+    def random(self):
+        self.calls += 1
+        return self.value
+
+
+@pytest.mark.parametrize("draw, killed", [(0.29, True), (0.31, False)])
+def test_condition_scales_the_party_size_chance(draw, killed):
+    """Pair chance 0.4, k = 0.5, condition 0.5: p = 0.3, one draw."""
+    env = world(hunt_success_by_party=(0.0, 0.4, 1.0, 1.0), hunt_condition_factor=0.5)
+    env.mammoths[0].energy = 12.0
+    env.hunt_rng = CountingDraw(draw)
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert bool(te.get("mammoth_0")) == killed and env.hunt_rng.calls == 1
+
+
+@pytest.mark.parametrize("draw, killed", [(0.39, True), (0.41, False)])
+def test_without_condition_the_old_chance_and_one_draw(draw, killed):
+    env = world(hunt_success_by_party=(0.0, 0.4, 1.0, 1.0))
+    env.mammoths[0].energy = 24.0
+    env.hunt_rng = CountingDraw(draw)
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert bool(te.get("mammoth_0")) == killed and env.hunt_rng.calls == 1
+
+
+def test_condition_means():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.callbacks import derived_rates
+
+    env = world(hunt_success_by_party=(1.0, 1.0, 1.0, 1.0), hunt_condition_factor=1.0)
+    env.mammoths[0].energy, env.mammoths[1].energy = 24.0, 6.0  # condition 1 (never killed), 0.25
+    place(env, {"predator_0": (200, 130), "predator_1": (600, 130)})
+    env.hunt_rng = FixedDraw(0.5)
+    hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    rates = derived_rates(dict(env.hunt_stats))
+    assert rates["hunted_condition_mean"] == pytest.approx((1.0 + 0.25) / 2)
+    assert rates["killed_condition_mean"] == pytest.approx(0.25)
+    assert "killed_condition_mean" not in derived_rates(dict(env.hunt_stats, kills_party_1=0))

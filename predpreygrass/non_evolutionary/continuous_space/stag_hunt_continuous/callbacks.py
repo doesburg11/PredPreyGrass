@@ -36,6 +36,10 @@ def derived_rates(stats):
     hunts = sum(stats[f"hunts_party_{size}"] for size in range(1, PARTY_SIZES + 1))
     if hunts:
         rates["party_2plus_share"] = 1 - stats["hunts_party_1"] / hunts
+        rates["hunted_condition_mean"] = stats["hunted_condition_total"] / hunts
+    kills = sum(stats[f"kills_party_{size}"] for size in range(1, PARTY_SIZES + 1))
+    if kills:
+        rates["killed_condition_mean"] = stats["killed_condition_total"] / kills
     # Burrows (DESIGN.md, 7) and the hunter cap.
     if stats["rabbit_steps"]:
         rates["rabbit_inside_share"] = stats["rabbit_steps_inside"] / stats["rabbit_steps"]

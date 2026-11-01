@@ -22,6 +22,10 @@ rest to the bystanders (all to the contributors without bystanders). On a
 failure the mammoth escapes; each contributor loses its share of
 hunt_struggle_fraction x hunt_carcass_energy and starts a cooldown of
 hunt_cooldown decisions. Every contributor pays hunt_join_cost per hunt.
+With hunt_condition_factor k > 0 the success probability is multiplied by
+1 - k x the mammoth's condition (its energy over its reproduction
+threshold, at most 1): well-fed mammoths are harder to kill (DESIGN.md, 8),
+and predators see the condition of the mammoths in their slots.
 
 Rabbit burrows (DESIGN.md, 7; none by default): burrow_count fixed discs
 of radius burrow_radius, drawn at reset from their own random stream. A
@@ -181,6 +185,9 @@ DEFAULT_CONFIG = {
     "hunt_struggle_fraction": 0.05,
     "hunt_join_cost": 0.05,
     "hunt_cooldown": 2,
+    # Weight of the mammoth's condition in the success probability (module
+    # docstring; 0: party size only).
+    "hunt_condition_factor": 0.0,
 }
 
 GRASS_KEYS = (
@@ -298,6 +305,9 @@ def new_hunt_stats():
         "mammoth_energy": 0.0,  # gained by contributors and bystanders
         "scavenger_energy": 0.0,  # of which by bystanders
         "predators_starved_in_hunts": 0,
+        # Summed condition of the mammoths hunted and of those killed.
+        "hunted_condition_total": 0.0,
+        "killed_condition_total": 0.0,
         "grass_eaten_total": 0,
         "steppe_eaten_total": 0,
         # Burrows and the hunter cap, summed over physics steps: rabbit steps
@@ -365,6 +375,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.struggle_fraction = c["hunt_struggle_fraction"]
         self.join_cost = c["hunt_join_cost"]
         self.cooldown = c["hunt_cooldown"]
+        self.condition_factor = c["hunt_condition_factor"]
         self.burrow_count = c["burrow_count"]
         self.burrow_radius = c["burrow_radius"]
         self._validate()
@@ -373,6 +384,8 @@ class StagHuntContinuous(MultiAgentEnv):
         for s in SPECIES:
             slots = sum(self.observe[(s, other)] for other in OBSERVED)
             self.obs_size[s] = SELF_SIZE + SLOT_SIZE * slots + FOOD_SIZE + 1 + (1 if s == "predator" else 0)
+            if self.condition_factor and s == "predator":
+                self.obs_size[s] += self.observe[("predator", "mammoth")]  # condition per mammoth slot
             if self.burrow_count and s in ("predator", "rabbit"):
                 # The nearest burrow; predators also an inside bit per rabbit slot.
                 self.obs_size[s] += BURROW_SIZE + (self.observe[("predator", "rabbit")] if s == "predator" else 0)
@@ -443,7 +456,7 @@ class StagHuntContinuous(MultiAgentEnv):
         for key in ("energy_grass_gain", "energy_steppe_gain", "energy_catch_efficiency_predator", "hunt_carcass_energy", "hunt_join_cost"):
             if not _number(c[key], 0):
                 raise ValueError(f"{key} must be finite and nonnegative")
-        for key in ("energy_catch_efficiency_predator", "hunt_scavenger_fraction", "hunt_struggle_fraction"):
+        for key in ("energy_catch_efficiency_predator", "hunt_scavenger_fraction", "hunt_struggle_fraction", "hunt_condition_factor"):
             if not _number(c[key], 0) or c[key] > 1:
                 raise ValueError(f"{key} must be in [0, 1]")
         if not _number(c["hunt_bystander_radius"], 0):
@@ -952,6 +965,10 @@ class StagHuntContinuous(MultiAgentEnv):
         if any(b - a <= JOINT_WINDOW for a, b in zip(first, first[1:])):
             self.hunt_stats["joint_arrivals"] += 1
 
+    def _condition(self, mammoth):
+        """Energy over the reproduction threshold, at most 1."""
+        return min(1.0, max(0.0, mammoth.energy) / self.threshold["mammoth"])
+
     def _hunts(self, joins, terminateds, truncateds, infos):
         """Resolve this decision's hunts (module docstring)."""
         self._record(joins)
@@ -959,7 +976,9 @@ class StagHuntContinuous(MultiAgentEnv):
         for mammoth, (party, bystanders) in self.hunt_parties(joins).items():
             n = len(party)
             size = min(n, PARTY_SIZES)
-            success = self.hunt_rng.random() < self.success[size - 1]
+            condition = self._condition(mammoth)
+            success = self.hunt_rng.random() < self.success[size - 1] * (1 - self.condition_factor * condition)
+            stats["hunted_condition_total"] += condition
             stats[f"hunts_party_{size}"] += 1
             for predator in party:
                 predator.energy -= self.join_cost
@@ -967,6 +986,7 @@ class StagHuntContinuous(MultiAgentEnv):
                 info["hunts"] = info.get("hunts", 0) + 1
             if success:
                 stats[f"kills_party_{size}"] += 1
+                stats["killed_condition_total"] += condition
                 self._remove(mammoth, terminateds, truncateds, infos, "hunted")
                 self._close_encounter(mammoth.id)
                 share = self.carcass * (1 - self.scavenger_fraction if bystanders else 1.0) / n
@@ -1037,9 +1057,9 @@ class StagHuntContinuous(MultiAgentEnv):
         food patch in view, own energy and (predators) hunt cooldown."""
         heading = math.radians(animal.orientation)
         values = [animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed, math.sin(heading), math.cos(heading)]
-        seen_rabbits = []
+        seen = {"mammoth": [], "rabbit": []}
         for other in OBSERVED:
-            values += self._slots(animal, self.animals[other], self.observe[(animal.species, other)], seen_rabbits if other == "rabbit" else None)
+            values += self._slots(animal, self.animals[other], self.observe[(animal.species, other)], seen.get(other))
         obs = np.asarray(values, dtype=np.float32)
         if not np.all(np.abs(obs) <= 1.0 + 1e-4):
             raise RuntimeError(f"observation out of [-1, 1]: {obs}")
@@ -1048,11 +1068,14 @@ class StagHuntContinuous(MultiAgentEnv):
         tail = [np.clip(animal.energy / self.max_energy[animal.species], 0.0, 1.0)]
         if animal.species == "predator":
             tail.append(min(1.0, max(0, animal.ready_at - self.decision) / self.cooldown) if self.cooldown else 0.0)
+        if self.condition_factor and animal.species == "predator":
+            condition = [self._condition(mammoth) for mammoth in seen["mammoth"]]
+            tail += condition + [0.0] * (self.observe[("predator", "mammoth")] - len(condition))
         if self.burrow_count and animal.species in ("predator", "rabbit"):
             tail += self._burrow_observation(animal)
             if animal.species == "predator":
                 # From the current positions, as the next catch test sees them.
-                inside = [float(flag) for flag in self._inside(seen_rabbits)]
+                inside = [float(flag) for flag in self._inside(seen["rabbit"])]
                 tail += inside + [0.0] * (self.observe[("predator", "rabbit")] - len(inside))
         return np.concatenate((obs, food, np.clip(np.asarray(tail, dtype=np.float32), -1.0, 1.0))).astype(np.float32)
 

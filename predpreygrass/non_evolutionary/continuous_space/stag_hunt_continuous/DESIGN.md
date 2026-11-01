@@ -327,3 +327,38 @@ shelter in burrows; the food-versus-safety trade-off is standard
 predator-prey ecology. A burrow is the cheapest refuge to build: a disc
 test in the catch rule, a redraw in grass placement, one observation
 slot.
+
+## 8. Well-fed mammoths are harder to kill (prepared 2026-11-01, setting `hunt_condition_factor`)
+
+Proposed after asking why the discrete stag hunt (stag_hunt_forward_view)
+seemed to work where this world does not. Its capture rule (joiners'
+summed energy must exceed the prey's) brakes a boom by itself; its own
+notes show rabbits dying out there too, so it never met this module's
+coexistence test. Its literal rule is not realistic (body reserves are not
+hunting force; moderate hunger raises hunting effort). The prey half has
+some support, with caveats: predators often select vulnerable prey
+(young, old, malnourished), but how strongly varies with predator, prey
+size, season and demography (e.g. lions and cheetahs), and mammoth kill
+sites differ (some suggest vulnerable juveniles, others show no strict age
+selection). Here "condition" is a deliberately simplified proxy, the
+mammoth's energy balance, not age, injury or escape ability; one artefact
+is that a mammoth that has just given birth (losing its offspring's 10
+energy) is easier to kill. The rule is intended to create a density
+feedback (scarce mammoths eat well, so are harder to kill, so hunting
+falls off before they are gone); scarcity does not by itself guarantee
+well-fed mammoths, and whether the feedback appears is what round 11
+tests.
+
+1. **Rule**: success probability = `hunt_success_by_party[n]` × (1 − k ×
+   condition), condition = mammoth energy / its reproduction threshold
+   (24), at most 1. One random draw per hunt as before. k = 0 (default) is
+   the current world.
+2. **Observation**: predators see the condition of each mammoth in their
+   slots (2 inputs), so they can pick weak ones. Hunter condition is left
+   out.
+3. **Counters**: `hunted_condition_mean`, `killed_condition_mean`.
+4. **Calibration**: r11a k = 0.5, r11b k = 0.8, in round 4 (cap 50, no
+   burrows, to test the rule alone), training truncated at the first prey
+   extinction. Risk: a lower mean success may drop the mammoth payoff into
+   the "ignore mammoths" regime of rounds 7-9; the counters show which
+   mammoths are hunted and killed.
