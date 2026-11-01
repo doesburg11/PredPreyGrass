@@ -3,7 +3,7 @@ settings of config/config_env.py and config/config_ppo.py except:
 
 - `rabbits_only`: no mammoths (step 1a: are hunters viable on rabbits?);
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r9b`: rounds 2 to 9 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r10b`: rounds 2 to 10 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -106,6 +106,12 @@ for arm, interval in (("with_mammoths_r8a", 1000), ("with_mammoths_r8b", 600)):
 # speed 6, hunters 5), and training truncated at the first prey extinction.
 for arm, speed in (("with_mammoths_r9a", 7.0), ("with_mammoths_r9b", 8.0)):
     ARMS[arm] = dict(ARMS["with_mammoths_r5"], rabbit_max_velocity=speed, truncate_on_prey_extinction=True)
+# Round 10 (2026-11-01), after round 9's faster rabbits multiplied into the
+# hunters' staple (mammoths ~9% of their food, joint arrivals at chance):
+# rabbit burrows (DESIGN.md, 7), 10 of radius 24, in round 5 (cap 25) and
+# round 4 (cap 50), training truncated at the first prey extinction.
+for arm, base in (("with_mammoths_r10a", "with_mammoths_r5"), ("with_mammoths_r10b", "with_mammoths_r4")):
+    ARMS[arm] = dict(ARMS[base], burrow_count=10, burrow_radius=24.0, truncate_on_prey_extinction=True)
 
 
 def main():

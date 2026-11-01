@@ -9,7 +9,7 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.enviro
 
 # Settings added after runs were saved, with the value that gives the
 # behaviour those runs had; filled in when a saved env_config lacks them.
-ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"truncate_on_prey_extinction": False}
+ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"truncate_on_prey_extinction": False, "burrow_count": 0, "burrow_radius": 24.0}
 
 
 def run_settings(checkpoint):

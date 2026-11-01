@@ -22,6 +22,9 @@ class GrassPatch:
     # Where the patch regrows when it does: None keeps its spot, "disperse"
     # next to a living patch of its cluster, "centre" around the centre.
     regrow: str | None = None
+    # Inside a burrow: the patch grows, disperses and counts for overgrazing
+    # as any other, but cannot be eaten or seen as food.
+    blocked: bool = False
 
 
 class Grass:
@@ -35,6 +38,8 @@ class Grass:
     overgrazing: a cluster grazed down to overgrazing_threshold of its
     patches collapses and regrows after overgrazing_delay steps around a new
     centre in a grid cell no other cluster uses.
+    set_burrows: discs where patches cannot be eaten (no draws of the
+    layer's random stream change).
     """
 
     def __init__(
@@ -114,6 +119,8 @@ class Grass:
         self.tick = 0
         self.total_consumed = 0
         self.total_collapses = 0
+        self.burrows = []
+        self.burrow_radius = 0.0
 
     def reset(self, seed=None):
         self.rng = random.Random(seed)
@@ -127,6 +134,8 @@ class Grass:
             self.centres = []
             self.patches = [GrassPatch(self.spot()) for _ in range(self.count)]
         self.collapsed = [False] * len(self.centres)
+        for patch in self.patches:
+            self.mark(patch)
         self.tick = 0
         self.total_consumed = 0
         self.total_collapses = 0
@@ -175,6 +184,20 @@ class Grass:
     def available(self, patch):
         return patch.ready_at <= self.tick
 
+    def edible(self, patch):
+        return self.available(patch) and not patch.blocked
+
+    def set_burrows(self, centres, radius):
+        """Burrow discs (positions, common radius); marks every patch."""
+        self.burrows = list(centres)
+        self.burrow_radius = radius
+        for patch in self.patches:
+            self.mark(patch)
+
+    def mark(self, patch):
+        """Whether the patch's centre is inside a burrow."""
+        patch.blocked = any(self.torus.distance(patch.position, centre) < self.burrow_radius for centre in self.burrows)
+
     def advance(self, prey):
         """One physics step: regrowth placement, grazing by the living prey
         (each patch to the closest prey within consume_radius, ties by agent
@@ -187,7 +210,7 @@ class Grass:
         living = [p for p in prey if p.alive]
         near = self.prey_in_reach(living)
         for index, patch in enumerate(self.patches):
-            if not self.available(patch):
+            if not self.edible(patch):
                 continue
             # The pre-filter only narrows the search; the exact torus distance
             # and tie-break decide.
@@ -202,6 +225,7 @@ class Grass:
                 patch.ready_at = self.tick + self.respawn_delay
                 if self.random_respawn:
                     patch.position = self.spot(patch.cluster)
+                    self.mark(patch)
                 elif self.dispersal:
                     patch.regrow = "disperse"
                 self.total_consumed += 1
@@ -211,11 +235,11 @@ class Grass:
 
     def prey_in_reach(self, prey):
         """{patch index: indices into prey} of the prey that may be within
-        consume_radius of each available patch (vectorized, float64, with a
+        consume_radius of each edible patch (vectorized, float64, with a
         margin; advance() confirms each candidate exactly)."""
         if not prey:
             return {}
-        indices = [i for i, patch in enumerate(self.patches) if self.available(patch)]
+        indices = [i for i, patch in enumerate(self.patches) if self.edible(patch)]
         if not indices:
             return {}
         patch_xy = np.array(
@@ -249,6 +273,7 @@ class Grass:
         elif patch.regrow == "centre":
             patch.position = self.spot(patch.cluster)
         patch.regrow = None
+        self.mark(patch)
 
     def check_overgrazing(self):
         """Collapse clusters grazed down to the threshold; re-arm recovered
@@ -281,12 +306,12 @@ class Grass:
             patch.regrow = "centre"
 
     def observation(self, observer, view_distance, fov):
-        """The nearest available patch in the observer's view cone, as
+        """The nearest edible patch in the observer's view cone, as
         [seen, dx / view_distance, dy / view_distance, distance /
         view_distance], or zeros."""
         visible = []
         for patch in self.patches:
-            if not self.available(patch):
+            if not self.edible(patch):
                 continue
             if not self.torus.in_view(observer, patch.position, view_distance, fov):
                 continue

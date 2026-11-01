@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import (
+    EXIT_WINDOW,
     MOVES,
     StagHuntContinuous,
     species_of,
@@ -402,7 +403,7 @@ def test_old_checkpoint_settings_get_added_settings(tmp_path):
     with open(checkpoint / "class_and_ctor_args.pkl", "wb") as f:
         pickle.dump({"ctor_args_and_kwargs": (({"env_config": old},), {})}, f)
     config = checkpoint_env_config(checkpoint)
-    assert all(config[k] == 0 for k in ADDED_SETTINGS)
+    assert all(config[k] == v for k, v in ADDED_SETTINGS.items()) and config["burrow_count"] == 0
     # Other missing settings are still refused.
     del old["hunt_cooldown"]
     (tmp_path / "source_code" / "settings.json").write_text(json.dumps({"config_env": old}))
@@ -479,3 +480,202 @@ def test_expected_values_and_rates():
     rates = derived_rates(stats)
     assert rates["join_rate"] == 0.5 and rates["contact_join_rate"] == 0.75
     assert rates["joint_arrival_rate"] == 0.25 and rates["party_2plus_share"] == 0.25
+
+
+def burrow_world(**config):
+    """world() with one burrow of radius 24 at (400, 400), on the rabbit."""
+    env = world(burrow_count=1, **config)
+    env.burrows = np.array([[400.0, 400.0]])
+    for rabbit, inside in zip(env.rabbits, env._inside(env.rabbits)):
+        rabbit.in_burrow = inside
+    return env
+
+
+def test_burrows_leave_the_rest_of_the_world_unchanged():
+    plain, burrows = StagHuntContinuous(), StagHuntContinuous({"burrow_count": 10})
+    plain.reset(seed=7)
+    burrows.reset(seed=7)
+    assert burrows.burrows.shape == (10, 2)
+    assert [(a.id, a.position.x, a.position.y) for a in plain.living()] == [(a.id, a.position.x, a.position.y) for a in burrows.living()]
+    for layer in ("grass", "steppe"):
+        assert [(p.position.x, p.position.y) for p in plain.food[layer].patches] == [(p.position.x, p.position.y) for p in burrows.food[layer].patches]
+        assert plain.food[layer].rng.getstate() == burrows.food[layer].rng.getstate()
+    # Grass inside a burrow is blocked; the steppe never is.
+    grass = burrows.food["grass"]
+    expected = [any(grass.torus.distance(p.position, Vector(x, y)) < 24.0 for x, y in burrows.burrows) for p in grass.patches]
+    assert [p.blocked for p in grass.patches] == expected
+    assert not any(p.blocked for p in burrows.food["steppe"].patches)
+    again = StagHuntContinuous({"burrow_count": 10})
+    again.reset(seed=7)
+    np.testing.assert_array_equal(again.burrows, burrows.burrows)
+    obs, _ = burrows.reset(seed=8)
+    sizes = {species_of(a): o.shape[0] for a, o in obs.items()}
+    assert sizes == {"predator": 64, "rabbit": 49, "mammoth": 39}
+    rng = np.random.default_rng(8)
+    for _ in range(30):
+        obs, _, te, tr, _ = burrows.step(random_actions(burrows, rng))
+        for agent, o in obs.items():
+            assert burrows.observation_spaces[agent].contains(o)
+        if te["__all__"] or tr["__all__"]:
+            break
+
+
+def test_burrow_settings_are_checked():
+    with pytest.raises(ValueError, match="burrow_count"):
+        StagHuntContinuous({"burrow_count": -1})
+    with pytest.raises(ValueError, match="burrow_radius"):
+        StagHuntContinuous({"burrow_radius": 0})
+    with pytest.raises(ValueError, match="burrow_radius"):
+        StagHuntContinuous({"burrow_radius": 400})
+
+
+def test_rabbit_in_burrow_cannot_be_caught():
+    env = burrow_world()
+    place(env, {"predator_0": (400, 410)})
+    _, _, te, _, _ = env.step(stopped_actions(env))
+    assert not te.get("rabbit_0") and env.rabbits
+    stats = env.hunt_stats
+    assert stats["catches_blocked"] == stats["rabbit_steps_inside"] == stats["rabbit_steps"] == env.action_repeat
+    assert stats["predator_steps_at_burrow_edge"] == env.action_repeat  # 10 from the centre, within 16 of the edge
+    # Out of the burrow (centre 30 from the burrow's), still touching: caught
+    # in the step it left, an exit catch.
+    place(env, {"rabbit_0": (400, 430), "predator_0": (400, 440)})
+    _, _, te, _, _ = env.step(stopped_actions(env))
+    assert te["rabbit_0"] and not env.rabbits
+    assert stats["burrow_exits"] == 1 and stats["catches_after_exit"] == 1 and stats["rabbits_caught"] == 1
+
+
+def test_catch_long_after_exit_is_not_an_exit_catch():
+    env = burrow_world(action_repeat=1)
+    place(env, {"rabbit_0": (400, 500)})
+    for _ in range(EXIT_WINDOW + 1):
+        env.step(stopped_actions(env))
+    assert env.hunt_stats["burrow_exits"] == 1
+    place(env, {"predator_0": (400, 510)})
+    env.step(stopped_actions(env))
+    assert not env.rabbits
+    assert env.hunt_stats["catches_after_exit"] == 0
+
+
+def test_grass_in_burrow_cannot_be_eaten_or_seen():
+    env = StagHuntContinuous({"predator_count": 1, "rabbit_count": 1, "mammoth_count": 1, "burrow_count": 1})
+    env.reset(seed=0)
+    grass = env.food["grass"]
+    patch = grass.patches[0]
+    grass.set_burrows([patch.position.copy()], 24.0)
+    assert patch.blocked and sum(p.blocked for p in grass.patches) >= 1
+    rabbit = env.rabbits[0]
+    place(env, {"rabbit_0": (patch.position.x, patch.position.y)})
+    others = [p for p in grass.patches if not p.blocked and grass.torus.distance(p.position, patch.position) <= grass.consume_radius]
+    eaten = grass.advance([rabbit])
+    assert eaten.get("rabbit_0", 0) == len(others)
+    assert grass.available(patch) and grass.total_consumed == len(others)
+    rabbit.orientation = 0.0
+    food = grass.observation(rabbit, 267, 360)
+    assert food[0] == 0 or food[3] > 0  # the blocked patch underfoot is not the nearest food
+
+
+def test_burrow_observations():
+    env = burrow_world(rabbit_count=2)
+    me = env.predators[0]
+    place(env, {"predator_0": (400, 500), "rabbit_0": (400, 400), "rabbit_1": (450, 450)})
+    me.orientation = heading_degrees(Vector(0, -1))  # facing the burrow
+    obs = env._observe(me)
+    assert obs.shape == (64,)
+    np.testing.assert_allclose(obs[58:62], [1.0, 0.0, -100 / 200, 100 / 200])
+    # Rabbit slots nearest first: rabbit_1 (outside), then rabbit_0 (inside).
+    assert obs[40] == 1 and obs[46] == 1
+    np.testing.assert_array_equal(obs[62:64], [0.0, 1.0])
+    # Facing away, the burrow is not seen.
+    me.orientation = heading_degrees(Vector(0, 1))
+    np.testing.assert_array_equal(env._observe(me)[58:62], 0.0)
+    # Rabbits: the nearest burrow anywhere, [dx, dy, distance, inside].
+    inside, outside = env.rabbits
+    np.testing.assert_allclose(env._observe(inside)[45:49], [0.0, 0.0, 0.0, 1.0])
+    place(env, {"rabbit_1": (400, 400 + 300)})  # 300 away, beyond the 267 view
+    np.testing.assert_allclose(env._observe(outside)[45:49], [0.0, -1.0, 1.0, 0.0], atol=1e-6)
+
+
+def test_newborn_rabbit_in_burrow_is_counted():
+    env = burrow_world(rabbit_count=1, energy_rabbit_max=16.0)
+    env.rabbits[0].energy = 15.0
+    env.time_step = 1
+    env.birth_rng.seed(0)
+    rewards, infos = {}, {}
+    born = env._reproduce(rewards, infos)
+    assert len(born) == 1
+    child = env.rabbits[-1]
+    # Born 32 from its parent at the burrow's centre: outside a radius-24 burrow.
+    assert not child.in_burrow and env.hunt_stats["births_rabbit_in_burrow"] == 0
+    env.burrow_radius = 40.0
+    env.rabbits[0].energy = 15.0
+    env._reproduce(rewards, infos)
+    assert env.rabbits[-1].in_burrow and env.hunt_stats["births_rabbit_in_burrow"] == 1
+
+
+def test_steps_at_predator_cap():
+    env = world(reproduction_max_predator=4)
+    env.step(stopped_actions(env))
+    assert env.hunt_stats["steps_at_predator_cap"] == env.action_repeat
+
+
+@pytest.mark.parametrize("wait, counted", [(EXIT_WINDOW - 1, True), (EXIT_WINDOW, False)])
+def test_exit_window_boundary(wait, counted):
+    """A catch counts as at the exit when fewer than EXIT_WINDOW physics
+    steps have passed since the step the rabbit left."""
+    env = burrow_world(action_repeat=1)
+    place(env, {"rabbit_0": (400, 500)})
+    env.step(stopped_actions(env))  # leaves at this step
+    left = env.rabbits[0].left_burrow_at
+    for _ in range(wait - 1):
+        env.step(stopped_actions(env))
+    place(env, {"predator_0": (400, 510)})
+    env.step(stopped_actions(env))  # caught at step left + wait
+    assert not env.rabbits and env.time_step - 1 - left == wait
+    assert env.hunt_stats["catches_after_exit"] == int(counted)
+
+
+def test_latest_exit_counts_and_rabbit_walks_out():
+    env = burrow_world(action_repeat=1)
+    rabbit = env.rabbits[0]
+    place(env, {"rabbit_0": (400, 500)})
+    env.step(stopped_actions(env))
+    place(env, {"rabbit_0": (400, 400)})
+    env.step(stopped_actions(env))
+    assert rabbit.in_burrow and env.hunt_stats["burrow_exits"] == 1
+    # Walking out at full speed along +x (move 0) until it is out.
+    rabbit.velocity = Vector(0, 0)
+    moves = {a: (np.array([STOP, 0]) if species_of(a) == "predator" else (0 if a == "rabbit_0" else STOP)) for a in env.active}
+    while env.hunt_stats["burrow_exits"] < 2:
+        env.step({a: moves[a] for a in env.active})
+    assert not rabbit.in_burrow and rabbit.left_burrow_at == env.time_step - 1
+    assert env.hunt_stats["rabbit_steps"] == env.time_step
+
+
+def test_burrows_wrap_around_the_torus():
+    env = burrow_world()
+    env.burrows = np.array([[5.0, 400.0]])
+    place(env, {"rabbit_0": (795, 400), "predator_0": (795, 415)})  # 10 from the burrow across the edge
+    assert env._inside(env.rabbits) == [True]
+    env.rabbits[0].in_burrow = True
+    env.step(stopped_actions(env))
+    assert env.rabbits and env.hunt_stats["catches_blocked"] > 0
+    np.testing.assert_allclose(env._observe(env.rabbits[0])[45:49], [10 / 267, 0.0, 10 / 267, 1.0], atol=1e-6)
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.grass import GrassPatch
+
+    grass = env.food["grass"]
+    grass.set_burrows([Vector(5.0, 400.0)], 24.0)
+    near, far = GrassPatch(Vector(790, 400)), GrassPatch(Vector(770, 400))
+    grass.mark(near)
+    grass.mark(far)
+    assert near.blocked and not far.blocked
+
+
+def test_counters_without_burrows_and_extinction_time():
+    env = world()
+    place(env, {"predator_0": (400, 410)})
+    env.step(stopped_actions(env))
+    stats = env.hunt_stats
+    assert stats["predator_steps"] == 4 * env.action_repeat and stats["rabbit_steps"] == 1
+    assert stats["rabbit_steps_inside"] == 0 and env.rabbit_burrow_steps == {}
+    assert env.extinct_at == {"rabbit": 1}

@@ -39,6 +39,7 @@ from pathlib import Path
 
 import numpy as np
 
+from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.callbacks import derived_rates
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import (
     JOINT_WINDOW,
     MOVES,
@@ -168,6 +169,9 @@ def play(env, modules, seed):
         "seed": seed,
         "outcome": outcome(env),
         "physics_steps": env.time_step,
+        "extinct_at": dict(env.extinct_at),
+        # Each rabbit's share of its steps spent inside a burrow (with burrows).
+        "rabbit_inside_shares": [inside / steps for steps, inside in env.rabbit_burrow_steps.values() if steps],
         "hunt_stats": env.episode_hunt_stats,
         "tracked": dict(zip(("encounter_episodes", "touched_episodes", "joint_arrivals"), real)),
         "null": {key: value / NULL_REPEATS for key, value in null.items()},
@@ -226,6 +230,14 @@ def summarise(rows):
     for key, denominator in (("contact_join_rate", "contact_decisions"), ("contact_with_partner_join_rate", "contact_with_partner"), ("contact_alone_join_rate", "contact_alone")):
         joins = "contact_joins" if key == "contact_join_rate" else f"{denominator}_joins"
         summary[key] = totals[joins] / totals[denominator] if totals[denominator] else None
+    # Burrow and cap shares over all episodes (callbacks.derived_rates).
+    rates = derived_rates(totals)
+    for key in ("rabbit_inside_share", "catches_per_open_rabbit_step", "predator_burrow_edge_share", "predator_cap_share"):
+        summary[key] = rates.get(key)
+    shares = sorted(share for row in rows for share in row.get("rabbit_inside_shares", []))
+    if shares:
+        summary["rabbit_inside_share_quartiles"] = [round(float(q), 3) for q in np.quantile(shares, (0.25, 0.5, 0.75))]
+    summary["extinction_steps"] = {s: sorted(row["extinct_at"][s] for row in rows if s in row.get("extinct_at", {})) for s in SPECIES}
     return summary
 
 

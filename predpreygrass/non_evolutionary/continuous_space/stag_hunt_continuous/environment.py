@@ -22,6 +22,11 @@ rest to the bystanders (all to the contributors without bystanders). On a
 failure the mammoth escapes; each contributor loses its share of
 hunt_struggle_fraction x hunt_carcass_energy and starts a cooldown of
 hunt_cooldown decisions. Every contributor pays hunt_join_cost per hunt.
+
+Rabbit burrows (DESIGN.md, 7; none by default): burrow_count fixed discs
+of radius burrow_radius, drawn at reset from their own random stream. A
+rabbit whose centre is inside one cannot be caught, and grass inside one
+cannot be eaten.
 """
 
 import math
@@ -46,6 +51,9 @@ MOVES = DIRECTIONS * len(SPEEDS)
 SELF_SIZE = 4  # own vx, vy (/ top speed), sin and cos of own heading
 SLOT_SIZE = 6  # seen flag, dx, dy, distance (/ view distance), vx, vy
 FOOD_SIZE = 4  # seen flag, dx, dy, distance (/ view distance)
+BURROW_SIZE = 4  # rabbits: dx, dy, distance, inside; predators: seen flag, dx, dy, distance
+# Physics steps after leaving a burrow in which a catch counts as at the exit.
+EXIT_WINDOW = 8
 PARTY_SIZES = 4  # success chances for parties of 1, 2, 3 and 4 or more
 JOINT_WINDOW = 2  # decisions between two predators' first touches of a mammoth
 # Below this speed an animal counts as stopped and keeps its heading.
@@ -126,6 +134,9 @@ DEFAULT_CONFIG = {
     "steppe_overgrazing": True,
     "steppe_overgrazing_threshold": 0.0,
     "steppe_overgrazing_delay": 400,
+    # Rabbit burrows (module docstring): 0 for none.
+    "burrow_count": 0,
+    "burrow_radius": 24.0,
     # Energy, per physics step. 75% of the cost at full speed comes from
     # movement (Taylor, Heglund & Maloiy 1982), as in the base world.
     "energy_predator_initial": 5.0,
@@ -216,6 +227,8 @@ class Animal:
         "alive",
         "ready_at",
         "next_birth_at",
+        "in_burrow",
+        "left_burrow_at",
         "radius",
         "mass",
         "max_speed",
@@ -238,6 +251,10 @@ class Animal:
         self.ready_at = 0
         # First physics step at which the animal may give birth again.
         self.next_birth_at = 0
+        # Whether its centre was inside a burrow at the last check, and the
+        # physics step at which it last left one.
+        self.in_burrow = False
+        self.left_burrow_at = None
         (
             self.radius,
             self.mass,
@@ -283,6 +300,23 @@ def new_hunt_stats():
         "predators_starved_in_hunts": 0,
         "grass_eaten_total": 0,
         "steppe_eaten_total": 0,
+        # Burrows and the hunter cap, summed over physics steps: rabbit steps
+        # (inside a burrow), rabbit steps inside a burrow touching a predator
+        # (catches the burrow blocked), rabbits leaving a burrow and catches
+        # within EXIT_WINDOW steps of it, predator steps (within a predator's
+        # radius of a burrow's edge), rabbits born inside, grown grass patches
+        # that a burrow keeps from being eaten (patch-steps), and steps with
+        # the predators at reproduction_max_predator.
+        "rabbit_steps": 0,
+        "rabbit_steps_inside": 0,
+        "catches_blocked": 0,
+        "burrow_exits": 0,
+        "catches_after_exit": 0,
+        "predator_steps": 0,
+        "predator_steps_at_burrow_edge": 0,
+        "births_rabbit_in_burrow": 0,
+        "grass_blocked_patch_steps": 0,
+        "steps_at_predator_cap": 0,
     }
     for size in range(1, PARTY_SIZES + 1):
         stats[f"hunts_party_{size}"] = 0
@@ -331,12 +365,17 @@ class StagHuntContinuous(MultiAgentEnv):
         self.struggle_fraction = c["hunt_struggle_fraction"]
         self.join_cost = c["hunt_join_cost"]
         self.cooldown = c["hunt_cooldown"]
+        self.burrow_count = c["burrow_count"]
+        self.burrow_radius = c["burrow_radius"]
         self._validate()
 
         self.obs_size = {}
         for s in SPECIES:
             slots = sum(self.observe[(s, other)] for other in OBSERVED)
             self.obs_size[s] = SELF_SIZE + SLOT_SIZE * slots + FOOD_SIZE + 1 + (1 if s == "predator" else 0)
+            if self.burrow_count and s in ("predator", "rabbit"):
+                # The nearest burrow; predators also an inside bit per rabbit slot.
+                self.obs_size[s] += BURROW_SIZE + (self.observe[("predator", "rabbit")] if s == "predator" else 0)
         self.possible_agents = [f"{s}_{i}" for s in SPECIES for i in range(self.pool[s])]
         spaces = {s: Box(-1.0, 1.0, shape=(self.obs_size[s],), dtype=np.float32) for s in SPECIES}
         actions = {"predator": MultiDiscrete([MOVES, 2]), "rabbit": Discrete(MOVES), "mammoth": Discrete(MOVES)}
@@ -348,6 +387,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.agents = []
 
         self.animals = {s: [] for s in SPECIES}
+        self.burrows = np.zeros((0, 2))
         self.active = []
         self.time_step = 0
         self.decision = 0
@@ -363,6 +403,10 @@ class StagHuntContinuous(MultiAgentEnv):
         # The last finished episode's counters, kept until the next one
         # ends, so a callback can read them after an automatic reset.
         self.episode_hunt_stats = None
+        # This episode's {rabbit id: [steps alive, steps inside a burrow]}
+        # (with burrows) and {species: physics step at which it died out}.
+        self.rabbit_burrow_steps = {}
+        self.extinct_at = {}
 
     def _validate(self):
         c = self.config
@@ -406,6 +450,10 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError("hunt_bystander_radius must be finite and nonnegative")
         if not isinstance(c["truncate_on_prey_extinction"], bool):
             raise ValueError("truncate_on_prey_extinction must be True or False")
+        if not _integer(c["burrow_count"], 0):
+            raise ValueError("burrow_count must be a nonnegative integer")
+        if not _number(c["burrow_radius"], 0, strict=True) or c["burrow_radius"] >= min(self.width, self.height) / 2:
+            raise ValueError("burrow_radius must be positive and less than half the arena")
         if not _integer(c["hunt_cooldown"], 0):
             raise ValueError("hunt_cooldown must be a nonnegative integer")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
@@ -433,6 +481,9 @@ class StagHuntContinuous(MultiAgentEnv):
         self.hunt_rng = random.Random(None if seed is None else seed + 2)
         self.food["grass"].reset(seed)
         self.food["steppe"].reset(None if seed is None else seed + 3)
+        burrow_rng = random.Random(None if seed is None else seed + 5)
+        self.burrows = np.array([(burrow_rng.uniform(0, self.width), burrow_rng.uniform(0, self.height)) for _ in range(self.burrow_count)]).reshape(-1, 2)
+        self.food["grass"].set_burrows([Vector(x, y) for x, y in self.burrows], self.burrow_radius)
         spawn = random.Random(seed)
         self.animals = {s: [] for s in SPECIES}
         # Rabbits and predators drawn as the base world's prey and predators
@@ -448,6 +499,10 @@ class StagHuntContinuous(MultiAgentEnv):
         self.hunt_stats = new_hunt_stats()
         self.encounters = {}
         self.last_joins = {}
+        self.rabbit_burrow_steps = {}
+        self.extinct_at = {}
+        for rabbit, inside in zip(self.rabbits, self._inside(self.rabbits)):
+            rabbit.in_burrow = inside
         self.active = [a.id for a in self.living()]
         self.agents = list(self.active)
         return self._observations(), {agent: {} for agent in self.active}
@@ -517,6 +572,7 @@ class StagHuntContinuous(MultiAgentEnv):
                 if agent != "__all__" and terminateds[agent] and agent not in obs:
                     obs[agent] = zeros[species_of(agent)]
                     rewards.setdefault(agent, 0.0)
+        self._note_extinctions()  # after the hunts
         self.decision += 1
         obs.update(self._observations())
         for key, total in totals.items():
@@ -527,7 +583,7 @@ class StagHuntContinuous(MultiAgentEnv):
                 self._close_encounter(mammoth_id)
             self.hunt_stats["grass_eaten_total"] = self.food["grass"].total_consumed
             self.hunt_stats["steppe_eaten_total"] = self.food["steppe"].total_consumed
-            self.episode_hunt_stats = dict(self.hunt_stats, **{f"births_{s}": self.births[s] for s in SPECIES})
+            self.episode_hunt_stats = dict(self.hunt_stats, physics_steps=self.time_step, **{f"births_{s}": self.births[s] for s in SPECIES})
         self.agents = list(self.active)
         return obs, rewards, terminateds, truncateds, infos
 
@@ -540,6 +596,7 @@ class StagHuntContinuous(MultiAgentEnv):
         born)."""
         agents = list(self.active)
         catches = []  # (catching predator, rabbit energy at the catch)
+        self._burrow_step()
         contacts = [(animal, *self._contacts(animal)) for animal in self.living()]
         for animal, catcher, aways in contacts:
             self._move(animal, moves[animal.id], catcher, aways, catches)
@@ -560,6 +617,7 @@ class StagHuntContinuous(MultiAgentEnv):
         infos = {agent: {"grass_eaten": eaten.get(agent, 0)} for agent in agents}
 
         self._energy(catches, eaten, terminateds, truncateds, infos)
+        self._note_extinctions()
 
         born = self._reproduce(rewards, infos) if self.active else []
         for child, parent in born:
@@ -569,6 +627,13 @@ class StagHuntContinuous(MultiAgentEnv):
             infos[child] = {"born": True, "parent": parent, "energy": self.initial_energy[species_of(child)]}
             agents.append(child)
         return (agents, rewards, *self._end_flags(terminateds, truncateds), infos, bool(born))
+
+    def _note_extinctions(self):
+        """The physics step at which each species present at the start died
+        out (the step just taken)."""
+        for s in SPECIES:
+            if self.count[s] and not self.animals[s]:
+                self.extinct_at.setdefault(s, self.time_step)
 
     def _extinct(self):
         """No predators, or no prey of either kind, or (with
@@ -607,6 +672,9 @@ class StagHuntContinuous(MultiAgentEnv):
         catcher = None
         if animal.species == "rabbit":
             catcher = next((p for p in self.predators if self._touching(animal, p)), None)
+            if catcher is not None and animal.in_burrow:
+                self.hunt_stats["catches_blocked"] += 1
+                catcher = None
         aways = []
         for other in self.animals[animal.species]:
             if other is not animal and self._touching(animal, other):
@@ -635,6 +703,8 @@ class StagHuntContinuous(MultiAgentEnv):
             # A caught rabbit is removed before it moves.
             animal.alive = False
             catches.append((catcher, animal.energy))
+            if animal.left_burrow_at is not None and self.time_step - animal.left_burrow_at < EXIT_WINDOW:
+                self.hunt_stats["catches_after_exit"] += 1
             self.rabbits.remove(animal)
             return
         self._steer(animal, self._desired_velocity(move, animal))
@@ -711,6 +781,9 @@ class StagHuntContinuous(MultiAgentEnv):
                 (parent.position.y + distance * math.sin(angle)) % self.height,
             )
             child = self._animal(s, self.next_id[s], position)
+            if s == "rabbit" and self.burrow_count:
+                child.in_burrow = self._inside([child])[0]
+                self.hunt_stats["births_rabbit_in_burrow"] += child.in_burrow
             self.next_id[s] += 1
             self.animals[s].append(child)
             self.active.append(child.id)
@@ -723,6 +796,70 @@ class StagHuntContinuous(MultiAgentEnv):
             infos.setdefault(parent.id, {})["births"] = 1
             infos[parent.id]["energy"] = parent.energy
         return born
+
+    # --- Burrows ---------------------------------------------------------
+
+    def _burrow_offsets(self, animals):
+        """Wrapped offsets (dx, dy), each (animals, burrows), from every
+        animal to every burrow centre."""
+        xy = np.array([(a.position.x, a.position.y) for a in animals], dtype=np.float64).reshape(-1, 2)
+        size = np.array([self.width, self.height], dtype=np.float64)
+        delta = (self.burrows[None, :, :] - xy[:, None, :] + size / 2) % size - size / 2
+        return delta[..., 0], delta[..., 1]
+
+    def _inside(self, animals):
+        """Whether each animal's centre is inside a burrow."""
+        if not self.burrow_count or not animals:
+            return [False] * len(animals)
+        dx, dy = self._burrow_offsets(animals)
+        return (np.hypot(dx, dy).min(axis=1) < self.burrow_radius).tolist()
+
+    def _burrow_step(self):
+        """At the start of a physics step: each rabbit's burrow state (for
+        the catch rule) and the burrow and cap counters."""
+        stats = self.hunt_stats
+        stats["steps_at_predator_cap"] += len(self.predators) >= self.max_population["predator"]
+        stats["rabbit_steps"] += len(self.rabbits)
+        stats["predator_steps"] += len(self.predators)
+        if not self.burrow_count:
+            return
+        for rabbit, inside in zip(self.rabbits, self._inside(self.rabbits)):
+            if rabbit.in_burrow and not inside:
+                rabbit.left_burrow_at = self.time_step
+                stats["burrow_exits"] += 1
+            rabbit.in_burrow = inside
+            stats["rabbit_steps_inside"] += inside
+            steps = self.rabbit_burrow_steps.setdefault(rabbit.id, [0, 0])
+            steps[0] += 1
+            steps[1] += inside
+        if self.predators:
+            dx, dy = self._burrow_offsets(self.predators)
+            edge = np.abs(np.hypot(dx, dy) - self.burrow_radius) <= np.array([[p.radius] for p in self.predators])
+            stats["predator_steps_at_burrow_edge"] += int(edge.any(axis=1).sum())
+        grass = self.food["grass"]
+        stats["grass_blocked_patch_steps"] += sum(patch.blocked and grass.available(patch) for patch in grass.patches)
+
+    def _burrow_observation(self, animal):
+        """Rabbits: the nearest burrow anywhere, [dx, dy, distance, inside]
+        with the offset scaled down to at most the view distance. Predators:
+        the nearest burrow in view, [seen, dx, dy, distance], or zeros."""
+        reach = animal.view_distance
+        dx, dy = self._burrow_offsets([animal])
+        distances = np.hypot(dx[0], dy[0])
+        if animal.species == "rabbit":
+            i = int(np.argmin(distances))
+            distance = float(distances[i])
+            scale = reach / max(distance, reach)
+            return [dx[0, i] * scale / reach, dy[0, i] * scale / reach, min(distance, reach) / reach, float(distance < self.burrow_radius)]
+        seen = [
+            (float(distances[i]), i)
+            for i in range(self.burrow_count)
+            if self.torus.in_view(animal, Vector(*self.burrows[i]), reach, animal.fov)
+        ]
+        if not seen:
+            return [0.0] * BURROW_SIZE
+        distance, i = min(seen)
+        return [1.0, dx[0, i] / reach, dy[0, i] / reach, distance / reach]
 
     # --- Hunts -----------------------------------------------------------
 
@@ -875,7 +1012,9 @@ class StagHuntContinuous(MultiAgentEnv):
     def _observations(self):
         return {animal.id: self._observe(animal) for animal in self.living()}
 
-    def _slots(self, observer, animals, count):
+    def _slots(self, observer, animals, count, chosen=None):
+        """Slot values of the nearest animals in view; appends those animals
+        to chosen if given."""
         if not count:
             return []
         seen = []
@@ -888,6 +1027,8 @@ class StagHuntContinuous(MultiAgentEnv):
         values = []
         reach = observer.view_distance
         for distance, _, dx, dy, animal in seen[:count]:
+            if chosen is not None:
+                chosen.append(animal)
             values += [1.0, dx / reach, dy / reach, distance / reach, animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed]
         return values + [0.0] * (SLOT_SIZE * count - len(values))
 
@@ -896,8 +1037,9 @@ class StagHuntContinuous(MultiAgentEnv):
         food patch in view, own energy and (predators) hunt cooldown."""
         heading = math.radians(animal.orientation)
         values = [animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed, math.sin(heading), math.cos(heading)]
+        seen_rabbits = []
         for other in OBSERVED:
-            values += self._slots(animal, self.animals[other], self.observe[(animal.species, other)])
+            values += self._slots(animal, self.animals[other], self.observe[(animal.species, other)], seen_rabbits if other == "rabbit" else None)
         obs = np.asarray(values, dtype=np.float32)
         if not np.all(np.abs(obs) <= 1.0 + 1e-4):
             raise RuntimeError(f"observation out of [-1, 1]: {obs}")
@@ -906,7 +1048,13 @@ class StagHuntContinuous(MultiAgentEnv):
         tail = [np.clip(animal.energy / self.max_energy[animal.species], 0.0, 1.0)]
         if animal.species == "predator":
             tail.append(min(1.0, max(0, animal.ready_at - self.decision) / self.cooldown) if self.cooldown else 0.0)
-        return np.concatenate((obs, food, np.asarray(tail, dtype=np.float32))).astype(np.float32)
+        if self.burrow_count and animal.species in ("predator", "rabbit"):
+            tail += self._burrow_observation(animal)
+            if animal.species == "predator":
+                # From the current positions, as the next catch test sees them.
+                inside = [float(flag) for flag in self._inside(seen_rabbits)]
+                tail += inside + [0.0] * (self.observe[("predator", "rabbit")] - len(inside))
+        return np.concatenate((obs, food, np.clip(np.asarray(tail, dtype=np.float32), -1.0, 1.0))).astype(np.float32)
 
 
 def number(animal):

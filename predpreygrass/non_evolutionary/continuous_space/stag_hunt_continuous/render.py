@@ -1,7 +1,8 @@
 """A pygame viewer for StagHuntContinuous, adapted from
 base_environment_continuous's.
 
-Draws the arena (grass and, tinted, the mammoths' steppe; the animals as
+Draws the arena (rabbit burrows as brown discs, grass and, tinted, the
+mammoths' steppe; the animals as
 sprites facing their direction of movement; a ring around every predator whose last join decision was on; the
 view cones of one predator and one mammoth), with the three populations
 over the episode to its right. It only reads the environment's state and
@@ -25,6 +26,7 @@ CONE_ALPHA = 80
 POPULATION_COLOR = {"predator": (200, 60, 50), "rabbit": (90, 90, 90), "mammoth": (150, 100, 40)}
 JOIN_COLOR = (230, 160, 20)
 STEPPE_TINT = (215, 160, 60)
+BURROW_COLOR = (120, 85, 50)
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
 MIN_SPRITE = 36  # Arena units; keeps small animals recognizable.
 GRASS_SPRITE = 24  # Arena units.
@@ -169,6 +171,9 @@ class Viewer:
             self.reset()  # a new episode without reset()
         self.history.append((env.time_step, len(env.predators), len(env.rabbits), len(env.mammoths)))
         self.canvas.fill(BACKGROUND)
+        for bx, by in env.burrows:
+            for x, y in self._copies(bx, by):
+                pygame.draw.circle(self.canvas, BURROW_COLOR, (round(x), round(y)), round(env.burrow_radius))
         for layer, sprite in (("grass", self.grass_sprite), ("steppe", self.steppe_sprite)):
             food = env.food[layer]
             for patch in food.patches:

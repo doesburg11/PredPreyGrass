@@ -251,7 +251,7 @@ Taken as best guesses at the user's request; each can be revisited.
 In the text above, the *(open)* marks on these points are settled by
 this section.
 
-## 7. Rabbit burrows (draft, 2026-11-01)
+## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`)
 
 Proposed after calibration rounds 1-9 (README, calibration log): every
 brake on the hunters tried so far (a cap, costlier offspring, a fixed
@@ -310,13 +310,17 @@ leaving mammoths as the main food and the cap unnecessary.
    versus alone joining, kill party sizes, contrast with untrained
    policies); the main test then needs its effect margin and per-seed
    reporting fixed in advance (DESIGN 4-5).
-8. **Counters** (TensorBoard `hunts/*` and `evaluate.py`): share of
-   rabbit physics steps inside a burrow and its spread over rabbits;
-   rabbits in the open per step; catches per open rabbit-step; exits and
-   catches within 8 physics steps of an exit; hunter steps within one
-   body radius of a burrow edge (edge camping); births inside a burrow;
-   blocked grass patches; physics steps with the hunter cap reached;
-   extinction cause and time.
+8. **Counters** (TensorBoard `hunts/*`, summed over physics steps, and
+   rates from them; `evaluate.py` also per episode): rabbit steps and
+   those inside a burrow (`rabbit_inside_share`, `open_rabbits_mean`);
+   `catches_per_open_rabbit_step`; `catches_blocked` (rabbit steps inside
+   a burrow touching a predator); `burrow_exits` and `catches_after_exit`
+   (within 8 physics steps); `predator_burrow_edge_share` (within a
+   predator radius of an edge: camping); `births_rabbit_in_burrow`;
+   `grass_blocked_patch_steps` (grown patches a burrow keeps from being
+   eaten); `predator_cap_share` (steps at the hunter cap). Evaluation
+   only: each rabbit's share of time inside (quartiles) and the physics
+   step at which each species died out.
 
 Realism: rabbits (and the hares and marmots Pleistocene hunters took) do
 shelter in burrows; the food-versus-safety trade-off is standard
