@@ -107,3 +107,14 @@ def test_tracked_count_with_births_kills_and_an_ending():
         stats["touched_episodes"],
         stats["joint_arrivals"],
     )
+
+
+def test_evaluation_plays_whole_episodes(monkeypatch):
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous import checkpoints, evaluate
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import DEFAULT_CONFIG
+
+    monkeypatch.setattr(checkpoints, "checkpoint_env_config", lambda checkpoint: dict(DEFAULT_CONFIG, truncate_on_prey_extinction=True))
+    monkeypatch.setattr(checkpoints, "load_modules", lambda checkpoint: {})
+    monkeypatch.setattr(evaluate, "_worker", {})
+    evaluate._init("some/checkpoint")
+    assert evaluate._worker["env"].truncate_on_prey_extinction is False

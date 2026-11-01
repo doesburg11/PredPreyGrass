@@ -7,6 +7,10 @@ from pathlib import Path
 
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import DEFAULT_CONFIG, SPECIES, StagHuntContinuous
 
+# Settings added after runs were saved, with the value that gives the
+# behaviour those runs had; filled in when a saved env_config lacks them.
+ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"truncate_on_prey_extinction": False}
+
 
 def run_settings(checkpoint):
     """The settings train.py saved for the checkpoint's run
@@ -23,13 +27,14 @@ def run_settings(checkpoint):
 
 def checkpoint_env_config(checkpoint):
     """The checkpoint's env_config, from the run's saved settings. Every
-    setting must be there (none silently taken from today's defaults), and
+    setting must be there (none silently taken from today's defaults, except
+    ADDED_SETTINGS in runs saved before they existed), and
     the env_config RLlib saved inside the checkpoint itself must agree, so
     settings found next to a checkpoint are those it was trained with."""
     settings = run_settings(checkpoint)
     if settings is None:
         raise ValueError(f"no source_code/settings.json for {checkpoint}")
-    config = dict(settings["config_env"])
+    config = dict(ADDED_SETTINGS, **settings["config_env"])
     # JSON turns the success tuple into a list.
     config["hunt_success_by_party"] = tuple(config["hunt_success_by_party"])
     unknown = set(config) - set(DEFAULT_CONFIG)
@@ -39,7 +44,7 @@ def checkpoint_env_config(checkpoint):
     saved = Path(checkpoint) / "class_and_ctor_args.pkl"
     if saved.is_file():
         with open(saved, "rb") as f:
-            inside = dict(pickle.load(f)["ctor_args_and_kwargs"][0][0]["env_config"])
+            inside = dict(ADDED_SETTINGS, **pickle.load(f)["ctor_args_and_kwargs"][0][0]["env_config"])
         inside["hunt_success_by_party"] = tuple(inside["hunt_success_by_party"])
         if inside != config:
             differ = sorted(k for k in set(inside) | set(config) if inside.get(k) != config.get(k))

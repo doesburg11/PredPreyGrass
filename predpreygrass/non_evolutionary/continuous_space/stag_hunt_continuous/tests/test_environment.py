@@ -241,6 +241,52 @@ def test_episode_continues_without_rabbits_and_ends_without_prey():
     assert env.episode_hunt_stats["kills_party_1"] == 2
 
 
+def test_truncate_on_prey_extinction():
+    # Rabbits gone, mammoths left: truncated, not terminated.
+    env = world(truncate_on_prey_extinction=True)
+    env.animals["rabbit"].clear()
+    _, _, te, tr, _ = env.step(stopped_actions(env))
+    assert tr["__all__"] and not te["__all__"]
+    assert all(tr[p.id] and not te[p.id] for p in env.predators)
+    # Mammoths hunted out, the rabbit left: truncated too.
+    env = world(truncate_on_prey_extinction=True, hunt_success_by_party=(1.0, 1.0, 1.0, 1.0))
+    place(env, {"predator_0": (200, 130), "predator_1": (600, 130)})
+    _, _, te, tr, _ = env.step(stopped_actions(env, join=1))
+    assert not env.mammoths and env.rabbits
+    assert tr["__all__"] and not te["__all__"]
+    assert env.episode_hunt_stats["kills_party_1"] == 2
+    # No prey of either kind: terminated, as without the setting.
+    env = world(truncate_on_prey_extinction=True)
+    env.animals["rabbit"].clear()
+    env.animals["mammoth"].clear()
+    _, _, te, tr, _ = env.step(stopped_actions(env))
+    assert te["__all__"] and not tr["__all__"]
+    # The last rabbit caught, or the mammoths starved: the dead terminated
+    # only, the survivors truncated only.
+    env = world(truncate_on_prey_extinction=True)
+    place(env, {"predator_0": (400, 410)})
+    _, _, te, tr, _ = env.step(stopped_actions(env))
+    assert te["rabbit_0"] and not tr["rabbit_0"]
+    assert tr["__all__"] and not te["__all__"]
+    assert all(tr[a.id] and not te[a.id] for a in env.living())
+    assert env.episode_hunt_stats["rabbits_caught"] == 1
+    env = world(truncate_on_prey_extinction=True)
+    for mammoth in env.mammoths:
+        mammoth.energy = 1e-9
+    env.resting_cost["mammoth"] = 1.0
+    _, _, te, tr, _ = env.step(stopped_actions(env))
+    assert not env.mammoths and env.rabbits
+    assert all(te[f"mammoth_{i}"] and not tr[f"mammoth_{i}"] for i in range(2))
+    assert tr["__all__"] and not te["__all__"]
+    assert all(tr[a.id] and not te[a.id] for a in env.living())
+    # A species absent from the start does not end the episode.
+    env = world(truncate_on_prey_extinction=True, mammoth_count=0)
+    _, _, te, tr, _ = env.step(stopped_actions(env))
+    assert not te["__all__"] and not tr["__all__"]
+    with pytest.raises(ValueError):
+        StagHuntContinuous({"truncate_on_prey_extinction": 1})
+
+
 def test_episode_ends_when_predators_die():
     env = world()
     for predator in env.predators:
@@ -248,8 +294,11 @@ def test_episode_ends_when_predators_die():
     env.config["energy_predator_resting_metabolic_cost"] = 0.0
     env.resting_cost["predator"] = 1.0
     _, _, te, tr, _ = env.step(stopped_actions(env))
-    assert tr["__all__"] or te["__all__"]
+    assert tr["__all__"] and not te["__all__"]
     assert not env.predators
+    # The dead are terminated only, the surviving prey truncated only.
+    assert all(te[f"predator_{i}"] and not tr[f"predator_{i}"] for i in range(4))
+    assert all(tr[a.id] and not te[a.id] for a in env.living())
 
 
 def test_observation_layout():
@@ -303,6 +352,62 @@ def test_capped_carcass_gain():
     hunt(env, {"predator_0": 1, "predator_1": 0, "predator_2": 0, "predator_3": 0})
     assert env.predators[0].energy == 24.0
     assert env.hunt_stats["mammoth_energy"] == pytest.approx(24.0 - (20.0 - 0.05))
+
+
+def test_birth_interval():
+    for interval, births in ((0, [1, 1, 1, 1]), (3, [1, 0, 0, 1])):
+        env = world(reproduction_predator_interval=interval)
+        counts = []
+        for step in range(4):
+            env.predators[0].energy = 24.0
+            env.time_step = 10 + step
+            counts.append(sum(parent == "predator_0" for _, parent in env._reproduce({}, {})))
+        assert counts == births
+        # Newborns start below the threshold, so only predator_0 gave birth.
+        assert env.births["predator"] == sum(births)
+    with pytest.raises(ValueError):
+        StagHuntContinuous({"reproduction_predator_interval": -1})
+    with pytest.raises(ValueError):
+        StagHuntContinuous({"reproduction_rabbit_interval": 2.5})
+
+
+def test_birth_interval_in_steps():
+    # One physics step per decision, so every step is visible.
+    env = world(action_repeat=1, reproduction_predator_interval=3)
+    for _ in range(2):
+        born_at = []
+        while env.time_step < 8:
+            env.predators[0].energy = 24.0
+            _, _, _, _, infos = env.step(stopped_actions(env))
+            if infos.get("predator_0", {}).get("births"):
+                born_at.append(env.time_step)
+        assert born_at == [1, 4, 7]
+        # A reset clears the wait.
+        env.reset(seed=0)
+        place(env, {})
+
+
+def test_old_checkpoint_settings_get_added_settings(tmp_path):
+    import json
+    import pickle
+
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.checkpoints import ADDED_SETTINGS, checkpoint_env_config
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import DEFAULT_CONFIG
+
+    old = {k: v for k, v in DEFAULT_CONFIG.items() if k not in ADDED_SETTINGS}
+    checkpoint = tmp_path / "checkpoint"
+    checkpoint.mkdir()
+    (tmp_path / "source_code").mkdir()
+    (tmp_path / "source_code" / "settings.json").write_text(json.dumps({"config_env": old}))
+    with open(checkpoint / "class_and_ctor_args.pkl", "wb") as f:
+        pickle.dump({"ctor_args_and_kwargs": (({"env_config": old},), {})}, f)
+    config = checkpoint_env_config(checkpoint)
+    assert all(config[k] == 0 for k in ADDED_SETTINGS)
+    # Other missing settings are still refused.
+    del old["hunt_cooldown"]
+    (tmp_path / "source_code" / "settings.json").write_text(json.dumps({"config_env": old}))
+    with pytest.raises(ValueError):
+        checkpoint_env_config(checkpoint)
 
 
 def test_joint_arrivals():

@@ -56,6 +56,11 @@ DEFAULT_CONFIG = {
     "height": 800,
     # Physics steps per episode.
     "max_time_steps": 8000,
+    # Also end the episode, truncated, when one prey species that it started
+    # with dies out (training only: the world would go on, so no artificial
+    # penalty for the extinction). Without prey of either kind it ends
+    # terminated either way.
+    "truncate_on_prey_extinction": False,
     # Physics steps per decision (fewer when a birth or the episode's end
     # cuts a decision short).
     "action_repeat": 8,
@@ -148,6 +153,11 @@ DEFAULT_CONFIG = {
     "reproduction_max_predator": 50,
     "reproduction_max_rabbit": 100,
     "reproduction_max_mammoth": 20,
+    # Physics steps an animal waits after giving birth before it can give
+    # birth again (0: no wait).
+    "reproduction_predator_interval": 0,
+    "reproduction_rabbit_interval": 0,
+    "reproduction_mammoth_interval": 0,
     # Agent IDs per species, never reused within an episode.
     "reproduction_predator_pool": 2000,
     "reproduction_rabbit_pool": 2000,
@@ -205,6 +215,7 @@ class Animal:
         "energy",
         "alive",
         "ready_at",
+        "next_birth_at",
         "radius",
         "mass",
         "max_speed",
@@ -225,6 +236,8 @@ class Animal:
         self.alive = True
         # First decision at which a predator may contribute to a hunt again.
         self.ready_at = 0
+        # First physics step at which the animal may give birth again.
+        self.next_birth_at = 0
         (
             self.radius,
             self.mass,
@@ -293,6 +306,7 @@ class StagHuntContinuous(MultiAgentEnv):
                 raise ValueError(f"{name} must be a positive integer")
         self.width, self.height = c["width"], c["height"]
         self.max_time_steps = c["max_time_steps"]
+        self.truncate_on_prey_extinction = c["truncate_on_prey_extinction"]
         self.action_repeat = c["action_repeat"]
         self.torus = Torus(self.width, self.height)
         self.food = {layer: Grass(self.width, self.height, **{key: c[f"{layer}_{key}"] for key in GRASS_KEYS}) for layer in ("grass", "steppe")}
@@ -306,6 +320,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.threshold = {s: c[f"reproduction_{s}_threshold"] for s in SPECIES}
         self.birth_reward = {s: c[f"reproduction_{s}_reward"] for s in SPECIES}
         self.max_population = {s: c[f"reproduction_max_{s}"] for s in SPECIES}
+        self.birth_interval = {s: c[f"reproduction_{s}_interval"] for s in SPECIES}
         self.pool = {s: c[f"reproduction_{s}_pool"] for s in SPECIES}
         self.food_gain = {"grass": c["energy_grass_gain"], "steppe": c["energy_steppe_gain"]}
         self.catch_efficiency = c["energy_catch_efficiency_predator"]
@@ -374,6 +389,8 @@ class StagHuntContinuous(MultiAgentEnv):
             for key in (f"reproduction_max_{s}", f"reproduction_{s}_pool"):
                 if not _integer(c[key], 1):
                     raise ValueError(f"{key} must be a positive integer")
+            if not _integer(c[f"reproduction_{s}_interval"], 0):
+                raise ValueError(f"reproduction_{s}_interval must be a nonnegative integer")
             # A parent pays the offspring's initial energy.
             if not self.initial_energy[s] < self.threshold[s] <= self.max_energy[s]:
                 raise ValueError(f"reproduction_{s}_threshold must exceed energy_{s}_initial and not exceed energy_{s}_max")
@@ -387,6 +404,8 @@ class StagHuntContinuous(MultiAgentEnv):
                 raise ValueError(f"{key} must be in [0, 1]")
         if not _number(c["hunt_bystander_radius"], 0):
             raise ValueError("hunt_bystander_radius must be finite and nonnegative")
+        if not isinstance(c["truncate_on_prey_extinction"], bool):
+            raise ValueError("truncate_on_prey_extinction must be True or False")
         if not _integer(c["hunt_cooldown"], 0):
             raise ValueError("hunt_cooldown must be a nonnegative integer")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
@@ -529,7 +548,8 @@ class StagHuntContinuous(MultiAgentEnv):
         terminateds = {agent: agent not in living for agent in agents}
         truncateds = {agent: False for agent in agents}
         if self.time_step + 1 >= self.max_time_steps or self._extinct():
-            truncateds = {agent: True for agent in agents}
+            # The survivors; an animal that died is terminated only.
+            truncateds = {agent: agent in living for agent in agents}
         self.time_step += 1
         self.active = [agent for agent in agents if not (terminateds[agent] or truncateds[agent])]
 
@@ -551,7 +571,11 @@ class StagHuntContinuous(MultiAgentEnv):
         return (agents, rewards, *self._end_flags(terminateds, truncateds), infos, bool(born))
 
     def _extinct(self):
-        """No predators, or no prey of either kind."""
+        """No predators, or no prey of either kind, or (with
+        truncate_on_prey_extinction) no prey of a kind the episode started
+        with."""
+        if self.truncate_on_prey_extinction and any(self.count[s] and not self.animals[s] for s in PREY):
+            return True
         return not self.predators or not (self.rabbits or self.mammoths)
 
     def _end_flags(self, terminateds, truncateds):
@@ -664,7 +688,9 @@ class StagHuntContinuous(MultiAgentEnv):
             infos.setdefault(animal.id, {})["energy"] = animal.energy
 
     def _reproduce(self, rewards, infos):
-        """Births at the energy threshold. Returns [(child, parent)]."""
+        """Births at the energy threshold, at least
+        reproduction_<species>_interval physics steps apart for each parent.
+        Returns [(child, parent)]."""
         population = {s: len(self.animals[s]) for s in SPECIES}
         active = set(self.active)
         born = []
@@ -672,6 +698,7 @@ class StagHuntContinuous(MultiAgentEnv):
             s = parent.species
             if (
                 parent.energy < self.threshold[s]
+                or self.time_step < parent.next_birth_at
                 or parent.id not in active
                 or population[s] >= self.max_population[s]
                 or self.next_id[s] >= self.pool[s]
@@ -688,6 +715,7 @@ class StagHuntContinuous(MultiAgentEnv):
             self.animals[s].append(child)
             self.active.append(child.id)
             parent.energy -= self.initial_energy[s]
+            parent.next_birth_at = self.time_step + self.birth_interval[s]
             born.append((child.id, parent.id))
             population[s] += 1
             self.births[s] += 1

@@ -192,6 +192,8 @@ def _init(checkpoint):
     else:
         config = checkpoint_env_config(checkpoint)
         _worker["modules"] = load_modules(checkpoint)
+    # Whole episodes, so the outcome shows which species survived.
+    config["truncate_on_prey_extinction"] = False
     _worker["env"] = StagHuntContinuous(config)
 
 

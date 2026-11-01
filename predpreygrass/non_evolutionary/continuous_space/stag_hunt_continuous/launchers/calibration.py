@@ -3,7 +3,7 @@ settings of config/config_env.py and config/config_ppo.py except:
 
 - `rabbits_only`: no mammoths (step 1a: are hunters viable on rabbits?);
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r5`: rounds 2 to 5 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r8b`: rounds 2 to 8 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -65,7 +65,41 @@ ARMS = {
         "hunt_join_cost": 0.02,
         "reproduction_max_predator": 25,
     },
+    # Round 6 (2026-10-31): limit the hunter boom without a cap, for realism
+    # (the user's aim): round 4 (cap 50) with costlier hunter offspring, as
+    # in humans: a hunter needs 20 energy to reproduce instead of 12, and a
+    # newborn takes 10 from its parent instead of 5 (also the starting
+    # energy of the first hunters).
+    "with_mammoths_r6": {
+        "predator_count": 10,
+        "mammoth_count": 8,
+        "hunt_carcass_energy": 48.0,
+        "hunt_struggle_fraction": 0.64 / 48.0,
+        "hunt_join_cost": 0.02,
+        "reproduction_predator_threshold": 20.0,
+        "energy_predator_initial": 10.0,
+    },
+    # Round 7 (2026-11-01), after round 6 only delayed the boom (episodes
+    # ~450 decisions from iteration ~350; at iteration 920 a hunter's median
+    # wait between births was 188 physics steps, 90% under 903): round 4 (cap
+    # 50) with a wait of 2000 physics steps between a hunter's births, so at
+    # most 4 births per hunter per episode, as human birth spacing limits
+    # how fast a population can grow.
+    "with_mammoths_r7": {
+        "predator_count": 10,
+        "mammoth_count": 8,
+        "hunt_carcass_energy": 48.0,
+        "hunt_struggle_fraction": 0.64 / 48.0,
+        "hunt_join_cost": 0.02,
+        "reproduction_predator_interval": 2000,
+    },
 }
+# Round 8 (2026-11-01), after round 7 swung the other way (no boom, but
+# mammoths ~3% of the hunters' energy and no joint arrivals): shorter waits
+# between births, bracketing the window, and training episodes truncated at
+# the first prey extinction so that episode length shows coexistence.
+for arm, interval in (("with_mammoths_r8a", 1000), ("with_mammoths_r8b", 600)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r7"], reproduction_predator_interval=interval, truncate_on_prey_extinction=True)
 
 
 def main():
