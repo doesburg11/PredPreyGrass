@@ -250,3 +250,76 @@ Taken as best guesses at the user's request; each can be revisited.
 
 In the text above, the *(open)* marks on these points are settled by
 this section.
+
+## 7. Rabbit burrows (draft, 2026-11-01)
+
+Proposed after calibration rounds 1-9 (README, calibration log): every
+brake on the hunters tried so far (a cap, costlier offspring, a fixed
+birth wait, faster rabbits) ended with the hunters living on one prey.
+Either rabbits were eaten out (a mammoth payoff big enough for group
+hunting fed a hunter boom), or the hunters ignored the mammoths. Faster
+rabbits (round 9) multiplied instead of escaping and became an easy
+staple. A burrow protects rabbits without making them more plentiful or
+easier to find: it caps how many can be caught, not how many there are.
+The hope (untested) is that rabbits then survive a hunter boom, while
+rabbits stay too scarce in the open for hunters to live on them alone,
+leaving mammoths as the main food and the cap unnecessary.
+
+1. **Burrows**: `burrow_count` fixed discs of radius `burrow_radius`,
+   drawn uniformly on the torus at reset from their own random stream
+   (seed + 5), so the grass, spawn and policy draws are those of the
+   same seed without burrows. Default 0 = the current world (old
+   checkpoints keep their observation shape).
+2. **Protection**: a rabbit whose centre is inside a burrow cannot be
+   caught. Hunters can walk over burrows; nothing else changes for
+   hunters or mammoths. No capacity limit in the first version. Contacts
+   are tested before movement, so a hunter waiting at the edge can catch
+   a rabbit whose centre has just left: ambush at the exit is allowed
+   (as in nature) and measured (8).
+3. **No food in burrows**: a grass patch whose centre is inside a burrow
+   cannot be eaten. Patches are not redrawn, so the grass layer's own
+   random stream, dispersal and overgrazing are unchanged; the blocked
+   patches still count for dispersal and overgrazing. A rabbit must
+   leave to eat, and since grass clusters move while burrows stay put,
+   the distance from safety to food changes during an episode: a safety
+   versus feeding trade-off (a "landscape of fear").
+4. **Births and spawns** are not moved: initial rabbits and newborns may
+   start inside or outside a burrow. Births inside are counted (8).
+5. **Observation**:
+   - rabbits: the nearest burrow regardless of the view cone (a rabbit
+     knows its warrens), `[dx/R, dy/R, distance/R, inside]`, offsets
+     clipped to the view distance (4 inputs);
+   - hunters: the nearest burrow in view, `[1, dx/R, dy/R, distance/R]`
+     (4), and an `inside` bit on each rabbit slot (2), since the nearest
+     burrow need not be the rabbit's.
+   Rabbits 45 → 49 inputs, hunters 58 → 64.
+6. **Starting values** (to calibrate): 10 burrows of radius 24 on the
+   800 × 800 arena (about 3% of the area). Burrows cut how many rabbits
+   can be caught, not how many there are; if rabbits again multiply into
+   a staple (as in round 9), fewer or smaller burrows, or a capacity.
+7. **Calibration rounds** (truncated at the first prey extinction in
+   training; coexistence judged by `evaluate.py` on 50 whole episodes):
+   - r10a: round 5 (cap 25) + burrows: does the world with cooperation
+     keep its rabbits?
+   - r10b: round 4 (cap 50) + burrows, towards the user's aim of no
+     tight cap; the share of time at the cap is recorded, and a cap that
+     binds often is not counted as "no cap".
+   A calibration round only passes into a pre-registered test with:
+   at least 45/50 coexisting, mammoths at least half of the hunters'
+   energy, and cooperation signals beyond joint arrivals alone (partner
+   versus alone joining, kill party sizes, contrast with untrained
+   policies); the main test then needs its effect margin and per-seed
+   reporting fixed in advance (DESIGN 4-5).
+8. **Counters** (TensorBoard `hunts/*` and `evaluate.py`): share of
+   rabbit physics steps inside a burrow and its spread over rabbits;
+   rabbits in the open per step; catches per open rabbit-step; exits and
+   catches within 8 physics steps of an exit; hunter steps within one
+   body radius of a burrow edge (edge camping); births inside a burrow;
+   blocked grass patches; physics steps with the hunter cap reached;
+   extinction cause and time.
+
+Realism: rabbits (and the hares and marmots Pleistocene hunters took) do
+shelter in burrows; the food-versus-safety trade-off is standard
+predator-prey ecology. A burrow is the cheapest refuge to build: a disc
+test in the catch rule, a redraw in grass placement, one observation
+slot.

@@ -3,7 +3,7 @@ settings of config/config_env.py and config/config_ppo.py except:
 
 - `rabbits_only`: no mammoths (step 1a: are hunters viable on rabbits?);
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r8b`: rounds 2 to 8 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r9b`: rounds 2 to 9 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -100,6 +100,12 @@ ARMS = {
 # the first prey extinction so that episode length shows coexistence.
 for arm, interval in (("with_mammoths_r8a", 1000), ("with_mammoths_r8b", 600)):
     ARMS[arm] = dict(ARMS["with_mammoths_r7"], reproduction_predator_interval=interval, truncate_on_prey_extinction=True)
+# Round 9 (2026-11-01), back to round 5 (cap 25), the only world with
+# cooperation and the mammoths kept, whose rabbits were nearly all caught
+# (152 caught against 145 born per evaluated episode): faster rabbits (top
+# speed 6, hunters 5), and training truncated at the first prey extinction.
+for arm, speed in (("with_mammoths_r9a", 7.0), ("with_mammoths_r9b", 8.0)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r5"], rabbit_max_velocity=speed, truncate_on_prey_extinction=True)
 
 
 def main():
