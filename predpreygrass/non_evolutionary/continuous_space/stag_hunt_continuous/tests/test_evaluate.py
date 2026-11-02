@@ -118,3 +118,14 @@ def test_evaluation_plays_whole_episodes(monkeypatch):
     monkeypatch.setattr(evaluate, "_worker", {})
     evaluate._init("some/checkpoint")
     assert evaluate._worker["env"].truncate_on_prey_extinction is False
+
+
+def test_summary_has_hunt_energy_means():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous import evaluate
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import new_hunt_stats
+
+    stats = new_hunt_stats()
+    stats.update(hunts_party_2=2, hunted_party_energy_total=30.0, hunted_mammoth_energy_total=24.0)
+    row = {"outcome": "coexisting", "hunt_stats": stats, "tracked": {}, "null": {}, "extinct_at": {}}
+    summary = evaluate.summarise([row])
+    assert summary["hunted_party_energy_mean"] == 15.0 and summary["hunted_mammoth_energy_mean"] == 12.0

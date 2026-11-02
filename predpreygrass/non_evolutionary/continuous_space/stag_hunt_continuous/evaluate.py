@@ -230,9 +230,9 @@ def summarise(rows):
     for key, denominator in (("contact_join_rate", "contact_decisions"), ("contact_with_partner_join_rate", "contact_with_partner"), ("contact_alone_join_rate", "contact_alone")):
         joins = "contact_joins" if key == "contact_join_rate" else f"{denominator}_joins"
         summary[key] = totals[joins] / totals[denominator] if totals[denominator] else None
-    # Burrow and cap shares over all episodes (callbacks.derived_rates).
+    # Burrow, cap and hunt-energy rates over all episodes (callbacks.derived_rates).
     rates = derived_rates(totals)
-    for key in ("rabbit_inside_share", "catches_per_open_rabbit_step", "predator_burrow_edge_share", "grass_near_burrow_share", "predator_cap_share"):
+    for key in ("rabbit_inside_share", "catches_per_open_rabbit_step", "predator_burrow_edge_share", "grass_near_burrow_share", "predator_cap_share", "hunted_party_energy_mean", "hunted_mammoth_energy_mean"):
         summary[key] = rates.get(key)
     shares = sorted(share for row in rows for share in row.get("rabbit_inside_shares", []))
     if shares:

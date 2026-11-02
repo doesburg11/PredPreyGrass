@@ -37,6 +37,9 @@ def derived_rates(stats):
     if hunts:
         rates["party_2plus_share"] = 1 - stats["hunts_party_1"] / hunts
         rates["hunted_condition_mean"] = stats["hunted_condition_total"] / hunts
+        if "hunted_party_energy_total" in stats:
+            rates["hunted_party_energy_mean"] = stats["hunted_party_energy_total"] / hunts
+            rates["hunted_mammoth_energy_mean"] = stats["hunted_mammoth_energy_total"] / hunts
     kills = sum(stats[f"kills_party_{size}"] for size in range(1, PARTY_SIZES + 1))
     if kills:
         rates["killed_condition_mean"] = stats["killed_condition_total"] / kills

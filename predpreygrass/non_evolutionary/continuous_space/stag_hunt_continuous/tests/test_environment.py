@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import (
+    BURROW_SIZE,
     EXIT_WINDOW,
     MOVES,
     OBSERVED,
@@ -971,3 +972,121 @@ def test_condition_means():
     assert rates["hunted_condition_mean"] == pytest.approx((1.0 + 0.25) / 2)
     assert rates["killed_condition_mean"] == pytest.approx(0.25)
     assert "killed_condition_mean" not in derived_rates(dict(env.hunt_stats, kills_party_1=0))
+
+
+@pytest.mark.parametrize("energy, ratio, killed", [(9.9, 1.0, True), (10.0, 1.0, False), (6.6, 1.5, True), (6.7, 1.5, False)])
+def test_energy_rule_summed_energy_against_the_mammoths(energy, ratio, killed):
+    """Pair with 4 + 6 = 10 energy (before the join cost), no random draw."""
+    env = world(hunt_rule="energy", hunt_energy_ratio=ratio)
+    env.mammoths[0].energy = energy
+    env.predators[0].energy, env.predators[1].energy = 4.0, 6.0
+    env.hunt_rng = CountingDraw(0.0)
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert bool(te.get("mammoth_0")) == killed and env.hunt_rng.calls == 0
+    stats = env.hunt_stats
+    assert stats["hunted_party_energy_total"] == pytest.approx(10.0) and stats["hunted_mammoth_energy_total"] == pytest.approx(energy)
+    assert stats["kills_party_2"] == killed
+    rates = derived_rates(stats)
+    assert rates["hunted_party_energy_mean"] == pytest.approx(10.0) and rates["hunted_mammoth_energy_mean"] == pytest.approx(energy)
+
+
+def test_energy_rule_lets_a_well_fed_hunter_kill_alone():
+    env = world(hunt_rule="energy")
+    env.mammoths[0].energy, env.predators[0].energy = 8.0, 12.0
+    place(env, {"predator_0": (200, 130)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 0, "predator_2": 0, "predator_3": 0})
+    assert te["mammoth_0"] and env.hunt_stats["kills_party_1"] == 1
+
+
+def test_energy_rule_observations():
+    env = world(hunt_rule="energy")
+    assert env.obs_size["predator"] == 58 + 2 + 4 and env.obs_size["rabbit"] == 45 and env.obs_size["mammoth"] == 39
+    predator = env.predators[0]
+    place(env, {"predator_0": (200, 130), "predator_1": (200, 160), "mammoth_1": (600, 600)})
+    predator.orientation = heading_degrees(Vector(0, -1))  # towards mammoth_0, away from predator_1
+    env.mammoths[0].energy = 20.0
+    obs = env._observe(predator)
+    assert obs.shape == (64,) and env.observation_spaces[predator.id].contains(obs)
+    # Tail: energy, cooldown, mammoth energies (2), predator energies (4).
+    mammoths, predators = obs[-6:-4], obs[-4:]
+    assert mammoths[0] == pytest.approx(20.0 / 40.0) and mammoths[1] == 0.0
+    seen = []
+    env._slots(predator, env.predators, 4, seen)
+    assert list(predators[: len(seen)]) == pytest.approx([p.energy / 24.0 for p in seen])
+    assert not predators[len(seen) :].any()
+    # The chance rule keeps its observation.
+    assert world().obs_size["predator"] == 58
+
+
+def test_energy_rule_settings_are_checked():
+    with pytest.raises(ValueError, match="hunt_rule"):
+        StagHuntContinuous({"hunt_rule": "summed"})
+    with pytest.raises(ValueError, match="hunt_energy_ratio"):
+        StagHuntContinuous({"hunt_rule": "energy", "hunt_energy_ratio": 0})
+    with pytest.raises(ValueError, match="hunt_condition_factor"):
+        StagHuntContinuous({"hunt_rule": "energy", "hunt_condition_factor": 0.5})
+
+
+def test_energy_rule_episode_runs():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.config.config_env import config_env
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS
+
+    env = StagHuntContinuous({**config_env, **ARMS["with_mammoths_r13a"]})
+    obs, _ = env.reset(seed=4)
+    rng = np.random.default_rng(4)
+    for _ in range(40):
+        for agent, o in obs.items():
+            assert env.observation_spaces[agent].contains(o)
+        obs, _, te, tr, _ = env.step(random_actions(env, rng))
+        if te["__all__"] or tr["__all__"]:
+            break
+
+
+@pytest.mark.parametrize(
+    "config, size",
+    [
+        ({"burrow_count": 10}, 64 + 6),
+        ({"burrow_count": 10, "burrow_hides_rabbits": True}, 62 + 6),
+        ({"burrow_count": 10, "burrow_hides_rabbits": True, "observe_predator_rabbit": 0}, 50 + 6),
+        ({"observe_predator_predator": 2, "observe_predator_mammoth": 3}, 58 - 12 + 6 + 3 + 2),
+    ],
+)
+def test_energy_rule_observation_layout_with_other_settings(config, size):
+    env = world(hunt_rule="energy", **config)
+    assert env.obs_size["predator"] == size
+    predator = env.predators[0]
+    obs = env._observe(predator)
+    assert obs.shape == (size,)
+    # The energies follow own energy and cooldown in the tail.
+    mammoth_slots, predator_slots = env.observe[("predator", "mammoth")], env.observe[("predator", "predator")]
+    start = size - (BURROW_SIZE + (0 if env.burrow_hides else env.observe[("predator", "rabbit")]) if env.burrow_count else 0) - mammoth_slots - predator_slots
+    assert obs[start - 2] == pytest.approx(predator.energy / 24.0)
+    seen = {"mammoth": [], "predator": []}
+    for other in seen:
+        env._slots(predator, env.animals[other], env.observe[("predator", other)], seen[other])
+    expected = [m.energy / 40.0 for m in seen["mammoth"]] + [0.0] * (mammoth_slots - len(seen["mammoth"]))
+    expected += [p.energy / 24.0 for p in seen["predator"]] + [0.0] * (predator_slots - len(seen["predator"]))
+    assert list(obs[start : start + mammoth_slots + predator_slots]) == pytest.approx(expected)
+
+
+def test_energy_rule_compares_before_the_join_cost():
+    """4 + 6 = 10 > 9.5 before a join cost of 1 each (8 after): a kill."""
+    env = world(hunt_rule="energy", hunt_join_cost=1.0)
+    env.mammoths[0].energy = 9.5
+    env.predators[0].energy, env.predators[1].energy = 4.0, 6.0
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert te["mammoth_0"]
+
+
+def test_energy_observations_at_the_maxima_stay_in_range():
+    env = world(hunt_rule="energy")
+    for p in env.predators:
+        p.energy = 24.0
+    for m in env.mammoths:
+        m.energy = 40.0
+    place(env, {"predator_0": (200, 130), "predator_1": (200, 110), "mammoth_1": (600, 600)})
+    env.predators[0].orientation = heading_degrees(Vector(0, -1))
+    obs = env._observe(env.predators[0])
+    assert obs[-6] == 1.0 and obs[-4] == 1.0 and env.observation_spaces["predator_0"].contains(obs)

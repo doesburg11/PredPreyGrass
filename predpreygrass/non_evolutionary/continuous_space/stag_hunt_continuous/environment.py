@@ -26,6 +26,11 @@ With hunt_condition_factor k > 0 the success probability is multiplied by
 1 - k x the mammoth's condition (its energy over its reproduction
 threshold, at most 1): well-fed mammoths are harder to kill (DESIGN.md, 8),
 and predators see the condition of the mammoths in their slots.
+With hunt_rule "energy" (DESIGN.md, 9; default "chance", the above) a hunt
+succeeds, with no random draw, when the contributors' summed energy
+exceeds hunt_energy_ratio x the mammoth's energy, as in the discrete
+stag_hunt_forward_view; predators then see the energy of the mammoths and
+predators in their slots.
 
 Rabbit burrows (DESIGN.md, 7; none by default): burrow_count fixed discs
 of radius burrow_radius, drawn at reset from their own random stream. A
@@ -194,6 +199,10 @@ DEFAULT_CONFIG = {
     # Weight of the mammoth's condition in the success probability (module
     # docstring; 0: party size only).
     "hunt_condition_factor": 0.0,
+    # "chance": party-size chance; "energy": summed energy against the
+    # mammoth's (module docstring).
+    "hunt_rule": "chance",
+    "hunt_energy_ratio": 1.0,
 }
 
 GRASS_KEYS = (
@@ -313,6 +322,10 @@ def new_hunt_stats():
         "predators_starved_in_hunts": 0,
         # Summed condition of the mammoths hunted and of those killed.
         "hunted_condition_total": 0.0,
+        # Summed contributor energy and mammoth energy over hunts (before
+        # the join cost).
+        "hunted_party_energy_total": 0.0,
+        "hunted_mammoth_energy_total": 0.0,
         "killed_condition_total": 0.0,
         "grass_eaten_total": 0,
         "steppe_eaten_total": 0,
@@ -387,6 +400,8 @@ class StagHuntContinuous(MultiAgentEnv):
         self.join_cost = c["hunt_join_cost"]
         self.cooldown = c["hunt_cooldown"]
         self.condition_factor = c["hunt_condition_factor"]
+        self.energy_rule = c["hunt_rule"] == "energy"
+        self.energy_ratio = c["hunt_energy_ratio"]
         self.burrow_count = c["burrow_count"]
         self.burrow_radius = c["burrow_radius"]
         self.burrow_placement = c["burrow_placement"]
@@ -399,6 +414,9 @@ class StagHuntContinuous(MultiAgentEnv):
             self.obs_size[s] = SELF_SIZE + SLOT_SIZE * slots + FOOD_SIZE + 1 + (1 if s == "predator" else 0)
             if self.condition_factor and s == "predator":
                 self.obs_size[s] += self.observe[("predator", "mammoth")]  # condition per mammoth slot
+            if self.energy_rule and s == "predator":
+                # Energy per mammoth slot and per predator slot.
+                self.obs_size[s] += self.observe[("predator", "mammoth")] + self.observe[("predator", "predator")]
             if self.burrow_count and s in ("predator", "rabbit"):
                 # The nearest burrow; predators also an inside bit per rabbit
                 # slot, unless rabbits inside are hidden from them.
@@ -473,6 +491,12 @@ class StagHuntContinuous(MultiAgentEnv):
         for key in ("energy_catch_efficiency_predator", "hunt_scavenger_fraction", "hunt_struggle_fraction", "hunt_condition_factor"):
             if not _number(c[key], 0) or c[key] > 1:
                 raise ValueError(f"{key} must be in [0, 1]")
+        if c["hunt_rule"] not in ("chance", "energy"):
+            raise ValueError('hunt_rule must be "chance" or "energy"')
+        if not _number(c["hunt_energy_ratio"], 0, strict=True):
+            raise ValueError("hunt_energy_ratio must be finite and positive")
+        if c["hunt_rule"] == "energy" and c["hunt_condition_factor"]:
+            raise ValueError('hunt_condition_factor applies to hunt_rule "chance" only')
         if not _number(c["hunt_bystander_radius"], 0):
             raise ValueError("hunt_bystander_radius must be finite and nonnegative")
         if not isinstance(c["truncate_on_prey_extinction"], bool):
@@ -1029,8 +1053,14 @@ class StagHuntContinuous(MultiAgentEnv):
             n = len(party)
             size = min(n, PARTY_SIZES)
             condition = self._condition(mammoth)
-            success = self.hunt_rng.random() < self.success[size - 1] * (1 - self.condition_factor * condition)
+            party_energy = sum(predator.energy for predator in party)
+            if self.energy_rule:
+                success = party_energy > self.energy_ratio * mammoth.energy
+            else:
+                success = self.hunt_rng.random() < self.success[size - 1] * (1 - self.condition_factor * condition)
             stats["hunted_condition_total"] += condition
+            stats["hunted_party_energy_total"] += party_energy
+            stats["hunted_mammoth_energy_total"] += mammoth.energy
             stats[f"hunts_party_{size}"] += 1
             for predator in party:
                 predator.energy -= self.join_cost
@@ -1109,7 +1139,7 @@ class StagHuntContinuous(MultiAgentEnv):
         food patch in view, own energy and (predators) hunt cooldown."""
         heading = math.radians(animal.orientation)
         values = [animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed, math.sin(heading), math.cos(heading)]
-        seen = {"mammoth": [], "rabbit": []}
+        seen = {"predator": [], "mammoth": [], "rabbit": []}
         for other in OBSERVED:
             animals = self.animals[other]
             if other == "rabbit" and animal.species == "predator" and self.burrow_hides and self.burrow_count and animals:
@@ -1127,6 +1157,10 @@ class StagHuntContinuous(MultiAgentEnv):
         if self.condition_factor and animal.species == "predator":
             condition = [self._condition(mammoth) for mammoth in seen["mammoth"]]
             tail += condition + [0.0] * (self.observe[("predator", "mammoth")] - len(condition))
+        if self.energy_rule and animal.species == "predator":
+            for other in ("mammoth", "predator"):
+                energy = [max(0.0, a.energy) / self.max_energy[other] for a in seen[other]]
+                tail += energy + [0.0] * (self.observe[("predator", other)] - len(energy))
         if self.burrow_count and animal.species in ("predator", "rabbit"):
             tail += self._burrow_observation(animal)
             if animal.species == "predator" and not self.burrow_hides:

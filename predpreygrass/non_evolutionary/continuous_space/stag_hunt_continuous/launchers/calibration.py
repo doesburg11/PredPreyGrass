@@ -6,7 +6,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r12`: rounds 2 to 12 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r13b`: rounds 2 to 13 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -134,6 +134,14 @@ ARMS["rabbits_only_warrens"] = dict(ARMS["rabbits_only"], burrow_count=20, burro
 # warrens (they saw rabbits inside) and no evaluated episode kept both
 # species: rabbits inside a warren hidden from the hunters.
 ARMS["rabbits_only_warrens_hidden"] = dict(ARMS["rabbits_only_warrens"], burrow_hides_rabbits=True)
+# Round 13 (2026-11-02), after the burrow checks: the discrete stag hunt's
+# capture rule (DESIGN.md, 9): a hunt succeeds when the contributors' summed
+# energy exceeds ratio x the mammoth's, in round 4 (cap 50, no burrows),
+# training truncated at the first prey extinction. Ratio 1 as in the
+# discrete module; 1.5 keeps solo kills rarer (6% of round 4's solo
+# attempts would succeed at 1.5, 15% at 1).
+for arm, ratio in (("with_mammoths_r13a", 1.0), ("with_mammoths_r13b", 1.5)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r4"], hunt_rule="energy", hunt_energy_ratio=ratio, truncate_on_prey_extinction=True)
 
 
 def main():

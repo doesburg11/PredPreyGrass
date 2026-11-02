@@ -398,3 +398,49 @@ tests.
    extinction. Risk: a lower mean success may drop the mammoth payoff into
    the "ignore mammoths" regime of rounds 7-9; the counters show which
    mammoths are hunted and killed.
+
+## 9. Summed-energy capture rule (2026-11-02, settings `hunt_rule`, `hunt_energy_ratio`)
+
+Proposed after rounds 1-12 and the burrow checks (README, calibration
+log): every world either booms (mammoths pay, hunters multiply and eat
+out a prey) or the hunters ignore the mammoths, and refuges for rabbits
+(burrows) cut rabbit breeding more than they cut catches. The discrete
+`stag_hunt_forward_view`, the source of this module, resolves a hunt by
+the hunters' state instead of a draw: it succeeds when the joiners'
+summed energy exceeds the prey's energy (`team_capture_margin` 0). This
+was the "summed-energy arm" left out on 2026-10-30 (section 6).
+
+1. **Rule**: with `hunt_rule = "energy"` a hunt succeeds when the
+   contributors' summed energy (before the join cost) exceeds
+   `hunt_energy_ratio` x the mammoth's energy; no random draw. Costs,
+   cooldown, carcass (fixed `hunt_carcass_energy`), scavenger share and
+   bystanders are unchanged. Default "chance" keeps the party-size draw;
+   `hunt_condition_factor` applies to it only.
+2. **Why it may brake a boom** (the hope, untested): hunters that have
+   outgrown their food are hungry, and hungry parties cannot kill, so
+   mammoth hunting stops as the hunters multiply and resumes as they
+   thin out. The brake grows with the hunters' hunger, not with a fixed
+   number (unlike the cap). Well-fed mammoths are also harder to kill,
+   which in round 11 turned hunters away from mammoths; here the hunters'
+   own energy is the other side of the scale.
+3. **Scale** (measured in round 4's trained checkpoint, iteration 190,
+   4 episodes): in its hunts the contributors' summed energy exceeded the
+   mammoth's in 15% of solo, 45% of pair and 84% of trio attempts (6%,
+   33%, 66% at 1.5 x), against the chance rule's 0, 40 and 75%: about
+   the same kill rates on average, but tied to hunger. A well-fed hunter
+   can kill a lean mammoth alone (as in the discrete module), so the
+   stag-hunt structure is weaker at ratio 1. Untrained hunters are lean
+   (median energy 3, mammoths 8): early kills will be rare, a risk that
+   hunters learn to ignore mammoths before they learn to hunt them.
+4. **Observation**: predators see the energy of the mammoths in their
+   slots (/ `energy_mammoth_max`) and of the predators in their slots
+   (/ `energy_predator_max`), 2 + 4 inputs (58 → 64), since the rule
+   depends on them (the discrete module's grid holds every agent's
+   energy). Whether a hunter can judge a partner's or a mammoth's
+   condition by sight is a simplification.
+5. **Counters**: summed party energy and mammoth energy per hunt
+   (`hunted_party_energy_mean`, `hunted_mammoth_energy_mean`).
+6. **Calibration round 13**: round 4 (cap 50, no burrows), training
+   truncated at the first prey extinction, ratio 1 (r13a) and 1.5 (r13b).
+   Judged as before: coexistence in at least 45 of 50 evaluated episodes,
+   mammoths at least half of the hunters' food, cooperation signals.
