@@ -251,7 +251,7 @@ Taken as best guesses at the user's request; each can be revisited.
 In the text above, the *(open)* marks on these points are settled by
 this section.
 
-## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`, `burrow_placement`)
+## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`, `burrow_placement`, `burrow_hides_rabbits`)
 
 Proposed after calibration rounds 1-9 (README, calibration log): every
 brake on the hunters tried so far (a cap, costlier offspring, a fixed
@@ -345,6 +345,18 @@ leaving mammoths as the main food and the cap unnecessary.
    New counters: `grass_near_burrow_share` (edible patches within reach
    of a rabbit inside a burrow) and `burrow_moves`. "random" (default)
    keeps the earlier placement and draws.
+10. **Hidden rabbits** (2026-11-02, setting `burrow_hides_rabbits`).
+   Without mammoths and with these warrens (check `rabbits_only_warrens`)
+   rabbits learned to hide (35% of their time inside after 1,000
+   iterations), but hunters spent 22% of their steps at a warren's edge,
+   stood on hidden rabbits, and no evaluated episode kept both species
+   (49 of 50 without warrens). Hunters saw a rabbit inside (its slot and
+   the inside bit of point 5), which real predators mostly cannot: an
+   animal underground is out of sight (smell aside). With
+   `burrow_hides_rabbits`, a rabbit inside a burrow fills no hunter slot
+   (judged from current positions, as the catch test) and the inside
+   bits are dropped (hunters 64 → 62 inputs); hunters still see the
+   nearest warren. Default False keeps point 5.
 
 Realism: rabbits (and the hares and marmots Pleistocene hunters took) do
 shelter in burrows; the food-versus-safety trade-off is standard

@@ -33,6 +33,8 @@ rabbit whose centre is inside one cannot be caught, and grass inside one
 cannot be eaten. burrow_placement "random": uniform over the arena, fixed;
 "cluster": one warren per grass cluster, just beside it in a random
 direction, moved with the cluster when it collapses and regrows elsewhere.
+burrow_hides_rabbits: predators do not see a rabbit inside a burrow (no
+slot, and no inside bits in their observation).
 """
 
 import math
@@ -144,6 +146,7 @@ DEFAULT_CONFIG = {
     "burrow_count": 0,
     "burrow_radius": 24.0,
     "burrow_placement": "random",
+    "burrow_hides_rabbits": False,
     # Energy, per physics step. 75% of the cost at full speed comes from
     # movement (Taylor, Heglund & Maloiy 1982), as in the base world.
     "energy_predator_initial": 5.0,
@@ -387,6 +390,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.burrow_count = c["burrow_count"]
         self.burrow_radius = c["burrow_radius"]
         self.burrow_placement = c["burrow_placement"]
+        self.burrow_hides = c["burrow_hides_rabbits"]
         self._validate()
 
         self.obs_size = {}
@@ -396,8 +400,9 @@ class StagHuntContinuous(MultiAgentEnv):
             if self.condition_factor and s == "predator":
                 self.obs_size[s] += self.observe[("predator", "mammoth")]  # condition per mammoth slot
             if self.burrow_count and s in ("predator", "rabbit"):
-                # The nearest burrow; predators also an inside bit per rabbit slot.
-                self.obs_size[s] += BURROW_SIZE + (self.observe[("predator", "rabbit")] if s == "predator" else 0)
+                # The nearest burrow; predators also an inside bit per rabbit
+                # slot, unless rabbits inside are hidden from them.
+                self.obs_size[s] += BURROW_SIZE + (self.observe[("predator", "rabbit")] if s == "predator" and not self.burrow_hides else 0)
         self.possible_agents = [f"{s}_{i}" for s in SPECIES for i in range(self.pool[s])]
         spaces = {s: Box(-1.0, 1.0, shape=(self.obs_size[s],), dtype=np.float32) for s in SPECIES}
         actions = {"predator": MultiDiscrete([MOVES, 2]), "rabbit": Discrete(MOVES), "mammoth": Discrete(MOVES)}
@@ -476,6 +481,8 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError("burrow_count must be a nonnegative integer")
         if not _number(c["burrow_radius"], 0, strict=True) or c["burrow_radius"] >= min(self.width, self.height) / 2:
             raise ValueError("burrow_radius must be positive and less than half the arena")
+        if not isinstance(c["burrow_hides_rabbits"], bool):
+            raise ValueError("burrow_hides_rabbits must be True or False")
         if c["burrow_placement"] not in ("random", "cluster"):
             raise ValueError('burrow_placement must be "random" or "cluster"')
         if c["burrow_placement"] == "cluster" and c["burrow_count"] and (not c["grass_clustered"] or c["burrow_count"] != c["grass_cluster_count"]):
@@ -1104,7 +1111,11 @@ class StagHuntContinuous(MultiAgentEnv):
         values = [animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed, math.sin(heading), math.cos(heading)]
         seen = {"mammoth": [], "rabbit": []}
         for other in OBSERVED:
-            values += self._slots(animal, self.animals[other], self.observe[(animal.species, other)], seen.get(other))
+            animals = self.animals[other]
+            if other == "rabbit" and animal.species == "predator" and self.burrow_hides and self.burrow_count and animals:
+                # From the current positions, as the next catch test sees them.
+                animals = [rabbit for rabbit, inside in zip(animals, self._inside(animals)) if not inside]
+            values += self._slots(animal, animals, self.observe[(animal.species, other)], seen.get(other))
         obs = np.asarray(values, dtype=np.float32)
         if not np.all(np.abs(obs) <= 1.0 + 1e-4):
             raise RuntimeError(f"observation out of [-1, 1]: {obs}")
@@ -1118,7 +1129,7 @@ class StagHuntContinuous(MultiAgentEnv):
             tail += condition + [0.0] * (self.observe[("predator", "mammoth")] - len(condition))
         if self.burrow_count and animal.species in ("predator", "rabbit"):
             tail += self._burrow_observation(animal)
-            if animal.species == "predator":
+            if animal.species == "predator" and not self.burrow_hides:
                 # From the current positions, as the next catch test sees them.
                 inside = [float(flag) for flag in self._inside(seen["rabbit"])]
                 tail += inside + [0.0] * (self.observe[("predator", "rabbit")] - len(inside))

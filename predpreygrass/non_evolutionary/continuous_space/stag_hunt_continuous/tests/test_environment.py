@@ -7,6 +7,9 @@ import pytest
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment import (
     EXIT_WINDOW,
     MOVES,
+    OBSERVED,
+    SELF_SIZE,
+    SLOT_SIZE,
     StagHuntContinuous,
     species_of,
 )
@@ -794,6 +797,71 @@ def test_calibration_arms_build():
         StagHuntContinuous({**config_env, **settings})
     r10b, r12 = ARMS["with_mammoths_r10b"], ARMS["with_mammoths_r12"]
     assert {k: v for k, v in r12.items() if r10b.get(k) != v} == {"burrow_count": 20, "burrow_placement": "cluster"}
+
+
+def rabbit_slots(env, predator):
+    """The values of a predator's rabbit slots."""
+    start = SELF_SIZE + SLOT_SIZE * sum(env.observe[("predator", other)] for other in OBSERVED[: OBSERVED.index("rabbit")])
+    return env._observe(predator)[start : start + SLOT_SIZE * env.observe[("predator", "rabbit")]]
+
+
+def test_hidden_rabbits_unseen_by_predators_and_still_safe():
+    shown, hidden = burrow_world(), burrow_world(burrow_hides_rabbits=True)
+    assert shown.obs_size["predator"] == 64 and hidden.obs_size["predator"] == 62
+    assert hidden.obs_size["rabbit"] == shown.obs_size["rabbit"] == 49
+    for env in (shown, hidden):
+        place(env, {"predator_0": (400, 430)})
+        env.predators[0].orientation = heading_degrees(Vector(0, -1))  # towards the rabbit
+    assert rabbit_slots(shown, shown.predators[0])[0] == 1.0
+    assert not rabbit_slots(hidden, hidden.predators[0]).any()
+    obs = hidden._observations()["predator_0"]
+    assert obs.shape == (62,) and hidden.observation_spaces["predator_0"].contains(obs)
+    # Outside the burrow the rabbit is seen again.
+    place(hidden, {"rabbit_0": (400, 370)})
+    assert rabbit_slots(hidden, hidden.predators[0])[0] == 1.0
+    # Hidden or not, a rabbit inside cannot be caught.
+    place(hidden, {"rabbit_0": (400, 400), "predator_0": (400, 410)})
+    hidden.step(stopped_actions(hidden))
+    assert hidden.rabbits and hidden.hunt_stats["catches_blocked"] == hidden.action_repeat
+    with pytest.raises(ValueError, match="burrow_hides_rabbits"):
+        StagHuntContinuous({"burrow_hides_rabbits": 1})
+
+
+def test_visible_rabbit_takes_the_slot_of_a_hidden_one():
+    env = burrow_world(burrow_hides_rabbits=True, rabbit_count=2)
+    place(env, {"predator_0": (400, 430), "rabbit_0": (400, 400), "rabbit_1": (400, 360)})
+    predator = env.predators[0]
+    predator.orientation = heading_degrees(Vector(0, -1))
+    slots = rabbit_slots(env, predator)
+    assert slots[0] == 1.0 and slots[3] == pytest.approx(70 / predator.view_distance)
+    assert not slots[SLOT_SIZE:].any()
+
+
+@pytest.mark.parametrize(
+    "config, size",
+    [
+        ({"burrow_count": 10, "burrow_hides_rabbits": True, "hunt_condition_factor": 0.5}, 64),
+        ({"burrow_count": 0, "burrow_hides_rabbits": True}, 58),
+        ({"burrow_count": 10, "burrow_hides_rabbits": True, "observe_predator_rabbit": 0}, 50),
+        ({"burrow_count": 10, "burrow_hides_rabbits": False, "observe_predator_rabbit": 3}, 71),
+    ],
+)
+def test_hidden_rabbit_observation_sizes(config, size):
+    env = StagHuntContinuous(config)
+    obs, _ = env.reset(seed=3)
+    assert env.obs_size["predator"] == size
+    rng = np.random.default_rng(3)
+    for _ in range(5):
+        for agent, o in obs.items():
+            assert env.observation_spaces[agent].contains(o)
+        obs, _, te, tr, _ = env.step(random_actions(env, rng))
+
+
+def test_hidden_check_arm_differs_only_in_hiding():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS
+
+    shown, hidden = ARMS["rabbits_only_warrens"], ARMS["rabbits_only_warrens_hidden"]
+    assert {k: v for k, v in hidden.items() if shown.get(k) != v} == {"burrow_hides_rabbits": True}
 
 
 def test_grass_near_burrow_counters():
