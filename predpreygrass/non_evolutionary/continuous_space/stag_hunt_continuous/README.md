@@ -1,14 +1,15 @@
 # stag_hunt_continuous
 
-**Status (2026-11-01): calibrating (DESIGN.md, plan step 1).** Hunters
+**Status (2026-11-02): calibrating (DESIGN.md, plan step 1).** Hunters
 are viable on rabbits alone. With mammoths, no round so far gives both
 coexistence and cooperation: worlds where hunters learn to hunt mammoths
 together (joint arrivals up to 2.4x chance) end in a hunter boom that eats
 out a prey species, and the brakes tried that keep the prey (a wait
 between births, faster rabbits) also remove the hunters' interest in
 mammoths. Rabbit burrows (round 10, DESIGN.md section 7) went unused by
-the rabbits; round 11 (well-fed mammoths harder to kill, DESIGN.md
-section 8) is running. See "Calibration log" below and
+the rabbits, and well-fed mammoths harder to kill (round 11, DESIGN.md
+section 8) turned the hunters away from mammoths. Round 12, one warren
+beside each grass cluster (DESIGN.md section 7, point 9), is running. See "Calibration log" below and
 [DESIGN.md](DESIGN.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
@@ -105,10 +106,11 @@ energy) gained by hunters.
 | 8b `with_mammoths_r8b` | as 8a with wait 600 | mammoth share ~6%; evaluation at iteration 480: coexistence in 38 of 50 (hunters died out in 11, rabbits in 1), joint arrival rate 0.029 vs chance 0.026 (`results/calibration_with_mammoths_r8b_iter480_eval.json`) | iteration 978 |
 | 9a `with_mammoths_r9a` | round 5 (cap 25) with rabbit top speed 7 (was 6; hunters 5), training truncated at the first prey extinction | rabbits multiplied instead of escaping (~250 births per training episode against ~90 in round 5) and became the staple; mammoth share ~10% and flat, joining fell with and without a partner; evaluation at iteration 290: **coexistence in 46 of 50**, but joint arrival rate 0.036 vs chance 0.032, mammoths ~9% of the hunters' food (`results/calibration_with_mammoths_r9a_iter290_eval.json`) | iteration 290 |
 | 9b `with_mammoths_r9b` | as 9a with rabbit top speed 8 | as 9a; evaluation at iteration 270: coexistence in 41 of 50 (rabbits died out in 6, hunters and rabbits in 3), joint arrival rate 0.032 vs chance 0.029, mammoths ~7% of the hunters' food (`results/calibration_with_mammoths_r9b_iter270_eval.json`) | iteration 270 |
-| 10a `with_mammoths_r10a` | round 5 (cap 25) with 10 rabbit burrows of radius 24 (DESIGN.md, 7), training truncated at the first prey extinction | rabbits did not learn to use the burrows (~3% of their time inside, the burrows' share of the area, through iteration 330); hunters lived on rabbits (mammoth share ~13%, rabbits caught = rabbits born), joint arrival rate 0.049, join with partner 0.33 vs alone 0.28; training episodes ~745 decisions (some prey extinctions); not evaluated | iteration 335 |
-| 10b `with_mammoths_r10b` | round 4 (cap 50) with the same burrows | rabbits did not use the burrows (~3%); round 4's boom, slower: mammoth share ~76%, training episodes ~350 decisions from iteration ~150, cap binding 25% of physics steps; strongest cooperation signals with a cap so far (joint arrival rate 0.255, join with partner 0.63 vs alone 0.40); not evaluated | iteration 289 |
-| 11a `with_mammoths_r11a` | round 4 (cap 50, no burrows) with hunt success × (1 − 0.5 × mammoth condition), condition = mammoth energy / its birth threshold, at most 1 (`hunt_condition_factor`, DESIGN.md, 8); hunters see the condition of mammoths in view; training truncated at the first prey extinction | running (launched 2026-11-01 23:55) | |
-| 11b `with_mammoths_r11b` | as 11a with factor 0.8 | running | |
+| 10a `with_mammoths_r10a` | round 5 (cap 25) with 10 rabbit burrows of radius 24 (DESIGN.md, 7), training truncated at the first prey extinction | rabbits did not learn to use the burrows (~3% of their time inside, the burrows' share of the area, through iteration 330); hunters lived on rabbits (mammoth share ~13%, rabbits caught = rabbits born), joint arrival rate 0.049, join with partner 0.33 vs alone 0.28; training episodes ~745 decisions (some prey extinctions); evaluation at iteration 330: **coexistence in 33 of 50** (rabbits died out, then hunters, in 15), joint arrival rate 0.042 vs chance 0.026, rabbits inside 3.4% (median rabbit never inside) (`results/calibration_with_mammoths_r10a_iter330_eval.json`) | iteration 335 |
+| 10b `with_mammoths_r10b` | round 4 (cap 50) with the same burrows | rabbits did not use the burrows (~3%); round 4's boom, slower: mammoth share ~76%, training episodes ~350 decisions from iteration ~150, cap binding 25% of physics steps; strongest cooperation signals with a cap so far (joint arrival rate 0.255, join with partner 0.63 vs alone 0.40); evaluation at iteration 280: **coexistence in 2 of 50** (both prey eaten out in 39), cap binding 56% of physics steps, joint arrival rate 0.326 vs chance 0.191, join with partner 0.63 vs alone 0.33 (`results/calibration_with_mammoths_r10b_iter280_eval.json`) | iteration 289 |
+| 11a `with_mammoths_r11a` | round 4 (cap 50, no burrows) with hunt success × (1 − 0.5 × mammoth condition), condition = mammoth energy / its birth threshold, at most 1 (`hunt_condition_factor`, DESIGN.md, 8); hunters see the condition of mammoths in view; training truncated at the first prey extinction | no boom (training episodes ~1,100 decisions, cap never binding) but hunters left the mammoths: mammoth share ~2%, rabbits the staple (~400 births per training episode), joint arrival rate ~0.03; killed mammoths' condition 0.67 vs hunted 0.71; evaluation of the final checkpoint: **coexistence in 35 of 50** (hunters died out in 15), joint arrival rate 0.028 vs chance 0.022 (`results/calibration_with_mammoths_r11a_eval.json`) | finished 1,000 |
+| 11b `with_mammoths_r11b` | as 11a with factor 0.8 | as 11a: mammoth share ~1.5%, joint arrival rate ~0.025; killed mammoths leaner than hunted (condition 0.49 vs 0.71); evaluation of the final checkpoint: **coexistence in 28 of 50** (hunters died out in 22), joint arrival rate 0.021 vs chance 0.018 (`results/calibration_with_mammoths_r11b_eval.json`) | finished 1,000 |
+| 12 `with_mammoths_r12` | round 10b (cap 50) with one warren per grass cluster (20), beside it and moving with it (`burrow_placement = "cluster"`, DESIGN.md, 7, point 9); untrained, the median edible grass patch is 31 units from a warren's edge (98 in round 10) | running (launched 2026-11-02) | |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -131,13 +133,18 @@ not checked) and the hunters turned to them, the round 7/8 regime again.
 Refuges in the terrain, rabbit burrows, which protect rabbits without
 making them more plentiful (DESIGN.md, section 7, reviewed by Codex), were
 tried in round 10, but the rabbits did not learn to use them within
-~300 iterations (a guess not checked: grass inside a burrow is blocked, so
-a hiding rabbit cannot eat). Round 11 tries a brake on the hunters
-instead: a hunt is less likely to succeed the better fed the mammoth
-(DESIGN.md, section 8), meant to slow hunting as mammoths become scarce. Accepted earlier: mammoths need
+~300 iterations. The likely reason (measured, not tested): the burrows lay
+far from the clustered grass (median patch 98 units from a burrow's edge,
+hunters see 200), so a feeding rabbit seldom had a refuge in reach. Round
+11 tried a brake on the hunters instead, a hunt less likely to succeed the
+better fed the mammoth (DESIGN.md, section 8), meant to slow hunting as
+mammoths become scarce; instead the hunters left the mammoths, which then
+stayed well fed and hard to kill (an interpretation). Round 12 puts a
+warren beside each grass cluster (DESIGN.md, section 7, point 9).
+Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
-it adds no biological realism. The checkpoints of rounds 1 to 10 are kept
+it adds no biological realism. The checkpoints of rounds 1 to 11 are kept
 for evaluate.py.
 
 Also found: RLlib's environment check at start-up rejects the final

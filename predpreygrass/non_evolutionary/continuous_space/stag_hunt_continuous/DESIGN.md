@@ -251,7 +251,7 @@ Taken as best guesses at the user's request; each can be revisited.
 In the text above, the *(open)* marks on these points are settled by
 this section.
 
-## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`)
+## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`, `burrow_placement`)
 
 Proposed after calibration rounds 1-9 (README, calibration log): every
 brake on the hunters tried so far (a cap, costlier offspring, a fixed
@@ -321,6 +321,30 @@ leaving mammoths as the main food and the cap unnecessary.
    eaten); `predator_cap_share` (steps at the hunter cap). Evaluation
    only: each rabbit's share of time inside (quartiles) and the physics
    step at which each species died out.
+9. **Warrens beside the grass** (2026-11-02, setting `burrow_placement`,
+   round 12). In round 10 rabbits spent ~3% of their time inside, the
+   burrows' share of the area, and more than half never entered one
+   (evaluations of r10a and r10b). A likely reason (measured, not
+   tested): uniform burrows lie far from the clustered grass, the median
+   grass patch 115 units from the nearest burrow centre (98 from its
+   edge), with hunters seeing 200 units, so a feeding rabbit seldom has
+   a refuge it can reach. (Blocked grass inside is a weaker reason: a
+   rabbit just inside the rim reaches grass within 12 units outside.)
+   `burrow_placement = "cluster"` puts one warren per grass cluster
+   (`burrow_count` must equal `grass_cluster_count`), its edge one
+   cluster spread (24) from the cluster's centre, in a direction drawn
+   from the burrows' own stream; when a cluster collapses and its centre
+   moves (overgrazing), its warren is redrawn beside the new centre at
+   the start of the next physics step (rabbits dig near their pasture),
+   though the new cluster's grass regrows only after the overgrazing
+   delay. A rabbit in the abandoned warren is then in the open (an exit
+   is counted). Grass inside stays uneatable. Untrained, the median
+   edible patch is then 31 units from a warren's edge (98 with uniform
+   burrows), about 5 physics steps at a rabbit's top speed; warrens
+   cover ~9% of the grass patches (2%), a little less food for rabbits.
+   New counters: `grass_near_burrow_share` (edible patches within reach
+   of a rabbit inside a burrow) and `burrow_moves`. "random" (default)
+   keeps the earlier placement and draws.
 
 Realism: rabbits (and the hares and marmots Pleistocene hunters took) do
 shelter in burrows; the food-versus-safety trade-off is standard

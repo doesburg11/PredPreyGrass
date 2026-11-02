@@ -3,7 +3,7 @@ settings of config/config_env.py and config/config_ppo.py except:
 
 - `rabbits_only`: no mammoths (step 1a: are hunters viable on rabbits?);
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r11b`: rounds 2 to 11 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r12`: rounds 2 to 12 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -117,6 +117,11 @@ for arm, base in (("with_mammoths_r10a", "with_mammoths_r5"), ("with_mammoths_r1
 # truncated at the first prey extinction.
 for arm, factor in (("with_mammoths_r11a", 0.5), ("with_mammoths_r11b", 0.8)):
     ARMS[arm] = dict(ARMS["with_mammoths_r4"], hunt_condition_factor=factor, truncate_on_prey_extinction=True)
+# Round 12 (2026-11-02), after round 10's rabbits did not use the burrows
+# (the median grass patch lay 115 units from the nearest one) and round 11's
+# hunters left the mammoths: round 10b (cap 50) with one warren per grass
+# cluster, beside it and moving with it (DESIGN.md, 7, point 9).
+ARMS["with_mammoths_r12"] = dict(ARMS["with_mammoths_r10b"], burrow_count=20, burrow_placement="cluster")
 
 
 def main():

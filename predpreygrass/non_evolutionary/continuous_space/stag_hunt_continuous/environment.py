@@ -30,7 +30,9 @@ and predators see the condition of the mammoths in their slots.
 Rabbit burrows (DESIGN.md, 7; none by default): burrow_count fixed discs
 of radius burrow_radius, drawn at reset from their own random stream. A
 rabbit whose centre is inside one cannot be caught, and grass inside one
-cannot be eaten.
+cannot be eaten. burrow_placement "random": uniform over the arena, fixed;
+"cluster": one warren per grass cluster, just beside it in a random
+direction, moved with the cluster when it collapses and regrows elsewhere.
 """
 
 import math
@@ -141,6 +143,7 @@ DEFAULT_CONFIG = {
     # Rabbit burrows (module docstring): 0 for none.
     "burrow_count": 0,
     "burrow_radius": 24.0,
+    "burrow_placement": "random",
     # Energy, per physics step. 75% of the cost at full speed comes from
     # movement (Taylor, Heglund & Maloiy 1982), as in the base world.
     "energy_predator_initial": 5.0,
@@ -315,8 +318,10 @@ def new_hunt_stats():
         # (catches the burrow blocked), rabbits leaving a burrow and catches
         # within EXIT_WINDOW steps of it, predator steps (within a predator's
         # radius of a burrow's edge), rabbits born inside, grown grass patches
-        # that a burrow keeps from being eaten (patch-steps), and steps with
-        # the predators at reproduction_max_predator.
+        # that a burrow keeps from being eaten (patch-steps), edible patches
+        # (of which within reach of a rabbit inside a burrow), warrens moved
+        # with their grass cluster, and steps with the predators at
+        # reproduction_max_predator.
         "rabbit_steps": 0,
         "rabbit_steps_inside": 0,
         "catches_blocked": 0,
@@ -326,6 +331,9 @@ def new_hunt_stats():
         "predator_steps_at_burrow_edge": 0,
         "births_rabbit_in_burrow": 0,
         "grass_blocked_patch_steps": 0,
+        "grass_edible_patch_steps": 0,
+        "grass_near_burrow_patch_steps": 0,
+        "burrow_moves": 0,
         "steps_at_predator_cap": 0,
     }
     for size in range(1, PARTY_SIZES + 1):
@@ -378,6 +386,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.condition_factor = c["hunt_condition_factor"]
         self.burrow_count = c["burrow_count"]
         self.burrow_radius = c["burrow_radius"]
+        self.burrow_placement = c["burrow_placement"]
         self._validate()
 
         self.obs_size = {}
@@ -467,6 +476,10 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError("burrow_count must be a nonnegative integer")
         if not _number(c["burrow_radius"], 0, strict=True) or c["burrow_radius"] >= min(self.width, self.height) / 2:
             raise ValueError("burrow_radius must be positive and less than half the arena")
+        if c["burrow_placement"] not in ("random", "cluster"):
+            raise ValueError('burrow_placement must be "random" or "cluster"')
+        if c["burrow_placement"] == "cluster" and c["burrow_count"] and (not c["grass_clustered"] or c["burrow_count"] != c["grass_cluster_count"]):
+            raise ValueError('burrow_placement "cluster" needs clustered grass and burrow_count equal to grass_cluster_count')
         if not _integer(c["hunt_cooldown"], 0):
             raise ValueError("hunt_cooldown must be a nonnegative integer")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
@@ -494,8 +507,12 @@ class StagHuntContinuous(MultiAgentEnv):
         self.hunt_rng = random.Random(None if seed is None else seed + 2)
         self.food["grass"].reset(seed)
         self.food["steppe"].reset(None if seed is None else seed + 3)
-        burrow_rng = random.Random(None if seed is None else seed + 5)
-        self.burrows = np.array([(burrow_rng.uniform(0, self.width), burrow_rng.uniform(0, self.height)) for _ in range(self.burrow_count)]).reshape(-1, 2)
+        self.burrow_rng = random.Random(None if seed is None else seed + 5)
+        if self.burrow_placement == "cluster" and self.burrow_count:
+            self.burrow_anchors = list(self.food["grass"].centres)
+            self.burrows = np.array([self._warren(centre) for centre in self.burrow_anchors]).reshape(-1, 2)
+        else:
+            self.burrows = np.array([(self.burrow_rng.uniform(0, self.width), self.burrow_rng.uniform(0, self.height)) for _ in range(self.burrow_count)]).reshape(-1, 2)
         self.food["grass"].set_burrows([Vector(x, y) for x, y in self.burrows], self.burrow_radius)
         spawn = random.Random(seed)
         self.animals = {s: [] for s in SPECIES}
@@ -827,6 +844,27 @@ class StagHuntContinuous(MultiAgentEnv):
         dx, dy = self._burrow_offsets(animals)
         return (np.hypot(dx, dy).min(axis=1) < self.burrow_radius).tolist()
 
+    def _warren(self, centre):
+        """A warren beside a grass cluster: its edge one cluster spread from
+        the cluster's centre, in a random direction."""
+        angle = self.burrow_rng.uniform(0, 2 * math.pi)
+        distance = self.food["grass"].cluster_spread + self.burrow_radius
+        return ((centre.x + distance * math.cos(angle)) % self.width, (centre.y + distance * math.sin(angle)) % self.height)
+
+    def _follow_clusters(self):
+        """Move the warren of each grass cluster that has collapsed and
+        moved since the last physics step."""
+        grass = self.food["grass"]
+        # Grass.collapse() replaces a moved centre with a new Vector, so
+        # identity tells a moved cluster (even to the same point).
+        moved = [i for i, centre in enumerate(grass.centres) if centre is not self.burrow_anchors[i]]
+        for i in moved:
+            self.burrow_anchors[i] = grass.centres[i]
+            self.burrows[i] = self._warren(grass.centres[i])
+        if moved:
+            grass.set_burrows([Vector(x, y) for x, y in self.burrows], self.burrow_radius)
+            self.hunt_stats["burrow_moves"] += len(moved)
+
     def _burrow_step(self):
         """At the start of a physics step: each rabbit's burrow state (for
         the catch rule) and the burrow and cap counters."""
@@ -836,6 +874,8 @@ class StagHuntContinuous(MultiAgentEnv):
         stats["predator_steps"] += len(self.predators)
         if not self.burrow_count:
             return
+        if self.burrow_placement == "cluster":
+            self._follow_clusters()
         for rabbit, inside in zip(self.rabbits, self._inside(self.rabbits)):
             if rabbit.in_burrow and not inside:
                 rabbit.left_burrow_at = self.time_step
@@ -851,6 +891,11 @@ class StagHuntContinuous(MultiAgentEnv):
             stats["predator_steps_at_burrow_edge"] += int(edge.any(axis=1).sum())
         grass = self.food["grass"]
         stats["grass_blocked_patch_steps"] += sum(patch.blocked and grass.available(patch) for patch in grass.patches)
+        edible = [patch for patch in grass.patches if grass.edible(patch)]
+        stats["grass_edible_patch_steps"] += len(edible)
+        if edible:
+            dx, dy = self._burrow_offsets(edible)
+            stats["grass_near_burrow_patch_steps"] += int((np.hypot(dx, dy).min(axis=1) <= self.burrow_radius + grass.consume_radius).sum())
 
     def _burrow_observation(self, animal):
         """Rabbits: the nearest burrow anywhere, [dx, dy, distance, inside]

@@ -10,6 +10,7 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.enviro
     StagHuntContinuous,
     species_of,
 )
+from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.callbacks import derived_rates
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.geometry import Vector, heading_degrees
 
 STOP = MOVES - 1  # speed 0
@@ -679,6 +680,131 @@ def test_counters_without_burrows_and_extinction_time():
     assert stats["predator_steps"] == 4 * env.action_repeat and stats["rabbit_steps"] == 1
     assert stats["rabbit_steps_inside"] == 0 and env.rabbit_burrow_steps == {}
     assert env.extinct_at == {"rabbit": 1}
+
+
+def cluster_world(seed=7, **config):
+    env = StagHuntContinuous({"burrow_count": 20, "burrow_placement": "cluster", **config})
+    env.reset(seed=seed)
+    return env
+
+
+def warren_distances(env):
+    """Torus distance from each grass cluster's centre to its warren."""
+    grass = env.food["grass"]
+    return [grass.torus.distance(centre, Vector(*xy)) for centre, xy in zip(grass.centres, env.burrows)]
+
+
+def test_cluster_warrens_beside_their_cluster_and_world_unchanged():
+    plain, env = StagHuntContinuous(), cluster_world()
+    plain.reset(seed=7)
+    assert env.burrows.shape == (20, 2)
+    assert warren_distances(env) == pytest.approx([24.0 + 24.0] * 20)
+    assert [(a.id, a.position.x, a.position.y) for a in plain.living()] == [(a.id, a.position.x, a.position.y) for a in env.living()]
+    grass = env.food["grass"]
+    assert [(p.position.x, p.position.y) for p in plain.food["grass"].patches] == [(p.position.x, p.position.y) for p in grass.patches]
+    assert plain.food["grass"].rng.getstate() == grass.rng.getstate()
+    expected = [any(grass.torus.distance(p.position, Vector(x, y)) < 24.0 for x, y in env.burrows) for p in grass.patches]
+    assert [p.blocked for p in grass.patches] == expected
+    np.testing.assert_array_equal(cluster_world().burrows, env.burrows)
+    assert not np.array_equal(cluster_world(seed=8).burrows, env.burrows)
+
+
+def test_cluster_warren_settings_are_checked():
+    with pytest.raises(ValueError, match="burrow_placement"):
+        StagHuntContinuous({"burrow_count": 10, "burrow_placement": "grid"})
+    with pytest.raises(ValueError, match="grass_cluster_count"):
+        StagHuntContinuous({"burrow_count": 10, "burrow_placement": "cluster"})
+    with pytest.raises(ValueError, match="clustered"):
+        StagHuntContinuous({"burrow_count": 20, "burrow_placement": "cluster", "grass_clustered": False, "grass_dispersal": False, "grass_overgrazing": False})
+    StagHuntContinuous({"burrow_placement": "cluster"})  # no burrows: nothing to place
+
+
+def test_warren_moves_with_its_collapsed_cluster():
+    env = cluster_world(rabbit_count=1)
+    grass = env.food["grass"]
+    rabbit = env.rabbits[0]
+    rabbit.velocity = Vector(0, 0)
+    rabbit.position = Vector(*env.burrows[3])
+    env._burrow_step()
+    assert rabbit.in_burrow
+    before = env.burrows.copy()
+    grass.collapse(3, [p for p in grass.patches if p.cluster == 3])
+    exits = env.hunt_stats["burrow_exits"]
+    env._burrow_step()
+    assert env.hunt_stats["burrow_moves"] == 1
+    assert warren_distances(env) == pytest.approx([48.0] * 20)
+    np.testing.assert_array_equal(np.delete(env.burrows, 3, axis=0), np.delete(before, 3, axis=0))
+    assert not np.array_equal(env.burrows[3], before[3])
+    expected = [any(grass.torus.distance(p.position, Vector(x, y)) < 24.0 for x, y in env.burrows) for p in grass.patches]
+    assert [p.blocked for p in grass.patches] == expected
+    # A rabbit in the abandoned warren is in the open (unless the new one covers it).
+    if not env._inside([rabbit])[0]:
+        assert not rabbit.in_burrow and env.hunt_stats["burrow_exits"] == exits + 1
+    env._burrow_step()
+    assert env.hunt_stats["burrow_moves"] == 1
+
+
+def test_rabbit_in_abandoned_warren_is_caught_in_that_step():
+    env = world(burrow_count=20, burrow_placement="cluster", grass_overgrazing=False)  # empty clusters would collapse every step
+    env.burrows = np.array([(50.0, 50.0 + 30 * i) for i in range(20)])
+    env.burrows[3] = (400.0, 400.0)
+    place(env, {"predator_0": (400, 410)})
+    _, _, te, _, _ = env.step(stopped_actions(env))
+    assert env.rabbits and env.hunt_stats["catches_blocked"] == env.action_repeat
+    # The cluster collapses and moves far away: at the start of the next
+    # physics step the warren follows it, the rabbit is in the open, an exit,
+    # and the touching predator catches it in that same step.
+    env.food["grass"].centres[3] = Vector(700.0, 300.0)
+    _, _, te, _, _ = env.step(stopped_actions(env))
+    stats = env.hunt_stats
+    assert te["rabbit_0"] and not env.rabbits
+    assert stats["burrow_moves"] == 1 and stats["burrow_exits"] == 1
+    assert stats["catches_after_exit"] == stats["rabbits_caught"] == 1
+
+
+def test_several_collapses_move_their_warrens_in_cluster_order():
+    env = cluster_world()
+    grass = env.food["grass"]
+    for cluster in (5, 2):
+        grass.collapse(cluster, [p for p in grass.patches if p.cluster == cluster])
+    expected = env.burrows.copy()
+    state = env.burrow_rng.getstate()
+    for cluster in (2, 5):
+        expected[cluster] = env._warren(grass.centres[cluster])
+    env.burrow_rng.setstate(state)
+    env._burrow_step()
+    np.testing.assert_array_equal(env.burrows, expected)
+    assert env.hunt_stats["burrow_moves"] == 2
+    marked = [any(grass.torus.distance(p.position, Vector(x, y)) < 24.0 for x, y in env.burrows) for p in grass.patches]
+    assert [p.blocked for p in grass.patches] == marked
+
+
+def test_cluster_warrens_follow_the_cluster_count():
+    env = cluster_world(grass_cluster_count=10, burrow_count=10)
+    assert env.burrows.shape == (10, 2) and warren_distances(env) == pytest.approx([48.0] * 10)
+    with pytest.raises(ValueError, match="grass_cluster_count"):
+        StagHuntContinuous({"grass_cluster_count": 10, "burrow_count": 9, "burrow_placement": "cluster"})
+
+
+def test_calibration_arms_build():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.config.config_env import config_env
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS
+
+    for settings in ARMS.values():
+        StagHuntContinuous({**config_env, **settings})
+    r10b, r12 = ARMS["with_mammoths_r10b"], ARMS["with_mammoths_r12"]
+    assert {k: v for k, v in r12.items() if r10b.get(k) != v} == {"burrow_count": 20, "burrow_placement": "cluster"}
+
+
+def test_grass_near_burrow_counters():
+    env = cluster_world()
+    env._burrow_step()
+    stats, grass = env.hunt_stats, env.food["grass"]
+    edible = [p for p in grass.patches if grass.edible(p)]
+    near = sum(min(grass.torus.distance(p.position, Vector(x, y)) for x, y in env.burrows) <= 24.0 + 12.0 for p in edible)
+    assert stats["grass_edible_patch_steps"] == len(edible)
+    assert stats["grass_near_burrow_patch_steps"] == near > 0
+    assert derived_rates(stats)["grass_near_burrow_share"] == near / len(edible)
 
 
 class FixedDraw:

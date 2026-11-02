@@ -48,6 +48,8 @@ def derived_rates(stats):
             rates["catches_per_open_rabbit_step"] = stats["rabbits_caught"] / open_steps
     if stats["predator_steps"]:
         rates["predator_burrow_edge_share"] = stats["predator_steps_at_burrow_edge"] / stats["predator_steps"]
+    if stats.get("grass_edible_patch_steps"):
+        rates["grass_near_burrow_share"] = stats["grass_near_burrow_patch_steps"] / stats["grass_edible_patch_steps"]
     if stats.get("physics_steps"):
         rates["predator_cap_share"] = stats["steps_at_predator_cap"] / stats["physics_steps"]
         rates["open_rabbits_mean"] = (stats["rabbit_steps"] - stats["rabbit_steps_inside"]) / stats["physics_steps"]
