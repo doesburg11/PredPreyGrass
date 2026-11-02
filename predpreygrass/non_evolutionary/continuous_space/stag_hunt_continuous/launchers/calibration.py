@@ -6,7 +6,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r13b`: rounds 2 to 13 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r14`: rounds 2 to 14 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -142,6 +142,11 @@ ARMS["rabbits_only_warrens_hidden"] = dict(ARMS["rabbits_only_warrens"], burrow_
 # attempts would succeed at 1.5, 15% at 1).
 for arm, ratio in (("with_mammoths_r13a", 1.0), ("with_mammoths_r13b", 1.5)):
     ARMS[arm] = dict(ARMS["with_mammoths_r4"], hunt_rule="energy", hunt_energy_ratio=ratio, truncate_on_prey_extinction=True)
+# Round 14 (2026-11-02), after round 13a (ratio 1) kept the mammoths about
+# half the hunters' food without a boom, but the rabbits were eaten out
+# first in 38 of 50 evaluated episodes: round 13a with round 9's faster
+# rabbits (top speed 7, hunters 5).
+ARMS["with_mammoths_r14"] = dict(ARMS["with_mammoths_r13a"], rabbit_max_velocity=7.0)
 
 
 def main():
