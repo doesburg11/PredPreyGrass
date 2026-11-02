@@ -12,8 +12,11 @@ section 8) turned the hunters away from mammoths. Round 12, one warren
 beside each grass cluster (DESIGN.md section 7, point 9), boomed with
 the rabbits still not hiding; without mammoths rabbits learned to hide,
 but no evaluated episode kept both species, even with hidden rabbits
-unseen by hunters; burrows are set aside. Round 13 ports the discrete module's
-summed-energy capture rule (DESIGN.md section 9), running. See "Calibration log" below and
+unseen by hunters; burrows are set aside. Round 13 ported the discrete module's
+summed-energy capture rule (DESIGN.md section 9): at ratio 1 no boom and
+mammoths about half the hunters' food, with joint arrivals 1.8x chance,
+but the rabbits are still eaten out (10 of 50 evaluated episodes keep all
+three species); at ratio 1.5 hunters leave the mammoths. See "Calibration log" below and
 [DESIGN.md](DESIGN.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
@@ -117,8 +120,8 @@ energy) gained by hunters.
 | 12 `with_mammoths_r12` | round 10b (cap 50) with one warren per grass cluster (20), beside it and moving with it (`burrow_placement = "cluster"`, DESIGN.md, 7, point 9); untrained, the median edible grass patch is 31 units from a warren's edge (98 in round 10) | rabbits still hardly used the warrens: ~7% of their time inside from iteration ~150 (~6% untrained), ~18% of edible grass within reach of a rabbit inside; round 4's boom again: training episodes ~255 decisions, cap binding 29%, joint arrival rate 0.315, join with partner 0.64 vs alone 0.44 (iterations 250–300); rabbit births ~61 per episode (~100 in 10b); not evaluated | iteration 449 |
 | check `rabbits_only_warrens` | round 1a (no mammoths) with round 12's warrens: can rabbits learn to hide in a world with full-length episodes? | rabbits learned to hide, late: time inside ~7% to iteration 300, 18% at 500, 35% at 1,000 and still rising; but training episodes ~455 decisions (1a: ~1,230), rabbit births ~83 per episode (1a: ~440); evaluation of the final checkpoint: **coexistence in 0 of 50** (rabbits eaten out in 34, hunters starved in 16; 1a: 49 of 50), rabbits inside 43% (quartiles 0, 0.06, 0.39), hunters within reach of a warren's edge 22% of their steps, 67,381 rabbit-steps inside a warren touching a hunter, 11% of catches within 8 steps of an exit (`results/calibration_rabbits_only_warrens_eval.json`) | finished 1,000 |
 | check 2 `rabbits_only_warrens_hidden` | check 1 with rabbits inside a warren hidden from the hunters (`burrow_hides_rabbits`, DESIGN.md, 7, point 10) | rabbits learned to hide sooner and more (35% of their time inside by iteration ~275, 45% at 750); training episodes ~450 decisions; evaluation of the final checkpoint: **coexistence in 0 of 50** (rabbits eaten out in 27, hunters starved in 23), rabbits inside 50% (quartiles 0, 0.07, 0.47), hunters at a warren's edge 18% of their steps, 8% of catches exit ambushes; per episode ~102 rabbit births and ~103 catches (1a: ~439 and ~378) (`results/calibration_rabbits_only_warrens_hidden_eval.json`) | finished 1,000 |
-| 13a `with_mammoths_r13a` | round 4 (cap 50, no burrows) with the discrete module's capture rule: a hunt succeeds when the contributors' summed energy exceeds the mammoth's (`hunt_rule = "energy"`, no draw; DESIGN.md, 9); hunters see mammoth and partner energies; training truncated at the first prey extinction | running (launched 2026-11-02) | |
-| 13b `with_mammoths_r13b` | as 13a with summed energy above 1.5 x the mammoth's | running | |
+| 13a `with_mammoths_r13a` | round 4 (cap 50, no burrows) with the discrete module's capture rule: a hunt succeeds when the contributors' summed energy exceeds the mammoth's (`hunt_rule = "energy"`, no draw; DESIGN.md, 9); hunters see mammoth and partner energies; training truncated at the first prey extinction | no boom (cap binding ~3%); mammoths ~50-60% of the hunters' energy from iteration ~200, falling to ~45% by 850 as rabbits became the staple again; training episodes grew from ~100 to ~510 decisions; joint arrival rate peaked ~0.23 (iterations 400-650); evaluation of the final checkpoint: **coexistence in 10 of 50** (rabbits eaten out in 38, median at ~1,000 physics steps, hunters starved afterwards in 30; mammoths out in 10), joint arrival rate 0.116 vs chance 0.066 (1.8x), join with partner 0.34 vs alone 0.19, cap binding 4% (`results/calibration_with_mammoths_r13a_eval.json`) | finished 1,000 |
+| 13b `with_mammoths_r13b` | as 13a with summed energy above 1.5 x the mammoth's | round 9's regime: rabbits the staple (mammoths ~11% of the hunters' energy), pair kills rare (~0.2 per episode), joint arrival rate ~0.04, join with partner = alone (~0.39); training episodes ~740 decisions and rising; not evaluated | stopped at iteration 258 (user) |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -163,9 +166,14 @@ quarter as much as without warrens (~100 births per episode against
 ~440), while catches fell less (an interpretation, not tested: time spent
 hidden is time not grazing, and hunters still wait where rabbits gather).
 Burrows as built here do not protect the rabbit population, so they are
-set aside as a lever. Round 13 tries the discrete module's capture rule: hungry
-hunters cannot kill a mammoth, so the brake should grow as the hunters
-outgrow their food (DESIGN.md, section 9; a hope, not tested).
+set aside as a lever. Round 13 tried the discrete module's capture rule: hungry
+hunters cannot kill a mammoth (DESIGN.md, section 9). At ratio 1 it
+removed the boom (cap binding ~4% against 25-56% in rounds 4, 10b and 12)
+and kept mammoths about half the hunters' food with cooperation signals,
+but did not save the rabbits: they went first in 38 of 50 evaluated
+episodes. An interpretation, not tested: the rule brakes the mammoth
+harvest, not the rabbit harvest, and the rabbits are the prey being eaten
+out. At ratio 1.5 the hunters left the mammoths, as in rounds 7 to 11.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
