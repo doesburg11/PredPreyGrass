@@ -2,6 +2,8 @@
 settings of config/config_env.py and config/config_ppo.py except:
 
 - `rabbits_only`: no mammoths (step 1a: are hunters viable on rabbits?);
+- `rabbits_only_warrens`: rabbits_only with round 12's warrens (can
+  rabbits learn to hide?);
 - `with_mammoths`: the configured world (step 1b);
 - `with_mammoths_r2` to `with_mammoths_r12`: rounds 2 to 12 of step 1b, see ARMS.
 
@@ -122,6 +124,11 @@ for arm, factor in (("with_mammoths_r11a", 0.5), ("with_mammoths_r11b", 0.8)):
 # hunters left the mammoths: round 10b (cap 50) with one warren per grass
 # cluster, beside it and moving with it (DESIGN.md, 7, point 9).
 ARMS["with_mammoths_r12"] = dict(ARMS["with_mammoths_r10b"], burrow_count=20, burrow_placement="cluster")
+# Check (2026-11-02), after round 12's rabbits spent ~7% of their time in
+# the warrens (~6% untrained) while a hunter boom cut training episodes to
+# ~255 decisions: can rabbits learn to hide at all, in the world without
+# mammoths where round 1a gave full-length episodes?
+ARMS["rabbits_only_warrens"] = dict(ARMS["rabbits_only"], burrow_count=20, burrow_placement="cluster")
 
 
 def main():

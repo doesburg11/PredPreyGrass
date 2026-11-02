@@ -9,7 +9,8 @@ between births, faster rabbits) also remove the hunters' interest in
 mammoths. Rabbit burrows (round 10, DESIGN.md section 7) went unused by
 the rabbits, and well-fed mammoths harder to kill (round 11, DESIGN.md
 section 8) turned the hunters away from mammoths. Round 12, one warren
-beside each grass cluster (DESIGN.md section 7, point 9), is running. See "Calibration log" below and
+beside each grass cluster (DESIGN.md section 7, point 9), boomed with
+the rabbits still not hiding; a check without mammoths is running. See "Calibration log" below and
 [DESIGN.md](DESIGN.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
@@ -110,7 +111,8 @@ energy) gained by hunters.
 | 10b `with_mammoths_r10b` | round 4 (cap 50) with the same burrows | rabbits did not use the burrows (~3%); round 4's boom, slower: mammoth share ~76%, training episodes ~350 decisions from iteration ~150, cap binding 25% of physics steps; strongest cooperation signals with a cap so far (joint arrival rate 0.255, join with partner 0.63 vs alone 0.40); evaluation at iteration 280: **coexistence in 2 of 50** (both prey eaten out in 39), cap binding 56% of physics steps, joint arrival rate 0.326 vs chance 0.191, join with partner 0.63 vs alone 0.33 (`results/calibration_with_mammoths_r10b_iter280_eval.json`) | iteration 289 |
 | 11a `with_mammoths_r11a` | round 4 (cap 50, no burrows) with hunt success × (1 − 0.5 × mammoth condition), condition = mammoth energy / its birth threshold, at most 1 (`hunt_condition_factor`, DESIGN.md, 8); hunters see the condition of mammoths in view; training truncated at the first prey extinction | no boom (training episodes ~1,100 decisions, cap never binding) but hunters left the mammoths: mammoth share ~2%, rabbits the staple (~400 births per training episode), joint arrival rate ~0.03; killed mammoths' condition 0.67 vs hunted 0.71; evaluation of the final checkpoint: **coexistence in 35 of 50** (hunters died out in 15), joint arrival rate 0.028 vs chance 0.022 (`results/calibration_with_mammoths_r11a_eval.json`) | finished 1,000 |
 | 11b `with_mammoths_r11b` | as 11a with factor 0.8 | as 11a: mammoth share ~1.5%, joint arrival rate ~0.025; killed mammoths leaner than hunted (condition 0.49 vs 0.71); evaluation of the final checkpoint: **coexistence in 28 of 50** (hunters died out in 22), joint arrival rate 0.021 vs chance 0.018 (`results/calibration_with_mammoths_r11b_eval.json`) | finished 1,000 |
-| 12 `with_mammoths_r12` | round 10b (cap 50) with one warren per grass cluster (20), beside it and moving with it (`burrow_placement = "cluster"`, DESIGN.md, 7, point 9); untrained, the median edible grass patch is 31 units from a warren's edge (98 in round 10) | running (launched 2026-11-02) | |
+| 12 `with_mammoths_r12` | round 10b (cap 50) with one warren per grass cluster (20), beside it and moving with it (`burrow_placement = "cluster"`, DESIGN.md, 7, point 9); untrained, the median edible grass patch is 31 units from a warren's edge (98 in round 10) | rabbits still hardly used the warrens: ~7% of their time inside from iteration ~150 (~6% untrained), ~18% of edible grass within reach of a rabbit inside; round 4's boom again: training episodes ~255 decisions, cap binding 29%, joint arrival rate 0.315, join with partner 0.64 vs alone 0.44 (iterations 250–300); rabbit births ~61 per episode (~100 in 10b); not evaluated | iteration 449 |
+| check `rabbits_only_warrens` | round 1a (no mammoths) with round 12's warrens: can rabbits learn to hide in a world with full-length episodes? | running (launched 2026-11-02) | |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -140,7 +142,11 @@ hunters see 200), so a feeding rabbit seldom had a refuge in reach. Round
 better fed the mammoth (DESIGN.md, section 8), meant to slow hunting as
 mammoths become scarce; instead the hunters left the mammoths, which then
 stayed well fed and hard to kill (an interpretation). Round 12 puts a
-warren beside each grass cluster (DESIGN.md, section 7, point 9).
+warren beside each grass cluster (DESIGN.md, section 7, point 9): the
+rabbits still did not hide (a guess not tested: births as their only
+reward, with training episodes cut short by the boom, give too weak a
+signal), so a check without mammoths asks whether rabbits learn to use
+warrens at all.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
