@@ -16,7 +16,10 @@ unseen by hunters; burrows are set aside. Round 13 ported the discrete module's
 summed-energy capture rule (DESIGN.md section 9): at ratio 1 no boom and
 mammoths about half the hunters' food, with joint arrivals 1.8x chance,
 but the rabbits are still eaten out (10 of 50 evaluated episodes keep all
-three species); at ratio 1.5 hunters leave the mammoths. See "Calibration log" below and
+three species); at ratio 1.5 hunters leave the mammoths. Round 14 added
+faster rabbits: 47 of 50 keep all three species, without a boom, but
+mammoths fall to about a fifth of the hunters' food and joint arrivals to
+1.2x chance. See "Calibration log" below and
 [DESIGN.md](DESIGN.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
@@ -122,6 +125,7 @@ energy) gained by hunters.
 | check 2 `rabbits_only_warrens_hidden` | check 1 with rabbits inside a warren hidden from the hunters (`burrow_hides_rabbits`, DESIGN.md, 7, point 10) | rabbits learned to hide sooner and more (35% of their time inside by iteration ~275, 45% at 750); training episodes ~450 decisions; evaluation of the final checkpoint: **coexistence in 0 of 50** (rabbits eaten out in 27, hunters starved in 23), rabbits inside 50% (quartiles 0, 0.07, 0.47), hunters at a warren's edge 18% of their steps, 8% of catches exit ambushes; per episode ~102 rabbit births and ~103 catches (1a: ~439 and ~378) (`results/calibration_rabbits_only_warrens_hidden_eval.json`) | finished 1,000 |
 | 13a `with_mammoths_r13a` | round 4 (cap 50, no burrows) with the discrete module's capture rule: a hunt succeeds when the contributors' summed energy exceeds the mammoth's (`hunt_rule = "energy"`, no draw; DESIGN.md, 9); hunters see mammoth and partner energies; training truncated at the first prey extinction | no boom (cap binding ~3%); mammoths ~50-60% of the hunters' energy from iteration ~200, falling to ~45% by 850 as rabbits became the staple again; training episodes grew from ~100 to ~510 decisions; joint arrival rate peaked ~0.23 (iterations 400-650); evaluation of the final checkpoint: **coexistence in 10 of 50** (rabbits eaten out in 38, median at ~1,000 physics steps, hunters starved afterwards in 30; mammoths out in 10), joint arrival rate 0.116 vs chance 0.066 (1.8x), join with partner 0.34 vs alone 0.19, cap binding 4% (`results/calibration_with_mammoths_r13a_eval.json`) | finished 1,000 |
 | 13b `with_mammoths_r13b` | as 13a with summed energy above 1.5 x the mammoth's | round 9's regime: rabbits the staple (mammoths ~11% of the hunters' energy), pair kills rare (~0.2 per episode), joint arrival rate ~0.04, join with partner = alone (~0.39); training episodes ~740 decisions and rising; not evaluated | stopped at iteration 258 (user) |
+| 14 `with_mammoths_r14` | round 13a with round 9's faster rabbits (top speed 7, hunters 5) | no boom (cap binding 0-3%); training episodes ~1,170 decisions; hunters drifted to rabbits: mammoths ~48% of their energy at iterations 200-250, ~41% at 300-350, ~31% at 500-550, ~22% at the end. Evaluations (50 episodes): iteration 300 **14 coexist**, joint 0.087 vs chance 0.058, partner 0.49 vs alone 0.33; iteration 500 **28**, joint 0.058 vs 0.044, partner 0.35 vs 0.25; final checkpoint **47**, joint 0.034 vs 0.028 (1.2x), partner 0.25 vs 0.19, rabbits out in 1, hunters out in 3, mammoths in 0 (`results/calibration_with_mammoths_r14_eval.json`, `_iter300_eval.json`, `_iter500_eval.json`) | finished 1,000 |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -174,6 +178,16 @@ but did not save the rabbits: they went first in 38 of 50 evaluated
 episodes. An interpretation, not tested: the rule brakes the mammoth
 harvest, not the rabbit harvest, and the rabbits are the prey being eaten
 out. At ratio 1.5 the hunters left the mammoths, as in rounds 7 to 11.
+Round 14 gave the rabbits top speed 7: the first world that passes the
+coexistence target without a boom and with mammoths still ~22% of the
+hunters' food (round 9: ~9%), but cooperation is near chance. Within this
+run coexistence rose as cooperation fell (14, 28, 47 of 50 at iterations
+300, 500, 1,000; joint arrivals 1.5x, 1.3x, 1.2x chance), and across the
+evaluated rounds both prey survived in nearly every world near chance
+and in few of those well above it; an association over 11 unlike runs, not
+a tested cause. Apparent competition through the shared hunters (Holt 1977)
+is one candidate, not tested; hunters' catch rate against rabbit density
+would show whether they switch prey.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
