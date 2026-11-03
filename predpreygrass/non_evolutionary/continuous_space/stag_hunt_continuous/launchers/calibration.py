@@ -6,7 +6,9 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r15b`: rounds 2 to 15 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r17b`: rounds 2 to 17 of step 1b, see
+  ARMS; `rabbits_only_r17` is round 17's first stage, and INIT_FROM names the
+  run an arm continues from.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -160,6 +162,17 @@ for arm, efficiency in (("with_mammoths_r15a", 0.3), ("with_mammoths_r15b", 0.4)
 for arm, period, amplitude in (("with_mammoths_r16a", 2000, 0.5), ("with_mammoths_r16b", 1000, 1.0)):
     ARMS[arm] = dict(ARMS["with_mammoths_r14"], grass_season_period=period, grass_season_amplitude=amplitude)
 
+# Round 17 (2026-11-03), the rabbits-first curriculum (user's idea): hunters
+# and rabbits train without mammoths, then both continue with mammoths added,
+# whose policy starts untrained (a rabbits-only checkpoint holds its initial
+# weights). Round 16's replays kept no more worlds with a delayed first lean
+# season or more rabbits at the start, which points at the policies. 17a tests
+# the curriculum against round 14, 17b adds round 16b's seasons.
+ARMS["rabbits_only_r17"] = dict(ARMS["with_mammoths_r14"], mammoth_count=0)
+ARMS["with_mammoths_r17a"] = dict(ARMS["with_mammoths_r14"])
+ARMS["with_mammoths_r17b"] = dict(ARMS["with_mammoths_r16b"])
+INIT_FROM = {"with_mammoths_r17a": "rabbits_only_r17", "with_mammoths_r17b": "rabbits_only_r17"}
+
 
 def main():
     if not 2 <= len(sys.argv) <= 4 or sys.argv[1] not in ARMS:
@@ -171,6 +184,8 @@ def main():
     train.config_env.update(ARMS[arm])
     train.config_ppo["tensorboard_dir"] = str(run / "tensorboard")
     train.config_ppo["checkpoint_dir"] = str(run / "checkpoint")
+    if arm in INIT_FROM:
+        train.config_ppo["init_checkpoint"] = str(RUNS_DIR / f"calibration_{INIT_FROM[arm]}" / "checkpoint")
     if len(sys.argv) > 2:
         train.config_ppo["iterations"] = int(sys.argv[2])
     if len(sys.argv) > 3:
