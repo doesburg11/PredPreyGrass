@@ -186,8 +186,24 @@ run coexistence rose as cooperation fell (14, 28, 47 of 50 at iterations
 evaluated rounds both prey survived in nearly every world near chance
 and in few of those well above it; an association over 11 unlike runs, not
 a tested cause. Apparent competition through the shared hunters (Holt 1977)
-is one candidate, not tested; hunters' catch rate against rabbit density
-would show whether they switch prey.
+is one candidate, not tested.
+
+Prey switching (`prey_switching.py`, 50 seeded episodes per checkpoint,
+`results/prey_switching_*.json`; descriptive, rabbit numbers are not set by
+the experimenter). The diet shows no detected departure from proportional
+use: slope b of diet ratio on availability ratio 1.16 [0.96, 1.38] in 13a,
+1.05 [0.86, 1.22] in 14, 1.03 [0.83, 1.21] in 14 at iteration 300 (b > 1
+would be switching; these intervals still allow moderate switching either
+way). Scarce rabbits are not safer: rabbits caught per rabbit x hunter x
+physics step do not rise with rabbit numbers (14: 25.7 x 10^-5 at 1-5
+rabbits, 13.9 at 41-70). What differs between 14's final checkpoint (47 of
+50 coexist) and its iteration 300 (14 of 50), in the same world, is lower
+hunting at every rabbit count: hunters' movement toward the nearest rabbit
+in view is about half (ratio 0.44-0.53, paired resampling of seeds), and the
+catch rate 0.47-0.68 of it up to 40 rabbits. Iteration 300 at rabbit speed 7
+matches 13a's final checkpoint at speed 6 on both measures up to 40 rabbits.
+An association between checkpoints whose rabbit and hunter policies both
+changed; which side's learning lowers the catch rate is not separated.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
