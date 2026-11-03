@@ -21,7 +21,9 @@ faster rabbits: 47 of 50 keep all three species, without a boom, but
 mammoths fall to about a fifth of the hunters' food and joint arrivals to
 1.2x chance. Round 15 made rabbits a poorer food: no joint arrivals above
 chance, mammoths still about a fifth of the food, stopped early. Round 16
-(running) gives the rabbits' grass seasons instead. See "Calibration log"
+gave the rabbits' grass seasons instead: 26 and 31 of 50 keep all three
+species, mostly losing the rabbits in or just after the first lean season,
+with joint arrivals 1.2-1.3x chance. See "Calibration log"
 below and
 [DESIGN.md](DESIGN.md).
 
@@ -135,8 +137,8 @@ energy) gained by hunters.
 | 14 `with_mammoths_r14` | round 13a with round 9's faster rabbits (top speed 7, hunters 5) | no boom (cap binding 0-3%); training episodes ~1,170 decisions; hunters drifted to rabbits: mammoths ~48% of their energy at iterations 200-250, ~41% at 300-350, ~31% at 500-550, ~22% at the end. Evaluations (50 episodes): iteration 300 **14 coexist**, joint 0.087 vs chance 0.058, partner 0.49 vs alone 0.33; iteration 500 **28**, joint 0.058 vs 0.044, partner 0.35 vs 0.25; final checkpoint **47**, joint 0.034 vs 0.028 (1.2x), partner 0.25 vs 0.19, rabbits out in 1, hunters out in 3, mammoths in 0 (`results/calibration_with_mammoths_r14_eval.json`, `_iter300_eval.json`, `_iter500_eval.json`) | finished 1,000 |
 | 15a `with_mammoths_r15a` | round 14 with rabbits a poorer food: hunters gain 0.3 of a caught rabbit's energy (0.5 before) | mammoths ~29% of the hunters' energy at iterations 150-223 (round 14 at that stage ~50%), pair kills ~0.3 per episode (~1.9); evaluation at iteration 220: **13 coexist** (hunters out in 37), joint 0.014 vs chance 0.016, partner 0.44 vs alone 0.42 | stopped at iteration 223 (for round 16's slots) |
 | 15b `with_mammoths_r15b` | as 15a with 0.4 | mammoths ~23% of the hunters' energy at iterations 350-400, ~20% at 590-639 (round 14: ~38%, ~28%), cap binding ~0; evaluations (50 episodes): iteration 390 **45 coexist**, joint 0.022 vs chance 0.024, partner 0.28 vs alone 0.24; iteration 630 **37** (hunters out in 13), joint 0.019 vs 0.020, partner 0.34 vs 0.28 | stopped at iteration 639: no joint arrivals above chance, and fewer coexisting late |
-| 16a `with_mammoths_r16a` | round 14 with seasons in the rabbits' grass (`grass_season_period` 2000, `grass_season_amplitude` 0.5; rabbit efficiency back at 0.5) | running (launched 2026-11-03) | |
-| 16b `with_mammoths_r16b` | as 16a with period 1000, amplitude 1 | running | |
+| 16a `with_mammoths_r16a` | round 14 with seasons in the rabbits' grass (`grass_season_period` 2000, `grass_season_amplitude` 0.5; rabbit efficiency back at 0.5) | no boom (cap binding ~1-3%); mammoths ~45% of the hunters' energy at iterations 250-300, ~27% at 850-900 (round 14: ~45%, ~23%). Evaluations (50 episodes): iteration 500 **18 coexist**, joint 0.074 vs chance 0.057, partner 0.29 vs alone 0.17; final checkpoint **31** (hunters out in 19, rabbits in 16), joint 0.054 vs 0.042 (1.3x), partner 0.22 vs 0.15, mammoths 24% of the food | seasons slowed the drift to rabbits without ending it |
+| 16b `with_mammoths_r16b` | as 16a with period 1000, amplitude 1 | no boom (cap binding up to ~4%); mammoths ~50% of the hunters' energy at iterations 250-450, ~33% at 850-900; training episodes ~720 decisions at 850-900 (round 14: ~1,160). Evaluations (50 episodes): iteration 500 **7 coexist**, joint 0.110 vs chance 0.074, partner 0.41 vs alone 0.23; final checkpoint **26** (hunters out in 23, rabbits in 20), joint 0.050 vs 0.041 (1.2x), partner 0.26 vs 0.16, mammoths 26% of the food | |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -257,6 +259,18 @@ The swings reach rabbits and hunters' food, with rabbits lagging the grass;
 mammoth kills were too few to show a seasonal pattern in these policies.
 Round 16's arms differ in both period and amplitude: calibration, not a test
 of either.
+
+Round 16 by season (`seasons.py`, final checkpoints, 50 episodes,
+`results/seasons_r16a.json`, `seasons_r16b.json`; cycles after the first, so
+only worlds still running; intervals resample episodes). Mammoths' share of the
+hunters' food in the grass's lean half against its good half: 16b 26% vs 18%
+(difference 95% interval +0.02 to +0.15, 38 group kills), 16a 6% vs 14% (-0.12
+to -0.03, 11 group kills). So a lean-season shift towards mammoths appears only
+in the shorter, stronger seasons, on few kills, and two arms cannot separate
+period from amplitude. Most rabbit extinctions come early: 16 of 20 in 16b by
+step ~1170 (first lean half: 500-1000), 13 of 16 in 16a by step ~1730 (1000-2000),
+which may reflect the first lean season arriving before rabbit numbers have
+built up from the 8 at the start (untested).
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
