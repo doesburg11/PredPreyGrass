@@ -6,7 +6,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r14`: rounds 2 to 14 of step 1b, see ARMS.
+- `with_mammoths_r2` to `with_mammoths_r15b`: rounds 2 to 15 of step 1b, see ARMS.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -147,6 +147,12 @@ for arm, ratio in (("with_mammoths_r13a", 1.0), ("with_mammoths_r13b", 1.5)):
 # first in 38 of 50 evaluated episodes: round 13a with round 9's faster
 # rabbits (top speed 7, hunters 5).
 ARMS["with_mammoths_r14"] = dict(ARMS["with_mammoths_r13a"], rabbit_max_velocity=7.0)
+# Round 15 (2026-11-03), after round 14 kept all three species (47 of 50) with
+# mammoths ~22% of the hunters' food, and cross-play tied that low share to
+# the hunters' policy whichever rabbits they met: round 14 with rabbits a
+# poorer food, hunters gaining 0.3 or 0.4 of a caught rabbit's energy (0.5).
+for arm, efficiency in (("with_mammoths_r15a", 0.3), ("with_mammoths_r15b", 0.4)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r14"], energy_catch_efficiency_predator=efficiency)
 
 
 def main():
