@@ -202,6 +202,7 @@ def test_counters_add_up_to_the_episode():
     assert totals["kills"] == sum(stats[f"kills_party_{size}"] for size in range(1, PARTY_SIZES + 1))
     assert row["grass_eaten"] == env.food["grass"].total_consumed
     assert (row["period"], row["amplitude"]) == (400, 0.8)
+    assert row["rabbit_count"] == env.count["rabbit"]
 
 
 def test_physics_steps_split_exactly_across_phases_when_decisions_cross_them():

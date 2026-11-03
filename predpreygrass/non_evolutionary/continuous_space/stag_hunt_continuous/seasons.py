@@ -10,10 +10,11 @@ populations, not from a previous season.
 
 --period, --amplitude and --start replace the checkpoint's seasons, to see what a
 seasonal world does to policies trained with or without them (observations do
-not change). Such policies never trained in that world.
+not change). Such policies never trained in that world. --rabbits replaces
+the number of rabbits at the start.
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.seasons \\
-        <checkpoint dir> <episodes> [out.json] [--period P] [--amplitude A] [--start S] [--skip-cycles N] [--workers N]
+        <checkpoint dir> <episodes> [out.json] [--period P] [--amplitude A] [--start S] [--rabbits R] [--skip-cycles N] [--workers N]
 """
 
 import argparse
@@ -105,6 +106,7 @@ def play_episode(env, choose, seed):
         "period": period,
         "amplitude": grass.season_amplitude,
         "start": grass.season_start,
+        "rabbit_count": env.count["rabbit"],
         "extinct_at": dict(env.extinct_at),
         "grass_eaten": grass.total_consumed,
         "physics_steps": env.time_step,
@@ -158,7 +160,7 @@ def summarise(rows, skip_cycles=1):
     }
 
 
-def _init(checkpoint, period, amplitude, start):
+def _init(checkpoint, period, amplitude, start, rabbits):
     import torch
 
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.checkpoints import checkpoint_env_config, load_modules
@@ -171,6 +173,8 @@ def _init(checkpoint, period, amplitude, start):
         config["grass_season_amplitude"] = amplitude
     if start is not None:
         config["grass_season_start"] = start
+    if rabbits is not None:
+        config["rabbit_count"] = rabbits
     config["truncate_on_prey_extinction"] = False
     _worker["modules"] = load_modules(checkpoint)
     _worker["env"] = StagHuntContinuous(config)
@@ -195,6 +199,7 @@ def main():
     parser.add_argument("--period", type=int)
     parser.add_argument("--amplitude", type=float)
     parser.add_argument("--start", type=int)
+    parser.add_argument("--rabbits", type=int)
     parser.add_argument("--skip-cycles", type=int, default=1)
     parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
@@ -205,7 +210,7 @@ def main():
     if args.workers < 1:
         parser.error("workers must be at least 1")
     context = get_context("spawn")
-    with ProcessPoolExecutor(args.workers, mp_context=context, initializer=_init, initargs=(args.checkpoint, args.period, args.amplitude, args.start)) as pool:
+    with ProcessPoolExecutor(args.workers, mp_context=context, initializer=_init, initargs=(args.checkpoint, args.period, args.amplitude, args.start, args.rabbits)) as pool:
         rows = list(pool.map(_play, range(args.episodes)))
     summary = summarise(rows, args.skip_cycles)
     print(f"period {summary['period']} amplitude {summary['amplitude']} start {summary['start']} outcomes {summary['outcomes']} grass eaten per 1000 steps (whole episodes) {summary['grass_eaten_per_1000_steps']:.1f}")

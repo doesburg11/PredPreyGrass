@@ -289,6 +289,23 @@ all (rabbits out at a median step of ~1,420-1,570, hunters later), where round
 14's lost 3. So the first lean season accounts for part of the die-off, not all
 of it; the rest goes with the policies trained in seasonal worlds or with the
 opening. These policies did not train with a delay.
+
+More rabbits at the start (`seasons.py --rabbits`, the same replay,
+`results/more_rabbits_<arm>_rabbits<n>_<on or off>.json`) did not help, episodes
+with all three species:
+
+| Arm, seasons | 8 rabbits | 30 | 60 |
+|---|---|---|---|
+| 16a, on | 31 | 31 | 26 |
+| 16a, off | 40 | 37 | 31 |
+| 16b, on | 26 | 23 | 10 |
+| 16b, off | 37 | 40 | 34 |
+
+Paired by seed, only two changes exclude none: 16b on at 60 (-16, 95% interval
+-25 to -6) and 16a off at 60 (-9, -17 to -1). So too few rabbits at the start
+does not look like the cause of the die-off, which points to the policies. With
+60 rabbits they still die out first, which would fit an overshoot (more early
+food for hunters, then a crash), not measured here.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
