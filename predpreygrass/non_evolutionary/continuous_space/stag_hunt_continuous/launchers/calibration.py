@@ -154,6 +154,12 @@ ARMS["with_mammoths_r14"] = dict(ARMS["with_mammoths_r13a"], rabbit_max_velocity
 for arm, efficiency in (("with_mammoths_r15a", 0.3), ("with_mammoths_r15b", 0.4)):
     ARMS[arm] = dict(ARMS["with_mammoths_r14"], energy_catch_efficiency_predator=efficiency)
 
+# Round 16: round 14 with the rabbits' grass growing in seasons (Grass), so a
+# rabbit diet stops being enough for part of each cycle. Settings from playing
+# round 14's policies in seasonal worlds.
+for arm, period, amplitude in (("with_mammoths_r16a", 2000, 0.5), ("with_mammoths_r16b", 1000, 1.0)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r14"], grass_season_period=period, grass_season_amplitude=amplitude)
+
 
 def main():
     if not 2 <= len(sys.argv) <= 4 or sys.argv[1] not in ARMS:

@@ -1,6 +1,6 @@
 # stag_hunt_continuous
 
-**Status (2026-11-02): calibrating (DESIGN.md, plan step 1).** Hunters
+**Status (2026-11-03): calibrating (DESIGN.md, plan step 1).** Hunters
 are viable on rabbits alone. With mammoths, no round so far gives both
 coexistence and cooperation: worlds where hunters learn to hunt mammoths
 together (joint arrivals up to 2.4x chance) end in a hunter boom that eats
@@ -19,7 +19,10 @@ but the rabbits are still eaten out (10 of 50 evaluated episodes keep all
 three species); at ratio 1.5 hunters leave the mammoths. Round 14 added
 faster rabbits: 47 of 50 keep all three species, without a boom, but
 mammoths fall to about a fifth of the hunters' food and joint arrivals to
-1.2x chance. See "Calibration log" below and
+1.2x chance. Round 15 made rabbits a poorer food: no joint arrivals above
+chance, mammoths still about a fifth of the food, stopped early. Round 16
+(running) gives the rabbits' grass seasons instead. See "Calibration log"
+below and
 [DESIGN.md](DESIGN.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
@@ -56,8 +59,10 @@ found no learned cooperation (DESIGN.md, section 2).
   [`callbacks.py`](callbacks.py).
 - [`calibrate.py`](calibrate.py): the hunt's expected-value table for the
   current settings.
-- [`prey_switching.py`](prey_switching.py), [`crossplay.py`](crossplay.py):
-  prey switching by rabbit count, and policies of two checkpoints mixed.
+- [`prey_switching.py`](prey_switching.py), [`crossplay.py`](crossplay.py),
+  [`seasons.py`](seasons.py): prey switching by rabbit count, policies of two
+  checkpoints mixed, and populations, food and kills by phase of the grass
+  seasons.
 - [`evaluate.py`](evaluate.py): plays seeded episodes of a checkpoint (or
   untrained policies): coexistence of the three species, hunt counters,
   and joint arrivals per mammoth encounter episode against a
@@ -128,8 +133,10 @@ energy) gained by hunters.
 | 13a `with_mammoths_r13a` | round 4 (cap 50, no burrows) with the discrete module's capture rule: a hunt succeeds when the contributors' summed energy exceeds the mammoth's (`hunt_rule = "energy"`, no draw; DESIGN.md, 9); hunters see mammoth and partner energies; training truncated at the first prey extinction | no boom (cap binding ~3%); mammoths ~50-60% of the hunters' energy from iteration ~200, falling to ~45% by 850 as rabbits became the staple again; training episodes grew from ~100 to ~510 decisions; joint arrival rate peaked ~0.23 (iterations 400-650); evaluation of the final checkpoint: **coexistence in 10 of 50** (rabbits eaten out in 38, median at ~1,000 physics steps, hunters starved afterwards in 30; mammoths out in 10), joint arrival rate 0.116 vs chance 0.066 (1.8x), join with partner 0.34 vs alone 0.19, cap binding 4% (`results/calibration_with_mammoths_r13a_eval.json`) | finished 1,000 |
 | 13b `with_mammoths_r13b` | as 13a with summed energy above 1.5 x the mammoth's | round 9's regime: rabbits the staple (mammoths ~11% of the hunters' energy), pair kills rare (~0.2 per episode), joint arrival rate ~0.04, join with partner = alone (~0.39); training episodes ~740 decisions and rising; not evaluated | stopped at iteration 258 (user) |
 | 14 `with_mammoths_r14` | round 13a with round 9's faster rabbits (top speed 7, hunters 5) | no boom (cap binding 0-3%); training episodes ~1,170 decisions; hunters drifted to rabbits: mammoths ~48% of their energy at iterations 200-250, ~41% at 300-350, ~31% at 500-550, ~22% at the end. Evaluations (50 episodes): iteration 300 **14 coexist**, joint 0.087 vs chance 0.058, partner 0.49 vs alone 0.33; iteration 500 **28**, joint 0.058 vs 0.044, partner 0.35 vs 0.25; final checkpoint **47**, joint 0.034 vs 0.028 (1.2x), partner 0.25 vs 0.19, rabbits out in 1, hunters out in 3, mammoths in 0 (`results/calibration_with_mammoths_r14_eval.json`, `_iter300_eval.json`, `_iter500_eval.json`) | finished 1,000 |
-| 15a `with_mammoths_r15a` | round 14 with rabbits a poorer food: hunters gain 0.3 of a caught rabbit's energy (0.5 before) | running (launched 2026-11-03) | |
-| 15b `with_mammoths_r15b` | as 15a with 0.4 | running | |
+| 15a `with_mammoths_r15a` | round 14 with rabbits a poorer food: hunters gain 0.3 of a caught rabbit's energy (0.5 before) | mammoths ~29% of the hunters' energy at iterations 150-223 (round 14 at that stage ~50%), pair kills ~0.3 per episode (~1.9); evaluation at iteration 220: **13 coexist** (hunters out in 37), joint 0.014 vs chance 0.016, partner 0.44 vs alone 0.42 | stopped at iteration 223 (for round 16's slots) |
+| 15b `with_mammoths_r15b` | as 15a with 0.4 | mammoths ~23% of the hunters' energy at iterations 350-400, ~20% at 590-639 (round 14: ~38%, ~28%), cap binding ~0; evaluations (50 episodes): iteration 390 **45 coexist**, joint 0.022 vs chance 0.024, partner 0.28 vs alone 0.24; iteration 630 **37** (hunters out in 13), joint 0.019 vs 0.020, partner 0.34 vs 0.28 | stopped at iteration 639: no joint arrivals above chance, and fewer coexisting late |
+| 16a `with_mammoths_r16a` | round 14 with seasons in the rabbits' grass (`grass_season_period` 2000, `grass_season_amplitude` 0.5; rabbit efficiency back at 0.5) | running (launched 2026-11-03) | |
+| 16b `with_mammoths_r16b` | as 16a with period 1000, amplitude 1 | running | |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -228,6 +235,28 @@ final rabbits being harder to catch and final hunters persisting on them with
 less movement and fewer mammoths, rather than hunters easing off; it does not
 establish evasion (spatial avoidance or abundance could also lower the rate),
 starvation as the cause of the collapse, or learned cooperation as such.
+
+Seasons (`Grass`, `seasons.py`): grass regrowth runs on a clock moving
+1 + amplitude x sin(2 pi t / period) per physics step, starting into the good
+season; the steppe has its own settings, off so far. The clock's rate averages
+1 over a cycle, but realised grazing need not match a world without seasons.
+Round 14's final policies, which never trained with seasons, played in such
+worlds (30 episodes each, first cycle left out, ranges over the 8 phases,
+`results/season_pilot_r14_<period>_<amplitude>.json`):
+
+| Period, amplitude | Coexist | Rabbits | Hunter food per 1,000 hunter steps | Grass eaten per 1,000 steps |
+|---|---|---|---|---|
+| no seasons | 29 | 30-35 | 12-13 | 207 |
+| 2000, 0.5 | 27 | 25-46 | 7-18 | 205 |
+| 1000, 1 | 20 | 26-48 | 4-21 | 200 |
+| 2000, 1 | 8 | 18-74 | 3-22 | 197 |
+| 4000, 0.5 | 18 | 24-69 | 7-19 | 192 |
+| 4000, 1 | 2 | 4-96 | 0.4-33 | 173 |
+
+The swings reach rabbits and hunters' food, with rabbits lagging the grass;
+mammoth kills were too few to show a seasonal pattern in these policies.
+Round 16's arms differ in both period and amplitude: calibration, not a test
+of either.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as

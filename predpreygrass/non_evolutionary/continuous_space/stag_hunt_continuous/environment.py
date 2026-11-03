@@ -134,6 +134,9 @@ DEFAULT_CONFIG = {
     "grass_overgrazing": True,
     "grass_overgrazing_threshold": 0.0,
     "grass_overgrazing_delay": 400,
+    # Seasons (Grass): off at amplitude 0.
+    "grass_season_period": 0,
+    "grass_season_amplitude": 0.0,
     # The mammoths' steppe: fewer, larger clusters.
     "steppe_count": 40,
     "steppe_consume_radius": 24.0,
@@ -147,6 +150,8 @@ DEFAULT_CONFIG = {
     "steppe_overgrazing": True,
     "steppe_overgrazing_threshold": 0.0,
     "steppe_overgrazing_delay": 400,
+    "steppe_season_period": 0,
+    "steppe_season_amplitude": 0.0,
     # Rabbit burrows (module docstring): 0 for none.
     "burrow_count": 0,
     "burrow_radius": 24.0,
@@ -218,6 +223,8 @@ GRASS_KEYS = (
     "overgrazing",
     "overgrazing_threshold",
     "overgrazing_delay",
+    "season_period",
+    "season_amplitude",
 )
 BODY = ("radius", "mass", "max_velocity", "max_acceleration", "max_steer_force", "view_distance", "fov")
 FOOD = {"predator": "grass", "rabbit": "grass", "mammoth": "steppe"}

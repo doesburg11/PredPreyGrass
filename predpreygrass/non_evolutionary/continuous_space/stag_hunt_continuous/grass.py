@@ -17,7 +17,7 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.geomet
 @dataclass
 class GrassPatch:
     position: Vector
-    ready_at: int = 0
+    ready_at: float = 0
     cluster: int | None = None
     # Where the patch regrows when it does: None keeps its spot, "disperse"
     # next to a living patch of its cluster, "centre" around the centre.
@@ -40,6 +40,11 @@ class Grass:
     centre in a grid cell no other cluster uses.
     set_burrows: discs where patches cannot be eaten (no draws of the
     layer's random stream change).
+    Seasons: delays run on a growth clock (tick) that advances by
+    1 + season_amplitude * sin(2 pi t / season_period) per physics step t,
+    starting into the good season. The clock's increment averages 1 per step
+    over a whole cycle; realised regrowth, grazing and collapses need not
+    match a world without seasons, since delays are set when a patch is eaten.
     """
 
     def __init__(
@@ -58,12 +63,15 @@ class Grass:
         overgrazing=True,
         overgrazing_threshold=0.0,
         overgrazing_delay=400,
+        season_period=0,
+        season_amplitude=0.0,
     ):
         for name, value, minimum in (
             ("count", count, 0),
             ("respawn_delay", respawn_delay, 1),
             ("cluster_count", cluster_count, 1),
             ("overgrazing_delay", overgrazing_delay, 1),
+            ("season_period", season_period, 0),
         ):
             if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
                 raise ValueError(f"grass_{name} must be an integer >= {minimum}")
@@ -91,6 +99,14 @@ class Grass:
                 raise ValueError(f"grass_{name} must be finite and " f"{'positive' if positive else 'nonnegative'}")
         if not 0 <= overgrazing_threshold < 1:
             raise ValueError("grass_overgrazing_threshold must be in [0, 1)")
+        if (
+            isinstance(season_amplitude, bool)
+            or not isinstance(season_amplitude, (int, float))
+            or not 0 <= season_amplitude <= 1
+        ):
+            raise ValueError("grass_season_amplitude must be in [0, 1]")
+        if season_amplitude and not season_period:
+            raise ValueError("grass_season_amplitude needs a positive grass_season_period")
         if (dispersal or overgrazing) and not clustered:
             raise ValueError("grass_dispersal and grass_overgrazing require grass_clustered")
         if dispersal and random_respawn:
@@ -112,11 +128,14 @@ class Grass:
         self.overgrazing = overgrazing
         self.overgrazing_threshold = overgrazing_threshold
         self.overgrazing_delay = overgrazing_delay
+        self.season_period = season_period
+        self.season_amplitude = season_amplitude
         self.rng = random.Random()
         self.centres = []
         self.collapsed = []
         self.patches = []
         self.tick = 0
+        self.steps = 0
         self.total_consumed = 0
         self.total_collapses = 0
         self.burrows = []
@@ -137,6 +156,7 @@ class Grass:
         for patch in self.patches:
             self.mark(patch)
         self.tick = 0
+        self.steps = 0
         self.total_consumed = 0
         self.total_collapses = 0
 
@@ -181,6 +201,12 @@ class Grass:
             return Vector(self.rng.uniform(0, self.width), self.rng.uniform(0, self.height))
         return self.near(self.centres[cluster], self.cluster_spread)
 
+    def growth_rate(self):
+        """How far the growth clock moves this physics step."""
+        if not self.season_amplitude:
+            return 1
+        return 1 + self.season_amplitude * math.sin(2 * math.pi * self.steps / self.season_period)
+
     def available(self, patch):
         return patch.ready_at <= self.tick
 
@@ -202,7 +228,8 @@ class Grass:
         """One physics step: regrowth placement, grazing by the living prey
         (each patch to the closest prey within consume_radius, ties by agent
         ID) and overgrazing. Returns {prey id: patches eaten}."""
-        self.tick += 1
+        self.tick += self.growth_rate()
+        self.steps += 1
         for patch in self.patches:
             if patch.regrow is not None and self.available(patch):
                 self.place(patch)
