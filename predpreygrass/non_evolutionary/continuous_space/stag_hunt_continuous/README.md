@@ -56,6 +56,8 @@ found no learned cooperation (DESIGN.md, section 2).
   [`callbacks.py`](callbacks.py).
 - [`calibrate.py`](calibrate.py): the hunt's expected-value table for the
   current settings.
+- [`prey_switching.py`](prey_switching.py), [`crossplay.py`](crossplay.py):
+  prey switching by rabbit count, and policies of two checkpoints mixed.
 - [`evaluate.py`](evaluate.py): plays seeded episodes of a checkpoint (or
   untrained policies): coexistence of the three species, hunt counters,
   and joint arrivals per mammoth encounter episode against a
@@ -203,7 +205,27 @@ in view is about half (ratio 0.44-0.53, paired resampling of seeds), and the
 catch rate 0.47-0.68 of it up to 40 rabbits. Iteration 300 at rabbit speed 7
 matches 13a's final checkpoint at speed 6 on both measures up to 40 rabbits.
 An association between checkpoints whose rabbit and hunter policies both
-changed; which side's learning lowers the catch rate is not separated.
+changed.
+
+Cross-play (`crossplay.py`, all 8 mixes of hunters, rabbits and mammoths
+from 14's final checkpoint and iteration 300, 50 seeded episodes each,
+`results/crossplay_r14_final_vs_iter300.json`; the unmixed cells repeat the
+evaluations exactly). The policies never trained against these partners, and
+rabbit counts, hunter condition and episode stage all shift between cells.
+Final rabbits go with a lower catch rate from either kind of hunter (0.42-0.74
+of that for iteration-300 rabbits at 11-40 rabbits, paired resampling of
+seeds). Against iteration-300 rabbits, final hunters catch about as many as
+iteration-300 hunters (0.92-1.16) with about half the pursuit (0.46-0.52), so
+the lower pursuit does not by itself lower catches. Pursuit, mammoth food
+share (0.15-0.19 against 0.40-0.51) and joint arrivals above chance (1.2-1.4x
+against 1.5-1.7x) go mostly with the hunters' checkpoint, whichever rabbits
+they meet. Iteration-300 hunters die out against final rabbits (50 and 49 of
+50), which also selects what their rates measure (before the collapse); final
+hunters against iteration-300 rabbits keep 28 and 40 of 50 episodes. This fits
+final rabbits being harder to catch and final hunters persisting on them with
+less movement and fewer mammoths, rather than hunters easing off; it does not
+establish evasion (spatial avoidance or abundance could also lower the rate),
+starvation as the cause of the collapse, or learned cooperation as such.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
