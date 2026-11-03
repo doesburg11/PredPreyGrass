@@ -8,12 +8,12 @@ rabbit numbers, hunter numbers and condition together.
 The first cycle is left out by default: it starts from the initial
 populations, not from a previous season.
 
---period and --amplitude replace the checkpoint's seasons, to see what a
+--period, --amplitude and --start replace the checkpoint's seasons, to see what a
 seasonal world does to policies trained with or without them (observations do
 not change). Such policies never trained in that world.
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.seasons \\
-        <checkpoint dir> <episodes> [out.json] [--period P] [--amplitude A] [--skip-cycles N] [--workers N]
+        <checkpoint dir> <episodes> [out.json] [--period P] [--amplitude A] [--start S] [--skip-cycles N] [--workers N]
 """
 
 import argparse
@@ -41,8 +41,10 @@ COUNTERS = (
 _worker = {}
 
 
-def cycle_phase(time_step, period):
-    """(whole cycles passed, phase index) of a physics step."""
+def cycle_phase(time_step, period, start=0):
+    """(whole cycles passed, phase index) of a physics step; cycles before
+    start are negative."""
+    time_step -= start
     return time_step // period, (time_step % period) * PHASES // period
 
 
@@ -63,7 +65,7 @@ def play_episode(env, choose, seed):
     cycles = {}
 
     def row_at(time_step):
-        cycle, phase = cycle_phase(time_step, period)
+        cycle, phase = cycle_phase(time_step, period, grass.season_start)
         return cycles.setdefault(cycle, [dict.fromkeys(COUNTERS, 0.0) for _ in range(PHASES)])[phase]
 
     physics_step = env._physics_step
@@ -102,6 +104,8 @@ def play_episode(env, choose, seed):
         "outcome": evaluate.outcome(env),
         "period": period,
         "amplitude": grass.season_amplitude,
+        "start": grass.season_start,
+        "extinct_at": dict(env.extinct_at),
         "grass_eaten": grass.total_consumed,
         "physics_steps": env.time_step,
         "cycles": {str(cycle): rows for cycle, rows in cycles.items()},
@@ -147,13 +151,14 @@ def summarise(rows, skip_cycles=1):
         "skip_cycles": skip_cycles,
         "period": rows[0]["period"],
         "amplitude": rows[0]["amplitude"],
+        "start": rows[0]["start"],
         "outcomes": outcomes,
         "grass_eaten_per_1000_steps": 1000 * sum(row["grass_eaten"] for row in rows) / sum(row["physics_steps"] for row in rows),
         "phases": phases,
     }
 
 
-def _init(checkpoint, period, amplitude):
+def _init(checkpoint, period, amplitude, start):
     import torch
 
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.checkpoints import checkpoint_env_config, load_modules
@@ -164,6 +169,8 @@ def _init(checkpoint, period, amplitude):
         config["grass_season_period"] = period
     if amplitude is not None:
         config["grass_season_amplitude"] = amplitude
+    if start is not None:
+        config["grass_season_start"] = start
     config["truncate_on_prey_extinction"] = False
     _worker["modules"] = load_modules(checkpoint)
     _worker["env"] = StagHuntContinuous(config)
@@ -187,6 +194,7 @@ def main():
     parser.add_argument("out", nargs="?")
     parser.add_argument("--period", type=int)
     parser.add_argument("--amplitude", type=float)
+    parser.add_argument("--start", type=int)
     parser.add_argument("--skip-cycles", type=int, default=1)
     parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
@@ -197,10 +205,10 @@ def main():
     if args.workers < 1:
         parser.error("workers must be at least 1")
     context = get_context("spawn")
-    with ProcessPoolExecutor(args.workers, mp_context=context, initializer=_init, initargs=(args.checkpoint, args.period, args.amplitude)) as pool:
+    with ProcessPoolExecutor(args.workers, mp_context=context, initializer=_init, initargs=(args.checkpoint, args.period, args.amplitude, args.start)) as pool:
         rows = list(pool.map(_play, range(args.episodes)))
     summary = summarise(rows, args.skip_cycles)
-    print(f"period {summary['period']} amplitude {summary['amplitude']} outcomes {summary['outcomes']} grass eaten per 1000 steps {summary['grass_eaten_per_1000_steps']:.1f}")
+    print(f"period {summary['period']} amplitude {summary['amplitude']} start {summary['start']} outcomes {summary['outcomes']} grass eaten per 1000 steps (whole episodes) {summary['grass_eaten_per_1000_steps']:.1f}")
     keys = ("grass", "rabbits", "hunters", "mammoths", "catches_per_1000_hunter_steps", "kills_per_1000_hunter_steps", "food_per_1000_hunter_steps", "mammoth_share")
     print("phase   " + " ".join(f"{key[:8]:>8s}" for key in keys) + "  group_kills")
     for phase in summary["phases"]:

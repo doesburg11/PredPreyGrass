@@ -270,7 +270,25 @@ in the shorter, stronger seasons, on few kills, and two arms cannot separate
 period from amplitude. Most rabbit extinctions come early: 16 of 20 in 16b by
 step ~1170 (first lean half: 500-1000), 13 of 16 in 16a by step ~1730 (1000-2000),
 which may reflect the first lean season arriving before rabbit numbers have
-built up from the 8 at the start (untested).
+built up from the 8 at the start.
+
+Delaying the first lean season (`grass_season_start`, plain growth until then;
+round 16's final policies replayed, not retrained, on the same 50 seeds;
+`results/delayed_lean_<arm>_<start or off>.json`), episodes with all three
+species:
+
+| Arm | Start 0 | Start 1000 | Start 2000 | Start 4000 | Seasons off |
+|---|---|---|---|---|---|
+| 16a | 31 | 36 | 35 | 40 | 40 |
+| 16b | 26 | 33 | 34 | 35 | 37 |
+
+Change against start 0, paired by seed: start 4000 +9 in both arms (95% interval
+0 to 17); the others include no change. A delay recovers at most what switching
+seasons off does, and these policies still lose 10-13 worlds with no seasons at
+all (rabbits out at a median step of ~1,420-1,570, hunters later), where round
+14's lost 3. So the first lean season accounts for part of the die-off, not all
+of it; the rest goes with the policies trained in seasonal worlds or with the
+opening. These policies did not train with a delay.
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as

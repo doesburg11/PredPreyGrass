@@ -9,7 +9,7 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.enviro
 
 # Settings added after runs were saved, with the value that gives the
 # behaviour those runs had; filled in when a saved env_config lacks them.
-ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"truncate_on_prey_extinction": False, "burrow_count": 0, "burrow_radius": 24.0, "burrow_placement": "random", "burrow_hides_rabbits": False, "hunt_condition_factor": 0.0, "hunt_rule": "chance", "hunt_energy_ratio": 1.0} | {f"{layer}_season_{name}": value for layer in ("grass", "steppe") for name, value in (("period", 0), ("amplitude", 0.0))}
+ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"truncate_on_prey_extinction": False, "burrow_count": 0, "burrow_radius": 24.0, "burrow_placement": "random", "burrow_hides_rabbits": False, "hunt_condition_factor": 0.0, "hunt_rule": "chance", "hunt_energy_ratio": 1.0} | {f"{layer}_season_{name}": value for layer in ("grass", "steppe") for name, value in (("period", 0), ("amplitude", 0.0), ("start", 0))}
 
 
 def run_settings(checkpoint):

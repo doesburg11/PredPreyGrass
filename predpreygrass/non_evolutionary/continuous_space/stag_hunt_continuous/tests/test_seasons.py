@@ -67,6 +67,20 @@ def test_growth_rate_starts_into_the_good_season():
     assert grass.growth_rate() == pytest.approx(0.5)
 
 
+def test_plain_growth_until_the_season_start():
+    grass = lone_patch(season_period=400, season_amplitude=0.5, season_start=300)
+    grass.steps = 299
+    assert grass.growth_rate() == 1
+    grass.steps = 300
+    assert grass.growth_rate() == 1  # sin(0): the first seasonal step
+    grass.steps = 301
+    assert grass.growth_rate() > 1
+    grass.steps = 400
+    assert grass.growth_rate() == pytest.approx(1.5)
+    grass.steps = 600
+    assert grass.growth_rate() == pytest.approx(0.5)
+
+
 def test_grass_eaten_in_the_lean_season_regrows_later():
     good = regrowth_steps(lone_patch(season_period=1000, season_amplitude=0.9), 150)
     lean = regrowth_steps(lone_patch(season_period=1000, season_amplitude=0.9), 650)
@@ -87,6 +101,8 @@ def test_full_amplitude_stops_growth_at_the_trough_only():
     "seasons",
     [
         {"season_period": -1},
+        {"season_start": -1},
+        {"season_start": 1.5},
         {"season_period": 1.5},
         {"season_amplitude": 0.5},
         {"season_period": 100, "season_amplitude": -0.1},
@@ -158,6 +174,22 @@ def seasonal_world(steps=1600, period=400):
     return StagHuntContinuous({"predator_count": 12, "mammoth_count": 6, "max_time_steps": steps, "grass_season_period": period, "grass_season_amplitude": 0.8})
 
 
+def test_cycle_phase_counts_from_the_season_start():
+    assert cycle_phase(99, 80, 100)[0] == -1
+    assert cycle_phase(100, 80, 100) == (0, 0)
+    assert cycle_phase(180, 80, 100) == (1, 0)
+
+
+def test_steps_before_the_season_start_stay_out_of_the_cycles():
+    env = StagHuntContinuous({"predator_count": 12, "mammoth_count": 6, "max_time_steps": 160, "grass_season_period": 40, "grass_season_amplitude": 0.8, "grass_season_start": 80})
+    row = play_episode(env, random_policy(5), 5)
+    assert sorted(row["cycles"], key=int) == ["-2", "-1", "0", "1"]
+    assert sum(phase["physics_steps"] for phase in row["cycles"]["-1"]) == 40
+    assert row["start"] == 80
+    pooled = summarise([row], skip_cycles=0)["phases"]
+    assert sum(phase["physics_steps"] for phase in pooled) == 80
+
+
 def test_counters_add_up_to_the_episode():
     env = seasonal_world()
     row = play_episode(env, random_policy(5), 5)
@@ -216,7 +248,7 @@ def test_summarise_leaves_out_early_cycles():
     empty = phase(0, 0, 0, 0)
     first = [phase(10, 100, 9, 1)] + [empty] * (PHASES - 1)
     second = [phase(10, 20, 1, 3)] + [empty] * (PHASES - 1)
-    rows = [{"outcome": "all", "period": 400, "amplitude": 0.5, "grass_eaten": 30, "physics_steps": 20, "cycles": {"0": first, "1": second}}]
+    rows = [{"outcome": "all", "period": 400, "amplitude": 0.5, "start": 0, "grass_eaten": 30, "physics_steps": 20, "cycles": {"0": first, "1": second}}]
     assert summarise(rows, skip_cycles=0)["phases"][0]["rabbits"] == 60
     summary = summarise(rows, skip_cycles=1)
     assert summary["phases"][0]["rabbits"] == 20

@@ -45,6 +45,7 @@ class Grass:
     starting into the good season. The clock's increment averages 1 per step
     over a whole cycle; realised regrowth, grazing and collapses need not
     match a world without seasons, since delays are set when a patch is eaten.
+    season_start: physics steps of plain growth before the first cycle.
     """
 
     def __init__(
@@ -65,6 +66,7 @@ class Grass:
         overgrazing_delay=400,
         season_period=0,
         season_amplitude=0.0,
+        season_start=0,
     ):
         for name, value, minimum in (
             ("count", count, 0),
@@ -72,6 +74,7 @@ class Grass:
             ("cluster_count", cluster_count, 1),
             ("overgrazing_delay", overgrazing_delay, 1),
             ("season_period", season_period, 0),
+            ("season_start", season_start, 0),
         ):
             if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
                 raise ValueError(f"grass_{name} must be an integer >= {minimum}")
@@ -130,6 +133,7 @@ class Grass:
         self.overgrazing_delay = overgrazing_delay
         self.season_period = season_period
         self.season_amplitude = season_amplitude
+        self.season_start = season_start
         self.rng = random.Random()
         self.centres = []
         self.collapsed = []
@@ -203,9 +207,9 @@ class Grass:
 
     def growth_rate(self):
         """How far the growth clock moves this physics step."""
-        if not self.season_amplitude:
+        if not self.season_amplitude or self.steps < self.season_start:
             return 1
-        return 1 + self.season_amplitude * math.sin(2 * math.pi * self.steps / self.season_period)
+        return 1 + self.season_amplitude * math.sin(2 * math.pi * (self.steps - self.season_start) / self.season_period)
 
     def available(self, patch):
         return patch.ready_at <= self.tick
