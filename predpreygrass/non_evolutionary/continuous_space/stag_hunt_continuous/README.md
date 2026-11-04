@@ -323,7 +323,7 @@ evaluation, so round 14's is below the ~22% it ended on in training):
 | Rabbit stage first | no | yes | no | yes |
 | All three species | 47 | 39 | 26 | 39 |
 | Joint arrivals vs chance | 1.2x | 1.3x | 1.2x | 1.1x |
-| Partner minus alone | +0.06 | -0.00 | +0.10 | +0.03 |
+| Partner minus alone | +0.06 | -0.01 | +0.10 | +0.03 |
 | Mammoths' share of food | 17% | 19% | 26% | 18% |
 | Group kills, of all mammoth kills | 43 of 360 | 46 of 437 | 94 of 421 | 34 of 405 |
 
