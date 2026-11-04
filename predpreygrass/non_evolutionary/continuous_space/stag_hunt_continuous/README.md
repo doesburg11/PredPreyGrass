@@ -1,6 +1,6 @@
 # stag_hunt_continuous
 
-**Status (2026-11-03): calibrating (DESIGN.md, plan step 1).** Hunters
+**Status (2026-11-04): calibrating (DESIGN.md, plan step 1).** Hunters
 are viable on rabbits alone. With mammoths, no round so far gives both
 coexistence and cooperation: worlds where hunters learn to hunt mammoths
 together (joint arrivals up to 2.4x chance) end in a hunter boom that eats
@@ -23,7 +23,10 @@ mammoths fall to about a fifth of the hunters' food and joint arrivals to
 chance, mammoths still about a fifth of the food, stopped early. Round 16
 gave the rabbits' grass seasons instead: 26 and 31 of 50 keep all three
 species, mostly losing the rabbits in or just after the first lean season,
-with joint arrivals 1.2-1.3x chance. See "Calibration log"
+with joint arrivals 1.2-1.3x chance. Round 17 trained hunters on rabbits
+first: 39 of 50 keep all three species with or without seasons, mammoths
+about a fifth of the food, joint arrivals 1.1-1.3x chance, and hunters join
+about as often alone as with a partner. See "Calibration log"
 below and
 [DESIGN.md](DESIGN.md).
 
@@ -139,9 +142,9 @@ energy) gained by hunters.
 | 15b `with_mammoths_r15b` | as 15a with 0.4 | mammoths ~23% of the hunters' energy at iterations 350-400, ~20% at 590-639 (round 14: ~38%, ~28%), cap binding ~0; evaluations (50 episodes): iteration 390 **45 coexist**, joint 0.022 vs chance 0.024, partner 0.28 vs alone 0.24; iteration 630 **37** (hunters out in 13), joint 0.019 vs 0.020, partner 0.34 vs 0.28 | stopped at iteration 639: no joint arrivals above chance, and fewer coexisting late |
 | 16a `with_mammoths_r16a` | round 14 with seasons in the rabbits' grass (`grass_season_period` 2000, `grass_season_amplitude` 0.5; rabbit efficiency back at 0.5) | no boom (cap binding ~1-3%); mammoths ~45% of the hunters' energy at iterations 250-300, ~27% at 850-900 (round 14: ~45%, ~23%). Evaluations (50 episodes): iteration 500 **18 coexist**, joint 0.074 vs chance 0.057, partner 0.29 vs alone 0.17; final checkpoint **31** (hunters out in 19, rabbits in 16), joint 0.054 vs 0.042 (1.3x), partner 0.22 vs 0.15, mammoths 24% of the food | seasons slowed the drift to rabbits without ending it |
 | 16b `with_mammoths_r16b` | as 16a with period 1000, amplitude 1 | no boom (cap binding up to ~4%); mammoths ~50% of the hunters' energy at iterations 250-450, ~33% at 850-900; training episodes ~720 decisions at 850-900 (round 14: ~1,160). Evaluations (50 episodes): iteration 500 **7 coexist**, joint 0.110 vs chance 0.074, partner 0.41 vs alone 0.23; final checkpoint **26** (hunters out in 23, rabbits in 20), joint 0.050 vs 0.041 (1.2x), partner 0.26 vs 0.16, mammoths 26% of the food | |
-| 17 stage 1 `rabbits_only_r17` | rabbits-first curriculum (user's idea): round 14 without mammoths, 400 iterations; the mammoth policy stays at its initial weights | running (launched 2026-11-03) | |
-| 17a `with_mammoths_r17a` | round 14 continued from stage 1's hunters and rabbits, mammoths added and learning from scratch | starts automatically after stage 1 | |
-| 17b `with_mammoths_r17b` | as 17a with round 16b's seasons (period 1000, amplitude 1) | starts automatically after stage 1 | |
+| 17 stage 1 `rabbits_only_r17` | rabbits-first curriculum (user's idea): round 14 without mammoths, 400 iterations; the mammoth policy stays at its initial weights | evaluation (50 episodes): **48 keep hunters and rabbits**, rabbits out in 1, hunters out in 1, cap 0 (`results/calibration_rabbits_only_r17_eval.json`) | finished 400 |
+| 17a `with_mammoths_r17a` | round 14 continued from stage 1's hunters and rabbits, mammoths added and learning from scratch | no boom (cap ~0.1%); mammoths ~32% of the hunters' energy at iterations 50-250, ~24% at 800; training joint rate 0.042-0.049 and partner below alone throughout (0.34 vs 0.37 at 800; round 14 at 850-900: 0.38 vs 0.29). Evaluations (50 episodes): iteration 500 **22 coexist**, joint 0.038 vs chance 0.028, partner 0.32 vs alone 0.34; final checkpoint **39** (hunters out in 11, rabbits in 3), joint 0.037 vs 0.028 (1.3x), partner 0.28 vs 0.29, mammoths 19% of the food, 46 of 437 kills by a group (`results/calibration_with_mammoths_r17a_eval.json`, `_iter500_eval.json`) | finished 1,000 |
+| 17b `with_mammoths_r17b` | as 17a with round 16b's seasons (period 1000, amplitude 1) | no boom (cap ~0.1%); mammoths ~38% at iterations 0-50, ~25% at 750-780; training joint rate 0.044-0.058, partner about level with alone by 750 (0.39 vs 0.39). Evaluations (50 episodes): iteration 500 **14 coexist**, joint 0.037 vs chance 0.029, partner 0.40 vs alone 0.40; final checkpoint **39** (hunters out in 11, rabbits in 8), joint 0.032 vs 0.029 (1.1x), partner 0.30 vs 0.27, mammoths 18% of the food, 34 of 405 kills by a group (round 16b: 94 of 421) (`results/calibration_with_mammoths_r17b_eval.json`, `_iter500_eval.json`) | finished 1,000 |
 
 Reading so far: hunters live on rabbits; between a carcass of 32 and 48
 the mammoth world tips from hunters ignoring mammoths into a hunter boom
@@ -309,6 +312,33 @@ Paired by seed, only two changes exclude none: 16b on at 60 (-16, 95% interval
 does not look like the cause of the die-off, which points to the policies. With
 60 rabbits they still die out first, which would fit an overshoot (more early
 food for hunters, then a crash), not measured here.
+
+Round 17 against the same worlds trained without the rabbit stage, final
+checkpoints, 50 episodes (one training run per arm; shares here are from
+evaluation, so round 14's is below the ~22% it ended on in training):
+
+| | 14 | 17a | 16b | 17b |
+|---|---|---|---|---|
+| Seasons | no | no | yes | yes |
+| Rabbit stage first | no | yes | no | yes |
+| All three species | 47 | 39 | 26 | 39 |
+| Joint arrivals vs chance | 1.2x | 1.3x | 1.2x | 1.1x |
+| Partner minus alone | +0.06 | -0.00 | +0.10 | +0.03 |
+| Mammoths' share of food | 17% | 19% | 26% | 18% |
+| Group kills, of all mammoth kills | 43 of 360 | 46 of 437 | 94 of 421 | 34 of 405 |
+
+The rabbit stage went with fewer worlds kept without seasons (exact test
+p = 0.04) and more with them (p = 0.01), both uncorrected, and with lost or
+smaller partner effects in both. Seasons did not raise the mammoth share of
+hunters started on rabbits. By season (`results/seasons_r17b.json`, computed as
+for round 16): 19% in the lean half against 14% in the good half (difference
+95% interval +0.01 to +0.09, 27 group kills), the same direction as 16b's. So
+hunters shift somewhat towards mammoths when rabbits are scarcer, but the rabbit
+stage gave neither the mammoth share nor the cooperation signals asked for. One
+possible reading, not tested: hunters arrive with a solo rabbit-hunting policy,
+and there is little reward left for learning joint hunts. Stage 1 had no
+seasons, so hunters first met scarcity after they had learned on plenty.
+
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
