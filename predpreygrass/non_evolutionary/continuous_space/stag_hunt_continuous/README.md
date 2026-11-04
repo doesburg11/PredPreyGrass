@@ -68,9 +68,10 @@ found no learned cooperation (DESIGN.md, section 2).
 - [`calibrate.py`](calibrate.py): the hunt's expected-value table for the
   current settings.
 - [`prey_switching.py`](prey_switching.py), [`crossplay.py`](crossplay.py),
-  [`seasons.py`](seasons.py): prey switching by rabbit count, policies of two
-  checkpoints mixed, and populations, food and kills by phase of the grass
-  seasons.
+  [`seasons.py`](seasons.py), [`payoffs.py`](payoffs.py): prey switching by
+  rabbit count, policies of two checkpoints mixed, populations, food and kills
+  by phase of the grass seasons, and the hunters' energy accounts by hunt and
+  by what they were doing.
 - [`evaluate.py`](evaluate.py): plays seeded episodes of a checkpoint (or
   untrained policies): coexistence of the three species, hunt counters,
   and joint arrivals per mammoth encounter episode against a
@@ -355,6 +356,36 @@ the lean half against 18% in the good half (difference 95% interval -0.02 to
 with a partner effect that 17b lacks, but hunters do not arrive together much
 above chance, so this may not be coordination; the join rates could also reflect
 where partners tend to be, not measured. Against round 14 there is no clear gain.
+
+Why do hunters drift to rabbits? Their energy accounts (`payoffs.py`, 50 episodes
+each, `results/payoffs_<run>.json`; no training), energy per 1000 hunter steps:
+
+| Run | All three species | Rabbit food | Hunts, net (95% interval) | Scavenged | Hunts with 2+ hunters |
+|---|---|---|---|---|---|
+| 16b iter 500 | 7 | 6.3 | +2.11 (+1.27 to +2.96) | 1.78 | 6.6% |
+| 13a | 10 | 7.4 | +2.20 (+1.32 to +3.28) | 1.87 | 6.4% |
+| 14 iter 300 | 14 | 9.0 | +0.77 (-0.17 to +1.78) | 1.46 | 5.1% |
+| 16b | 26 | 9.7 | +0.26 (-0.06 to +0.66) | 0.66 | 2.6% |
+| 18 | 40 | 11.3 | -1.52 (-1.76 to -1.25) | 0.52 | 1.5% |
+| 14 | 47 | 10.6 | -1.00 (-1.18 to -0.82) | 0.39 | 1.5% |
+
+So at the end of training the hunts of rounds 14 and 18 cost the hunters more than
+they bring, while group hunts themselves still pay. Per hunter per hunt, solo
+hunts net -0.21 to -0.34 in all six (2-4% kill), pairs +2.82 to +4.69 (18-31% kill).
+Under the energy rule a hunt's result is fixed by the energies, and hunters are
+lean against mammoths: parties average about 5 energy per hunter, mammoths hunted
+about 14-20. In training the hunted mammoth's energy rises with the mammoths'
+learning, 11 to 19 in round 14, 11 to 16 in 16b and 11 to 18 in 18, while the
+party's stays about 5 per hunter, so a typical pair cannot win. Only about 1% of a
+lone hunter's contacts could win, yet hunters alone still join 15-30% of those
+that cannot (46-76% of those that can, round 18 38%), so they use the energies
+partly. So both may contribute: mammoths getting harder to kill, and hunters not
+learning to wait or to hunt together. Across these six checkpoints the worlds where
+hunts pay most keep the fewest species (an association; each differs in training
+and rule), which fits round 13's earlier reading that mammoth food feeds hunters
+who then eat out the rabbits, not tested here. Bout-level rates in the same files
+are descriptive only: bouts are chosen by the policy and take their group from
+their largest party.
 
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
