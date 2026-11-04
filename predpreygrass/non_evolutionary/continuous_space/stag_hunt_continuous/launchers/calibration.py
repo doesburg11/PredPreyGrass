@@ -6,7 +6,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r19c`: rounds 2 to 19 of step 1b, see
+- `with_mammoths_r2` to `with_mammoths_r20`: rounds 2 to 20 of step 1b, see
   ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
   rounds 17 and 18, and INIT_FROM names the run an arm continues from.
 
@@ -188,6 +188,11 @@ INIT_FROM["with_mammoths_r18"] = "rabbits_only_r18"
 # (3 of 50 at iteration 190, joint arrivals 2.2x chance).
 for arm, ratio in (("with_mammoths_r19a", 0.75), ("with_mammoths_r19b", 0.5), ("with_mammoths_r19c", 0.6)):
     ARMS[arm] = dict(ARMS["with_mammoths_r14"], hunt_min_party=2, hunt_energy_ratio=ratio)
+# Round 20 (2026-11-04), after 19b's cooperation ate out both prey: 19b with a
+# wait of 1000 physics steps between a hunter's births, a brake on hunter
+# numbers as human birth spacing is. Rounds 7-8 tried this with solo kills
+# possible and the hunters left the mammoths.
+ARMS["with_mammoths_r20"] = dict(ARMS["with_mammoths_r19b"], reproduction_predator_interval=1000)
 
 
 def main():
