@@ -6,9 +6,9 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r17b`: rounds 2 to 17 of step 1b, see
-  ARMS; `rabbits_only_r17` is round 17's first stage, and INIT_FROM names the
-  run an arm continues from.
+- `with_mammoths_r2` to `with_mammoths_r18`: rounds 2 to 18 of step 1b, see
+  ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
+  rounds 17 and 18, and INIT_FROM names the run an arm continues from.
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -172,6 +172,13 @@ ARMS["rabbits_only_r17"] = dict(ARMS["with_mammoths_r14"], mammoth_count=0)
 ARMS["with_mammoths_r17a"] = dict(ARMS["with_mammoths_r14"])
 ARMS["with_mammoths_r17b"] = dict(ARMS["with_mammoths_r16b"])
 INIT_FROM = {"with_mammoths_r17a": "rabbits_only_r17", "with_mammoths_r17b": "rabbits_only_r17"}
+
+# Round 18 (2026-11-04), after round 17's hunters took a fifth of their food
+# from mammoths with or without seasons in the second stage: round 17b with the
+# seasons in the first stage too, so hunters learn on rabbits under scarcity.
+ARMS["rabbits_only_r18"] = dict(ARMS["with_mammoths_r16b"], mammoth_count=0)
+ARMS["with_mammoths_r18"] = dict(ARMS["with_mammoths_r16b"])
+INIT_FROM["with_mammoths_r18"] = "rabbits_only_r18"
 
 
 def main():
