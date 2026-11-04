@@ -6,7 +6,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   rabbits learn to hide?); `rabbits_only_warrens_hidden`: rabbits inside
   hidden from the hunters;
 - `with_mammoths`: the configured world (step 1b);
-- `with_mammoths_r2` to `with_mammoths_r18`: rounds 2 to 18 of step 1b, see
+- `with_mammoths_r2` to `with_mammoths_r19b`: rounds 2 to 19 of step 1b, see
   ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
   rounds 17 and 18, and INIT_FROM names the run an arm continues from.
 
@@ -179,6 +179,13 @@ INIT_FROM = {"with_mammoths_r17a": "rabbits_only_r17", "with_mammoths_r17b": "ra
 ARMS["rabbits_only_r18"] = dict(ARMS["with_mammoths_r16b"], mammoth_count=0)
 ARMS["with_mammoths_r18"] = dict(ARMS["with_mammoths_r16b"])
 INIT_FROM["with_mammoths_r18"] = "rabbits_only_r18"
+
+# Round 19 (2026-11-04), after the energy accounts (payoffs.py) showed ~88% of
+# round 14's kills solo, solo hunts losing and pairs paying: round 14 with a
+# minimum party of two, at two energy ratios, since a typical pair rarely beats
+# a well-fed mammoth at ratio 1. In replay these kept 34-42 of 50.
+for arm, ratio in (("with_mammoths_r19a", 0.75), ("with_mammoths_r19b", 0.5)):
+    ARMS[arm] = dict(ARMS["with_mammoths_r14"], hunt_min_party=2, hunt_energy_ratio=ratio)
 
 
 def main():
