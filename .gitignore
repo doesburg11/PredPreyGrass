@@ -199,6 +199,7 @@ predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/runs
 predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/runs/
 predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/runs/
 predpreygrass/non_evolutionary/continuous_space/stag_hunt_continuous/runs/
+predpreygrass/non_evolutionary/continuous_space/stag_hunt_rule_prey/runs/
 predpreygrass/non_evolutionary/discrete_space/predator_sexual_reproduction/runs/
 ray_results_archive/
 **/ray_results/
