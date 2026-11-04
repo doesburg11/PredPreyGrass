@@ -24,7 +24,10 @@ starves, and of the episode's last decision, are not counted. Births move energy
 to the child and are not a cost here.
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.payoffs \\
-        <checkpoint dir> <episodes> [out.json] [--workers N]
+        <checkpoint dir> <episodes> [out.json] [--energy-ratio R] [--workers N]
+
+--energy-ratio replaces the checkpoint's hunt_energy_ratio; such policies never
+trained under it.
 """
 
 import argparse
@@ -249,7 +252,7 @@ def play_episode(env, choose, seed):
         del env._gain, env._physics_step, env._hunts
     for records in lives.values():
         add_life(row, records)
-    row.update(seed=seed, outcome=evaluate.outcome(env), physics_steps=env.time_step, unexplained_energy=unexplained)
+    row.update(seed=seed, outcome=evaluate.outcome(env), energy_ratio=env.energy_ratio, extinct_at=dict(env.extinct_at), physics_steps=env.time_step, unexplained_energy=unexplained)
     return row
 
 
@@ -337,6 +340,7 @@ def summarise(rows):
         )
     return {
         "episodes": len(rows),
+        "energy_ratio": rows[0]["energy_ratio"],
         "outcomes": outcomes,
         "unexplained_energy": sum(row["unexplained_energy"] for row in rows),
         "attempts": attempts,
@@ -347,13 +351,15 @@ def summarise(rows):
     }
 
 
-def _init(checkpoint):
+def _init(checkpoint, energy_ratio=None):
     import torch
 
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.checkpoints import checkpoint_env_config, load_modules
 
     torch.set_num_threads(1)
     config = checkpoint_env_config(checkpoint)
+    if energy_ratio is not None:
+        config["hunt_energy_ratio"] = energy_ratio
     config["truncate_on_prey_extinction"] = False
     _worker["modules"] = load_modules(checkpoint)
     _worker["env"] = StagHuntContinuous(config)
@@ -375,13 +381,14 @@ def main():
     parser.add_argument("checkpoint")
     parser.add_argument("episodes", type=int)
     parser.add_argument("out", nargs="?")
+    parser.add_argument("--energy-ratio", type=float)
     parser.add_argument("--workers", type=int, default=1)
     args = parser.parse_args()
     if args.episodes < 1:
         parser.error("episodes must be at least 1")
     if args.workers < 1:
         parser.error("workers must be at least 1")
-    with ProcessPoolExecutor(args.workers, mp_context=get_context("spawn"), initializer=_init, initargs=(args.checkpoint,)) as pool:
+    with ProcessPoolExecutor(args.workers, mp_context=get_context("spawn"), initializer=_init, initargs=(args.checkpoint, args.energy_ratio)) as pool:
         rows = list(pool.map(_play, range(args.episodes)))
     summary = summarise(rows)
     print(f"outcomes {summary['outcomes']} unexplained energy {summary['unexplained_energy']:.3f}")

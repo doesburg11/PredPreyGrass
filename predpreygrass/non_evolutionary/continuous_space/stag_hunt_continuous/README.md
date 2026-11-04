@@ -387,6 +387,24 @@ who then eat out the rabbits, not tested here. Bout-level rates in the same file
 are descriptive only: bouts are chosen by the policy and take their group from
 their largest party.
 
+Replay at a lower energy ratio (`payoffs.py --energy-ratio`, final policies, not
+retrained, same seeds, `results/replay_ratio_<run>_<ratio>.json`):
+
+| Run | Ratio | All three species | Rabbits out | Hunters out | Mammoths out | Solo kills | Kills by 2+ |
+|---|---|---|---|---|---|---|---|
+| 14 | 1 | 47 | 1 | 3 | 0 | 317 | 43 |
+| 14 | 0.75 | 25 | 25 | 25 | 0 | 775 | 151 |
+| 14 | 0.5 | 0 | 50 | 33 | 17 | 1,258 | 265 |
+| 18 | 1 | 40 | 7 | 10 | 0 | 363 | 50 |
+| 18 | 0.75 | 13 | 35 | 37 | 0 | 643 | 146 |
+| 18 | 0.5 | 0 | 50 | 29 | 21 | 1,463 | 343 |
+
+Rabbits go first (median step at ratio 0.5: 998 and 657), against about 1,000-1,700
+at 0.75. A lower ratio mostly adds solo kills: the solo hunt turns profitable (+1.4
+per hunter at 0.5), so it does not make a partner necessary. These policies and
+their rabbits never trained under these ratios, so this is what the rule does
+at once, not what training would reach. Round 19 at ratio 0.5 was not started.
+
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
