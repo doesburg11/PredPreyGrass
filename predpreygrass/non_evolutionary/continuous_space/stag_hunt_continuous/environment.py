@@ -30,7 +30,8 @@ With hunt_rule "energy" (DESIGN.md, 9; default "chance", the above) a hunt
 succeeds, with no random draw, when the contributors' summed energy
 exceeds hunt_energy_ratio x the mammoth's energy, as in the discrete
 stag_hunt_forward_view; predators then see the energy of the mammoths and
-predators in their slots.
+predators in their slots. With hunt_min_party above 1 a smaller party always
+fails, under either rule, at the cost of any failure.
 
 Rabbit burrows (DESIGN.md, 7; none by default): burrow_count fixed discs
 of radius burrow_radius, drawn at reset from their own random stream. A
@@ -210,6 +211,7 @@ DEFAULT_CONFIG = {
     # mammoth's (module docstring).
     "hunt_rule": "chance",
     "hunt_energy_ratio": 1.0,
+    "hunt_min_party": 1,
 }
 
 GRASS_KEYS = (
@@ -412,6 +414,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.condition_factor = c["hunt_condition_factor"]
         self.energy_rule = c["hunt_rule"] == "energy"
         self.energy_ratio = c["hunt_energy_ratio"]
+        self.min_party = c["hunt_min_party"]
         self.burrow_count = c["burrow_count"]
         self.burrow_radius = c["burrow_radius"]
         self.burrow_placement = c["burrow_placement"]
@@ -505,6 +508,8 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError('hunt_rule must be "chance" or "energy"')
         if not _number(c["hunt_energy_ratio"], 0, strict=True):
             raise ValueError("hunt_energy_ratio must be finite and positive")
+        if not _integer(c["hunt_min_party"], 1):
+            raise ValueError("hunt_min_party must be a positive integer")
         if c["hunt_rule"] == "energy" and c["hunt_condition_factor"]:
             raise ValueError('hunt_condition_factor applies to hunt_rule "chance" only')
         if not _number(c["hunt_bystander_radius"], 0):
@@ -1064,7 +1069,9 @@ class StagHuntContinuous(MultiAgentEnv):
             size = min(n, PARTY_SIZES)
             condition = self._condition(mammoth)
             party_energy = sum(predator.energy for predator in party)
-            if self.energy_rule:
+            if n < self.min_party:
+                success = False
+            elif self.energy_rule:
                 success = party_energy > self.energy_ratio * mammoth.energy
             else:
                 success = self.hunt_rng.random() < self.success[size - 1] * (1 - self.condition_factor * condition)

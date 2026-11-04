@@ -142,6 +142,15 @@ def test_energy_rule_attempts_with_enough_energy_all_kill():
         assert counters["kills"] == counters["enough_energy"]
 
 
+def test_minimum_party_stops_solo_kills_and_counts_as_not_enough():
+    env = small_env(hunt_rule="energy", hunt_energy_ratio=0.1, hunt_min_party=2, max_time_steps=1600)
+    row = play_episode(env, random_policy(4), 4)
+    assert row["attempts"]["1"]["hunts"] > 0
+    assert row["attempts"]["1"]["kills"] == row["attempts"]["1"]["enough_energy"] == 0
+    assert row["contacts"]["alone"]["enough"] == 0
+    assert row["unexplained_energy"] == pytest.approx(0.0, abs=1e-6)
+
+
 def test_summary_reports_each_group():
     rows = [play_episode(small_env(), random_policy(seed), seed) for seed in range(2)]
     summary = summarise(rows)

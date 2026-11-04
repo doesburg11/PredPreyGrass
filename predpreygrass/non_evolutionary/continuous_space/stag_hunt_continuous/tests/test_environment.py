@@ -999,6 +999,40 @@ def test_energy_rule_lets_a_well_fed_hunter_kill_alone():
     assert te["mammoth_0"] and env.hunt_stats["kills_party_1"] == 1
 
 
+def test_minimum_party_fails_a_smaller_party_at_the_cost_of_any_failure():
+    env = world(hunt_rule="energy", hunt_min_party=2, hunt_struggle_fraction=0.01, hunt_carcass_energy=48.0, hunt_join_cost=0.02)
+    env.mammoths[0].energy, env.predators[0].energy = 8.0, 12.0
+    place(env, {"predator_0": (200, 130)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 0, "predator_2": 0, "predator_3": 0})
+    assert not te.get("mammoth_0") and env.hunt_stats["kills_party_1"] == 0 and env.hunt_stats["hunts_party_1"] == 1
+    assert env.predators[0].energy == pytest.approx(12.0 - 0.02 - 0.48)
+    assert env.predators[0].ready_at > env.decision - 1
+
+
+def test_minimum_party_lets_a_party_of_that_size_win():
+    env = world(hunt_rule="energy", hunt_min_party=2)
+    env.mammoths[0].energy = 8.0
+    env.predators[0].energy, env.predators[1].energy = 4.0, 6.0
+    place(env, {"predator_0": (200, 130), "predator_1": (230, 100)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 1, "predator_2": 0, "predator_3": 0})
+    assert te["mammoth_0"] and env.hunt_stats["kills_party_2"] == 1
+
+
+def test_minimum_party_applies_to_the_chance_rule():
+    env = world(hunt_min_party=2, hunt_success_by_party=(1.0, 1.0, 1.0, 1.0))
+    env.hunt_rng = CountingDraw(0.0)
+    place(env, {"predator_0": (200, 130)})
+    te, _, _ = hunt(env, {"predator_0": 1, "predator_1": 0, "predator_2": 0, "predator_3": 0})
+    assert not te.get("mammoth_0") and env.hunt_stats["kills_party_1"] == 0
+    assert env.hunt_rng.calls == 0
+
+
+@pytest.mark.parametrize("value", (0, 1.5, -1))
+def test_minimum_party_setting_is_checked(value):
+    with pytest.raises(ValueError, match="hunt_min_party"):
+        StagHuntContinuous({"hunt_min_party": value})
+
+
 def test_energy_rule_observations():
     env = world(hunt_rule="energy")
     assert env.obs_size["predator"] == 58 + 2 + 4 and env.obs_size["rabbit"] == 45 and env.obs_size["mammoth"] == 39

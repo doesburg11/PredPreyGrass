@@ -22,7 +22,7 @@ def expected_values(config):
     s = config["hunt_scavenger_fraction"]
     rows = []
     for n in range(1, PARTY_SIZES + 1):
-        p = config["hunt_success_by_party"][n - 1]
+        p = config["hunt_success_by_party"][n - 1] if n >= config["hunt_min_party"] else 0.0
         failure = (1 - p) * config["hunt_struggle_fraction"] * carcass / n + config["hunt_join_cost"]
         rows.append((n, p, p * carcass / n - failure, p * carcass * (1 - s) / n - failure, p * carcass * s))
     return rows

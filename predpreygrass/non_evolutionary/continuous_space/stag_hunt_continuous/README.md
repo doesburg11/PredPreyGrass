@@ -405,6 +405,29 @@ per hunter at 0.5), so it does not make a partner necessary. These policies and
 their rabbits never trained under these ratios, so this is what the rule does
 at once, not what training would reach. Round 19 at ratio 0.5 was not started.
 
+The energy rule also lets one hunter kill: 317 of round 14's 360 kills were solo.
+With a minimum party of two (`hunt_min_party`; smaller parties always fail, at the
+cost of any failure; same replay, `results/replay_minparty2_<run>_<ratio>.json`):
+
+| Run | Ratio | All three species | Rabbits out | Hunters out | Kills by 2+ | Pair, net per hunter per hunt | Rabbit food per 1000 steps |
+|---|---|---|---|---|---|---|---|
+| 14 | 1 | 38 | 0 | 12 | 25 | +3.57 | 12.6 |
+| 14 | 0.75 | 40 | 1 | 10 | 92 | +7.79 | 11.6 |
+| 14 | 0.5 | 34 | 6 | 16 | 191 | +11.31 | 10.1 |
+| 14 | 0.25 | 31 | 9 | 17 | 452 | +15.49 | 7.5 |
+| 18 | 1 | 41 | 0 | 9 | 21 | +3.53 | 15.1 |
+| 18 | 0.75 | 42 | 0 | 8 | 34 | +5.01 | 14.7 |
+| 18 | 0.5 | 40 | 3 | 10 | 92 | +9.09 | 13.3 |
+| 18 | 0.25 | 25 | 20 | 18 | 765 | +15.29 | 6.2 |
+
+Against the same ratios without the minimum (0 of 50 at 0.5), the rabbits mostly
+survive, so solo kills seem to carry much of what eats them out; hunters lose more
+often than with their own solo kills at ratio 1. A solo hunt now always costs 0.66,
+and these policies still try: hunters alone join 16-31% of contacts. This is
+behaviour never trained under the rule, with few pairs forming, so it does not show
+what happens once hunters learn to hunt together, when more mammoth food could
+bring the boom back.
+
 Accepted earlier: mammoths need
 not be the hunters' only food (round 5's ~80-85% share is acceptable,
 cooperation stays voluntary), and a forced-join-off test was dropped as
