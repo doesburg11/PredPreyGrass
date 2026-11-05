@@ -1,7 +1,7 @@
 # stag_hunt_rule_prey
 
-**Status (2026-11-05): calibration done and stopped as agreed, coexistence target not
-met.** Only hunters learn; rabbits and
+**Status (2026-11-05): closed, coexistence target not met; the stag hunt line is
+paused.** See [RESULTS.md](RESULTS.md), section 9. Only hunters learn; rabbits and
 mammoths follow fixed rules. A simplification of
 [`stag_hunt_continuous`](../stag_hunt_continuous/README.md), whose 20 calibration
 rounds are the background.
@@ -61,7 +61,8 @@ learned strong group hunting of mammoths, which became their main net food, but 
 evaluated episode kept all three species. In `base` and `lean` hunters overran the prey
 within about 700 steps, and scarcer food did not help. A larger world, replayed without
 training, delayed this only slightly. With harder rabbits most worlds lost the hunters
-instead, and rabbits stopped being a real food source. Details are in
+instead, and rabbits stopped being a real food source. Paying hunters for time alive
+instead of births lost the group hunting without bringing restraint. Details are in
 [RESULTS.md](RESULTS.md).
 
 | Arm, final | All three species (of 50) | Joint arrivals vs chance | Mammoth share of food | Mammoth hunts vs rabbits, net energy per 1000 steps |
@@ -69,6 +70,8 @@ instead, and rabbits stopped being a real food source. Details are in
 | `base` | 0 | 2.7x | 87% | +18.8 vs +4.2 |
 | `lean` | 0 | 3.1x | 87% | +16.8 vs +3.4 |
 | `harder_rabbits` | 0 | 3.6x | 92% | +7.6 vs +0.9 |
+| `alive_individual` | 0 | 0.6x | 2% | -0.2 vs +5.8 |
+| `alive_shared` | 0 | 0.7x | 3% | -0.2 vs +5.5 |
 
 ## Files
 

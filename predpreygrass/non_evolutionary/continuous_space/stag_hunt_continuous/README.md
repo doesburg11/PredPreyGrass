@@ -1,10 +1,10 @@
 # stag_hunt_continuous
 
-**Status (2026-11-05): calibration stopped after 20 rounds, target not met.** The
-work continues with rule-following prey in
-[`../stag_hunt_rule_prey/`](../stag_hunt_rule_prey/README.md). Details of every
-round, the reasons for each change and for stopping are in
-[RESULTS.md](RESULTS.md).
+**Status (2026-11-05): stopped, target not met.** Calibration stopped after 20
+rounds, and the follow-up with rule-following prey,
+[`../stag_hunt_rule_prey/`](../stag_hunt_rule_prey/README.md), was stopped the same
+day. The stag hunt line as a whole is paused, not abandoned. Details of every round,
+the reasons for each change and for stopping are in [RESULTS.md](RESULTS.md).
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
 (the predators, standing for humans) live with two prey species:

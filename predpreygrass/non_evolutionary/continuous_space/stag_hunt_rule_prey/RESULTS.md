@@ -239,7 +239,7 @@ What this shows, for these hunters, who were not trained at these caps:
   caps 15 to 20, where rabbits are nearly always lost, so a reward for time alive might
   still give up the rabbits.
 
-## 8. Restraint: paid for time alive (2026-11-05, running)
+## 8. Restraint: paid for time alive (2026-11-05)
 
 Settings and stop rule fixed before training, after section 7, which suggests births pay
 most for the overrun. Two arms on `base` rabbits, 800 x 800, from scratch, 1000 iterations,
@@ -267,3 +267,58 @@ Expected risks, stated in advance: hunter-steps in section 7 peak where rabbits 
 so both arms may settle on hunters and mammoths only. Hunters see only nearby animals, so
 they may be unable to sense depletion. `gae_lambda` 0.95 stays as it was, so long-range
 credit rests on the critic.
+
+**Result: neither arm met the target. Under the stop rule the module closes.** Whole
+episodes, 50 per checkpoint (`results/calibration_alive_*_eval.json`,
+`results/payoffs_alive_*.json`):
+
+| | Individual 250 / 500 / 1000 | Shared 250 / 500 / 1000 |
+|---|---|---|
+| All three species | 7 / 0 / 0 | 7 / 0 / 0 |
+| Only mammoths left | 40 / 49 / 50 | 40 / 49 / 50 |
+| Rabbits gone, median step | 2,527 / 1,424 / 1,518 | 2,675 / 1,605 / 1,225 |
+| Hunters gone, median step | 4,249 / 3,330 / 3,695 | 4,210 / 3,672 / 3,268 |
+| Mammoth share of food | 1 / 3 / 2% | 2 / 3 / 3% |
+| Group hunts (solo) | 9 (2,291) / 10 (1,429) / 6 (1,039) | 15 (2,615) / 13 (1,445) / 8 (1,014) |
+| Joint arrivals vs chance | 0.59 / 0.64 / 0.62x | 0.57 / 0.57 / 0.67x |
+| Hunter-steps per episode | 65,036 / 40,510 / 43,215 | 67,549 / 43,075 / 34,453 |
+
+Hunters gave up mammoth hunting and joining almost entirely (joining .05 to .09 at
+contacts), lived on rabbits until the rabbits were gone, then starved. Accounts, final,
+per 1000 hunter steps: rabbits +5.8 and +5.5, hunts -0.2, metabolic cost 6.8 and 6.7.
+The shared arm looks no different from the individual one.
+
+Hunter-steps per episode, the quantity the reward pays for, fell from iteration 250 to
+1000 in both arms, so training moved away from what the reward pays for in whole
+episodes. Why was not tested. One possibility: a failed solo hunt costs energy and
+survival is paid at once, so hunters learn early not to join, before pairs could find out
+that mammoth hunts pay. Another: hunters see only nearby animals and cannot sense that
+rabbits are running out.
+
+## 9. Where it ended (2026-11-05)
+
+The module is closed, together with
+[`stag_hunt_continuous`](../stag_hunt_continuous/README.md); the stag hunt line is
+paused. One seed per run, no solo control, so none of this is a confirmatory result.
+
+- **Cooperation in the hunt was easy, restraint was hard.** With rule-following prey and a
+  births reward, hunters learned strong mammoth hunting in groups (joint arrivals 2.7 to
+  3.6x chance, mammoths 87 to 92% of food), far above the learning-prey module. In every
+  such world they overran the prey: 0 of 50 coexisting in all five trained arms.
+- **Changing the prey moved the failure, not removed it.** Scarcer food, a larger world
+  (replay) and harder rabbits each led to hunters overrunning the prey or starving.
+- **A sustainable pressure seems to exist, but births do not pay for it.** At a cap of 10
+  hunters, 32 of 50 kept all three species with cooperation signals intact (replay), but
+  the overrun gave the most hunter births.
+- **Paying for time alive lost cooperation without bringing restraint.**
+- **Across both modules**, about 25 runs lay along one trade-off: strong cooperation where
+  hunters could overrun the prey, coexistence where they had little need to cooperate. One
+  reading, not tested: as in the classic stag hunt, hunters settle on the safe solo prey
+  while it is plentiful and turned to mammoths only under a scarcity this world could not
+  sustain.
+
+Ideas on record, not tried: rabbits that keep hunters alive but give too little energy for
+births, so only mammoth hunts lead to offspring (point 2 of the stag hunt directly in the
+rules); a trained run at a hunter cap of 10 to 12, read as cooperation in a world where
+something else limits hunter numbers, not as emerged restraint; refuges or territories.
+
