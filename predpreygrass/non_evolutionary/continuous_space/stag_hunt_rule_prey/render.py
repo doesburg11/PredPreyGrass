@@ -25,9 +25,10 @@ CONE_COLOR = {"predator": (82, 117, 172), "mammoth": (167, 98, 88)}
 CONE_ALPHA = 80
 POPULATION_COLOR = {"predator": (200, 60, 50), "rabbit": (90, 90, 90), "mammoth": (150, 100, 40)}
 JOIN_COLOR = (230, 160, 20)
-STEPPE_TINT = (215, 160, 60)
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
 MIN_SPRITE = 36  # Arena units; keeps small animals recognizable.
+# For believable proportions on screen only: bodies keep their sizes.
+SPRITE_SCALE = {"predator": 1.5, "rabbit": 1.0, "mammoth": 1.0}
 GRASS_SPRITE = 24  # Arena units.
 # The sprites' own facing: the mammoth and the rabbit (drawn for this
 # module) look right, the hunter (predator) holds its spear to the left.
@@ -124,8 +125,14 @@ class Viewer:
         grass = grass.subsurface(grass.get_bounding_rect(min_alpha=1))
         height = max(1, round(GRASS_SPRITE * grass.get_height() / grass.get_width()))
         self.grass_sprite = pygame.transform.smoothscale(grass, (GRASS_SPRITE, height))
-        self.steppe_sprite = self.grass_sprite.copy()
-        self.steppe_sprite.fill(STEPPE_TINT + (255,), special_flags=pygame.BLEND_RGBA_MULT)
+        self.steppe_sprite = pygame.transform.smoothscale(grass, (2 * GRASS_SPRITE, 2 * height))
+        # Yellow from the sprite's own green: dark outlines stay dark.
+        pixels = pygame.surfarray.pixels3d(self.steppe_sprite)
+        green = pixels[..., 1].astype(float)
+        pixels[..., 0] = (green * 1.35).clip(0, 255)
+        pixels[..., 1] = (green * 1.2).clip(0, 255)
+        pixels[..., 2] = 0
+        del pixels  # releases the lock on the surface
         self.poses = {}  # agent: (faces_right, tilt)
         self.watched = {"predator": None, "mammoth": None}  # whose cone is drawn
         self.history = []  # (physics step, predators, rabbits, mammoths)
@@ -139,7 +146,7 @@ class Viewer:
         image = pygame.image.load(str(ASSETS / f"{species}.png")).convert_alpha()
         image = image.subsurface(image.get_bounding_rect(min_alpha=1))
         radius = self.env.body[species][0]
-        target = max(SPRITE_PER_DIAMETER * 2 * radius, MIN_SPRITE)
+        target = max(SPRITE_PER_DIAMETER * 2 * radius, MIN_SPRITE) * SPRITE_SCALE[species]
         scale = target / max(image.get_size())
         size = (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale)))
         return pygame.transform.smoothscale(image, size)
