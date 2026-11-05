@@ -148,10 +148,58 @@ Rabbits are caught far less, and worlds now often lose the hunters instead. Thes
 never met such rabbits, so this does not show what retrained hunters would do. Episodes
 also ended sooner, so births are not a like-for-like comparison.
 
-## 6. One run with harder rabbits (2026-11-05, running)
+## 6. One run with harder rabbits (2026-11-05)
 
 Settings fixed before training, after section 5: `base` with `rabbit_fov` 340 and
 `rabbit_flee_distance` 200, 800 x 800, from scratch, 1000 iterations, one seed. The
 target is unchanged: at least 45 of 50 evaluated episodes with all three species, mammoths
 about half of hunters' food or more, and joint arrivals above chance. One run, with no
 further rabbit changes after it, whatever the result.
+
+**Result: coexistence target not met, 0 of 50 at every checkpoint. As agreed, no further
+rabbit changes.** Whole-episode evaluation, 50 episodes per checkpoint
+(`results/calibration_harder_rabbits*_eval.json`, `results/payoffs_harder_rabbits*.json`):
+
+| | Iteration 250 | Iteration 500 | Iteration 1000 | `base`, 1000 |
+|---|---|---|---|---|
+| All three species | 0 | 0 | 0 | 0 |
+| Hunters out, both prey left | 25 | 28 | 29 | 0 |
+| Hunters and mammoths out, rabbits left | 25 | 12 | 6 | 0 |
+| Both prey out, hunters left | 0 | 10 | 15 | 50 |
+| Joint arrivals vs chance | 2.7x | 3.3x | 3.6x | 2.7x |
+| Joining, with a partner / alone | .70 / .62 | .68 / .60 | .67 / .60 | .74 / .56 |
+| Mammoth share of food | 95% | 93% | 92% | 87% |
+| Group kills | 382 | 319 | 296 | 850 |
+| Rabbits caught | 460 | 638 | 595 | 2,369 |
+
+Episodes end when no hunters are left or no prey are left, so the counts of kills and
+catches come from episodes of different lengths and are not like-for-like.
+
+Final hunters fall into three kinds of episode, all over by step 2,560 of 8,000:
+
+- **29 episodes, early loss:** hunters die out at steps 224 to 457, both prey left.
+- **15 episodes, prey overrun:** mammoths go first (steps 140 to 435), then rabbits (748
+  to 1,397), hunters left.
+- **6 episodes, slow loss:** mammoths go early and hunters die out at steps 1,965 to
+  2,560, rabbits left.
+
+Hunters' net energy per 1000 steps, final: mammoth hunts +7.6 (6.6 to 8.4), rabbits +0.9,
+scavenged +2.2, metabolic cost 10.4. In `base`: +18.8, +4.2, +5.8, 11.7. Rabbits now give
+under a tenth of the metabolic cost, so in this run they do not act as the food a hunter
+can live on alone, which point 2 of the stag hunt definition asks for. Income and cost
+are close to balance, which may be why so many worlds lose their hunters, though this was
+not tested.
+
+Group hunting still pays those who manage it. Party of 2 succeeds 52% of the time, party
+of 3 84%, party of 4 97%, against none alone. Net energy per 1000 steps while in a party
+attempt is +104, in a solo attempt -26, elsewhere -8.9. Solo attempts remain 81% of all
+attempts (1,995 of 2,476), each losing 0.66, and joining at a contact is not tied to
+having enough energy: .81 when the party has enough, .87 when it does not. Joint arrivals
+are the highest of the module, but the partner effect is smaller than in `base`.
+
+Reading, hedged, one seed: harder rabbits moved the failure rather than removed it. From
+`base`, where hunters always overran the prey, most worlds now lose the hunters, and some
+still lose the prey, so the world seems to lie between the two failures with no stable
+state found here. These results do not separate the rabbit changes from training
+differences between runs, and no solo control was run, so they are not evidence that
+cooperation emerged or caused anything.

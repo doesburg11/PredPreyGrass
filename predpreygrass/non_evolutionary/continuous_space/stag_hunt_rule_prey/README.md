@@ -56,15 +56,19 @@ arrivals above chance, joining more with a partner than alone).
 
 ## Results in short
 
-One calibration, two arms, one seed each. Hunters learned strong group hunting of
-mammoths, which became their main net food, but no evaluated episode kept all three
-species: hunters overran the prey within about 700 steps. Scarcer food did not help.
-Details are in [RESULTS.md](RESULTS.md).
+One calibration, two arms, then one later run with harder rabbits, one seed each. Hunters
+learned strong group hunting of mammoths, which became their main net food, but no
+evaluated episode kept all three species. In `base` and `lean` hunters overran the prey
+within about 700 steps, and scarcer food did not help. A larger world, replayed without
+training, delayed this only slightly. With harder rabbits most worlds lost the hunters
+instead, and rabbits stopped being a real food source. Details are in
+[RESULTS.md](RESULTS.md).
 
 | Arm, final | All three species (of 50) | Joint arrivals vs chance | Mammoth share of food | Mammoth hunts vs rabbits, net energy per 1000 steps |
 |---|---|---|---|---|
 | `base` | 0 | 2.7x | 87% | +18.8 vs +4.2 |
 | `lean` | 0 | 3.1x | 87% | +16.8 vs +3.4 |
+| `harder_rabbits` | 0 | 3.6x | 92% | +7.6 vs +0.9 |
 
 ## Files
 
