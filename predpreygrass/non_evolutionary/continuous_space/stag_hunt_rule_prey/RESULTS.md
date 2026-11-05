@@ -322,3 +322,22 @@ births, so only mammoth hunts lead to offspring (point 2 of the stag hunt direct
 rules); a trained run at a hunter cap of 10 to 12, read as cooperation in a world where
 something else limits hunter numbers, not as emerged restraint; refuges or territories.
 
+
+## 10. Two species only: hunters and rule rabbits (2026-11-05, running)
+
+One run added after the module closed, at the user's request, to ask whether the third
+species was the obstacle to coexistence. With one predator and two prey, hunters can live
+on one prey while eating out the other (apparent competition), so the scarcity of either
+prey no longer brakes them. Settings fixed before training: `base` with no mammoths and
+no steppe (arm `rabbits_only`), births reward, 800 x 800, from scratch, 1000 iterations,
+one seed.
+
+How it differs from earlier runs: `stag_hunt_continuous` round 1a had the same two
+species with learning rabbits (49 of 50 coexisting); `base` had mammoths; the time-alive
+arms had mammoths present, though ignored, and another reward.
+
+Stop rule: coexistence (hunters and rabbits both left at step 8000; evaluate.py labels
+this `only_predator_rabbit`) in at least 45 of 50 evaluated episodes counts as success.
+Success points to the second prey as the obstacle; failure points away from species
+count, towards rule prey that never adapt and gains turned into more hunters. One run,
+no variations after it, whatever the result.

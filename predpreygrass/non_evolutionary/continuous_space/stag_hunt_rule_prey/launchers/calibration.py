@@ -31,6 +31,9 @@ ARMS = {
     # the scale does not otherwise change the policy's updates.
     "alive_individual": {**WHOLE_EPISODES, "alive_reward": 0.002},
     "alive_shared": {**WHOLE_EPISODES, "alive_reward": 0.002, "alive_reward_shared": True},
+    # Two species, chosen after the module closed (RESULTS.md, section 10): is the
+    # third species the obstacle to coexistence? `base` without mammoths.
+    "rabbits_only": {"mammoth_count": 0, "steppe_count": 0},
 }
 
 # Settings of config_ppo that differ by arm. Gamma 0.999 per decision looks
