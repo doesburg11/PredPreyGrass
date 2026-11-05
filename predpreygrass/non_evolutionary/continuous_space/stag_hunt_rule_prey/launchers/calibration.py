@@ -37,6 +37,9 @@ ARMS = {
     # Rabbits only, lean and fat (RESULTS.md, section 11): a lone hunter cannot
     # catch a fat rabbit, two can. One run, chosen after the replay there.
     "lean_fat_rabbits": {"mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0},
+    # The same, continued for 1000 more iterations at the user's request, from the
+    # final weights of lean_fat_rabbits (optimizer state starts fresh).
+    "lean_fat_rabbits_more": {"mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0},
 }
 
 # Settings of config_ppo that differ by arm. Gamma 0.999 per decision looks
@@ -44,6 +47,7 @@ ARMS = {
 PPO_ARMS = {
     "alive_individual": {"gamma": 0.999},
     "alive_shared": {"gamma": 0.999},
+    "lean_fat_rabbits_more": {"init_checkpoint": str(RUNS_DIR / "calibration_lean_fat_rabbits" / "checkpoint")},
 }
 
 
