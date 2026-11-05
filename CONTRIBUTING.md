@@ -42,7 +42,8 @@ New environments live under `predpreygrass/evolutionary/` (a heritable trait und
 selection) or `predpreygrass/non_evolutionary/` (fixed traits, incentive-design
 variation only) — see [EXPERIMENTS.md](EXPERIMENTS.md) for the distinction and existing
 examples to follow. Each environment module is expected to ship its own `README.md`
-(methodology/results) and `tests/` directory, matching the pattern of its siblings.
+(methodology and a short summary of results), `RESULTS.md` (detailed outcomes, from
+the first result on) and `tests/` directory, matching the pattern of its siblings.
 
 ## Repeatable editor checks
 
