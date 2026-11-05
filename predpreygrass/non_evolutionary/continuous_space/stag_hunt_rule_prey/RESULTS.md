@@ -101,3 +101,49 @@ Per contributing hunter a hunt nets +10.8 to +11.2 in pairs, +10.6 to +10.8 in t
 **Decision.** As agreed in advance, calibration of this module stops here whatever the
 result. A larger world, refuges, or a brake on hunters would each be a separate
 decision.
+
+## 4. Larger worlds, replay without training (2026-11-05)
+
+`base`'s final hunters, not retrained, in larger worlds at equal densities
+([`launchers/large_world_replay.py`](launchers/large_world_replay.py),
+`results/replay_base_area_x<N>.json`). Counts of animals and food, clusters and caps
+scale with the area; bodies, speeds, view and hunt rules do not.
+
+| Area | World | Episodes | All three species | Rabbits gone, median step | Mammoths gone, median step | Joint vs chance |
+|---|---|---|---|---|---|---|
+| x1 | 800 | 50 | 0 | 566 | 653 | 2.7x |
+| x2 | 1,131 | 50 | 0 | 603 | 763 | 2.7x |
+| x4 | 1,600 | 50 | 0 | 665 | 938 | 2.6x |
+| x9 | 2,400 | not finished | | | | |
+| x16 | 3,200 | not finished | | | | |
+
+x1 reproduces the evaluation exactly. Prey last somewhat longer with area, in episodes
+that could reach 8,000 steps. At x4, 3 episodes kept mammoths after rabbits and then
+hunters died out. x9 and x16 hit their time limits twice (50 min with 50 episodes, then
+25 min with 20 and 10), so they say nothing about survival, and are costly to play.
+These hunters were trained in the small world, so this does not show how hunters
+trained in a larger one would do.
+
+## 5. Harder rabbits, replay without training (2026-11-05)
+
+`base`'s final hunters, not retrained, 50 episodes, against rabbits with view 340 degrees
+(was 240) and flee distance 200 (was 120), both changed together
+([`launchers/rabbit_replay.py`](launchers/rabbit_replay.py),
+`results/replay_base_rabbit_fov340_flee200.json`). Prompted by a measurement over 20
+episodes of 858 catches: median rabbit speed at the catch 3.7 of a top speed of 7, 72%
+below the hunters' top speed, and 19% with the catcher in the rabbit's blind area.
+
+| | Old rabbits | New rabbits |
+|---|---|---|
+| All three species | 0 | 0 |
+| Hunters out, both prey left | 0 | 33 (median step 563) |
+| Both prey gone, hunters left | 50 | 17 |
+| Rabbits caught | 2,369 | 706 |
+| Hunter births | 2,441 | 875 |
+| Rabbit births | 1,995 | 1,497 |
+| Mammoth share of food | 87% | 88% |
+| Joint arrivals vs chance | 2.7x | 2.7x |
+
+Rabbits are caught far less, and worlds now often lose the hunters instead. These hunters
+never met such rabbits, so this does not show what retrained hunters would do. Episodes
+also ended sooner, so births are not a like-for-like comparison.
