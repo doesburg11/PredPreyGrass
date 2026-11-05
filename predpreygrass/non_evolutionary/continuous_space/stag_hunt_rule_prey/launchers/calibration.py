@@ -34,6 +34,9 @@ ARMS = {
     # Two species, chosen after the module closed (RESULTS.md, section 10): is the
     # third species the obstacle to coexistence? `base` without mammoths.
     "rabbits_only": {"mammoth_count": 0, "steppe_count": 0},
+    # Rabbits only, lean and fat (RESULTS.md, section 11): a lone hunter cannot
+    # catch a fat rabbit, two can. One run, chosen after the replay there.
+    "lean_fat_rabbits": {"mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0},
 }
 
 # Settings of config_ppo that differ by arm. Gamma 0.999 per decision looks

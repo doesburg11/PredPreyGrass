@@ -389,3 +389,17 @@ not retrained, 50 whole episodes each (`results/replay_rabbits_only_iter290_*.js
 The check passes. These hunters were trained without the rule, so the 44% catches with
 another hunter near come from hunters close together, not from learned cooperation; any
 cooperation claim needs a comparison with chance.
+
+## 12. Lean and fat rabbits, trained (2026-11-05, running)
+
+Arm `lean_fat_rabbits`: `rabbits_only` with the rule of section 11, births reward, 800 x
+800, from scratch, 1000 iterations, one seed. Fixed before training:
+
+- **Coexistence:** hunters and rabbits both left at step 8000 in at least 45 of 50
+  evaluated episodes.
+- **Cooperation:** catch attempts made with another hunter within 64 units more often than
+  hunters spend time with another hunter within 64 units (chance), measured afterwards on
+  the evaluated hunters.
+
+One run, no variations after it, whatever the result. Risk stated in advance: hunters
+that learn to move in pairs make every fat rabbit catchable, which may remove the refuge.
