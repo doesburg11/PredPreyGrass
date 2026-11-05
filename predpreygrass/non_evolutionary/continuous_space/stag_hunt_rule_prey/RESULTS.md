@@ -342,7 +342,7 @@ Success points to the second prey as the obstacle; failure points away from spec
 count, towards rule prey that never adapt and gains turned into more hunters. One run,
 no variations after it, whatever the result.
 
-**Result: stopped early by the user at about iteration 190, on clear evidence of an
+**Result: stopped early by the user at iteration 290, on clear evidence of an
 overrun, so the stop rule's 50-episode evaluation was not run.** Training episodes (which
 end when rabbits or hunters die out) grew to about 3,450 physics steps by iteration 60,
 then fell to about 1,300 by iteration 185, while rabbits caught per episode rose from 40 to
