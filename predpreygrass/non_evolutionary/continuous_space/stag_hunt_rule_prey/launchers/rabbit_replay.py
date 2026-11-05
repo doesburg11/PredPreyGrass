@@ -29,7 +29,7 @@ def init(checkpoint, settings):
 
 def main():
     checkpoint, episodes, workers, out = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
-    settings = {k: float(v) for k, v in (item.split("=") for item in sys.argv[5:])}
+    settings = {k: json.loads(v) for k, v in (item.split("=") for item in sys.argv[5:])}
     with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=init, initargs=(checkpoint, settings)) as pool:
         rows = sorted(pool.map(evaluate._play, range(episodes)), key=lambda row: row["seed"])
     summary = {"checkpoint": checkpoint, "settings": settings, **evaluate.summarise(rows)}

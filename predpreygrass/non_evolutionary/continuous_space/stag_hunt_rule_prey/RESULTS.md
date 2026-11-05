@@ -203,3 +203,38 @@ still lose the prey, so the world seems to lie between the two failures with no 
 state found here. These results do not separate the rabbit changes from training
 differences between runs, and no solo control was run, so they are not evidence that
 cooperation emerged or caused anything.
+
+## 7. Is there a sustainable hunting pressure? Replay at lower hunter caps (2026-11-05)
+
+A check before any restraint training: `base`'s final hunters, not retrained, 50 episodes,
+with `reproduction_max_predator` lowered from 50
+([`launchers/rabbit_replay.py`](launchers/rabbit_replay.py),
+`results/replay_base_cap*.json`). The caps are a diagnostic, not a proposed design.
+
+| Hunter cap | All three species | Hunters and mammoths left | Mammoth share | Joint vs chance | Partner / alone | Episode length, mean | Hunter births per episode | Hunter-steps per episode |
+|---|---|---|---|---|---|---|---|---|
+| 10 | 32 | 11 | 59% | 3.4x | .56 / .47 | 7,658 | 18 | 75,843 |
+| 15 | 1 | 49 | 91% | 3.8x | .63 / .52 | 8,000 | 37 | 117,627 |
+| 20 | 0 | 34 | 94% | 4.1x | .65 / .53 | 6,906 | 44 | 133,791 |
+| 30 | 0 | 0 | 89% | 3.2x | .70 / .57 | 1,789 | 38 | 45,568 |
+| 50 (`base`) | 0 | 0 | 87% | 2.7x | .74 / .56 | 845 | 49 | 25,500 |
+
+The remaining cap 10 episodes kept mammoths only (7); cap 20 also had 15 episodes with
+hunters only and 1 with mammoths only. Hunters were at the cap about 94 to 98% of the time
+at caps 10 to 20.
+
+What this shows, for these hunters, who were not trained at these caps:
+
+- **A sustainable pressure seems to exist, but low.** Cap 10, the starting hunter number,
+  gives 32 of 50, short of the 45 target, but with mammoths at 59% and joint arrivals well
+  above chance. Rabbits go first: at cap 15 they are out in 49 of 50 episodes (median step
+  1,642), while mammoths last in all 50.
+- **Births favour the overrun.** The overrun gives the most hunter births per episode even
+  counted over whole 8,000-step episodes, and in far less time, so a births reward may
+  prefer it even if shared among all hunters and with no discounting. This changes the
+  plan, which would have kept births as the reward. At the observed rates, cap 20 passes
+  49 births after about 7,700 steps, cap 10 after about 20,000. The caps themselves hold
+  births down, so a world restrained some other way could do better than this.
+- **Hunter lifetime favours restraint, but not all three species.** Hunter-steps peak at
+  caps 15 to 20, where rabbits are nearly always lost, so a reward for time alive might
+  still give up the rabbits.
