@@ -176,6 +176,62 @@ def test_a_predator_birth_is_rewarded_and_ends_the_decision_with_the_child_activ
     assert parent.energy == pytest.approx(13.0 - 5.0)
 
 
+def test_alive_reward_is_paid_per_physics_step_to_each_living_hunter():
+    env = world(alive_reward=0.5, reproduction_predator_reward=0.0)
+    _, rewards, _, _, _ = env.step(stopped(env))
+    assert all(rewards[f"predator_{i}"] == pytest.approx(0.5 * env.action_repeat) for i in range(4))
+
+
+def test_alive_reward_stops_when_the_hunter_starves():
+    env = world(alive_reward=0.5, energy_predator_resting_metabolic_cost=1.0)
+    env.predators[0].energy = 1.5
+    env.action_repeat = 2
+    _, rewards, terminateds, _, _ = env.step(stopped(env))
+    assert terminateds["predator_0"] and rewards["predator_0"] == pytest.approx(0.5)
+    assert rewards["predator_1"] == pytest.approx(1.0)
+
+
+def test_shared_alive_reward_scales_with_living_hunters_and_skips_the_newborn_step():
+    env = world(alive_reward=0.5, alive_reward_shared=True, reproduction_predator_reward=0.0)
+    env.action_repeat = 1
+    env.predators[0].energy = 13.0
+    _, rewards, _, _, _ = env.step(stopped(env))
+    assert rewards["predator_0"] == pytest.approx(0.5)
+    assert rewards["predator_4"] == 0.0
+    _, rewards, _, _, _ = env.step(stopped(env))
+    assert rewards["predator_1"] == rewards["predator_4"] == pytest.approx(0.5 * 5 / 4)
+
+
+def test_shared_alive_reward_falls_when_a_hunter_starves():
+    env = world(alive_reward=0.5, alive_reward_shared=True, energy_predator_resting_metabolic_cost=1.0)
+    env.predators[0].energy = 0.5
+    env.action_repeat = 1
+    _, rewards, _, _, _ = env.step(stopped(env))
+    assert rewards["predator_1"] == pytest.approx(0.5 * 3 / 4)
+    assert rewards["predator_0"] == 0.0
+
+
+def test_time_limit_survivors_are_paid_on_the_last_step():
+    env = world(alive_reward=0.5, max_time_steps=4, action_repeat=8)
+    _, rewards, _, truncateds, _ = env.step(stopped(env))
+    assert truncateds["__all__"] and rewards["predator_0"] == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize("settings", [{"alive_reward": -1.0}, {"alive_reward_shared": 1}])
+def test_alive_reward_settings_are_validated(settings):
+    with pytest.raises(ValueError):
+        StagHuntRulePrey(settings)
+
+
+def test_alive_arms_set_reward_episodes_and_gamma():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.launchers.calibration import ARMS, PPO_ARMS
+
+    for arm, shared in (("alive_individual", False), ("alive_shared", True)):
+        assert ARMS[arm]["truncate_on_prey_extinction"] is False and ARMS[arm]["reproduction_predator_reward"] == 0.0
+        assert ARMS[arm]["alive_reward"] > 0 and ARMS[arm].get("alive_reward_shared", False) is shared
+        assert PPO_ARMS[arm]["gamma"] == 0.999
+
+
 def test_starving_prey_are_removed_without_agent_flags():
     env = world(energy_rabbit_resting_metabolic_cost=2.0)
     env.rabbits[0].energy = 0.5

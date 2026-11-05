@@ -8,6 +8,10 @@ from pathlib import Path
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.environment import DEFAULT_CONFIG, StagHuntRulePrey
 
 
+# Settings added after earlier runs, which trained as these values say.
+LATER_SETTINGS = {"alive_reward": 0.0, "alive_reward_shared": False}
+
+
 def run_settings(checkpoint):
     """The settings train.py saved for the checkpoint's run
     (source_code/settings.json: config_env and config_ppo), or None. Found
@@ -25,13 +29,14 @@ def checkpoint_env_config(checkpoint):
     """The checkpoint's env_config, from the run's saved settings. Every
     setting must be there (none silently taken from today's defaults), and
     the env_config RLlib saved inside the checkpoint itself must agree, so
-    settings found next to a checkpoint are those it was trained with."""
+    settings found next to a checkpoint are those it was trained with. Only
+    LATER_SETTINGS may be absent."""
     settings = run_settings(checkpoint)
     if settings is None:
         raise ValueError(f"no source_code/settings.json for {checkpoint}")
     config = dict(settings["config_env"])
     unknown = set(config) - set(DEFAULT_CONFIG)
-    missing = set(DEFAULT_CONFIG) - set(config)
+    missing = set(DEFAULT_CONFIG) - set(config) - set(LATER_SETTINGS)
     if unknown or missing:
         raise ValueError(f"settings without a counterpart: {sorted(unknown)}; missing settings: {sorted(missing)}")
     saved = Path(checkpoint) / "class_and_ctor_args.pkl"
@@ -41,7 +46,7 @@ def checkpoint_env_config(checkpoint):
         if inside != config:
             differ = sorted(k for k in set(inside) | set(config) if inside.get(k) != config.get(k))
             raise ValueError(f"{checkpoint}: its own env_config differs from the run's settings.json in {differ}")
-    return config
+    return {**LATER_SETTINGS, **config}
 
 
 def default_module(env, species, vf_share_layers=False):

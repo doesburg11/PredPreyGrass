@@ -13,6 +13,8 @@ import sys
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey import train
 from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.config.config_ppo import RUNS_DIR
 
+WHOLE_EPISODES = {"truncate_on_prey_extinction": False, "reproduction_predator_reward": 0.0}
+
 ARMS = {
     # The world of stag_hunt_continuous's round 19c with the prey on rules.
     "base": {},
@@ -22,6 +24,20 @@ ARMS = {
     # Rabbits nearer to real ones, chosen after the replay in RESULTS.md, section
     # 5: wider view, earlier flight. One run, no further rabbit changes after it.
     "harder_rabbits": {"rabbit_fov": 340, "rabbit_flee_distance": 200.0},
+    # Restraint, chosen after RESULTS.md, section 7: paid for time alive, not
+    # births, on whole episodes, so that a collapse costs the learner. The scale
+    # keeps values mostly within vf_clip_param (error about 32), where a clamped
+    # value loss would stop the critic learning; advantages are normalized, so
+    # the scale does not otherwise change the policy's updates.
+    "alive_individual": {**WHOLE_EPISODES, "alive_reward": 0.002},
+    "alive_shared": {**WHOLE_EPISODES, "alive_reward": 0.002, "alive_reward_shared": True},
+}
+
+# Settings of config_ppo that differ by arm. Gamma 0.999 per decision looks
+# about 1000 decisions ahead, up to 8000 physics steps: one episode.
+PPO_ARMS = {
+    "alive_individual": {"gamma": 0.999},
+    "alive_shared": {"gamma": 0.999},
 }
 
 
@@ -33,6 +49,7 @@ def main():
     if run.exists():
         raise SystemExit(f"refusing: {run} exists")
     train.config_env.update(ARMS[arm])
+    train.config_ppo.update(PPO_ARMS.get(arm, {}))
     train.config_ppo["tensorboard_dir"] = str(run / "tensorboard")
     train.config_ppo["checkpoint_dir"] = str(run / "checkpoint")
     if len(sys.argv) > 2:

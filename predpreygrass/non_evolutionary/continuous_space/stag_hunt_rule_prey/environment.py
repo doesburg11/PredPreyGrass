@@ -154,6 +154,13 @@ DEFAULT_CONFIG = {
     "reproduction_rabbit_threshold": 8.0,
     "reproduction_mammoth_threshold": 24.0,
     "reproduction_predator_reward": 10.0,
+    # Reward per physics step for each hunter that lived through it (a newborn
+    # starts on the next). With alive_reward_shared it is multiplied by those
+    # hunters / predator_count, so a hunter is also paid for the others being
+    # alive. (Splitting the total among the living would pay each exactly
+    # alive_reward: no shared stake.)
+    "alive_reward": 0.0,
+    "alive_reward_shared": False,
     "reproduction_max_predator": 50,
     "reproduction_max_rabbit": 100,
     "reproduction_max_mammoth": 20,
@@ -338,6 +345,8 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.speed_cost = {s: c[f"energy_{s}_speed_cost"] for s in SPECIES}
         self.threshold = {s: c[f"reproduction_{s}_threshold"] for s in SPECIES}
         self.birth_reward = c["reproduction_predator_reward"]
+        self.alive_reward = c["alive_reward"]
+        self.alive_reward_shared = c["alive_reward_shared"]
         self.max_population = {s: c[f"reproduction_max_{s}"] for s in SPECIES}
         self.birth_interval = {s: c[f"reproduction_{s}_interval"] for s in SPECIES}
         self.pool = {s: c[f"reproduction_{s}_pool"] for s in SPECIES}
@@ -425,6 +434,10 @@ class StagHuntRulePrey(MultiAgentEnv):
                 raise ValueError(f"{s}_flee_distance must be finite and nonnegative")
         if not _number(c["reproduction_predator_reward"], 0):
             raise ValueError("reproduction_predator_reward must be finite and nonnegative")
+        if not _number(c["alive_reward"], 0):
+            raise ValueError("alive_reward must be finite and nonnegative")
+        if not isinstance(c["alive_reward_shared"], bool):
+            raise ValueError("alive_reward_shared must be True or False")
         if not _number(c["hunt_energy_ratio"], 0, strict=True):
             raise ValueError("hunt_energy_ratio must be finite and positive")
         if not _integer(c["hunt_min_party"], 1):
@@ -597,6 +610,12 @@ class StagHuntRulePrey(MultiAgentEnv):
         self._energy(catches, eaten, terminateds, truncateds, infos)
         self._note_extinctions()
 
+        if self.alive_reward:
+            pay = self.alive_reward
+            if self.alive_reward_shared:
+                pay *= len(self.predators) / self.count["predator"]
+            for predator in self.predators:
+                rewards[predator.id] += pay
         born = self._reproduce(rewards, infos) if self.active else []
         for child, parent in born:
             rewards[child] = 0.0

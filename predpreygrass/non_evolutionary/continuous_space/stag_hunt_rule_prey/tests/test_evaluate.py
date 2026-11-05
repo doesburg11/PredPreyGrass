@@ -130,3 +130,33 @@ def test_summary_has_hunt_energy_means():
     row = {"outcome": "coexisting", "hunt_stats": stats, "tracked": {}, "null": {}, "extinct_at": {}}
     summary = evaluate.summarise([row])
     assert summary["hunted_party_energy_mean"] == 15.0 and summary["hunted_mammoth_energy_mean"] == 12.0
+
+
+def _saved_run(tmp_path, config):
+    import json
+
+    run = tmp_path / "run"
+    (run / "source_code").mkdir(parents=True)
+    (run / "checkpoint").mkdir()
+    (run / "source_code" / "settings.json").write_text(json.dumps({"config_env": config}))
+    return run / "checkpoint"
+
+
+def test_checkpoints_from_before_alive_reward_still_load(tmp_path):
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.checkpoints import LATER_SETTINGS, checkpoint_env_config
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.environment import DEFAULT_CONFIG
+
+    old = {k: v for k, v in DEFAULT_CONFIG.items() if k not in LATER_SETTINGS}
+    config = checkpoint_env_config(_saved_run(tmp_path, old))
+    assert config["alive_reward"] == 0.0 and config["alive_reward_shared"] is False
+
+
+def test_checkpoints_missing_any_other_setting_are_refused(tmp_path):
+    import pytest
+
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.checkpoints import checkpoint_env_config
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.environment import DEFAULT_CONFIG
+
+    old = {k: v for k, v in DEFAULT_CONFIG.items() if k != "width"}
+    with pytest.raises(ValueError):
+        checkpoint_env_config(_saved_run(tmp_path, old))
