@@ -16,6 +16,9 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.config.
 ARMS = {
     # The world of stag_hunt_continuous's round 19c with the prey on rules.
     "base": {},
+    # Scarcer food, chosen with prey_check: about 46 rabbits, about 15
+    # mammoths at energy about 10, so a typical pair can win at ratio 0.6.
+    "lean": {"grass_overgrazing_delay": 800, "steppe_overgrazing_delay": 800},
 }
 
 
