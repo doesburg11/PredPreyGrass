@@ -19,6 +19,9 @@ ARMS = {
     # Scarcer food, chosen with prey_check: about 46 rabbits, about 15
     # mammoths at energy about 10, so a typical pair can win at ratio 0.6.
     "lean": {"grass_overgrazing_delay": 800, "steppe_overgrazing_delay": 800},
+    # Rabbits nearer to real ones, chosen after the replay in RESULTS.md, section
+    # 5: wider view, earlier flight. One run, no further rabbit changes after it.
+    "harder_rabbits": {"rabbit_fov": 340, "rabbit_flee_distance": 200.0},
 }
 
 

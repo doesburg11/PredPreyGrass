@@ -147,3 +147,11 @@ below the hunters' top speed, and 19% with the catcher in the rabbit's blind are
 Rabbits are caught far less, and worlds now often lose the hunters instead. These hunters
 never met such rabbits, so this does not show what retrained hunters would do. Episodes
 also ended sooner, so births are not a like-for-like comparison.
+
+## 6. One run with harder rabbits (2026-11-05, running)
+
+Settings fixed before training, after section 5: `base` with `rabbit_fov` 340 and
+`rabbit_flee_distance` 200, 800 x 800, from scratch, 1000 iterations, one seed. The
+target is unchanged: at least 45 of 50 evaluated episodes with all three species, mammoths
+about half of hunters' food or more, and joint arrivals above chance. One run, with no
+further rabbit changes after it, whatever the result.
