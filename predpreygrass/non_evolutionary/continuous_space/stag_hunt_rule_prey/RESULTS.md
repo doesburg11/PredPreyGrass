@@ -238,3 +238,32 @@ What this shows, for these hunters, who were not trained at these caps:
 - **Hunter lifetime favours restraint, but not all three species.** Hunter-steps peak at
   caps 15 to 20, where rabbits are nearly always lost, so a reward for time alive might
   still give up the rabbits.
+
+## 8. Restraint: paid for time alive (2026-11-05, running)
+
+Settings and stop rule fixed before training, after section 7, which suggests births pay
+most for the overrun. Two arms on `base` rabbits, 800 x 800, from scratch, 1000 iterations,
+one seed each, 14 env runners each, run side by side:
+
+- **`alive_individual`:** 0.002 per physics step to each hunter that lives through it, no
+  birth reward, training on whole episodes (`truncate_on_prey_extinction` off), gamma 0.999
+  per decision.
+- **`alive_shared`:** the same, with the pay multiplied by surviving hunters / 10, so a
+  hunter is also paid for the others being alive. Splitting a time-alive total among the
+  living would pay each hunter the same as the individual arm, so it is not split.
+
+The target is unchanged: at least 45 of 50 evaluated episodes with all three species,
+mammoths about half of hunters' food or more, and joint arrivals above chance.
+
+Stop rule:
+
+- `alive_individual` meets the target: no more tuning; next are a solo control and more seeds.
+- Only `alive_shared` meets it: a dilemma between individual and group is suggested, and
+  how to solve it is a separate decision.
+- Neither meets it: restraint is not shown to be learnable in this setup, the module closes,
+  and there are no further variations.
+
+Expected risks, stated in advance: hunter-steps in section 7 peak where rabbits are lost,
+so both arms may settle on hunters and mammoths only. Hunters see only nearby animals, so
+they may be unable to sense depletion. `gae_lambda` 0.95 stays as it was, so long-range
+credit rests on the critic.
