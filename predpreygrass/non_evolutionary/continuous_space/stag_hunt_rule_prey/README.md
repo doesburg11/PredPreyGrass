@@ -1,7 +1,7 @@
 # stag_hunt_rule_prey
 
-**Status (2026-11-05): first calibration training (arms `base` and `lean`), results
-pending.** Only hunters learn; rabbits and
+**Status (2026-11-05): calibration done and stopped as agreed, coexistence target not
+met.** Only hunters learn; rabbits and
 mammoths follow fixed rules. A simplification of
 [`stag_hunt_continuous`](../stag_hunt_continuous/README.md), whose 20 calibration
 rounds are the background.
@@ -53,6 +53,18 @@ Agreed in advance, to avoid another long series of adjustments:
 Targets, as before: all three species in at least 45 of 50 evaluated episodes,
 mammoths about half or more of hunters' food, and cooperation signals (joint
 arrivals above chance, joining more with a partner than alone).
+
+## Results in short
+
+One calibration, two arms, one seed each. Hunters learned strong group hunting of
+mammoths, which became their main net food, but no evaluated episode kept all three
+species: hunters overran the prey within about 700 steps. Scarcer food did not help.
+Details are in [RESULTS.md](RESULTS.md).
+
+| Arm, final | All three species (of 50) | Joint arrivals vs chance | Mammoth share of food | Mammoth hunts vs rabbits, net energy per 1000 steps |
+|---|---|---|---|---|
+| `base` | 0 | 2.7x | 87% | +18.8 vs +4.2 |
+| `lean` | 0 | 3.1x | 87% | +16.8 vs +3.4 |
 
 ## Files
 
