@@ -357,3 +357,35 @@ gains in hunting turned into more hunters. `stag_hunt_continuous` round 1a, with
 rabbits, kept both species in 49 of 50, but in a world that differed in more than rabbit
 learning. A run in this world with learning rabbits would separate the two; not started.
 
+
+## 11. Lean and fat rabbits: replay without training (2026-11-05)
+
+The user's idea: a stag hunt with rabbits only, where lean rabbits are the hare and fat
+rabbits the stag. Rule (`rabbit_fat_energy` > 0, off by default): a hunter touching a
+rabbit with no other hunter within 64 units catches it with probability 1 at energy 3 or
+less, falling linearly to 0 at energy 6 (4: 67%, 5: 33%); with at least one more hunter
+within 64 units, always. The catch is shared equally among the hunters within 64 units. A
+failed attempt lets the rabbit go on and blocks the hunter's catching for 8 physics steps.
+
+Cut-offs chosen from rabbits with a harmless hunter (6 episodes): energy 3 or less is
+31% of rabbits at fewer than 10 rabbits and 46% at 80 or more; energy 6 or more is 25%
+and 15%. Energy depends on rabbit numbers only weakly, because each rabbit's own breeding
+cycle (birth at 8, back to 5) dominates. Fat rabbits are mostly rabbits about to breed.
+
+Check, with the stop rule fixed in advance (training only if hunters and rabbits both
+survive in at least 25 of 50): the `rabbits_only` hunters from iteration 290 (section 10),
+not retrained, 50 whole episodes each (`results/replay_rabbits_only_iter290_*.json`).
+
+| | Without the rule | With the rule |
+|---|---|---|
+| Hunters and rabbits both left at step 8000 | 0 | **38** |
+| Rabbits gone | 50 (median step 510) | 12 (median step 4,176) |
+| Rabbits caught | 2,228 | 23,050 |
+| Of which with another hunter within 64 units | - | 10,211 (44%) |
+| Failed solo attempts | - | 23,922 |
+| Hunter births | 186 | 1,031 |
+| Hunters, mean | 11.4 | 9.7 |
+
+The check passes. These hunters were trained without the rule, so the 44% catches with
+another hunter near come from hunters close together, not from learned cooperation; any
+cooperation claim needs a comparison with chance.
