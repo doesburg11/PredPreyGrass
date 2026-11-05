@@ -323,7 +323,7 @@ rules); a trained run at a hunter cap of 10 to 12, read as cooperation in a worl
 something else limits hunter numbers, not as emerged restraint; refuges or territories.
 
 
-## 10. Two species only: hunters and rule rabbits (2026-11-05, running)
+## 10. Two species only: hunters and rule rabbits (2026-11-05)
 
 One run added after the module closed, at the user's request, to ask whether the third
 species was the obstacle to coexistence. With one predator and two prey, hunters can live
@@ -341,3 +341,19 @@ this `only_predator_rabbit`) in at least 45 of 50 evaluated episodes counts as s
 Success points to the second prey as the obstacle; failure points away from species
 count, towards rule prey that never adapt and gains turned into more hunters. One run,
 no variations after it, whatever the result.
+
+**Result: stopped early by the user at about iteration 190, on clear evidence of an
+overrun, so the stop rule's 50-episode evaluation was not run.** Training episodes (which
+end when rabbits or hunters die out) grew to about 3,450 physics steps by iteration 60,
+then fell to about 1,300 by iteration 185, while rabbits caught per episode rose from 40 to
+75 and the mean number of rabbits fell from about 60 to 39. Twelve whole episodes from the
+iteration 140 checkpoint (`results/rabbits_only_iter140_peek_eval.json`): rabbits eaten
+out in all 12, median step about 480, hunters left in every one.
+
+Reading, hedged, one seed: with two species the rabbits are overrun as well, so the third
+species does not seem to be the main obstacle. Two explanations remain and this run does
+not separate them: rule rabbits that never adapt, which hunters can keep exploiting, and
+gains in hunting turned into more hunters. `stag_hunt_continuous` round 1a, with learning
+rabbits, kept both species in 49 of 50, but in a world that differed in more than rabbit
+learning. A run in this world with learning rabbits would separate the two; not started.
+
