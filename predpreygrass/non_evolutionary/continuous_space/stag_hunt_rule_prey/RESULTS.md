@@ -390,7 +390,7 @@ The check passes. These hunters were trained without the rule, so the 44% catche
 another hunter near come from hunters close together, not from learned cooperation; any
 cooperation claim needs a comparison with chance.
 
-## 12. Lean and fat rabbits, trained (2026-11-05, running)
+## 12. Lean and fat rabbits, trained (2026-11-05)
 
 Arm `lean_fat_rabbits`: `rabbits_only` with the rule of section 11, births reward, 800 x
 800, from scratch, 1000 iterations, one seed. Fixed before training:
@@ -403,3 +403,51 @@ Arm `lean_fat_rabbits`: `rabbits_only` with the rule of section 11, births rewar
 
 One run, no variations after it, whatever the result. Risk stated in advance: hunters
 that learn to move in pairs make every fat rabbit catchable, which may remove the refuge.
+
+**Result: coexistence met (46 of 50), cooperation against chance not met.** Whole
+episodes, 50 per checkpoint (`results/calibration_lean_fat_rabbits*_eval.json`):
+
+| | Iteration 250 | Iteration 500 | Iteration 1000 |
+|---|---|---|---|
+| Hunters and rabbits both left at step 8000 | 39 | **50** | **46** |
+| Hunters gone, rabbits left | 11 (median step 3,447) | 0 | 0 |
+| Rabbits gone, hunters left | 0 | 0 | 4 (median step 5,454) |
+| Hunters, mean | 7.0 | 10.5 | 11.6 |
+| Rabbits, mean | 40.4 | 19.4 | 14.0 |
+| Hunter births | 790 | 1,255 | 1,217 |
+| Catches alone / with another hunter near | 12,070 / 5,384 | 12,889 / 11,736 | 11,555 / 12,586 |
+| Failed solo attempts | 16,064 | 21,770 | 21,665 |
+
+This is the first world in either stag hunt module where trained hunters and prey kept
+coexisting at the target level. Mean rabbit numbers fell from 40 to 14 over training,
+so the margin may be narrowing; the run is being continued (section 13).
+
+Cooperation, as fixed before training ([`launchers/coop_check.py`](launchers/coop_check.py),
+20 episodes each): catch attempts made with another hunter within 64 units, against the
+share of hunter time spent with another hunter within 64 units.
+
+| | Iteration 250 | Iteration 1000 |
+|---|---|---|
+| Attempts with a partner near | 16.1% | 26.9% |
+| Hunter time with a partner near (chance) | 24.2% | 33.4% |
+| Ratio | 0.67x | 0.81x |
+| Episodes above chance | 0 of 20 | 0 of 20 |
+
+Attempts with a partner near are below chance, so the target is not met. Both measures
+are imperfect, which was not foreseen when the target was set: a lone hunter at a fat
+rabbit fails and retries after each cooldown, so solo attempts are counted many times and
+the attempt share is pushed down. Counting catches instead (52% with a partner near at
+iteration 1000, 1.6x the time share) pushes the other way, since a party always succeeds
+and a lone hunter often does not. A fair measure would count each hunter's approach to a
+rabbit once. Either way, the evidence for learned cooperation is weak: the rise in
+catches with a partner near (5,384 to 12,586) goes with more hunters close together
+(time share 24% to 33%).
+
+## 13. Lean and fat rabbits, continued to 2000 iterations (2026-11-06, running)
+
+At the user's request, after the training curve was still rising at iteration 1000:
+`lean_fat_rabbits_more`, 1000 more iterations from the final weights of section 12 (the
+optimizer state starts fresh), same world and rule, evaluated at 1250, 1500 and 2000
+iterations overall with the same targets. Section 12's iteration 1000 stays the result
+fixed in advance.
+
