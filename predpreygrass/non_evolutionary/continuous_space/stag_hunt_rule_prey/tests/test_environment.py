@@ -232,6 +232,67 @@ def test_alive_arms_set_reward_episodes_and_gamma():
         assert PPO_ARMS[arm]["gamma"] == 0.999
 
 
+def rabbit_beside(env, *numbers, energy):
+    """Puts the rabbit touching predator numbers[0], with the others near."""
+    rabbit = env.rabbits[0]
+    rabbit.energy = energy
+    first = env.predators[numbers[0]]
+    rabbit.position = Vector(first.position.x + 20, first.position.y)
+    for k, n in enumerate(numbers[1:]):
+        env.predators[n].position = Vector(first.position.x + 20, first.position.y + 40 + 5 * k)
+    env.action_repeat = 1
+    return rabbit
+
+
+def test_a_fat_rabbit_escapes_a_lone_hunter_who_then_waits():
+    env = world(rabbit_fat_energy=6.0, energy_rabbit_max=40.0)
+    rabbit = rabbit_beside(env, 0, energy=7.0)
+    env.step(stopped(env))
+    assert env.rabbits and env.hunt_stats["rabbit_catch_failures"] == 1
+    assert env.predators[0].catch_ready_at == env.time_step + env.config["rabbit_catch_cooldown"]
+    assert rabbit.alive
+
+
+def test_a_lean_rabbit_is_caught_alone_and_the_catch_goes_to_the_hunter():
+    env = world(rabbit_fat_energy=6.0)
+    rabbit_beside(env, 0, energy=2.0)
+    before = env.predators[0].energy
+    env.step(stopped(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught_solo"] == 1
+    assert env.predators[0].energy == pytest.approx(before + 0.5 * 2.0)
+
+
+def test_a_fat_rabbit_is_caught_by_two_who_share_it():
+    env = world(rabbit_fat_energy=6.0, energy_rabbit_max=40.0)
+    rabbit_beside(env, 0, 1, energy=7.0)
+    before = [p.energy for p in env.predators[:2]]
+    env.step(stopped(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught_party"] == 1
+    for p, e in zip(env.predators[:2], before):
+        assert p.energy == pytest.approx(e + 0.5 * 7.0 / 2)
+
+
+def test_without_the_rule_one_hunter_catches_any_rabbit():
+    env = world(energy_rabbit_max=40.0)
+    rabbit_beside(env, 0, energy=7.0)
+    env.step(stopped(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught"] == 1
+
+
+def test_a_toucher_shares_even_with_a_party_radius_below_touching():
+    env = world(rabbit_fat_energy=6.0, rabbit_party_radius=0.0)
+    rabbit_beside(env, 0, energy=2.0)
+    before = env.predators[0].energy
+    env.step(stopped(env))
+    assert not env.rabbits and env.predators[0].energy == pytest.approx(before + 0.5 * 2.0)
+
+
+@pytest.mark.parametrize("settings", [{"rabbit_fat_energy": 2.0}, {"rabbit_catch_cooldown": -1}, {"rabbit_party_radius": -1.0}])
+def test_lean_and_fat_settings_are_validated(settings):
+    with pytest.raises(ValueError):
+        StagHuntRulePrey(settings)
+
+
 def test_starving_prey_are_removed_without_agent_flags():
     env = world(energy_rabbit_resting_metabolic_cost=2.0)
     env.rabbits[0].energy = 0.5

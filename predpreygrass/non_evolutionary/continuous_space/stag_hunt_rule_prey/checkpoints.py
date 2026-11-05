@@ -9,7 +9,14 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.environ
 
 
 # Settings added after earlier runs, which trained as these values say.
-LATER_SETTINGS = {"alive_reward": 0.0, "alive_reward_shared": False}
+LATER_SETTINGS = {
+    "alive_reward": 0.0,
+    "alive_reward_shared": False,
+    "rabbit_lean_energy": 3.0,
+    "rabbit_fat_energy": 0.0,
+    "rabbit_party_radius": 64.0,
+    "rabbit_catch_cooldown": 8,
+}
 
 
 def run_settings(checkpoint):

@@ -161,6 +161,17 @@ DEFAULT_CONFIG = {
     # alive_reward: no shared stake.)
     "alive_reward": 0.0,
     "alive_reward_shared": False,
+    # Lean and fat rabbits (off at rabbit_fat_energy 0). A hunter touching a
+    # rabbit with no other hunter within rabbit_party_radius of the rabbit
+    # catches it with probability 1 at energy <= rabbit_lean_energy, falling
+    # linearly to 0 at rabbit_fat_energy; with at least one more hunter there,
+    # always. The catch is shared equally by the hunters within the radius. A
+    # failed attempt lets the rabbit go on, and the hunter cannot catch again
+    # for rabbit_catch_cooldown physics steps.
+    "rabbit_lean_energy": 3.0,
+    "rabbit_fat_energy": 0.0,
+    "rabbit_party_radius": 64.0,
+    "rabbit_catch_cooldown": 8,
     "reproduction_max_predator": 50,
     "reproduction_max_rabbit": 100,
     "reproduction_max_mammoth": 20,
@@ -230,6 +241,7 @@ class Animal:
         "energy",
         "alive",
         "ready_at",
+        "catch_ready_at",
         "next_birth_at",
         "radius",
         "mass",
@@ -251,6 +263,8 @@ class Animal:
         self.alive = True
         # First decision at which a predator may contribute to a hunt again.
         self.ready_at = 0
+        # First physics step at which a predator may catch a rabbit again.
+        self.catch_ready_at = 0
         # First physics step at which the animal may give birth again.
         self.next_birth_at = 0
         (
@@ -292,6 +306,11 @@ def new_hunt_stats():
         "touched_episodes": 0,
         "joint_arrivals": 0,
         "rabbits_caught": 0,
+        # With lean and fat rabbits: catches with no other hunter near, with
+        # one or more, and failed solo attempts.
+        "rabbits_caught_solo": 0,
+        "rabbits_caught_party": 0,
+        "rabbit_catch_failures": 0,
         "rabbit_energy": 0.0,  # gained by predators
         "mammoth_energy": 0.0,  # gained by contributors and bystanders
         "scavenger_energy": 0.0,  # of which by bystanders
@@ -347,6 +366,10 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.birth_reward = c["reproduction_predator_reward"]
         self.alive_reward = c["alive_reward"]
         self.alive_reward_shared = c["alive_reward_shared"]
+        self.lean_energy = c["rabbit_lean_energy"]
+        self.fat_energy = c["rabbit_fat_energy"]
+        self.party_radius = c["rabbit_party_radius"]
+        self.catch_cooldown = c["rabbit_catch_cooldown"]
         self.max_population = {s: c[f"reproduction_max_{s}"] for s in SPECIES}
         self.birth_interval = {s: c[f"reproduction_{s}_interval"] for s in SPECIES}
         self.pool = {s: c[f"reproduction_{s}_pool"] for s in SPECIES}
@@ -378,6 +401,7 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.decision = 0
         self.birth_rng = random.Random()
         self.rule_rng = random.Random()
+        self.catch_rng = random.Random()
         self.next_id = {}
         self.births = {}
         self.hunt_stats = new_hunt_stats()
@@ -434,6 +458,12 @@ class StagHuntRulePrey(MultiAgentEnv):
                 raise ValueError(f"{s}_flee_distance must be finite and nonnegative")
         if not _number(c["reproduction_predator_reward"], 0):
             raise ValueError("reproduction_predator_reward must be finite and nonnegative")
+        if not _number(c["rabbit_lean_energy"], 0) or not _number(c["rabbit_fat_energy"], 0) or not _number(c["rabbit_party_radius"], 0):
+            raise ValueError("rabbit_lean_energy, rabbit_fat_energy and rabbit_party_radius must be finite and nonnegative")
+        if c["rabbit_fat_energy"] and c["rabbit_fat_energy"] <= c["rabbit_lean_energy"]:
+            raise ValueError("rabbit_fat_energy must exceed rabbit_lean_energy (or be 0: off)")
+        if not _integer(c["rabbit_catch_cooldown"], 0):
+            raise ValueError("rabbit_catch_cooldown must be a nonnegative integer")
         if not _number(c["alive_reward"], 0):
             raise ValueError("alive_reward must be finite and nonnegative")
         if not isinstance(c["alive_reward_shared"], bool):
@@ -469,6 +499,7 @@ class StagHuntRulePrey(MultiAgentEnv):
     def reset(self, *, seed=None, options=None):
         self.birth_rng = random.Random(None if seed is None else seed + 1)
         self.rule_rng = random.Random(None if seed is None else seed + 2)
+        self.catch_rng = random.Random(None if seed is None else seed + 4)
         self.food["grass"].reset(seed)
         self.food["steppe"].reset(None if seed is None else seed + 3)
         spawn = random.Random(seed)
@@ -583,7 +614,7 @@ class StagHuntRulePrey(MultiAgentEnv):
         step, rewards, terminateds, truncateds, infos, whether anyone was
         born)."""
         agents = list(self.active)
-        catches = []  # (catching predator, rabbit energy at the catch)
+        catches = []  # (hunters sharing the catch, rabbit energy at the catch)
         stats = self.hunt_stats
         stats["steps_at_predator_cap"] += len(self.predators) >= self.max_population["predator"]
         stats["rabbit_steps"] += len(self.rabbits)
@@ -668,7 +699,24 @@ class StagHuntRulePrey(MultiAgentEnv):
         contact."""
         catcher = None
         if animal.species == "rabbit":
-            catcher = next((p for p in self.predators if self._touching(animal, p)), None)
+            touching = [p for p in self.predators if self._touching(animal, p) and p.catch_ready_at <= self.time_step]
+            if touching and not self.fat_energy:
+                catcher = [touching[0]]
+            elif touching:
+                # The touching hunters always belong to the party, whatever the radius.
+                party = [p for p in self.predators if p in touching or self.torus.distance(animal.position, p.position) <= self.party_radius]
+                if len(party) >= 2:
+                    catcher = party
+                    self.hunt_stats["rabbits_caught_party"] += 1
+                else:
+                    chance = min(1.0, max(0.0, (self.fat_energy - animal.energy) / (self.fat_energy - self.lean_energy)))
+                    if self.catch_rng.random() < chance:
+                        catcher = party
+                        self.hunt_stats["rabbits_caught_solo"] += 1
+                    else:
+                        self.hunt_stats["rabbit_catch_failures"] += 1
+                        for p in touching:
+                            p.catch_ready_at = self.time_step + 1 + self.catch_cooldown
         aways = []
         for other in self.animals[animal.species]:
             if other is not animal and self._touching(animal, other):
@@ -728,12 +776,13 @@ class StagHuntRulePrey(MultiAgentEnv):
 
     def _energy(self, catches, eaten, terminateds, truncateds, infos):
         """Food, metabolic costs and starvation."""
-        for predator, rabbit_energy in catches:
-            if predator.alive:
-                before = predator.energy
-                self._gain(predator, self.catch_efficiency * rabbit_energy)
-                self.hunt_stats["rabbits_caught"] += 1
-                self.hunt_stats["rabbit_energy"] += predator.energy - before
+        for hunters, rabbit_energy in catches:
+            self.hunt_stats["rabbits_caught"] += 1
+            for predator in hunters:
+                if predator.alive:
+                    before = predator.energy
+                    self._gain(predator, self.catch_efficiency * rabbit_energy / len(hunters))
+                    self.hunt_stats["rabbit_energy"] += predator.energy - before
         for prey in self.rabbits + self.mammoths:
             count = eaten.get(prey.id, 0)
             if count:
