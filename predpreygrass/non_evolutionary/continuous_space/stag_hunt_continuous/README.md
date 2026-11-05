@@ -1,8 +1,10 @@
 # stag_hunt_continuous
 
-**Status (2026-11-05): calibration stopped.** Round 20 failed the test set
-in advance for it, and the work continues with rule-following prey in
-`../stag_hunt_rule_prey/`. History of the rounds: hunters are viable on rabbits alone. With mammoths, no round so far gives both
+**Status (2026-11-05): calibration stopped after 20 rounds.** No round met the
+target. Round 20 failed the test set in advance for it, and the work continues
+with rule-following prey in
+[`../stag_hunt_rule_prey/`](../stag_hunt_rule_prey/README.md); see "Why each
+round, and why the trail stopped". History of the rounds: hunters are viable on rabbits alone. With mammoths, no round so far gives both
 coexistence and cooperation: worlds where hunters learn to hunt mammoths
 together (joint arrivals up to 2.4x chance) end in a hunter boom that eats
 out a prey species, and the brakes tried that keep the prey (a wait
@@ -30,7 +32,11 @@ about a fifth of the food, joint arrivals 1.1-1.3x chance, and hunters join
 about as often alone as with a partner. Round 18 kept the seasons in the
 rabbit stage too: 40 of 50, mammoths about a fifth of the food, hunters
 joining more with a partner (0.38 vs 0.31), but joint arrivals near chance
-(1.1x). See "Calibration log"
+(1.1x). Round 19 required a party of at least two: ratio 0.5 boomed (0 of 50,
+joint 2.2x), 0.75 left the mammoths (46 of 50 at iteration 400, mammoths 3%),
+and 0.6 ended at 39 of 50 with mammoths 24%. Round 20 added a birth wait to
+ratio 0.5: 50 of 50, but mammoths 7% and joint arrivals at chance. See
+"Calibration log"
 below and
 [DESIGN.md](DESIGN.md).
 
@@ -101,9 +107,70 @@ found no learned cooperation (DESIGN.md, section 2).
   metrics, tests; Codex review (2026-10-30).
 - [x] Evaluation tools: evaluate.py (coexistence, hunt counters, joint
   arrivals against a chance level), watch.py and render.py (2026-10-30).
-- [ ] Calibrate viability from scratch (in progress, see the log).
-- [ ] Pre-register and run the main test (hunt arm against a solo
-  control and untrained policies, joint arrivals above chance).
+- [x] Calibrate viability from scratch: stopped 2026-11-05 after 20 rounds
+  without meeting the target (see "Why each round, and why the trail stopped").
+- [ ] Not run in this module: the main test (hunt arm against a solo control
+  and untrained policies, joint arrivals above chance). It needed a world
+  that met the calibration target first.
+
+## Why each round, and why the trail stopped
+
+The target was all three species in at least 45 of 50 evaluated episodes,
+mammoths about half or more of hunters' food (about 80% acceptable), and
+cooperation signals, without a tight cap on hunters. The log below gives each
+round's change and outcome; this table gives the reason for the change. The
+reasons for rounds 2-4 are reconstructed from the sequence of results.
+
+| Round | Why this change |
+| --- | --- |
+| 1a, 1b | Check that hunters can live on rabbits alone, then try the configured world with mammoths. |
+| 2 | Hunters barely touched mammoths in 1b: more animals to meet, and a failed solo attempt made cheaper. |
+| 3, 4 | Mammoths still a small share: a larger carcass (64), then 48 after 64 boomed, to look between the two regimes. |
+| 5 | Stop the boom with a lower hunter cap (25). |
+| 6 | A fixed cap is not realistic and the user wanted the world to work without it: costlier offspring as a brake that depends on energy. |
+| 7, 8 | Costly offspring only delayed the boom: a fixed wait between births (2000, then 1000 and 600 when mammoths lost their value). |
+| 9 | Round 5 lost its rabbits: faster rabbits so they survive the hunters. |
+| 10 | Faster rabbits made rabbits the staple: refuges instead, since long coexistence in nature has been linked to space. |
+| 11 | Burrows went unused: a brake from the prey's side instead, with well-fed mammoths harder to kill. |
+| 12, checks 1-2 | Burrows may have failed because they lay far from grass: warrens beside each cluster. When that boomed, checks without mammoths asked whether rabbits can learn to hide at all, then whether hiding helps if hunters cannot see them inside. |
+| 13 | Burrows set aside. The user chose the discrete module's summed-energy rule over a carcass sweep or accepting a cap, tying kills to hunters' condition. |
+| 14 | 13a kept mammoths but lost rabbits, so rabbits were the bottleneck: round 9's faster rabbits. |
+| 15 | Rabbits became the staple again: make them a poorer food so hunters need mammoths. |
+| 16 | Constant scarcity looked like a dead end. The user's idea: seasonal lean periods, pressure from the world and not forced cooperation. |
+| 17 | The user's idea: rabbits-first training, so hunters are viable before mammoths appear. |
+| 18 | Round 17's rabbit stage had no seasons, so hunters may have started well fed: seasons in both stages. |
+| 19a-c | Energy accounts showed group hunts paid but parties were far too weak for most mammoths, so lower ratios. A replay showed that lower ratios alone mainly added solo kills, hence a minimum party of 2. 0.75 and 0.5 went to opposite regimes, so 0.6 lies between. |
+| 20 | 19b had the strongest cooperation with a boom: last attempt to brake it with a birth wait, under a test set in advance. |
+
+**The pattern.** Worlds with strong cooperation boomed and lost prey, and the
+brakes that kept the prey also lost the group hunting. Round 19c's iteration 250
+was the best mix (30 of 50, mammoths 46%, joint 1.3x chance), and with more
+training it moved to the stable side (39 of 50, mammoths 24%, joint 1.1x).
+Round 20 repeated this at the extreme: 50 of 50 with mammoths at 7% and joint
+arrivals at chance. All of this is one seed per arm and not confirmatory.
+
+**Why it stopped.** Round 20 failed its test, set in advance, on joint arrivals
+and mammoth share. The user was also troubled by the series of adjustments
+leading nowhere, and each new setting made the results harder to interpret.
+
+**Why rule-following prey.** The alternatives were to give hunters larger
+brains or prey smaller ones, and the user chose simpler prey
+([`../stag_hunt_rule_prey/`](../stag_hunt_rule_prey/README.md)), because:
+
+- All three species here have the same network, though human brains are far
+  more developed than a rabbit's or a mammoth's.
+- Larger hunter networks add computation; simpler prey removes it, and leaves a
+  simpler base to build on.
+- A learning arms race between humans and their prey is not a real feature of
+  the human case, since prey adapt over generations and hunters within a
+  lifetime.
+
+That module gets one calibration with settings chosen in advance, then a hard
+stop and a write-up, however it comes out.
+
+**Open, untested.** Reward here is births only, so an individual hunter gains
+nothing by holding back. Sustainability may therefore be its own social dilemma,
+which no adjustment of prey or carcass would remove.
 
 ## Calibration log (not confirmatory)
 

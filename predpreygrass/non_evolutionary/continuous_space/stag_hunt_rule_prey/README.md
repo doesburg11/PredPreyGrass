@@ -1,6 +1,7 @@
 # stag_hunt_rule_prey
 
-**Status (2026-11-04): built, not yet trained.** Only hunters learn; rabbits and
+**Status (2026-11-05): first calibration training (arms `base` and `lean`), results
+pending.** Only hunters learn; rabbits and
 mammoths follow fixed rules. A simplification of
 [`stag_hunt_continuous`](../stag_hunt_continuous/README.md), whose 20 calibration
 rounds are the background.
@@ -41,9 +42,14 @@ short and is not rewarded. Seasons remain available in `grass.py`, off by defaul
 Agreed in advance, to avoid another long series of adjustments:
 
 1. Check prey on their own ([`prey_check.py`](prey_check.py)), done, below.
-2. One small calibration, with settings chosen before seeing results: grass and
-   steppe regrowth (`grass_respawn_delay`, `steppe_respawn_delay`), each at a few
-   levels, minimum party 2.
+2. One small calibration, with settings chosen before seeing results, minimum
+   party 2: arm `base` (collapse delays 400) and arm `lean`
+   (`grass_overgrazing_delay` and `steppe_overgrazing_delay` 800). The plan first
+   named `*_respawn_delay`, but prey checks at 200 and 800 changed almost nothing:
+   clusters get grazed out and a collapse overwrites that delay. Unhunted prey at
+   the collapse delays, 12 episodes each: grass 200/400/800/1600 gives rabbits at
+   the cap of 100/83/46/out in 7 of 12; steppe 400/800/1600/3200 gives mammoths
+   20 (energy rising to 25)/15 (about 10)/7-9 (6-9)/out in all 12.
 3. Stop calibrating, whatever the result, and write up. Safe zones or a larger
    world would be separate decisions, on the evidence.
 
