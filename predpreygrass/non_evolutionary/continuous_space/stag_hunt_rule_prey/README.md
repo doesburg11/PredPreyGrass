@@ -41,15 +41,12 @@ short and is not rewarded. Seasons remain available in `grass.py`, off by defaul
 
 Agreed in advance, to avoid another long series of adjustments:
 
-1. Check prey on their own ([`prey_check.py`](prey_check.py)), done, below.
+1. Check prey on their own ([`prey_check.py`](prey_check.py)), done, see
+   [RESULTS.md](RESULTS.md).
 2. One small calibration, with settings chosen before seeing results, minimum
    party 2: arm `base` (collapse delays 400) and arm `lean`
-   (`grass_overgrazing_delay` and `steppe_overgrazing_delay` 800). The plan first
-   named `*_respawn_delay`, but prey checks at 200 and 800 changed almost nothing:
-   clusters get grazed out and a collapse overwrites that delay. Unhunted prey at
-   the collapse delays, 12 episodes each: grass 200/400/800/1600 gives rabbits at
-   the cap of 100/83/46/out in 7 of 12; steppe 400/800/1600/3200 gives mammoths
-   20 (energy rising to 25)/15 (about 10)/7-9 (6-9)/out in all 12.
+   (`grass_overgrazing_delay` and `steppe_overgrazing_delay` 800). See
+   [RESULTS.md](RESULTS.md).
 3. Stop calibrating, whatever the result, and write up. Safe zones or a larger
    world would be separate decisions, on the evidence.
 
@@ -57,29 +54,9 @@ Targets, as before: all three species in at least 45 of 50 evaluated episodes,
 mammoths about half or more of hunters' food, and cooperation signals (joint
 arrivals above chance, joining more with a partner than alone).
 
-## Prey on their own
-
-One harmless hunter (it stands still, catches and frightens nothing, and has no
-young), default settings, 12 episodes (`results/prey_check_default.json`):
-
-| From step | Rabbits | Mammoths | Mammoth energy | Edible grass | Edible steppe |
-|---|---|---|---|---|---|
-| 0 | 50 | 16 | 13 | 12 | 5.4 |
-| 1000 | 81 | 20 | 15 | 4.7 | 4.0 |
-| 3000 | 83 | 20 | 21 | 5.3 | 3.7 |
-| 7000 | 83 | 20 | 25 | 4.7 | 3.3 |
-
-No extinctions. Rabbits settle near 83, under their cap of 100, so grass limits them.
-Mammoths stay at their cap of 20, where they cannot breed, and keep fattening, so
-unhunted mammoths drift out of a party's reach: at ratio 0.6 a mammoth of 25 needs
-a party above 15 energy, three typical hunters. Hunting should lower this by making
-room for births, not measured yet.
-
-Training, evaluation, accounts and the viewer have been run on a two-iteration
-smoke run. All tests pass.
-
 ## Files
 
+- [`RESULTS.md`](RESULTS.md): prey checks and calibration results.
 - [`environment.py`](environment.py): the world; only hunters are RLlib agents.
 - [`rules.py`](rules.py): the prey's rules.
 - [`prey_check.py`](prey_check.py): prey populations with no hunting.

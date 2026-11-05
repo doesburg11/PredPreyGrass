@@ -253,7 +253,7 @@ this section.
 
 ## 7. Rabbit burrows (2026-11-01; built, settings `burrow_count`, `burrow_radius`, `burrow_placement`, `burrow_hides_rabbits`)
 
-Proposed after calibration rounds 1-9 (README, calibration log): every
+Proposed after calibration rounds 1-9 (RESULTS.md, calibration log): every
 brake on the hunters tried so far (a cap, costlier offspring, a fixed
 birth wait, faster rabbits) ended with the hunters living on one prey.
 Either rabbits were eaten out (a mammoth payoff big enough for group
@@ -401,7 +401,7 @@ tests.
 
 ## 9. Summed-energy capture rule (2026-11-02, settings `hunt_rule`, `hunt_energy_ratio`)
 
-Proposed after rounds 1-12 and the burrow checks (README, calibration
+Proposed after rounds 1-12 and the burrow checks (RESULTS.md, calibration
 log): every world either booms (mammoths pay, hunters multiply and eat
 out a prey) or the hunters ignore the mammoths, and refuges for rabbits
 (burrows) cut rabbit breeding more than they cut catches. The discrete
