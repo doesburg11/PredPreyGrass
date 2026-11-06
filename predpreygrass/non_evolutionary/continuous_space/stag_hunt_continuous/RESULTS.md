@@ -665,3 +665,60 @@ is why test 3 compares with them.
 **Caveats, set in advance:** one seed. Several energies change at once, so a
 difference from section 5 cannot be put down to one of them. The per-head gain of a
 pair on a fat rabbit over the best lone attempt is modest (about 1.2 to 1.7 times).
+
+## 8. Follow-up: calls and catching together (2026-11-06)
+
+At the user's request, while section 7 trains. Section 7's hunters, like section
+5's, skipped partners for rabbits they could take alone but did not seek one for fat
+rabbits beyond chance (early look at iteration 340: fat 18.2% against chance 20.0%,
+lean 13.6%; not a test). Two missing pieces of human group hunting are added together:
+a way to recruit, and a share only for those who hunt.
+
+**World (arm `lean_fat_r7_signal`):** section 7's arm plus:
+
+- **Calls** (`hunter_calls`, `call_radius` 200): a hunter's second action bit, the
+  join bit of mammoth hunts and unused without mammoths, becomes a call with no effect
+  of its own. Every hunter observes the nearest other hunter that called in the last
+  decision within 200 units, in any direction (like a sound, outside the view cone):
+  heard, direction and distance. Calls have no built-in meaning.
+- **Catching together** (`rabbit_fat_touch_only`, `rabbit_touch_window` 8): a fat
+  rabbit (energy 5 or more) is caught only once two or more different hunters have
+  each touched it, while ready, within 8 physics steps (one decision), and is shared
+  evenly among those touchers only. A hunter merely within 64 units gains nothing. A
+  touch with no other toucher in the window fails, with the catch cooldown. Lean and
+  middle rabbits as in section 7. The window was chosen by the user over strictly
+  simultaneous touching after a paper check: section 7's policies at iteration 570
+  replayed with simultaneous touching (20 episodes, never trained under it) made 35
+  such catches in 20 episodes, against 3,662 party catches under section 7's rule.
+
+From scratch, 1000 iterations, 14 env runners, one seed. Trained from a separate
+checkout (code commit b8bf0763, merged to main after section 7's evaluations) and
+started automatically when section 7's training ended, so the two never shared the
+GPU.
+
+**Tests, set before training** (final checkpoint):
+
+1. **Coexistence:** hunters and rabbits both alive at step 8000 in at least 45 of 50
+   evaluated episodes.
+2. **Cooperation:** with the fair measure (`launchers/coop_fair.py`, 20 episodes),
+   approaches to fat rabbits have another hunter within 64 units more often than
+   approaches to lean rabbits and than chance.
+3. **Above section 7:** the fat share in test 2 divided by chance above section 7's
+   final value of the same ratio. (Section 7's policies cannot be replayed here as a
+   reference, since the call adds to the observation.)
+4. **Calls followed by a partner** (`launchers/calls.py`, 20 episodes): when a hunter
+   is alone at an open fat rabbit (within 64 units of it, no other hunter within 64 of
+   the rabbit), another hunter reaches the rabbit within 4 decisions more often after
+   a call than after silence; 95% bootstrap interval over episodes of the difference
+   above 0. This is an association, not a causal effect: the policy chooses when to
+   call.
+
+Also recorded, not tests: iterations 250 and 500; fat rabbits caught together; call
+rate at a fat rabbit against elsewhere.
+
+**Hard stop:** one run, no changes afterwards, whatever the result.
+
+**Caveats, set in advance:** one seed. Calls and the catching rule change together, so
+a difference from section 7 cannot be put down to either. Catching together may be too
+hard to learn (the paper check above), in which case fat rabbits would drop out of the
+diet; that would fail test 2, not show a new kind of cooperation.
