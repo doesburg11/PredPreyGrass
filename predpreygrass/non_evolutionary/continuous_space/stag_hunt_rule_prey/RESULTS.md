@@ -418,8 +418,10 @@ episodes, 50 per checkpoint (`results/calibration_lean_fat_rabbits*_eval.json`):
 | Catches alone / with another hunter near | 12,070 / 5,384 | 12,889 / 11,736 | 11,555 / 12,586 |
 | Failed solo attempts | 16,064 | 21,770 | 21,665 |
 
-This is the first world in either stag hunt module where trained hunters and prey kept
-coexisting at the target level. Mean rabbit numbers fell from 40 to 14 over training,
+This is the first world with rule-following prey where trained hunters and prey kept
+coexisting at the target level. With learning prey, `stag_hunt_continuous` had met it
+before, without a cooperation signal: round 1a (hunters and rabbits only, 49 of 50),
+round 14 (47 of 50) and round 20 (50 of 50). Mean rabbit numbers fell from 40 to 14 over training,
 so the margin may be narrowing; the run is being continued (section 13).
 
 Cooperation, as fixed before training ([`launchers/coop_check.py`](launchers/coop_check.py),
