@@ -560,3 +560,52 @@ lone catches (27,456 against 16,348), so hunters still try fat rabbits alone. Th
 the closest the line came to both targets in one world: coexistence as in round 1a,
 and a fat-above-lean difference that round 1a's policies did not show (10 of 20) —
 but the fat share does not exceed chance, which is what the stag hunt needed.
+
+## 6. Follow-up: bigger fat rabbits, catches shared evenly (2026-11-06)
+
+At the user's request, after section 5 (which had been set as a hard stop). Section
+5's hunters learned to skip partners for lean rabbits but did not seek them for fat
+ones. One account: the payoffs barely made the fat rabbit a stag. A hunter gains half
+a caught rabbit's energy, and rabbits bred at 8 (dropping to 5), so a fat rabbit (6
+to 8) shared by two paid each about 1.75, against up to 1.5 for a lean rabbit alone
+(in replays, 1.4 times per head on average).
+
+**World (arm `lean_fat_big`):** section 5's arm with rabbits breeding at energy 16
+instead of 8 (`reproduction_rabbit_threshold`; a parent still pays its child's 3) and
+fat from 12 instead of 6 (`rabbit_fat_energy`; lean still 3 or less). Catches are
+shared evenly, as before. A fat rabbit (12 to 16) shared by two pays each 3 to 4,
+against up to 1.5 for a lean rabbit alone. From scratch, 1000 iterations, 14 env
+runners, one seed.
+
+**Paper check before training** (scratch replays of section 5's final policies, 10
+episodes; these policies never trained here): a party's fat rabbit paid each hunter
+2.6 times a lone lean catch (section 5's world: 1.4), but rabbits were fat 90% of the
+time and lean 2%, hunters' food per step fell to about their resting cost, and every
+episode ended before step 2,800. The run tests whether training from scratch finds a
+way to live in this world. (A no-split variant, not what the user asked for, was
+started by mistake and stopped at iteration 186 unevaluated; its code was reverted.)
+
+**Tests, set before training** (final checkpoint; the same as section 5):
+
+1. **Coexistence:** hunters and rabbits both alive at step 8000 in at least 45 of 50
+   evaluated episodes.
+2. **Cooperation:** with the fair measure (`launchers/coop_fair.py`, 20 episodes),
+   approaches to fat rabbits have another hunter within 64 units more often than
+   approaches to lean rabbits and than chance.
+3. **Learned, not imposed:** the fat share in test 2 above that of section 5's final
+   policies replayed in this world (never trained in it).
+
+Also recorded, not tests: iterations 250 and 500.
+
+**Reference, before training** (section 5's final policies in this world;
+`results/replay_lean_fat_learning_big_*.json`): both alive at step 8000 in 0 of 50
+(hunters died out in 30, median step about 2,000; rabbits in 20, median about 1,200).
+Fair measure: chance 20.5%, fat 17.4% (447 approaches), lean 12.5% (8), middle 0%
+(45).
+
+**Hard stop:** one run, no changes afterwards, whatever the result.
+
+**Caveats, set in advance:** one seed. Rabbits breed half as often per unit of food
+gathered, so rabbit numbers and the hunters' food supply change along with the payoff;
+a difference from section 5 can come from either. Lean rabbits are mainly the young,
+so lone hunting depends on catching them before they grow.

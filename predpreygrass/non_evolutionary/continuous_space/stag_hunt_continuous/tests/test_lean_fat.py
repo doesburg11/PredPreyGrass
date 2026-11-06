@@ -164,3 +164,13 @@ def test_coop_fair_summary_handles_empty_counts():
     row.update(hunter_steps=10, with_partner=2, fat_approaches=4, fat_with_partner=2, lean_approaches=5, lean_with_partner=1)
     s = summarise([row])
     assert s["chance"] == 0.2 and s["share"]["fat"] == 0.5 and s["cooperation_shown"] is True
+
+
+def test_the_big_rabbit_arm_is_the_lean_fat_arm_with_bigger_fat_rabbits():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS, INIT_FROM
+
+    arm = dict(ARMS["lean_fat_big"])
+    assert arm.pop("reproduction_rabbit_threshold") == 16.0 and arm.pop("rabbit_fat_energy") == 12.0
+    assert dict(ARMS["lean_fat_learning"], rabbit_fat_energy=12.0) == dict(arm, rabbit_fat_energy=12.0)
+    assert "lean_fat_big" not in INIT_FROM
+    StagHuntContinuous(dict(ARMS["lean_fat_big"]))  # valid

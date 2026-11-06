@@ -10,7 +10,8 @@ settings of config/config_env.py and config/config_ppo.py except:
   ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
   rounds 17 and 18, and INIT_FROM names the run an arm continues from;
 - `lean_fat_learning`: rabbits_only with lean and fat rabbits, predators
-  seeing the rabbits' energy (RESULTS.md, section 5).
+  seeing the rabbits' energy (RESULTS.md, section 5); `lean_fat_big`: the
+  same with rabbits breeding at 16 and fat from 12 (section 6).
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -200,6 +201,11 @@ ARMS["with_mammoths_r20"] = dict(ARMS["with_mammoths_r19b"], reproduction_predat
 # rabbits of stag_hunt_rule_prey, and predators that see the rabbits' energy
 # and their own catch cooldown (RESULTS.md, section 5). From scratch.
 ARMS["lean_fat_learning"] = dict(ARMS["rabbits_only"], rabbit_fat_energy=6.0, observe_rabbit_condition=True)
+# Its follow-up (RESULTS.md, section 6), from scratch: bigger fat rabbits,
+# catches still shared evenly. Rabbits breed at 16 instead of 8 and are fat
+# from 12, so a fat rabbit shared by two pays each hunter more than a lean one
+# (energy 3 or less) caught alone.
+ARMS["lean_fat_big"] = dict(ARMS["lean_fat_learning"], reproduction_rabbit_threshold=16.0, rabbit_fat_energy=12.0)
 
 
 def main():
