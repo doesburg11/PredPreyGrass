@@ -11,7 +11,8 @@ settings of config/config_env.py and config/config_ppo.py except:
   rounds 17 and 18, and INIT_FROM names the run an arm continues from;
 - `lean_fat_learning`: rabbits_only with lean and fat rabbits, predators
   seeing the rabbits' energy (RESULTS.md, section 5); `lean_fat_big`: the
-  same with rabbits breeding at 16 and fat from 12 (section 6).
+  same with rabbits breeding at 16 and fat from 12 (section 6); `lean_fat_r7`: rabbits
+  born at 2, breeding at 7 for a cost of 3, lean to 2, fat from 5 (section 7).
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -206,6 +207,17 @@ ARMS["lean_fat_learning"] = dict(ARMS["rabbits_only"], rabbit_fat_energy=6.0, ob
 # from 12, so a fat rabbit shared by two pays each hunter more than a lean one
 # (energy 3 or less) caught alone.
 ARMS["lean_fat_big"] = dict(ARMS["lean_fat_learning"], reproduction_rabbit_threshold=16.0, rabbit_fat_energy=12.0)
+# Section 7 (user's settings), from scratch: rabbits born at 2 (the starting
+# ones too), breeding at 7 and paying 3 per birth (1 lost), so adults move
+# between 4 and 7; lean at 2 or less, fat from 5 (both thresholds one lower).
+ARMS["lean_fat_r7"] = dict(
+    ARMS["lean_fat_learning"],
+    energy_rabbit_initial=2.0,
+    reproduction_rabbit_threshold=7.0,
+    reproduction_rabbit_cost=3.0,
+    rabbit_lean_energy=2.0,
+    rabbit_fat_energy=5.0,
+)
 
 
 def main():

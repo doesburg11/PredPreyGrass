@@ -184,6 +184,11 @@ DEFAULT_CONFIG = {
     "reproduction_predator_reward": 10.0,
     "reproduction_rabbit_reward": 10.0,
     "reproduction_mammoth_reward": 10.0,
+    # Energy a parent pays at a birth; None: the child's initial energy (a
+    # value above it is lost in the birth).
+    "reproduction_predator_cost": None,
+    "reproduction_rabbit_cost": None,
+    "reproduction_mammoth_cost": None,
     "reproduction_max_predator": 50,
     "reproduction_max_rabbit": 100,
     "reproduction_max_mammoth": 20,
@@ -421,6 +426,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.resting_cost = {s: c[f"energy_{s}_resting_metabolic_cost"] for s in SPECIES}
         self.speed_cost = {s: c[f"energy_{s}_speed_cost"] for s in SPECIES}
         self.threshold = {s: c[f"reproduction_{s}_threshold"] for s in SPECIES}
+        self.birth_cost = {s: self.initial_energy[s] if c[f"reproduction_{s}_cost"] is None else c[f"reproduction_{s}_cost"] for s in SPECIES}
         self.birth_reward = {s: c[f"reproduction_{s}_reward"] for s in SPECIES}
         self.max_population = {s: c[f"reproduction_max_{s}"] for s in SPECIES}
         self.birth_interval = {s: c[f"reproduction_{s}_interval"] for s in SPECIES}
@@ -525,9 +531,13 @@ class StagHuntContinuous(MultiAgentEnv):
                     raise ValueError(f"{key} must be a positive integer")
             if not _integer(c[f"reproduction_{s}_interval"], 0):
                 raise ValueError(f"reproduction_{s}_interval must be a nonnegative integer")
-            # A parent pays the offspring's initial energy.
+            # A child starts with energy_<species>_initial; its parent pays
+            # reproduction_<species>_cost (by default the same).
             if not self.initial_energy[s] < self.threshold[s] <= self.max_energy[s]:
                 raise ValueError(f"reproduction_{s}_threshold must exceed energy_{s}_initial and not exceed energy_{s}_max")
+            cost = c[f"reproduction_{s}_cost"]
+            if cost is not None and not (_number(cost, 0) and self.initial_energy[s] <= cost < self.threshold[s]):
+                raise ValueError(f"reproduction_{s}_cost must be None or at least energy_{s}_initial and below reproduction_{s}_threshold")
             if self.count[s] > min(self.max_population[s], self.pool[s]):
                 raise ValueError(f"{s}_count must not exceed reproduction_max_{s} or the pool")
         for key in ("energy_grass_gain", "energy_steppe_gain", "energy_catch_efficiency_predator", "hunt_carcass_energy", "hunt_join_cost"):
@@ -921,7 +931,7 @@ class StagHuntContinuous(MultiAgentEnv):
             self.next_id[s] += 1
             self.animals[s].append(child)
             self.active.append(child.id)
-            parent.energy -= self.initial_energy[s]
+            parent.energy -= self.birth_cost[s]
             parent.next_birth_at = self.time_step + self.birth_interval[s]
             born.append((child.id, parent.id))
             population[s] += 1

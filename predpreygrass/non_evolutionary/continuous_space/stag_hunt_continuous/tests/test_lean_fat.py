@@ -174,3 +174,51 @@ def test_the_big_rabbit_arm_is_the_lean_fat_arm_with_bigger_fat_rabbits():
     assert dict(ARMS["lean_fat_learning"], rabbit_fat_energy=12.0) == dict(arm, rabbit_fat_energy=12.0)
     assert "lean_fat_big" not in INIT_FROM
     StagHuntContinuous(dict(ARMS["lean_fat_big"]))  # valid
+
+
+def test_a_birth_costs_the_parent_the_set_cost_and_the_child_starts_at_its_initial_energy():
+    env = StagHuntContinuous(dict(mammoth_count=0, energy_rabbit_initial=2.0, reproduction_rabbit_threshold=7.0, reproduction_rabbit_cost=3.0))
+    env.reset(seed=0)
+    assert all(r.energy == 2.0 for r in env.rabbits)
+    parent = env.rabbits[0]
+    parent.energy = 7.0
+    rewards, infos = {}, {}
+    born = env._reproduce(rewards, infos)
+    assert [p for _, p in born] == [parent.id]
+    assert parent.energy == pytest.approx(4.0)
+    child = next(r for r in env.rabbits if r.id == born[0][0])
+    assert child.energy == pytest.approx(2.0)
+
+
+def test_the_default_birth_cost_is_the_childs_initial_energy():
+    env = StagHuntContinuous(dict(mammoth_count=0))
+    env.reset(seed=0)
+    parent = env.rabbits[0]
+    parent.energy = env.threshold["rabbit"]
+    env._reproduce({}, {})
+    assert parent.energy == pytest.approx(env.threshold["rabbit"] - env.initial_energy["rabbit"])
+
+
+@pytest.mark.parametrize("cost", [1.0, 8.0, -1.0, "3", True])
+def test_the_birth_cost_is_validated(cost):
+    with pytest.raises(ValueError):
+        StagHuntContinuous(dict(energy_rabbit_initial=2.0, reproduction_rabbit_threshold=7.0, reproduction_rabbit_cost=cost))
+
+
+@pytest.mark.parametrize("species", ["predator", "rabbit", "mammoth"])
+def test_the_birth_cost_is_validated_for_every_species(species):
+    StagHuntContinuous({f"reproduction_{species}_cost": None})
+    with pytest.raises(ValueError):
+        StagHuntContinuous({f"reproduction_{species}_cost": 1000.0})
+
+
+def test_the_r7_arm_is_the_lean_fat_arm_with_the_users_rabbit_energies():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS, INIT_FROM
+
+    arm = dict(ARMS["lean_fat_r7"])
+    changed = {k: arm.pop(k) for k in ("energy_rabbit_initial", "reproduction_rabbit_threshold", "reproduction_rabbit_cost", "rabbit_lean_energy", "rabbit_fat_energy")}
+    assert changed == {"energy_rabbit_initial": 2.0, "reproduction_rabbit_threshold": 7.0, "reproduction_rabbit_cost": 3.0, "rabbit_lean_energy": 2.0, "rabbit_fat_energy": 5.0}
+    base = dict(ARMS["lean_fat_learning"])
+    base.pop("rabbit_fat_energy")
+    assert arm == base and "lean_fat_r7" not in INIT_FROM
+    StagHuntContinuous(dict(ARMS["lean_fat_r7"]))

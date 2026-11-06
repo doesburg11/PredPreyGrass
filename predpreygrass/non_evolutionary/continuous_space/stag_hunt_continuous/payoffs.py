@@ -20,8 +20,8 @@ Bout groups are descriptive, not payoffs of a choice: a bout takes its group fro
 its largest party, approaches that never arrive stay in the rest, the nearest
 mammoth can change during one, and all of it holds for the moments the policy
 chose. Metabolic cost and rabbit food of a hunter's last decision before it
-starves, and of the episode's last decision, are not counted. Births move energy
-to the child and are not a cost here.
+starves, and of the episode's last decision, are not counted. Births (the
+parent's whole birth cost, reproduction_predator_cost) are not a cost here.
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.payoffs \\
         <checkpoint dir> <episodes> [out.json] [--energy-ratio R] [--min-party N] [--workers N]
@@ -244,7 +244,7 @@ def play_episode(env, choose, seed):
             for hunter in env.predators:
                 record = step_records.get(hunter.id)
                 if record is not None and hunter.id in start:
-                    transferred = infos.get(hunter.id, {}).get("births", 0) * env.initial_energy["predator"]
+                    transferred = infos.get(hunter.id, {}).get("births", 0) * env.birth_cost["predator"]
                     unexplained += abs(hunter.energy - start[hunter.id] - (record["rabbit"] - record["metabolic"] + record["hunt_net"] + record["scavenged"] - transferred))
             if terms["__all__"] or truncs["__all__"]:
                 break

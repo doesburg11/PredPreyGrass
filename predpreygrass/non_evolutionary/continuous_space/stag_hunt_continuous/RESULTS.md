@@ -609,3 +609,59 @@ Fair measure: chance 20.5%, fat 17.4% (447 approaches), lean 12.5% (8), middle 0
 gathered, so rabbit numbers and the hunters' food supply change along with the payoff;
 a difference from section 5 can come from either. Lean rabbits are mainly the young,
 so lone hunting depends on catching them before they grow.
+
+**Stopped (2026-11-06), not evaluated:** I stopped this run at iteration 752 of 1000,
+reading a request to change the rabbits' energies as a request to replace it; the
+user had not asked for it to be stopped, and chose to go on to section 7 rather than
+resume it. Checkpoints to iteration 750 are kept. Training curves at the stop: no
+rabbit was born in any training episode at any point (all 752 iterations); episodes
+ended at about step 900 (at most 1,013), with hunters catching about 7 of the 8
+starting rabbits. A reading, not tested: starting at 3 and breeding at 16, a rabbit
+needs about 7 grass patches or more before its first birth, all that time catchable
+by a lone hunter; the hunters ate them first, and with no births the rabbits, rewarded
+for births only, had nothing to learn from.
+
+## 7. Follow-up: the user's rabbit energies (2026-11-06)
+
+The user's settings, after section 6.
+
+**World (arm `lean_fat_r7`):** section 5's arm with rabbits born at energy 2 (the
+starting rabbits too; was 3), breeding at 7 (was 8) and paying 3 per birth (new
+setting `reproduction_rabbit_cost`; before, a parent paid its child's start energy),
+so 1 is lost in each birth and an adult drops to 4. Lean: 2 or less (was 3); fat: 5
+or more (was 6). Catches shared evenly, as in section 5. From scratch, 1000
+iterations, 14 env runners, one seed.
+
+A lone hunter catches a rabbit with probability 1 at energy 2 or less, falling
+linearly to 0 at 5; a party (another hunter within 64 units) always, shared evenly.
+A hunter gains half a caught rabbit's energy, so the best a lone hunter can expect
+per attempt is about 1.04 (rabbit energy 2.5, chance 5/6), and two hunters sharing a
+fat rabbit (5 to 7) gain 1.25 to 1.75 each.
+
+**Paper check** (scratch replays of section 5's final policies, 10 episodes; these
+policies never trained here): a party's fat rabbit paid each hunter 1.8 times a lone
+lean catch; hunters starved out by step 2,223 in all 10, rabbits multiplying to about
+65.
+
+**Tests, set before training** (final checkpoint; the same as section 5):
+
+1. **Coexistence:** hunters and rabbits both alive at step 8000 in at least 45 of 50
+   evaluated episodes.
+2. **Cooperation:** with the fair measure (`launchers/coop_fair.py`, 20 episodes),
+   approaches to fat rabbits have another hunter within 64 units more often than
+   approaches to lean rabbits and than chance.
+3. **Learned, not imposed:** the fat share in test 2 above that of section 5's final
+   policies replayed in this world (never trained in it).
+
+Also recorded, not tests: iterations 250 and 500.
+
+**Reference, before training** (section 5's final policies in this world;
+`results/replay_lean_fat_learning_r7_*.json`): both alive at step 8000 in 0 of 50
+(hunters died out in all 50, median step about 1,750). Fair measure: chance 7.4%,
+lean 8.2% (522 approaches), middle 6.1%, fat 9.2% (519); fat above lean in 11 of 20.
+Like section 5's reference, these policies would pass test 2 on small margins, which
+is why test 3 compares with them.
+
+**Caveats, set in advance:** one seed. Several energies change at once, so a
+difference from section 5 cannot be put down to one of them. The per-head gain of a
+pair on a fat rabbit over the best lone attempt is modest (about 1.2 to 1.7 times).
