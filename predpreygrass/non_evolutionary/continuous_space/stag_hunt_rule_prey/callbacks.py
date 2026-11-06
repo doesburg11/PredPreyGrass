@@ -49,7 +49,11 @@ class HuntLogger(RLlibCallback):
     def on_episode_end(self, *, episode, env=None, env_index=0, metrics_logger=None, **kwargs):
         if env is None or metrics_logger is None:
             return
-        stats = getattr(_unwrapped(env, env_index), "episode_hunt_stats", None)
+        inner = _unwrapped(env, env_index)
+        genes = getattr(inner, "episode_gene_stats", None)
+        for key, value in (genes or {}).items():
+            metrics_logger.log_value(f"genes/{key}", float(value))
+        stats = getattr(inner, "episode_hunt_stats", None)
         if not stats:
             return
         for key, value in {**stats, **derived_rates(stats)}.items():

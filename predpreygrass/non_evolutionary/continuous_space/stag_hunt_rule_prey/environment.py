@@ -26,8 +26,13 @@ hunt_carcass_energy and starts a cooldown of hunt_cooldown decisions. Every
 contributor pays hunt_join_cost per hunt.
 """
 
+import json
 import math
+import os
 import random
+import time
+import uuid
+from collections import deque
 
 import numpy as np
 from gymnasium.spaces import Box, Dict, MultiDiscrete
@@ -172,6 +177,27 @@ DEFAULT_CONFIG = {
     "rabbit_fat_energy": 0.0,
     "rabbit_party_radius": 64.0,
     "rabbit_catch_cooldown": 8,
+    # Heritable rabbit genes (off by default). A rabbit's genome is (log flee
+    # ratio, log breeding ratio): it flees at rabbit_flee_distance x exp(g0),
+    # at most rabbit_view_distance, and gives birth at
+    # reproduction_rabbit_threshold x exp(g1), between energy_rabbit_initial +
+    # 0.5 and energy_rabbit_max (GENE_LIMITS; genes are clipped to give these).
+    # A newborn inherits its mother's genome plus N(0, rabbit_gene_mutation_std)
+    # per gene. An episode's founders are drawn from the gene pool the previous
+    # episode left in this environment instance: the genomes of the rabbits
+    # alive at its end or, if none were, of the last rabbit_count rabbits to
+    # die (the first episode: all zero, the base rabbit). With
+    # rabbit_genes_expressed False genes are inherited and mutated but every
+    # rabbit behaves as the base: a neutral reference for drift.
+    # rabbit_gene_founders (a list of genomes) fixes the pool founders are drawn
+    # from in every episode, which then never changes (evaluation).
+    # rabbit_gene_log: a directory to which this environment instance appends
+    # its gene pool, one JSON line per episode, or "" for none.
+    "rabbit_genes": False,
+    "rabbit_genes_expressed": True,
+    "rabbit_gene_mutation_std": 0.05,
+    "rabbit_gene_founders": None,
+    "rabbit_gene_log": "",
     "reproduction_max_predator": 50,
     "reproduction_max_rabbit": 100,
     "reproduction_max_mammoth": 20,
@@ -214,6 +240,9 @@ GRASS_KEYS = (
 )
 BODY = ("radius", "mass", "max_velocity", "max_acceleration", "max_steer_force", "view_distance", "fov")
 FOOD = {"predator": "grass", "rabbit": "grass", "mammoth": "steppe"}
+GENES = ("flee", "breeding")
+GENE_FLEE_FLOOR = 1 / 8  # lowest flee ratio
+BREEDING_MARGIN = 0.5  # lowest breeding threshold above the initial energy
 
 
 def _number(value, minimum=None, strict=False):
@@ -243,6 +272,9 @@ class Animal:
         "ready_at",
         "catch_ready_at",
         "next_birth_at",
+        "flee_distance",
+        "birth_threshold",
+        "genome",
         "radius",
         "mass",
         "max_speed",
@@ -252,7 +284,7 @@ class Animal:
         "fov",
     )
 
-    def __init__(self, agent_id, species, position, velocity, energy, body):
+    def __init__(self, agent_id, species, position, velocity, energy, body, flee_distance=0.0, birth_threshold=math.inf, genome=None):
         self.id = agent_id
         self.species = species
         self.position = position
@@ -267,6 +299,11 @@ class Animal:
         self.catch_ready_at = 0
         # First physics step at which the animal may give birth again.
         self.next_birth_at = 0
+        # The prey rule's flee distance and the energy at which it gives
+        # birth: the species' unless set by a rabbit's genome.
+        self.flee_distance = flee_distance
+        self.birth_threshold = birth_threshold
+        self.genome = genome
         (
             self.radius,
             self.mass,
@@ -370,6 +407,10 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.fat_energy = c["rabbit_fat_energy"]
         self.party_radius = c["rabbit_party_radius"]
         self.catch_cooldown = c["rabbit_catch_cooldown"]
+        self.genes = c["rabbit_genes"]
+        self.genes_expressed = c["rabbit_genes_expressed"]
+        self.mutation_std = c["rabbit_gene_mutation_std"]
+        self.gene_log = c["rabbit_gene_log"]
         self.max_population = {s: c[f"reproduction_max_{s}"] for s in SPECIES}
         self.birth_interval = {s: c[f"reproduction_{s}_interval"] for s in SPECIES}
         self.pool = {s: c[f"reproduction_{s}_pool"] for s in SPECIES}
@@ -384,6 +425,25 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.energy_ratio = c["hunt_energy_ratio"]
         self.min_party = c["hunt_min_party"]
         self._validate()
+        # Gene limits, (low, high) per gene, so the phenotypes stay in range.
+        base_flee = self.flee_distance["rabbit"]
+        flee_high = math.log(self.body["rabbit"][BODY.index("view_distance")] / base_flee) if base_flee else 0.0
+        base_threshold = self.threshold["rabbit"]
+        self.gene_limits = (
+            (min(math.log(GENE_FLEE_FLOOR), flee_high), flee_high),
+            (math.log(min(self.initial_energy["rabbit"] + BREEDING_MARGIN, base_threshold) / base_threshold), math.log(self.max_energy["rabbit"] / base_threshold)),
+        )
+        founders = c["rabbit_gene_founders"]
+        self.fixed_founders = None if founders is None else [self._clipped(g) for g in founders]
+        self.gene_pool = None  # None: base genomes
+        self.recent_dead = deque(maxlen=max(1, self.count["rabbit"]))
+        self.gene_rng = random.Random()
+        self.episodes_started = 0
+        self.log_name = f"pool_{os.getpid()}_{uuid.uuid4().hex[:8]}.jsonl"
+        # Means over the last finished episode's final rabbits (or the last to
+        # die), kept like episode_hunt_stats.
+        self.episode_gene_stats = None
+        self.episode_founders = None
 
         # Energy per mammoth slot and per predator slot.
         self.obs_size = SELF_SIZE + SLOT_SIZE * sum(self.observe.values()) + FOOD_SIZE + 2 + self.observe["mammoth"] + self.observe["predator"]
@@ -464,6 +524,21 @@ class StagHuntRulePrey(MultiAgentEnv):
             raise ValueError("rabbit_fat_energy must exceed rabbit_lean_energy (or be 0: off)")
         if not _integer(c["rabbit_catch_cooldown"], 0):
             raise ValueError("rabbit_catch_cooldown must be a nonnegative integer")
+        for key in ("rabbit_genes", "rabbit_genes_expressed"):
+            if not isinstance(c[key], bool):
+                raise ValueError(f"{key} must be True or False")
+        if not _number(c["rabbit_gene_mutation_std"], 0):
+            raise ValueError("rabbit_gene_mutation_std must be finite and nonnegative")
+        if not isinstance(c["rabbit_gene_log"], str):
+            raise ValueError("rabbit_gene_log must be a string")
+        founders = c["rabbit_gene_founders"]
+        if founders is not None:
+            if not c["rabbit_genes"]:
+                raise ValueError("rabbit_gene_founders requires rabbit_genes")
+            if not isinstance(founders, (list, tuple)) or not founders or not all(
+                isinstance(g, (list, tuple)) and len(g) == len(GENES) and all(_number(v) for v in g) for g in founders
+            ):
+                raise ValueError(f"rabbit_gene_founders must be a nonempty list of genomes of {len(GENES)} finite numbers")
         if not _number(c["alive_reward"], 0):
             raise ValueError("alive_reward must be finite and nonnegative")
         if not isinstance(c["alive_reward_shared"], bool):
@@ -500,6 +575,9 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.birth_rng = random.Random(None if seed is None else seed + 1)
         self.rule_rng = random.Random(None if seed is None else seed + 2)
         self.catch_rng = random.Random(None if seed is None else seed + 4)
+        if seed is not None:
+            self.gene_rng = random.Random(seed + 5)
+        founders = self._founder_genomes() if self.genes else None
         self.food["grass"].reset(seed)
         self.food["steppe"].reset(None if seed is None else seed + 3)
         spawn = random.Random(seed)
@@ -509,7 +587,8 @@ class StagHuntRulePrey(MultiAgentEnv):
         for s, margin in (("rabbit", 20), ("predator", 0), ("mammoth", 20)):
             for i in range(self.count[s]):
                 position = Vector(spawn.randint(margin, self.width - margin), spawn.randint(margin, self.height - margin))
-                self.animals[s].append(self._animal(s, i, position))
+                genome = founders[i] if s == "rabbit" and founders is not None else None
+                self.animals[s].append(self._animal(s, i, position, genome))
         self.time_step = 0
         self.decision = 0
         self.next_id = dict(self.count)
@@ -522,10 +601,81 @@ class StagHuntRulePrey(MultiAgentEnv):
         self.agents = list(self.active)
         return self._observations(), {agent: {} for agent in self.active}
 
-    def _animal(self, species, number, position):
+    def _animal(self, species, number, position, genome=None):
         # Initial velocity as in the base world: predators (0, -1), prey (-1, 0).
         velocity = Vector(0, -1) if species == "predator" else Vector(-1, 0)
-        return Animal(f"{species}_{number}", species, position, velocity, self.initial_energy[species], self.body[species])
+        flee, threshold = self.flee_distance.get(species, 0.0), self.threshold[species]
+        if genome is not None and self.genes_expressed:
+            flee, threshold = self._phenotype(genome)
+        return Animal(f"{species}_{number}", species, position, velocity, self.initial_energy[species], self.body[species], flee, threshold, genome)
+
+    # --- Rabbit genes ----------------------------------------------------
+
+    def _clipped(self, genome):
+        return tuple(min(high, max(low, float(g))) for g, (low, high) in zip(genome, self.gene_limits))
+
+    def _phenotype(self, genome):
+        """(flee distance, breeding threshold) of a rabbit with this genome."""
+        view = self.body["rabbit"][BODY.index("view_distance")]
+        flee = min(view, self.flee_distance["rabbit"] * math.exp(genome[0]))
+        low = min(self.initial_energy["rabbit"] + BREEDING_MARGIN, self.threshold["rabbit"])
+        threshold = min(self.max_energy["rabbit"], max(low, self.threshold["rabbit"] * math.exp(genome[1])))
+        return flee, threshold
+
+    def _mutated(self, genome):
+        return self._clipped(g + self.gene_rng.gauss(0.0, self.mutation_std) for g in genome)
+
+    def _founder_genomes(self):
+        """This episode's founder genomes, drawn from the pool (or the fixed
+        founders), rabbit_count of them, without replacement while it is large
+        enough. Founders are not mutated; mutation happens at births. An
+        episode left unfinished (reset before its end) leaves the pool as it
+        was."""
+        pool = self.fixed_founders if self.fixed_founders is not None else self.gene_pool or [tuple(0.0 for _ in GENES)]
+        self.episodes_started += 1
+        self.recent_dead.clear()
+        count = self.count["rabbit"]
+        if len(pool) >= count:
+            founders = self.gene_rng.sample(pool, count)
+        else:
+            founders = [self.gene_rng.choice(pool) for _ in range(count)]
+        self.episode_founders = list(founders)
+        return founders
+
+    def _end_genes(self):
+        """At an episode's end: its gene stats; the pool becomes the genomes
+        of the rabbits alive now or, with none, of the last rabbit_count to die
+        (a deliberate bottleneck after an extinction), and is logged (not with
+        fixed founders)."""
+        self.episode_gene_stats = self._gene_stats()
+        if self.fixed_founders is not None:
+            return
+        ended = [r.genome for r in self.rabbits] or list(self.recent_dead)
+        if ended:
+            self.gene_pool = ended
+        if self.gene_log:
+            self._log_pool()
+
+    def _log_pool(self):
+        os.makedirs(self.gene_log, exist_ok=True)
+        line = {"time": time.time(), "episodes": self.episodes_started, "expressed": self.genes_expressed, "genomes": [list(g) for g in (self.gene_pool or [])]}
+        with open(os.path.join(self.gene_log, self.log_name), "a") as handle:
+            handle.write(json.dumps(line) + "\n")
+
+    def _gene_stats(self):
+        """Means of genes and phenotypes over the rabbits alive now (or, with
+        none, the last to die). With rabbit_genes_expressed False the
+        phenotypes are those the genes would give, not the base the rabbits
+        have."""
+        genomes = [r.genome for r in self.rabbits] or list(self.recent_dead)
+        if not genomes:
+            return None
+        stats = {f"rabbit_gene_{name}_mean": float(np.mean([g[i] for g in genomes])) for i, name in enumerate(GENES)}
+        phenotypes = [self._phenotype(g) for g in genomes]
+        stats["rabbit_flee_distance_mean"] = float(np.mean([f for f, _ in phenotypes]))
+        stats["rabbit_breeding_threshold_mean"] = float(np.mean([t for _, t in phenotypes]))
+        stats["rabbit_gene_pool_size"] = float(len(genomes))
+        return stats
 
     def _parse(self, agent, action):
         """(movement action, join) of a predator's action."""
@@ -603,6 +753,8 @@ class StagHuntRulePrey(MultiAgentEnv):
             self.hunt_stats["grass_eaten_total"] = self.food["grass"].total_consumed
             self.hunt_stats["steppe_eaten_total"] = self.food["steppe"].total_consumed
             self.episode_hunt_stats = dict(self.hunt_stats, physics_steps=self.time_step, **{f"births_{s}": self.births[s] for s in SPECIES})
+            if self.genes:
+                self._end_genes()
         self.agents = list(self.active)
         return obs, rewards, terminateds, truncateds, infos
 
@@ -746,6 +898,8 @@ class StagHuntRulePrey(MultiAgentEnv):
             animal.alive = False
             catches.append((catcher, animal.energy))
             self.rabbits.remove(animal)
+            if animal.genome is not None:
+                self.recent_dead.append(animal.genome)
             return
         self._steer(animal, self._desired_velocity(move, animal))
         # A bump adds a push of top speed / 8 away from each animal touched.
@@ -766,6 +920,8 @@ class StagHuntRulePrey(MultiAgentEnv):
     def _remove(self, animal, terminateds, truncateds, infos, reason):
         animal.alive = False
         self.animals[animal.species].remove(animal)
+        if animal.genome is not None:
+            self.recent_dead.append(animal.genome)
         if animal.species != "predator":
             return
         if animal.id in self.active:
@@ -810,7 +966,7 @@ class StagHuntRulePrey(MultiAgentEnv):
         for parent in self.living():
             s = parent.species
             if (
-                parent.energy < self.threshold[s]
+                parent.energy < parent.birth_threshold
                 or self.time_step < parent.next_birth_at
                 or (s == "predator" and parent.id not in active)
                 or population[s] >= self.max_population[s]
@@ -823,7 +979,8 @@ class StagHuntRulePrey(MultiAgentEnv):
                 (parent.position.x + distance * math.cos(angle)) % self.width,
                 (parent.position.y + distance * math.sin(angle)) % self.height,
             )
-            child = self._animal(s, self.next_id[s], position)
+            genome = self._mutated(parent.genome) if parent.genome is not None else None
+            child = self._animal(s, self.next_id[s], position, genome)
             self.next_id[s] += 1
             self.animals[s].append(child)
             parent.energy -= self.initial_energy[s]

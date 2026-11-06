@@ -1,7 +1,7 @@
 """The prey's fixed rules: no learning, the same behaviour in every run.
 
 At each decision a prey flees the nearest predator in its view cone within its
-flee distance, at full speed. Otherwise it goes to the nearest edible patch of
+flee distance (its own: a rabbit's may be set by its genes), at full speed. Otherwise it goes to the nearest edible patch of
 its food in view (full speed, stopping when it can eat), or else wanders at
 half speed, turning at most one direction step at a time.
 """
@@ -28,7 +28,7 @@ def prey_move(env, prey, rng):
     """A prey's movement action in this state. Draws from rng only to wander."""
     threats = []
     for predator in env.predators:
-        if env.torus.in_view(prey, predator.position, env.flee_distance[prey.species], prey.fov):
+        if env.torus.in_view(prey, predator.position, prey.flee_distance, prey.fov):
             dx, dy = env.torus.offset(prey.position, predator.position)
             threats.append((math.hypot(dx, dy), predator.id, dx, dy))
     if threats:

@@ -40,14 +40,29 @@ ARMS = {
     # The same, continued for 1000 more iterations at the user's request, from the
     # final weights of lean_fat_rabbits (optimizer state starts fresh).
     "lean_fat_rabbits_more": {"mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0},
+    # Rabbits with heritable flee distance and breeding threshold (RESULTS.md,
+    # section 14), from the same weights as lean_fat_rabbits_more, its control.
+    # neutral_rabbits carries the genes without expressing them: the reference
+    # for drift, and a second run of the control world. One run each.
+    "evolving_rabbits": {
+        "mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0,
+        "rabbit_genes": True, "rabbit_gene_log": str(RUNS_DIR / "calibration_evolving_rabbits" / "gene_pools"),
+    },
+    "neutral_rabbits": {
+        "mammoth_count": 0, "steppe_count": 0, "rabbit_fat_energy": 6.0,
+        "rabbit_genes": True, "rabbit_genes_expressed": False, "rabbit_gene_log": str(RUNS_DIR / "calibration_neutral_rabbits" / "gene_pools"),
+    },
 }
+FROM_LEAN_FAT = {"init_checkpoint": str(RUNS_DIR / "calibration_lean_fat_rabbits" / "checkpoint")}
 
 # Settings of config_ppo that differ by arm. Gamma 0.999 per decision looks
 # about 1000 decisions ahead, up to 8000 physics steps: one episode.
 PPO_ARMS = {
     "alive_individual": {"gamma": 0.999},
     "alive_shared": {"gamma": 0.999},
-    "lean_fat_rabbits_more": {"init_checkpoint": str(RUNS_DIR / "calibration_lean_fat_rabbits" / "checkpoint")},
+    "lean_fat_rabbits_more": FROM_LEAN_FAT,
+    "evolving_rabbits": FROM_LEAN_FAT,
+    "neutral_rabbits": FROM_LEAN_FAT,
 }
 
 

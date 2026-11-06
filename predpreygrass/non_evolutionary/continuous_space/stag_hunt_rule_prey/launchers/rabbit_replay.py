@@ -23,6 +23,9 @@ def init(checkpoint, settings):
         assert key in config, key
     config.update(settings)
     config["truncate_on_prey_extinction"] = False
+    if config.get("rabbit_genes") and config.get("rabbit_gene_founders") is None:
+        # The gene pool would carry over between this worker's episodes.
+        raise SystemExit("rabbit genes are on: use launchers/gene_eval.py, or set rabbit_genes false")
     evaluate._worker["modules"] = load_modules(checkpoint)
     evaluate._worker["env"] = evaluate.StagHuntRulePrey(config)
 

@@ -11,7 +11,9 @@ often than approaches to lean rabbits and than chance (RESULTS.md, section 12).
 
 Run from the repository root:
     python predpreygrass/non_evolutionary/continuous_space/stag_hunt_rule_prey/launchers/coop_fair.py \\
-        CHECKPOINT EPISODES WORKERS
+        CHECKPOINT EPISODES WORKERS [POOL_DIR]
+
+With rabbit genes, POOL_DIR gives each episode's founders as in gene_eval.py.
 """
 
 import sys
@@ -22,7 +24,7 @@ GAP = 64  # physics steps
 _w = {}
 
 
-def init(checkpoint):
+def init(checkpoint, pools):
     import torch
 
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.checkpoints import checkpoint_env_config, load_modules
@@ -31,6 +33,10 @@ def init(checkpoint):
     torch.set_num_threads(1)
     config = checkpoint_env_config(checkpoint)
     config["truncate_on_prey_extinction"] = False
+    config["rabbit_gene_log"] = ""
+    if config.get("rabbit_genes") and pools is None:
+        raise SystemExit("rabbit genes are on: give POOL_DIR")
+    _w["pools"] = pools
     _w["modules"] = load_modules(checkpoint)
     _w["env"] = StagHuntRulePrey(config)
 
@@ -39,6 +45,10 @@ def play(seed):
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey import evaluate
 
     env = _w["env"]
+    if _w["pools"] is not None:
+        from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.launchers.gene_pools import use_pool
+
+        use_pool(env, _w["pools"], seed)
     radius = env.party_radius
     counts = {"hunter_steps": 0, "with_partner": 0}
     for kind in ("fat", "middle", "lean"):
@@ -81,7 +91,12 @@ def play(seed):
 
 def main():
     checkpoint, episodes, workers = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=init, initargs=(checkpoint,)) as pool:
+    pools = None
+    if len(sys.argv) > 4:
+        from predpreygrass.non_evolutionary.continuous_space.stag_hunt_rule_prey.launchers.gene_pools import load_pools
+
+        pools = load_pools(sys.argv[4], checkpoint)
+    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=init, initargs=(checkpoint, pools)) as pool:
         rows = list(pool.map(play, range(episodes)))
     t = {k: sum(r[k] for r in rows) for k in rows[0]}
     chance = t["with_partner"] / t["hunter_steps"]

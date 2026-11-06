@@ -16,6 +16,11 @@ LATER_SETTINGS = {
     "rabbit_fat_energy": 0.0,
     "rabbit_party_radius": 64.0,
     "rabbit_catch_cooldown": 8,
+    "rabbit_genes": False,
+    "rabbit_genes_expressed": True,
+    "rabbit_gene_mutation_std": 0.05,
+    "rabbit_gene_founders": None,
+    "rabbit_gene_log": "",
 }
 
 

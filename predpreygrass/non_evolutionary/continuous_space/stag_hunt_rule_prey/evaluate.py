@@ -189,6 +189,9 @@ def _init(checkpoint):
         _worker["modules"] = load_modules(checkpoint)
     # Whole episodes, so the outcome shows which species survived.
     config["truncate_on_prey_extinction"] = False
+    if config.get("rabbit_genes") and config.get("rabbit_gene_founders") is None:
+        # The gene pool would carry over between this worker's episodes.
+        raise SystemExit("rabbit genes are on: use launchers/gene_eval.py, or set rabbit_genes false")
     _worker["env"] = StagHuntRulePrey(config)
 
 

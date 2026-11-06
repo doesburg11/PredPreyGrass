@@ -499,3 +499,54 @@ grow.
 Section 12's result at iteration 1000 stays the result fixed in advance: coexistence met
 (46 of 50), cooperation not above chance.
 
+## 14. Rabbits with evolving rule parameters (2026-11-06, running)
+
+At the user's request, after section 13: in every run so far hunters adapted and rabbits
+did not. Here rabbits adapt by selection, hunters by learning.
+
+**Genes.** Each rabbit carries two heritable genes (`rabbit_genes`, environment.py): its
+flee distance, 120 x exp(g0), at most its view distance 267, and its breeding threshold,
+8 x exp(g1), between 3.5 and 16. A mother loses 3 at each birth, so a higher threshold
+means fewer births but more time fat (energy 6 or more), out of a lone hunter's reach. Both
+costs already exist in the world: fleeing earlier costs grazing and running, breeding
+later costs offspring. A newborn inherits its mother's genes plus N(0, 0.05) per gene. The
+founders of an episode come from the gene pool its environment instance left at the end
+of the previous episode (the rabbits alive then or, if none, the last 8 to die), so each of
+the 14 env runners carries one lineage through the run. The first founders are the base
+rabbit. Speed and field of view stay fixed.
+
+**Arms** (`launchers/calibration.py`), one run each, 1000 iterations from the final
+weights of `lean_fat_rabbits` (iteration 1000), the same start as section 13:
+
+- `evolving_rabbits`: genes expressed.
+- `neutral_rabbits`: genes inherited and mutated but not expressed, so every rabbit
+  behaves as the base: the reference for drift, and a second run of section 13's world
+  (a test checks that it plays exactly as the world without genes).
+
+**Tests, set before the runs** (final checkpoints):
+
+1. Coexistence: hunters and rabbits coexist in at least 45 of 50 episodes, the founders
+   of each from the evolved pools (`launchers/gene_eval.py`; episode s from lineage
+   s mod 14). Section 13's control reached 29.
+2. Rabbits evolved: the lineages' mean genes differ between the arms, two-sided
+   Mann-Whitney U on 14 vs 14 lineage means, p < 0.025 for at least one gene (0.05,
+   Bonferroni over two) (`launchers/gene_drift_test.py`).
+3. Cooperation: with the evolved rabbits, approaches to fat rabbits have a partner near
+   more often than approaches to lean rabbits and than chance (`launchers/coop_fair.py`
+   with the pools, 20 episodes).
+
+Also recorded, not tests: the evolving hunters against base rabbits (`rabbit_genes`
+off), to separate hunter change from rabbit change, and the neutral run against base
+rabbits (a second control).
+
+**Hard stop:** one run per arm, no changes afterwards whatever the result; the next step
+is the user's.
+
+**Caveats, set in advance:** one run per arm, not paired by seed, so a difference in
+coexistence could also be run-to-run variation (the 14 lineages per arm are not
+independent of their run's hunters). Pools are matched to checkpoints by wall clock,
+the last episode a lineage finished before the save. The extinction fallback (last 8 to
+die) is a strong bottleneck that adds drift in both arms. In a 3-iteration smoke run
+genes already moved (flee about x1.36, breeding about x1.15 in 3 to 4 episodes): evolution is
+fast here, so the rabbits may also simply outrun the hunters' learning.
+
