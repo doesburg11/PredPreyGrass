@@ -12,7 +12,9 @@ settings of config/config_env.py and config/config_ppo.py except:
 - `lean_fat_learning`: rabbits_only with lean and fat rabbits, predators
   seeing the rabbits' energy (RESULTS.md, section 5); `lean_fat_big`: the
   same with rabbits breeding at 16 and fat from 12 (section 6); `lean_fat_r7`: rabbits
-  born at 2, breeding at 7 for a cost of 3, lean to 2, fat from 5 (section 7).
+  born at 2, breeding at 7 for a cost of 3, lean to 2, fat from 5 (section 7);
+  `lean_fat_r7_signal`: the same with calls and fat rabbits caught only by
+  two or more hunters touching within one decision (section 8).
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -218,6 +220,12 @@ ARMS["lean_fat_r7"] = dict(
     rabbit_lean_energy=2.0,
     rabbit_fat_energy=5.0,
 )
+# Section 8 (user's choice), from scratch: lean_fat_r7 with calls (the join
+# bit, heard within 200 in any direction) and fat rabbits caught only by two
+# or more hunters touching them within one decision (8 physics steps),
+# shared among those only. With calls on, the callbacks' join_rate is the
+# call rate (the same action bit).
+ARMS["lean_fat_r7_signal"] = dict(ARMS["lean_fat_r7"], hunter_calls=True, call_radius=200.0, rabbit_fat_touch_only=True, rabbit_touch_window=8)
 
 
 def main():

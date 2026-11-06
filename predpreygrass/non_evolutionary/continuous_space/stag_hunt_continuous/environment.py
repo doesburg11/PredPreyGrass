@@ -66,6 +66,7 @@ SELF_SIZE = 4  # own vx, vy (/ top speed), sin and cos of own heading
 SLOT_SIZE = 6  # seen flag, dx, dy, distance (/ view distance), vx, vy
 FOOD_SIZE = 4  # seen flag, dx, dy, distance (/ view distance)
 BURROW_SIZE = 4  # rabbits: dx, dy, distance, inside; predators: seen flag, dx, dy, distance
+CALL_SIZE = 4  # predators with hunter_calls: heard flag, dx, dy, distance (/ call radius)
 # Physics steps after leaving a burrow in which a catch counts as at the exit.
 EXIT_WINDOW = 8
 PARTY_SIZES = 4  # success chances for parties of 1, 2, 3 and 4 or more
@@ -232,6 +233,21 @@ DEFAULT_CONFIG = {
     # Predators also see the energy of the rabbits in their slots and their
     # own catch cooldown.
     "observe_rabbit_condition": False,
+    # Calls (needs mammoth_count 0): a predator's second action bit, the join
+    # bit of mammoth hunts, becomes a call, with no effect of its own. Every
+    # predator observes the nearest other predator that called in the last
+    # decision within call_radius, in any direction (like a sound, outside
+    # the view cone): [heard, dx, dy, distance], scaled by call_radius.
+    "hunter_calls": False,
+    "call_radius": 200.0,
+    # A fat rabbit (energy >= rabbit_fat_energy) is caught only once two or
+    # more different predators have touched it, each while ready, within
+    # rabbit_touch_window physics steps (0: in the same step), and is shared
+    # only among those touchers; predators merely near it gain nothing. A
+    # touch with no other toucher in the window fails, with the catch
+    # cooldown. Lean and middle rabbits as before.
+    "rabbit_fat_touch_only": False,
+    "rabbit_touch_window": 0,
 }
 
 GRASS_KEYS = (
@@ -356,6 +372,11 @@ def new_hunt_stats():
         "rabbits_caught_solo": 0,
         "rabbits_caught_party": 0,
         "rabbit_catch_failures": 0,
+        # With rabbit_fat_touch_only: fat rabbits caught by two or more
+        # touchers within the window (also counted in rabbits_caught_party).
+        "rabbits_caught_touching": 0,
+        # With hunter_calls: predator decisions with the call on.
+        "calls": 0,
         "rabbit_energy": 0.0,  # gained by predators
         "mammoth_energy": 0.0,  # gained by contributors and bystanders
         "scavenger_energy": 0.0,  # of which by bystanders
@@ -453,6 +474,10 @@ class StagHuntContinuous(MultiAgentEnv):
         self.party_radius = c["rabbit_party_radius"]
         self.catch_cooldown = c["rabbit_catch_cooldown"]
         self.observe_condition = c["observe_rabbit_condition"]
+        self.hunter_calls = c["hunter_calls"]
+        self.call_radius = c["call_radius"]
+        self.fat_touch_only = c["rabbit_fat_touch_only"]
+        self.touch_window = c["rabbit_touch_window"]
         self._validate()
 
         self.obs_size = {}
@@ -471,6 +496,8 @@ class StagHuntContinuous(MultiAgentEnv):
             if self.observe_condition and s == "predator":
                 # Energy per rabbit slot and the own catch cooldown.
                 self.obs_size[s] += self.observe[("predator", "rabbit")] + 1
+            if self.hunter_calls and s == "predator":
+                self.obs_size[s] += CALL_SIZE
         self.possible_agents = [f"{s}_{i}" for s in SPECIES for i in range(self.pool[s])]
         spaces = {s: Box(-1.0, 1.0, shape=(self.obs_size[s],), dtype=np.float32) for s in SPECIES}
         actions = {"predator": MultiDiscrete([MOVES, 2]), "rabbit": Discrete(MOVES), "mammoth": Discrete(MOVES)}
@@ -496,6 +523,8 @@ class StagHuntContinuous(MultiAgentEnv):
         # of its first touch}}.
         self.encounters = {}
         self.last_joins = {}
+        self.calls = set()
+        self.fat_touches = {}  # {rabbit id: {predator id: physics step of its last ready touch}}
         # The last finished episode's counters, kept until the next one
         # ends, so a callback can read them after an automatic reset.
         self.episode_hunt_stats = None
@@ -578,6 +607,17 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError("rabbit_catch_cooldown must be a nonnegative integer")
         if not isinstance(c["observe_rabbit_condition"], bool):
             raise ValueError("observe_rabbit_condition must be True or False")
+        for key in ("hunter_calls", "rabbit_fat_touch_only"):
+            if not isinstance(c[key], bool):
+                raise ValueError(f"{key} must be True or False")
+        if not _integer(c["rabbit_touch_window"], 0):
+            raise ValueError("rabbit_touch_window must be a nonnegative integer")
+        if not _number(c["call_radius"], 0, strict=True):
+            raise ValueError("call_radius must be finite and positive")
+        if c["hunter_calls"] and c["mammoth_count"]:
+            raise ValueError("hunter_calls needs mammoth_count 0 (the call is the join bit of mammoth hunts)")
+        if c["rabbit_fat_touch_only"] and not c["rabbit_fat_energy"]:
+            raise ValueError("rabbit_fat_touch_only needs rabbit_fat_energy (lean and fat rabbits)")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
             raise ValueError(f"hunt_success_by_party must be {PARTY_SIZES} probabilities")
 
@@ -626,6 +666,8 @@ class StagHuntContinuous(MultiAgentEnv):
         self.hunt_stats = new_hunt_stats()
         self.encounters = {}
         self.last_joins = {}
+        self.calls = set()
+        self.fat_touches = {}  # {rabbit id: {predator id: physics step of its last ready touch}}
         self.rabbit_burrow_steps = {}
         self.extinct_at = {}
         for rabbit, inside in zip(self.rabbits, self._inside(self.rabbits)):
@@ -667,6 +709,9 @@ class StagHuntContinuous(MultiAgentEnv):
         moves = {agent: move for agent, (move, _) in parsed.items()}
         joins = {agent: join for agent, (_, join) in parsed.items() if species_of(agent) == "predator"}
         self.last_joins = joins  # for viewers
+        if self.hunter_calls:
+            self.calls = {agent for agent, join in joins.items() if join}
+            self.hunt_stats["calls"] += len(self.calls)
         obs, rewards, terminateds, truncateds, infos = {}, {}, {}, {}, {}
         totals = {"grass_eaten": {}, "births": {}}
         zeros = {s: np.zeros(self.obs_size[s], dtype=np.float32) for s in SPECIES}
@@ -798,11 +843,31 @@ class StagHuntContinuous(MultiAgentEnv):
         contact."""
         catcher = None
         if animal.species == "rabbit":
+            if self.fat_touch_only and (animal.in_burrow or animal.energy < self.fat_energy):
+                # Touches count only while the rabbit stays fat and open.
+                self.fat_touches.pop(animal.id, None)
             touching = [p for p in self.predators if self._touching(animal, p) and p.catch_ready_at <= self.time_step]
             if touching and animal.in_burrow:
                 self.hunt_stats["catches_blocked"] += 1
             elif touching and not self.fat_energy:
                 catcher = [touching[0]]
+            elif touching and self.fat_touch_only and animal.energy >= self.fat_energy:
+                now = self.time_step
+                recent = self.fat_touches.setdefault(animal.id, {})
+                for p in touching:
+                    recent[p.id] = now
+                for pid in [pid for pid, t in recent.items() if now - t > self.touch_window]:
+                    del recent[pid]
+                touchers = [p for p in self.predators if p.id in recent]
+                if len(touchers) >= 2:
+                    catcher = touchers
+                    del self.fat_touches[animal.id]
+                    self.hunt_stats["rabbits_caught_party"] += 1
+                    self.hunt_stats["rabbits_caught_touching"] += 1
+                else:
+                    self.hunt_stats["rabbit_catch_failures"] += 1
+                    for p in touching:
+                        p.catch_ready_at = self.time_step + 1 + self.catch_cooldown
             elif touching:
                 # The touching predators always belong to the party, whatever the radius.
                 party = [p for p in self.predators if p in touching or self.torus.distance(animal.position, p.position) <= self.party_radius]
@@ -867,6 +932,7 @@ class StagHuntContinuous(MultiAgentEnv):
         animal.energy = min(self.max_energy[animal.species], animal.energy + amount)
 
     def _remove(self, animal, terminateds, truncateds, infos, reason):
+        self.fat_touches.pop(animal.id, None)
         animal.alive = False
         self.animals[animal.species].remove(animal)
         if animal.id in self.active:
@@ -1219,6 +1285,22 @@ class StagHuntContinuous(MultiAgentEnv):
             values += [1.0, dx / reach, dy / reach, distance / reach, animal.velocity.x / animal.max_speed, animal.velocity.y / animal.max_speed]
         return values + [0.0] * (SLOT_SIZE * count - len(values))
 
+    def _heard(self, listener):
+        """[heard, dx, dy, distance] of the nearest other predator that
+        called in the last decision, within call_radius, or zeros."""
+        best = None
+        for caller in self.predators:
+            if caller is listener or caller.id not in self.calls:
+                continue
+            dx, dy = self.torus.offset(listener.position, caller.position)
+            distance = math.hypot(dx, dy)
+            if distance <= self.call_radius and (best is None or (distance, caller.id) < best[:2]):
+                best = (distance, caller.id, dx, dy)
+        if best is None:
+            return [0.0] * CALL_SIZE
+        distance, _, dx, dy = best
+        return [1.0, dx / self.call_radius, dy / self.call_radius, distance / self.call_radius]
+
     def _observe(self, animal):
         """Self, the nearest animals of each species in view, the nearest
         food patch in view, own energy and (predators) hunt cooldown."""
@@ -1256,6 +1338,8 @@ class StagHuntContinuous(MultiAgentEnv):
             energy = [max(0.0, a.energy) / self.max_energy["rabbit"] for a in seen["rabbit"]]
             tail += energy + [0.0] * (self.observe[("predator", "rabbit")] - len(energy))
             tail.append(min(1.0, max(0, animal.catch_ready_at - self.time_step) / self.catch_cooldown) if self.catch_cooldown else 0.0)
+        if self.hunter_calls and animal.species == "predator":
+            tail += self._heard(animal)
         return np.concatenate((obs, food, np.clip(np.asarray(tail, dtype=np.float32), -1.0, 1.0))).astype(np.float32)
 
 
