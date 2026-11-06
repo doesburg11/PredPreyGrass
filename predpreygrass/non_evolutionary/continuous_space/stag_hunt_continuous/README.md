@@ -7,6 +7,12 @@ day. The stag hunt line as a whole was closed on 2026-11-06, with a closing summ
 [`../stag_hunt_rule_prey/RESULTS.md`](../stag_hunt_rule_prey/RESULTS.md), section 15. Details of every round,
 the reasons for each change and for stopping are in [RESULTS.md](RESULTS.md).
 
+**One more run (2026-11-06, RESULTS section 5):** lean and fat rabbits with both
+species learning and hunters seeing rabbit energy. Hunters and rabbits coexisted in 46
+of 50 episodes, but approaches to fat rabbits had a partner near no more often than
+chance (23.6% against 24.6%; lean 16.8%), so cooperation was not shown. Hard stop: no
+changes after this run.
+
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
 (the predators, standing for humans) live with two prey species:
 **rabbits**, which one hunter can catch, and **mammoths**, which need a

@@ -519,3 +519,44 @@ episodes (median step about 1,500, latest 4,354). The fair measure (20 episodes)
 7.1%, approaches with a partner near lean 5.5% (256 approaches), middle 8.9%, fat 9.9%
 (181); fat above lean in 10 of 20 episodes. These untrained-for-the-rule policies would
 pass test 2 on small counts, which is why test 3 compares with them.
+
+### 5.1 Result (2026-11-06): coexistence met, cooperation not shown
+
+Training ran 1000 iterations without failure. Evaluated with the same scripts as the
+reference (`results/calibration_lean_fat_learning{_iter250,_iter500,}_{eval,coop}.json`):
+
+| Checkpoint | Both alive at step 8000 (of 50) | Chance | Partner near: lean | middle | fat | Fat above lean (episodes of 20) | Fat above chance (episodes of 20) |
+|---|---|---|---|---|---|---|---|
+| Iteration 250 | 42 (rabbits eaten out in 8) | 33.3% | 23.0% | 23.3% | 29.6% | 17 | 2 |
+| Iteration 500 | **50** | 28.5% | 19.3% | 18.1% | 24.1% | 18 | 1 |
+| Final (1000) | **46** (hunters died out in 4) | 24.6% | 16.8% | 15.4% | 23.6% | 18 | 6 |
+| Reference: round 1a policies, rule on | 0 (hunters died out in 50) | 7.1% | 5.5% | 8.9% | 9.9% | 10 | – |
+
+Approach counts at the final checkpoint: lean 5,542, middle 6,758, fat 4,699.
+Catches over the 50 final episodes: 16,348 by a lone hunter, 7,199 by a party, and
+27,456 failed lone attempts.
+
+**Tests at the final checkpoint:**
+
+1. **Coexistence: met.** 46 of 50 (target 45; round 1a without the rule 49).
+2. **Cooperation: not met.** Fat approaches had a partner near more often than lean
+   ones (23.6% against 16.8%, in 18 of 20 episodes), but not more often than chance
+   (24.6%; above it in 6 of 20 episodes; fat minus chance -1.0 points, bootstrap 95%
+   interval over episodes -2.2 to +0.1).
+3. **Above the reference: met** (23.6% against 9.9%). With test 2 failed this does not
+   show learned cooperation: the reference's chance level was 7.1%, so most of the gap
+   is that the trained hunters simply spend more time near each other.
+
+Under the pre-registered tests, the stag hunt was not shown. Per the hard stop there
+are no further changes.
+
+**Reading (exploratory, one seed, not tested):** the pattern is the same at all three
+checkpoints. Lean and middle approaches have a partner near *less* often than chance,
+and fat approaches about at chance. One description that fits: hunters approach fat
+rabbits as often with a partner as their general closeness to other hunters gives, and
+peel off alone for lean ones; that is, they learned which rabbits a lone hunter can
+take, not to seek a partner for the ones it cannot. Lone attempts that fail outnumber
+lone catches (27,456 against 16,348), so hunters still try fat rabbits alone. This is
+the closest the line came to both targets in one world: coexistence as in round 1a,
+and a fat-above-lean difference that round 1a's policies did not show (10 of 20) —
+but the fat share does not exceed chance, which is what the stag hunt needed.
