@@ -227,12 +227,6 @@ DEFAULT_CONFIG = {
     # Predators also see the energy of the rabbits in their slots and their
     # own catch cooldown.
     "observe_rabbit_condition": False,
-    # A fat rabbit (energy >= rabbit_fat_energy) caught by a party is not
-    # split: every predator in the party gains as if it had caught it alone.
-    # Lean and middle rabbits are still shared. A payoff device that makes the
-    # fat rabbit worth more per head than a lean one (the stag hunt's stag),
-    # not a physical account: the party gains more energy than the rabbit had.
-    "rabbit_fat_party_unsplit": False,
 }
 
 GRASS_KEYS = (
@@ -357,7 +351,6 @@ def new_hunt_stats():
         "rabbits_caught_solo": 0,
         "rabbits_caught_party": 0,
         "rabbit_catch_failures": 0,
-        "rabbits_caught_fat_unsplit": 0,
         "rabbit_energy": 0.0,  # gained by predators
         "mammoth_energy": 0.0,  # gained by contributors and bystanders
         "scavenger_energy": 0.0,  # of which by bystanders
@@ -454,7 +447,6 @@ class StagHuntContinuous(MultiAgentEnv):
         self.party_radius = c["rabbit_party_radius"]
         self.catch_cooldown = c["rabbit_catch_cooldown"]
         self.observe_condition = c["observe_rabbit_condition"]
-        self.fat_party_unsplit = c["rabbit_fat_party_unsplit"]
         self._validate()
 
         self.obs_size = {}
@@ -576,10 +568,6 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError("rabbit_catch_cooldown must be a nonnegative integer")
         if not isinstance(c["observe_rabbit_condition"], bool):
             raise ValueError("observe_rabbit_condition must be True or False")
-        if not isinstance(c["rabbit_fat_party_unsplit"], bool):
-            raise ValueError("rabbit_fat_party_unsplit must be True or False")
-        if c["rabbit_fat_party_unsplit"] and not c["rabbit_fat_energy"]:
-            raise ValueError("rabbit_fat_party_unsplit needs rabbit_fat_energy (lean and fat rabbits)")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
             raise ValueError(f"hunt_success_by_party must be {PARTY_SIZES} probabilities")
 
@@ -881,12 +869,10 @@ class StagHuntContinuous(MultiAgentEnv):
         """Food, metabolic costs and starvation."""
         for hunters, rabbit_energy in catches:
             self.hunt_stats["rabbits_caught"] += 1
-            unsplit = self.fat_party_unsplit and len(hunters) >= 2 and rabbit_energy >= self.fat_energy
-            self.hunt_stats["rabbits_caught_fat_unsplit"] += unsplit
             for predator in hunters:
                 if predator.alive:
                     before = predator.energy
-                    self._gain(predator, self.catch_efficiency * rabbit_energy / (1 if unsplit else len(hunters)))
+                    self._gain(predator, self.catch_efficiency * rabbit_energy / len(hunters))
                     self.hunt_stats["rabbit_energy"] += predator.energy - before
         for prey in self.rabbits + self.mammoths:
             count = eaten.get(prey.id, 0)

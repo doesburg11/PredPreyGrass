@@ -10,8 +10,7 @@ settings of config/config_env.py and config/config_ppo.py except:
   ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
   rounds 17 and 18, and INIT_FROM names the run an arm continues from;
 - `lean_fat_learning`: rabbits_only with lean and fat rabbits, predators
-  seeing the rabbits' energy (RESULTS.md, section 5); `lean_fat_unsplit`: the
-  same with fat rabbits caught by a party not split (section 6).
+  seeing the rabbits' energy (RESULTS.md, section 5).
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -201,11 +200,6 @@ ARMS["with_mammoths_r20"] = dict(ARMS["with_mammoths_r19b"], reproduction_predat
 # rabbits of stag_hunt_rule_prey, and predators that see the rabbits' energy
 # and their own catch cooldown (RESULTS.md, section 5). From scratch.
 ARMS["lean_fat_learning"] = dict(ARMS["rabbits_only"], rabbit_fat_energy=6.0, observe_rabbit_condition=True)
-# Its follow-up (RESULTS.md, section 6), a new run from scratch: a fat rabbit
-# caught by a party is not split. In replays of lean_fat_learning's policies a
-# party's fat rabbit then paid each hunter about 2.7 times a lone lean catch,
-# against 1.4 times when split (measured, not a bound from the thresholds).
-ARMS["lean_fat_unsplit"] = dict(ARMS["lean_fat_learning"], rabbit_fat_party_unsplit=True)
 
 
 def main():
