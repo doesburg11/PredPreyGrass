@@ -435,7 +435,15 @@ share of hunter time spent with another hunter within 64 units.
 | Ratio | 0.67x | 0.81x |
 | Episodes above chance | 0 of 20 | 0 of 20 |
 
-Attempts with a partner near are below chance, so the target is not met. Both measures
+Attempts with a partner near are below chance, so the target is not met.
+
+**Found later (2026-11-06), affecting sections 11 to 14:** hunters did not observe a
+rabbit's energy. Their observation gives rabbits' positions and velocities only (energy
+is observed for mammoths and other hunters), and not their own catch cooldown either. So
+they could not tell a fat rabbit from a lean one before touching it, and every
+cooperation measure on fat against lean rabbits in these sections tested a choice the
+hunters could not make. The coexistence results stand; the cooperation nulls may be due
+to this. `stag_hunt_continuous` RESULTS.md section 5 gives hunters this view. Both measures
 are imperfect, which was not foreseen when the target was set: a lone hunter at a fat
 rabbit fails and retries after each cooldown, so solo attempts are counted many times and
 the attempt share is pushed down. Counting catches instead (52% with a partner near at
@@ -622,6 +630,10 @@ each, no confirmatory test of cooperation passed.
   where the prey became harder to catch they starved instead of hunting it together.
   Changing the prey (food, space, speed, refuges, seasons, birth spacing, lean and fat
   rabbits, evolving rabbits) moved the failure but did not remove it.
+- **A gap found afterwards:** in the lean-and-fat runs (sections 11 to 14) hunters could
+  not see which rabbits were fat (section 12), so their cooperation tests were not a fair
+  chance. One more run, with learning rabbits and hunters that see rabbit energy, is in
+  `stag_hunt_continuous` RESULTS.md, section 5.
 - **One reading, not tested:** leaving prey for later is a commons dilemma of its own, a
   second cooperation problem on top of the stag hunt. With a births reward an individual
   hunter gains nothing by holding back, so no change to the prey is likely to remove it.
