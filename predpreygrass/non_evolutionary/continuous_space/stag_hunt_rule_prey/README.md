@@ -73,6 +73,14 @@ instead of births lost the group hunting without bringing restraint. Details are
 | `alive_individual` | 0 | 0.6x | 2% | -0.2 vs +5.8 |
 | `alive_shared` | 0 | 0.7x | 3% | -0.2 vs +5.5 |
 
+After closing, three rabbits-only arms (two species, no mammoths). With plain rabbits
+(`rabbits_only`) hunters overran them. With lean and fat rabbits (`lean_fat_rabbits`: a
+lone hunter cannot catch a fat rabbit, two can) hunters and rabbits coexisted in 46 of 50
+episodes at 1000 iterations, meeting the target, but hunters did not approach fat rabbits
+with a partner more often than chance. Continued to 2000 iterations
+(`lean_fat_rabbits_more`), coexistence fell to 29 of 50 and cooperation stayed the same.
+See [RESULTS.md](RESULTS.md), sections 10 to 13.
+
 ## Files
 
 - [`RESULTS.md`](RESULTS.md): prey checks and calibration results.

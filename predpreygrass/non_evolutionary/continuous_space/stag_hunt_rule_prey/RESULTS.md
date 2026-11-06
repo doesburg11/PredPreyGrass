@@ -465,11 +465,37 @@ fat rabbits are (for example near grass where hunters gather); this was not sepa
 For reference, `rabbits_only` hunters at iteration 290 replayed without the rule: 22.3% of
 approaches with a partner near, chance 23.4%.
 
-## 13. Lean and fat rabbits, continued to 2000 iterations (2026-11-06, running)
+## 13. Lean and fat rabbits, continued to 2000 iterations (2026-11-06)
 
 At the user's request, after the training curve was still rising at iteration 1000:
 `lean_fat_rabbits_more`, 1000 more iterations from the final weights of section 12 (the
 optimizer state starts fresh), same world and rule, evaluated at 1250, 1500 and 2000
 iterations overall with the same targets. Section 12's iteration 1000 stays the result
 fixed in advance.
+
+Result: longer training made coexistence worse, and cooperation did not change.
+
+| Iterations overall | 1000 (section 12) | 1250 | 1500 | 2000 |
+|---|---|---|---|---|
+| Hunters and rabbits coexist (of 50) | 46 | 40 | 37 | 29 |
+| Rabbits gone, hunters left | 4 | 10 | 13 | 21 |
+| Mean episode length (physics steps) | 7766 | 7302 | 7065 | 6210 |
+| Mean rabbits alive | 14.0 | 13.0 | 12.3 | 11.9 |
+| Mean hunters alive | 11.6 | 12.0 | 11.7 | 11.5 |
+| Catches by a party (share) | 0.52 | 0.52 | 0.54 | 0.54 |
+
+The training curve (`env_runners/hunts/physics_steps`) shows the same: it peaked at about
+7800 near iteration 1130 overall and fell slowly to about 7070 at 2000. The rise at
+iteration 1000 was close to its top, and hunters that kept learning ate the rabbits out
+more often. That fits the pattern of earlier sections: the births reward pays for eating
+more now, not for leaving rabbits for later.
+
+Fair cooperation measure (`launchers/coop_fair.py`, 20 episodes) at 2000 iterations:
+chance 33.4%, lean approaches with a partner near 29.8%, middle 32.4%, fat 31.6% (0.94x
+chance), fat above lean in 14 of 20 episodes. That is the same as at iteration 1000 (33.4%,
+28.9%, 31.4%, 15 of 20): cooperation not shown, and the small fat-over-lean gap did not
+grow.
+
+Section 12's result at iteration 1000 stays the result fixed in advance: coexistence met
+(46 of 50), cooperation not above chance.
 
