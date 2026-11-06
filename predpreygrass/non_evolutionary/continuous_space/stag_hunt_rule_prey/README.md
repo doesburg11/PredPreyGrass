@@ -79,7 +79,11 @@ lone hunter cannot catch a fat rabbit, two can) hunters and rabbits coexisted in
 episodes at 1000 iterations, meeting the target, but hunters did not approach fat rabbits
 with a partner more often than chance. Continued to 2000 iterations
 (`lean_fat_rabbits_more`), coexistence fell to 29 of 50 and cooperation stayed the same.
-See [RESULTS.md](RESULTS.md), sections 10 to 13.
+Then rabbits with heritable flee distance and breeding threshold
+(`evolving_rabbits`, with a neutral-gene reference): all three tests failed. Coexistence
+18 of 50, but now with hunters starving in 22, mostly against lineages that stayed fat;
+gene differences from drift not significant; no cooperation. See [RESULTS.md](RESULTS.md),
+sections 10 to 14.
 
 ## Files
 

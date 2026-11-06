@@ -499,7 +499,7 @@ grow.
 Section 12's result at iteration 1000 stays the result fixed in advance: coexistence met
 (46 of 50), cooperation not above chance.
 
-## 14. Rabbits with evolving rule parameters (2026-11-06, running)
+## 14. Rabbits with evolving rule parameters (2026-11-06)
 
 At the user's request, after section 13: in every run so far hunters adapted and rabbits
 did not. Here rabbits adapt by selection, hunters by learning.
@@ -549,4 +549,51 @@ the last episode a lineage finished before the save. The extinction fallback (la
 die) is a strong bottleneck that adds drift in both arms. In a 3-iteration smoke run
 genes already moved (flee about x1.36, breeding about x1.15 in 3 to 4 episodes): evolution is
 fast here, so the rabbits may also simply outrun the hunters' learning.
+
+### Result: all three tests failed
+
+Both runs finished 1000 iterations (about 2.4 hours, side by side).
+
+| Final checkpoint, 50 episodes | Coexist | Rabbits gone | Hunters gone | Steps per episode | Rabbits | Hunters | Party catches |
+|---|---|---|---|---|---|---|---|
+| Section 13 control (`lean_fat_rabbits_more`) | 29 | 21 | 0 | 6210 | 11.9 | 11.5 | 54% |
+| `neutral_rabbits` (base rabbits) | 27 | 23 | 0 | 6398 | 12.0 | 11.8 | 54% |
+| `evolving_rabbits`, evolved rabbits (**test 1**) | **18** | 10 | **22** | 4664 | 26.0 | 8.3 | 33% |
+| `evolving_rabbits` at 1250 / 1500 overall | 24 / 31 | 4 / 7 | 22 / 12 | 5438 / 5983 | 27.8 / 23.8 | 8.4 / 9.3 | 31% / 32% |
+| `evolving_rabbits` hunters, base rabbits | 42 | 8 | 0 | 7441 | 12.7 | 11.4 | 54% |
+
+1. **Coexistence: failed**, 18 of 50 (target 45). The failure turned around: in the control
+   the rabbits were eaten out; with evolved rabbits the hunters died out in 22 of 50
+   episodes, as the risk set in advance said they might.
+2. **Rabbits evolved beyond drift: failed.** Lineage means at the end: flee x1.15 of base
+   (evolving) vs x0.65 (neutral), p = 0.12; breeding x1.18 vs x1.03, p = 0.63 (pass needed
+   p < 0.025). The flee difference pointed the same way at 1250 (p = 0.041) and 1500
+   (p = 0.21). Drift in the neutral arm was large (single lineages from about x0.2 to x2.2 in
+   flee), so 14 lineages per arm could not separate the two.
+3. **Cooperation: failed.** Chance 25.6%; approaches with a partner near: lean 22.0%,
+   middle 21.3%, fat 23.3% (0.91x chance); fat above lean in 9 of 20 episodes. Party catches
+   fell from 54% to 33% of catches.
+
+The neutral run matches the section 13 control (27 vs 29 of 50), so run-to-run variation
+in that world is small at this scale.
+
+**Exploratory, not a test** (14 lineages, one run). Lineages split by breeding threshold:
+
+| Lineages | Breeding threshold | Hunters gone | Coexist |
+|---|---|---|---|
+| 3 | x0.5 (about 4: breed early, stay lean) | 0 of 11 | 8 of 11 |
+| 11 | x1.1 to x2.0 (about 9 to 16: stay fat) | 22 of 39 | 10 of 39 |
+
+Rank correlation of a lineage's share of hunter extinctions with its breeding gene 0.52
+(p = 0.06), with its flee gene 0.41 (p = 0.15). Lineages that stayed fat, out of a lone
+hunter's reach, starved the hunters, who did not switch to hunting fat rabbits in pairs
+(party catches fell). Three lineages at the cap (x2.0, breeding at 16) had pools of only 4
+to 8 rabbits, after an extinction bottleneck. The hunters trained against evolving rabbits
+did better than the control against base rabbits (42 vs 29 of 50 coexist); with one run
+each this may be run variation or hunters that learned some restraint while food was hard
+to get.
+
+**In short:** the rabbits found the refuge the stag-hunt rule offered, staying fat, and
+the hunters answered with neither restraint nor cooperation, so in many episodes they
+starved. The hard stop applies: no changes after this run; the next step is the user's.
 
