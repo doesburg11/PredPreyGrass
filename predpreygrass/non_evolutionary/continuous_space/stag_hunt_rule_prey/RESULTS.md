@@ -443,6 +443,28 @@ rabbit once. Either way, the evidence for learned cooperation is weak: the rise 
 catches with a partner near (5,384 to 12,586) goes with more hunters close together
 (time share 24% to 33%).
 
+A fair measure, built afterwards at the user's request and fixed before running
+([`launchers/coop_fair.py`](launchers/coop_fair.py), 20 episodes each): each approach
+of a hunter to a rabbit counts once (touches of the same rabbit within 64 physics steps
+are one approach). Cooperation would show as approaches to fat rabbits having a partner
+within 64 units more often than approaches to lean rabbits and than chance.
+
+| | Iteration 250 | Iteration 1000 |
+|---|---|---|
+| Chance (hunter time with a partner near) | 24.2% | 33.4% |
+| Approaches to lean rabbits with a partner near | 16.1% (3,350) | 28.9% (3,807) |
+| Approaches to middle rabbits with a partner near | 15.9% (5,384) | 29.4% (6,273) |
+| Approaches to fat rabbits with a partner near | 19.7% (2,655) | 31.4% (4,127) |
+| Episodes with fat above lean | 14 of 20 | 15 of 20 |
+
+Not shown: approaches to fat rabbits have a partner near slightly more often than
+approaches to lean ones (2.5 to 3.6 points, in about 3 of 4 episodes), but below chance.
+Hunters approach rabbits more often when alone than their time near others would give.
+The small fat-lean difference could be a first trace of selectivity, or come from where
+fat rabbits are (for example near grass where hunters gather); this was not separated.
+For reference, `rabbits_only` hunters at iteration 290 replayed without the rule: 22.3% of
+approaches with a partner near, chance 23.4%.
+
 ## 13. Lean and fat rabbits, continued to 2000 iterations (2026-11-06, running)
 
 At the user's request, after the training curve was still rising at iteration 1000:
