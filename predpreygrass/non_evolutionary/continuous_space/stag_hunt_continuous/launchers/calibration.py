@@ -8,7 +8,9 @@ settings of config/config_env.py and config/config_ppo.py except:
 - `with_mammoths`: the configured world (step 1b);
 - `with_mammoths_r2` to `with_mammoths_r20`: rounds 2 to 20 of step 1b, see
   ARMS; `rabbits_only_r17` and `rabbits_only_r18` are the first stages of
-  rounds 17 and 18, and INIT_FROM names the run an arm continues from.
+  rounds 17 and 18, and INIT_FROM names the run an arm continues from;
+- `lean_fat_learning`: rabbits_only with lean and fat rabbits, predators
+  seeing the rabbits' energy (RESULTS.md, section 5).
 
 Not confirmatory; the seeds of these runs are not reused. Run from the
 repository root, e.g. under systemd-run --user:
@@ -193,6 +195,11 @@ for arm, ratio in (("with_mammoths_r19a", 0.75), ("with_mammoths_r19b", 0.5), ("
 # numbers as human birth spacing is. Rounds 7-8 tried this with solo kills
 # possible and the hunters left the mammoths.
 ARMS["with_mammoths_r20"] = dict(ARMS["with_mammoths_r19b"], reproduction_predator_interval=1000)
+# After the stag hunt line closed (2026-11-06), at the user's request: one
+# more run, round 1a (rabbits only, rabbits learning) with the lean and fat
+# rabbits of stag_hunt_rule_prey, and predators that see the rabbits' energy
+# and their own catch cooldown (RESULTS.md, section 5). From scratch.
+ARMS["lean_fat_learning"] = dict(ARMS["rabbits_only"], rabbit_fat_energy=6.0, observe_rabbit_condition=True)
 
 
 def main():

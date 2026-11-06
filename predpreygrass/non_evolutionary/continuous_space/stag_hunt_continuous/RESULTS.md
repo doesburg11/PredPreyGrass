@@ -462,3 +462,60 @@ always plays whole episodes), `burrow_count` and `burrow_radius` (rabbit
 burrows, DESIGN.md 7) and `hunt_condition_factor` (DESIGN.md 8). The Codex review of the latter found that
 an animal dying in the step that ended an episode was flagged both
 terminated and truncated; it is now terminated only.
+
+## 5. One more run: lean and fat rabbits, rabbits learning (2026-11-06)
+
+At the user's request, after the stag hunt line was closed: one more run, the
+lean-and-fat world of
+[`../stag_hunt_rule_prey/RESULTS.md`](../stag_hunt_rule_prey/RESULTS.md) (sections
+11 and 12), but with hunters and rabbits both learning, and round 1a as the comparison.
+
+**World (arm `lean_fat_learning`, `launchers/calibration.py`):** round 1a unchanged
+(no mammoths, 6 hunters, 8 rabbits at the start, rabbit speed 6, 800 x 800, births
+reward for both species, whole episodes in training), plus:
+
+- **The lean and fat rule** of the rule-prey module (`rabbit_fat_energy` 6): a hunter
+  touching a rabbit with no other hunter within 64 units catches it with probability 1
+  at energy 3 or less, falling linearly to 0 at energy 6; with another hunter within 64
+  units, always, shared equally. A failed attempt blocks the hunter's catching for 8
+  physics steps.
+- **Hunters see each rabbit's energy** in their rabbit slots, and their own catch
+  cooldown (`observe_rabbit_condition`). In the rule-prey runs they could not: they saw
+  rabbits' positions and velocities only, so they could not tell a fat rabbit from a
+  lean one. That gap was found while building this run and is recorded there too.
+
+From scratch, 1000 iterations, 14 env runners, one seed. With the rule off and the
+observation unchanged, the code replays round 1a's evaluated episodes exactly (checked
+on 6 episodes).
+
+**Tests, set before training** (final checkpoint):
+
+1. **Coexistence:** hunters and rabbits both alive at step 8000 in at least 45 of 50
+   evaluated episodes (round 1a without the rule: 49).
+2. **Cooperation:** with the fair measure (`launchers/coop_fair.py`, 20 episodes, each
+   approach of a hunter to a rabbit counted once), approaches to fat rabbits have another
+   hunter within 64 units more often than approaches to lean rabbits and than chance
+   (hunter time with another hunter within 64 units).
+3. **Learned, not imposed:** the share in test 2 for fat rabbits is also above that of
+   round 1a's policies replayed with the rule switched on (trained without it, so neither
+   hunters nor rabbits learned it).
+
+Also recorded, not tests: iterations 250 and 500, and the reference replay of test 3
+(coexistence and the fair measure).
+
+**Hard stop:** one run, no changes afterwards, whatever the result.
+
+**Caveats, set in advance:** one seed. Compared with the rule-prey lean-and-fat run, two
+things change at once (learning rabbits and visible rabbit energy), as well as the world
+(6 instead of 10 hunters, slower rabbits, no truncation at prey extinction in training),
+so a difference from that run cannot be put down to either. Compared with round 1a, the
+rule and the hunters' view of rabbit energy change together. Rabbits that learn may
+avoid lone hunters while lean, or stay near others; that would be adaptation, not a
+fault.
+
+**Reference, before training** (round 1a's policies, trained without the rule, replayed
+with it on; `results/replay_rabbits_only_lean_fat_*.json`): hunters died out in all 50
+episodes (median step about 1,500, latest 4,354). The fair measure (20 episodes): chance
+7.1%, approaches with a partner near lean 5.5% (256 approaches), middle 8.9%, fat 9.9%
+(181); fat above lean in 10 of 20 episodes. These untrained-for-the-rule policies would
+pass test 2 on small counts, which is why test 3 compares with them.

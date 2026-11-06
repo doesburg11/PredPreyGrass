@@ -212,6 +212,21 @@ DEFAULT_CONFIG = {
     "hunt_rule": "chance",
     "hunt_energy_ratio": 1.0,
     "hunt_min_party": 1,
+    # Lean and fat rabbits (off at rabbit_fat_energy 0), as in
+    # stag_hunt_rule_prey. A predator touching a rabbit with no other
+    # predator within rabbit_party_radius of the rabbit catches it with
+    # probability 1 at energy <= rabbit_lean_energy, falling linearly to 0 at
+    # rabbit_fat_energy; with at least one more predator there, always. The
+    # catch is shared equally by the predators within the radius. A failed
+    # attempt lets the rabbit go on, and the predator cannot catch again for
+    # rabbit_catch_cooldown physics steps.
+    "rabbit_lean_energy": 3.0,
+    "rabbit_fat_energy": 0.0,
+    "rabbit_party_radius": 64.0,
+    "rabbit_catch_cooldown": 8,
+    # Predators also see the energy of the rabbits in their slots and their
+    # own catch cooldown.
+    "observe_rabbit_condition": False,
 }
 
 GRASS_KEYS = (
@@ -260,6 +275,7 @@ class Animal:
         "energy",
         "alive",
         "ready_at",
+        "catch_ready_at",
         "next_birth_at",
         "in_burrow",
         "left_burrow_at",
@@ -283,6 +299,8 @@ class Animal:
         self.alive = True
         # First decision at which a predator may contribute to a hunt again.
         self.ready_at = 0
+        # First physics step at which a predator may catch a rabbit again.
+        self.catch_ready_at = 0
         # First physics step at which the animal may give birth again.
         self.next_birth_at = 0
         # Whether its centre was inside a burrow at the last check, and the
@@ -328,6 +346,11 @@ def new_hunt_stats():
         "touched_episodes": 0,
         "joint_arrivals": 0,
         "rabbits_caught": 0,
+        # With lean and fat rabbits: catches with no other predator near,
+        # with at least one, and failed solo attempts.
+        "rabbits_caught_solo": 0,
+        "rabbits_caught_party": 0,
+        "rabbit_catch_failures": 0,
         "rabbit_energy": 0.0,  # gained by predators
         "mammoth_energy": 0.0,  # gained by contributors and bystanders
         "scavenger_energy": 0.0,  # of which by bystanders
@@ -419,6 +442,11 @@ class StagHuntContinuous(MultiAgentEnv):
         self.burrow_radius = c["burrow_radius"]
         self.burrow_placement = c["burrow_placement"]
         self.burrow_hides = c["burrow_hides_rabbits"]
+        self.lean_energy = c["rabbit_lean_energy"]
+        self.fat_energy = c["rabbit_fat_energy"]
+        self.party_radius = c["rabbit_party_radius"]
+        self.catch_cooldown = c["rabbit_catch_cooldown"]
+        self.observe_condition = c["observe_rabbit_condition"]
         self._validate()
 
         self.obs_size = {}
@@ -434,6 +462,9 @@ class StagHuntContinuous(MultiAgentEnv):
                 # The nearest burrow; predators also an inside bit per rabbit
                 # slot, unless rabbits inside are hidden from them.
                 self.obs_size[s] += BURROW_SIZE + (self.observe[("predator", "rabbit")] if s == "predator" and not self.burrow_hides else 0)
+            if self.observe_condition and s == "predator":
+                # Energy per rabbit slot and the own catch cooldown.
+                self.obs_size[s] += self.observe[("predator", "rabbit")] + 1
         self.possible_agents = [f"{s}_{i}" for s in SPECIES for i in range(self.pool[s])]
         spaces = {s: Box(-1.0, 1.0, shape=(self.obs_size[s],), dtype=np.float32) for s in SPECIES}
         actions = {"predator": MultiDiscrete([MOVES, 2]), "rabbit": Discrete(MOVES), "mammoth": Discrete(MOVES)}
@@ -451,6 +482,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.decision = 0
         self.birth_rng = random.Random()
         self.hunt_rng = random.Random()
+        self.catch_rng = random.Random()
         self.next_id = {}
         self.births = {}
         self.hunt_stats = new_hunt_stats()
@@ -528,6 +560,14 @@ class StagHuntContinuous(MultiAgentEnv):
             raise ValueError('burrow_placement "cluster" needs clustered grass and burrow_count equal to grass_cluster_count')
         if not _integer(c["hunt_cooldown"], 0):
             raise ValueError("hunt_cooldown must be a nonnegative integer")
+        if not _number(c["rabbit_lean_energy"], 0) or not _number(c["rabbit_fat_energy"], 0) or not _number(c["rabbit_party_radius"], 0):
+            raise ValueError("rabbit_lean_energy, rabbit_fat_energy and rabbit_party_radius must be finite and nonnegative")
+        if c["rabbit_fat_energy"] and c["rabbit_fat_energy"] <= c["rabbit_lean_energy"]:
+            raise ValueError("rabbit_fat_energy must exceed rabbit_lean_energy (or be 0: off)")
+        if not _integer(c["rabbit_catch_cooldown"], 0):
+            raise ValueError("rabbit_catch_cooldown must be a nonnegative integer")
+        if not isinstance(c["observe_rabbit_condition"], bool):
+            raise ValueError("observe_rabbit_condition must be True or False")
         if self.success is None or len(self.success) != PARTY_SIZES or not all(_number(p, 0) and p <= 1 for p in self.success):
             raise ValueError(f"hunt_success_by_party must be {PARTY_SIZES} probabilities")
 
@@ -554,6 +594,7 @@ class StagHuntContinuous(MultiAgentEnv):
         self.food["grass"].reset(seed)
         self.food["steppe"].reset(None if seed is None else seed + 3)
         self.burrow_rng = random.Random(None if seed is None else seed + 5)
+        self.catch_rng = random.Random(None if seed is None else seed + 6)
         if self.burrow_placement == "cluster" and self.burrow_count:
             self.burrow_anchors = list(self.food["grass"].centres)
             self.burrows = np.array([self._warren(centre) for centre in self.burrow_anchors]).reshape(-1, 2)
@@ -671,7 +712,7 @@ class StagHuntContinuous(MultiAgentEnv):
         step, rewards, terminateds, truncateds, infos, whether anyone was
         born)."""
         agents = list(self.active)
-        catches = []  # (catching predator, rabbit energy at the catch)
+        catches = []  # (predators sharing the catch, rabbit energy at the catch)
         self._burrow_step()
         contacts = [(animal, *self._contacts(animal)) for animal in self.living()]
         for animal, catcher, aways in contacts:
@@ -747,10 +788,26 @@ class StagHuntContinuous(MultiAgentEnv):
         contact."""
         catcher = None
         if animal.species == "rabbit":
-            catcher = next((p for p in self.predators if self._touching(animal, p)), None)
-            if catcher is not None and animal.in_burrow:
+            touching = [p for p in self.predators if self._touching(animal, p) and p.catch_ready_at <= self.time_step]
+            if touching and animal.in_burrow:
                 self.hunt_stats["catches_blocked"] += 1
-                catcher = None
+            elif touching and not self.fat_energy:
+                catcher = [touching[0]]
+            elif touching:
+                # The touching predators always belong to the party, whatever the radius.
+                party = [p for p in self.predators if p in touching or self.torus.distance(animal.position, p.position) <= self.party_radius]
+                if len(party) >= 2:
+                    catcher = party
+                    self.hunt_stats["rabbits_caught_party"] += 1
+                else:
+                    chance = min(1.0, max(0.0, (self.fat_energy - animal.energy) / (self.fat_energy - self.lean_energy)))
+                    if self.catch_rng.random() < chance:
+                        catcher = party
+                        self.hunt_stats["rabbits_caught_solo"] += 1
+                    else:
+                        self.hunt_stats["rabbit_catch_failures"] += 1
+                        for p in touching:
+                            p.catch_ready_at = self.time_step + 1 + self.catch_cooldown
         aways = []
         for other in self.animals[animal.species]:
             if other is not animal and self._touching(animal, other):
@@ -810,12 +867,13 @@ class StagHuntContinuous(MultiAgentEnv):
 
     def _energy(self, catches, eaten, terminateds, truncateds, infos):
         """Food, metabolic costs and starvation."""
-        for predator, rabbit_energy in catches:
-            if predator.alive:
-                before = predator.energy
-                self._gain(predator, self.catch_efficiency * rabbit_energy)
-                self.hunt_stats["rabbits_caught"] += 1
-                self.hunt_stats["rabbit_energy"] += predator.energy - before
+        for hunters, rabbit_energy in catches:
+            self.hunt_stats["rabbits_caught"] += 1
+            for predator in hunters:
+                if predator.alive:
+                    before = predator.energy
+                    self._gain(predator, self.catch_efficiency * rabbit_energy / len(hunters))
+                    self.hunt_stats["rabbit_energy"] += predator.energy - before
         for prey in self.rabbits + self.mammoths:
             count = eaten.get(prey.id, 0)
             if count:
@@ -1184,6 +1242,10 @@ class StagHuntContinuous(MultiAgentEnv):
                 # From the current positions, as the next catch test sees them.
                 inside = [float(flag) for flag in self._inside(seen["rabbit"])]
                 tail += inside + [0.0] * (self.observe[("predator", "rabbit")] - len(inside))
+        if self.observe_condition and animal.species == "predator":
+            energy = [max(0.0, a.energy) / self.max_energy["rabbit"] for a in seen["rabbit"]]
+            tail += energy + [0.0] * (self.observe[("predator", "rabbit")] - len(energy))
+            tail.append(min(1.0, max(0, animal.catch_ready_at - self.time_step) / self.catch_cooldown) if self.catch_cooldown else 0.0)
         return np.concatenate((obs, food, np.clip(np.asarray(tail, dtype=np.float32), -1.0, 1.0))).astype(np.float32)
 
 

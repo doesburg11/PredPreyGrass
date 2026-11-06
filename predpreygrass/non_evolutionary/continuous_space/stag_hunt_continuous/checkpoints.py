@@ -9,7 +9,7 @@ from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.enviro
 
 # Settings added after runs were saved, with the value that gives the
 # behaviour those runs had; filled in when a saved env_config lacks them.
-ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"hunt_min_party": 1, "truncate_on_prey_extinction": False, "burrow_count": 0, "burrow_radius": 24.0, "burrow_placement": "random", "burrow_hides_rabbits": False, "hunt_condition_factor": 0.0, "hunt_rule": "chance", "hunt_energy_ratio": 1.0} | {f"{layer}_season_{name}": value for layer in ("grass", "steppe") for name, value in (("period", 0), ("amplitude", 0.0), ("start", 0))}
+ADDED_SETTINGS = {f"reproduction_{s}_interval": 0 for s in SPECIES} | {"hunt_min_party": 1, "truncate_on_prey_extinction": False, "burrow_count": 0, "burrow_radius": 24.0, "burrow_placement": "random", "burrow_hides_rabbits": False, "hunt_condition_factor": 0.0, "hunt_rule": "chance", "hunt_energy_ratio": 1.0, "rabbit_lean_energy": 3.0, "rabbit_fat_energy": 0.0, "rabbit_party_radius": 64.0, "rabbit_catch_cooldown": 8, "observe_rabbit_condition": False} | {f"{layer}_season_{name}": value for layer in ("grass", "steppe") for name, value in (("period", 0), ("amplitude", 0.0), ("start", 0))}
 
 
 def run_settings(checkpoint):

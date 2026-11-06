@@ -1,0 +1,224 @@
+{
+ "checkpoint": "predpreygrass/non_evolutionary/continuous_space/stag_hunt_continuous/runs/calibration_rabbits_only/checkpoint",
+ "overrides": {
+  "rabbit_fat_energy": 6.0
+ },
+ "summary": {
+  "episodes": 20,
+  "chance": 0.07149398427384974,
+  "share": {
+   "lean": 0.0546875,
+   "middle": 0.08860759493670886,
+   "fat": 0.09944751381215469
+  },
+  "approaches": {
+   "lean": 256,
+   "middle": 237,
+   "fat": 181
+  },
+  "fat_above_lean_episodes": 10,
+  "cooperation_shown": true
+ },
+ "episodes": [
+  {
+   "hunter_steps": 5223,
+   "with_partner": 414,
+   "lean_approaches": 12,
+   "lean_with_partner": 0,
+   "middle_approaches": 8,
+   "middle_with_partner": 1,
+   "fat_approaches": 9,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 7710,
+   "with_partner": 780,
+   "lean_approaches": 15,
+   "lean_with_partner": 0,
+   "middle_approaches": 18,
+   "middle_with_partner": 2,
+   "fat_approaches": 12,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 5403,
+   "with_partner": 363,
+   "lean_approaches": 8,
+   "lean_with_partner": 0,
+   "middle_approaches": 16,
+   "middle_with_partner": 2,
+   "fat_approaches": 5,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 8327,
+   "with_partner": 258,
+   "lean_approaches": 19,
+   "lean_with_partner": 2,
+   "middle_approaches": 14,
+   "middle_with_partner": 1,
+   "fat_approaches": 12,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 7317,
+   "with_partner": 310,
+   "lean_approaches": 19,
+   "lean_with_partner": 2,
+   "middle_approaches": 12,
+   "middle_with_partner": 1,
+   "fat_approaches": 8,
+   "fat_with_partner": 1
+  },
+  {
+   "hunter_steps": 6187,
+   "with_partner": 616,
+   "lean_approaches": 9,
+   "lean_with_partner": 0,
+   "middle_approaches": 15,
+   "middle_with_partner": 2,
+   "fat_approaches": 11,
+   "fat_with_partner": 1
+  },
+  {
+   "hunter_steps": 8132,
+   "with_partner": 484,
+   "lean_approaches": 20,
+   "lean_with_partner": 1,
+   "middle_approaches": 18,
+   "middle_with_partner": 2,
+   "fat_approaches": 15,
+   "fat_with_partner": 3
+  },
+  {
+   "hunter_steps": 5870,
+   "with_partner": 88,
+   "lean_approaches": 11,
+   "lean_with_partner": 0,
+   "middle_approaches": 10,
+   "middle_with_partner": 1,
+   "fat_approaches": 7,
+   "fat_with_partner": 1
+  },
+  {
+   "hunter_steps": 8658,
+   "with_partner": 1315,
+   "lean_approaches": 16,
+   "lean_with_partner": 2,
+   "middle_approaches": 17,
+   "middle_with_partner": 1,
+   "fat_approaches": 11,
+   "fat_with_partner": 4
+  },
+  {
+   "hunter_steps": 6781,
+   "with_partner": 360,
+   "lean_approaches": 18,
+   "lean_with_partner": 1,
+   "middle_approaches": 15,
+   "middle_with_partner": 1,
+   "fat_approaches": 10,
+   "fat_with_partner": 1
+  },
+  {
+   "hunter_steps": 4552,
+   "with_partner": 10,
+   "lean_approaches": 4,
+   "lean_with_partner": 0,
+   "middle_approaches": 7,
+   "middle_with_partner": 0,
+   "fat_approaches": 6,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 5145,
+   "with_partner": 0,
+   "lean_approaches": 10,
+   "lean_with_partner": 0,
+   "middle_approaches": 8,
+   "middle_with_partner": 0,
+   "fat_approaches": 2,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 5654,
+   "with_partner": 306,
+   "lean_approaches": 12,
+   "lean_with_partner": 1,
+   "middle_approaches": 7,
+   "middle_with_partner": 0,
+   "fat_approaches": 9,
+   "fat_with_partner": 2
+  },
+  {
+   "hunter_steps": 5516,
+   "with_partner": 292,
+   "lean_approaches": 11,
+   "lean_with_partner": 1,
+   "middle_approaches": 7,
+   "middle_with_partner": 0,
+   "fat_approaches": 10,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 4656,
+   "with_partner": 382,
+   "lean_approaches": 6,
+   "lean_with_partner": 0,
+   "middle_approaches": 11,
+   "middle_with_partner": 1,
+   "fat_approaches": 5,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 7402,
+   "with_partner": 1678,
+   "lean_approaches": 13,
+   "lean_with_partner": 1,
+   "middle_approaches": 11,
+   "middle_with_partner": 1,
+   "fat_approaches": 11,
+   "fat_with_partner": 1
+  },
+  {
+   "hunter_steps": 5110,
+   "with_partner": 392,
+   "lean_approaches": 12,
+   "lean_with_partner": 1,
+   "middle_approaches": 7,
+   "middle_with_partner": 1,
+   "fat_approaches": 4,
+   "fat_with_partner": 0
+  },
+  {
+   "hunter_steps": 5692,
+   "with_partner": 272,
+   "lean_approaches": 13,
+   "lean_with_partner": 0,
+   "middle_approaches": 10,
+   "middle_with_partner": 1,
+   "fat_approaches": 10,
+   "fat_with_partner": 2
+  },
+  {
+   "hunter_steps": 6128,
+   "with_partner": 278,
+   "lean_approaches": 15,
+   "lean_with_partner": 2,
+   "middle_approaches": 14,
+   "middle_with_partner": 0,
+   "fat_approaches": 14,
+   "fat_with_partner": 2
+  },
+  {
+   "hunter_steps": 7205,
+   "with_partner": 458,
+   "lean_approaches": 13,
+   "lean_with_partner": 0,
+   "middle_approaches": 12,
+   "middle_with_partner": 3,
+   "fat_approaches": 10,
+   "fat_with_partner": 0
+  }
+ ]
+}

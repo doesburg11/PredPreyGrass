@@ -23,10 +23,13 @@ than shifted tracks do; that is what the solo-control arm and the
 untrained policies are for (DESIGN.md, 5).
 
     python -m predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.evaluate \\
-        <checkpoint dir | untrained> <episodes> [out.json] [--workers N]
+        <checkpoint dir | untrained> <episodes> [out.json] [--workers N] [--set KEY=JSON ...]
 
 With `untrained`, the policies are freshly initialised (seed 0) in the
-world of config/config_env.py.
+world of config/config_env.py. --set changes settings of the world the
+policies play in, e.g. --set rabbit_fat_energy=6.0 for policies trained
+without lean and fat rabbits (a setting that changes the observations does
+not fit a checkpoint trained without it).
 """
 
 import argparse
@@ -178,7 +181,7 @@ def play(env, modules, seed):
     }
 
 
-def _init(checkpoint):
+def _init(checkpoint, overrides=None):
     import torch
 
     from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.checkpoints import (
@@ -198,6 +201,7 @@ def _init(checkpoint):
         _worker["modules"] = load_modules(checkpoint)
     # Whole episodes, so the outcome shows which species survived.
     config["truncate_on_prey_extinction"] = False
+    config.update(overrides or {})
     _worker["env"] = StagHuntContinuous(config)
 
 
@@ -241,16 +245,29 @@ def summarise(rows):
     return summary
 
 
+def parse_overrides(items):
+    """{key: value} from KEY=JSON strings (--set)."""
+    overrides = {}
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep:
+            raise SystemExit(f"--set needs KEY=JSON, not {item!r}")
+        overrides[key] = json.loads(value)
+    return overrides
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint")
     parser.add_argument("episodes", type=int)
     parser.add_argument("out", nargs="?")
     parser.add_argument("--workers", type=int, default=10)
+    parser.add_argument("--set", action="append", default=[], metavar="KEY=JSON")
     args = parser.parse_args()
-    with ProcessPoolExecutor(args.workers, mp_context=get_context("spawn"), initializer=_init, initargs=(args.checkpoint,)) as pool:
+    overrides = parse_overrides(args.set)
+    with ProcessPoolExecutor(args.workers, mp_context=get_context("spawn"), initializer=_init, initargs=(args.checkpoint, overrides)) as pool:
         rows = sorted(pool.map(_play, range(args.episodes)), key=lambda row: row["seed"])
-    summary = {"checkpoint": str(args.checkpoint), **summarise(rows)}
+    summary = {"checkpoint": str(args.checkpoint), "overrides": overrides, **summarise(rows)}
     for key, value in summary.items():
         if key not in ("totals", "tracked", "chance"):
             print(f"{key}: {round(value, 3) if isinstance(value, float) else value}")
