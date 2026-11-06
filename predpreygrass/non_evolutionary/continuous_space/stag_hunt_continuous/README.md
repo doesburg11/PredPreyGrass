@@ -13,6 +13,12 @@ of 50 episodes, but approaches to fat rabbits had a partner near no more often t
 chance (23.6% against 24.6%; lean 16.8%), so cooperation was not shown. Hard stop: no
 changes after this run.
 
+**Follow-ups (2026-11-06/07, RESULTS sections 6 and 7):** bigger fat rabbits (section
+6) were stopped at iteration 752 unevaluated: no rabbit was born. With the user's
+rabbit energies (section 7: born at 2, breed at 7, pay 3) hunters and rabbits coexisted
+in 46 of 50 episodes, but fat approaches had a partner near less often than chance
+(13.2% against 14.6%; lean 9.6%). Section 8 (calls and catching together) is running.
+
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
 (the predators, standing for humans) live with two prey species:
 **rabbits**, which one hunter can catch, and **mammoths**, which need a

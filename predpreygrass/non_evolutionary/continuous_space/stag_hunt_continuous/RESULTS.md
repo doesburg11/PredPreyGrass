@@ -666,6 +666,42 @@ is why test 3 compares with them.
 difference from section 5 cannot be put down to one of them. The per-head gain of a
 pair on a fat rabbit over the best lone attempt is modest (about 1.2 to 1.7 times).
 
+### 7.1 Result (2026-11-07): coexistence met, cooperation not shown
+
+Training ran 1000 iterations without failure. Evaluated with the same scripts as
+section 5 (`results/calibration_lean_fat_r7{_iter250,_iter500,}_{eval,coop}.json`):
+
+| Checkpoint | Both alive at step 8000 (of 50) | Chance | Partner near: lean | middle | fat | Fat above lean (episodes of 20) | Fat above chance (episodes of 20) |
+|---|---|---|---|---|---|---|---|
+| Iteration 250 | **49** (hunters died out in 1) | 19.6% | 13.8% | 13.4% | 16.9% | 16 | 3 |
+| Iteration 500 | **47** (hunters died out in 3) | 21.8% | 14.7% | 13.7% | 18.9% | 20 | 2 |
+| Final (1000) | **46** (hunters died out in 4) | 14.6% | 9.6% | 10.2% | 13.2% | 16 | 5 |
+| Reference: section 5's final policies | 0 (hunters died out in 50) | 7.4% | 8.2% | 6.1% | 9.2% | 11 | – |
+
+Approach counts at the final checkpoint: lean 4,880, middle 7,396, fat 4,391.
+Catches over the 50 final episodes: 19,373 by a lone hunter, 5,605 by a party, and
+39,920 failed lone attempts.
+
+**Tests at the final checkpoint:**
+
+1. **Coexistence: met.** 46 of 50 (target 45).
+2. **Cooperation: not met.** Fat approaches had a partner near more often than lean
+   ones (13.2% against 9.6%, in 16 of 20 episodes), but less often than chance
+   (14.6%; above it in 5 of 20 episodes; fat minus chance -1.4 points, bootstrap 95%
+   interval over episodes -2.2 to -0.6, so below chance).
+3. **Above the reference: met** (13.2% against 9.2%). With test 2 failed this does not
+   show learned cooperation; as in section 5, most of the gap is that the trained
+   hunters spend more time near each other (chance 14.6% against 7.4%).
+
+**Reading (exploratory, one seed, not tested):** the same pattern as section 5 at all
+three checkpoints, with the fat share a little further below chance (fat minus chance
+-2.7, -2.9 and -1.4 points at iterations 250, 500 and 1000, each interval below 0).
+Hunters approach lean rabbits alone and fat ones at about their general closeness to
+other hunters; failed lone attempts outnumber lone catches about 2 to 1, so hunters
+still try fat rabbits alone. The new energies kept coexistence but did not change the
+cooperation result. Section 8 (calls and catching together) was set before these
+results were known.
+
 ## 8. Follow-up: calls and catching together (2026-11-06)
 
 At the user's request, while section 7 trains. Section 7's hunters, like section
