@@ -115,7 +115,7 @@ def test_the_default_world_is_unchanged_by_the_new_settings():
                 return trace, env
 
     plain, env = run()
-    explicit, _ = run(rabbit_fat_energy=0.0, observe_rabbit_condition=False)
+    explicit, _ = run(rabbit_fat_energy=0.0, observe_rabbit_condition=False, rabbit_fat_party_unsplit=False)
     assert plain == explicit
     assert env.hunt_stats["rabbits_caught"] > 0
     assert env.hunt_stats["rabbits_caught_solo"] == env.hunt_stats["rabbits_caught_party"] == env.hunt_stats["rabbit_catch_failures"] == 0
@@ -164,3 +164,85 @@ def test_coop_fair_summary_handles_empty_counts():
     row.update(hunter_steps=10, with_partner=2, fat_approaches=4, fat_with_partner=2, lean_approaches=5, lean_with_partner=1)
     s = summarise([row])
     assert s["chance"] == 0.2 and s["share"]["fat"] == 0.5 and s["cooperation_shown"] is True
+
+
+def test_an_unsplit_fat_rabbit_pays_each_member_of_the_party_in_full():
+    env = world(rabbit_fat_energy=6.0, rabbit_fat_party_unsplit=True)
+    rabbit_beside(env, 0, 1, energy=7.0)
+    before = [p.energy for p in env.predators[:2]]
+    env.step(stopped_actions(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught_fat_unsplit"] == 1
+    for p, e in zip(env.predators[:2], before):
+        assert p.energy == pytest.approx(e + 0.5 * 7.0)
+
+
+def test_unsplit_leaves_middle_party_catches_and_lone_catches_split_as_before():
+    env = world(rabbit_fat_energy=6.0, rabbit_fat_party_unsplit=True)
+    rabbit_beside(env, 0, 1, energy=4.0)  # a middle rabbit, caught by the party
+    before = [p.energy for p in env.predators[:2]]
+    env.step(stopped_actions(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught_fat_unsplit"] == 0
+    for p, e in zip(env.predators[:2], before):
+        assert p.energy == pytest.approx(e + 0.5 * 4.0 / 2)
+    env = world(rabbit_fat_energy=6.0, rabbit_fat_party_unsplit=True)
+    rabbit_beside(env, 0, energy=2.0)
+    before = env.predators[0].energy
+    env.step(stopped_actions(env))
+    assert env.predators[0].energy == pytest.approx(before + 0.5 * 2.0)
+    assert env.hunt_stats["rabbits_caught_fat_unsplit"] == 0
+
+
+@pytest.mark.parametrize("settings", [{"rabbit_fat_party_unsplit": True}, {"rabbit_fat_energy": 6.0, "rabbit_fat_party_unsplit": 1}])
+def test_unsplit_is_validated(settings):
+    with pytest.raises(ValueError):
+        StagHuntContinuous(settings)
+
+
+def test_the_unsplit_arm_is_the_lean_fat_arm_with_the_flag():
+    from predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration import ARMS, INIT_FROM
+
+    arm = dict(ARMS["lean_fat_unsplit"])
+    assert arm.pop("rabbit_fat_party_unsplit") is True
+    assert arm == ARMS["lean_fat_learning"] and "lean_fat_unsplit" not in INIT_FROM
+
+
+@pytest.mark.parametrize("energy, unsplit", [(6.0, True), (2.5, False)])
+def test_unsplit_at_the_fat_boundary_and_for_a_lean_party_catch(energy, unsplit):
+    env = world(rabbit_fat_energy=6.0, rabbit_fat_party_unsplit=True)
+    rabbit_beside(env, 0, 1, energy=energy)
+    before = [p.energy for p in env.predators[:2]]
+    env.step(stopped_actions(env))
+    assert not env.rabbits and env.hunt_stats["rabbits_caught_fat_unsplit"] == unsplit
+    for p, e in zip(env.predators[:2], before):
+        assert p.energy == pytest.approx(e + 0.5 * energy / (1 if unsplit else 2))
+
+
+def test_every_party_member_gains_in_full_and_a_hunter_beyond_the_radius_nothing():
+    env = world(rabbit_fat_energy=6.0, rabbit_fat_party_unsplit=True)
+    rabbit = rabbit_beside(env, 0, 1, 2, energy=7.0)
+    far = env.predators[3]
+    far.position = Vector(rabbit.position.x + 300, rabbit.position.y)
+    before = [p.energy for p in env.predators[:4]]
+    env.step(stopped_actions(env))
+    for p, e in zip(env.predators[:3], before):
+        assert p.energy == pytest.approx(e + 0.5 * 7.0)
+    assert far.energy <= before[3]
+
+
+def test_flag_off_is_unchanged_in_the_lean_and_fat_world():
+    def run(**config):
+        env = StagHuntContinuous(dict(mammoth_count=0, max_time_steps=1500, rabbit_fat_energy=6.0, **config))
+        env.reset(seed=3)
+        rng = np.random.default_rng(1)
+        trace = []
+        while True:
+            _, rewards, terms, truncs, _ = env.step(random_actions(env, rng))
+            trace.append((sorted(rewards.items()), [(a.id, round(a.position.x, 9), round(a.energy, 9)) for a in env.living()]))
+            if terms["__all__"] or truncs["__all__"]:
+                return trace, env
+
+    plain, env = run()
+    explicit, _ = run(rabbit_fat_party_unsplit=False)
+    assert plain == explicit
+    assert env.hunt_stats["rabbits_caught_solo"] + env.hunt_stats["rabbits_caught_party"] + env.hunt_stats["rabbit_catch_failures"] > 0
+    assert env.hunt_stats["rabbits_caught_fat_unsplit"] == 0
