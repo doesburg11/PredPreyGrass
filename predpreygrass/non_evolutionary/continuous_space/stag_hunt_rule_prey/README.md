@@ -1,8 +1,8 @@
 # stag_hunt_rule_prey
 
-**Status (2026-11-05): closed, coexistence target not met; the stag hunt line is
-paused.** See [RESULTS.md](RESULTS.md), section 9. Only hunters learn; rabbits and
-mammoths follow fixed rules. A simplification of
+**Status (2026-11-06): closed, together with the whole stag hunt line.** See
+[RESULTS.md](RESULTS.md), section 15. Only hunters learn; rabbits and mammoths follow
+fixed rules. A simplification of
 [`stag_hunt_continuous`](../stag_hunt_continuous/README.md), whose 20 calibration
 rounds are the background.
 
@@ -83,7 +83,8 @@ Then rabbits with heritable flee distance and breeding threshold
 (`evolving_rabbits`, with a neutral-gene reference): all three tests failed. Coexistence
 18 of 50, but now with hunters starving in 22, mostly against lineages that stayed fat;
 gene differences from drift not significant; no cooperation. See [RESULTS.md](RESULTS.md),
-sections 10 to 14.
+sections 10 to 14, and section 15 for the closing summary: group hunting was easy to learn,
+restraint was never learned, and leaving prey for later may be a commons dilemma of its own.
 
 ## Files
 

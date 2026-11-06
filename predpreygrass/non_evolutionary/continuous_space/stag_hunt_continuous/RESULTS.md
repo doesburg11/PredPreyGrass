@@ -11,7 +11,8 @@ Section 2 gives the reasons, section 3 the rounds in brief, section 4 the full l
 and analyses.
 
 The follow-up with rule-following prey was also stopped on 2026-11-05, and the stag
-hunt line is paused. Across both modules, about 25 runs, one seed each, the
+hunt line was closed on 2026-11-06 (see
+[`../stag_hunt_rule_prey/RESULTS.md`](../stag_hunt_rule_prey/RESULTS.md), section 15). Across both modules, about 25 runs, one seed each, the
 results lay along one trade-off: hunters cooperated strongly where they could
 overrun the prey, and coexisted with it where they had little need to cooperate
 (round 20, with spaced births: 50 of 50, mammoths 7%, joint arrivals at chance). No

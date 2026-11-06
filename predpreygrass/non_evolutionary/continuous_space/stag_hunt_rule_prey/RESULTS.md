@@ -597,3 +597,36 @@ to get.
 the hunters answered with neither restraint nor cooperation, so in many episodes they
 starved. The hard stop applies: no changes after this run; the next step is the user's.
 
+
+## 15. Closed: the stag hunt line (2026-11-06)
+
+The module is closed, and with it the stag hunt line (this module and
+[`stag_hunt_continuous`](../stag_hunt_continuous/README.md)). About 30 runs, one seed
+each, no confirmatory test of cooperation passed.
+
+**What the line shows, hedged (one seed per run):**
+
+| Kind of world | Coexistence (of 50) | Cooperation |
+|---|---|---|
+| Mammoths, rule prey (sections 3, 6) | 0 in all trained arms | strong: joint arrivals 2.7 to 3.6x chance, mammoths 87 to 92% of food |
+| Mammoths, learning prey (`stag_hunt_continuous`, rounds 13 to 20) | up to 50 | at most 1.3x chance where coexistence held |
+| Lean and fat rabbits (section 12) | **46, the target** | approaches to fat rabbits with a partner below chance |
+| Same, trained longer (section 13) | 29 | unchanged |
+| Same, rabbits evolving (section 14) | 18, hunters starving | below chance |
+
+- **Group hunting is easy to learn where it pays.** Hunters rewarded only for births
+  learned strong mammoth hunting in groups.
+- **Restraint was never learned.** Wherever hunters could overrun the prey they did, and
+  where the prey became harder to catch they starved instead of hunting it together.
+  Changing the prey (food, space, speed, refuges, seasons, birth spacing, lean and fat
+  rabbits, evolving rabbits) moved the failure but did not remove it.
+- **One reading, not tested:** leaving prey for later is a commons dilemma of its own, a
+  second cooperation problem on top of the stag hunt. With a births reward an individual
+  hunter gains nothing by holding back, so no change to the prey is likely to remove it.
+
+**Open thread, not built:** test one mechanism known to support restraint in a commons,
+rather than adjust the world again. The 14 env runners are 14 separate worlds, so
+selection between groups is available: worlds whose hunters ate out their prey are
+replaced by copies of worlds that kept it, reusing the gene-pool machinery of section 14.
+If taken up, it is a new module with tests and a stop rule set in advance, not another
+round here.
