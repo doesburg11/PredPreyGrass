@@ -20,7 +20,11 @@ ASSETS = Path(__file__).resolve().parent / "assets"
 BACKGROUND = (172, 206, 231)
 CONE_COLOR = {"predator": (82, 117, 172), "deer": (167, 98, 88)}
 CONE_ALPHA = 80
-POPULATION_COLOR = {"predator": (200, 60, 50), "deer": (150, 100, 40)}
+# Population chart: series in the order of a history row after its step.
+SERIES = ("predator", "deer", "fawn", "middle", "adult")
+POPULATION_COLOR = {"predator": (200, 60, 50), "deer": (120, 120, 120), "fawn": (230, 185, 90), "middle": (195, 125, 45), "adult": (115, 65, 25)}
+SERIES_LABEL = {"predator": "predators", "deer": "deer (all)", "fawn": "fawns", "middle": "middle deer", "adult": "adult deer"}
+SERIES_WIDTH = {"predator": 3, "deer": 2, "fawn": 2, "middle": 2, "adult": 3}
 ADULT_COLOR = (230, 160, 20)
 # Deer sprite size by kind, relative to an adult's.
 DEER_SCALE = {"fawn": 0.55, "middle": 0.78, "adult": 1.0}
@@ -129,7 +133,7 @@ class Viewer:
         self.grass_sprite = pygame.transform.smoothscale(grass, (GRASS_SPRITE, height))
         self.poses = {}  # agent: (faces_right, tilt)
         self.watched = {"predator": None, "deer": None}  # whose cone is drawn
-        self.history = []  # (physics step, predators, deer)
+        self.history = []  # (physics step, predators, deer, fawns, middle, adults)
         self.closed = False
 
     def _sprite(self, species):
@@ -169,7 +173,8 @@ class Viewer:
                 self.closed = True
         if self.history and env.time_step < self.history[-1][0]:
             self.reset()  # a new episode without reset()
-        self.history.append((env.time_step, len(env.predators), len(env.deer)))
+        kinds = [env.kind(deer) for deer in env.deer]
+        self.history.append((env.time_step, len(env.predators), len(env.deer), kinds.count("fawn"), kinds.count("middle"), kinds.count("adult")))
         self.canvas.fill(BACKGROUND)
         sprite = self.grass_sprite
         for patch in env.grass.patches:
@@ -236,7 +241,8 @@ class Viewer:
             self.canvas.blit(image, (x - image.get_width() // 2, y - image.get_height() // 2))
 
     def _draw_population(self, surface):
-        """Predator and deer counts over the episode: physics steps on the x
+        """Predator and deer counts (all deer, and fawns, middle deer and
+        adults) over the episode: physics steps on the x
         axis, animals on the y axis."""
         pygame = self.pygame
         width, height = surface.get_size()
@@ -266,21 +272,25 @@ class Viewer:
             label = self.font.render(f"{step:g}", True, ink)
             surface.blit(label, (x - label.get_width() / 2, top + plot_h + 6))
         pygame.draw.rect(surface, ink, (left, top, plot_w, plot_h), 1)
-        for index, species in ((1, "predator"), (2, "deer")):
+        for index, series in enumerate(SERIES, start=1):
             points = [to_xy(row[0], row[index]) for row in self.history]
             if len(points) > 1:
-                pygame.draw.lines(surface, POPULATION_COLOR[species], False, points, 3)
-        counts = dict(zip(("predator", "deer"), self.history[-1][1:] if self.history else (0, 0)))
+                pygame.draw.lines(surface, POPULATION_COLOR[series], False, points, SERIES_WIDTH[series])
+        counts = dict(zip(SERIES, self.history[-1][1:] if self.history else (0,) * len(SERIES)))
         surface.blit(self.title_font.render("Population", True, ink), (left, top * 0.3))
-        legend_x = left + plot_w
-        for text, species in (
-            (f"deer {counts['deer']}", "deer"),
-            (f"predators {counts['predator']}", "predator"),
-        ):
-            label = self.font.render(text, True, POPULATION_COLOR[species])
-            legend_x -= label.get_width()
-            surface.blit(label, (legend_x, top * 0.45))
-            legend_x -= 24
+        # Legend: a boxed list in the plot's top-left corner, with the
+        # current count of each series.
+        rows = [(f"{SERIES_LABEL[series]}  {counts[series]}", series) for series in SERIES]
+        labels = [(self.font.render(text, True, ink), series) for text, series in rows]
+        swatch, pad = 22, 8
+        line_h = max(label.get_height() for label, _ in labels) + 4
+        box = pygame.Rect(left + pad, top + pad, swatch + 3 * pad + max(label.get_width() for label, _ in labels), line_h * len(labels) + pad)
+        pygame.draw.rect(surface, (255, 255, 255), box)
+        pygame.draw.rect(surface, grid, box, 1)
+        for i, (label, series) in enumerate(labels):
+            y = box.top + pad // 2 + i * line_h + line_h // 2
+            pygame.draw.line(surface, POPULATION_COLOR[series], (box.left + pad, y), (box.left + pad + swatch, y), SERIES_WIDTH[series] + 1)
+            surface.blit(label, (box.left + 2 * pad + swatch, y - label.get_height() // 2))
         caption = self.font.render("physics step", True, ink)
         surface.blit(caption, (left + plot_w / 2 - caption.get_width() / 2, height - bottom * 0.45))
 
