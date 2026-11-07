@@ -2,7 +2,7 @@
 
 ## 1. Replication without calls (2026-11-07)
 
-**Question:** does the result of `stag_hunt_continuous`'s RESULTS.md section 8
+**Question:** does the result of [`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/RESULTS.md)'s RESULTS.md section 8 (archived)
 (coexistence and adult approaches with a partner near above chance) hold without
 hunters' calls, and in more than one training run? Section 8 was a single run, with
 calls and the catching-together rule added at once; silencing the calls of its trained

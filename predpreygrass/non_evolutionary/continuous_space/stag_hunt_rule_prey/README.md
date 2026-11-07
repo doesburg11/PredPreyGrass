@@ -3,7 +3,7 @@
 **Status (2026-11-06): closed, together with the whole stag hunt line.** See
 [RESULTS.md](RESULTS.md), section 15. Only hunters learn; rabbits and mammoths follow
 fixed rules. A simplification of
-[`stag_hunt_continuous`](../stag_hunt_continuous/README.md), whose 20 calibration
+[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/README.md) (archived), whose 20 calibration
 rounds are the background.
 
 ## Why

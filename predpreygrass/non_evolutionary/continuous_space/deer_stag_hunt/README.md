@@ -15,7 +15,7 @@ for adults more than chance.
 ## Origin
 
 This module is the world of
-[`stag_hunt_continuous`](../stag_hunt_continuous/README.md)'s RESULTS.md section 8,
+[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/RESULTS.md)'s section 8 (that module is now in PredPreyGrass-archive),
 the one world of that line that met both coexistence (49 of 50 episodes) and
 cooperation above chance (adult approaches with a partner near 15.5% against chance
 13.2%), stripped to what that run used. Removed: hunters' calls (unused there:
@@ -87,5 +87,7 @@ adults) and `adults_caught`.
   measure (with a bootstrap interval over episodes); `launchers/replicate.py`: training
   runs from scratch; `launchers/verdict.py`: RESULTS.md section 1's tests and verdict.
 - `checkpoints.py`, `render.py`, `watch.py`: loading checkpoints, viewing episodes.
-- `tests/`: the rules, evaluation, and equivalence with `stag_hunt_continuous`.
+- `tests/`: the rules, evaluation, and equivalence with `stag_hunt_continuous`
+  (that test needs a PredPreyGrass-archive checkout next to this repository, or
+  `PREDPREYGRASS_ARCHIVE` set to one; it is skipped otherwise).
 - `RESULTS.md`: experiments and results.

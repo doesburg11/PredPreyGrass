@@ -298,7 +298,7 @@ rabbits are running out.
 ## 9. Where it ended (2026-11-05)
 
 The module is closed, together with
-[`stag_hunt_continuous`](../stag_hunt_continuous/README.md); the stag hunt line is
+[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/README.md) (archived); the stag hunt line is
 paused. One seed per run, no solo control, so none of this is a confirmatory result.
 
 - **Cooperation in the hunt was easy, restraint was hard.** With rule-following prey and a
@@ -611,7 +611,7 @@ starved. The hard stop applies: no changes after this run; the next step is the 
 ## 15. Closed: the stag hunt line (2026-11-06)
 
 The module is closed, and with it the stag hunt line (this module and
-[`stag_hunt_continuous`](../stag_hunt_continuous/README.md)). About 30 runs, one seed
+[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/README.md) (archived)). About 30 runs, one seed
 each, no confirmatory test of cooperation passed.
 
 **What the line shows, hedged (one seed per run):**

@@ -4,13 +4,23 @@ and the same movement actions, the same episode (positions, velocities,
 energies, cooldowns, agents, rewards, end flags and observations, the
 removed inputs aside)."""
 
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.environment import DEFAULT_CONFIG, SLOT_SIZE, DeerStagHunt
 
-old_env = pytest.importorskip("predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.environment")
-calibration = pytest.importorskip("predpreygrass.non_evolutionary.continuous_space.stag_hunt_continuous.launchers.calibration")
+# stag_hunt_continuous now lives in PredPreyGrass-archive (top-level package
+# stag_hunt_continuous): found in $PREDPREYGRASS_ARCHIVE, or in a checkout
+# next to this repository; skipped if neither is there.
+ARCHIVE = Path(os.environ.get("PREDPREYGRASS_ARCHIVE", Path(__file__).resolve().parents[6] / "PredPreyGrass-archive"))
+if (ARCHIVE / "stag_hunt_continuous").is_dir() and str(ARCHIVE) not in sys.path:
+    sys.path.append(str(ARCHIVE))
+old_env = pytest.importorskip("stag_hunt_continuous.environment", reason=f"stag_hunt_continuous not found in {ARCHIVE}")
+calibration = pytest.importorskip("stag_hunt_continuous.launchers.calibration", reason=f"stag_hunt_continuous not found in {ARCHIVE}")
 
 RENAMED = {
     "deer_fawn_energy": "rabbit_lean_energy",
