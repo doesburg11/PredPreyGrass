@@ -32,7 +32,7 @@ slots, hunt cooldown), so training is not draw for draw the same.
 Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
 
 | | Hunters | Deer |
-|---|---|---|
+| --- | --- | --- |
 | Start | 6, energy 5 | 8, energy 2 |
 | Food | deer | grass (+2 per patch) |
 | Birth | at energy 12, pays 5 | at energy 7, pays 3 |
