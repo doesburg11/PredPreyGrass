@@ -1,8 +1,8 @@
 """A pygame viewer for DeerStagHunt, adapted from stag_hunt_continuous's.
 
 Draws the arena (grass; the animals as sprites facing their direction of
-movement, adult deer with a ring; the view cones of one predator and one
-deer), with both populations over the episode to its right. It only reads the environment's state and
+movement, deer sized by kind: fawns small, middle deer medium, adults full
+size with a ring; the view cones of one predator and one deer), with both populations over the episode to its right. It only reads the environment's state and
 never draws random numbers, so watching an episode does not change it.
 
 On a machine without a display, set SDL_VIDEODRIVER=dummy to render
@@ -22,6 +22,8 @@ CONE_COLOR = {"predator": (82, 117, 172), "deer": (167, 98, 88)}
 CONE_ALPHA = 80
 POPULATION_COLOR = {"predator": (200, 60, 50), "deer": (150, 100, 40)}
 ADULT_COLOR = (230, 160, 20)
+# Deer sprite size by kind, relative to an adult's.
+DEER_SCALE = {"fawn": 0.55, "middle": 0.78, "adult": 1.0}
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
 MIN_SPRITE = 36  # Arena units; keeps small animals recognizable.
 GRASS_SPRITE = 24  # Arena units.
@@ -116,7 +118,11 @@ class Viewer:
         self.clock = pygame.time.Clock()
         self.font = pygame.font.Font(None, max(16, self.arena_px[1] // 40))
         self.title_font = pygame.font.Font(None, max(20, self.arena_px[1] // 28))
-        self.sprites = {species: self._sprite(species) for species in ("predator", "deer")}
+        self.sprites = {"predator": self._sprite("predator")}
+        adult = self._sprite("deer")
+        for kind, scale in DEER_SCALE.items():
+            size = (max(1, round(adult.get_width() * scale)), max(1, round(adult.get_height() * scale)))
+            self.sprites[kind] = pygame.transform.smoothscale(adult, size)
         grass = pygame.image.load(str(ASSETS / "grass-transparent.png")).convert_alpha()
         grass = grass.subsurface(grass.get_bounding_rect(min_alpha=1))
         height = max(1, round(GRASS_SPRITE * grass.get_height() / grass.get_width()))
@@ -220,7 +226,7 @@ class Viewer:
             MAX_TILT[species],
         )
         self.poses[animal.id] = (right, tilt)
-        image = self.sprites[species]
+        image = self.sprites[self.env.kind(animal) if species == "deer" else species]
         if right != SPRITE_FACES_RIGHT[species]:
             image = pygame.transform.flip(image, True, False)
         # pygame rotates counterclockwise: a right-facing sprite leans up with
