@@ -1,0 +1,245 @@
+{
+ "checkpoint": "predpreygrass/non_evolutionary/continuous_space/stag_hunt_continuous/runs/calibration_lean_fat_r7_signal/checkpoint/iter_000500",
+ "overrides": {},
+ "summary": {
+  "episodes": 20,
+  "call_rate_alone_at_fat": 0.5293246292436743,
+  "call_rate_otherwise": 0.5401074117550944,
+  "moments": {
+   "call": 5947,
+   "silent": 4980
+  },
+  "arrival_after_call": 0.1731965696990079,
+  "arrival_after_silence": 0.16586345381526105,
+  "difference": 0.007333115883746855,
+  "difference_interval": [
+   -0.006989627463945686,
+   0.02213710984812209
+  ],
+  "valid_resamples": 1.0,
+  "censored": 1949,
+  "calls_followed_by_partner": false
+ },
+ "episodes": [
+  {
+   "decisions": 14110,
+   "calls": 7611,
+   "alone_at_fat": 2865,
+   "alone_at_fat_calls": 1552,
+   "call_moments": 297,
+   "call_arrivals": 53,
+   "silent_moments": 235,
+   "silent_arrivals": 37,
+   "censored": 86
+  },
+  {
+   "decisions": 13949,
+   "calls": 7509,
+   "alone_at_fat": 2548,
+   "alone_at_fat_calls": 1351,
+   "call_moments": 252,
+   "call_arrivals": 41,
+   "silent_moments": 225,
+   "silent_arrivals": 40,
+   "censored": 97
+  },
+  {
+   "decisions": 14839,
+   "calls": 8028,
+   "alone_at_fat": 3151,
+   "alone_at_fat_calls": 1640,
+   "call_moments": 295,
+   "call_arrivals": 54,
+   "silent_moments": 259,
+   "silent_arrivals": 41,
+   "censored": 85
+  },
+  {
+   "decisions": 14963,
+   "calls": 8114,
+   "alone_at_fat": 2876,
+   "alone_at_fat_calls": 1539,
+   "call_moments": 296,
+   "call_arrivals": 52,
+   "silent_moments": 243,
+   "silent_arrivals": 42,
+   "censored": 110
+  },
+  {
+   "decisions": 14564,
+   "calls": 7878,
+   "alone_at_fat": 2724,
+   "alone_at_fat_calls": 1397,
+   "call_moments": 276,
+   "call_arrivals": 59,
+   "silent_moments": 241,
+   "silent_arrivals": 36,
+   "censored": 105
+  },
+  {
+   "decisions": 14527,
+   "calls": 7898,
+   "alone_at_fat": 2886,
+   "alone_at_fat_calls": 1543,
+   "call_moments": 306,
+   "call_arrivals": 74,
+   "silent_moments": 247,
+   "silent_arrivals": 47,
+   "censored": 107
+  },
+  {
+   "decisions": 15244,
+   "calls": 8220,
+   "alone_at_fat": 2697,
+   "alone_at_fat_calls": 1427,
+   "call_moments": 269,
+   "call_arrivals": 45,
+   "silent_moments": 237,
+   "silent_arrivals": 40,
+   "censored": 101
+  },
+  {
+   "decisions": 15332,
+   "calls": 8206,
+   "alone_at_fat": 3216,
+   "alone_at_fat_calls": 1726,
+   "call_moments": 355,
+   "call_arrivals": 64,
+   "silent_moments": 251,
+   "silent_arrivals": 48,
+   "censored": 116
+  },
+  {
+   "decisions": 14696,
+   "calls": 7842,
+   "alone_at_fat": 2860,
+   "alone_at_fat_calls": 1530,
+   "call_moments": 254,
+   "call_arrivals": 43,
+   "silent_moments": 241,
+   "silent_arrivals": 20,
+   "censored": 106
+  },
+  {
+   "decisions": 14927,
+   "calls": 8013,
+   "alone_at_fat": 3325,
+   "alone_at_fat_calls": 1761,
+   "call_moments": 313,
+   "call_arrivals": 42,
+   "silent_moments": 262,
+   "silent_arrivals": 34,
+   "censored": 89
+  },
+  {
+   "decisions": 14885,
+   "calls": 7911,
+   "alone_at_fat": 2778,
+   "alone_at_fat_calls": 1480,
+   "call_moments": 287,
+   "call_arrivals": 44,
+   "silent_moments": 239,
+   "silent_arrivals": 39,
+   "censored": 105
+  },
+  {
+   "decisions": 14108,
+   "calls": 7614,
+   "alone_at_fat": 2576,
+   "alone_at_fat_calls": 1372,
+   "call_moments": 267,
+   "call_arrivals": 39,
+   "silent_moments": 230,
+   "silent_arrivals": 47,
+   "censored": 118
+  },
+  {
+   "decisions": 14433,
+   "calls": 7822,
+   "alone_at_fat": 2922,
+   "alone_at_fat_calls": 1528,
+   "call_moments": 282,
+   "call_arrivals": 47,
+   "silent_moments": 271,
+   "silent_arrivals": 50,
+   "censored": 82
+  },
+  {
+   "decisions": 13011,
+   "calls": 6861,
+   "alone_at_fat": 3244,
+   "alone_at_fat_calls": 1673,
+   "call_moments": 333,
+   "call_arrivals": 45,
+   "silent_moments": 311,
+   "silent_arrivals": 48,
+   "censored": 91
+  },
+  {
+   "decisions": 15749,
+   "calls": 8649,
+   "alone_at_fat": 2607,
+   "alone_at_fat_calls": 1389,
+   "call_moments": 294,
+   "call_arrivals": 58,
+   "silent_moments": 204,
+   "silent_arrivals": 50,
+   "censored": 95
+  },
+  {
+   "decisions": 14283,
+   "calls": 7742,
+   "alone_at_fat": 2980,
+   "alone_at_fat_calls": 1612,
+   "call_moments": 309,
+   "call_arrivals": 57,
+   "silent_moments": 271,
+   "silent_arrivals": 46,
+   "censored": 84
+  },
+  {
+   "decisions": 13143,
+   "calls": 6880,
+   "alone_at_fat": 2964,
+   "alone_at_fat_calls": 1547,
+   "call_moments": 318,
+   "call_arrivals": 49,
+   "silent_moments": 273,
+   "silent_arrivals": 39,
+   "censored": 92
+  },
+  {
+   "decisions": 15016,
+   "calls": 7999,
+   "alone_at_fat": 3256,
+   "alone_at_fat_calls": 1703,
+   "call_moments": 335,
+   "call_arrivals": 56,
+   "silent_moments": 278,
+   "silent_arrivals": 40,
+   "censored": 85
+  },
+  {
+   "decisions": 14294,
+   "calls": 7693,
+   "alone_at_fat": 2674,
+   "alone_at_fat_calls": 1407,
+   "call_moments": 288,
+   "call_arrivals": 46,
+   "silent_moments": 232,
+   "silent_arrivals": 46,
+   "censored": 105
+  },
+  {
+   "decisions": 14547,
+   "calls": 7850,
+   "alone_at_fat": 2908,
+   "alone_at_fat_calls": 1554,
+   "call_moments": 321,
+   "call_arrivals": 62,
+   "silent_moments": 230,
+   "silent_arrivals": 36,
+   "censored": 90
+  }
+ ]
+}

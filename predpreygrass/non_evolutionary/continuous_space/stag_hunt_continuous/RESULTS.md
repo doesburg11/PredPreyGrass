@@ -758,3 +758,67 @@ rate at a fat rabbit against elsewhere.
 a difference from section 7 cannot be put down to either. Catching together may be too
 hard to learn (the paper check above), in which case fat rabbits would drop out of the
 diet; that would fail test 2, not show a new kind of cooperation.
+
+### 8.1 Result (2026-11-07): coexistence and cooperation met, no evidence calls mattered
+
+Training ran 1000 iterations without failure (after a one-minute false start: the
+chain script's status folder was missing in the separate checkout; relaunched
+unchanged at 00:47). Evaluated with the pre-registered scripts
+(`results/calibration_lean_fat_r7_signal{_iter250,_iter500,}_{eval,coop,calls}.json`):
+
+| Checkpoint | Both alive at step 8000 (of 50) | Chance | Partner near: lean | middle | fat | Fat ÷ chance | Fat above lean (of 20) | Fat above chance (of 20) | Fat minus chance (95% interval) |
+|---|---|---|---|---|---|---|---|---|---|
+| Iteration 250 | **50** | 14.1% | 10.1% | 10.5% | 17.7% | 1.26 | 20 | 19 | +3.6 (+2.7 to +4.7) |
+| Iteration 500 | **50** | 18.7% | 13.3% | 13.7% | 23.5% | 1.26 | 20 | 20 | +4.8 (+4.0 to +5.7) |
+| Final (1000) | **49** (hunters died out in 1, step 6,494) | 13.2% | 9.9% | 9.5% | 15.5% | **1.18** | 20 | 16 | +2.3 (+1.1 to +3.5) |
+| Section 7 final (reference for test 3) | 46 | 14.6% | 9.6% | 10.2% | 13.2% | 0.90 | 16 | 5 | -1.4 (-2.2 to -0.6) |
+
+Calls (`launchers/calls.py`, 20 episodes):
+
+| Checkpoint | Call rate alone at a fat rabbit | elsewhere | Moments (call / silent) | Partner arrived after call | after silence | Difference (95% interval) |
+|---|---|---|---|---|---|---|
+| Iteration 250 | 55.5% | 56.8% | 7,121 / 5,496 | 14.8% | 12.7% | +2.1 (+0.5 to +3.7) |
+| Iteration 500 | 52.9% | 54.0% | 5,947 / 4,980 | 17.3% | 16.6% | +0.7 (-0.7 to +2.2) |
+| Final (1000) | 47.1% | 47.3% | 4,304 / 4,887 | 12.2% | 13.1% | -0.9 (-2.4 to +0.6) |
+
+Catches over the 50 final episodes: 23,919 by a lone hunter (lean and middle rabbits),
+4,257 by a party, of which 720 fat rabbits caught by hunters touching together, and
+54,758 failed lone attempts.
+
+**Tests at the final checkpoint:**
+
+1. **Coexistence: met.** 49 of 50 (target 45).
+2. **Cooperation: met.** Fat approaches had a partner near more often than lean ones
+   (15.5% against 9.9%, in 20 of 20 episodes) and than chance (13.2%; above it in 16
+   of 20; fat minus chance +2.3 points, bootstrap 95% interval over episodes +1.1 to
+   +3.5). First time in the stag hunt line.
+3. **Above section 7: met.** Fat ÷ chance 1.18 against 0.90.
+4. **Calls followed by a partner: not met.** A partner reached the rabbit after 12.2%
+   of calls and 13.1% of silences (difference -0.9 points, interval -2.4 to +0.6).
+   At iteration 250 the association was there (+2.1, interval above 0), then faded.
+
+**Exploratory, not a test: calls silenced** (`launchers/silence_calls.py`; the final
+policies replayed on the same 20 seeds with the heard-call input set to zero;
+`results/calibration_lean_fat_r7_signal_{heard,silenced}_coop.json`): fat 15.1%
+against 15.5% heard, chance 13.1% against 13.2%, lean 8.6% against 9.9%, fat above
+lean in 20 of 20 in both, both alive in 20 of 20 in both. The fat-partner pattern
+persists without the heard-call input at evaluation (no paired uncertainty computed);
+this does not show that calls had no effect during training. The same check at iteration 620 (an
+early look during training) gave the same picture (fat 20.2% silenced, 20.3% heard).
+
+**Reading (hedged; one seed):** approaches to fat rabbits occurred with a partner near
+more often than the hunters' general closeness to each other would give, and
+approaches to lean ones less often. There is no evidence that the final behaviour
+depended on heard calls. Since the silenced replay leaves the
+pattern intact, the partner-finding most likely rests on what hunters already see of
+each other (positions and movement in the view cone), but this run cannot separate
+the two changes made at once: a run with catching together and no calls is the clean
+test of whether calls mattered in training. Also, the catching rule makes a partner
+necessary for a fat rabbit, and failed lone touches (each followed by a
+cooldown near the rabbit) may themselves raise the chance that a partner is near at a
+later approach; so the result is at most coordination where the task requires two; whether hunters would seek partners for a larger share where a lone
+hunter can also succeed (the stag hunt in the user's sense) is what sections 5 and 7
+tested, without success. Failed lone attempts (54,758) still outnumber all catches,
+so many hunters still try rabbits alone first.
+
+Per the hard stop there are no further changes.

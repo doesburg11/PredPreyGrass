@@ -17,7 +17,12 @@ changes after this run.
 6) were stopped at iteration 752 unevaluated: no rabbit was born. With the user's
 rabbit energies (section 7: born at 2, breed at 7, pay 3) hunters and rabbits coexisted
 in 46 of 50 episodes, but fat approaches had a partner near less often than chance
-(13.2% against 14.6%; lean 9.6%). Section 8 (calls and catching together) is running.
+(13.2% against 14.6%; lean 9.6%). Section 8 (calls, and fat rabbits caught only by two hunters touching them within
+one decision): coexistence 49 of 50 and, for the first time in the line, fat approaches
+had a partner near more often than chance (15.5% against 13.2%; lean 9.9%), but there was
+no evidence that calls mattered (silencing them at evaluation changed nothing). The rule
+makes a partner necessary for a fat rabbit, so this is at most coordination where two are
+required.
 
 Cooperative hunting in the continuous Predator-Prey-Grass world. Hunters
 (the predators, standing for humans) live with two prey species:
