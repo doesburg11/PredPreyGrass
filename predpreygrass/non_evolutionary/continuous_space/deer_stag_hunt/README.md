@@ -6,6 +6,8 @@ coexisted in 43, 49 and 50 of 50 episodes, and approaches to adults had a partne
 1.20, 1.23 and 1.15 times as often as chance (above fawns too; 95% intervals above
 zero). run_1 missed the coexistence bar; the other two met all tests. The effect is
 small, and adult catches fell late in training in run_1 and run_3 (see RESULTS.md).
+Written up for a general reader, with an animation and a results chart, on the site page
+[A Replicated Stag Hunt](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/deer-stag-hunt).
 
 A stag hunt with one prey species. Hunters (the predators, standing for humans) and
 deer share a continuous torus with clustered grass. A **fawn** can be caught by one
