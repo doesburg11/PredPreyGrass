@@ -30,15 +30,29 @@ energy. Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
 Catching, by the deer's energy (a deer grows by grazing and gives birth at 7, which
 drops it to 4):
 
-| Deer | Energy | Caught by one hunter | Caught with a partner | Energy gained per hunter |
-| --- | --- | --- | --- | --- |
-| Fawn (the hare) | 2 or less | always | always, if another hunter is within 64 units; shared by all hunters within 64 | alone up to 1 |
-| Middle | 2 to 5 | chance (5 − energy) / 3, falling from 1 to 0 | always, as for a fawn | alone 1 to 2.5 |
-| Adult (the stag) | 5 or more | never | only if two or more hunters touch it within one decision (8 physics steps); shared by those who touched it only | 1.25 to 1.75 each, when two share it |
+| Deer | Energy | Hunter alone (no other hunter within 64 units) | Another hunter within 64 units of the deer |
+| --- | --- | --- | --- |
+| Fawn (the hare) | 2 or less | always caught; gains up to 1 | always caught, but shared by every hunter within 64 (the others need not touch it) |
+| Middle | 2 to 5 | caught with chance (5 − energy) / 3, falling from 1 to 0; gains 1 to 2.5 | always caught, shared as for a fawn |
+| Adult (the stag) | 5 or more | never caught | caught only if two or more hunters touch it within one decision (8 physics steps); shared by those who touched it only; 1.25 to 1.75 each when two share it |
 
-A hunter gains half its share of the deer's energy, so two hunters sharing an adult
-each get more than a fawn gives one hunter alone. A failed attempt costs each hunter
+A hunter gains half its share of the deer's energy. A failed attempt costs each hunter
 that touched the deer a wait of 8 physics steps before it can catch again.
+
+The rule for young deer is a sharing rule, kept from the world this module copies
+(see Origin): a hunter nearby makes the catch certain but takes a share without
+touching the deer. With one partner near, the expected gain per hunter is:
+
+| Deer | Alone | With one partner near (each) | Better |
+| --- | --- | --- | --- |
+| Fawn, energy 2 | 1.0 | 0.5 | alone |
+| Middle, energy 3 | 1.0 | 0.75 | alone |
+| Middle, energy 3.5 | 0.875 | 0.875 | equal |
+| Middle, energy 4.5 | 0.375 | 1.125 | partner |
+| Adult, energy 5 to 7 | 0 | 1.25 to 1.75 | partner (required) |
+
+So the value of a partner grows with the deer's size: it costs half a fawn, pays for
+middle deer above energy 3.5, and is required for an adult.
 
 Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
 decision early).
@@ -84,7 +98,11 @@ needed for this result.
 Limits: the effect is small (adults are 1 to 4% of the deer caught), and adult catches
 fell late in training in run_1 and run_3. The rule makes a partner necessary for an
 adult, so this shows coordination where the task requires two, not proof that hunters
-seek each other out. Details in [RESULTS.md](RESULTS.md); written up for a general
+seek each other out. And a partner near a fawn takes half of it, so hunters have a
+reason to keep away from others near fawns. That lowers the fawn share and makes "adults
+above fawns" easier to pass; the comparison with chance is not affected this way, and
+adults were above chance in all three runs, but part of the gap between adults and
+fawns may come from avoiding sharing rather than seeking partners. Details in [RESULTS.md](RESULTS.md); written up for a general
 reader, with an animation and a results chart, on the site page
 [A Replicated Stag Hunt](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/deer-stag-hunt).
 

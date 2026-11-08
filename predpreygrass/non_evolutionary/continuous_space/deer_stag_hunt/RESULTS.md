@@ -96,6 +96,13 @@ partner near above fawns and chance.
 - **Approach with a partner near is the measure, not proof of seeking a partner:**
   hunters may meet near adults for other reasons (shared grass areas, deer herds), which
   the chance baseline only partly removes.
+- **The fawn comparison is partly built in.** A fawn or middle deer touched with another
+  hunter within 64 units is shared with every hunter that near, so a partner near a
+  fawn halves the meal. Hunters therefore have a reason to avoid others near fawns,
+  which lowers the fawn share in test 2. The chance comparison does not have this
+  bias (adults were above chance in all runs), but part of the adult-fawn gap may
+  reflect avoiding sharing rather than seeking partners. (Added 2026-11-08, after
+  the verdict; it does not change the pre-registered tests.)
 - Three runs show run-to-run variation; they are not a population estimate.
 
 **Hard stop reached.** No world changes followed; the next step is the user's decision.
