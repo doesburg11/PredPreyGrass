@@ -57,6 +57,17 @@ middle deer above energy 3.5, and is required for an adult.
 Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
 decision early).
 
+**Grass regrowth (`grass_regrowth`).** Sections 1 and 2 of RESULTS.md ran with
+`"instant"` grass: an eaten patch is gone for 400 physics steps, then back whole.
+Since 2026-11-09 the default is `"logistic"`: each patch's biomass regrows
+gradually, slowly when grazed short, fastest at half grown, slowly again near full
+(bare to 95% in about 400 physics steps). A deer eats all of a patch and gains that
+share of its energy (2 for a full patch), and deer see how grown the nearest patch is.
+Grass kept short barely regrows, so a deer sitting on a bare patch gains less than it
+spends at rest. Runs saved before the setting existed load with `"instant"` and
+reproduce exactly ([grass.py](grass.py), [tests/test_grass.py](tests/test_grass.py)).
+No training run has used logistic grass yet.
+
 **A second catching rule (`deer_catch_rule: "touch"`, tested in RESULTS.md
 section 2).** Only touching counts, with one rule for every deer: each touch is a
 solo attempt with the chance above (0 for an adult), a failed attempt costs a wait,
@@ -180,7 +191,7 @@ adults) and `adults_caught`.
 ## Files
 
 - `environment.py`: the world (`DeerStagHunt`); `grass.py`, `geometry.py`: grass
-  clusters and torus geometry.
+  clusters (instant or logistic regrowth) and torus geometry.
 - `train.py`, `config/`: training; `callbacks.py`: TensorBoard counters.
 - `evaluate.py`, `launchers/coop_fair.py`: evaluation and the fair cooperation
   measure (with a bootstrap interval over episodes); `launchers/replicate.py`: training

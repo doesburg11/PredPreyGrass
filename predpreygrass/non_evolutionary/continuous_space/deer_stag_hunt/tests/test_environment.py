@@ -161,11 +161,11 @@ def test_predators_see_deer_energy_and_their_own_cooldown():
     hunter.orientation = 0.0
     hunter.catch_ready_at = 4
     obs = env._observe(hunter)
-    assert obs.shape == (env.obs_size["predator"],) == (48,)
+    assert obs.shape == (env.obs_size["predator"],) == (49,)  # 48 with instant grass
     assert obs[-3] == pytest.approx(6.0 / 16.0)  # the nearest deer's energy
     assert obs[-2] == 0.0  # second deer slot empty
     assert obs[-1] == pytest.approx(4 / env.catch_cooldown)
-    assert env.obs_size["deer"] == 45
+    assert env.obs_size["deer"] == 46  # 45 with instant grass
 
 
 def test_observations_fit_their_spaces_through_an_episode():

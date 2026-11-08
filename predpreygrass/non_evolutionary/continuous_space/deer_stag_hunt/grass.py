@@ -1,6 +1,24 @@
 """Grass: renewable food patches in clusters that move by seed dispersal and
 collapse when overgrazed (SPEC.md, section 4).
 
+Two ways of regrowing (regrowth):
+- "instant" (the world of RESULTS.md sections 1 and 2): an eaten patch is
+  gone for respawn_delay physics steps, then back whole.
+- "logistic": each patch has a biomass b in [0, 1] (1 = a whole patch,
+  energy_grass_gain to a deer) that grows every physics step by
+  growth_rate * (b + root_reserve) * (1 - b): slowly when grazed short
+  (little leaf left; the small root reserve lets bare grass start again),
+  fastest at half grown, slowly again near full. A deer eats all of a
+  patch's biomass and gains that share of energy_grass_gain. With the
+  defaults (growth_rate 0.0187, root_reserve 0.01) bare grass reaches 0.95
+  in about 400 physics steps, as instant grass returns; a deer keeping a
+  patch bare gains about 0.0004 energy per physics step, below a resting
+  deer's cost (0.0016), so nibbling does not pay. An eaten patch re-seeds
+  at once next to a mature patch (b >= MATURE) of its cluster, or from the
+  seed bank, and grows there from 0; a cluster collapses when it has no
+  more mature patches than overgrazing_threshold of its patches. Patches
+  start whole.
+
 The procedures and the order of their random draws follow add_walls's
 GrassLayer exactly, without its wall handling; and stag_hunt_continuous's
 grass, without its seasons and burrows.
@@ -12,6 +30,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
+REGROWTH = ("instant", "logistic")
+MATURE = 0.5  # logistic regrowth: biomass of a patch that seeds and counts as living
+
 from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.geometry import Torus, Vector
 
 
@@ -19,6 +40,7 @@ from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.geometry imp
 class GrassPatch:
     position: Vector
     ready_at: float = 0
+    biomass: float = 1.0  # used by logistic regrowth only
     cluster: int | None = None
     # Where the patch regrows when it does: None keeps its spot, "disperse"
     # next to a living patch of its cluster, "centre" around the centre.
@@ -54,7 +76,15 @@ class Grass:
         overgrazing=True,
         overgrazing_threshold=0.0,
         overgrazing_delay=400,
+        regrowth="instant",
+        growth_rate=0.0187,
+        root_reserve=0.01,
     ):
+        if regrowth not in REGROWTH:
+            raise ValueError(f"grass_regrowth must be one of {REGROWTH}")
+        for name, value in (("growth_rate", growth_rate), ("root_reserve", root_reserve)):
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 < value <= 1:
+                raise ValueError(f"grass_{name} must be in (0, 1]")
         for name, value, minimum in (
             ("count", count, 0),
             ("respawn_delay", respawn_delay, 1),
@@ -108,6 +138,10 @@ class Grass:
         self.overgrazing = overgrazing
         self.overgrazing_threshold = overgrazing_threshold
         self.overgrazing_delay = overgrazing_delay
+        self.regrowth = regrowth
+        self.logistic = regrowth == "logistic"
+        self.growth_rate = growth_rate
+        self.root_reserve = root_reserve
         self.rng = random.Random()
         self.centres = []
         self.collapsed = []
@@ -177,16 +211,33 @@ class Grass:
         return patch.ready_at <= self.tick
 
     def edible(self, patch):
-        return self.available(patch)
+        return self.available(patch) and (not self.logistic or patch.biomass > 0)
+
+    def mature(self, patch):
+        """Logistic regrowth: a patch that seeds new ones and keeps its
+        cluster alive."""
+        return self.available(patch) and patch.regrow is None and patch.biomass >= MATURE
+
+    def grow(self):
+        """Logistic regrowth: one physics step of growth for every patch
+        that is in place."""
+        r, b0 = self.growth_rate, self.root_reserve
+        for patch in self.patches:
+            if patch.regrow is None and self.available(patch):
+                b = patch.biomass
+                patch.biomass = min(1.0, b + r * (b + b0) * (1.0 - b))
 
     def advance(self, prey):
-        """One physics step: regrowth placement, grazing by the living prey
-        (each patch to the closest prey within consume_radius, ties by agent
-        ID) and overgrazing. Returns {prey id: patches eaten}."""
+        """One physics step: regrowth placement (and, logistic, growth),
+        grazing by the living prey (each patch to the closest prey within
+        consume_radius, ties by agent ID) and overgrazing. Returns {prey id:
+        patches eaten}, in whole patches (logistic: the biomass eaten)."""
         self.tick += 1
         for patch in self.patches:
             if patch.regrow is not None and self.available(patch):
                 self.place(patch)
+        if self.logistic:
+            self.grow()
         eaten = {}
         living = [p for p in prey if p.alive]
         near = self.prey_in_reach(living)
@@ -200,7 +251,17 @@ class Grass:
                 distance = self.torus.distance(living[j].position, patch.position)
                 if distance <= self.consume_radius:
                     candidates.append((distance, living[j].id))
-            if candidates:
+            if candidates and self.logistic:
+                _, agent = min(candidates)
+                eaten[agent] = eaten.get(agent, 0) + patch.biomass
+                patch.biomass = 0.0
+                if self.random_respawn:
+                    patch.position = self.spot(patch.cluster)
+                elif self.dispersal:
+                    patch.regrow = "disperse"
+                    self.place(patch)
+                self.total_consumed += 1
+            elif candidates:
                 _, agent = min(candidates)
                 eaten[agent] = eaten.get(agent, 0) + 1
                 patch.ready_at = self.tick + self.respawn_delay
@@ -243,7 +304,9 @@ class Grass:
             parents = [
                 other
                 for other in self.patches
-                if other is not patch and other.cluster == patch.cluster and other.regrow is None and self.available(other)
+                if other is not patch
+                and other.cluster == patch.cluster
+                and (self.mature(other) if self.logistic else other.regrow is None and self.available(other))
             ]
             if parents:
                 parent = self.rng.choice(parents)
@@ -259,7 +322,7 @@ class Grass:
         ones."""
         for cluster in range(len(self.centres)):
             members = [p for p in self.patches if p.cluster == cluster]
-            living = sum(self.available(p) for p in members)
+            living = sum((self.mature(p) if self.logistic else self.available(p)) for p in members)
             limit = self.overgrazing_threshold * len(members)
             if self.collapsed[cluster]:
                 if living > limit:
@@ -283,11 +346,16 @@ class Grass:
         for patch in members:
             patch.ready_at = regrows
             patch.regrow = "centre"
+            if self.logistic:
+                patch.biomass = 0.0
+
+    def observation_size(self):
+        return 5 if self.logistic else 4
 
     def observation(self, observer, view_distance, fov):
         """The nearest edible patch in the observer's view cone, as
         [seen, dx / view_distance, dy / view_distance, distance /
-        view_distance], or zeros."""
+        view_distance] (logistic: and its biomass), or zeros."""
         visible = []
         for patch in self.patches:
             if not self.edible(patch):
@@ -295,11 +363,11 @@ class Grass:
             if not self.torus.in_view(observer, patch.position, view_distance, fov):
                 continue
             dx, dy = self.torus.offset(observer.position, patch.position)
-            visible.append((math.hypot(dx, dy), dx, dy))
+            visible.append((math.hypot(dx, dy), dx, dy, patch.biomass))
         if not visible:
-            return np.zeros(4, dtype=np.float32)
-        distance, dx, dy = min(visible)
-        return np.asarray(
-            [1.0, dx / view_distance, dy / view_distance, distance / view_distance],
-            dtype=np.float32,
-        )
+            return np.zeros(self.observation_size(), dtype=np.float32)
+        distance, dx, dy, biomass = min(visible)
+        values = [1.0, dx / view_distance, dy / view_distance, distance / view_distance]
+        if self.logistic:
+            values.append(biomass)
+        return np.asarray(values, dtype=np.float32)

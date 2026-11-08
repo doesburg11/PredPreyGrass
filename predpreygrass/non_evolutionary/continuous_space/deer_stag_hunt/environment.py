@@ -1,7 +1,9 @@
 """Deer stag hunt in continuous space for RLlib (README.md, DESIGN.md).
 
 Two species on a torus: predators (the hunters) and deer, which graze
-clustered grass. Both learn (one PPO policy per species) and are rewarded
+clustered grass (grass_regrowth "logistic", the default: patches regrow
+gradually; "instant", the world of RESULTS.md sections 1 and 2: an eaten
+patch is back whole after grass_respawn_delay; grass.py). Both learn (one PPO policy per species) and are rewarded
 only for births. A deer's energy sets how hard it is to catch:
 
 - fawn (energy <= deer_fawn_energy): a lone predator touching it catches it
@@ -69,7 +71,7 @@ SPEEDS = (1.0, 0.5, 0.0)  # full, half, stopped
 MOVES = DIRECTIONS * len(SPEEDS)
 SELF_SIZE = 4  # own vx, vy (/ top speed), sin and cos of own heading
 SLOT_SIZE = 6  # seen flag, dx, dy, distance (/ view distance), vx, vy
-FOOD_SIZE = 4  # seen flag, dx, dy, distance (/ view distance)
+FOOD_SIZE = 4  # seen flag, dx, dy, distance (/ view distance); logistic grass adds its biomass
 # Below this speed an animal counts as stopped and keeps its heading.
 STOPPED_SPEED = 1e-6
 KINDS = ("fawn", "middle", "adult")
@@ -117,6 +119,13 @@ DEFAULT_CONFIG = {
     "grass_overgrazing": True,
     "grass_overgrazing_threshold": 0.0,
     "grass_overgrazing_delay": 400,
+    # "logistic" (default): grass regrows gradually (grass.py); deer see the
+    # biomass of the nearest patch. "instant": an eaten patch is back whole
+    # after grass_respawn_delay (RESULTS.md sections 1 and 2; runs saved
+    # before this setting load with it, checkpoints.py).
+    "grass_regrowth": "logistic",
+    "grass_growth_rate": 0.0187,
+    "grass_root_reserve": 0.01,
     # Energy.
     "energy_predator_initial": 5.0,
     "energy_deer_initial": 2.0,
@@ -164,6 +173,9 @@ GRASS_KEYS = (
     "overgrazing",
     "overgrazing_threshold",
     "overgrazing_delay",
+    "regrowth",
+    "growth_rate",
+    "root_reserve",
 )
 BODY = ("radius", "mass", "max_velocity", "max_acceleration", "max_steer_force", "view_distance", "fov")
 
@@ -296,7 +308,7 @@ class DeerStagHunt(MultiAgentEnv):
         self.obs_size = {}
         for s in SPECIES:
             slots = sum(self.observe[(s, other)] for other in SPECIES)
-            self.obs_size[s] = SELF_SIZE + SLOT_SIZE * slots + FOOD_SIZE + 1
+            self.obs_size[s] = SELF_SIZE + SLOT_SIZE * slots + self.grass.observation_size() + 1
         self.obs_size["predator"] += self.observe[("predator", "deer")] + 1
         self.possible_agents = [f"{s}_{i}" for s in SPECIES for i in range(self.pool[s])]
         spaces = {s: Box(-1.0, 1.0, shape=(self.obs_size[s],), dtype=np.float32) for s in SPECIES}

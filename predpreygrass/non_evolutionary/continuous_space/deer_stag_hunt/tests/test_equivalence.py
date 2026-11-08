@@ -32,8 +32,12 @@ RENAMED = {
 
 
 # Settings of this module without a counterpart there, with the value that
-# is the old world (deer_catch_rule "party": the old catching rules).
-NO_COUNTERPART = {"deer_catch_rule": "party"}
+# is the old world (deer_catch_rule "party": the old catching rules;
+# grass_regrowth "instant": the old grass, whose two growth settings are then
+# unused, so any value is the old world: None).
+NO_COUNTERPART = {"deer_catch_rule": "party", "grass_regrowth": "instant", "grass_growth_rate": None, "grass_root_reserve": None}
+# This module's defaults with the old world's value of each such setting.
+OLD_WORLD = dict(DEFAULT_CONFIG, **{k: v for k, v in NO_COUNTERPART.items() if v is not None})
 
 
 def old_key(key):
@@ -45,7 +49,8 @@ def old_config(new):
     without calls, with the deer settings carried over."""
     config = dict(calibration.ARMS["lean_fat_r7_signal"], hunter_calls=False)
     for key, value in NO_COUNTERPART.items():
-        assert new.get(key, value) == value, f"{key}={new[key]!r} has no counterpart in stag_hunt_continuous"
+        if value is not None:
+            assert new.get(key, value) == value, f"{key}={new[key]!r} has no counterpart in stag_hunt_continuous"
     config.update({old_key(key): value for key, value in new.items() if key not in NO_COUNTERPART})
     # Mammoths are absent, but their view distance is still checked.
     config["mammoth_view_distance"] = min(old_env.DEFAULT_CONFIG["mammoth_view_distance"], config["width"] / 2, config["height"] / 2)
@@ -61,9 +66,8 @@ def test_defaults_are_the_passing_world():
     off); the settings dropped are those of the removed features, at values
     that switch them off."""
     old = dict(old_env.DEFAULT_CONFIG, **calibration.ARMS["lean_fat_r7_signal"])
-    for key, value in DEFAULT_CONFIG.items():
+    for key, value in OLD_WORLD.items():
         if key in NO_COUNTERPART:
-            assert value == NO_COUNTERPART[key], key
             continue
         assert old[old_key(key)] == value, key
     assert old["mammoth_count"] == 0 and old["burrow_count"] == 0
@@ -117,7 +121,7 @@ def run_both(config, seed, decisions):
 @pytest.mark.parametrize("seed", [0, 1, 2])
 def test_same_episode_as_the_passing_world(seed):
     """Random actions end these episodes early (hunters starve)."""
-    new, old = run_both(dict(DEFAULT_CONFIG), seed, 600)
+    new, old = run_both(dict(OLD_WORLD), seed, 600)
     assert new.time_step == old.time_step > 300
     assert new.births == {"predator": old.births["predator"], "deer": old.births["rabbit"]}
 
@@ -125,7 +129,7 @@ def test_same_episode_as_the_passing_world(seed):
 def test_same_long_episode_with_births_of_both_species():
     """Well-fed hunters live long enough under random actions for births,
     cluster collapses and the episode's end."""
-    config = dict(DEFAULT_CONFIG, energy_predator_initial=11.5, max_time_steps=4000)
+    config = dict(OLD_WORLD, energy_predator_initial=11.5, max_time_steps=4000)
     new, old = run_both(config, 3, 2000)
     assert new.time_step == old.time_step
     assert new.births["predator"] > 0 and new.births["deer"] > 0
@@ -136,7 +140,7 @@ def test_same_episode_in_a_crowded_world_with_adult_catches():
     """A small arena with many predators, so adults are caught together
     under random actions and every catch branch is compared."""
     config = dict(
-        DEFAULT_CONFIG,
+        OLD_WORLD,
         width=300,
         height=300,
         predator_view_distance=150,

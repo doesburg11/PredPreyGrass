@@ -1,6 +1,7 @@
 """A pygame viewer for DeerStagHunt, adapted from stag_hunt_continuous's.
 
-Draws the arena (grass; the animals as sprites facing their direction of
+Draws the arena (grass, logistic grass at a size growing with its biomass;
+the animals as sprites facing their direction of
 movement, deer sized by kind: fawns small and spotted, middle deer medium
 and plain, adults full size with antlers (deer_style "antlers", the
 default; "ring": plain sprites, a ring around adults); the view cones of one predator and one deer), with both populations over the episode to its right. It only reads the environment's state and
@@ -37,6 +38,7 @@ DEER_SCALE = {"fawn": 0.55, "middle": 0.78, "adult": 1.0}
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
 MIN_SPRITE = 36  # Arena units; keeps small animals recognizable.
 GRASS_SPRITE = 24  # Arena units.
+GRASS_LEVELS, GRASS_MIN, GRASS_HIDDEN = 8, 0.3, 0.05
 # The sprites' own facing: the hunter (predator) holds its spear to the
 # left; the deer (the repository's assets/images/icons/prey_deer.png) looks
 # right.
@@ -144,6 +146,13 @@ class Viewer:
         grass = grass.subsurface(grass.get_bounding_rect(min_alpha=1))
         height = max(1, round(GRASS_SPRITE * grass.get_height() / grass.get_width()))
         self.grass_sprite = pygame.transform.smoothscale(grass, (GRASS_SPRITE, height))
+        # Logistic grass: the sprite grows with the patch's biomass, in
+        # GRASS_LEVELS steps (side proportional to biomass, at least
+        # GRASS_MIN of full size; patches under GRASS_HIDDEN are not drawn).
+        self.grass_levels = [
+            pygame.transform.smoothscale(grass, (max(1, round(GRASS_SPRITE * f)), max(1, round(height * f))))
+            for f in (GRASS_MIN + (1 - GRASS_MIN) * i / (GRASS_LEVELS - 1) for i in range(GRASS_LEVELS))
+        ]
         self.poses = {}  # agent: (faces_right, tilt)
         self.watched = {"predator": None, "deer": None}  # whose cone is drawn
         self.history = []  # (physics step, predators, deer, fawns, middle, adults)
@@ -227,6 +236,10 @@ class Viewer:
         sprite = self.grass_sprite
         for patch in env.grass.patches:
             if env.grass.available(patch):
+                if env.grass.logistic:
+                    if patch.regrow is not None or patch.biomass < GRASS_HIDDEN:
+                        continue
+                    sprite = self.grass_levels[min(GRASS_LEVELS - 1, int(patch.biomass * GRASS_LEVELS))]
                 for x, y in self._copies(patch.position.x, patch.position.y):
                     self.canvas.blit(sprite, sprite.get_rect(center=(round(x), round(y))))
         if self.draw_view_cones:

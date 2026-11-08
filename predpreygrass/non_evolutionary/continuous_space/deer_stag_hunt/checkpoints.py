@@ -23,7 +23,9 @@ def run_settings(checkpoint):
 
 # Settings added after runs were saved, with the value those runs had:
 # a run saved before deer_catch_rule existed used the party rule.
-LEGACY_SETTINGS = {"deer_catch_rule": "party"}
+# Runs saved before grass_regrowth existed had instant grass (the two growth
+# settings are unused then; their values here are only placeholders).
+LEGACY_SETTINGS = {"deer_catch_rule": "party", "grass_regrowth": "instant", "grass_growth_rate": 0.0187, "grass_root_reserve": 0.01}
 
 
 def _with_legacy(config):
