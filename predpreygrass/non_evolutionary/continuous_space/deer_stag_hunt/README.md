@@ -1,40 +1,23 @@
 # Hunting Together: A Stag Hunt with Deer
 
-** In 3 independent runs, hunters and deer
-coexisted in 43, 49 and 50 of 50 episodes, and approaches to adults had a partner near
-1.20, 1.23 and 1.15 times as often as chance (above fawns too; 95% intervals above
-zero). run_1 missed the coexistence bar; the other two met all tests. The effect is
-small, and adult catches fell late in training in run_1 and run_3 (see RESULTS.md).
-Written up for a general reader, with an animation and a results chart, on the site page
-[A Replicated Stag Hunt](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/deer-stag-hunt).
+## The idea
 
-A stag hunt with one prey species. Hunters (the predators, standing for humans) and
-deer share a continuous torus with clustered grass. A **fawn** can be caught by one
-hunter for sure, as a hare in the classic stag hunt; an **adult** deer only by two
-or more hunters touching it within one decision, as the stag, and only they share it. A
-lone hunter can live on fawns, but two hunters sharing an adult each get more than a
-fawn gives one hunter. Both species learn (one PPO policy per species) and are rewarded
-only for births. The aim: hunters and deer coexisting, with hunters seeking a partner
-for adults more than chance.
+In the classic stag hunt, a hunter alone can always catch a hare, a small but safe
+meal. A stag is a much bigger meal, but one hunter cannot take it: it needs partners.
+Hunting together pays more, but only if a partner shows up. The game is a standard
+model of cooperation between humans.
 
-## Origin
-
-This module is the world of
-[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/RESULTS.md)'s section 8 (that module is now in PredPreyGrass-archive),
-the one world of that line that met both coexistence (49 of 50 episodes) and
-cooperation above chance (adult approaches with a partner near 15.5% against chance
-13.2%), stripped to what that run used. Removed: hunters' calls (unused there:
-silencing them changed nothing), mammoths and their hunts, the steppe food layer,
-burrows, seasons, birth spacing, and the mammoth-era analysis tools. Renamed: rabbits
-to deer, lean to fawn, fat to adult. The world is the same: with the same seed and the
-same movement actions an episode here is identical to one there, calls off
-([tests/test_equivalence.py](tests/test_equivalence.py)). The networks are slightly
-smaller: predators have no unused join output and no always-zero inputs (empty mammoth
-slots, hunt cooldown), so training is not draw for draw the same.
+This module puts that choice into a simulated ecosystem. The hunters stand for
+humans. The deer are the prey, and how a deer can be caught depends on how big it is:
+a **fawn** is the hare, which one hunter can catch on its own, and an **adult** deer is
+the stag, which only two hunters together can catch. Nobody tells the hunters to
+cooperate. The question is whether they learn to.
 
 ## The world
 
-Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
+Hunters and deer live on an 800 by 800 continuous torus (no edges) with clustered
+grass. Deer eat grass, hunters eat deer, and both give birth when they have enough
+energy. Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
 
 | | Hunters | Deer |
 | --- | --- | --- |
@@ -59,6 +42,66 @@ that touched the deer a wait of 8 physics steps before it can catch again.
 
 Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
 decision early).
+
+## How the animals learn
+
+Hunters and deer start with no knowledge. Each species has one neural network
+policy, shared by all its members, trained with PPO (reinforcement learning). The
+only reward is a birth: an animal gets a reward each time it gives birth, and nothing
+for eating, catching or surviving as such. To breed, a hunter must eat enough, so
+training pushes the hunters' policy toward hunting that feeds them well. Training
+runs for 1000 iterations, each a batch of experience from 14 worlds run in parallel.
+
+## The experiment
+
+An earlier module found both coexistence and cooperation in this world once, in a
+single training run, and there the hunters could also make calls to each other. This experiment asks: **does the result
+hold without calls, and in more than one run?** Three runs were trained from scratch
+(`run_1`, `run_2`, `run_3`), differing only by chance. Each final policy was then
+evaluated:
+
+- **Coexistence:** in how many of 50 test episodes are hunters and deer both still
+  alive at the end? Hunters that eat all the deer, or starve, fail.
+- **Cooperation against chance:** when a hunter goes for a deer, is another hunter
+  within 64 units? If hunters seek partners for adults, this should happen more often
+  for adults than for fawns, and more often than chance. Chance is the share of all
+  hunter time spent with another hunter that close, so hunters that simply stay
+  together do not count as cooperating.
+
+The tests, set before training (RESULTS.md, section 1): at least 45 of 50 episodes
+coexisting; adults approached with a partner near more often than fawns and than
+chance; and that ratio above the value of a weaker earlier world. The result counts
+as replicated if all three tests are met in at least 2 of the 3 runs.
+
+## Outcome
+
+**Replicated.** In the 3 runs, hunters and deer coexisted in 43, 49 and 50 of 50
+episodes. Adults were approached with a partner near 1.20, 1.23 and 1.15 times as often
+as chance, and more often than fawns, with 95% intervals above zero in every run.
+run_1 missed the coexistence bar; the other two met all tests. So calls were not
+needed for this result.
+
+Limits: the effect is small (adults are 1 to 4% of the deer caught), and adult catches
+fell late in training in run_1 and run_3. The rule makes a partner necessary for an
+adult, so this shows coordination where the task requires two, not proof that hunters
+seek each other out. Details in [RESULTS.md](RESULTS.md); written up for a general
+reader, with an animation and a results chart, on the site page
+[A Replicated Stag Hunt](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/deer-stag-hunt).
+
+## Origin
+
+This module is the world of
+[`stag_hunt_continuous`](https://github.com/doesburg11/PredPreyGrass-archive/blob/main/stag_hunt_continuous/RESULTS.md)'s section 8 (that module is now in PredPreyGrass-archive),
+the one world of that line that met both coexistence (49 of 50 episodes) and
+cooperation above chance (adult approaches with a partner near 15.5% against chance
+13.2%), stripped to what that run used. Removed: hunters' calls (unused there:
+silencing them changed nothing), mammoths and their hunts, the steppe food layer,
+burrows, seasons, birth spacing, and the mammoth-era analysis tools. Renamed: rabbits
+to deer, lean to fawn, fat to adult. The world is the same: with the same seed and the
+same movement actions an episode here is identical to one there, calls off
+([tests/test_equivalence.py](tests/test_equivalence.py)). The networks are slightly
+smaller: predators have no unused join output and no always-zero inputs (empty mammoth
+slots, hunt cooldown), so training is not draw for draw the same.
 
 ## Running
 
