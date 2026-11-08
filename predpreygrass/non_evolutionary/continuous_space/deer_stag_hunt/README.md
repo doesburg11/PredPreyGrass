@@ -1,4 +1,6 @@
-# deer_stag_hunt
+# Hunting Together: A Stag Hunt with Deer
+
+Module `deer_stag_hunt`.
 
 **Status (2026-11-08): replication without calls done, verdict replicated
 ([RESULTS.md](RESULTS.md), section 1).** In 3 independent runs, hunters and deer
@@ -12,7 +14,7 @@ Written up for a general reader, with an animation and a results chart, on the s
 A stag hunt with one prey species. Hunters (the predators, standing for humans) and
 deer share a continuous torus with clustered grass. A **fawn** can be caught by one
 hunter for sure, as a hare in the classic stag hunt; an **adult** deer only by two
-hunters touching it within one decision, as the stag, and only those two share it. A
+or more hunters touching it within one decision, as the stag, and only they share it. A
 lone hunter can live on fawns, but two hunters sharing an adult each get more than a
 fawn gives one hunter. Both species learn (one PPO policy per species) and are rewarded
 only for births. The aim: hunters and deer coexisting, with hunters seeking a partner
@@ -45,19 +47,21 @@ Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
 | Top speed | 5 | 6 |
 | Sees | 4 hunters and 2 deer (with their energy) in a 150° cone of 200 | 3 hunters and 3 deer in a 240° cone of 267 |
 
-Catching, by the deer's energy:
+Catching, by the deer's energy (a deer grows by grazing and gives birth at 7, which
+drops it to 4):
 
-- **fawn** (2 or less): a lone hunter touching it catches it;
-- **middle** (between 2 and 5): a lone hunter with a chance falling linearly from 1
-  to 0;
-- a fawn or middle deer touched with another hunter within 64 units is always caught,
-  shared by every hunter within 64;
-- **adult** (5 or more): only once two hunters have touched it within 8 physics steps
-  (one decision), shared by those two only.
+| Deer | Energy | Caught by one hunter | Caught with a partner | Energy gained per hunter |
+| --- | --- | --- | --- | --- |
+| Fawn (the hare) | 2 or less | always | always, if another hunter is within 64 units; shared by all hunters within 64 | alone up to 1 |
+| Middle | 2 to 5 | chance (5 − energy) / 3, falling from 1 to 0 | always, as for a fawn | alone 1 to 2.5 |
+| Adult (the stag) | 5 or more | never | only if two or more hunters touch it within one decision (8 physics steps); shared by those who touched it only | 1.25 to 1.75 each, when two share it |
 
-A failed attempt costs each toucher a wait of 8 physics steps. A hunter gains half its
-share of the deer's energy. Episodes last 8000 physics steps (about 1,400 decisions,
-since a birth ends a decision early).
+A hunter gains half its share of the deer's energy, so two hunters sharing an adult
+each get more than a fawn gives one hunter alone. A failed attempt costs each hunter
+that touched the deer a wait of 8 physics steps before it can catch again.
+
+Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
+decision early).
 
 ## Running
 
