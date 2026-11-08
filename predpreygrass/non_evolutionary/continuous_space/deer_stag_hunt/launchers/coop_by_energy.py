@@ -47,6 +47,7 @@ ADULT = 5.0  # checked against each episode's world in count()
 LOW = (1, 2, 3)  # (2, 3.5]: alone pays more
 HIGH = (5, 6)  # (4, 5): a partner pays more
 TOP = 6  # (4.5, 5)
+ADULT_BIN = 7  # >= 5
 BOOTSTRAP = 5000
 
 
@@ -163,6 +164,13 @@ def top_minus_chance(rows):
     return None if near is None or chance is None else near - chance
 
 
+def joint_ratio(rows):
+    """RESULTS.md section 2.1, test C: joint share of middle deer with energy
+    in (4, 5) divided by joint share of adults, or None."""
+    high, adult = pooled_group(rows, "joint", HIGH), pooled(rows, "joint", ADULT_BIN)
+    return None if high is None or not adult else high / adult
+
+
 def summarise(rows, names):
     chance = chance_of(rows)
     out = {
@@ -172,6 +180,8 @@ def summarise(rows, names):
         "trend_interval": interval(rows, trend),
         "top_minus_chance": top_minus_chance(rows),
         "top_minus_chance_interval": interval(rows, top_minus_chance),
+        "joint_ratio": joint_ratio(rows),
+        "joint_ratio_interval": interval(rows, joint_ratio),
         "bins": [],
     }
     for b, name in enumerate(names):
@@ -213,7 +223,7 @@ def main():
         print(f"  {row['bin']:16s} {row['approaches']:10d} {f(row['near']):>6s} {f(row['near_over_chance'], 2):>11s} "
               f"{'-' if iv is None else f'[{iv[0]:+.3f},{iv[1]:+.3f}]':>18s} {f(row['joint']):>6s} "
               f"{'-' if jv is None else f'[{jv[0]:.3f},{jv[1]:.3f}]':>16s}")
-    for label, key in (("A: near (4,5) - near (2,3.5]", "trend"), ("B: near (4.5,5) - chance", "top_minus_chance")):
+    for label, key in (("A: near (4,5) - near (2,3.5]", "trend"), ("B: near (4.5,5) - chance", "top_minus_chance"), ("C: joint (4,5) / joint adult", "joint_ratio")):
         value, iv = s[key], s[f"{key}_interval"]
         print(f"  {label}: {'-' if value is None else f'{value:+.3f}'}, 95% interval {'-' if iv is None else f'[{iv[0]:+.3f},{iv[1]:+.3f}]'}")
     if args.out:

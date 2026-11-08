@@ -1,5 +1,5 @@
 #!/bin/bash
-# RESULTS.md section 2.1: waits for run_touch.sh to finish (runs/touch.status
+# RESULTS.md section 2.1 (tests A, B, C): waits for run_touch.sh to finish (runs/touch.status
 # DONE; stops on FAILED), then runs launchers/coop_by_energy.py (40 episodes,
 # seeds 0-39) on touch_1-3's final checkpoints (the tests), section 1's
 # run_1-3 final checkpoints and touch_1-3 at iteration 500 (comparison, no

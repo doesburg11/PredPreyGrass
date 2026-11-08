@@ -169,8 +169,11 @@ looked at.
 **Measure:** `launchers/coop_by_energy.py`. Approaches as in `coop_fair.py` (its counts
 are reproduced exactly), binned by the deer's energy at the approach. Near: another
 hunter within 64 units of the deer, as in section 1. Chance: as in section 1. Also
-reported, not tested: joint touch (another hunter ready to catch touched the same deer
-within 8 physics steps of the approach).
+tested from the amendment below: joint touch (another hunter ready to catch, not in a
+catch cooldown, touched the same deer within 8 physics steps of the approach, before or
+after). Under the touch rule that is what catches a deer together; a hunter merely
+near gets nothing, so near is the measure kept from section 1 and joint the one that
+fits this rule.
 
 **Tests,** on each of touch_1-3's final checkpoints, 40 episodes (seeds 0-39), 95%
 bootstrap intervals over episodes:
@@ -179,8 +182,12 @@ bootstrap intervals over episodes:
   energy in (2, 3.5]; the interval above 0.
 - **B (above chance where a partner pays):** near share for middle deer with energy in
   (4.5, 5) minus chance; the interval above 0.
+- **C (teaming up where a partner pays, as for adults):** joint share for middle deer
+  with energy in (4, 5) divided by joint share for adults; the interval above 0.5.
+  Adults must be caught by two, so their joint share is the level of teaming where it
+  is required.
 
-**Verdict:** the pattern is shown if A and B are both met in at least 2 of the 3 runs
+**Verdict:** the pattern is shown if A, B and C are all met in at least 2 of the 3 runs
 (`launchers/energy_verdict.py touch_1 touch_2 touch_3`).
 
 **How a positive verdict may be described:** as a hypothesis from interim checkpoints
@@ -193,6 +200,14 @@ touch_1-3 at iteration 500, same measure. In the first look, test A was met unde
 party rule too (all three runs at iteration 500), so A alone does not separate the
 rules; B did (party-rule values −0.028 to −0.030, intervals below 0). A is kept as a
 necessary condition.
+
+**Amendment (2026-11-08, 20:36, still before any final checkpoint): test C added.**
+Near has no part in catching under the touch rule, so a test on joint touches was
+added. Its form was chosen on the same first-look data: a rise in joint share from
+(2, 3.5] to (4, 5) was met in 2 of 3 party-rule runs as well, so it would not separate
+the rules; the ratio to adults did: 0.89 in both touch checkpoints (intervals
+[0.78, 1.00] and [0.78, 1.04]), 0.18 to 0.25 in the party-rule runs. The threshold
+0.5 was set between those values, which makes C, like B, informed by the first look.
 
 **Limits, set now:** big middle deer may share places with adults, so a met B is
 consistent with partnering by payoff but also with place or with generalising from
