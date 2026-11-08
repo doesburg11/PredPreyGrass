@@ -283,3 +283,193 @@ def test_the_episode_is_truncated_at_the_time_limit():
     _, _, terms, truncs, _ = env.step(stop(env))
     assert truncs["__all__"] and not terms["__all__"] and env.time_step == 5
     assert env.episode_stats["physics_steps"] == 5 and env.extinct_at == {}
+
+
+# --- deer_catch_rule "touch" (RESULTS.md section 2) ----------------------
+
+
+def test_the_default_catch_rule_is_party():
+    assert DEFAULT_CONFIG["deer_catch_rule"] == "party"
+    with pytest.raises(ValueError):
+        DeerStagHunt({"deer_catch_rule": "other"})
+
+
+def test_touch_rule_a_partner_near_but_not_touching_plays_no_part_in_a_young_catch():
+    for draw, caught in ((0.16, True), (0.17, False)):
+        env = world(deer_catch_rule="touch")
+        deer = deer_at(env, 4.5)  # solo chance (5 - 4.5) / 3 = 1/6
+        toucher, near = env.predators[:2]
+        place(toucher, 420, 300)
+        place(near, 400, 350)  # within 64, not touching
+        env.catch_rng.random = lambda draw=draw: draw
+        before = near.energy
+        env.step(stop(env))
+        assert (not deer.alive) is caught
+        assert env.stats["young_caught_solo" if caught else "young_failures"] == 1
+        assert env.stats["young_caught_party"] == 0
+        assert near.energy == pytest.approx(before - env.resting_cost["predator"])
+        if not caught:
+            assert toucher.catch_ready_at == env.time_step + env.catch_cooldown
+
+
+def test_touch_rule_a_fawn_alone_is_caught_without_a_draw():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 2.0)
+    place(env.predators[0], 420, 300)
+    env.catch_rng.random = lambda: pytest.fail("a fawn draws no number")
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_solo"] == 1
+
+
+def test_touch_rule_two_touching_at_once_catch_a_young_deer_without_a_draw_and_share_it():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 4.0)
+    a, b, near = env.predators[:3]
+    place(a, 420, 300)
+    place(b, 380, 300)
+    place(near, 400, 350)
+    env.catch_rng.random = lambda: pytest.fail("two touchers draw no number")
+    before = [p.energy for p in (a, b, near)]
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_party"] == 1
+    cost = env.resting_cost["predator"]
+    assert a.energy == pytest.approx(before[0] + 0.5 * 4.0 / 2 - cost)
+    assert b.energy == pytest.approx(before[1] + 0.5 * 4.0 / 2 - cost)
+    assert near.energy == pytest.approx(before[2] - cost)
+
+
+def test_touch_rule_a_second_touch_within_the_window_after_a_failed_attempt_catches_and_later_does_not():
+    for gap, caught in ((8, True), (9, False)):
+        env = world(deer_catch_rule="touch")
+        deer = deer_at(env, 4.0)
+        first, second = env.predators[:2]
+        place(first, 420, 300)
+        place(second, 380, 380)
+        env.catch_rng.random = lambda: 0.999  # every solo attempt fails
+        env.step(stop(env))
+        assert env.stats["young_failures"] == 1
+        place(first, 420, 420)
+        for _ in range(gap - 1):
+            env.step(stop(env))
+        place(second, 380, 300)
+        env.step(stop(env))
+        assert (not deer.alive) is caught, gap
+        assert env.stats["young_caught_party"] == int(caught)
+
+
+def test_touch_rule_adults_as_in_the_party_rule_and_touches_survive_growing_up():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 4.9)
+    first, second = env.predators[:2]
+    place(first, 420, 300)
+    place(second, 400, 350)  # near, not touching
+    env.catch_rng.random = lambda: 0.999
+    env.step(stop(env))
+    assert deer.alive and env.stats["young_failures"] == 1
+    place(first, 420, 420)
+    deer.energy = 5.5  # now adult; the failed touch still counts
+    place(second, 380, 300)
+    env.step(stop(env))
+    assert not deer.alive and env.stats["adults_caught"] == 1
+
+
+def test_touch_rule_a_lone_adult_touch_fails():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 6.0)
+    toucher = env.predators[0]
+    place(toucher, 420, 300)
+    env.catch_rng.random = lambda: pytest.fail("an adult draws no number")
+    env.step(stop(env))
+    assert deer.alive and env.stats["adult_failures"] == 1
+    assert toucher.catch_ready_at == env.time_step + env.catch_cooldown
+
+
+def test_old_run_settings_without_the_catch_rule_load_as_party(tmp_path):
+    import json
+
+    from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.checkpoints import checkpoint_env_config
+
+    old = {k: v for k, v in DEFAULT_CONFIG.items() if k != "deer_catch_rule"}
+    (tmp_path / "source_code").mkdir()
+    (tmp_path / "source_code" / "settings.json").write_text(json.dumps({"config_env": old, "config_ppo": {}}))
+    (tmp_path / "checkpoint").mkdir()
+    assert checkpoint_env_config(tmp_path / "checkpoint")["deer_catch_rule"] == "party"
+
+
+def test_touch_rule_one_hunter_touching_again_after_its_wait_is_not_two_touchers():
+    env = world(deer_catch_rule="touch", deer_catch_cooldown=2)
+    deer = deer_at(env, 4.0)
+    hunter = env.predators[0]
+    place(hunter, 420, 300)
+    env.catch_rng.random = lambda: 0.999
+    for _ in range(6):
+        env.step(stop(env))
+    assert deer.alive and env.stats["young_caught_party"] == 0
+    assert env.stats["young_failures"] == 2  # touches at steps 1 and 4 only
+
+
+def test_touch_rule_a_remembered_toucher_that_died_gets_no_share():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 4.0)
+    first, second, third = env.predators[:3]
+    place(first, 420, 300)
+    env.catch_rng.random = lambda: 0.999
+    env.step(stop(env))
+    first.energy = 1e-9  # starves at the next step, touching nothing
+    place(first, 420, 420)
+    env.step(stop(env))
+    assert not first.alive and deer.id in env.adult_touches
+    place(second, 380, 300)
+    env.step(stop(env))
+    assert deer.alive and env.stats["young_failures"] == 2  # the dead toucher does not count
+    place(second, 380, 420)
+    place(third, 400, 280)
+    gains = []
+    gain = env._gain
+    env._gain = lambda animal, amount: (gains.append((animal.id, amount)), gain(animal, amount))
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_party"] == 1
+    shares = dict(g for g in gains if g[0].startswith("predator"))
+    assert set(shares) == {second.id, third.id}  # the dead first toucher is not there
+    assert shares[second.id] == shares[third.id] == pytest.approx(1.0, abs=0.01)
+
+
+def test_touch_rule_three_touching_at_once_share_evenly_and_touches_survive_shrinking():
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 6.0)
+    a, b, c = env.predators[:3]
+    for p, (x, y) in zip((a, b, c), ((425, 300), (387.5, 321.65), (387.5, 278.35))):  # 25 from the deer, 43 apart
+        place(p, x, y)
+    before = [p.energy for p in (a, b, c)]
+    env.step(stop(env))
+    assert not deer.alive and env.stats["adults_caught"] == 1
+    for p, e in zip((a, b, c), before):
+        assert p.energy == pytest.approx(e + 0.5 * 6.0 / 3 - env.resting_cost["predator"])
+    env = world(deer_catch_rule="touch")
+    deer = deer_at(env, 5.5)
+    first, second = env.predators[:2]
+    place(first, 420, 300)
+    env.step(stop(env))
+    assert env.stats["adult_failures"] == 1
+    place(first, 420, 420)
+    deer.energy = 4.0  # no longer adult; the failed touch still counts
+    env.catch_rng.random = lambda: pytest.fail("a second toucher draws no number")
+    place(second, 380, 300)
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_party"] == 1
+
+
+def test_party_rule_given_explicitly_is_the_default_world_draw_for_draw():
+    a, b = DeerStagHunt({}), DeerStagHunt({"deer_catch_rule": "party"})
+    obs_a, _ = a.reset(seed=3)
+    obs_b, _ = b.reset(seed=3)
+    rng = np.random.default_rng(3)
+    for _ in range(300):
+        actions = {agent: int(rng.integers(MOVES)) for agent in a.active}
+        obs_a, *_ = a.step(actions)
+        obs_b, *_ = b.step(actions)
+        assert a.stats == b.stats and obs_a.keys() == obs_b.keys()
+        assert all(np.array_equal(obs_a[k], obs_b[k]) for k in obs_a)
+        if not a.active:
+            break
+    assert a.catch_rng.random() == b.catch_rng.random()

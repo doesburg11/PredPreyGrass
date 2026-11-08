@@ -31,6 +31,11 @@ RENAMED = {
 }
 
 
+# Settings of this module without a counterpart there, with the value that
+# is the old world (deer_catch_rule "party": the old catching rules).
+NO_COUNTERPART = {"deer_catch_rule": "party"}
+
+
 def old_key(key):
     return RENAMED.get(key) or key.replace("deer", "rabbit")
 
@@ -39,7 +44,9 @@ def old_config(new):
     """stag_hunt_continuous's settings for a deer world: the passing arm
     without calls, with the deer settings carried over."""
     config = dict(calibration.ARMS["lean_fat_r7_signal"], hunter_calls=False)
-    config.update({old_key(key): value for key, value in new.items()})
+    for key, value in NO_COUNTERPART.items():
+        assert new.get(key, value) == value, f"{key}={new[key]!r} has no counterpart in stag_hunt_continuous"
+    config.update({old_key(key): value for key, value in new.items() if key not in NO_COUNTERPART})
     # Mammoths are absent, but their view distance is still checked.
     config["mammoth_view_distance"] = min(old_env.DEFAULT_CONFIG["mammoth_view_distance"], config["width"] / 2, config["height"] / 2)
     return config
@@ -55,6 +62,9 @@ def test_defaults_are_the_passing_world():
     that switch them off."""
     old = dict(old_env.DEFAULT_CONFIG, **calibration.ARMS["lean_fat_r7_signal"])
     for key, value in DEFAULT_CONFIG.items():
+        if key in NO_COUNTERPART:
+            assert value == NO_COUNTERPART[key], key
+            continue
         assert old[old_key(key)] == value, key
     assert old["mammoth_count"] == 0 and old["burrow_count"] == 0
     assert old["grass_season_amplitude"] == 0 and old["reproduction_rabbit_interval"] == 0 and old["reproduction_predator_interval"] == 0

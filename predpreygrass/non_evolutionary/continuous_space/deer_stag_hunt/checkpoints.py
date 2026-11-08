@@ -21,6 +21,15 @@ def run_settings(checkpoint):
     return None
 
 
+# Settings added after runs were saved, with the value those runs had:
+# a run saved before deer_catch_rule existed used the party rule.
+LEGACY_SETTINGS = {"deer_catch_rule": "party"}
+
+
+def _with_legacy(config):
+    return {**{k: v for k, v in LEGACY_SETTINGS.items() if k not in config}, **config}
+
+
 def checkpoint_env_config(checkpoint):
     """The checkpoint's env_config, from the run's saved settings. Every
     setting must be there (none silently taken from today's defaults), and
@@ -29,7 +38,7 @@ def checkpoint_env_config(checkpoint):
     settings = run_settings(checkpoint)
     if settings is None:
         raise ValueError(f"no source_code/settings.json for {checkpoint}")
-    config = dict(settings["config_env"])
+    config = _with_legacy(dict(settings["config_env"]))
     unknown = set(config) - set(DEFAULT_CONFIG)
     missing = set(DEFAULT_CONFIG) - set(config)
     if unknown or missing:
@@ -37,7 +46,7 @@ def checkpoint_env_config(checkpoint):
     saved = Path(checkpoint) / "class_and_ctor_args.pkl"
     if saved.is_file():
         with open(saved, "rb") as f:
-            inside = dict(pickle.load(f)["ctor_args_and_kwargs"][0][0]["env_config"])
+            inside = _with_legacy(dict(pickle.load(f)["ctor_args_and_kwargs"][0][0]["env_config"]))
         if inside != config:
             differ = sorted(k for k in set(inside) | set(config) if inside.get(k) != config.get(k))
             raise ValueError(f"{checkpoint}: its own env_config differs from the run's settings.json in {differ}")

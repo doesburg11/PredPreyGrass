@@ -57,6 +57,13 @@ middle deer above energy 3.5, and is required for an adult.
 Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
 decision early).
 
+**A second catching rule (`deer_catch_rule: "touch"`, being tested in RESULTS.md
+section 2).** Only touching counts, with one rule for every deer: each touch is a
+solo attempt with the chance above (0 for an adult), a failed attempt costs a wait,
+and two or more hunters touching a deer within 8 physics steps catch it and share it.
+Hunters merely near a deer get nothing. The default stays `"party"`, the world above,
+so section 1's runs reproduce exactly.
+
 ## How the animals learn
 
 Hunters and deer start with no knowledge. Each species has one neural network
@@ -128,6 +135,8 @@ From the repository root:
 ```bash
 # A training run from scratch (defaults: 1000 iterations, 14 env runners)
 python predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/launchers/replicate.py NAME
+# ... with the touch rule (RESULTS.md section 2); all three runs and evaluations: launchers/run_touch.sh
+python predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/launchers/replicate.py NAME --catch-rule touch
 
 # Coexistence and catch counters over 50 episodes
 python -m predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.evaluate \

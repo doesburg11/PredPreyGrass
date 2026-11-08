@@ -106,3 +106,45 @@ partner near above fawns and chance.
 - Three runs show run-to-run variation; they are not a population estimate.
 
 **Hard stop reached.** No world changes followed; the next step is the user's decision.
+
+## 2. One touch rule for every deer (pre-registered 2026-11-08)
+
+**Question:** does section 1's result hold in a world where only touching counts?
+In section 1's world, a young deer touched while another hunter was within 64
+units was always caught and shared by every hunter that near, without the others
+touching it. That rule is not needed for the stag hunt, gives nearby hunters a share
+for nothing, and builds in part of the fawn comparison (section 1.1, limits).
+
+**World:** section 1's world with `deer_catch_rule: "touch"` (environment.py
+docstring), nothing else changed:
+
+- every touch is a solo attempt, caught with chance 1 for a fawn, falling linearly
+  from 1 at energy 2 to 0 at energy 5, and 0 for an adult; a caught deer goes to the
+  toucher alone;
+- a failed attempt costs the toucher a wait of 8 physics steps, as before;
+- once two or more hunters have touched a deer within 8 physics steps (at once, or
+  after a failed attempt), it is caught whatever its size and shared by those
+  touchers only.
+
+Adults are caught as in section 1. Per meal, a partner pays for deer above energy
+3.5 (README.md, The world); the payoffs are section 1's.
+
+**Runs:** three runs from scratch (`touch_1`, `touch_2`, `touch_3`), 1000 iterations,
+14 env runners, `launchers/replicate.py NAME --catch-rule touch`, two at a time.
+
+**Tests and verdict:** section 1's, unchanged (coexistence at least 45 of 50;
+adult share above fawn share and chance; adult ÷ chance above 0.90; all three in at
+least 2 of 3 runs), on the final checkpoints, with `launchers/verdict.py touch_1 touch_2
+touch_3`. The cooperation measure is unchanged: a partner near means another hunter
+within 64 units of the deer at the approach, although under this rule such a hunter
+gets no share unless it touches.
+
+**Also recorded, not tests:** iterations 250 and 500; the share of young catches
+made by two touchers; adults caught and hunter births.
+
+**Hard stop:** no setting changes during or after these runs, whatever the outcome.
+What follows is the user's decision.
+
+**What outcomes would mean:** a replication would show section 1's result does not
+need the party rule for young deer. A failure would mean it did need it in this
+world, through coexistence or through cooperation; three runs could not tell more.
