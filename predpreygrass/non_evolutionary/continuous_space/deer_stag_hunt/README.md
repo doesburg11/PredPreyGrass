@@ -1,7 +1,11 @@
 # deer_stag_hunt
 
-**Status (2026-11-07): built; first experiment (replication without calls) set in
-[RESULTS.md](RESULTS.md), section 1.**
+**Status (2026-11-08): replication without calls done, verdict replicated
+([RESULTS.md](RESULTS.md), section 1).** In 3 independent runs, hunters and deer
+coexisted in 43, 49 and 50 of 50 episodes, and approaches to adults had a partner near
+1.20, 1.23 and 1.15 times as often as chance (above fawns too; 95% intervals above
+zero). run_1 missed the coexistence bar; the other two met all tests. The effect is
+small, and adult catches fell late in training in run_1 and run_3 (see RESULTS.md).
 
 A stag hunt with one prey species. Hunters (the predators, standing for humans) and
 deer share a continuous torus with clustered grass. A **fawn** can be caught by one
