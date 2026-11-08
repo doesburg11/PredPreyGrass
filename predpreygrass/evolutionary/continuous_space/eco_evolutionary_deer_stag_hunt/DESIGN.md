@@ -1,12 +1,13 @@
 # Design note: nature, nurture and both in the deer stag hunt (2026-11-08)
 
-Status: **draft 2, awaiting the user's decision; nothing built.** Draft 1 was
-revised after a Codex review (see "Revisions after review" at the end). The open
-decisions are listed in the section before it.
+Status: **draft 2 approved 2026-11-08 with every recommended option (decisions
+1-5 below); built in this module (README.md); pre-registered in RESULTS.md
+section 1.** Draft 1 was revised after a Codex review (see "Revisions after
+review" at the end). Written in deer_stag_hunt and moved here when built.
 
 ## Why
 
-deer_stag_hunt replicated (RESULTS.md section 1.1). Hunters and deer coexist,
+deer_stag_hunt replicated (its RESULTS.md section 1.1). Hunters and deer coexist,
 and hunters approach adult deer with a partner near more often than chance
 (1.15-1.23 times). That result comes from learning alone: one shared PPO policy
 per species, with no genomes.
@@ -176,7 +177,7 @@ This stage is about nature versus nurture in hunters, not coevolution.
 - **Run value:** each measure's mean over checkpoints 500, 750 and 1000. These
   three are one run's repeated measures, not independent data.
   - **Estimand:** sustained late-training performance, not final performance.
-  - **Why:** deer_stag_hunt's late decline (RESULTS.md section 1.1) showed that a
+  - **Why:** deer_stag_hunt's late decline (its RESULTS.md section 1.1) showed that a
     single final checkpoint can be decided by where a decline happens to fall.
     This is a new experiment, so the choice is made before its data.
 - **Unconditional:** every episode counts. After hunters die out, the episode
@@ -273,7 +274,7 @@ Following [[avoid endless tweaking]], the limits are agreed before anything runs
   (sharing tolerance, social attention) or another way for genes to act could
   give other results.
 - **Not partner seeking:** C, adult approaches with a partner near, is a measure
-  of company, not proof that hunters seek a partner (deer_stag_hunt RESULTS.md
+  of company, not proof that hunters seek a partner (deer_stag_hunt's RESULTS.md
   section 1.1).
 - **Statistics:** five runs per arm show run-to-run variation. They give a test,
   not a population estimate.
