@@ -148,3 +148,59 @@ What follows is the user's decision.
 **What outcomes would mean:** a replication would show section 1's result does not
 need the party rule for young deer. A failure would mean it did need it in this
 world, through coexistence or through cooperation; three runs could not tell more.
+
+### 2.1 Partnering by the deer's energy (pre-registered 2026-11-08, before the final checkpoints)
+
+**Question:** under the touch rule, a middle deer (energy between 2 and 5) can be
+tried alone (chance (5 − energy) / 3) or caught for certain by two touchers. Per
+hunter, alone pays more below energy 3.5 and a partner pays more above it (README.md,
+The world). No rule forces a partner, so this is the stag hunt in its strict sense,
+which no earlier world of this line showed. Do hunters approach the larger middle
+deer with a partner near more often, and above chance?
+
+**How this was set (exploratory origin, stated in full):** the question came up after
+section 2's pre-registration. A first look on the interim checkpoints touch_1 iteration
+390 and touch_2 iteration 350, and on section 1's run_1-3 at iteration 500 (20 episodes
+each), showed partnering rising with energy under the touch rule, reaching chance in the
+top middle bin, but not under the party rule. The tests below were then set, before
+any final checkpoint exists. The interim checkpoints enter no test; touch_3 was not
+looked at.
+
+**Measure:** `launchers/coop_by_energy.py`. Approaches as in `coop_fair.py` (its counts
+are reproduced exactly), binned by the deer's energy at the approach. Near: another
+hunter within 64 units of the deer, as in section 1. Chance: as in section 1. Also
+reported, not tested: joint touch (another hunter ready to catch touched the same deer
+within 8 physics steps of the approach).
+
+**Tests,** on each of touch_1-3's final checkpoints, 40 episodes (seeds 0-39), 95%
+bootstrap intervals over episodes:
+
+- **A (rise):** near share for middle deer with energy in (4, 5) minus near share for
+  energy in (2, 3.5]; the interval above 0.
+- **B (above chance where a partner pays):** near share for middle deer with energy in
+  (4.5, 5) minus chance; the interval above 0.
+
+**Verdict:** the pattern is shown if A and B are both met in at least 2 of the 3 runs
+(`launchers/energy_verdict.py touch_1 touch_2 touch_3`).
+
+**How a positive verdict may be described:** as a hypothesis from interim checkpoints
+confirmed on the final ones, not as an independent confirmation: touch_1 and touch_2
+informed the tests (at earlier checkpoints) and can make the verdict. touch_3, the
+only run not looked at, is reported on its own as well.
+
+**Comparison, no test:** section 1's run_1-3 final checkpoints (party rule) and
+touch_1-3 at iteration 500, same measure. In the first look, test A was met under the
+party rule too (all three runs at iteration 500), so A alone does not separate the
+rules; B did (party-rule values −0.028 to −0.030, intervals below 0). A is kept as a
+necessary condition.
+
+**Limits, set now:** big middle deer may share places with adults, so a met B is
+consistent with partnering by payoff but also with place or with generalising from
+adults; it is not proof of choosing a partner by payoff. The crossing in the first
+look was near energy 4.5, not at the payoff break-even 3.5. A control world (adults
+catchable alone) would separate place from cooperation; it is not part of this
+section.
+
+**Running:** `launchers/run_energy.sh` waits for section 2's runs and evaluations, then
+runs all of the above. Results to `results/<run>_energy.json` and
+`results/energy_verdict.txt`. No setting changes; hard stop as in section 2.

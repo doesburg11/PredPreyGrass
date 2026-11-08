@@ -163,6 +163,8 @@ adults) and `adults_caught`.
 - `evaluate.py`, `launchers/coop_fair.py`: evaluation and the fair cooperation
   measure (with a bootstrap interval over episodes); `launchers/replicate.py`: training
   runs from scratch; `launchers/verdict.py`: RESULTS.md section 1's tests and verdict.
+- `launchers/coop_by_energy.py`, `launchers/energy_verdict.py`, `launchers/run_energy.sh`:
+  partnering by the deer's energy, RESULTS.md section 2.1.
 - `checkpoints.py`, `render.py`, `watch.py`: loading checkpoints, viewing episodes.
 - `tests/`: the rules, evaluation, and equivalence with `stag_hunt_continuous`
   (that test needs a PredPreyGrass-archive checkout next to this repository, or
