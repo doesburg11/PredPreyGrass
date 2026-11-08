@@ -1,9 +1,6 @@
 # Hunting Together: A Stag Hunt with Deer
 
-Module `deer_stag_hunt`.
-
-**Status (2026-11-08): replication without calls done, verdict replicated
-([RESULTS.md](RESULTS.md), section 1).** In 3 independent runs, hunters and deer
+** In 3 independent runs, hunters and deer
 coexisted in 43, 49 and 50 of 50 episodes, and approaches to adults had a partner near
 1.20, 1.23 and 1.15 times as often as chance (above fawns too; 95% intervals above
 zero). run_1 missed the coexistence bar; the other two met all tests. The effect is
