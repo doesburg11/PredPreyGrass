@@ -151,6 +151,10 @@ python -m predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.watch \
     predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/runs/NAME/checkpoint --seed 0
 ```
 
+In the viewer, deer show their stage: fawns are small with white spots, middle deer
+medium-sized and plain, adults full size with antlers. (Until 2026-11-08 adults were
+marked by a ring instead; `render.Viewer(..., deer_style="ring")` still draws that.)
+
 TensorBoard's `env_runners/catches/` holds the per-episode counters, among them
 `adult_energy_share` (the share of the hunters' energy from deer that came from
 adults) and `adults_caught`.
