@@ -1,8 +1,9 @@
 """A pygame viewer for DeerStagHunt, adapted from stag_hunt_continuous's.
 
 Draws the arena (grass; the animals as sprites facing their direction of
-movement, deer sized by kind: fawns small, middle deer medium, adults full
-size with a ring; the view cones of one predator and one deer), with both populations over the episode to its right. It only reads the environment's state and
+movement, deer sized by kind: fawns small and spotted, middle deer medium
+and plain, adults full size with antlers (deer_style "antlers", the
+default; "ring": plain sprites, a ring around adults); the view cones of one predator and one deer), with both populations over the episode to its right. It only reads the environment's state and
 never draws random numbers, so watching an episode does not change it.
 
 On a machine without a display, set SDL_VIDEODRIVER=dummy to render
@@ -26,6 +27,11 @@ POPULATION_COLOR = {"predator": (200, 60, 50), "deer": (120, 120, 120), "fawn": 
 SERIES_LABEL = {"predator": "predators", "deer": "deer (all)", "fawn": "fawns", "middle": "middle deer", "adult": "adult deer"}
 SERIES_WIDTH = {"predator": 3, "deer": 2, "fawn": 2, "middle": 2, "adult": 3}
 ADULT_COLOR = (230, 160, 20)
+DEER_STYLES = ("antlers", "ring")
+ANTLER_COLOR = ((92, 58, 28), (125, 84, 45))  # near antler, far antler
+SPOT_COLOR = (255, 251, 238)
+# Work resolution for drawing antlers and spots onto the (small) deer image.
+DECORATE_SCALE = 6
 # Deer sprite size by kind, relative to an adult's.
 DEER_SCALE = {"fawn": 0.55, "middle": 0.78, "adult": 1.0}
 SPRITE_PER_DIAMETER = 1.25  # Sprite size relative to the body diameter.
@@ -86,8 +92,12 @@ class Viewer:
     of the window (None: as fast as possible).
     """
 
-    def __init__(self, env, window_size="fit", fps=None, draw_view_cones=True, caption="PredPreyGrass deer stag hunt"):
+    def __init__(self, env, window_size="fit", fps=None, draw_view_cones=True, caption="PredPreyGrass deer stag hunt", deer_style="antlers"):
         import pygame
+
+        if deer_style not in DEER_STYLES:
+            raise ValueError(f"deer_style must be one of {DEER_STYLES}")
+        self.deer_style = deer_style
 
         if window_size not in ("fit", None) and (
             isinstance(window_size, bool) or not isinstance(window_size, int) or window_size < 1
@@ -126,7 +136,10 @@ class Viewer:
         adult = self._sprite("deer")
         for kind, scale in DEER_SCALE.items():
             size = (max(1, round(adult.get_width() * scale)), max(1, round(adult.get_height() * scale)))
-            self.sprites[kind] = pygame.transform.smoothscale(adult, size)
+            if deer_style == "antlers":
+                self.sprites[kind] = self._decorated_deer(kind, size)
+            else:
+                self.sprites[kind] = pygame.transform.smoothscale(adult, size)
         grass = pygame.image.load(str(ASSETS / "grass-transparent.png")).convert_alpha()
         grass = grass.subsurface(grass.get_bounding_rect(min_alpha=1))
         height = max(1, round(GRASS_SPRITE * grass.get_height() / grass.get_width()))
@@ -148,6 +161,41 @@ class Viewer:
         scale = target / max(image.get_size())
         size = (max(1, round(image.get_width() * scale)), max(1, round(image.get_height() * scale)))
         return pygame.transform.smoothscale(image, size)
+
+    def _decorated_deer(self, kind, size):
+        """The deer image at size (width, height), with antlers for an adult
+        and spots for a fawn, drawn at DECORATE_SCALE times that size and
+        scaled down. An adult's image gets room above for the antlers and
+        the same below, so the body stays centred on the animal."""
+        pygame = self.pygame
+        image = pygame.image.load(str(ASSETS / "deer.png")).convert_alpha()
+        image = image.subsurface(image.get_bounding_rect(min_alpha=1))
+        w, h = size[0] * DECORATE_SCALE, size[1] * DECORATE_SCALE
+        body = pygame.transform.smoothscale(image, (w, h))
+        if kind == "adult":
+            pad = round(0.55 * h)
+            canvas = pygame.Surface((w, h + 2 * pad), pygame.SRCALPHA)
+            # The deer faces right, head at the top right: antlers rise from
+            # the top of the head, swept back, with tines to the front.
+            line = max(2, round(0.034 * w))
+            for (dx, color) in ((0.035, ANTLER_COLOR[1]), (0.0, ANTLER_COLOR[0])):
+                base = ((0.80 + dx) * w, pad + 0.10 * h)
+                tip = ((0.62 + dx) * w, pad - 0.48 * h)
+                pygame.draw.line(canvas, color, base, tip, line)
+                for t, length in ((0.30, 0.20), (0.62, 0.17), (0.92, 0.12)):
+                    x = base[0] + (tip[0] - base[0]) * t
+                    y = base[1] + (tip[1] - base[1]) * t
+                    pygame.draw.line(canvas, color, (x, y), (x + length * w, y - 0.16 * h), line)
+            canvas.blit(body, (0, pad))
+        else:
+            canvas = body.copy()
+            if kind == "fawn":
+                # Spots along the back (the back runs from the lower left to
+                # the upper right of the leaping deer).
+                for fx, fy in ((0.36, 0.50), (0.47, 0.42), (0.58, 0.34), (0.44, 0.55), (0.55, 0.47)):
+                    pygame.draw.circle(canvas, SPOT_COLOR, (round(fx * w), round(fy * h)), max(2, round(0.06 * w)))
+        out = (max(1, round(canvas.get_width() / DECORATE_SCALE)), max(1, round(canvas.get_height() / DECORATE_SCALE)))
+        return pygame.transform.smoothscale(canvas, out)
 
     def _copies(self, x, y):
         """A position and its images one arena width/height away, so things
@@ -221,7 +269,7 @@ class Viewer:
     def _draw_animal(self, animal):
         pygame = self.pygame
         species = animal.species
-        if species == "deer" and self.env.kind(animal) == "adult":
+        if species == "deer" and self.deer_style == "ring" and self.env.kind(animal) == "adult":
             for x, y in self._copies(animal.position.x, animal.position.y):
                 pygame.draw.circle(self.canvas, ADULT_COLOR, (round(x), round(y)), round(animal.radius * 1.6), 3)
         right, tilt = sprite_pose(
