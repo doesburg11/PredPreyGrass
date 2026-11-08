@@ -1,7 +1,9 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-08): built; experiment pre-registered in
-[RESULTS.md](RESULTS.md), section 1; pilot next.**
+**Status (2026-11-08): pilot FAILED (hunters extinct in 50 of 50 episodes in every arm;
+likely cause: naive hunters against frozen trained deer); stage stopped, see
+[RESULTS.md](RESULTS.md) §1.5. Pre-registered in
+[RESULTS.md](RESULTS.md), section 1.**
 
 Nature, nurture and both in a stag hunt. This is
 [deer_stag_hunt](../../../non_evolutionary/continuous_space/deer_stag_hunt/)'s world,

@@ -102,3 +102,41 @@ one shared policy per species, not individual lifetime learning, so a positive r
 is not a classic Baldwin effect.
 
 **Hard stop:** after the main runs, the experiment stops whatever the outcome.
+
+### 1.5 Pilot result (2026-11-08): failed, the stage stops
+
+The pilot ran from 06:53 to 09:28 without a crash. It fails its second criterion:
+hunters are alive at the end of none of the 50 evaluated episodes, in every arm.
+
+| Arm | Iteration | Coexisting (of 50) | Median hunter extinction (physics step) | A (adults per episode) | S | Hunter births in training (all episodes) |
+| --- | --- | --- | --- | --- | --- | --- |
+| L | 250 | 0 | 1351 | 0.34 | 0.013 | 27 in 5441 |
+| L | 500 | 0 | 1285 | 0.14 | 0.005 | 78 in 10484 |
+| B | 250 | 0 | 1487 | 0.14 | 0.004 | 50 in 4848 |
+| B | 500 | 0 | 1425 | 0.14 | 0.005 | 94 in 9610 |
+| E | 250 | 0 | 909 | 0.12 | 0.007 | 6 in 8027 |
+| E | 500 | 0 | 826 | 0.16 | 0.012 | 14 in 16073 |
+
+Results files: `results/pilot_<arm>_iter<250|500>_{eval,coop}.json`.
+
+- **For comparison:** in deer_stag_hunt, all three runs coexisted in 50 of 50 episodes
+  at iterations 250 and 500.
+- **Learning signal:** the hunters' reward comes from births. Their mean episode return
+  was above zero in 66 of L's 500 iterations and 85 of B's, never above 1.8. In
+  deer_stag_hunt run_1 it was 230 by iteration 101.
+- **Gene selection:** with under one hunter birth per hundred episodes, there was
+  almost no selection. Gene means stayed within 0.1 of zero. E's lineages reached
+  generation 2 at most.
+
+**Likely cause (not tested):** the frozen deer. In deer_stag_hunt, hunters and deer
+started naive together. The deer's returns there were about 90 at iteration 1, so
+early hunters could catch and breed, and that gave PPO a reward to learn from. Here
+the deer are deer_stag_hunt's final, trained deer from the first episode (deer
+return about 970 at iteration 1). Naive hunters starve before they breed, so they
+get almost no reward. Arm L, which has the bias switched off and a world shown equal
+to deer_stag_hunt's (tests/test_equivalence.py), fails in the same way. That points
+at the design choice of frozen trained deer, not at the gene code. This is an
+inference from the comparison; no run has isolated it.
+
+**Per the pre-registration (§1.2), nothing is adjusted and re-run. The main runs are
+not launched.**
