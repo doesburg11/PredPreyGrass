@@ -35,7 +35,7 @@ RENAMED = {
 # is the old world (deer_catch_rule "party": the old catching rules;
 # grass_regrowth "instant": the old grass, whose two growth settings are then
 # unused, so any value is the old world: None).
-NO_COUNTERPART = {"deer_catch_rule": "party", "grass_regrowth": "instant", "grass_growth_rate": None, "grass_root_reserve": None}
+NO_COUNTERPART = {"deer_catch_rule": "party", "grass_regrowth": "instant", "grass_growth_rate": None, "grass_root_reserve": None, "grass_bite": None, "grass_stubble": None}
 # This module's defaults with the old world's value of each such setting.
 OLD_WORLD = dict(DEFAULT_CONFIG, **{k: v for k, v in NO_COUNTERPART.items() if v is not None})
 

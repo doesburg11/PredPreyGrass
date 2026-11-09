@@ -1,4 +1,4 @@
-"""Logistic grass regrowth (grass.py) and the instant grass it replaced as the
+"""Logistic and grazed grass regrowth (grass.py), and instant grass, the
 default."""
 
 import json
@@ -178,3 +178,93 @@ def test_a_real_old_checkpoint_loads_as_instant():
         pytest.skip("run_2 is not in this checkout")
     assert checkpoint_env_config(checkpoint)["grass_regrowth"] == "instant"
     assert set(load_modules(checkpoint)) == {"predator", "deer"}
+
+
+# Grazed grass (RESULTS.md section 4): deer crop down to stubble.
+
+
+def grazed(**kw):
+    return grass(**dict(dict(regrowth="grazed"), **kw))
+
+
+def test_a_deer_bites_at_most_bite_per_step_never_below_stubble():
+    g = grazed(count=1, cluster_count=1, dispersal=False, bite=0.1, stubble=0.2)
+    patch = g.patches[0]
+    where = (patch.position.x, patch.position.y)
+    patch.biomass = 1.0
+    eaten = g.advance([Prey(*where)])
+    assert eaten["deer_0"] == pytest.approx(0.1)
+    assert patch.biomass == pytest.approx(0.9)
+    patch.biomass = 0.25
+    r, b0 = g.growth_rate, g.root_reserve
+    grown = 0.25 + r * (0.25 + b0) * 0.75
+    eaten = g.advance([Prey(*where)])
+    assert eaten["deer_0"] == pytest.approx(grown - 0.2)  # only down to stubble
+    assert patch.biomass == pytest.approx(0.2)
+    assert not g.edible(patch)
+
+
+def test_grazed_patch_keeps_its_place_and_regrows_from_stubble():
+    g = grazed(count=1, cluster_count=1, bite=1.0, stubble=0.2)
+    patch = g.patches[0]
+    where = Vector(patch.position.x, patch.position.y)
+    g.advance([Prey(where.x, where.y)])
+    assert patch.biomass == pytest.approx(0.2) and patch.regrow is None
+    assert patch.position.x == where.x and patch.position.y == where.y
+    for _ in range(50):
+        g.advance([])
+    assert patch.biomass > 0.35  # fast: from stubble, not from bare
+
+
+def test_stubble_patches_are_not_seen():
+    g = grazed(count=1, cluster_count=1, dispersal=False, stubble=0.2)
+    patch = g.patches[0]
+    observer = Prey(patch.position.x - 10, patch.position.y)
+    observer.velocity, observer.orientation = Vector(1, 0), 0.0
+    patch.biomass = 0.2
+    assert g.observation(observer, 200, 360)[0] == 0.0
+    patch.biomass = 0.6
+    seen = g.observation(observer, 200, 360)
+    assert seen[0] == 1.0 and seen[4] == pytest.approx(0.6) and len(seen) == 5
+
+
+def test_grazed_cluster_collapses_without_mature_patches_but_not_above_stubble_mature():
+    g = grazed(count=10, cluster_count=1, overgrazing=True, dispersal=False, stubble=0.2)
+    for p in g.patches:
+        p.biomass = MATURE - 0.2
+    g.advance([])
+    assert g.total_collapses == 1 and all(p.biomass == 0.0 and p.regrow == "centre" for p in g.patches)
+    g = grazed(count=10, cluster_count=1, overgrazing=True, dispersal=False, stubble=0.6, bite=1.0)
+    for _ in range(100):
+        g.advance([Prey(p.position.x, p.position.y, f"deer_{i}") for i, p in enumerate(g.patches)])
+    assert g.total_collapses == 0 and all(p.biomass >= 0.6 for p in g.patches)
+
+
+def test_grazed_settings_are_checked():
+    for bad in (dict(bite=0), dict(bite=1.5), dict(stubble=1.0), dict(stubble=-0.1), dict(stubble=True)):
+        with pytest.raises(ValueError):
+            grazed(**bad)
+
+
+def test_a_grazed_episode_runs_and_deer_gain_energy():
+    env = DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="grazed", max_time_steps=2000))
+    obs, _ = env.reset(seed=1)
+    assert env.obs_size["deer"] == 46 and env.obs_size["predator"] == 49
+    rng = np.random.default_rng(0)
+    gained = 0.0
+    for _ in range(200):
+        obs, _, t, tr, infos = env.step({a: int(rng.integers(48)) for a in env.active})
+        gained += sum(i.get("grass_eaten", 0) for i in infos.values())
+        if t["__all__"] or tr["__all__"]:
+            break
+    assert env.grass.total_consumed > 0 and gained > 0
+
+
+def test_two_deer_at_one_patch_take_one_bite_the_closer_one():
+    g = grazed(count=1, cluster_count=1, dispersal=False, bite=0.1, stubble=0.2)
+    patch = g.patches[0]
+    patch.biomass = 1.0
+    near, far = Prey(patch.position.x + 2, patch.position.y, "deer_1"), Prey(patch.position.x + 6, patch.position.y, "deer_0")
+    eaten = g.advance([far, near])
+    assert eaten == {"deer_1": pytest.approx(0.1)}
+    assert patch.biomass == pytest.approx(0.9)

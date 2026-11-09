@@ -18,6 +18,13 @@ Two ways of regrowing (regrowth):
   seed bank, and grows there from 0; a cluster collapses when it has no
   more mature patches than overgrazing_threshold of its patches. Patches
   start whole.
+- "grazed" (RESULTS.md section 4): biomass and growth as "logistic", but a
+  deer crops instead of uprooting. Each physics step, a patch in reach is
+  bitten by its closest deer, which takes bite of biomass (at most down to
+  stubble, below which it cannot graze) and gains that share of
+  energy_grass_gain. A grazed patch keeps its place and regrows from its
+  stubble. A cluster with no patch at MATURE or above collapses as under
+  "logistic" (killed back to bare, regrowing elsewhere).
 
 The procedures and the order of their random draws follow add_walls's
 GrassLayer exactly, without its wall handling; and stag_hunt_continuous's
@@ -30,7 +37,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-REGROWTH = ("instant", "logistic")
+REGROWTH = ("instant", "logistic", "grazed")
 MATURE = 0.5  # logistic regrowth: biomass of a patch that seeds and counts as living
 
 from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.geometry import Torus, Vector
@@ -79,12 +86,16 @@ class Grass:
         regrowth="instant",
         growth_rate=0.0187,
         root_reserve=0.01,
+        bite=0.1,
+        stubble=0.2,
     ):
         if regrowth not in REGROWTH:
             raise ValueError(f"grass_regrowth must be one of {REGROWTH}")
-        for name, value in (("growth_rate", growth_rate), ("root_reserve", root_reserve)):
+        for name, value in (("growth_rate", growth_rate), ("root_reserve", root_reserve), ("bite", bite)):
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not 0 < value <= 1:
                 raise ValueError(f"grass_{name} must be in (0, 1]")
+        if isinstance(stubble, bool) or not isinstance(stubble, (int, float)) or not math.isfinite(stubble) or not 0 <= stubble < 1:
+            raise ValueError("grass_stubble must be in [0, 1)")
         for name, value, minimum in (
             ("count", count, 0),
             ("respawn_delay", respawn_delay, 1),
@@ -139,9 +150,12 @@ class Grass:
         self.overgrazing_threshold = overgrazing_threshold
         self.overgrazing_delay = overgrazing_delay
         self.regrowth = regrowth
-        self.logistic = regrowth == "logistic"
+        self.logistic = regrowth in ("logistic", "grazed")  # biomass that grows
+        self.grazed = regrowth == "grazed"
         self.growth_rate = growth_rate
         self.root_reserve = root_reserve
+        self.bite = bite
+        self.stubble = stubble
         self.rng = random.Random()
         self.centres = []
         self.collapsed = []
@@ -211,7 +225,11 @@ class Grass:
         return patch.ready_at <= self.tick
 
     def edible(self, patch):
-        return self.available(patch) and (not self.logistic or patch.biomass > 0)
+        if not self.available(patch):
+            return False
+        if self.grazed:
+            return patch.biomass > self.stubble
+        return not self.logistic or patch.biomass > 0
 
     def mature(self, patch):
         """Logistic regrowth: a patch that seeds new ones and keeps its
@@ -231,7 +249,7 @@ class Grass:
         """One physics step: regrowth placement (and, logistic, growth),
         grazing by the living prey (each patch to the closest prey within
         consume_radius, ties by agent ID) and overgrazing. Returns {prey id:
-        patches eaten}, in whole patches (logistic: the biomass eaten)."""
+        patches eaten}, in whole patches (logistic, grazed: the biomass eaten)."""
         self.tick += 1
         for patch in self.patches:
             if patch.regrow is not None and self.available(patch):
@@ -251,7 +269,13 @@ class Grass:
                 distance = self.torus.distance(living[j].position, patch.position)
                 if distance <= self.consume_radius:
                     candidates.append((distance, living[j].id))
-            if candidates and self.logistic:
+            if candidates and self.grazed:
+                _, agent = min(candidates)
+                take = min(self.bite, patch.biomass - self.stubble)
+                eaten[agent] = eaten.get(agent, 0) + take
+                patch.biomass -= take
+                self.total_consumed += 1  # bites
+            elif candidates and self.logistic:
                 _, agent = min(candidates)
                 eaten[agent] = eaten.get(agent, 0) + patch.biomass
                 patch.biomass = 0.0
@@ -355,7 +379,8 @@ class Grass:
     def observation(self, observer, view_distance, fov):
         """The nearest edible patch in the observer's view cone, as
         [seen, dx / view_distance, dy / view_distance, distance /
-        view_distance] (logistic: and its biomass), or zeros."""
+        view_distance] (logistic, grazed: and its biomass), or zeros. Grazed:
+        patches at stubble are not edible, so not seen."""
         visible = []
         for patch in self.patches:
             if not self.edible(patch):

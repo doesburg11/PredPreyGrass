@@ -129,6 +129,10 @@ DEFAULT_CONFIG = {
     "grass_regrowth": "instant",
     "grass_growth_rate": 0.0187,
     "grass_root_reserve": 0.01,
+    # "grazed" only (RESULTS.md section 4): biomass a deer bites off a patch
+    # per physics step, and the stubble below which it cannot graze.
+    "grass_bite": 0.1,
+    "grass_stubble": 0.2,
     # Energy.
     "energy_predator_initial": 5.0,
     "energy_deer_initial": 2.0,
@@ -179,6 +183,8 @@ GRASS_KEYS = (
     "regrowth",
     "growth_rate",
     "root_reserve",
+    "bite",
+    "stubble",
 )
 BODY = ("radius", "mass", "max_velocity", "max_acceleration", "max_steer_force", "view_distance", "fov")
 
