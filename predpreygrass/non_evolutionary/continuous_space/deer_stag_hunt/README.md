@@ -60,14 +60,17 @@ decision early).
 
 **Grass regrowth (`grass_regrowth`).** Sections 1 and 2 of RESULTS.md ran with
 `"instant"` grass: an eaten patch is gone for 400 physics steps, then back whole.
-Since 2026-11-09 the default is `"logistic"`: each patch's biomass regrows
+The alternative, `"logistic"`: each patch's biomass regrows
 gradually, slowly when grazed short, fastest at half grown, slowly again near full
 (bare to 95% in about 400 physics steps). A deer eats all of a patch and gains that
 share of its energy (2 for a full patch), and deer see how grown the nearest patch is.
 Grass kept short barely regrows, so a deer sitting on a bare patch gains less than it
 spends at rest. Runs saved before the setting existed load with `"instant"` and
 reproduce exactly ([grass.py](grass.py), [tests/test_grass.py](tests/test_grass.py)).
-No training run has used logistic grass yet.
+The default is `"instant"`. With root reserve 0.01, logistic grass roughly halved the
+deer's food, since deer graze patches long before they are grown, and the runs of
+RESULTS.md section 3 were stopped (section 3.1); a calibration of the root reserve
+follows (section 3.2).
 
 **A second catching rule (`deer_catch_rule: "touch"`, tested in RESULTS.md
 section 2).** Only touching counts, with one rule for every deer: each touch is a

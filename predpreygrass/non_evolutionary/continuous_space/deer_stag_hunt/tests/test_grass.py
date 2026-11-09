@@ -22,9 +22,9 @@ def grass(**kw):
     return g
 
 
-def test_default_is_logistic_and_instant_still_available():
-    assert DEFAULT_CONFIG["grass_regrowth"] == "logistic"
-    assert DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="instant")).grass.regrowth == "instant"
+def test_default_is_instant_and_logistic_available():
+    assert DEFAULT_CONFIG["grass_regrowth"] == "instant"
+    assert DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="logistic")).grass.regrowth == "logistic"
     with pytest.raises(ValueError):
         DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="linear"))
     with pytest.raises(ValueError):
@@ -101,7 +101,7 @@ def test_cluster_collapses_without_mature_patches():
 
 
 def test_deer_and_predators_see_the_biomass_of_the_nearest_patch():
-    env = DeerStagHunt(dict(DEFAULT_CONFIG))
+    env = DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="logistic"))
     obs, _ = env.reset(seed=0)
     instant = DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="instant"))
     assert env.obs_size["deer"] == instant.obs_size["deer"] + 1
@@ -128,7 +128,7 @@ def test_old_run_settings_without_grass_regrowth_load_as_instant(tmp_path):
 
 
 def test_a_logistic_episode_runs_and_deer_graze():
-    env = DeerStagHunt(dict(DEFAULT_CONFIG, max_time_steps=2000))
+    env = DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="logistic", max_time_steps=2000))
     obs, _ = env.reset(seed=1)
     rng = np.random.default_rng(0)
     for _ in range(200):
@@ -156,7 +156,7 @@ def test_collapsed_cluster_recovers_rearms_and_can_collapse_again():
 
 
 def test_biomass_is_the_food_entry_after_distance_for_both_species():
-    env = DeerStagHunt(dict(DEFAULT_CONFIG))
+    env = DeerStagHunt(dict(DEFAULT_CONFIG, grass_regrowth="logistic"))
     env.reset(seed=0)
     patch = env.grass.patches[0]
     patch.biomass = 0.37

@@ -1,9 +1,10 @@
 """Deer stag hunt in continuous space for RLlib (README.md, DESIGN.md).
 
 Two species on a torus: predators (the hunters) and deer, which graze
-clustered grass (grass_regrowth "logistic", the default: patches regrow
-gradually; "instant", the world of RESULTS.md sections 1 and 2: an eaten
-patch is back whole after grass_respawn_delay; grass.py). Both learn (one PPO policy per species) and are rewarded
+clustered grass (grass_regrowth "instant", the default and the world of
+RESULTS.md sections 1 and 2: an eaten patch is back whole after
+grass_respawn_delay; "logistic": patches regrow gradually, being calibrated
+in RESULTS.md section 3; grass.py). Both learn (one PPO policy per species) and are rewarded
 only for births. A deer's energy sets how hard it is to catch:
 
 - fawn (energy <= deer_fawn_energy): a lone predator touching it catches it
@@ -119,11 +120,13 @@ DEFAULT_CONFIG = {
     "grass_overgrazing": True,
     "grass_overgrazing_threshold": 0.0,
     "grass_overgrazing_delay": 400,
-    # "logistic" (default): grass regrows gradually (grass.py); deer see the
-    # biomass of the nearest patch. "instant": an eaten patch is back whole
-    # after grass_respawn_delay (RESULTS.md sections 1 and 2; runs saved
-    # before this setting load with it, checkpoints.py).
-    "grass_regrowth": "logistic",
+    # "instant" (default): an eaten patch is back whole after
+    # grass_respawn_delay (RESULTS.md sections 1 and 2; runs saved before this
+    # setting load with it, checkpoints.py). "logistic": grass regrows
+    # gradually (grass.py); deer see the biomass of the nearest patch. Default
+    # back to "instant" on 2026-11-09: with root reserve 0.01 logistic grass
+    # halved the deer's food (RESULTS.md section 3.1); calibration pending.
+    "grass_regrowth": "instant",
     "grass_growth_rate": 0.0187,
     "grass_root_reserve": 0.01,
     # Energy.
