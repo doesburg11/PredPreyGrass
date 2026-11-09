@@ -467,3 +467,23 @@ iterations, its two verdicts and comparison), with only b0 changed; the runs are
 `logistic_b_1` to `logistic_b_3`, and the pilot does not enter them.
 **If it fails:** the logistic-grass line ends; the default stays instant. No second
 calibration, no other knob.
+
+**Calibration result (2026-11-09, 11:13; `results/grass_supply.json`).** Grass energy
+gained by deer per physics step, touch_1's final policies, 10 episodes each:
+
+| Grass | Energy per step | ÷ instant | Biomass per patch eaten | Mean deer | Mean hunters | Hunters extinct (of 10) |
+| --- | --- | --- | --- | --- | --- | --- |
+| instant | 0.475 | 1.00 | 1.03 | 42.0 | 8.9 | 0 |
+| b0 0.01 | 0.166 | 0.35 | 0.08 | 16.9 | 2.9 | 9 |
+| b0 0.02 | 0.180 | 0.38 | 0.07 | 19.2 | 2.5 | 6 |
+| b0 0.05 | 0.251 | 0.53 | 0.07 | 25.4 | 3.4 | 5 |
+| b0 0.1 | 0.349 | 0.73 | 0.08 | 31.1 | 5.7 | 0 |
+| b0 0.2 | 0.400 | 0.84 | 0.13 | 25.9 | 8.9 | 0 |
+| b0 0.5 | 0.495 | 1.04 | 0.19 | 32.3 | 11.2 | 0 |
+
+By the rule, **b0 = 0.5** (the only candidate near instant's supply). With it, bare grass
+reaches 0.95 in 144 physics steps (400 with b0 0.01), so regrowth is gradual but about
+three times faster than instant grass's 400-step wait, and deer keep patches grazed
+short (0.19 of a patch per bite), more like a lawn than a meadow. "Instant" counts a
+patch as 1 even when a deer ate two at once, hence biomass above 1. Pilot launched
+11:13 (`logistic_pilot`, systemd unit deer-logistic-pilot).
