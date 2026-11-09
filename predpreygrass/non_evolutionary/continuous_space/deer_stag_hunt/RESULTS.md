@@ -411,3 +411,29 @@ the bin counts are reported to judge this.
 (systemd-run needs the absolute path). Status in `runs/logistic.status`; results
 to `results/logistic_*` and `results/logistic_verdict.txt`,
 `results/logistic_energy_verdict.txt`.
+
+### 3.1 Stopped early (2026-11-09, 11:03)
+
+**No verdict.** The runs were stopped by the user's decision at iteration 287
+(logistic_1) and 280 (logistic_2); logistic_3 never started. Section 3's tests were
+not applied.
+
+**Why.** Training showed hunters barely breeding: 0.06-0.07 hunter births per episode
+at iteration 240-250 (touch_1 at the same point: 9.4), deer births 47-48 (touch_1:
+313), and short training episodes (19 per iteration against 2-3), with no improvement
+since about iteration 100. A look at logistic_1's iteration-240 checkpoint (4 episodes,
+taken at 10:55, before stopping; it changed no test) found hunters extinct in all 4,
+after 1825 to 3365 of 8000 physics steps, with about 23 deer on average (touch_3's
+final checkpoint: about 57).
+
+**What seems to cause it (exploratory, 3 episodes each).** Deer eat a patch by
+touching it, whatever its biomass, so under logistic grass they grazed patches at a
+mean biomass of 0.12-0.15, when regrowth from bare is still slow (0.13 after 147
+physics steps with root reserve 0.01). Deer gained 0.21-0.25 grass energy per physics
+step against 0.48 with instant grass (touch_1's final checkpoint), so section 3 changed
+the food supply as well as the way grass regrows, and probably mostly tested the
+former. The comparison is between different trained policies, so the numbers are only
+indicative.
+
+**What follows:** a calibration of logistic grass to section 2's food supply, decided
+with the user, set before any new training run.
