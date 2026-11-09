@@ -487,3 +487,9 @@ three times faster than instant grass's 400-step wait, and deer keep patches gra
 short (0.19 of a patch per bite), more like a lawn than a meadow. "Instant" counts a
 patch as 1 even when a deer ate two at once, hence biomass above 1. Pilot launched
 11:13 (`logistic_pilot`, systemd unit deer-logistic-pilot).
+
+**Amendment (2026-11-09, 11:20, user's decision, before the pilot's result):** if the
+pilot fails, this approach (logistic grass tuned by root reserve) ends as set, but the
+search for a more realistic grass than instant regrowth goes on as a new design (for
+example partial grazing: deer crop a patch and leave stubble that regrows), with its own
+pre-registration, pilot and hard stop. The default stays instant meanwhile.
