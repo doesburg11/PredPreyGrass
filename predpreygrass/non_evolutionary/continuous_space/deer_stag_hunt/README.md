@@ -28,7 +28,8 @@ energy. Defaults in [environment.py](environment.py) (`DEFAULT_CONFIG`):
 | Sees | 4 hunters and 2 deer (with their energy) in a 150° cone of 200 | 3 hunters and 3 deer in a 240° cone of 267 |
 
 Catching, by the deer's energy (a deer grows by grazing and gives birth at 7, which
-drops it to 4):
+drops it to 4), under the default rule (`deer_catch_rule: "party"`, section 1's runs;
+the touch rule of section 2 is below):
 
 | Deer | Energy | Hunter alone (no other hunter within 64 units) | Another hunter within 64 units of the deer |
 | --- | --- | --- | --- |
@@ -75,6 +76,17 @@ and two or more hunters touching a deer within 8 physics steps catch it and shar
 Hunters merely near a deer get nothing. The default stays `"party"`, the world above,
 so section 1's runs reproduce exactly.
 
+| Deer | Energy | One hunter touches it | Two or more hunters touch it within 8 physics steps | A hunter near but not touching |
+| --- | --- | --- | --- | --- |
+| Fawn | 2 or less | always caught, all for the toucher | caught, shared by the touchers | gets nothing |
+| Middle | 2 to 5 | caught with chance (5 − energy) / 3, all for the toucher | caught, shared by the touchers | gets nothing |
+| Adult | 5 or more | never caught | caught, shared by the touchers | gets nothing |
+
+Under this rule the 64-unit radius plays no part in catching. Section 2 still measures
+cooperation as an approach with another hunter within 64 units (below), to compare with
+section 1; that measures where hunters are, not how deer are caught. The measure that
+fits the touch rule is a joint touch (section 2.1, test C).
+
 ## How the animals learn
 
 Hunters and deer start with no knowledge. Each species has one neural network
@@ -98,7 +110,8 @@ evaluated:
   within 64 units? If hunters seek partners for adults, this should happen more often
   for adults than for fawns, and more often than chance. Chance is the share of all
   hunter time spent with another hunter that close, so hunters that simply stay
-  together do not count as cooperating.
+  together do not count as cooperating. (This 64-unit measure is used under both
+  catching rules; under the touch rule the radius plays no part in catching.)
 
 The tests, set before training (RESULTS.md, section 1): at least 45 of 50 episodes
 coexisting; adults approached with a partner near more often than fawns and than
