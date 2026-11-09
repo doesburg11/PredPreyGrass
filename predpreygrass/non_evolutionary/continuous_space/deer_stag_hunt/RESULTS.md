@@ -598,3 +598,66 @@ is tuned to whole patches returning at once: realistic grazing would need a re-b
 ecosystem (more grass, more energy per bite, or other changes), a project of its own,
 not a different growth rule. `"logistic"` and `"grazed"` stay in the code, untested for
 cooperation.
+
+## 5. Control world: young deer caught alone for certain (pre-registered 2026-11-09, before any code or training)
+
+**Question:** section 2.1 found hunters approaching the largest middle deer (energy
+4.5-5) with a partner near above chance, and teaming up on deer in (4, 5) nearly as
+often as on adults. It could not tell apart three explanations (section 2.1, limits):
+
+1. **payoff:** a partner pays for a middle deer above energy 3.5 (the strict stag hunt);
+2. **place:** big middle deer are where adults are, and hunters partner there anyway;
+3. **generalisation:** hunters treat big middle deer like adults, which differ by
+   energy only.
+
+**World:** section 2's touch world (instant grass) with one change: a lone touch catches
+a fawn or a middle deer for certain (`deer_young_solo: "certain"`; section 2: chance
+falling from 1 at energy 2 to 0 at energy 5). Adults are unchanged: caught only by two
+touchers within 8 physics steps. Two touchers still catch any deer together and share
+it. So a partner never pays for a young deer (a shared meal is half of a certain lone
+one), while places and adults, and so explanations 2 and 3, stay as they were.
+
+**Prediction:** if explanation 1 carries section 2.1's pattern, it disappears here. If
+explanations 2 or 3 carry it, it stays.
+
+**Runs:** three runs from scratch (`control_1`, `control_2`, `control_3`), 500 iterations
+(as agreed for section 3), 14 env runners, two at a time, then the third.
+
+**Validity:** young deer are easier to catch here, so the hunters get more food and may
+eat the deer out. A run counts only if its final checkpoint coexists in at least 45 of
+50 episodes (`evaluate.py`). Fewer than 2 valid runs: the control is inconclusive and
+stops (hard stop below).
+
+**Tests,** on each valid run's final checkpoint, with section 2.1's measure and tests A,
+B and C unchanged (`launchers/coop_by_energy.py`, 40 episodes, seeds 0-39, 95% bootstrap
+intervals over episodes).
+
+**Verdict** (`launchers/energy_verdict.py`, plus the two rules below):
+
+- **Payoff supported:** in at least 2 valid runs, B is not met **and** C's interval lies
+  entirely below 0.5 (teaming on big middle deer well under the adult level, as under
+  the party rule, 0.23-0.29). Section 2.1's pattern then needs the payoff of a partner
+  for middle deer; place and generalisation alone do not produce it.
+- **Payoff not supported:** in at least 2 valid runs, A, B and C are all met. Section
+  2.1's pattern then appears without that payoff, and its stag hunt reading is
+  withdrawn.
+- **Inconclusive:** anything else.
+
+**Comparison, no test:** touch_1-3 at iteration 500 (the same training length):
+touch_1 and touch_2 met A, B and C there, touch_3 met A and C. Also recorded: section
+1's tests 1-3 (adults with a partner near above chance should still hold, as adults
+still need two), joint share by energy bin, adults caught, hunter births, and young
+catches made by two.
+
+**Limits, set now:**
+
+- The worlds differ in food as well as payoff: certain catches feed the hunters more,
+  which may change their numbers, spacing and so chance. Chance is measured per world,
+  but a difference in B or C may still come partly from ecology.
+- Three runs per world; a "payoff supported" verdict rests on the absence of a pattern
+  in this world, shown by C's upper bound, not by a direct test of the difference
+  between worlds.
+- Place and generalisation are not separated from each other; only both from payoff.
+
+**Hard stop:** no setting changes during or after these runs, whatever the outcome,
+including if the validity rule fails. What follows is the user's decision.
