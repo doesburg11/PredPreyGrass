@@ -571,3 +571,10 @@ So the fixed-behaviour measure probably shows the old deer's habits, not what gr
 grass can supply. Under section 3.2's logistic grass this did not arise, as deer still
 ate a whole patch on touch. This was not foreseen when section 4 was pre-registered.
 How to proceed is the user's decision.
+
+**Amendment (2026-11-09, 12:10, user's decision, after seeing the calibration
+result):** the fixed-behaviour calibration is set aside for the grazed design, as it
+likely measures instant-trained deer's habits. The pilot goes ahead with stubble 0.1
+(the rule's choice) and trains deer and hunters from scratch, so it measures supply
+with deer that can learn to graze. Pilot and its bar unchanged (2.57). This is the only
+amendment: if the pilot fails, the grazed design ends.
