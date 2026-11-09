@@ -437,3 +437,33 @@ indicative.
 
 **What follows:** a calibration of logistic grass to section 2's food supply, decided
 with the user, set before any new training run.
+
+### 3.2 Calibrating logistic grass (pre-registered 2026-11-09, before any measurement)
+
+**Agreed with the user:** one knob, one calibration, one pilot, then a hard stop.
+
+**Knob:** the root reserve only (`grass_root_reserve`, b0), which sets how fast bare
+grass starts regrowing; growth rate 0.0187, energy per patch and everything else stay.
+A larger b0 means grass recovers from roots and stubble rather than from almost
+nothing, closer to how grazed grass regrows.
+
+**Target:** the deer's grass supply of section 2's world (instant grass), measured
+with fixed behaviour: touch_1's final policies for hunters and deer, in the touch-rule
+world, seeds 0-9, episodes of up to 8000 physics steps (`launchers/grass_supply.py`;
+under logistic grass the extra biomass input is removed so the policies see what they
+were trained with). Measure: grass energy gained by deer per physics step. Candidates:
+b0 = 0.01, 0.02, 0.05, 0.1, 0.2, 0.5. **Rule:** the candidate whose supply ÷ instant
+supply is closest to 1 (ties to the smaller) is chosen, whatever the other numbers.
+Limit: behaviour is that of policies trained with instant grass; trained logistic-grass
+deer may graze differently.
+
+**Pilot:** one training run (`logistic_pilot`), touch rule, logistic grass with the
+chosen b0, 150 iterations, 14 env runners. **Passes if** hunter births per episode
+(training log, `births_predator`), averaged over iterations 141-150, are at least 2.57,
+half the mean of touch_1-3 over the same iterations (5.39, 5.03, 4.99; mean 5.14).
+
+**If it passes:** section 3's replication as pre-registered there (three runs of 500
+iterations, its two verdicts and comparison), with only b0 changed; the runs are named
+`logistic_b_1` to `logistic_b_3`, and the pilot does not enter them.
+**If it fails:** the logistic-grass line ends; the default stays instant. No second
+calibration, no other knob.
