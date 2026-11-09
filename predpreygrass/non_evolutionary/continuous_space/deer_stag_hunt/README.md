@@ -57,7 +57,7 @@ middle deer above energy 3.5, and is required for an adult.
 Episodes last 8000 physics steps (about 1,400 decisions, since a birth ends a
 decision early).
 
-**A second catching rule (`deer_catch_rule: "touch"`, being tested in RESULTS.md
+**A second catching rule (`deer_catch_rule: "touch"`, tested in RESULTS.md
 section 2).** Only touching counts, with one rule for every deer: each touch is a
 solo attempt with the chance above (0 for an adult), a failed attempt costs a wait,
 and two or more hunters touching a deer within 8 physics steps catch it and share it.
@@ -112,6 +112,24 @@ adults were above chance in all three runs, but part of the gap between adults a
 fawns may come from avoiding sharing rather than seeking partners. Details in [RESULTS.md](RESULTS.md); written up for a general
 reader, with an animation and a results chart, on the site page
 [A Replicated Stag Hunt](https://humanbehaviorpatterns.org/learning-selection-interaction/predpreygrass-continuous/deer-stag-hunt).
+
+**With only touching counting (RESULTS.md section 2): replicated, in all three runs.**
+Under the touch rule (`touch_1` to `touch_3`), hunters and deer coexisted in 50 of 50
+episodes in every run, and adults were approached with a partner near 1.12, 1.21 and
+1.15 times as often as chance, intervals above zero. So the party rule for young deer
+was not needed for this result. The same limits apply: the effect is small, and adult
+catches again fell late in training (by 25 to 44%).
+
+**Partnering where it pays but is not required (section 2.1): pattern shown, in 2 of 3
+runs.** Under the touch rule a middle deer can be caught alone by chance or by two
+hunters for certain, and a partner pays more for the larger ones. Hunters approached
+the largest middle deer (energy 4.5 to 5) with a partner near slightly above chance
+(1.09 to 1.15 times) and teamed up on them nearly as often as on adults; under the
+party rule they did neither. This is consistent with the stag hunt in its strict sense,
+pairing without being forced, but with hedges: the tests were set after a look at
+interim checkpoints of two of the runs (the third, not looked at, met them), the margins
+are 1 to 2 percentage points, and big middle deer may share places with adults or be
+treated like them; a control world in which adults can be caught alone was not run.
 
 ## Origin
 

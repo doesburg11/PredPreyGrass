@@ -219,3 +219,119 @@ section.
 **Running:** `launchers/run_energy.sh` waits for section 2's runs and evaluations, then
 runs all of the above. Results to `results/<run>_energy.json` and
 `results/energy_verdict.txt`. No setting changes; hard stop as in section 2.
+
+### 2.2 Results (2026-11-09)
+
+**Section 2 verdict: replicated.** `launchers/verdict.py touch_1 touch_2 touch_3`: all
+three runs meet all three tests (needed: 2 of 3).
+
+Final checkpoints (iteration 1000), the tests:
+
+| Run | Coexisting (of 50) | Chance | Fawn share | Adult share | Adult ÷ chance | Adult − chance, 95% interval | Tests met |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| touch_1 | 50 | 0.132 | 0.093 | 0.148 | 1.12 | [0.006, 0.026] | 1, 2, 3 |
+| touch_2 | 50 | 0.142 | 0.099 | 0.171 | 1.21 | [0.023, 0.036] | 1, 2, 3 |
+| touch_3 | 50 | 0.082 | 0.054 | 0.095 | 1.15 | [0.004, 0.021] | 1, 2, 3 |
+
+Also recorded (not tests). "Young by two" is the share of fawn and middle deer
+catches made by two or more touchers (under the touch rule the only way to share a
+young deer); section 1's runs are given for comparison, where the same column is the
+share of young catches shared with a hunter near (the party rule).
+
+| Run | Checkpoint | Coexisting | Adult ÷ chance | Adult − chance, 95% interval | Episodes adult > chance (of 20) | Adult energy share | Adults caught (50 episodes) | Hunter births (50 episodes) | Young by two |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| touch_1 | 250 | 50 | 1.16 | [0.015, 0.036] | 17 | 0.074 | 1277 | 1210 | 0.031 |
+| | 500 | 50 | 1.10 | [0.006, 0.024] | 15 | 0.074 | 1283 | 1089 | 0.040 |
+| | 1000 | 50 | 1.12 | [0.006, 0.026] | 16 | 0.050 | 721 | 891 | 0.029 |
+| touch_2 | 250 | 50 | 1.20 | [0.017, 0.038] | 17 | 0.076 | 1293 | 1185 | 0.030 |
+| | 500 | 50 | 1.14 | [0.012, 0.032] | 16 | 0.083 | 1421 | 1117 | 0.039 |
+| | 1000 | 50 | 1.21 | [0.023, 0.036] | 19 | 0.070 | 1060 | 949 | 0.033 |
+| touch_3 | 250 | 50 | 1.10 | [0.002, 0.020] | 17 | 0.052 | 811 | 1073 | 0.022 |
+| | 500 | 50 | 1.07 | [−0.000, 0.015] | 13 | 0.048 | 697 | 920 | 0.022 |
+| | 1000 | 50 | 1.15 | [0.004, 0.021] | 12 | 0.032 | 399 | 743 | 0.018 |
+| run_1 (party) | 1000 | 43 | 1.20 | [0.002, 0.028] | 11 | 0.030 | 243 | 439 | 0.084 |
+| run_2 (party) | 1000 | 49 | 1.23 | [0.024, 0.045] | 18 | 0.075 | 1130 | 920 | 0.164 |
+| run_3 (party) | 1000 | 50 | 1.15 | [0.010, 0.027] | 16 | 0.055 | 706 | 740 | 0.129 |
+
+**What section 2 shows.** Section 1's result held when only touching counts: 50 of 50
+episodes coexisting in all three runs, at every checkpoint, and adults approached with
+a partner near 1.12-1.21 times chance at iteration 1000, intervals above zero. So in
+this world the party rule for young deer was not needed for coexistence or for adult
+approaches above chance. Coexistence was, if anything, steadier than under the party
+rule (150 of 150 against 142 of 150), though three runs per rule cannot establish a
+difference.
+
+**Limits of section 2.**
+
+- **The effect is small**, as in section 1: adults are 1.5-3.2% of the deer caught at
+  iteration 1000 and give 3-7% of the hunters' energy from deer.
+- **Late decline again.** From iteration 500 to 1000, adult catches fell by 44% in
+  touch_1, 25% in touch_2 and 43% in touch_3, hunter births with them, though no run
+  lost its hunters. Section 1 saw the same in two of three runs; why is still not known.
+- **touch_3 is borderline in places:** at iteration 500 its adult − chance interval
+  touched zero, and at iteration 1000 adults beat chance in only 12 of 20 episodes. Its
+  hunters also spent much less time near each other (chance 0.08 against 0.13-0.14).
+- The measure is still approach with a partner near (section 1.1, limits), although
+  under this rule a hunter near gets nothing. Teaming up on young deer is rare: 2-3%
+  of young catches are made by two touchers.
+
+**Section 2.1 verdict: pattern shown.** `launchers/energy_verdict.py`: touch_2 and touch_3
+meet A, B and C; touch_1 meets A and C and misses B narrowly (interval [−0.001, +0.025]).
+
+| Run | A: near (4,5) − near (2,3.5] | B: near (4.5,5) − chance | C: joint (4,5) ÷ joint adult | Tests met |
+| --- | --- | --- | --- | --- |
+| touch_1 | +0.043 [+0.029, +0.056] | +0.012 [−0.001, +0.025] | 0.92 [0.84, 1.02] | A, C |
+| touch_2 | +0.059 [+0.048, +0.070] | +0.019 [+0.008, +0.029] | 0.86 [0.76, 0.97] | A, B, C |
+| touch_3 (not looked at before) | +0.032 [+0.022, +0.043] | +0.013 [+0.002, +0.024] | 0.86 [0.71, 1.05] | A, B, C |
+| *comparison, no test:* | | | | |
+| run_1 (party) | +0.019 [+0.010, +0.029] | −0.007 [−0.014, +0.001] | 0.29 [0.22, 0.37] | A |
+| run_2 (party) | +0.043 [+0.032, +0.055] | −0.027 [−0.036, −0.019] | 0.24 [0.20, 0.28] | A |
+| run_3 (party) | +0.035 [+0.027, +0.044] | −0.023 [−0.033, −0.013] | 0.23 [0.18, 0.28] | A |
+| touch_1, iteration 500 | +0.069 [+0.055, +0.081] | +0.028 [+0.017, +0.039] | 1.00 [0.91, 1.11] | A, B, C |
+| touch_2, iteration 500 | +0.064 [+0.055, +0.072] | +0.022 [+0.011, +0.032] | 0.89 [0.82, 0.97] | A, B, C |
+| touch_3, iteration 500 | +0.038 [+0.027, +0.049] | +0.004 [−0.005, +0.013] | 0.84 [0.76, 0.93] | A, C |
+
+Near share ÷ chance and joint share by the deer's energy, final checkpoints (40
+episodes each; from `results/<run>_energy.json`):
+
+| Deer energy | touch_1 near ÷ chance | touch_2 | touch_3 | run_1 (party) | run_2 (party) | run_3 (party) | touch_1 joint | touch_2 | touch_3 | run_1 (party) | run_2 (party) | run_3 (party) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ≤ 2 (fawn) | 0.75 | 0.70 | 0.69 | 0.80 | 0.76 | 0.79 | 0.010 | 0.010 | 0.005 | 0.006 | 0.014 | 0.010 |
+| 2-2.5 | 0.58 | 0.56 | 0.72 | 0.64 | 0.44 | 0.56 | 0.009 | 0.004 | 0.007 | 0.004 | 0.011 | 0.007 |
+| 2.5-3 | 0.66 | 0.47 | 0.63 | 0.54 | 0.49 | 0.36 | 0.024 | 0.015 | 0.013 | 0.003 | 0.009 | 0.000 |
+| 3-3.5 | 0.74 | 0.65 | 0.62 | 0.45 | 0.49 | 0.49 | 0.035 | 0.031 | 0.019 | 0.003 | 0.010 | 0.003 |
+| 3.5-4 | 0.90 | 0.79 | 0.83 | 0.71 | 0.76 | 0.76 | 0.049 | 0.049 | 0.027 | 0.007 | 0.016 | 0.013 |
+| 4-4.5 | 0.97 | 0.88 | 0.90 | 0.65 | 0.72 | 0.70 | 0.063 | 0.070 | 0.034 | 0.009 | 0.023 | 0.014 |
+| 4.5-5 | 1.09 | 1.13 | 1.15 | 0.91 | 0.82 | 0.81 | 0.082 | 0.093 | 0.045 | 0.016 | 0.030 | 0.021 |
+| ≥ 5 (adult) | 1.09 | 1.21 | 1.10 | 1.17 | 1.23 | 1.14 | 0.079 | 0.095 | 0.045 | 0.043 | 0.109 | 0.077 |
+
+**What section 2.1 shows.** Under the touch rule, where nothing forces a partner for a
+middle deer, hunters approached the largest middle deer (energy 4.5-5) with a partner
+near slightly more often than chance (1.09-1.15 times) and teamed up on deer in (4, 5)
+nearly as often as on adults (ratio 0.86-0.92). Under the party rule neither held:
+the largest middle deer stayed below chance and joint touches on them were a quarter
+of the adult level. touch_3, the one run not looked at before the tests were set,
+met all three tests. Within this world, the pattern is consistent with hunters
+pairing up where a partner pays without being required, the stag hunt in its strict
+sense.
+
+**Limits of section 2.1.**
+
+- **Not an independent confirmation.** The tests were set after a first look at
+  touch_1 and touch_2 (earlier checkpoints), with B and C's form and C's threshold
+  informed by that look. touch_3 alone was not looked at; it met all tests, a single
+  run.
+- **Small effects.** B's margins are 1-2 percentage points; touch_1 missed B by 0.1
+  points at its lower bound, and touch_3 missed B at iteration 500. Joint touches are
+  rare: at most 9.5% of approaches in the touch-rule runs, adults included.
+- **Not proof of choosing by payoff.** The rise crosses chance near energy 4.5, not at
+  the payoff break-even 3.5. Large middle deer may share places with adults, or
+  hunters may treat them like adults (they differ by energy only), which a C ratio
+  near 1 would also show. A control world in which adults can be caught alone would
+  separate place and generalisation from cooperation; it was not run.
+- **The comparison with the party rule is between worlds trained apart,** so the
+  differences in B and C may come from any difference the rule makes, not from payoff
+  alone.
+
+**Hard stop reached.** No world changes followed these runs; the next step is the
+user's decision.

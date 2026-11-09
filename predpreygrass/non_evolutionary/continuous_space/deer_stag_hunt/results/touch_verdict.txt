@@ -1,0 +1,4 @@
+touch_1: coexisting 50/50; chance 0.132, fawn 0.09330714185491792, adult 0.14803682134134885, adult/chance 1.1192273381383937, interval [0.0060057341289457, 0.025835665457705714]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+touch_2: coexisting 50/50; chance 0.142, fawn 0.09940714187232869, adult 0.1707236842105263, adult/chance 1.2062396228663588, interval [0.022590932112673212, 0.03622177962307674]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+touch_3: coexisting 50/50; chance 0.082, fawn 0.054466230936819175, adult 0.09483454398708636, adult/chance 1.1504934253027042, interval [0.003635846707684215, 0.020945058181306583]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+replicated

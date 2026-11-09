@@ -1,0 +1,13 @@
+Section 2.1 tests (A: near (4,5) - near (2,3.5] > 0; B: near (4.5,5) - chance > 0; C: joint (4,5) / joint adult > 0.5; 95% intervals over episodes)
+  touch_1          episodes  40  A +0.043 [+0.029, +0.056] met  B +0.012 [-0.001, +0.025] not met  C +0.922 [+0.837, +1.018] met
+  touch_2          episodes  40  A +0.059 [+0.048, +0.070] met  B +0.019 [+0.008, +0.029] met  C +0.861 [+0.764, +0.973] met
+  touch_3          episodes  40  A +0.032 [+0.022, +0.043] met  B +0.013 [+0.002, +0.024] met  C +0.862 [+0.710, +1.050] met
+runs meeting A, B and C: 2 of 3 (needed: 2)
+verdict: pattern shown
+comparison (no test):
+  run_1            episodes  40  A +0.019 [+0.010, +0.029] met  B -0.007 [-0.014, +0.001] not met  C +0.291 [+0.223, +0.370] not met
+  run_2            episodes  40  A +0.043 [+0.032, +0.055] met  B -0.027 [-0.036, -0.019] not met  C +0.241 [+0.200, +0.282] not met
+  run_3            episodes  40  A +0.035 [+0.027, +0.044] met  B -0.023 [-0.033, -0.013] not met  C +0.227 [+0.183, +0.277] not met
+  touch_1_iter500  episodes  40  A +0.069 [+0.055, +0.081] met  B +0.028 [+0.017, +0.039] met  C +1.003 [+0.909, +1.105] met
+  touch_2_iter500  episodes  40  A +0.064 [+0.055, +0.072] met  B +0.022 [+0.011, +0.032] met  C +0.894 [+0.817, +0.973] met
+  touch_3_iter500  episodes  40  A +0.038 [+0.027, +0.049] met  B +0.004 [-0.005, +0.013] not met  C +0.839 [+0.757, +0.929] met
