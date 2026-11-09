@@ -389,11 +389,12 @@ def test_old_run_settings_without_the_catch_rule_load_as_party(tmp_path):
 
     from predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.checkpoints import checkpoint_env_config
 
-    old = {k: v for k, v in DEFAULT_CONFIG.items() if k != "deer_catch_rule"}
+    old = {k: v for k, v in DEFAULT_CONFIG.items() if k not in ("deer_catch_rule", "deer_young_solo")}
     (tmp_path / "source_code").mkdir()
     (tmp_path / "source_code" / "settings.json").write_text(json.dumps({"config_env": old, "config_ppo": {}}))
     (tmp_path / "checkpoint").mkdir()
-    assert checkpoint_env_config(tmp_path / "checkpoint")["deer_catch_rule"] == "party"
+    config = checkpoint_env_config(tmp_path / "checkpoint")
+    assert config["deer_catch_rule"] == "party" and config["deer_young_solo"] == "graded"
 
 
 def test_touch_rule_one_hunter_touching_again_after_its_wait_is_not_two_touchers():
@@ -473,3 +474,45 @@ def test_party_rule_given_explicitly_is_the_default_world_draw_for_draw():
         if not a.active:
             break
     assert a.catch_rng.random() == b.catch_rng.random()
+
+
+def test_young_solo_certain_needs_the_touch_rule_and_a_known_value():
+    assert DEFAULT_CONFIG["deer_young_solo"] == "graded"
+    with pytest.raises(ValueError):
+        DeerStagHunt(dict(DEFAULT_CONFIG, deer_young_solo="certain"))
+    with pytest.raises(ValueError):
+        DeerStagHunt(dict(DEFAULT_CONFIG, deer_catch_rule="touch", deer_young_solo="other"))
+
+
+@pytest.mark.parametrize("energy", [2.0, 3.0, 4.5, 4.999])
+def test_young_solo_certain_a_lone_hunter_catches_any_young_deer_without_a_draw(energy):
+    env = world(deer_catch_rule="touch", deer_young_solo="certain")
+    deer = deer_at(env, energy)
+    hunter = env.predators[0]
+    place(hunter, 420, 300)
+    env.catch_rng.random = lambda: pytest.fail("a certain catch draws no number")
+    before = hunter.energy
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_solo"] == 1 and env.stats["young_failures"] == 0
+    assert hunter.energy == pytest.approx(before + 0.5 * energy - env.resting_cost["predator"])
+
+
+def test_young_solo_certain_adults_still_need_two_and_two_still_share_a_young_deer():
+    env = world(deer_catch_rule="touch", deer_young_solo="certain")
+    deer = deer_at(env, 5.0)
+    place(env.predators[0], 420, 300)
+    env.catch_rng.random = lambda: pytest.fail("an adult draws no number")
+    env.step(stop(env))
+    assert deer.alive and env.stats["adult_failures"] == 1 and env.stats["adults_caught"] == 0
+
+    env = world(deer_catch_rule="touch", deer_young_solo="certain")
+    deer = deer_at(env, 4.5)
+    a, b = env.predators[:2]
+    place(a, 420, 300)
+    place(b, 380, 300)
+    before = [a.energy, b.energy]
+    env.step(stop(env))
+    assert not deer.alive and env.stats["young_caught_party"] == 1
+    cost = env.resting_cost["predator"]
+    assert a.energy == pytest.approx(before[0] + 0.5 * 4.5 / 2 - cost)
+    assert b.energy == pytest.approx(before[1] + 0.5 * 4.5 / 2 - cost)

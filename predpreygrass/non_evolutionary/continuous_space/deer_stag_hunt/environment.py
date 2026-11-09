@@ -37,6 +37,11 @@ one rule covers every deer, and hunters merely near a deer play no part:
   attempt), it is caught, whatever its size, and shared evenly among those
   touchers only. Two touching at once draw no solo chance.
 
+With deer_young_solo "certain" (only under "touch"; RESULTS.md section 5's
+control world) a lone ready touch catches every fawn and middle deer for
+certain, without a draw; adults are unchanged. The default "graded" is the
+falling chance above.
+
 Statistics keep their names: under "touch", young_caught_party counts young
 deer caught by two or more touchers.
 
@@ -167,6 +172,8 @@ DEFAULT_CONFIG = {
     "deer_touch_window": 8,
     # "party" (default) or "touch" (module docstring).
     "deer_catch_rule": "party",
+    # "graded" (default) or "certain" (module docstring; "touch" only).
+    "deer_young_solo": "graded",
 }
 
 GRASS_KEYS = (
@@ -313,6 +320,7 @@ class DeerStagHunt(MultiAgentEnv):
         self.catch_cooldown = c["deer_catch_cooldown"]
         self.touch_window = c["deer_touch_window"]
         self.catch_rule = c["deer_catch_rule"]
+        self.young_solo = c["deer_young_solo"]
         self._validate()
 
         # Predators: self, slots, food, own energy, the energy of each deer
@@ -390,6 +398,10 @@ class DeerStagHunt(MultiAgentEnv):
                 raise ValueError(f"{key} must be a nonnegative integer")
         if c["deer_catch_rule"] not in ("party", "touch"):
             raise ValueError('deer_catch_rule must be "party" or "touch"')
+        if c["deer_young_solo"] not in ("graded", "certain"):
+            raise ValueError('deer_young_solo must be "graded" or "certain"')
+        if c["deer_young_solo"] == "certain" and c["deer_catch_rule"] != "touch":
+            raise ValueError('deer_young_solo "certain" needs deer_catch_rule "touch"')
 
     # --- Episode ---------------------------------------------------------
 
@@ -617,6 +629,8 @@ class DeerStagHunt(MultiAgentEnv):
         return catcher, aways
 
     def _solo_chance(self, deer):
+        if self.young_solo == "certain" and deer.energy < self.adult_energy:
+            return 1.0
         return min(1.0, max(0.0, (self.adult_energy - deer.energy) / (self.adult_energy - self.fawn_energy)))
 
     def _touch_catch(self, deer, touching, adult):

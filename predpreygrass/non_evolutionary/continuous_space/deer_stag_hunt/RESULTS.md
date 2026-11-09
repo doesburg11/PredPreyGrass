@@ -659,5 +659,11 @@ catches made by two.
   between worlds.
 - Place and generalisation are not separated from each other; only both from payoff.
 
+**Running:** `launchers/run_control.sh` (systemd unit `deer-control`, status
+`runs/control.status`) checks the settings against touch_1's before and after training,
+evaluates iterations 250 and 500, and writes `results/control_verdict.txt` (section 5's
+verdict, valid runs only) and, recorded only, `results/control_section1_tests.txt` and
+`results/control_energy_tests.txt` (all three runs).
+
 **Hard stop:** no setting changes during or after these runs, whatever the outcome,
 including if the validity rule fails. What follows is the user's decision.
