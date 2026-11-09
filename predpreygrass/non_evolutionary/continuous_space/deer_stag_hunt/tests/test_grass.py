@@ -268,3 +268,65 @@ def test_two_deer_at_one_patch_take_one_bite_the_closer_one():
     eaten = g.advance([far, near])
     assert eaten == {"deer_1": pytest.approx(0.1)}
     assert patch.biomass == pytest.approx(0.9)
+
+
+def test_a_patch_kept_short_dies_back_and_reseeds_next_to_a_mature_one():
+    g = grazed(count=40, cluster_count=1, dispersal_distance=1.0, bite=1.0, stubble=0.2, dieback_delay=50)
+    parent = g.patches[5]
+    victim = g.patches[0]
+    deer = Prey(victim.position.x, victim.position.y)
+    start = (victim.position.x, victim.position.y)
+    for step in range(60):
+        g.advance([deer])  # cropped to stubble every step
+        if victim.biomass == 0.0:  # died back (only then is it bare)
+            break
+    assert step == 50 and g.total_diebacks >= 1  # last mature at tick 1 (before its first bite)
+    assert (victim.position.x, victim.position.y) != start and victim.regrow is None
+    near_mature = [p for p in g.patches if p is not victim and p.biomass >= MATURE and g.torus.distance(p.position, victim.position) < 8]
+    assert near_mature and parent.biomass >= MATURE
+
+
+def test_light_grazing_does_not_kill():
+    g = grazed(count=1, cluster_count=1, dispersal=False, bite=1.0, stubble=0.2, dieback_delay=100)
+    patch = g.patches[0]
+    where = (patch.position.x, patch.position.y)
+    for step in range(1000):
+        g.advance([Prey(*where)] if patch.biomass >= 0.6 else [])  # grazed only when tall again
+    assert g.total_diebacks == 0
+
+
+def test_dieback_delay_is_checked():
+    for bad in (0, 1.5, True):
+        with pytest.raises(ValueError):
+            grazed(dieback_delay=bad)
+
+
+def test_a_collapsing_cluster_does_not_die_back_first():
+    g = grazed(count=10, cluster_count=1, overgrazing=True, dieback_delay=5)
+    for p in g.patches:
+        p.biomass = 0.3
+        p.short_since = -100  # timers long expired
+    g.advance([])
+    assert g.total_collapses == 1 and g.total_diebacks == 0
+    assert all(p.regrow == "centre" for p in g.patches)
+
+
+def test_growing_to_mature_then_bitten_below_resets_the_clock():
+    g = grazed(count=1, cluster_count=1, dispersal=False, bite=0.02, stubble=0.2, dieback_delay=20)
+    patch = g.patches[0]
+    where = (patch.position.x, patch.position.y)
+    patch.biomass = MATURE - 0.001
+    for _ in range(200):  # grows just past MATURE, bitten just below it, every step
+        patch.biomass = MATURE - 0.001
+        g.advance([Prey(*where)])
+        assert patch.biomass < MATURE
+    assert g.total_diebacks == 0
+
+
+def test_unavailable_time_does_not_count_toward_dieback():
+    g = grazed(count=1, cluster_count=1, dispersal=False, overgrazing=False, dieback_delay=20)
+    patch = g.patches[0]
+    patch.biomass, patch.ready_at = 0.3, 50
+    for _ in range(50):
+        g.advance([])
+    assert g.total_diebacks == 0 and patch.short_since == 49

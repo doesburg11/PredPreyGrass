@@ -23,8 +23,11 @@ Two ways of regrowing (regrowth):
   bitten by its closest deer, which takes bite of biomass (at most down to
   stubble, below which it cannot graze) and gains that share of
   energy_grass_gain. A grazed patch keeps its place and regrows from its
-  stubble. A cluster with no patch at MATURE or above collapses as under
-  "logistic" (killed back to bare, regrowing elsewhere).
+  stubble. A patch kept short (below MATURE) for dieback_delay physics steps
+  dies and re-seeds next to a mature patch of its cluster (dispersal), from
+  bare: sustained grazing moves grass, light grazing does not. A cluster
+  with no patch at MATURE or above collapses as under "logistic" (killed back
+  to bare, regrowing elsewhere).
 
 The procedures and the order of their random draws follow add_walls's
 GrassLayer exactly, without its wall handling; and stag_hunt_continuous's
@@ -48,6 +51,7 @@ class GrassPatch:
     position: Vector
     ready_at: float = 0
     biomass: float = 1.0  # used by logistic regrowth only
+    short_since: int = 0  # grazed: the last physics step it was mature, placed or unavailable
     cluster: int | None = None
     # Where the patch regrows when it does: None keeps its spot, "disperse"
     # next to a living patch of its cluster, "centre" around the centre.
@@ -88,6 +92,7 @@ class Grass:
         root_reserve=0.01,
         bite=0.1,
         stubble=0.2,
+        dieback_delay=400,
     ):
         if regrowth not in REGROWTH:
             raise ValueError(f"grass_regrowth must be one of {REGROWTH}")
@@ -101,6 +106,7 @@ class Grass:
             ("respawn_delay", respawn_delay, 1),
             ("cluster_count", cluster_count, 1),
             ("overgrazing_delay", overgrazing_delay, 1),
+            ("dieback_delay", dieback_delay, 1),
         ):
             if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
                 raise ValueError(f"grass_{name} must be an integer >= {minimum}")
@@ -156,6 +162,8 @@ class Grass:
         self.root_reserve = root_reserve
         self.bite = bite
         self.stubble = stubble
+        self.dieback_delay = dieback_delay
+        self.total_diebacks = 0
         self.rng = random.Random()
         self.centres = []
         self.collapsed = []
@@ -179,6 +187,7 @@ class Grass:
         self.tick = 0
         self.total_consumed = 0
         self.total_collapses = 0
+        self.total_diebacks = 0
 
     def grid(self):
         """Columns and rows of the grid that spreads clusters over the arena
@@ -256,6 +265,10 @@ class Grass:
                 self.place(patch)
         if self.logistic:
             self.grow()
+        if self.grazed:  # mature after growing counts, even if bitten below it now
+            for patch in self.patches:
+                if patch.regrow is None and self.available(patch) and patch.biomass >= MATURE:
+                    patch.short_since = self.tick
         eaten = {}
         living = [p for p in prey if p.alive]
         near = self.prey_in_reach(living)
@@ -296,7 +309,29 @@ class Grass:
                 self.total_consumed += 1
         if self.overgrazing:
             self.check_overgrazing()
+        if self.grazed:  # after collapses: a collapsing cluster's patches do not die back
+            self.die_back()
         return eaten
+
+    def die_back(self):
+        """Grazed: a patch kept below MATURE for dieback_delay physics steps
+        dies and re-seeds (next to a mature patch of its cluster, with
+        dispersal), growing from bare."""
+        for patch in self.patches:
+            if patch.regrow is not None or not self.available(patch):
+                patch.short_since = self.tick  # the clock runs only while the patch grows
+                continue
+            if patch.biomass >= MATURE:
+                patch.short_since = self.tick
+            elif self.tick - patch.short_since >= self.dieback_delay:
+                patch.biomass = 0.0
+                self.total_diebacks += 1
+                if self.random_respawn:
+                    patch.position = self.spot(patch.cluster)
+                elif self.dispersal:
+                    patch.regrow = "disperse"
+                    self.place(patch)
+                patch.short_since = self.tick
 
     def prey_in_reach(self, prey):
         """{patch index: indices into prey} of the prey that may be within
@@ -340,6 +375,7 @@ class Grass:
         elif patch.regrow == "centre":
             patch.position = self.spot(patch.cluster)
         patch.regrow = None
+        patch.short_since = self.tick
 
     def check_overgrazing(self):
         """Collapse clusters grazed down to the threshold; re-arm recovered
