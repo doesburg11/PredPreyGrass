@@ -546,3 +546,28 @@ enter them.
 tuning of bite, dieback or anything else; the default stays instant. If the
 replication runs, no setting changes whatever the outcome. What follows is the user's
 decision.
+
+### 4.1 Calibration (2026-11-09, 12:05): failed by the rule
+
+`results/grass_supply_stubble.json`, touch_1's final policies, 10 episodes each:
+
+| Grass | Energy per step | ÷ instant | Biomass per bite | Mean deer | Mean hunters | Hunters extinct (of 10) | Collapses | Diebacks |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| instant | 0.475 | 1.00 | 1.03 | 42.0 | 8.9 | 0 | 380 | 0 |
+| stubble 0.05 | 0.192 | 0.40 | 0.03 | 20.1 | 3.1 | 8 | 96 | 569 |
+| stubble 0.1 | 0.214 | 0.45 | 0.03 | 25.1 | 2.7 | 3 | 116 | 713 |
+| stubble 0.2 | 0.183 | 0.39 | 0.04 | 22.4 | 2.8 | 8 | 150 | 156 |
+| stubble 0.3 | 0.160 | 0.34 | 0.05 | 20.0 | 2.8 | 8 | 155 | 7 |
+| stubble 0.4 | 0.183 | 0.38 | 0.05 | 21.9 | 3.2 | 8 | 150 | 0 |
+
+The closest candidate, stubble 0.1, gives 0.45 of instant grass's supply, outside 0.8 to
+1.25: by section 4's rule the design fails at calibration.
+
+**A likely flaw in the measure (stated after the result).** The supply hardly changes
+with the stubble height, and bites are tiny (0.03-0.05 of a patch). touch_1's deer were
+trained on instant grass, where a touch gives a whole patch at once; under grazed grass
+a whole patch takes about 8 physics steps of staying, which these deer never learned.
+So the fixed-behaviour measure probably shows the old deer's habits, not what grazed
+grass can supply. Under section 3.2's logistic grass this did not arise, as deer still
+ate a whole patch on touch. This was not foreseen when section 4 was pre-registered.
+How to proceed is the user's decision.
