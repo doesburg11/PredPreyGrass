@@ -493,3 +493,16 @@ pilot fails, this approach (logistic grass tuned by root reserve) ends as set, b
 search for a more realistic grass than instant regrowth goes on as a new design (for
 example partial grazing: deer crop a patch and leave stubble that regrows), with its own
 pre-registration, pilot and hard stop. The default stays instant meanwhile.
+
+**Pilot result (2026-11-09, 12:00): passed.** logistic_pilot (b0 0.5, 150 iterations):
+hunter births per episode averaged over iterations 141-150 were 11.01 (bar 2.57;
+touch_1-3 over the same iterations 4.99-5.39), deer births 203.1 (touch_1-3: 190-194).
+So with the deer's grass supply restored, logistic grass at this root reserve supports
+breeding hunters early in training, at about twice section 2's rate.
+
+**Replication not run (user's decision, 2026-11-09, before the pilot's result):** b0 0.5
+is a crude stand-in for grass regrowing from what grazers leave; the user chose to go
+for the biologically more realistic mechanism instead (deer crop patches down to
+stubble, section 4) rather than replicate with b0 0.5. Section 3 thus ends without a
+verdict; its pilot shows only that gradual regrowth with section 2's food supply does
+not by itself starve the hunters.
