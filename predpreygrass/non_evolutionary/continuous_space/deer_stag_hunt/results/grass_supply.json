@@ -1,0 +1,771 @@
+{
+ "checkpoint": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/runs/touch_1/checkpoint",
+ "summary": {
+  "instant": {
+   "grass_energy_per_step": 0.47492499999999993,
+   "biomass_per_bite": 1.0294952225189922,
+   "mean_deer": 41.989900000000006,
+   "mean_hunters": 8.9376125,
+   "physics_steps": 8000.0,
+   "hunters_extinct": 0,
+   "supply_ratio": 1.0
+  },
+  "0.01": {
+   "grass_energy_per_step": 0.16568801348133338,
+   "biomass_per_bite": 0.07567184743239193,
+   "mean_deer": 16.865222369811775,
+   "mean_hunters": 2.8799895172064183,
+   "physics_steps": 4527.0,
+   "hunters_extinct": 9,
+   "supply_ratio": 0.3488719555326281
+  },
+  "0.02": {
+   "grass_energy_per_step": 0.17963197424423893,
+   "biomass_per_bite": 0.06551110361787826,
+   "mean_deer": 19.245480913020174,
+   "mean_hunters": 2.5153849182214136,
+   "physics_steps": 6472.9,
+   "hunters_extinct": 6,
+   "supply_ratio": 0.3782322982454892
+  },
+  "0.05": {
+   "grass_energy_per_step": 0.2507726445874769,
+   "biomass_per_bite": 0.07021079792145916,
+   "mean_deer": 25.442320770601594,
+   "mean_hunters": 3.429405460811604,
+   "physics_steps": 6478.2,
+   "hunters_extinct": 5,
+   "supply_ratio": 0.5280257821497646
+  },
+  "0.1": {
+   "grass_energy_per_step": 0.3487260963965983,
+   "biomass_per_bite": 0.0812276634455863,
+   "mean_deer": 31.057762499999995,
+   "mean_hunters": 5.708775,
+   "physics_steps": 8000.0,
+   "hunters_extinct": 0,
+   "supply_ratio": 0.7342761412783037
+  },
+  "0.2": {
+   "grass_energy_per_step": 0.4004872159402225,
+   "biomass_per_bite": 0.1346909049079662,
+   "mean_deer": 25.93945,
+   "mean_hunters": 8.8836,
+   "physics_steps": 8000.0,
+   "hunters_extinct": 0,
+   "supply_ratio": 0.8432641278943467
+  },
+  "0.5": {
+   "grass_energy_per_step": 0.49532592831806116,
+   "biomass_per_bite": 0.1949399581808096,
+   "mean_deer": 32.2597875,
+   "mean_hunters": 11.1799625,
+   "physics_steps": 8000.0,
+   "hunters_extinct": 0,
+   "supply_ratio": 1.0429561053178107
+  }
+ },
+ "chosen": 0.5,
+ "episodes": [
+  {
+   "setting": "instant",
+   "seed": 0,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0365521003818876,
+   "mean_deer": 40.1405,
+   "mean_hunters": 9.392875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 1,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0231556273559506,
+   "mean_deer": 35.6245,
+   "mean_hunters": 9.958,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 2,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0303687635574836,
+   "mean_deer": 46.189625,
+   "mean_hunters": 8.23175,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 3,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0342950462710943,
+   "mean_deer": 40.46675,
+   "mean_hunters": 9.026625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.47425,
+   "biomass_per_bite": 1.0304182509505704,
+   "mean_deer": 33.093625,
+   "mean_hunters": 10.198875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 5,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.029252437703142,
+   "mean_deer": 47.0735,
+   "mean_hunters": 8.1275,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 6,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0242587601078168,
+   "mean_deer": 45.41125,
+   "mean_hunters": 8.296,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 7,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0303687635574836,
+   "mean_deer": 45.33475,
+   "mean_hunters": 8.353375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 8,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.029810298102981,
+   "mean_deer": 41.154375,
+   "mean_hunters": 9.03925,
+   "hunters_extinct": false
+  },
+  {
+   "setting": "instant",
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.475,
+   "biomass_per_bite": 1.0264721772015126,
+   "mean_deer": 45.410125,
+   "mean_hunters": 8.751875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.01,
+   "seed": 0,
+   "physics_steps": 2247,
+   "grass_energy_per_step": 0.18858694780332447,
+   "biomass_per_bite": 0.07572460180737492,
+   "mean_deer": 19.935024477080553,
+   "mean_hunters": 3.4250111259457054,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 1,
+   "physics_steps": 4256,
+   "grass_energy_per_step": 0.16616134438706912,
+   "biomass_per_bite": 0.08828747586908442,
+   "mean_deer": 14.492951127819548,
+   "mean_hunters": 3.294172932330827,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 2,
+   "physics_steps": 2958,
+   "grass_energy_per_step": 0.1767961326274492,
+   "biomass_per_bite": 0.07473034585767287,
+   "mean_deer": 17.85125084516565,
+   "mean_hunters": 3.255916159567275,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 3,
+   "physics_steps": 2363,
+   "grass_energy_per_step": 0.18001998747522316,
+   "biomass_per_bite": 0.0832134644765165,
+   "mean_deer": 19.11045281421921,
+   "mean_hunters": 3.4143038510368178,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 4,
+   "physics_steps": 4406,
+   "grass_energy_per_step": 0.16541534240228645,
+   "biomass_per_bite": 0.06922682357755264,
+   "mean_deer": 17.809804811620516,
+   "mean_hunters": 2.6123467998184293,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 5,
+   "physics_steps": 5889,
+   "grass_energy_per_step": 0.1544590803884148,
+   "biomass_per_bite": 0.06360905765086537,
+   "mean_deer": 16.53166921378842,
+   "mean_hunters": 2.119714722363729,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 6,
+   "physics_steps": 4948,
+   "grass_energy_per_step": 0.1486409998509544,
+   "biomass_per_bite": 0.07248922405504853,
+   "mean_deer": 15.662894098625708,
+   "mean_hunters": 2.5753839935327405,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 7,
+   "physics_steps": 4983,
+   "grass_energy_per_step": 0.1597454798522912,
+   "biomass_per_bite": 0.07964896198758926,
+   "mean_deer": 15.35881998795906,
+   "mean_hunters": 2.9608669476219145,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 8,
+   "physics_steps": 5220,
+   "grass_energy_per_step": 0.1666420801484296,
+   "biomass_per_bite": 0.08641681485940816,
+   "mean_deer": 15.437356321839081,
+   "mean_hunters": 3.0260536398467432,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.01,
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.15041273987789133,
+   "biomass_per_bite": 0.06337170418280655,
+   "mean_deer": 16.462,
+   "mean_hunters": 2.116125,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.02,
+   "seed": 0,
+   "physics_steps": 3641,
+   "grass_energy_per_step": 0.19731653153032308,
+   "biomass_per_bite": 0.07354929272132538,
+   "mean_deer": 19.425707223290306,
+   "mean_hunters": 3.2655863773688547,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 1,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.17478865690518175,
+   "biomass_per_bite": 0.06283971127275993,
+   "mean_deer": 18.88375,
+   "mean_hunters": 2.2755,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.02,
+   "seed": 2,
+   "physics_steps": 4013,
+   "grass_energy_per_step": 0.19446763068212558,
+   "biomass_per_bite": 0.07438034711469406,
+   "mean_deer": 18.93172190381261,
+   "mean_hunters": 3.3060054821829055,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 3,
+   "physics_steps": 5721,
+   "grass_energy_per_step": 0.1785938300734053,
+   "biomass_per_bite": 0.05674415760579539,
+   "mean_deer": 21.554273728369168,
+   "mean_hunters": 1.8683796539066597,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.16793131398041716,
+   "biomass_per_bite": 0.05783256615769855,
+   "mean_deer": 19.733625,
+   "mean_hunters": 1.913125,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.02,
+   "seed": 5,
+   "physics_steps": 4363,
+   "grass_energy_per_step": 0.18557840396081246,
+   "biomass_per_bite": 0.06818920132061855,
+   "mean_deer": 20.0034380013752,
+   "mean_hunters": 2.6094430437772176,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 6,
+   "physics_steps": 7926,
+   "grass_energy_per_step": 0.17341644730322622,
+   "biomass_per_bite": 0.061235799756097796,
+   "mean_deer": 18.964673227353014,
+   "mean_hunters": 2.3300529901589706,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 7,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.17809995658990035,
+   "biomass_per_bite": 0.08182860399260297,
+   "mean_deer": 16.780375,
+   "mean_hunters": 3.016875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.02,
+   "seed": 8,
+   "physics_steps": 7065,
+   "grass_energy_per_step": 0.16614162436720237,
+   "biomass_per_bite": 0.056809146072707616,
+   "mean_deer": 19.138995046001416,
+   "mean_hunters": 2.078131634819533,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.02,
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.17998534704979505,
+   "biomass_per_bite": 0.061702210164482366,
+   "mean_deer": 19.03825,
+   "mean_hunters": 2.49075,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 0,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.23780036170420651,
+   "biomass_per_bite": 0.07864418741767888,
+   "mean_deer": 21.2375,
+   "mean_hunters": 4.044625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 1,
+   "physics_steps": 6270,
+   "grass_energy_per_step": 0.2515611655256289,
+   "biomass_per_bite": 0.07007679526593626,
+   "mean_deer": 24.591866028708132,
+   "mean_hunters": 3.8425837320574163,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.05,
+   "seed": 2,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.2533740639115945,
+   "biomass_per_bite": 0.04921796113278837,
+   "mean_deer": 32.60475,
+   "mean_hunters": 1.77075,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 3,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.24314883029532372,
+   "biomass_per_bite": 0.07462559051494629,
+   "mean_deer": 22.446375,
+   "mean_hunters": 3.81825,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.2553721392880378,
+   "biomass_per_bite": 0.059555069796650616,
+   "mean_deer": 28.00875,
+   "mean_hunters": 2.94475,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 5,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.24438355402905493,
+   "biomass_per_bite": 0.06820164767433333,
+   "mean_deer": 24.728375,
+   "mean_hunters": 3.328,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.05,
+   "seed": 6,
+   "physics_steps": 3371,
+   "grass_energy_per_step": 0.25231764614647134,
+   "biomass_per_bite": 0.08411419948177956,
+   "mean_deer": 23.325719371106498,
+   "mean_hunters": 4.123702165529516,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.05,
+   "seed": 7,
+   "physics_steps": 7527,
+   "grass_energy_per_step": 0.23613234353049944,
+   "biomass_per_bite": 0.07292065929900998,
+   "mean_deer": 22.48638235684868,
+   "mean_hunters": 3.6774279261325895,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.05,
+   "seed": 8,
+   "physics_steps": 5359,
+   "grass_energy_per_step": 0.2500071027297449,
+   "biomass_per_bite": 0.06438193481637207,
+   "mean_deer": 27.478634073521178,
+   "mean_hunters": 3.029109908565031,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.05,
+   "seed": 9,
+   "physics_steps": 2255,
+   "grass_energy_per_step": 0.28362923871420676,
+   "biomass_per_bite": 0.08036993381509629,
+   "mean_deer": 27.514855875831486,
+   "mean_hunters": 3.7148558758314856,
+   "hunters_extinct": true
+  },
+  {
+   "setting": 0.1,
+   "seed": 0,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3816533837605647,
+   "biomass_per_bite": 0.06443310408315785,
+   "mean_deer": 39.774875,
+   "mean_hunters": 5.0315,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 1,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3293618490028624,
+   "biomass_per_bite": 0.09050267197990311,
+   "mean_deer": 26.571875,
+   "mean_hunters": 5.88775,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 2,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3372748989832257,
+   "biomass_per_bite": 0.09073236908554058,
+   "mean_deer": 26.804875,
+   "mean_hunters": 6.169,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 3,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.35051103707737147,
+   "biomass_per_bite": 0.0849260493251854,
+   "mean_deer": 29.023625,
+   "mean_hunters": 6.382875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.38810207424196563,
+   "biomass_per_bite": 0.061635299835941654,
+   "mean_deer": 41.82525,
+   "mean_hunters": 4.411,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 5,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.35876848845440906,
+   "biomass_per_bite": 0.07576547984888,
+   "mean_deer": 33.075875,
+   "mean_hunters": 5.47375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 6,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.35472180117966956,
+   "biomass_per_bite": 0.07810674913127151,
+   "mean_deer": 31.268125,
+   "mean_hunters": 5.859375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 7,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3045479345196449,
+   "biomass_per_bite": 0.10352611014520095,
+   "mean_deer": 21.92725,
+   "mean_hunters": 6.420625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 8,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.33781873615039415,
+   "biomass_per_bite": 0.08401361257159765,
+   "mean_deer": 28.97675,
+   "mean_hunters": 5.774125,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.1,
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3445007605958756,
+   "biomass_per_bite": 0.07863518844918412,
+   "mean_deer": 31.329125,
+   "mean_hunters": 5.67775,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 0,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3845397892282604,
+   "biomass_per_bite": 0.1415701018787889,
+   "mean_deer": 23.8155,
+   "mean_hunters": 9.094125,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 1,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3546348571245273,
+   "biomass_per_bite": 0.16475486974426354,
+   "mean_deer": 20.3785,
+   "mean_hunters": 8.7925,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 2,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.4360125690314605,
+   "biomass_per_bite": 0.1244328107966497,
+   "mean_deer": 29.4585,
+   "mean_hunters": 9.320375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 3,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.4079151061667204,
+   "biomass_per_bite": 0.1279733666405397,
+   "mean_deer": 27.135375,
+   "mean_hunters": 8.67075,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.43466527917719716,
+   "biomass_per_bite": 0.11404047728642192,
+   "mean_deer": 30.5155,
+   "mean_hunters": 8.57175,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 5,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.38899503946967706,
+   "biomass_per_bite": 0.13641768874966756,
+   "mean_deer": 24.743875,
+   "mean_hunters": 8.85525,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 6,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3809127223126604,
+   "biomass_per_bite": 0.1511708392946365,
+   "mean_deer": 23.31475,
+   "mean_hunters": 9.14925,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 7,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.40516087836711856,
+   "biomass_per_bite": 0.1254950838987513,
+   "mean_deer": 27.175375,
+   "mean_hunters": 8.672,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 8,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.3964495389454369,
+   "biomass_per_bite": 0.13663606374131892,
+   "mean_deer": 24.968375,
+   "mean_hunters": 8.846375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.2,
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.4155863795791662,
+   "biomass_per_bite": 0.12441774704862398,
+   "mean_deer": 27.88875,
+   "mean_hunters": 8.863625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 0,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.4961444635017438,
+   "biomass_per_bite": 0.19774590016012109,
+   "mean_deer": 32.11825,
+   "mean_hunters": 10.891625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 1,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.41203135225104226,
+   "biomass_per_bite": 0.22919279780338883,
+   "mean_deer": 27.170375,
+   "mean_hunters": 9.657875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 2,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.48425601443247035,
+   "biomass_per_bite": 0.1997755835117452,
+   "mean_deer": 30.11275,
+   "mean_hunters": 11.746,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 3,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.5238655048769875,
+   "biomass_per_bite": 0.18395768760494685,
+   "mean_deer": 31.87375,
+   "mean_hunters": 12.80475,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 4,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.5731606881503049,
+   "biomass_per_bite": 0.15918919265388276,
+   "mean_deer": 41.80825,
+   "mean_hunters": 11.127,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 5,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.476207552275558,
+   "biomass_per_bite": 0.2032035640177333,
+   "mean_deer": 29.442875,
+   "mean_hunters": 10.641625,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 6,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.47690789376180187,
+   "biomass_per_bite": 0.19778450752174262,
+   "mean_deer": 31.449,
+   "mean_hunters": 10.887125,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 7,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.5572523755180308,
+   "biomass_per_bite": 0.16979048614199596,
+   "mean_deer": 37.10975,
+   "mean_hunters": 12.299875,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 8,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.44843922106599227,
+   "biomass_per_bite": 0.22327071001543056,
+   "mean_deer": 27.19275,
+   "mean_hunters": 11.24375,
+   "hunters_extinct": false
+  },
+  {
+   "setting": 0.5,
+   "seed": 9,
+   "physics_steps": 8000,
+   "grass_energy_per_step": 0.5049942173466796,
+   "biomass_per_bite": 0.1854891523771091,
+   "mean_deer": 34.320125,
+   "mean_hunters": 10.5,
+   "hunters_extinct": false
+  }
+ ]
+}
