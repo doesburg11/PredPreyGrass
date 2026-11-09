@@ -211,6 +211,8 @@ adults) and `adults_caught`.
   runs from scratch; `launchers/verdict.py`: RESULTS.md section 1's tests and verdict.
 - `launchers/coop_by_energy.py`, `launchers/energy_verdict.py`, `launchers/run_energy.sh`:
   partnering by the deer's energy, RESULTS.md section 2.1.
+- `launchers/run_logistic.sh`, `launchers/check_logistic_world.py`: RESULTS.md section 3's runs (touch rule, logistic grass,
+  500 iterations), evaluations and both verdicts.
 - `checkpoints.py`, `render.py`, `watch.py`: loading checkpoints, viewing episodes.
 - `tests/`: the rules, evaluation, and equivalence with `stag_hunt_continuous`
   (that test needs a PredPreyGrass-archive checkout next to this repository, or

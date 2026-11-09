@@ -335,3 +335,79 @@ sense.
 
 **Hard stop reached.** No world changes followed these runs; the next step is the
 user's decision.
+
+## 3. Logistic grass (pre-registered 2026-11-09, before training)
+
+**Question:** do section 2's results hold when grass regrows gradually? In sections
+1 and 2 an eaten patch was gone for 400 physics steps and then back whole at once.
+Here it regrows logistically, as grass does. Two questions, judged separately:
+does section 2's replication hold (coexistence and adult approaches with a partner
+near above chance), and does section 2.1's pattern (partnering where a partner pays
+but is not required) hold?
+
+**World:** section 2's world (`deer_catch_rule: "touch"`) with `grass_regrowth:
+"logistic"` (README.md, "Grass regrowth"; the default since commit 838357eb), growth
+rate 0.0187, root reserve 0.01; nothing else changed (`launchers/check_logistic_world.py`
+compares the settings with touch_1's, before training and for each saved run). An eaten patch regrows from bare
+to 95% in about 400 physics steps, a deer eating a patch gains its biomass times 2,
+and deer and hunters see the biomass of the nearest patch (one input more each). So
+the deer's food supply differs from section 2's: grazed patches regrow slowly, and a
+deer eating a patch early gets less. Deer energies, and with them the mix of fawns,
+middle deer and adults, may change.
+
+**Runs:** three runs from scratch (`logistic_1`, `logistic_2`, `logistic_3`), 500
+iterations, 14 env runners, two at a time (`launchers/run_logistic.sh`, which calls
+`launchers/replicate.py NAME 500 --catch-rule touch` and checks the saved world).
+
+**Iterations: 500, not 1000, chosen after seeing sections 1 and 2.** There,
+adult ÷ chance was above 1 from iteration 250 on and stayed at a similar level, while
+adult catches and the ecology changed: they fell from iteration 500 to 1000 in all six
+runs (by 13 to 84%). At iteration 500 each overall verdict would have been the same as
+at 1000, though not each run's outcome (section 1: 3 of 3 runs met all tests instead of
+2 of 3; section 2: 3 of 3 as at 1000; section 2.1: 2 of 3 as at 1000, with touch_3
+instead of touch_1 missing B). A verdict at 500 therefore
+describes the state before any such late decline; it says nothing about stability over
+longer training. The final checkpoint is iteration 500; iteration 250 is recorded, not
+tested.
+
+**Tests and verdicts,** on the final checkpoints (iteration 500):
+
+1. **Replication (section 1's tests, unchanged):** coexistence in at least 45 of 50
+   episodes; adult share with a partner near above fawn share and above chance
+   (coop_fair.py, 20 episodes); adult share ÷ chance above 0.90. Replicated if all three
+   are met in at least 2 of the 3 runs (`launchers/verdict.py logistic_1 logistic_2
+   logistic_3`).
+2. **Partnering by energy (section 2.1's tests, unchanged):** A, B and C with their
+   thresholds, 40 episodes (seeds 0-39), 5000 bootstrap resamples. Pattern shown if
+   all three are met in at least 2 of the 3 runs (`launchers/energy_verdict.py`).
+
+Both verdicts are reported, each on its own. Section 2.1's tests were set on touch-rule
+runs; these three runs were not looked at when they were set, so a positive verdict 2
+would be a test on fresh runs, though in a changed world (gradual grass), not an exact
+repeat of section 2.1.
+
+**Comparison, no test:** touch_1-3 at iteration 500 (section 2.2), same measures.
+
+**Also recorded, not tests:** iteration 250; adults caught, hunter and deer births,
+grass eaten, the share of young catches made by two touchers, the adult energy share.
+
+**Hard stop:** no setting changes during or after these runs, whatever the outcome. In
+particular, if coexistence fails, the grass growth rate is not tuned and the runs are
+not repeated with other settings; that would be the result. What follows is the
+user's decision.
+
+**What outcomes would mean:** a replication would show section 2's result does not
+need grass coming back whole at once, for this growth rate and root reserve; other
+rates were not tried. A failure of coexistence would show this growth rate changes the
+ecology enough to break it, in this world; it would not say gradual grass as such
+prevents coexistence. A failure of verdict 2 with verdict 1 met could mean section
+2.1's pattern is specific to instant grass or too small to recur, but also that gradual
+grass changed the deer's energies and with them how many approaches fall in the tested
+energy bands (test C divides by the adults' joint share), lowering the tests' power;
+the bin counts are reported to judge this.
+
+**Running:** `systemd-run --user --unit deer-logistic bash
+/home/doesburg/Projects/PredPreyGrass/predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/launchers/run_logistic.sh`
+(systemd-run needs the absolute path). Status in `runs/logistic.status`; results
+to `results/logistic_*` and `results/logistic_verdict.txt`,
+`results/logistic_energy_verdict.txt`.
