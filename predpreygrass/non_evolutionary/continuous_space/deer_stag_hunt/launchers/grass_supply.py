@@ -86,6 +86,8 @@ def episode(job):
         "mean_deer": counts["deer"] / steps,
         "mean_hunters": counts["predator"] / steps,
         "hunters_extinct": "predator" in result["extinct_at"],
+        "collapses": env.grass.total_collapses,
+        "diebacks": getattr(env.grass, "total_diebacks", 0),
     }
 
 
@@ -101,15 +103,15 @@ def main():
     summary = {}
     for s in ("instant",) + candidates:
         mine = [r for r in rows if r["setting"] == s]
-        summary[str(s)] = {key: float(np.mean([r[key] for r in mine if r[key] is not None])) for key in ("grass_energy_per_step", "biomass_per_bite", "mean_deer", "mean_hunters", "physics_steps")}
+        summary[str(s)] = {key: float(np.mean([r[key] for r in mine if r[key] is not None])) for key in ("grass_energy_per_step", "biomass_per_bite", "mean_deer", "mean_hunters", "physics_steps", "collapses", "diebacks")}
         summary[str(s)]["hunters_extinct"] = sum(r["hunters_extinct"] for r in mine)
     reference = summary["instant"]["grass_energy_per_step"]
     for s, v in summary.items():
         v["supply_ratio"] = v["grass_energy_per_step"] / reference
     chosen = min(candidates, key=lambda s: (abs(summary[str(s)]["supply_ratio"] - 1), s))
-    print(f"{'setting':>8s} {'energy/step':>11s} {'ratio':>6s} {'biomass/bite':>12s} {'deer':>6s} {'hunters':>7s} {'steps':>6s} {'hunters extinct':>15s}")
+    print(f"{'setting':>8s} {'energy/step':>11s} {'ratio':>6s} {'biomass/bite':>12s} {'deer':>6s} {'hunters':>7s} {'steps':>6s} {'hunters extinct':>15s} {'collapses':>9s} {'diebacks':>8s}")
     for s, v in summary.items():
-        print(f"{s:>8s} {v['grass_energy_per_step']:11.3f} {v['supply_ratio']:6.2f} {v['biomass_per_bite']:12.2f} {v['mean_deer']:6.1f} {v['mean_hunters']:7.1f} {v['physics_steps']:6.0f} {v['hunters_extinct']:>8d}/{episodes}")
+        print(f"{s:>8s} {v['grass_energy_per_step']:11.3f} {v['supply_ratio']:6.2f} {v['biomass_per_bite']:12.2f} {v['mean_deer']:6.1f} {v['mean_hunters']:7.1f} {v['physics_steps']:6.0f} {v['hunters_extinct']:>8d}/{episodes}      {v['collapses']:9.0f} {v['diebacks']:8.0f}")
     print(f"chosen {mode.replace('_', ' ')} (supply ratio closest to 1, ties to the smaller): {chosen}")
     Path(out).write_text(json.dumps({"checkpoint": str(CHECKPOINT), "mode": mode, "summary": summary, "chosen": chosen, "episodes": rows}, indent=1))
 

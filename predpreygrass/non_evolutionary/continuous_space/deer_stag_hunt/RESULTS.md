@@ -506,3 +506,43 @@ for the biologically more realistic mechanism instead (deer crop patches down to
 stubble, section 4) rather than replicate with b0 0.5. Section 3 thus ends without a
 verdict; its pilot shows only that gradual regrowth with section 2's food supply does
 not by itself starve the hunters.
+
+## 4. Grazed grass (pre-registered 2026-11-09, before any measurement)
+
+**Question:** do section 2's results hold when deer graze as grazers do? Decided with
+the user, who asked for the biologically most realistic mechanism after section 3.
+
+**World:** section 2's world (touch rule) with `grass_regrowth: "grazed"` (grass.py):
+
+- a patch's biomass grows logistically (growth rate 0.0187, root reserve 0.01);
+- each physics step, a patch in reach is bitten by its closest deer, which takes up to
+  `grass_bite` 0.1 of a full patch (a full patch is grazed in about one decision), but
+  not below `grass_stubble`; it gains that share of 2 energy;
+- a grazed patch keeps its place and regrows from its stubble;
+- a patch kept below half grown for `grass_dieback_delay` 400 physics steps dies and
+  re-seeds next to a half-grown patch of its cluster, from bare (sustained grazing moves
+  grass, as eaten patches did under instant grass; light grazing does not);
+- a cluster with no patch at half grown collapses and regrows elsewhere after 400
+  physics steps, as before.
+
+Bite 0.1 and dieback delay 400 are set, not tuned; the stubble height is calibrated.
+
+**Calibration (as section 3.2):** `launchers/grass_supply.py 10 24 OUT stubble`,
+touch_1's final policies, seeds 0-9; candidates stubble 0.05, 0.1, 0.2, 0.3, 0.4
+(0.5 or more would make overgrazing impossible); the candidate whose supply ÷ instant
+supply is closest to 1 is chosen (ties to the smaller). If even that is outside 0.8 to
+1.25, the design fails at calibration (hard stop below).
+
+**Pilot:** one run (`grazed_pilot`), 150 iterations, passes if hunter births per
+episode over iterations 141-150 average at least 2.57 (section 3.2's bar).
+
+**Replication, if the pilot passes:** three runs `grazed_1` to `grazed_3`, 500
+iterations, with section 3's tests, verdicts and comparison unchanged (section 1's
+three tests, replicated in at least 2 of 3; section 2.1's A, B and C, pattern in at
+least 2 of 3; touch_1-3 at iteration 500 for comparison, no test). The pilot does not
+enter them.
+
+**Hard stop:** if calibration or the pilot fails, the grazed design ends with no
+tuning of bite, dieback or anything else; the default stays instant. If the
+replication runs, no setting changes whatever the outcome. What follows is the user's
+decision.
