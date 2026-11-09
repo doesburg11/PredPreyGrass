@@ -578,3 +578,23 @@ likely measures instant-trained deer's habits. The pilot goes ahead with stubble
 (the rule's choice) and trains deer and hunters from scratch, so it measures supply
 with deer that can learn to graze. Pilot and its bar unchanged (2.57). This is the only
 amendment: if the pilot fails, the grazed design ends.
+
+### 4.2 Pilot (2026-11-09, 13:06): failed; the grazed design ends
+
+grazed_pilot (stubble 0.1, 150 iterations): hunter births per episode over iterations
+141-150 averaged 0.98 (bar 2.57; touch_1-3 4.99-5.39; section 3.2's pilot 11.01), deer
+births 57.6 (touch_1-3: 190-194). Deer trained from scratch on grazed grass stayed few
+and the hunters barely bred, so the shortage was not only the fixed-behaviour
+calibration's. By the hard stop, the grazed design ends; no setting is tuned.
+
+### Gradual grass: conclusion (2026-11-09)
+
+Instant grass stays the default, as decided with the user; sections 1 and 2's results
+stand on it. Of three gradual designs, two (logistic grass with root reserve 0.01,
+grazed grass) gave the deer roughly 40% of instant grass's food and starved the hunters;
+the one that fed them (root reserve 0.5) regrows so fast that it is little more
+realistic than instant grass, and was not replicated. In this world the energy budget
+is tuned to whole patches returning at once: realistic grazing would need a re-balanced
+ecosystem (more grass, more energy per bite, or other changes), a project of its own,
+not a different growth rule. `"logistic"` and `"grazed"` stay in the code, untested for
+cooperation.

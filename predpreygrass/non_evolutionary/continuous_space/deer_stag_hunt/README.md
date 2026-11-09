@@ -70,9 +70,13 @@ reproduce exactly ([grass.py](grass.py), [tests/test_grass.py](tests/test_grass.
 The default is `"instant"`. With root reserve 0.01, logistic grass roughly halved the
 deer's food, since deer graze patches long before they are grown, and the runs of
 RESULTS.md section 3 were stopped (section 3.1); a calibration of the root reserve
-was tried (section 3.2). A third way, `"grazed"`, is being tested (section 4): deer crop
-a patch a bite at a time down to a stubble that regrows, grazed patches stay in place,
-and a patch kept short too long dies and re-seeds next to a healthy one.
+was tried (section 3.2). A third way, `"grazed"` (section 4): deer crop a patch a bite
+at a time down to a stubble that regrows, grazed patches stay in place, and a patch kept
+short too long dies and re-seeds next to a healthy one. Both gradual modes left deer too
+little food in this world, whose energy budget is tuned to whole patches returning at
+once; only a root reserve of 0.5 (fast regrowth) fed the hunters. So `"instant"` stays
+the default; the gradual modes stay available, untested for cooperation (RESULTS.md,
+"Gradual grass: conclusion").
 
 **A second catching rule (`deer_catch_rule: "touch"`, tested in RESULTS.md
 section 2).** Only touching counts, with one rule for every deer: each touch is a
