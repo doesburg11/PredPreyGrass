@@ -70,7 +70,7 @@ def play(env, actors, seed, pool=None):
     }
 
 
-def _init(checkpoint, overrides=None):
+def _init(checkpoint, overrides=None, deer=None):
     import torch
 
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.checkpoints import evaluation_env_config, load_actors
@@ -80,7 +80,7 @@ def _init(checkpoint, overrides=None):
     config = evaluation_env_config(checkpoint, overrides)
     _worker["env"] = EvolvingDeerStagHunt(config)
     _worker["pool"] = pooled_gene_pool(config["gene_initial_pool"])
-    _worker["actors"] = load_actors(checkpoint, _worker["env"])
+    _worker["actors"] = load_actors(checkpoint, _worker["env"], deer)
 
 
 def _play(seed):
@@ -128,10 +128,15 @@ def parse_overrides(items):
     return overrides
 
 
-def evaluate(checkpoint, episodes, workers=10, overrides=None):
-    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=_init, initargs=(str(checkpoint), overrides)) as pool:
+def evaluate(checkpoint, episodes, workers=10, overrides=None, deer=None):
+    """deer: a deer module directory to act instead of the checkpoint's own
+    (checkpoints.checkpoint_deer)."""
+    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.checkpoints import checkpoint_deer
+
+    deer_used = str(deer or checkpoint_deer(checkpoint))
+    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=_init, initargs=(str(checkpoint), overrides, deer and str(deer))) as pool:
         rows = sorted(pool.map(_play, range(episodes)), key=lambda row: row["seed"])
-    return {"checkpoint": str(checkpoint), "overrides": overrides or {}, **summarise(rows)}, rows
+    return {"checkpoint": str(checkpoint), "deer": deer_used, "overrides": overrides or {}, **summarise(rows)}, rows
 
 
 def main():

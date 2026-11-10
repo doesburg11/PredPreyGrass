@@ -118,9 +118,10 @@ def summarise(rows):
     }
 
 
-def coop(checkpoint, episodes, workers, overrides=None):
-    """coop_fair's summary and per-episode rows for a checkpoint."""
-    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=evaluate._init, initargs=(str(checkpoint), overrides or {})) as pool:
+def coop(checkpoint, episodes, workers, overrides=None, deer=None):
+    """coop_fair's summary and per-episode rows for a checkpoint (deer: as
+    evaluate.evaluate)."""
+    with ProcessPoolExecutor(workers, mp_context=get_context("spawn"), initializer=evaluate._init, initargs=(str(checkpoint), overrides or {}, deer and str(deer))) as pool:
         rows = list(pool.map(_count, range(episodes)))
     return summarise(rows), rows
 

@@ -1,9 +1,11 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-08): pilot FAILED (hunters extinct in 50 of 50 episodes in every arm;
-likely cause: naive hunters against frozen trained deer); stage stopped, see
-[RESULTS.md](RESULTS.md) §1.5. Pre-registered in
-[RESULTS.md](RESULTS.md), section 1.**
+**Status (2026-11-10): section 2 pre-registered and built; its pilot is next.**
+Section 1 (2026-11-08, deer frozen at deer_stag_hunt's final policy) failed its pilot:
+hunters died out in 50 of 50 episodes in every arm, likely because naive hunters met
+trained deer ([RESULTS.md](RESULTS.md) §1.5). Section 2 ([DESIGN_2.md](DESIGN_2.md),
+[RESULTS.md](RESULTS.md) §2) replays deer_stag_hunt's touch-rule deer in training
+order, so hunters and deer start naive together, in the touch world.
 
 Nature, nurture and both in a stag hunt. This is
 [deer_stag_hunt](../../../non_evolutionary/continuous_space/deer_stag_hunt/)'s world,
@@ -37,8 +39,11 @@ Every hunter carries four genes in [-1, 1]:
 | L, learning only | PPO; genes inherited but not expressed | [train.py](train.py), β = 0 |
 | B, both | PPO plus the bias, inside the module's forward passes | [train.py](train.py), [rl_module.py](rl_module.py) |
 
-- **Frozen deer:** in all arms the deer use a deer_stag_hunt run's final deer policy,
-  copied into each run (`runs/<run>/deer_policy/`).
+- **Deer, section 2:** replayed from deer_stag_hunt's touch_((k − 1) mod 3) + 1 in
+  training order, never trained here: iteration t uses that run's deer of iteration
+  10·floor(t/10) (iteration 10 before 20), copied into each run with a hashed
+  manifest (`runs/<run>/deer_schedule/`, [deer_schedule.py](deer_schedule.py)).
+  Section 1 used one frozen final deer policy (`runs/<run>/deer_policy/`).
 - **Same world:** without the gene inputs, an episode is deer_stag_hunt's for the same
   actions ([tests/test_equivalence.py](tests/test_equivalence.py)).
 
@@ -47,13 +52,13 @@ Every hunter carries four genes in [-1, 1]:
 From the repository root, long jobs under `systemd-run --user`:
 
 ```bash
-# Pilot: L and B (500 iterations), E matched to them, evaluations
-bash predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_pilot.sh
+# Section 2 pilot: L on all three deer schedules, B on touch_1 (500 iterations), E matched, evaluations, check
+systemd-run --user --unit eco-deer-pilot2 bash $PWD/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_pilot_2.sh
 
-# Main runs: L_k, B_k (k = 1..5), E_k matched to them, evaluations
-bash predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_main.sh
+# Section 2 main runs (only after the pilot passed): L_k, B_k (k = 1..6), E_k matched, evaluations, verdict
+systemd-run --user --unit eco-deer-main2 bash $PWD/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_main_2.sh
 
-# One run of arm L or B, run k (seed k, deer of deer_stag_hunt run ((k-1) mod 3) + 1)
+# One run of arm L or B, run k (seed k, deer replayed from deer_stag_hunt touch_((k-1) mod 3) + 1)
 python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/replicate.py NAME B 1 [ITERATIONS]
 
 # One E run matched to L and B runs
@@ -78,7 +83,11 @@ python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hu
 - `launchers/`:
   - `replicate.py`, `evaluate_run.py`, `verdict.py`: runs, evaluation and the
     verdict;
-  - `run_pilot.sh`, `run_main.sh`: the scripted pilot and main runs.
+  - `run_pilot_2.sh`, `run_main_2.sh`, `pilot_check_2.py`, `verdict_2.py`: section 2's
+    scripted pilot, main runs, pilot bar and verdict (section 1's scripts were removed
+    after its stop; they are in git history, and `verdict.py` remains as the source of
+    the shared run values).
 - `tests/`: the genes and bias, evolution, the RL module, deer_stag_hunt's rules, and
   equivalence with deer_stag_hunt.
-- `DESIGN.md`, `RESULTS.md`: the design and the experiment.
+- `deer_schedule.py`: the replayed deer of section 2.
+- `DESIGN.md`, `DESIGN_2.md`, `RESULTS.md`: the designs and the experiments.

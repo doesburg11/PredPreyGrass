@@ -38,6 +38,26 @@ A failed attempt lets the deer go on, and each predator that touched it
 cannot catch again for deer_catch_cooldown physics steps. A predator gains
 energy_catch_efficiency_predator x its share of the deer's energy.
 
+These are the rules with deer_catch_rule "party" (the default; section 1 of
+RESULTS.md). With deer_catch_rule "touch" (section 2; deer_stag_hunt's
+RESULTS.md section 2) one rule covers every deer, and hunters merely near a
+deer play no part:
+
+- every ready touch is a solo attempt, caught with the chance above (1 for a
+  fawn, falling linearly to 0 from deer_fawn_energy to deer_adult_energy, 0
+  for an adult); a caught deer goes to the toucher alone;
+- a failed attempt costs the toucher deer_catch_cooldown physics steps, and
+  is remembered for deer_touch_window physics steps;
+- once two or more different predators have touched a deer, while ready,
+  within deer_touch_window physics steps (at once, or after a failed
+  attempt), it is caught, whatever its size, and shared evenly among those
+  touchers only. Two touching at once draw no solo chance.
+
+deer_young_solo "certain" (only under "touch") makes a lone ready touch catch
+every fawn and middle deer for certain; the default "graded" is the falling
+chance. Both are ported from deer_stag_hunt unchanged. Under "touch",
+young_caught_party counts young deer caught by two or more touchers.
+
 A predator's action is one of the 48 movement actions (16 directions x full,
 half or no speed); so is a deer's. Each decision lasts up to action_repeat
 physics steps (fewer after a birth or at the episode's end).
@@ -143,6 +163,10 @@ DEFAULT_CONFIG = {
     "deer_party_radius": 64.0,
     "deer_catch_cooldown": 8,
     "deer_touch_window": 8,
+    # "party" (default) or "touch" (module docstring).
+    "deer_catch_rule": "party",
+    # "graded" (default) or "certain" (module docstring; "touch" only).
+    "deer_young_solo": "graded",
     # Hunters' genes (module docstring).
     "gene_bound": 1.0,
     "gene_founder_std": 0.1,
@@ -292,6 +316,8 @@ class EvolvingDeerStagHunt(MultiAgentEnv):
         self.party_radius = c["deer_party_radius"]
         self.catch_cooldown = c["deer_catch_cooldown"]
         self.touch_window = c["deer_touch_window"]
+        self.catch_rule = c["deer_catch_rule"]
+        self.young_solo = c["deer_young_solo"]
         self.gene_bound = c["gene_bound"]
         self.founder_std = c["gene_founder_std"]
         self.mutation_std = c["gene_mutation_std"]
@@ -400,6 +426,12 @@ class EvolvingDeerStagHunt(MultiAgentEnv):
         for key in ("deer_catch_cooldown", "deer_touch_window"):
             if not _integer(c[key], 0):
                 raise ValueError(f"{key} must be a nonnegative integer")
+        if c["deer_catch_rule"] not in ("party", "touch"):
+            raise ValueError('deer_catch_rule must be "party" or "touch"')
+        if c["deer_young_solo"] not in ("graded", "certain"):
+            raise ValueError('deer_young_solo must be "graded" or "certain"')
+        if c["deer_young_solo"] == "certain" and c["deer_catch_rule"] != "touch":
+            raise ValueError('deer_young_solo "certain" needs deer_catch_rule "touch"')
         # Genes are observation inputs, so they must stay within [-1, 1].
         if not _number(c["gene_bound"], 0, strict=True) or c["gene_bound"] > 1:
             raise ValueError("gene_bound must be in (0, 1]")
@@ -673,11 +705,13 @@ class EvolvingDeerStagHunt(MultiAgentEnv):
         catcher = None
         if animal.species == "deer":
             adult = animal.energy >= self.adult_energy
-            if not adult:
+            if not adult and self.catch_rule == "party":
                 # Touches count only while the deer stays adult.
                 self.adult_touches.pop(animal.id, None)
             touching = [p for p in self.predators if self._touching(animal, p) and p.catch_ready_at <= self.time_step]
-            if touching and adult:
+            if touching and self.catch_rule == "touch":
+                catcher = self._touch_catch(animal, touching, adult)
+            elif touching and adult:
                 now = self.time_step
                 recent = self.adult_touches.setdefault(animal.id, {})
                 for p in touching:
@@ -716,6 +750,35 @@ class EvolvingDeerStagHunt(MultiAgentEnv):
                 away.normalize()
                 aways.append(away)
         return catcher, aways
+
+    def _solo_chance(self, deer):
+        if self.young_solo == "certain" and deer.energy < self.adult_energy:
+            return 1.0
+        return min(1.0, max(0.0, (self.adult_energy - deer.energy) / (self.adult_energy - self.fawn_energy)))
+
+    def _touch_catch(self, deer, touching, adult):
+        """deer_catch_rule "touch": the predators catching the deer this
+        physics step, or None (module docstring)."""
+        now = self.time_step
+        recent = self.adult_touches.setdefault(deer.id, {})
+        for p in touching:
+            recent[p.id] = now
+        for pid in [pid for pid, t in recent.items() if now - t > self.touch_window]:
+            del recent[pid]
+        touchers = [p for p in self.predators if p.id in recent]
+        if len(touchers) >= 2:
+            del self.adult_touches[deer.id]
+            self.stats["adults_caught" if adult else "young_caught_party"] += 1
+            return touchers
+        chance = self._solo_chance(deer)
+        if chance >= 1.0 or (chance > 0.0 and self.catch_rng.random() < chance):
+            del self.adult_touches[deer.id]
+            self.stats["young_caught_solo"] += 1
+            return touching
+        self.stats["adult_failures" if adult else "young_failures"] += 1
+        for p in touching:
+            p.catch_ready_at = self.time_step + 1 + self.catch_cooldown
+        return None
 
     def _steer(self, animal, desired):
         """Acceleration towards the desired velocity: the steering force,

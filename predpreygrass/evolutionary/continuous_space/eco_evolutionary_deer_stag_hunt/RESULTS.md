@@ -210,3 +210,12 @@ recommended option). Everything not named here is as in section 1 and DESIGN.md.
   every measure; per-run values, bootstrap intervals, C, gene means, selection
   differentials against L's unexpressed genes, checkpoints 250 and 500 (section 1.4).
 - **Hard stop:** after the main runs, the stage stops whatever the outcome.
+
+**Clarification (2026-11-10, after Codex's code review, before any run of this
+section):** in section 2.1, E's switch "at iteration t" means the moment L and B
+switch to D(t): before sampling iteration t, so at their median total physics
+steps at the *end of iteration t − 1* (from each run's `iterations.jsonl`). This
+is the reading the design states (deer change "before sampling" iteration t);
+the wording above could also be read as the total at the end of iteration t,
+one iteration later. E's checkpoints at marks 250, 500, 750 and 1000 then hold
+D(mark), checked when each is saved. No other change.

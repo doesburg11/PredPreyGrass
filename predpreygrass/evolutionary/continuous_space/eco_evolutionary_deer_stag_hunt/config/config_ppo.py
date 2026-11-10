@@ -5,7 +5,7 @@ from pathlib import Path
 
 # This module's runs: runs/ inside the module (gitignored).
 RUNS_DIR = Path(__file__).resolve().parents[1] / "runs"
-# deer_stag_hunt's runs, whose final deer policies the deer use (frozen).
+# deer_stag_hunt's runs, whose deer the deer use.
 DEER_RUNS_DIR = Path(__file__).resolve().parents[4] / "non_evolutionary" / "continuous_space" / "deer_stag_hunt" / "runs"
 
 # {run_name} becomes <module>_<Amsterdam timestamp> when training starts.
@@ -14,8 +14,11 @@ config_ppo = {
     # "L": learning only (genes inherited, not expressed); "B": learning plus
     # the genes' innate bias (beta = genes.BETA0). The E arm is evolve.py.
     "arm": "B",
-    # A deer_stag_hunt checkpoint whose deer policy the deer use, frozen.
-    "deer_checkpoint": str(DEER_RUNS_DIR / "run_1" / "checkpoint"),
+    # Section 2: a deer_stag_hunt run whose deer are replayed in training
+    # order (deer_schedule.py). Section 1 instead set deer_checkpoint, one
+    # checkpoint's deer, frozen; exactly one of the two is set.
+    "deer_schedule": str(DEER_RUNS_DIR / "touch_1"),
+    "deer_checkpoint": None,
     "seed": None,  # RLlib's seed (network initialisation, first episodes)
     "iterations": 1000,  # Number of PPO training iterations.
     "num_env_runners": 14,

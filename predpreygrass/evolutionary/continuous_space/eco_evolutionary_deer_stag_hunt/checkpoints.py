@@ -4,7 +4,8 @@ policies that act in them.
 Layout of a run (train.py for L and B, evolve.py for E):
 
     runs/<run>/source_code/settings.json   {"config_env", "config_ppo"} (arm in config_ppo)
-    runs/<run>/deer_policy/                 the frozen deer policy
+    runs/<run>/deer_policy/                 section 1: the frozen deer policy
+    runs/<run>/deer_schedule/               section 2: the replayed deer (deer_schedule.py)
     runs/<run>/checkpoint/[iter_<n>/]       gene_pools.json, budget.json (and,
                                             L and B, RLlib's checkpoint)
 """
@@ -100,15 +101,38 @@ def _load(module, path):
     return module
 
 
-def deer_module(run, env):
-    """The run's frozen deer policy (RLlib's default PPO network)."""
+def deer_module_at(path, env):
+    """A deer policy (RLlib's default PPO network, vf_share_layers False, as
+    every deer_stag_hunt run trained it) from a module directory."""
     import dataclasses
 
     from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
 
-    settings = json.loads((Path(run) / "source_code" / "settings.json").read_text())
-    config = dataclasses.asdict(DefaultModelConfig(vf_share_layers=settings["config_ppo"].get("vf_share_layers", False)))
-    return _load(_default_module(env, "deer", config), Path(run) / DEER_POLICY / "module_state.pkl")
+    config = dataclasses.asdict(DefaultModelConfig(vf_share_layers=False))
+    return _load(_default_module(env, "deer", config), Path(path) / "module_state.pkl")
+
+
+def deer_module(run, env):
+    """Section 1: the run's one frozen deer policy."""
+    return deer_module_at(Path(run) / DEER_POLICY, env)
+
+
+def checkpoint_deer(checkpoint):
+    """The deer module directory a checkpoint acts with: section 2, the
+    replayed deer it was saved with (deer.json, hash checked); section 1,
+    the run's frozen deer."""
+    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt import deer_schedule
+
+    run = run_dir(checkpoint)
+    active = deer_schedule.active(checkpoint)
+    if active is None:
+        if deer_schedule.manifest(run) is not None:
+            raise ValueError(f"{checkpoint}: its run replays deer but the checkpoint records none")
+        return Path(run) / DEER_POLICY
+    path = deer_schedule.deer_path(run, active["source_iteration"])
+    if deer_schedule.sha256(path / "module_state.pkl") != active["sha256"]:
+        raise RuntimeError(f"{checkpoint}: its deer differ from the ones it records")
+    return path
 
 
 class ModuleActor:
@@ -137,10 +161,10 @@ class EArmActor:
         return torch.from_numpy(genes.e_arm_logits(obs, self.layout, self.beta))
 
 
-def load_actors(checkpoint, env=None):
+def load_actors(checkpoint, env=None, deer=None):
     """{species: actor} acting in a checkpoint's world: the trained
-    predator module (arms L and B) or the gene rule (arm E), and the frozen
-    deer."""
+    predator module (arms L and B) or the gene rule (arm E), and the deer
+    (checkpoint_deer, or the deer module directory `deer`)."""
     import dataclasses
 
     from ray.rllib.core.rl_module.default_model_config import DefaultModelConfig
@@ -151,7 +175,7 @@ def load_actors(checkpoint, env=None):
     run = run_dir(checkpoint)
     env = env or EvolvingDeerStagHunt(checkpoint_env_config(checkpoint))
     ppo = settings["config_ppo"]
-    actors = {"deer": ModuleActor(deer_module(run, env))}
+    actors = {"deer": ModuleActor(deer_module_at(deer or checkpoint_deer(checkpoint), env))}
     if ppo["arm"] == "E":
         actors["predator"] = EArmActor(genes.layout(env), ppo["beta"])
     else:

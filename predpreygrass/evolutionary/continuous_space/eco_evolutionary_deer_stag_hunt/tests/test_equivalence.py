@@ -12,8 +12,13 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt
 base = pytest.importorskip("predpreygrass.non_evolutionary.continuous_space.deer_stag_hunt.environment")
 
 
+# deer_stag_hunt's gradual-grass settings, which this module does not have
+# (its grass is always instant, deer_stag_hunt's default).
+GRASS_ONLY_THERE = {"grass_regrowth": "instant", "grass_growth_rate": 0.0187, "grass_root_reserve": 0.01, "grass_bite": 0.1, "grass_stubble": 0.2, "grass_dieback_delay": 400}
+
+
 def base_config(config):
-    return {k: v for k, v in config.items() if not k.startswith("gene_")}
+    return {**GRASS_ONLY_THERE, **{k: v for k, v in config.items() if not k.startswith("gene_")}}
 
 
 def state(env):
@@ -59,6 +64,31 @@ def test_same_long_episode_with_births():
     new, old = run_both(config, 3, 2000)
     assert new.births == old.births and new.births["predator"] > 0
     assert new.stats == old.stats
+
+
+CROWDED = dict(
+    width=300,
+    height=300,
+    predator_view_distance=150,
+    deer_view_distance=150,
+    predator_count=14,
+    deer_count=20,
+    energy_deer_initial=3.0,
+    reproduction_deer_cost=3.0,
+    grass_cluster_count=4,
+    grass_count=40,
+)
+
+
+@pytest.mark.parametrize("seed", [0, 1])
+def test_same_episode_touch_rule(seed):
+    new, old = run_both(dict(DEFAULT_CONFIG, deer_catch_rule="touch"), seed, 600)
+    assert new.time_step == old.time_step > 300
+
+
+def test_same_crowded_episode_touch_rule_with_adult_and_shared_young_catches():
+    new, old = run_both(dict(DEFAULT_CONFIG, deer_catch_rule="touch", **CROWDED), 7, 1500)
+    assert new.stats == old.stats and new.stats["adults_caught"] > 0 and new.stats["young_caught_party"] > 0
 
 
 def test_same_crowded_episode_with_adult_catches():
