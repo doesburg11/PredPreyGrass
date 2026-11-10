@@ -1,0 +1,7 @@
+pilot_B1: coexisting 15/50 at 250, 33/50 at 500; hunter births per episode at 500: 21.50 -> FAIL
+pilot_L1: coexisting 18/50 at 250, 22/50 at 500; hunter births per episode at 500: 18.98 -> FAIL
+pilot_L2: coexisting 30/50 at 250, 27/50 at 500; hunter births per episode at 500: 19.28 -> FAIL
+pilot_L3: coexisting 32/50 at 250, 38/50 at 500; hunter births per episode at 500: 20.42 -> FAIL
+pilot_E1 (reported only) iter 250: coexisting 50/50, hunter births per episode 16.52, adults per episode 5.90
+pilot_E1 (reported only) iter 500: coexisting 49/50, hunter births per episode 12.82, adults per episode 1.44
+pilot: FAIL

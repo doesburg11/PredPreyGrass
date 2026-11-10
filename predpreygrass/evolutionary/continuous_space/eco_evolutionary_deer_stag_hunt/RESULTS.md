@@ -219,3 +219,58 @@ is the reading the design states (deer change "before sampling" iteration t);
 the wording above could also be read as the total at the end of iteration t,
 one iteration later. E's checkpoints at marks 250, 500, 750 and 1000 then hold
 D(mark), checked when each is saved. No other change.
+
+### 2.5 Pilot result (2026-11-10): failed, the stage stops
+
+The pilot ran from 04:11 to 06:50 without a crash. It fails its second criterion in
+all four L and B runs: hunters and deer coexist in fewer than 40 of 50 evaluated
+episodes. The third criterion is met everywhere (hunter births 19-22 per episode at
+iteration 500, bar 5). This time the hunters do not starve; the deer are **eaten out**:
+every non-coexisting episode ends with the deer extinct and hunters alive.
+
+| Run | Iteration | Coexisting (of 50) | Median deer extinction (physics step) | A (adults per episode) | S | Hunter births per episode |
+| --- | --- | --- | --- | --- | --- | --- |
+| pilot_L1 | 250 | 18 | 2475 | 68.6 | 0.131 | 17.0 |
+| pilot_L1 | 500 | 22 | 4139 | 84.2 | 0.139 | 19.0 |
+| pilot_L2 | 250 | 30 | 3394 | 87.1 | 0.115 | 20.9 |
+| pilot_L2 | 500 | 27 | 3493 | 83.9 | 0.131 | 19.3 |
+| pilot_L3 | 250 | 32 | 3853 | 87.7 | 0.130 | 19.0 |
+| pilot_L3 | 500 | 38 | 3373 | 94.5 | 0.131 | 20.4 |
+| pilot_B1 | 250 | 15 | 2970 | 61.1 | 0.127 | 15.3 |
+| pilot_B1 | 500 | 33 | 3630 | 85.0 | 0.137 | 21.5 |
+| pilot_E1 (reported only) | 250 | 50 | - | 5.9 | 0.022 | 16.5 |
+| pilot_E1 (reported only) | 500 | 49 (1 hunters extinct) | - | 1.4 | 0.008 | 12.8 |
+
+Results files: `results/pilot_<L1|L2|L3|B1|E1>_iter<250|500>_{eval,coop}.json`,
+`results/pilot2_check.txt`.
+
+- **For comparison:** deer_stag_hunt touch_1-3 at iteration 500, against the same
+  deer: 50 of 50 coexisting, A 25.7 / 28.4 / 13.9, S 0.026 / 0.028 / 0.017, hunter
+  births 18-22. The L and B hunters here catch 3-6 times as many adults per episode,
+  at about 5 times the success per attempt, against the very deer checkpoints the
+  source hunters met.
+- **The world and PPO settings** of pilot_L1 equal those of touch_1 apart from the
+  genes (unexpressed in L), the seed and the run length (checked from the saved
+  settings).
+- **The failure the design named:** DESIGN_2.md said that if the hunters here learned
+  faster than deer_stag_hunt's, the replayed deer "may be too weak and be eaten out".
+  That is what happened.
+
+**Likely cause (not tested):** the deer do not respond to these hunters. In
+deer_stag_hunt each deer checkpoint was the deer's answer to the hunters of that
+moment, and it kept changing as they did. Here each checkpoint stays put for ten
+iterations against hunters it never trained against, and the hunters appear to find
+ways of catching adults that those deer never had to answer. This is the familiar
+weakness of training against frozen opponents. It is an inference from the
+comparison above; no run has isolated it, and a hidden difference between the two
+modules' training paths has not been ruled out beyond the settings check.
+
+**E** coexists (49-50 of 50) but catches few adults, as its fixed cruise rule does
+not learn; it is reported only.
+
+**Per the pre-registration (§2.2), nothing is tuned or re-run. The main runs are not
+launched.** Both deer designs tried so far fail in opposite directions: frozen
+trained deer starve naive hunters (§1.5); replayed deer that cannot respond are eaten
+out (§2.5). Deer that learn alongside the hunters in every arm (DESIGN_2.md's first
+alternative, real coevolution but harder to attribute) would be a new design and a
+new user decision.

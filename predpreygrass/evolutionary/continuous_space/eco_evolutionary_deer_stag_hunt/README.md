@@ -1,11 +1,14 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-10): section 2 pre-registered and built; its pilot is next.**
+**Status (2026-11-10): stopped; both pilots failed.**
 Section 1 (2026-11-08, deer frozen at deer_stag_hunt's final policy) failed its pilot:
 hunters died out in 50 of 50 episodes in every arm, likely because naive hunters met
 trained deer ([RESULTS.md](RESULTS.md) §1.5). Section 2 ([DESIGN_2.md](DESIGN_2.md),
-[RESULTS.md](RESULTS.md) §2) replays deer_stag_hunt's touch-rule deer in training
-order, so hunters and deer start naive together, in the touch world.
+[RESULTS.md](RESULTS.md) §2) replayed deer_stag_hunt's touch-rule deer in training
+order. Its pilot failed the other way: hunters bred well but ate the deer out
+(coexisting 15-38 of 50, bar 40), catching 3-6 times as many adults as
+deer_stag_hunt's hunters against the same deer, likely because replayed deer cannot
+respond to new hunters (§2.5). Per the pre-registration, no main runs.
 
 Nature, nurture and both in a stag hunt. This is
 [deer_stag_hunt](../../../non_evolutionary/continuous_space/deer_stag_hunt/)'s world,
