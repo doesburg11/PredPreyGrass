@@ -1,6 +1,6 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-10): stopped; both pilots failed.**
+**Status (2026-11-10): section 3's pilot passed; main runs next.** Sections 1 and 2 stopped after failed pilots.
 Section 1 (2026-11-08, deer frozen at deer_stag_hunt's final policy) failed its pilot:
 hunters died out in 50 of 50 episodes in every arm, likely because naive hunters met
 trained deer ([RESULTS.md](RESULTS.md) §1.5). Section 2 ([DESIGN_2.md](DESIGN_2.md),
@@ -12,7 +12,10 @@ respond to new hunters (§2.5). Per the pre-registration, no main runs.
 Section 3 ([DESIGN_3.md](DESIGN_3.md), [RESULTS.md](RESULTS.md) §3), pre-registered
 and built 2026-11-10: deer learn alongside the hunters in every run, as in
 deer_stag_hunt; arms B and L only; hunters judged on a cross-play panel against
-other runs' deer. Its pilot is next.
+other runs' deer. Its pilot passed (§3.6): both runs coexisted in 49-50 of 50
+episodes at 250 and 500, with about 21 hunter births per episode. Section 3.5
+pre-registers an exploratory analysis with the genes' bias switched off at
+evaluation.
 
 Nature, nurture and both in a stag hunt. This is
 [deer_stag_hunt](../../../non_evolutionary/continuous_space/deer_stag_hunt/)'s world,

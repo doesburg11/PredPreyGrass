@@ -424,3 +424,39 @@ numbers, in both conditions; P1's per-checkpoint differences.
   code. It is written only after the main runs end, so that the code stays frozen at
   the pilot's commit until then (section 3.2), and Codex-reviewed before it runs. They
   run on B's checkpoints 500, 750 and 1000 whatever tests 1-3 show.
+
+### 3.6 Pilot result (2026-11-10): passed
+
+pilot3_L1 and pilot3_B1, seed 1, 500 iterations, deer learning alongside, commit
+f98825da with no uncommitted code. No crashes. Own-world evaluations, 50 episodes
+(seeds 0-49) and coop_fair.py 20 episodes:
+
+| Run | Coexisting at 250 | Coexisting at 500 | Hunter births per episode at 500 | Bar |
+|---|---|---|---|---|
+| pilot3_L1 | 49 / 50 | 50 / 50 | 21.24 | pass |
+| pilot3_B1 | 50 / 50 | 50 / 50 | 21.28 | pass |
+
+The bar (section 3.2) was coexisting at least 40 of 50 at each checkpoint and at
+least 5 hunter births per episode at 500. deer_stag_hunt touch_1-3 at 500: 18-22
+births. Deer learning alongside the hunters avoided both earlier failures: hunters
+did not starve (section 1.5) and deer were not eaten out (section 2.5).
+
+**Reported, not tested** (one seed per arm; the pilot enters no test):
+
+| Run, checkpoint | Adults caught per episode | Attempt success | Adult approaches with a partner near, over chance | Young caught with a partner | `a_young` mean | `a_adult` mean |
+|---|---|---|---|---|---|---|
+| L1, 250 | 18.28 | 0.017 | 1.16 | 14.6 | +0.24 | −0.17 |
+| L1, 500 | 20.84 | 0.021 | 1.15 | 18.0 | +0.24 | −0.11 |
+| B1, 250 | 15.04 | 0.025 | 0.82 | 53.8 | +0.92 | −0.45 |
+| B1, 500 | 20.00 | 0.028 | 0.91 | 57.2 | +0.92 | −0.72 |
+
+In B1 the genes act (β > 0) and moved toward young deer and away from adults; in L1
+they are unexpressed and move only by drift. In this one seed, B1's hunters
+approached adults with a partner near *below* chance, L1's above it (as in
+deer_stag_hunt §2), and B1 partnered more on young deer. No conclusion is drawn
+from one seed. An informal look at B1 checkpoint 430 and L1 checkpoint 260 during
+the pilot (scratchpad only, not a pilot measure) prompted section 3.5.
+
+Per section 3.2, the main runs (section 3.3) are next; nothing in sections 3.1-3.5
+changes.
+
