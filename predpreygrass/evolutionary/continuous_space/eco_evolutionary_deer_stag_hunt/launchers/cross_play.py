@@ -71,7 +71,11 @@ def done(path, expected):
     or incomplete file, which is then redone)."""
     try:
         data = json.loads(path.read_text())
-        return data.get("provenance") == expected and data["summary"]["episodes"] == EPISODES and data["coop"]["episodes"] == COOP_EPISODES
+        return (
+            data.get("provenance") == expected
+            and data["summary"]["episodes"] == EPISODES == len(data["episodes"])
+            and data["coop"]["episodes"] == COOP_EPISODES == len(data["coop_episodes"])
+        )
     except (OSError, ValueError, KeyError, TypeError):
         return False
 

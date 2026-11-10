@@ -82,6 +82,8 @@ def check_cell(data, hunter_run, deer_run, mark):
     expected = provenance(checkpoint_at(RUNS_DIR / hunter_run, mark), checkpoint_deer(checkpoint_at(RUNS_DIR / deer_run, mark)))
     if data.get("provenance") != expected or data["summary"]["episodes"] != 50 or data["coop"]["episodes"] != 20:
         raise ValueError(f"panel cell {hunter_run} vs {deer_run} at {mark}: provenance or episodes differ")
+    if len(data.get("coop_episodes") or []) != 20:
+        raise ValueError(f"panel cell {hunter_run} vs {deer_run} at {mark}: not 20 coop_fair episodes")
     if sorted(row["seed"] for row in data["episodes"]) != list(range(50)):
         raise ValueError(f"panel cell {hunter_run} vs {deer_run} at {mark}: seeds are not 0-49")
 

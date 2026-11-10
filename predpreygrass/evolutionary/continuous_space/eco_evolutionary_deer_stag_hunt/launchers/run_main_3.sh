@@ -21,16 +21,23 @@ grep -q "^pilot: PASS" "$RES/pilot3_check.txt" 2>/dev/null || fail "the pilot ha
 # Code frozen at the pilot (RESULTS.md section 3.2): both pilot runs started
 # from one commit without uncommitted code changes, and the module's code is
 # unchanged since (documents and results aside).
+CODE=("$M/*.py" "$M/config" "$M/launchers" "$M/tests")
+CODE_RE="^.. $M/([^/]*\.py|config/|launchers/|tests/)"  # git status lines touching the code
 C=""
 for run in pilot3_L1 pilot3_B1; do
   [ -e "$RUNS/$run/source_code/uncommitted.patch" ] && fail "$run started with uncommitted changes"
+  grep -Eq "$CODE_RE" "$RUNS/$run/source_code/git.txt" && fail "$run started with uncommitted or untracked code files"
   c=$(sed -n 's/^commit: //p' "$RUNS/$run/source_code/git.txt")
   [ -n "$c" ] || fail "$run has no recorded commit"
   [ -z "$C" ] || [ "$C" = "$c" ] || fail "the pilot runs started from different commits"
   C=$c
+  # The check must be newer than the pilot's checkpoints and evaluations.
+  for f in "$RUNS/$run/checkpoint/learner_group/learner/rl_module/predator_policy/module_state.pkl" "$RES/${run}_iter500_eval.json" "$RES/${run}_iter250_eval.json"; do
+    [ "$RES/pilot3_check.txt" -nt "$f" ] || fail "results/pilot3_check.txt is older than $f"
+  done
 done
-CODE=("$M/*.py" "$M/config" "$M/launchers" "$M/tests")
 git diff --quiet "$C" -- "${CODE[@]}" || fail "the code changed since the pilot ($C)"
+[ -z "$(git status --porcelain -- "${CODE[@]}")" ] || fail "uncommitted or untracked code files"
 
 # A run finished once (<run>.done) is never redone. A run that did not
 # finish, whether it crashed or the launcher was interrupted, gets one rerun

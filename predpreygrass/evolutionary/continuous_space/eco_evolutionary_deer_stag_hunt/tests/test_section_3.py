@@ -191,7 +191,10 @@ def test_cross_play_redoes_unreadable_or_incomplete_cells(tmp_path):
     assert not cross_play.done(path, expected)
     path.write_text(json.dumps({"provenance": expected, "summary": {"episodes": 50}}))
     assert not cross_play.done(path, expected)  # no coop part
-    path.write_text(json.dumps({"provenance": expected, "summary": {"episodes": 50}, "coop": {"episodes": 20}}))
+    full = {"provenance": expected, "summary": {"episodes": 50}, "episodes": [{}] * 50, "coop": {"episodes": 20}, "coop_episodes": [{}] * 20}
+    path.write_text(json.dumps(dict(full, coop_episodes=[{}] * 19)))
+    assert not cross_play.done(path, expected)  # truncated coop rows
+    path.write_text(json.dumps(full))
     assert cross_play.done(path, expected)
     assert not cross_play.done(path, {"checkpoint": "b"})  # another checkpoint
 
