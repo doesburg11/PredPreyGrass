@@ -1,8 +1,15 @@
-"""Train the hunters (arms L and B, DESIGN.md) against frozen deer, using
-the environment and PPO configuration files.
+"""Train the hunters (arms L and B, DESIGN.md), using the environment and
+PPO configuration files.
 
 The predators' policy is rl_module.GeneBiasPPOTorchRLModule (beta 0 in arm
-L, genes.BETA0 in arm B). The deer are never trained. Either (RESULTS.md
+L, genes.BETA0 in arm B). Three deer modes, exactly one set:
+
+- deer_learn (RESULTS.md section 3, DESIGN_3.md): a fresh deer policy
+  trained by PPO alongside the hunters, as in deer_stag_hunt (RLlib's
+  default network); each checkpoint holds its own deer. Checked after the
+  first iteration: deer and hunter weights both changed.
+
+Otherwise the deer are never trained. Either (RESULTS.md
 section 2, deer_schedule set) they are replayed from a deer_stag_hunt run in
 training order (deer_schedule.py): copied into <run>/deer_schedule/ with a
 manifest, D(t) loaded into the learner and every env runner before sampling
@@ -38,7 +45,7 @@ from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_env import config_env
-from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_ppo import config_ppo
+from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_ppo import DEER_RUNS_DIR, config_ppo
 
 # Set native thread limits before loading NumPy/PyTorch in CLI runs.
 if __name__ == "__main__":
@@ -171,9 +178,16 @@ def load_settings():
     if ppo["arm"] not in ARMS:
         raise ValueError(f"arm must be one of {sorted(ARMS)} (E is evolve.py)")
     ppo["beta"] = ARMS[ppo["arm"]]
-    if (ppo["deer_checkpoint"] is None) == (ppo["deer_schedule"] is None):
-        raise ValueError("set exactly one of deer_checkpoint (section 1) and deer_schedule (section 2)")
-    if ppo["deer_schedule"] is not None:
+    if not isinstance(ppo["deer_learn"], bool):
+        raise ValueError("deer_learn must be a boolean")
+    if sum((ppo["deer_checkpoint"] is not None, ppo["deer_schedule"] is not None, ppo["deer_learn"])) != 1:
+        raise ValueError("set exactly one of deer_checkpoint (section 1), deer_schedule (section 2) and deer_learn (section 3)")
+    if ppo["deer_learn"]:
+        if ppo["vf_share_layers"]:
+            raise ValueError("learning deer use RLlib's default network with vf_share_layers False (checkpoints.deer_module_at)")
+        # The world must be deer_stag_hunt's touch world, as in its touch runs.
+        deer_schedule.check_source(DEER_RUNS_DIR / "touch_1", env)
+    elif ppo["deer_schedule"] is not None:
         if ppo["iterations"] > deer_schedule.LAST:
             raise ValueError(f"a deer schedule covers at most {deer_schedule.LAST} iterations")
         ppo["deer_schedule"] = os.path.abspath(os.path.expanduser(os.fspath(ppo["deer_schedule"])))
@@ -195,7 +209,7 @@ def load_settings():
     return env, SimpleNamespace(**ppo)
 
 
-SOURCE_FILES = ("*.py", "config/*.py", "launchers/*.py", "launchers/*.sh", "README.md", "DESIGN.md", "DESIGN_2.md")
+SOURCE_FILES = ("*.py", "config/*.py", "launchers/*.py", "launchers/*.sh", "README.md", "DESIGN.md", "DESIGN_2.md", "DESIGN_3.md")
 
 
 def run_directory(ppo):
@@ -356,6 +370,14 @@ def switch_deer(algo, state):
         raise RuntimeError("switching the deer changed the optimizer state")
 
 
+def check_both_learned(before, after):
+    """Learn mode, after the first iteration: the learner's deer and hunter
+    weights both changed ({policy: numpy state} before and after)."""
+    for policy in ("deer_policy", "predator_policy"):
+        if _same_flat(before[policy], after[policy]):
+            raise RuntimeError(f"{policy}: the learner's weights did not change in the first iteration")
+
+
 def total_physics_steps(algo):
     """Lifetime physics steps summed over every simulation environment."""
     per_runner = algo.env_runner_group.foreach_env_runner(
@@ -377,16 +399,22 @@ def main():
         os.environ[variable] = "1"
     torch.set_num_threads(1)
     register()
+    learn = ppo.deer_learn
     replay = ppo.deer_schedule is not None
-    if replay:
+    logging = replay or learn
+    if logging:
+        log = open(Path(run_dir) / "iterations.jsonl", "w")
+    if learn:
+        deer_dir = loaded_deer = None
+    elif replay:
         deer_schedule.copy_schedule(ppo.deer_schedule, run_dir, ppo.iterations, env_config)
         active = deer_schedule.source_iteration(1)
         deer_dir = deer_schedule.deer_path(run_dir, active)
         switches = set(deer_schedule.switch_iterations(ppo.iterations))
-        log = open(Path(run_dir) / "iterations.jsonl", "w")
     else:
         deer_dir = copy_deer_policy(ppo.deer_checkpoint, run_dir)
-    loaded_deer = deer_state(deer_dir)
+    if not learn:
+        loaded_deer = deer_state(deer_dir)
 
     policies, mapping_fn = POLICIES, _per_species_mapping
 
@@ -427,9 +455,10 @@ def main():
         .multi_agent(
             policies=policies,
             policy_mapping_fn=mapping_fn,
-            # The deer act with their loaded weights; the learner never
-            # updates them.
-            policies_to_train=["predator_policy"],
+            # Learn mode: both species learn (deer_stag_hunt). Otherwise the
+            # deer act with their loaded weights; the learner never updates
+            # them.
+            policies_to_train=sorted(POLICIES) if learn else ["predator_policy"],
         )
         .rl_module(
             rl_module_spec=MultiRLModuleSpec(
@@ -438,7 +467,7 @@ def main():
                         module_class=GeneBiasPPOTorchRLModule,
                         model_config=predator_model_config(env_config, ppo.arm, ppo.vf_share_layers),
                     ),
-                    "deer_policy": RLModuleSpec(load_state_path=str(deer_dir)),
+                    "deer_policy": RLModuleSpec() if learn else RLModuleSpec(load_state_path=str(deer_dir)),
                 }
             ),
             model_config=DefaultModelConfig(vf_share_layers=ppo.vf_share_layers),
@@ -448,7 +477,10 @@ def main():
         config = config.debugging(seed=ppo.seed)
 
     algo = config.build_algo()
-    check_deer_frozen(algo, loaded_deer)
+    if learn:
+        initial = {policy: _numpy(_learner_state(algo, policy)) for policy in POLICIES}
+    else:
+        check_deer_frozen(algo, loaded_deer)
     writer = SummaryWriter(ppo.tensorboard_dir) if ppo.tensorboard_dir else None
     try:
         for i in range(ppo.iterations):
@@ -459,7 +491,13 @@ def main():
                 switch_deer(algo, loaded_deer)
                 print(f"deer of source iteration {active} from iteration {i + 1}", flush=True)
             result = algo.train()
-            if replay:
+            if learn:
+                if i == 0:
+                    check_both_learned(initial, {policy: _numpy(_learner_state(algo, policy)) for policy in POLICIES})
+                    del initial
+                log.write(json.dumps({"iteration": i + 1, "physics_steps": total_physics_steps(algo)}) + "\n")
+                log.flush()
+            elif replay:
                 # The deer must come out of every iteration as they went in
                 # (RLlib syncs only trained modules; checked, not assumed).
                 check_deer_frozen(algo, loaded_deer)
@@ -503,12 +541,13 @@ def main():
             save_evolution(algo, ppo.checkpoint_dir)
             if replay:
                 deer_schedule.write_active(ppo.checkpoint_dir, active, run_dir)
-            check_deer_frozen(algo, loaded_deer)
+            if not learn:
+                check_deer_frozen(algo, loaded_deer)
             print(f"checkpoint saved to {ppo.checkpoint_dir}", flush=True)
     finally:
         if writer is not None:
             writer.close()
-        if replay:
+        if logging:
             log.close()
         algo.stop()
 

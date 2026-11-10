@@ -43,6 +43,7 @@ def main():
         seed=k,
         deer_schedule=str(deer_source(k)),
         deer_checkpoint=None,
+        deer_learn=False,
         tensorboard_dir=str(run / "tensorboard"),
         checkpoint_dir=str(run / "checkpoint"),
     )

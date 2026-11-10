@@ -6,6 +6,8 @@ Layout of a run (train.py for L and B, evolve.py for E):
     runs/<run>/source_code/settings.json   {"config_env", "config_ppo"} (arm in config_ppo)
     runs/<run>/deer_policy/                 section 1: the frozen deer policy
     runs/<run>/deer_schedule/               section 2: the replayed deer (deer_schedule.py)
+                                            (section 3: the deer learn; each RLlib
+                                            checkpoint holds its own deer module)
     runs/<run>/checkpoint/[iter_<n>/]       gene_pools.json, budget.json (and,
                                             L and B, RLlib's checkpoint)
 """
@@ -118,12 +120,19 @@ def deer_module(run, env):
 
 
 def checkpoint_deer(checkpoint):
-    """The deer module directory a checkpoint acts with: section 2, the
+    """The deer module directory a checkpoint acts with: section 3, the
+    deer module saved inside the checkpoint itself; section 2, the
     replayed deer it was saved with (deer.json, hash checked); section 1,
     the run's frozen deer."""
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt import deer_schedule
 
     run = run_dir(checkpoint)
+    if (run_settings(checkpoint) or {}).get("config_ppo", {}).get("deer_learn"):
+        # Section 3: the deer trained in this run, inside this checkpoint.
+        path = Path(checkpoint) / "learner_group" / "learner" / "rl_module" / "deer_policy"
+        if not (path / "module_state.pkl").is_file():
+            raise ValueError(f"{checkpoint}: a learning-deer checkpoint without its deer module")
+        return path
     active = deer_schedule.active(checkpoint)
     if active is None:
         if deer_schedule.manifest(run) is not None:

@@ -14,10 +14,13 @@ config_ppo = {
     # "L": learning only (genes inherited, not expressed); "B": learning plus
     # the genes' innate bias (beta = genes.BETA0). The E arm is evolve.py.
     "arm": "B",
-    # Section 2: a deer_stag_hunt run whose deer are replayed in training
-    # order (deer_schedule.py). Section 1 instead set deer_checkpoint, one
-    # checkpoint's deer, frozen; exactly one of the two is set.
-    "deer_schedule": str(DEER_RUNS_DIR / "touch_1"),
+    # Deer, exactly one of three modes. Section 3: deer_learn, a fresh deer
+    # policy trained alongside the hunters. Section 2: deer_schedule, a
+    # deer_stag_hunt run whose deer are replayed in training order
+    # (deer_schedule.py). Section 1: deer_checkpoint, one checkpoint's deer,
+    # frozen.
+    "deer_learn": True,
+    "deer_schedule": None,
     "deer_checkpoint": None,
     "seed": None,  # RLlib's seed (network initialisation, first episodes)
     "iterations": 1000,  # Number of PPO training iterations.

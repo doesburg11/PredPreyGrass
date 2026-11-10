@@ -9,6 +9,10 @@ order. Its pilot failed the other way: hunters bred well but ate the deer out
 (coexisting 15-38 of 50, bar 40), catching 3-6 times as many adults as
 deer_stag_hunt's hunters against the same deer, likely because replayed deer cannot
 respond to new hunters (§2.5). Per the pre-registration, no main runs.
+Section 3 ([DESIGN_3.md](DESIGN_3.md), [RESULTS.md](RESULTS.md) §3), pre-registered
+and built 2026-11-10: deer learn alongside the hunters in every run, as in
+deer_stag_hunt; arms B and L only; hunters judged on a cross-play panel against
+other runs' deer. Its pilot is next.
 
 Nature, nurture and both in a stag hunt. This is
 [deer_stag_hunt](../../../non_evolutionary/continuous_space/deer_stag_hunt/)'s world,
@@ -42,6 +46,8 @@ Every hunter carries four genes in [-1, 1]:
 | L, learning only | PPO; genes inherited but not expressed | [train.py](train.py), β = 0 |
 | B, both | PPO plus the bias, inside the module's forward passes | [train.py](train.py), [rl_module.py](rl_module.py) |
 
+- **Deer, section 3:** a fresh deer policy trained alongside the hunters in every
+  run (`deer_learn`); each checkpoint holds its own deer.
 - **Deer, section 2:** replayed from deer_stag_hunt's touch_((k − 1) mod 3) + 1 in
   training order, never trained here: iteration t uses that run's deer of iteration
   10·floor(t/10) (iteration 10 before 20), copied into each run with a hashed
@@ -55,6 +61,16 @@ Every hunter carries four genes in [-1, 1]:
 From the repository root, long jobs under `systemd-run --user`:
 
 ```bash
+# Section 3 pilot: pilot3_L1, pilot3_B1 (500 iterations, deer learning), evaluations, check
+systemd-run --user --unit eco-deer-pilot3 bash $PWD/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_pilot_3.sh
+
+# Section 3 main runs (only after the pilot passed): main3_L1..6, main3_B1..6, evaluations, cross-play panel, verdict
+systemd-run --user --unit eco-deer-main3 bash $PWD/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_main_3.sh
+
+# One section 3 run (seed K, deer learning); the cross-play panel at a mark
+python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/replicate_3.py NAME B 1 [ITERATIONS]
+python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/cross_play.py MARK RUN RUN ...
+
 # Section 2 pilot: L on all three deer schedules, B on touch_1 (500 iterations), E matched, evaluations, check
 systemd-run --user --unit eco-deer-pilot2 bash $PWD/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/launchers/run_pilot_2.sh
 
@@ -86,6 +102,9 @@ python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hu
 - `launchers/`:
   - `replicate.py`, `evaluate_run.py`, `verdict.py`: runs, evaluation and the
     verdict;
+  - `replicate_3.py`, `cross_play.py`, `run_pilot_3.sh`, `run_main_3.sh`,
+    `pilot_check_3.py`, `verdict_3.py`: section 3's runs, cross-play panel, pilot,
+    main runs, pilot bar and verdict;
   - `run_pilot_2.sh`, `run_main_2.sh`, `pilot_check_2.py`, `verdict_2.py`: section 2's
     scripted pilot, main runs, pilot bar and verdict (section 1's scripts were removed
     after its stop; they are in git history, and `verdict.py` remains as the source of
@@ -93,4 +112,4 @@ python predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hu
 - `tests/`: the genes and bias, evolution, the RL module, deer_stag_hunt's rules, and
   equivalence with deer_stag_hunt.
 - `deer_schedule.py`: the replayed deer of section 2.
-- `DESIGN.md`, `DESIGN_2.md`, `RESULTS.md`: the designs and the experiments.
+- `DESIGN.md`, `DESIGN_2.md`, `DESIGN_3.md`, `RESULTS.md`: the designs and the experiments.
