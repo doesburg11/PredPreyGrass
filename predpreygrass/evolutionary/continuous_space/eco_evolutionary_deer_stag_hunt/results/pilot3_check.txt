@@ -1,0 +1,5 @@
+pilot3_B1: coexisting 50/50 at 250, 50/50 at 500; hunter births per episode at 500: 21.28 -> pass
+pilot3_L1: coexisting 49/50 at 250, 50/50 at 500; hunter births per episode at 500: 21.24 -> pass
+pilot3_L1 (reported) iter 500: adults per episode 20.84, attempt success 0.020972968621057506
+pilot3_B1 (reported) iter 500: adults per episode 20.00, attempt success 0.027605244996549344
+pilot: PASS
