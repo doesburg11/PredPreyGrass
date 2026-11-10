@@ -1,0 +1,8 @@
+Section 5 (valid: coexisting >= 45/50; absent: B not met and C upper bound < 0.5)
+  control_1        episodes  40  A +0.117 [+0.102, +0.133] met  B -0.013 [-0.026, +0.001] not met  C +0.309 [+0.268, +0.353] not met
+    coexisting 48/50 valid; A,B,C all met: False; pattern absent: True
+  control_2        episodes  40  A +0.096 [+0.083, +0.110] met  B -0.021 [-0.036, -0.007] not met  C +0.276 [+0.240, +0.315] not met
+    coexisting 49/50 valid; A,B,C all met: False; pattern absent: True
+  control_3        episodes  40  A +0.116 [+0.102, +0.129] met  B -0.028 [-0.043, -0.013] not met  C +0.275 [+0.234, +0.316] not met
+    coexisting 49/50 valid; A,B,C all met: False; pattern absent: True
+verdict: payoff supported

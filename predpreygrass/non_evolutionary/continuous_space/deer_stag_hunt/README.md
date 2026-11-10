@@ -167,7 +167,18 @@ party rule they did neither. This is consistent with the stag hunt in its strict
 pairing without being forced, but with hedges: the tests were set after a look at
 interim checkpoints of two of the runs (the third, not looked at, met them), the margins
 are 1 to 2 percentage points, and big middle deer may share places with adults or be
-treated like them; a control world in which adults can be caught alone was not run.
+treated like them.
+
+**Control world (section 5): payoff supported, in all 3 runs.** In a world where one
+hunter catches any young deer for certain, so that a partner never pays for one,
+hunters did not approach the largest middle deer with a partner near above chance (0.86
+to 0.94 times) and teamed up on deer of energy 4 to 5 at under a third of the adult
+level. So where the deer stand and how much they look like adults did not by themselves
+produce section 2.1's pattern; it is consistent with partnering more where a partner
+pays, though the worlds also differ in ecology and no direct test of the difference was
+made. Hedges: the rise in partnering from small to large middle deer appeared here too,
+consistent with place or likeness producing part of it; the joint-touch comparison is partly
+driven by more teaming on adults in this world; margins are a few percentage points.
 
 ## Origin
 

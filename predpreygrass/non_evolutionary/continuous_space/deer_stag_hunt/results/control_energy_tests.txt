@@ -1,0 +1,11 @@
+Recorded only (RESULTS.md section 5): the verdict lines below count all three runs, valid or not; section 5's verdict is control_verdict.txt.
+Section 2.1 tests (A: near (4,5) - near (2,3.5] > 0; B: near (4.5,5) - chance > 0; C: joint (4,5) / joint adult > 0.5; 95% intervals over episodes)
+  control_1        episodes  40  A +0.117 [+0.102, +0.133] met  B -0.013 [-0.026, +0.001] not met  C +0.309 [+0.268, +0.353] not met
+  control_2        episodes  40  A +0.096 [+0.083, +0.110] met  B -0.021 [-0.036, -0.007] not met  C +0.276 [+0.240, +0.315] not met
+  control_3        episodes  40  A +0.116 [+0.102, +0.129] met  B -0.028 [-0.043, -0.013] not met  C +0.275 [+0.234, +0.316] not met
+runs meeting A, B and C: 0 of 3 (needed: 2)
+verdict: pattern not shown
+comparison (no test):
+  touch_1_iter500  episodes  40  A +0.069 [+0.055, +0.081] met  B +0.028 [+0.017, +0.039] met  C +1.003 [+0.909, +1.105] met
+  touch_2_iter500  episodes  40  A +0.064 [+0.055, +0.072] met  B +0.022 [+0.011, +0.032] met  C +0.894 [+0.817, +0.973] met
+  touch_3_iter500  episodes  40  A +0.038 [+0.027, +0.049] met  B +0.004 [-0.005, +0.013] not met  C +0.839 [+0.757, +0.929] met

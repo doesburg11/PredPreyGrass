@@ -328,7 +328,8 @@ sense.
   the payoff break-even 3.5. Large middle deer may share places with adults, or
   hunters may treat them like adults (they differ by energy only), which a C ratio
   near 1 would also show. A control world in which adults can be caught alone would
-  separate place and generalisation from cooperation; it was not run.
+  separate place and generalisation from cooperation; it was not run (a control of
+  this kind, with young deer caught alone for certain instead, is section 5).
 - **The comparison with the party rule is between worlds trained apart,** so the
   differences in B and C may come from any difference the rule makes, not from payoff
   alone.
@@ -667,3 +668,75 @@ verdict, valid runs only) and, recorded only, `results/control_section1_tests.tx
 
 **Hard stop:** no setting changes during or after these runs, whatever the outcome,
 including if the validity rule fails. What follows is the user's decision.
+
+### 5.1 Results (2026-11-10, 01:50): payoff supported, in all 3 runs
+
+All three runs are valid (coexisting 48, 49 and 49 of 50 episodes), and in all three, B
+is not met and C's interval lies below 0.5 (`results/control_verdict.txt`).
+
+| Run | Coexisting (of 50) | A: near (4,5) − near (2,3.5] | B: near (4.5,5) − chance | C: joint (4,5) ÷ joint adult | Pattern absent |
+| --- | --- | --- | --- | --- | --- |
+| control_1 | 48 | +0.117 [+0.102, +0.133] | −0.013 [−0.026, +0.001] | 0.31 [0.27, 0.35] | yes |
+| control_2 | 49 | +0.096 [+0.083, +0.110] | −0.021 [−0.036, −0.007] | 0.28 [0.24, 0.32] | yes |
+| control_3 | 49 | +0.116 [+0.102, +0.129] | −0.028 [−0.043, −0.013] | 0.28 [0.23, 0.32] | yes |
+| *comparison, no test:* | | | | | |
+| touch_1, iteration 500 | 50 | +0.069 [+0.055, +0.081] | +0.028 [+0.017, +0.039] | 1.00 [0.91, 1.11] | |
+| touch_2, iteration 500 | 50 | +0.064 [+0.055, +0.072] | +0.022 [+0.011, +0.032] | 0.89 [0.82, 0.97] | |
+| touch_3, iteration 500 | 50 | +0.038 [+0.027, +0.049] | +0.004 [−0.005, +0.013] | 0.84 [0.76, 0.93] | |
+
+Near share ÷ chance and joint share by the deer's energy, final checkpoints (40
+episodes each; from `results/<run>_energy.json`; touch runs at iteration 500):
+
+| Deer energy | control_1 near ÷ chance | control_2 | control_3 | touch_1 | touch_2 | touch_3 | control_1 joint | control_2 | control_3 | touch_1 | touch_2 | touch_3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ≤ 2 (fawn) | 0.79 | 0.80 | 0.86 | 0.71 | 0.68 | 0.71 | 0.028 | 0.024 | 0.027 | 0.013 | 0.011 | 0.007 |
+| 2-2.5 | 0.23 | 0.29 | 0.31 | 0.56 | 0.46 | 0.43 | 0.007 | 0.007 | 0.005 | 0.033 | 0.023 | 0.000 |
+| 2.5-3 | 0.31 | 0.37 | 0.23 | 0.62 | 0.68 | 0.57 | 0.000 | 0.003 | 0.003 | 0.027 | 0.023 | 0.014 |
+| 3-3.5 | 0.45 | 0.44 | 0.29 | 0.69 | 0.69 | 0.65 | 0.005 | 0.003 | 0.003 | 0.035 | 0.044 | 0.023 |
+| 3.5-4 | 0.71 | 0.76 | 0.70 | 0.87 | 0.91 | 0.82 | 0.014 | 0.009 | 0.012 | 0.057 | 0.062 | 0.035 |
+| 4-4.5 | 0.79 | 0.84 | 0.85 | 1.01 | 0.99 | 0.86 | 0.043 | 0.037 | 0.039 | 0.088 | 0.078 | 0.043 |
+| 4.5-5 | 0.94 | 0.90 | 0.86 | 1.18 | 1.13 | 1.04 | 0.061 | 0.041 | 0.041 | 0.112 | 0.105 | 0.058 |
+| ≥ 5 (adult) | 1.13 | 1.09 | 1.20 | 1.09 | 1.14 | 1.07 | 0.170 | 0.142 | 0.146 | 0.100 | 0.103 | 0.061 |
+
+Also recorded (not tests): section 1's tests 1-3 met in all three runs (adults ÷ chance
+1.12, 1.10, 1.17, intervals above zero); chance 0.20-0.23 (touch runs at iteration 500:
+0.11-0.16); adults caught in 50 episodes 1133, 992, 947 (touch: 697-1421); hunter births
+1098-1125 (touch: 920-1117); young deer caught by two 1.2-1.5% of young catches (touch:
+2.2-4.0%).
+
+**What section 5 shows.** Where a partner never pays for a young deer, hunters did not
+approach the largest middle deer with a partner near above chance (0.86-0.94 times
+chance, against 1.04-1.18 in the touch world at the same training length), and teamed
+up on deer in (4, 5) at under a third of the adult level (against 0.84-1.00). So
+place and likeness to adults, which this world keeps, did not by themselves produce
+section 2.1's pattern; the pattern is consistent with hunters partnering more where a
+partner pays.
+
+**Limits of section 5.**
+
+- **The rise is there without the payoff.** Test A, the rise from small to large
+  middle deer, was met here too, more strongly than in the touch world (+0.10 to +0.12):
+  near share rises with energy even where a partner never pays, which is consistent
+  with place or likeness producing part of section 2.1's rise. What this world lacks is
+  the step from just below chance to above it; that the payoff causes the step is
+  consistent with these results but not shown by them (next limits).
+- **C's drop is partly in the denominator.** Joint touches on adults were more common
+  here (0.14-0.17 against 0.06-0.10), and those on deer in (4, 5) less common (about
+  0.04-0.06 against 0.04-0.11; touch_3's overlaps the control range, below control_1's
+  and above control_2's and control_3's).
+  C's ratio falls from both sides, so it overstates the change in teaming up on big
+  middle deer alone. B, measured against chance in its own world, does not have this
+  problem; it is the cleaner of the two.
+- **The worlds differ in ecology.** Hunters were closer together here (chance 0.20-0.23
+  against 0.11-0.16), and fewer young deer were caught; any of that may affect B and C
+  as well as the payoff.
+- **Small margins**, as in section 2.1: B differs between worlds by 2-6 percentage
+  points over all pairings of a control run with a touch run (3-4 for runs of the same
+  number).
+- **Absence, not a test of difference.** As set: the verdict rests on the pattern's
+  absence in this world, not on a direct test of the difference between the worlds;
+  touch_3 at iteration 500 also missed B.
+- Place and likeness are not separated from each other.
+
+**Hard stop reached.** No setting changes followed; the next step is the user's
+decision.

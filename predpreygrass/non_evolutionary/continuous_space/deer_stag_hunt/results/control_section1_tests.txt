@@ -1,0 +1,5 @@
+Recorded only (RESULTS.md section 5): the verdict lines below count all three runs, valid or not; section 5's verdict is control_verdict.txt.
+control_1: coexisting 48/50; chance 0.233, fawn 0.18242710795902287, adult 0.26198557488332624, adult/chance 1.124145055692628, interval [0.012011422914562697, 0.045968879408066904]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+control_2: coexisting 49/50; chance 0.200, fawn 0.1663768115942029, adult 0.21866182990729544, adult/chance 1.0951788951567465, interval [0.0059609065810614925, 0.031763343265224064]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+control_3: coexisting 49/50; chance 0.202, fawn 0.17090697222761703, adult 0.23591854419410746, adult/chance 1.1691607010390355, interval [0.023910415916136046, 0.04405743026327519]; tests {'1_coexistence': True, '2_cooperation': True, '3_above_section_7': True}
+replicated
