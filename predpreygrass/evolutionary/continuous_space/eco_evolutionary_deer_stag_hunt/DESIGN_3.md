@@ -1,6 +1,7 @@
 # Design note 3: nature and nurture with deer learning alongside (2026-11-10)
 
-Status: **draft 2, awaiting the user's decisions (end). Nothing built.** Draft 1 was
+Status: **draft 2 approved 2026-11-10 with every recommended option (decisions 1-5
+below); pre-registered in RESULTS.md section 3.** Draft 1 was
 revised after a Codex review ("Revisions after review", end).
 This is a **new stage**, prompted by a user decision after section 2's stop. It gets
 its own pre-registration (RESULTS.md section 3) and does not continue or rerun

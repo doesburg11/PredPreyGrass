@@ -274,3 +274,73 @@ trained deer starve naive hunters (§1.5); replayed deer that cannot respond are
 out (§2.5). Deer that learn alongside the hunters in every arm (DESIGN_2.md's first
 alternative, real coevolution but harder to attribute) would be a new design and a
 new user decision.
+
+## 3. Deer learning alongside the hunters (pre-registered 2026-11-10, before any code)
+
+A new stage, prompted by the user's decision after section 2's stop, not a rerun of
+sections 1 or 2. Design and reasons: DESIGN_3.md (draft 2, approved 2026-11-10 with
+every recommended option). Everything not named here is as in section 2 and
+DESIGN.md.
+
+### 3.1 World, deer and arms
+
+- **World:** deer_stag_hunt's touch rule, instant grass, `deer_young_solo` "graded"
+  (section 2.1's world).
+- **Deer:** a fresh deer policy in every run, trained by PPO alongside the hunters,
+  with deer_stag_hunt's network and settings. No deer are copied from anywhere.
+- **Arms:** L (genes inherited, visible, unexpressed, β = 0) and B (β₀ = 3.4417), as in
+  section 1.1. **Arm E is not run.**
+
+### 3.2 Pilot (before the main runs)
+
+- **Code frozen first:** code, launchers and verdict scripts committed and
+  Codex-reviewed before the pilot; each run saves its source and commit hash.
+- **Runs:** pilot3_L1, pilot3_B1, seed 1, 500 iterations, two at a time. They enter
+  no test; nothing in this section changes after seeing them.
+- **Pilot passes if, in both runs:** (1) nothing crashes; (2) at iteration 250 and,
+  separately, at iteration 500, at least 40 of 50 own-world episodes coexisting;
+  (3) at iteration 500, hunter births per own-world episode at least 5.
+- **If the pilot fails:** this stage stops and the eco-evolutionary line in this world
+  ends. Nothing is tuned or re-run: no change to β, the genes, any PPO or world
+  setting, and no run is excluded.
+
+### 3.3 Main runs
+
+- L_k and B_k (`main3_L<k>`, `main3_B<k>`), k = 1-6, seed k, 1000 iterations, two at a
+  time; checkpoints every 10 iterations.
+- **Own world:** checkpoints 250, 500, 750, 1000 against their own run's deer at that
+  checkpoint, evaluate.py 50 episodes (seeds 0-49) and coop_fair.py 20 episodes.
+- **Cross-play panel:** at 500, 750 and 1000, every run's hunters (policy plus the
+  checkpoint's founder gene pool) against every other run's deer at the same
+  checkpoint, evaluate.py 50 episodes, seeds 0-49 (3 × 12 × 11 = 396 evaluations).
+- **Failures that aren't results:** a crash or hardware failure: rerun from scratch
+  with the same seed, recorded; no other rerun. A code bug (not a setting): fixed,
+  recorded, every affected run rerun from scratch (the pilot too if affected), no
+  pre-registered setting changed. A technically failed evaluation is rerun; a
+  checkpoint that cannot be loaded is reported missing.
+- **Hard stop:** after the main runs, the stage stops whatever the outcome.
+
+### 3.4 Measures and tests, set before the main runs
+
+- **Measures:** A, S, C as in section 1.4; coexisting = both species alive at the
+  episode's last physics step.
+- **Panel value of a hunter run:** A = mean over its 33 off-diagonal cells (11 deer ×
+  3 checkpoints); S pooled over those cells' episodes. Own-run cells are left out.
+- **Test statistic everywhere:** mean(B) − mean(L) of run values; one-sided exact
+  permutation test over all 924 labellings of 6 of the 12 runs as B; p = share of
+  labellings with a difference ≥ the observed.
+- **Test 1 (primary):** panel A and panel S, p < 0.05 each; both must hold, otherwise
+  "not met".
+- **Test 2 (condition):** in at least 5 of 6 B runs, own-world coexisting counts at
+  500, 750 and 1000 sum to at least 135 of 150.
+- **Test 3 (secondary, its own claim per gene):** run value = mean of the per-episode
+  selection differential (`gene_stats`) over own-world evaluation episodes at 500,
+  750 and 1000 with a defined value, equally weighted (undefined ones counted and
+  reported); B > L for `a_hunter` and for `a_adult`, p < 0.025 each.
+- **Verdicts:** tests 1 and 2 met: "in this world, with deer learning alongside, the
+  hunter systems of arm B (shared PPO learning plus an evolving innate attraction
+  bias) catch more adults, and more per attempt, than those of arm L (learning
+  alone), against a common panel of coevolved deer"; not a claim that the genes'
+  evolution caused it. Test 3 met for a gene: "in B, `<gene>` had a larger positive
+  selection differential than in L", with gene means reported beside it.
+- **Also reported:** DESIGN_3.md "Also reported, not tested".
