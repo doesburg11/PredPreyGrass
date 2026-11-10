@@ -740,3 +740,24 @@ partner pays.
 
 **Hard stop reached.** No setting changes followed; the next step is the user's
 decision.
+
+## Closed (2026-11-10)
+
+The module is closed by the user's decision, with positive results, and stays in
+place (not archived). What it shows, with the hedges of each section:
+
+- **Section 1:** the replication of stag_hunt_rule_prey's cooperation result without
+  calls: met in 2 of 3 runs at iteration 1000 (all 3 at 250 and 500).
+- **Section 2:** with the touch rule, hunters and deer coexisted in 50 of 50 episodes in
+  all 3 runs, and adult approaches with a partner near were above chance (1.12-1.21).
+- **Section 2.1:** hunters partnered more on large middle deer, where a partner pays,
+  than on small ones: pattern shown in 2 of 3 runs, small margins.
+- **Section 5:** in a control world where a partner never pays for a young deer, that
+  step was absent in 3 of 3 runs: consistent with the payoff driving it, though the
+  rise with deer size persists there.
+- **Sections 3-4:** gradual grass closed; instant grass stays the default.
+
+Left unexplored: the late decline in adult catches between iterations 500 and 1000
+(sections 1.1 and 2), whose cause is unknown. Continued in
+eco_evolutionary_deer_stag_hunt (nature and nurture), which reads this module's
+touch runs.

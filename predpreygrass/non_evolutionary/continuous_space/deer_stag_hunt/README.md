@@ -5,6 +5,19 @@
   <br><em>Trained hunters and deer (run_2, seed 0): adults have antlers and can only be caught by two hunters together; fawns are small with white spots.</em>
 </p>
 
+**Status: closed 2026-11-10, with positive results. Kept in place; not for archiving.**
+Hunters learned to cooperate on big game without being told to. With the touch rule
+(two hunters must touch a deer together), all three runs kept hunters and deer
+coexisting in 50 of 50 episodes, and hunters approached adult deer with a partner
+near above chance. They also teamed up more on large middle deer, where a partner
+pays, than on small ones (2 of 3 runs), and a control world in which a partner
+never pays for a young deer showed no such step (3 of 3): consistent with hunters
+partnering where it pays. Margins are small and the hedges are in
+[RESULTS.md](RESULTS.md). The one thread left unexplored is the late decline in
+adult catches between iterations 500 and 1000. The follow-up on nature and nurture
+is [eco_evolutionary_deer_stag_hunt](../../../evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/),
+which uses this module's `runs/touch_1` settings to check its world.
+
 ## The idea
 
 In the classic stag hunt, a hunter alone can always catch a hare, a small but safe
