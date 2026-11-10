@@ -1,10 +1,12 @@
 """RESULTS.md section 3's cross-play panel: at a checkpoint mark, every
 run's hunters (policy plus the checkpoint's founder gene pool) against
 every other run's deer at the same mark, evaluate.py 50 episodes, seeds
-0-49, to results/<hunters>_iter<mark>_vs_<deer>_eval.json. Own-run cells
+0-49, and coop_fair.py 20 episodes (C, reported), to
+results/<hunters>_iter<mark>_vs_<deer>_eval.json. Own-run cells
 are the own-world evaluations (launchers/evaluate_run.py) and are not
 repeated here. Existing result files whose recorded checkpoint, deer and
-hashes match are kept, so the panel can be resumed.
+hashes match are kept, so the panel can be resumed; an unreadable or
+incomplete file is redone.
 
 Each pair is refused unless both runs learned their deer (section 3) in
 the same world, with the same deer observation and action spaces.
@@ -23,9 +25,10 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.checkpoints import checkpoint_at, checkpoint_deer, checkpoint_env_config, run_settings
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_ppo import RUNS_DIR
 from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.deer_schedule import sha256
+from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.launchers.coop_fair import coop
 
 RESULTS = Path(__file__).resolve().parents[1] / "results"
-EPISODES = 50
+EPISODES, COOP_EPISODES = 50, 20
 
 
 def gene_free(config):
@@ -64,10 +67,13 @@ def provenance(hunters, deer_dir):
 
 
 def done(path, expected):
-    if not path.is_file():
+    """A finished cell with this provenance (False for a missing, unreadable
+    or incomplete file, which is then redone)."""
+    try:
+        data = json.loads(path.read_text())
+        return data.get("provenance") == expected and data["summary"]["episodes"] == EPISODES and data["coop"]["episodes"] == COOP_EPISODES
+    except (OSError, ValueError, KeyError, TypeError):
         return False
-    data = json.loads(path.read_text())
-    return data.get("provenance") == expected and data["summary"]["episodes"] == EPISODES
 
 
 def main():
@@ -93,8 +99,11 @@ def main():
             summary, rows = evaluate.evaluate(hunters, EPISODES, args.workers, deer=deer_dir)
             if summary["deer"] != str(deer_dir) or summary["checkpoint"] != str(hunters):
                 raise RuntimeError(f"{path}: evaluated {summary['checkpoint']} with {summary['deer']}")
-            path.write_text(json.dumps({"provenance": expected, "hunter_run": hunter_run, "deer_run": deer_run, "mark": args.mark, "summary": summary, "episodes": rows}, indent=1))
-            print(f"iter {args.mark}: {hunter_run} hunters vs {deer_run} deer: coexisting {summary['coexisting']}/50, adults/episode {summary['adults_caught_per_episode']:.2f}", flush=True)
+            coop_summary, coop_rows = coop(hunters, COOP_EPISODES, args.workers, deer=deer_dir)
+            temporary = path.with_suffix(".tmp")
+            temporary.write_text(json.dumps({"provenance": expected, "hunter_run": hunter_run, "deer_run": deer_run, "mark": args.mark, "summary": summary, "episodes": rows, "coop": coop_summary, "coop_episodes": coop_rows}, indent=1))
+            temporary.replace(path)
+            print(f"iter {args.mark}: {hunter_run} hunters vs {deer_run} deer: coexisting {summary['coexisting']}/50, adults/episode {summary['adults_caught_per_episode']:.2f}, adult/chance {coop_summary['adult_over_chance']}", flush=True)
 
 
 if __name__ == "__main__":

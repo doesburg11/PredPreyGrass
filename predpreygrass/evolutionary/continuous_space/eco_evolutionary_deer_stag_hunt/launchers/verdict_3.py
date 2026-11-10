@@ -50,17 +50,28 @@ def permutation_p(bs, ls):
 
 def check_own(run, mark):
     """Refuse an own-world result file that is not this run's checkpoint at
-    this mark against its own deer."""
+    this mark against its own deer, with 50 evaluation episodes (seeds
+    0-49) and 20 coop_fair episodes, written after the checkpoint's modules
+    (no stale file from an earlier run of the same name)."""
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.checkpoints import checkpoint_at, checkpoint_deer
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_ppo import RUNS_DIR
 
     checkpoint = checkpoint_at(RUNS_DIR / run, mark)
     expected = (str(checkpoint), str(checkpoint_deer(checkpoint)))
-    for kind in ("eval", "coop"):
-        data = json.loads((RESULTS / f"{run}_iter{mark}_{kind}.json").read_text())
+    modules = [checkpoint / "learner_group" / "learner" / "rl_module" / p / "module_state.pkl" for p in ("predator_policy", "deer_policy")]
+    newest = max(m.stat().st_mtime for m in modules)
+    for kind, episodes in (("eval", 50), ("coop", 20)):
+        path = RESULTS / f"{run}_iter{mark}_{kind}.json"
+        data = json.loads(path.read_text())
         found = (data.get("checkpoint") or data["summary"].get("checkpoint"), data.get("deer") or data["summary"].get("deer"))
         if found != expected:
             raise ValueError(f"{run} iter {mark} {kind}: evaluated {found}, expected {expected}")
+        if data["summary"]["episodes"] != episodes or len(data["episodes"]) != episodes:
+            raise ValueError(f"{path}: not {episodes} episodes")
+        if kind == "eval" and sorted(row["seed"] for row in data["episodes"]) != list(range(episodes)):
+            raise ValueError(f"{path}: seeds are not 0-{episodes - 1}")
+        if path.stat().st_mtime < newest:
+            raise ValueError(f"{path}: older than the checkpoint it claims to evaluate")
 
 
 def check_cell(data, hunter_run, deer_run, mark):
@@ -69,8 +80,10 @@ def check_cell(data, hunter_run, deer_run, mark):
     from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.launchers.cross_play import provenance
 
     expected = provenance(checkpoint_at(RUNS_DIR / hunter_run, mark), checkpoint_deer(checkpoint_at(RUNS_DIR / deer_run, mark)))
-    if data.get("provenance") != expected or data["summary"]["episodes"] != 50:
+    if data.get("provenance") != expected or data["summary"]["episodes"] != 50 or data["coop"]["episodes"] != 20:
         raise ValueError(f"panel cell {hunter_run} vs {deer_run} at {mark}: provenance or episodes differ")
+    if sorted(row["seed"] for row in data["episodes"]) != list(range(50)):
+        raise ValueError(f"panel cell {hunter_run} vs {deer_run} at {mark}: seeds are not 0-49")
 
 
 def load_panel(runs, marks=CHECKPOINTS, check=True):
@@ -83,7 +96,7 @@ def load_panel(runs, marks=CHECKPOINTS, check=True):
                     data = json.loads((RESULTS / f"{h}_iter{mark}_vs_{d}_eval.json").read_text())
                     if check:
                         check_cell(data, h, d, mark)
-                    panel[(h, d, mark)] = data["summary"]
+                    panel[(h, d, mark)] = dict(data["summary"], coop=data.get("coop"))
     return panel
 
 
@@ -96,7 +109,8 @@ def panel_values(panel, run, side="hunters"):
     a = sum(s["totals"].get("adults_caught", 0) / s["episodes"] for s in cells) / len(cells)
     caught = sum(s["totals"].get("adults_caught", 0) for s in cells)
     attempts = caught + sum(s["totals"].get("adult_failures", 0) for s in cells)
-    return {"A": a, "S": caught / attempts if attempts else 0.0, "cells": len(cells)}
+    ratios = [s["coop"]["adult_over_chance"] for s in cells if s.get("coop") and s["coop"].get("adult_over_chance") is not None]
+    return {"A": a, "S": caught / attempts if attempts else 0.0, "C": sum(ratios) / len(ratios) if ratios else None, "cells": len(cells)}
 
 
 def selection_value(rows_by_mark, gene):
@@ -182,12 +196,21 @@ def main():
     for arm in ("L", "B"):
         for r, sel in zip(RUNS[arm], selection_full[arm]):
             print(f"  {r} selection: " + "; ".join(f"{g} {v[0]:+.5f} ({v[1]} defined, {v[2]} undefined)" if v[0] is not None else f"{g} - ({v[2]} undefined)" for g, v in sel.items()))
-    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.launchers.verdict import evolution
+    for arm in ("L", "B"):
+        cs = [v["C"] for v in panel_by_arm[arm] if v["C"] is not None]
+        print(f"  panel C, arm {arm}: " + " ".join(f"{v['C']:.3f}" if v["C"] is not None else "-" for v in panel_by_arm[arm]) + (f" (mean {sum(cs) / len(cs):.3f})" if cs else ""))
+    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.checkpoints import checkpoint_at, gene_means
+    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config.config_ppo import RUNS_DIR
 
+    print("  own world (the panel's diagonal) per checkpoint: coexisting, A, S, hunter births per episode, gene pool means")
     for arm in ("L", "B"):
         for r in RUNS[arm]:
-            e = evolution(r, 1000)
-            print(f"  {r} final gene pool means: " + " ".join(f"{g} {v:+.3f}" for g, v in e["genes"].items()))
+            for mark in (250,) + CHECKPOINTS:
+                s = json.loads((RESULTS / f"{r}_iter{mark}_eval.json").read_text())["summary"]
+                t = s["totals"]
+                success = s.get("adult_attempt_success")
+                genes_text = " ".join(f"{g} {v:+.3f}" for g, v in gene_means(checkpoint_at(RUNS_DIR / r, mark)).items())
+                print(f"    {r} iter {mark}: coexisting {s['coexisting']}, A {s['adults_caught_per_episode']:.2f}, S {success if success is None else round(success, 4)}, births {t.get('births_predator', 0) / s['episodes']:.2f}; {genes_text}")
     print(f"tests: {tests}")
     print("verdict (tests 1 and 2): met" if tests["1_panel_B_over_L"] and tests["2_B_coexists"] else "verdict (tests 1 and 2): not met")
     for gene in SELECTED:

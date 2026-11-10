@@ -168,3 +168,75 @@ def test_judge_selection_alpha_and_missing_values():
     selection["B"] = [{"a_hunter": None, "a_adult": 0.1}] + selection["B"][1:]
     tests, details = verdict_3.judge(panel, coexist, selection)
     assert not tests["3_selection_a_hunter"] and details["selection_a_hunter"]["p"] is None
+
+
+def test_panel_c_is_the_mean_of_cells_with_a_value_and_a_full_panel_has_33_cells():
+    panel = {}
+    runs = [f"r{k}" for k in range(12)]
+    for mark in (500, 750, 1000):
+        for h in runs:
+            for d in runs:
+                if h != d:
+                    panel[(h, d, mark)] = dict(cell(1, 1), coop={"adult_over_chance": 1.0 if d != "r1" else None})
+    v = verdict_3.panel_values(panel, "r0")
+    assert v["cells"] == 33 and v["C"] == pytest.approx(1.0)
+    assert verdict_3.panel_values(panel, "r0", "deer")["cells"] == 33
+
+
+def test_cross_play_redoes_unreadable_or_incomplete_cells(tmp_path):
+    path = tmp_path / "cell.json"
+    expected = {"checkpoint": "a"}
+    assert not cross_play.done(path, expected)  # missing
+    path.write_text("{not json")
+    assert not cross_play.done(path, expected)
+    path.write_text(json.dumps({"provenance": expected, "summary": {"episodes": 50}}))
+    assert not cross_play.done(path, expected)  # no coop part
+    path.write_text(json.dumps({"provenance": expected, "summary": {"episodes": 50}, "coop": {"episodes": 20}}))
+    assert cross_play.done(path, expected)
+    assert not cross_play.done(path, {"checkpoint": "b"})  # another checkpoint
+
+
+def own_files(tmp_path, run_dir, checkpoint, deer, eval_seeds=range(50), coop_episodes=20):
+    rows = [{"seed": s} for s in eval_seeds]
+    (tmp_path / "r_iter250_eval.json").write_text(json.dumps({"summary": {"checkpoint": str(checkpoint), "deer": str(deer), "episodes": len(rows)}, "episodes": rows}))
+    (tmp_path / "r_iter250_coop.json").write_text(json.dumps({"checkpoint": str(checkpoint), "deer": str(deer), "summary": {"episodes": coop_episodes}, "episodes": [{}] * coop_episodes}))
+
+
+@pytest.fixture
+def own_run(tmp_path, monkeypatch):
+    from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt.config import config_ppo as cfg
+
+    runs, results = tmp_path / "runs", tmp_path / "results"
+    results.mkdir()
+    run, checkpoint, deer = fake_run(runs, "r")
+    hunters = checkpoint / "learner_group" / "learner" / "rl_module" / "predator_policy"
+    hunters.mkdir(parents=True)
+    (hunters / "module_state.pkl").write_bytes(b"y")
+    monkeypatch.setattr(cfg, "RUNS_DIR", runs)
+    monkeypatch.setattr(verdict_3, "RESULTS", results)
+    return results, run, checkpoint, deer
+
+
+def test_check_own_accepts_a_complete_fresh_evaluation(own_run):
+    results, run, checkpoint, deer = own_run
+    own_files(results, run, checkpoint, deer)
+    verdict_3.check_own("r", 250)
+
+
+@pytest.mark.parametrize("kwargs", [{"eval_seeds": range(49)}, {"eval_seeds": list(range(49)) + [0]}, {"coop_episodes": 19}])
+def test_check_own_refuses_incomplete_evaluations(own_run, kwargs):
+    results, run, checkpoint, deer = own_run
+    own_files(results, run, checkpoint, deer, **kwargs)
+    with pytest.raises(ValueError):
+        verdict_3.check_own("r", 250)
+
+
+def test_check_own_refuses_a_file_older_than_its_checkpoint(own_run):
+    import os
+
+    results, run, checkpoint, deer = own_run
+    own_files(results, run, checkpoint, deer)
+    for path in results.iterdir():
+        os.utime(path, (1, 1))
+    with pytest.raises(ValueError):
+        verdict_3.check_own("r", 250)

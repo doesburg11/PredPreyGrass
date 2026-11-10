@@ -6,8 +6,9 @@ L, genes.BETA0 in arm B). Three deer modes, exactly one set:
 
 - deer_learn (RESULTS.md section 3, DESIGN_3.md): a fresh deer policy
   trained by PPO alongside the hunters, as in deer_stag_hunt (RLlib's
-  default network); each checkpoint holds its own deer. Checked after the
-  first iteration: deer and hunter weights both changed.
+  default network); each checkpoint holds its own deer. Checked: after the
+  first iteration, deer and hunter weights both changed; after every
+  iteration, every env runner's acting deer weights equal the learner's.
 
 Otherwise the deer are never trained. Either (RESULTS.md
 section 2, deer_schedule set) they are replayed from a deer_stag_hunt run in
@@ -495,6 +496,8 @@ def main():
                 if i == 0:
                     check_both_learned(initial, {policy: _numpy(_learner_state(algo, policy)) for policy in POLICIES})
                     del initial
+                # The env runners act with the learner's current deer.
+                check_deer_frozen(algo, _numpy(_learner_state(algo, "deer_policy")))
                 log.write(json.dumps({"iteration": i + 1, "physics_steps": total_physics_steps(algo)}) + "\n")
                 log.flush()
             elif replay:
