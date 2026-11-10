@@ -344,3 +344,83 @@ DESIGN.md.
   evolution caused it. Test 3 met for a gene: "in B, `<gene>` had a larger positive
   selection differential than in L", with gene means reported beside it.
 - **Also reported:** DESIGN_3.md "Also reported, not tested".
+
+### 3.5 Exploratory analysis: innate bias versus learned strategy (pre-registered 2026-11-10, before any main run)
+
+**Where it came from, stated plainly:** this analysis was added while the pilot
+was running, after an informal look at pilot3_B1's checkpoint 430 (own-world
+evaluation, 50 episodes, not a pilot measure). There, B's genes had moved toward
+young deer (`a_young` mean +0.91) and away from adults (`a_adult` mean −0.66), while
+adult catches per episode were about L1's at checkpoint 260. The user proposed a
+reading: **nature takes the simple, robust option (easy prey), and learning builds
+the harder one (adults, with partners) on top of it.** Sections 3.1-3.4 are
+unchanged by this; it adds nothing to their tests or verdicts.
+
+**Hypothesis H_nn:** in arm B, the innate bias term (β times the gene-weighted
+direction vectors added to the move logits, rl_module.py) has an attraction
+component toward young deer and a repulsion component from adults, and B's trained
+policy, with that term removed, still hunts adults and partners on them, partly
+against that pull.
+
+**Premise check, per checkpoint:** a B run meets the premise at a checkpoint if the
+mean over its 50 own-world episodes of the per-episode gene means (`gene_stats`,
+all hunters in the episode) has `a_young` > 0 and `a_adult` < 0. Premise status is
+reported for every B run at 500, 750 and 1000. P1 and P2 are interpreted only if at
+least 4 of 6 B runs meet the premise at each of the three checkpoints; otherwise
+they are reported, without interpretation.
+
+**The comparison:** each main B run's checkpoints 500, 750 and 1000, played twice with
+the same policy weights, founder gene pool and episode seeds:
+
+- **bias on:** β = 3.4417, as trained (section 3.3's evaluations, reused);
+- **bias off:** β = 0 at evaluation only. This is **B's trained policy with the
+  direct logit bias disabled**, not learning isolated from evolution: the network
+  still sees its evolved genes and can act on them, and it was trained with the bias
+  and in B's coevolutionary history.
+
+Both conditions are played against **the run's own deer** (P1: evaluate.py 50
+episodes, seeds 0-49; coop_fair.py 20 episodes) and **the section 3.3 cross-play panel**
+(P2: the 33 off-diagonal cells per run, same seeds and episode counts). Run values as
+in section 3.4: the mean over the three checkpoints, panel values over the 33 cells.
+
+**Predictions under H_nn:**
+
+- **P1 (within B, paired, own world):** bias off minus bias on is positive for A
+  (adults caught per episode) and for C (adult approaches with a partner near, over
+  chance). Per B run, the difference; one-sided sign-flip permutation test over the
+  64 sign arrangements of the 6 differences, p < 0.05 for each measure. All six
+  differences are reported. Assumption: the sign-flip test is valid if, without an
+  effect, each run's difference is symmetric about 0; the conditions were not
+  randomly assigned within runs (bias off is a fixed intervention), so this is an
+  assumption, not guaranteed by design. With 6 pairs the smallest p is 1/64; p < 0.05
+  needs at most 3 of 64 arrangements at least as large as observed.
+- **P2 (B's trained policy against L's, common panel):** B's panel values with the
+  bias off against L's panel values (section 3.4), on A and C: section 3.4's
+  statistic and 924-labelling permutation test, one-sided, B-off > L, p < 0.05 each.
+
+**Decision language:** "consistent with H_nn" only if P1 holds on both A and C. P2 is
+reported beside it, separately, as whether B's trained policy, bias off, targets
+adults more than L's against common deer; it does not decide H_nn. Each of the four
+tests is reported on its own, not combined.
+
+**Also reported:** S (adult attempt success), young caught solo and with a partner,
+the share of catches that are adults, hunter births and mean hunter and deer
+numbers, in both conditions; P1's per-checkpoint differences.
+
+**Limits, set now:**
+
+- **Off-distribution policy.** B's policy was trained with the bias on. Switching it
+  off changes the inputs to every move, and the ecology of the episode follows. A
+  rise in adult hunting with the bias off fits H_nn, but also simpler readings: PPO
+  learned to *offset* the bias, and the offset remains once the bias is removed; or
+  the change is ecological, since removing the bias changes survival, prey numbers
+  and how often hunters meet, and so how often partners are near. P1 cannot tell
+  "learning built a harder strategy" from compensation or ecology; C is the measure
+  closest to the first, and hunter and deer numbers are reported to show ecology.
+- **Exploratory.** P1 and P2 are not corrected for multiplicity with tests 1-3 and
+  enter no verdict of section 3.4. Wording if met: "consistent with H_nn"; never
+  "nature does X, nurture does Y".
+- **Timing.** The bias-off evaluations need a β override in evaluation, which is new
+  code. It is written only after the main runs end, so that the code stays frozen at
+  the pilot's commit until then (section 3.2), and Codex-reviewed before it runs. They
+  run on B's checkpoints 500, 750 and 1000 whatever tests 1-3 show.
