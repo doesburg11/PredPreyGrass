@@ -1,7 +1,7 @@
 # Design note 2: nature, nurture and both, with hunters and deer starting together (2026-11-10)
 
-Status: **draft 2, awaiting the user's decisions (end of this note). Nothing is built
-or run.** Draft 1 was revised after a Codex review ("Revisions after review", end).
+Status: **draft 2 approved 2026-11-10 with every recommended option (decisions 1-5
+below); pre-registered in RESULTS.md section 2.** Draft 1 was revised after a Codex review ("Revisions after review", end).
 This is a **new stage**, prompted by a new user decision after section 1's stop: it
 gets its own pre-registration (RESULTS.md section 2) and does not continue or rerun
 section 1. Everything not named here stays as in DESIGN.md (approved 2026-11-08).

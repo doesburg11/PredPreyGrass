@@ -140,3 +140,73 @@ inference from the comparison; no run has isolated it.
 
 **Per the pre-registration (§1.2), nothing is adjusted and re-run. The main runs are
 not launched.**
+
+## 2. Hunters and deer starting together: deer replayed (pre-registered 2026-11-10, before any code)
+
+A new stage, prompted by the user's decision after section 1's stop, not a rerun of
+section 1. Design and reasons: DESIGN_2.md (approved 2026-11-10 with every
+recommended option). Everything not named here is as in section 1 and DESIGN.md.
+
+### 2.1 World, deer and arms
+
+- **World:** deer_stag_hunt's touch rule (`deer_catch_rule: "touch"`), instant grass.
+- **Genes, β₀ = 3.4417, arms E, L and B:** as in section 1.1.
+- **Deer, replayed:** run k of every arm follows the deer of deer_stag_hunt
+  touch_((k − 1) mod 3) + 1 in training order. Training iteration t collects its
+  samples with the deer of checkpoint D(t): iter_000010 for t = 1-19;
+  iter_(10 · floor(t / 10)) for t = 20-999; the final checkpoint for t = 1000. The
+  deer never learn; they change before sampling iterations 20, 30, ..., 990 and 1000,
+  in the learner and every env runner at once.
+- **Arm E:** each of its 14 environments switches to D(t) when its own physics steps
+  pass 1/14 of the median total physics steps of the L and B runs of the same schedule
+  at iteration t (saved table). E's results are **reported, not tested**.
+
+### 2.2 Pilot (before the main runs)
+
+- **Runs:** pilot_L1, pilot_L2, pilot_L3 (L on touch_1, touch_2, touch_3 deer;
+  seeds 1-3), pilot_B1 (B on touch_1, seed 1), 500 iterations, two at a time; pilot_E1
+  (E on touch_1, matched to pilot_L1 and pilot_B1) on the CPU. Pilot runs enter no
+  test.
+- **Pilot passes if,** in every one of the four L and B pilot runs:
+  1. nothing crashes;
+  2. at iterations 250 and 500, hunters and deer are both alive at the end of at least
+     40 of 50 evaluated episodes;
+  3. at iteration 500, hunter births per evaluated episode are at least 5
+     (deer_stag_hunt touch_1-3 at iteration 500: 18-22).
+- E is reported only.
+- **If the pilot fails:** this stage stops. Nothing is tuned or re-run: no change to
+  β, the schedule, the schedule-to-run allocation, D(t), the thresholds or any world
+  setting, and no run is excluded.
+
+### 2.3 Main runs
+
+- **Runs:** L_k, B_k (k = 1-6, 1000 iterations, 14 env runners, seed k, deer
+  touch_((k − 1) mod 3) + 1), and E_k matched to L_k's and B_k's schedule (median of
+  the four L and B runs sharing that schedule).
+- A run that crashes is rerun from scratch with the same seed, and the crash recorded;
+  no other rerun.
+
+### 2.4 Measures and tests, set before the main runs
+
+- **Evaluation:** each checkpoint saved after iteration t is evaluated against D(t),
+  50 episodes, seeds 0-49 in every arm (evaluate.py; coop_fair.py 20 episodes).
+- **Measures:** A (adults caught per episode), S (adults caught ÷ (caught + failed
+  adult attempts), pooled over a run's 150 episodes), C (supporting): section 1.4.
+  Run value: mean over checkpoints 500, 750 and 1000 (S pooled). Estimand:
+  performance against the schedule.
+- **Test 1, B beats L on A and on S:** per run k, B_k − L_k; one-sided sign-flip
+  permutation test on the mean difference over the 6 pairs (all 64 sign
+  arrangements, p = share with a mean at least the observed), p < 0.05 for A and for
+  S. Both must hold.
+- **Test 2, B sustains coexistence:** in at least 5 of 6 B runs, hunters and deer both
+  alive at the end of at least 45 of 50 episodes, averaged over the three
+  checkpoints.
+- **Verdict:** if both tests are met: "in this world, against a replayed schedule of
+  deer, an innate attraction bias that evolves plus shared PPO learning catches more
+  adults, and more per attempt, than learning alone." Conditional on the three deer
+  schedules.
+- **Also reported:** every L and B final checkpoint against each of the three final
+  deer (touch_1-3, iteration 1000), 50 episodes, seeds 0-49; B − L per schedule; E on
+  every measure; per-run values, bootstrap intervals, C, gene means, selection
+  differentials against L's unexpressed genes, checkpoints 250 and 500 (section 1.4).
+- **Hard stop:** after the main runs, the stage stops whatever the outcome.
