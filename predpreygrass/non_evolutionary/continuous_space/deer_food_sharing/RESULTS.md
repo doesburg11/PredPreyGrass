@@ -65,3 +65,25 @@ run (coop_by_energy.py).
 - **Hard stop:** after the three runs, this stage stops whatever the outcome. No other
   value of s or R, no other sharing rule. If test 2 is not met, the sharing line ends.
   If it is met, an evolutionary follow-up is a new user decision.
+
+### 1.5 Prediction from a theory model (recorded 2026-11-11, before any training run)
+
+Added after the tests above were set and before share_1 started training; it changes
+no test. EvolvedCooperation's `ecological_models/stag_hunt_sharing` (commit b4ce469)
+is a spatial stag or hare grid in which a caught stag gives a fraction s to every
+hunter within a radius, whatever it hunts. In 1560 runs, a positive s never gave more
+stag hunters than s = 0. With s ≥ 0.5, stag hunting died out in every condition. The
+radius, diminishing returns and riskier stags didn't rescue it. In that model,
+untargeted sharing is a transfer to free-riders.
+
+**Prediction:** test 2 will not be met. The share_1-3 runs' C won't all lie above
+1.206, and may lie below the touch runs'. If hunters gather near hunts to collect
+shares, the chance level (and so the expected joint rate) may rise more than the
+joint rate does.
+
+The transfer is uncertain. These hunters learn one shared policy; there are no
+heritable free-rider types. Every bystander can also go for adults, and a hunter
+waiting near others also has a partner near. The touch rule already shares an adult
+among the hunters who touched it, so this module adds the *untargeted* kind of sharing.
+If test 2 is met, the result goes against the theory model, and the clustering measures
+in 1.2 are the first place to look for why.
