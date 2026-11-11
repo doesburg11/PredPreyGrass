@@ -154,7 +154,13 @@ class PredPreyGrass(MultiAgentEnv):
     def reset(self, *, seed=None, options=None):
         super().reset(seed=seed, options=options)
         self.current_step = 0
-        self.rng = np.random.default_rng(seed)
+        # Per the Gymnasium reset(seed=...) contract: only reseed when an
+        # explicit seed is given. RLlib's auto-reset between episodes calls
+        # reset(seed=None); recreating self.rng unconditionally here would draw
+        # fresh OS entropy every episode after the first, so --seed would only
+        # affect episode 0 of each env-runner slot (see base_environment_discrete).
+        if seed is not None or not hasattr(self, "rng"):
+            self.rng = np.random.default_rng(seed)
         self.grid_world_state = self.initial_grid_world_state.copy()
 
         self.possible_agents = (
@@ -183,7 +189,7 @@ class PredPreyGrass(MultiAgentEnv):
 
         n_prey = self.n_initial_active_cooperator_prey + self.n_initial_active_defector_prey
         total_entities = self.n_initial_active_predator + n_prey + self.initial_num_grass
-        all_positions = self._generate_unique_positions(self.grid_size, total_entities, seed)
+        all_positions = self._generate_unique_positions(self.grid_size, total_entities, self.rng)
 
         predator_positions = all_positions[: self.n_initial_active_predator]
         prey_positions = all_positions[
@@ -544,12 +550,14 @@ class PredPreyGrass(MultiAgentEnv):
             for j in range(self.grid_size)
             if (i, j) not in occupied_positions
         ]
-        return free[np.random.randint(len(free))] if free else None
+        return free[self.rng.integers(len(free))] if free else None
 
     @staticmethod
     def _generate_unique_positions(grid_size: int, num_positions: int, seed=None):
         if num_positions > grid_size * grid_size:
             raise ValueError("Cannot place more unique positions than grid cells.")
+        # seed is the caller's persistent Generator (reset() passes self.rng);
+        # default_rng returns a Generator unchanged.
         rng = np.random.default_rng(seed)
         positions: set = set()
         while len(positions) < num_positions:

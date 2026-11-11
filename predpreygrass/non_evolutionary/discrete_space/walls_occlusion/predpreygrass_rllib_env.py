@@ -135,7 +135,13 @@ class PredPreyGrass(_MultiAgentEnvBase):
     def _init_reset_variables(self, seed):
         # Agent tracking
         self.current_step = 0
-        self.rng = np.random.default_rng(seed)
+        # Per the Gymnasium reset(seed=...) contract: only reseed when an
+        # explicit seed is given. RLlib's auto-reset between episodes calls
+        # reset(seed=None); recreating self.rng unconditionally here would draw
+        # fresh OS entropy every episode after the first, so --seed would only
+        # affect episode 0 of each env-runner slot (see base_environment_discrete).
+        if seed is not None or not hasattr(self, "rng"):
+            self.rng = np.random.default_rng(seed)
 
         self.agent_positions = {}
         self.predator_positions = {}
@@ -1157,7 +1163,9 @@ class PredPreyGrass(_MultiAgentEnvBase):
         if num_positions > grid_size * grid_size:
             raise ValueError("Cannot place more unique positions than grid cells.")
 
-        rng = np.random.default_rng(seed)
+        # The persistent self.rng (see reset()), not a fresh default_rng(seed),
+        # which would ignore the seed on auto-reset (seed=None) episodes.
+        rng = self.rng
         positions = set()
 
         while len(positions) < num_positions:
