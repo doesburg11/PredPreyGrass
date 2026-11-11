@@ -2,7 +2,9 @@
 
 <p align="center">
   <img src="../../../../assets/images/gifs/deer_stag_hunt.gif" alt="Trained hunters with spears among deer of three sizes on a light blue torus: adults with antlers, small fawns with white spots, plain middle deer; shaded cones show what one deer and one hunter see" width="550">
-  <br><em>Trained hunters and deer (run_2, seed 0): adults have antlers and can only be caught by two hunters together; fawns are small with white spots.</em>
+</p>
+<p align="center">
+  Trained hunters and deer (run_2, seed 0): adults have antlers and can only be caught by two hunters together; fawns are small with white spots.
 </p>
 
 **Status: closed 2026-11-10, with positive results. Kept in place; not for archiving.**

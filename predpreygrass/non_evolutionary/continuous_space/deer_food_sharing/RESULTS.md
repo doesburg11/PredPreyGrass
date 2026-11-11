@@ -60,7 +60,7 @@ run (coop_by_energy.py).
 ### 1.4 Failures that aren't results, and the hard stop
 
 - A crash or hardware failure: the run is rerun from scratch once, the failed attempt
-  kept as runs/<run>.crash1 and recorded in runs/sharing.crashes (run_sharing.sh does
+  kept as `runs/<run>.crash1` and recorded in `runs/sharing.crashes` (run_sharing.sh does
   this); no other rerun. A code bug (not a setting): fixed, recorded, every affected run rerun.
 - **Hard stop:** after the three runs, this stage stops whatever the outcome. No other
   value of s or R, no other sharing rule. If test 2 is not met, the sharing line ends.
