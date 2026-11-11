@@ -15,6 +15,13 @@ from predpreygrass.evolutionary.continuous_space.eco_evolutionary_deer_stag_hunt
 
 # --- settings: exactly one deer mode -------------------------------------------------
 
+# Learn mode checks the world against deer_stag_hunt's local run touch_1
+# (train.load_settings); runs aren't in git, so CI has none.
+needs_touch_1 = pytest.mark.skipif(
+    not (train.DEER_RUNS_DIR / "touch_1" / "source_code" / "settings.json").is_file(),
+    reason="deer_stag_hunt's touch_1 is not in this checkout",
+)
+
 
 @pytest.fixture
 def ppo(monkeypatch, tmp_path):
@@ -27,6 +34,7 @@ def ppo(monkeypatch, tmp_path):
     return set_
 
 
+@needs_touch_1
 def test_learn_mode_is_the_default_and_valid(ppo):
     _, settings = ppo()
     assert settings.deer_learn is True and settings.deer_schedule is None and settings.deer_checkpoint is None
@@ -43,6 +51,7 @@ def test_settings_refuse_other_deer_modes(ppo, kwargs):
         ppo(**kwargs)
 
 
+@needs_touch_1  # without touch_1 the ValueError would come from the missing run, not the world
 def test_learn_mode_requires_deer_stag_hunts_touch_world(monkeypatch, ppo):
     monkeypatch.setattr(train, "config_env", dict(config_env, deer_catch_rule="party"))
     with pytest.raises(ValueError):
