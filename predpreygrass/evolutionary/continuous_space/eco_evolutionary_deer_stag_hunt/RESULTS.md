@@ -460,3 +460,15 @@ the pilot (scratchpad only, not a pilot measure) prompted section 3.5.
 Per section 3.2, the main runs (section 3.3) are next; nothing in sections 3.1-3.5
 changes.
 
+
+### 3.7 Main runs: interruption (2026-11-12)
+
+An announced power cut: with the user's OK, both training runs of pair 6 (main3_L6,
+main3_B6, started 10:28) were stopped cleanly at 12:17 at about iteration 75 and 90,
+before reaching any checkpoint used in a test. Pairs 1-5 had finished. On relaunch at
+16:57 the launcher kept the stopped attempts as `runs/main3_L6.crash1/` and
+`runs/main3_B6.crash1/` (with their logs) and restarted both runs from scratch with
+the same seed, as section 3.3 sets for a hardware failure; this uses their one rerun.
+No code changed: the module's code and tests are still those of the pilot commit
+f98825da (a CI skip for two tests that need deer_stag_hunt's local run touch_1 was
+moved outside the module, to `continuous_space/conftest.py`, b8d81070).
