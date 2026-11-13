@@ -1,0 +1,11 @@
+sharing
+  share_1: coexisting 50, A 14.94, C 1.12, S 0.02, chance 0.124, births 16.88, to_bystanders 0.139, adults_shared 205, bystanders_per_shared 1.2
+  share_2: coexisting 50, A 14.92, C 1.08, S 0.019, chance 0.125, births 18.3, to_bystanders 0.1, adults_shared 147, bystanders_per_shared 1.163
+  share_3: coexisting 50, A 9.56, C 1.037, S 0.016, chance 0.099, births 16.3, to_bystanders 0.112, adults_shared 105, bystanders_per_shared 1.067
+touch (deer_stag_hunt)
+  touch_1: coexisting 50, A 14.42, C 1.119, S 0.021, chance 0.132, births 17.82, to_bystanders None, adults_shared 0, bystanders_per_shared None
+  touch_2: coexisting 50, A 21.2, C 1.206, S 0.025, chance 0.142, births 18.98, to_bystanders None, adults_shared 0, bystanders_per_shared None
+  touch_3: coexisting 50, A 7.98, C 1.15, S 0.013, chance 0.082, births 14.86, to_bystanders None, adults_shared 0, bystanders_per_shared None
+tests: {'1_coexistence': True, '2_partnering_C': False, '3_adults_A': False}
+verdict: not met
+secondary, adults caught: not met

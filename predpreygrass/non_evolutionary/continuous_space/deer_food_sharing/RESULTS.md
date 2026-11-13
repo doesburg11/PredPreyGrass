@@ -87,3 +87,46 @@ waiting near others also has a partner near. The touch rule already shares an ad
 among the hunters who touched it, so this module adds the *untargeted* kind of sharing.
 If test 2 is met, the result goes against the theory model, and the clustering measures
 in 1.2 are the first place to look for why.
+
+### 1.6 Result (2026-11-13): not met; the sharing line ends
+
+share_1 and share_2 trained side by side early on 2026-11-13 (once eco section 3's
+main training freed the GPU), share_3 after them; no crash, no rerun
+(`runs/sharing.crashes` absent). Final checkpoints, evaluate.py 50 episodes and
+coop_fair.py 20 episodes (`results/sharing_verdict.txt`):
+
+| Run | Coexisting | C (partner near, over chance) | A (adults per episode) | S | Chance | Hunter births | Adult energy to bystanders | Adults shared | Bystanders per shared adult |
+|---|---|---|---|---|---|---|---|---|---|
+| share_1 | 50 / 50 | 1.120 | 14.94 | 0.020 | 0.124 | 16.88 | 0.139 | 205 | 1.20 |
+| share_2 | 50 / 50 | 1.080 | 14.92 | 0.019 | 0.125 | 18.30 | 0.100 | 147 | 1.16 |
+| share_3 | 50 / 50 | 1.037 | 9.56 | 0.016 | 0.099 | 16.30 | 0.112 | 105 | 1.07 |
+| touch_1 | 50 / 50 | 1.119 | 14.42 | 0.021 | 0.132 | 17.82 | | | |
+| touch_2 | 50 / 50 | 1.206 | 21.20 | 0.025 | 0.142 | 18.98 | | | |
+| touch_3 | 50 / 50 | 1.150 | 7.98 | 0.013 | 0.082 | 14.86 | | | |
+
+- **Test 1 (condition): met.** All three sharing runs coexisted in 50 of 50.
+- **Test 2 (primary): not met.** No sharing run's C is above 1.206; share_2 and
+  share_3 are below all three touch runs, share_1 equals touch_1 (1.120 vs 1.119).
+- **Test 3 (secondary): not met.** No sharing run caught more than 21.20 adults per
+  episode.
+
+**Verdict, in the pre-registered wording:** with sharing at s = 0.5 within R = 128,
+partnering on adults was not above every run without sharing.
+
+**Against the theory prediction (1.5):** test 2 was predicted not met, and was not
+met. The suggested route (hunters gathering near hunts, raising the chance level) is
+not supported: chance in the sharing runs (0.099-0.125) lies within the touch runs'
+range (0.082-0.142). A shared adult reached only about 1.1-1.2 bystanders, and
+bystanders got 10-14% of adult energy, so the transfer was small; sharing may simply
+have changed little. Historical controls, three runs a side; no mechanism is claimed.
+
+**Theory follow-ups, run while these trained** (EvolvedCooperation
+`ecological_models/stag_hunt_sharing` README, 2026-11-11 to 11-13): sharing only
+among stag hunters can rescue stag hunting, but only when big game pays clearly more
+than the alternative in expectation (1.2-1.75 times at the deer world's lifetime
+success rates); in this deer world adults bring a hunter far less than young deer over a lifetime, and the
+real-forager evidence does not clearly support big game paying that much more. By
+that sweep's pre-registered rule no deer run with a changed world follows.
+
+Per section 1.4's hard stop, the stage stops and, test 2 not met, the sharing line
+ends.

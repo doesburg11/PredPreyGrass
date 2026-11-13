@@ -1,7 +1,10 @@
 # deer_food_sharing
 
-**Status (2026-11-11): built and pre-registered (RESULTS.md section 1); runs not yet
-started.**
+**Status (2026-11-13): CLOSED, not met.** Three runs with big game shared all coexisted
+(50 of 50), but none partnered on adults more than every run without sharing (C
+1.04-1.12 against 1.12-1.21), and none caught more adults; the theory model predicted
+this before training. Per the hard stop, the sharing line ends
+([RESULTS.md](RESULTS.md) section 1.6).
 
 Does sharing big game make learned cooperation on big game stronger? This is
 [deer_stag_hunt](../deer_stag_hunt/)'s touch world, where hunters that only learn

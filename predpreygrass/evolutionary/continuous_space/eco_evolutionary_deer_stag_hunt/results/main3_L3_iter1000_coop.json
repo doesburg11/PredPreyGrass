@@ -1,0 +1,229 @@
+{
+ "checkpoint": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/runs/main3_L3/checkpoint",
+ "deer": "/home/doesburg/Projects/PredPreyGrass/predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/runs/main3_L3/checkpoint/learner_group/learner/rl_module/deer_policy",
+ "summary": {
+  "episodes": 20,
+  "chance": 0.10710932578153193,
+  "share": {
+   "fawn": 0.07128621799785374,
+   "middle": 0.08829798031056531,
+   "adult": 0.11967011756448499
+  },
+  "approaches": {
+   "fawn": 6523,
+   "middle": 9853,
+   "adult": 5699
+  },
+  "adult_above_fawn_episodes": 20,
+  "adult_above_chance_episodes": 13,
+  "cooperation_shown": true,
+  "adult_over_chance": 1.1172707576235983,
+  "adult_minus_chance": 0.012560791782953065,
+  "adult_minus_chance_interval": [
+   0.0023394801049173714,
+   0.02309218722904574
+  ]
+ },
+ "episodes": [
+  {
+   "hunter_steps": 73976,
+   "with_partner": 10593,
+   "fawn_approaches": 375,
+   "fawn_with_partner": 42,
+   "middle_approaches": 531,
+   "middle_with_partner": 70,
+   "adult_approaches": 325,
+   "adult_with_partner": 53
+  },
+  {
+   "hunter_steps": 81092,
+   "with_partner": 11669,
+   "fawn_approaches": 369,
+   "fawn_with_partner": 39,
+   "middle_approaches": 510,
+   "middle_with_partner": 51,
+   "adult_approaches": 283,
+   "adult_with_partner": 43
+  },
+  {
+   "hunter_steps": 70124,
+   "with_partner": 7736,
+   "fawn_approaches": 341,
+   "fawn_with_partner": 29,
+   "middle_approaches": 489,
+   "middle_with_partner": 39,
+   "adult_approaches": 296,
+   "adult_with_partner": 52
+  },
+  {
+   "hunter_steps": 66930,
+   "with_partner": 6980,
+   "fawn_approaches": 353,
+   "fawn_with_partner": 21,
+   "middle_approaches": 497,
+   "middle_with_partner": 53,
+   "adult_approaches": 277,
+   "adult_with_partner": 29
+  },
+  {
+   "hunter_steps": 65621,
+   "with_partner": 6928,
+   "fawn_approaches": 312,
+   "fawn_with_partner": 17,
+   "middle_approaches": 544,
+   "middle_with_partner": 49,
+   "adult_approaches": 269,
+   "adult_with_partner": 38
+  },
+  {
+   "hunter_steps": 66339,
+   "with_partner": 6159,
+   "fawn_approaches": 329,
+   "fawn_with_partner": 25,
+   "middle_approaches": 478,
+   "middle_with_partner": 37,
+   "adult_approaches": 311,
+   "adult_with_partner": 40
+  },
+  {
+   "hunter_steps": 63236,
+   "with_partner": 6661,
+   "fawn_approaches": 313,
+   "fawn_with_partner": 21,
+   "middle_approaches": 475,
+   "middle_with_partner": 49,
+   "adult_approaches": 315,
+   "adult_with_partner": 32
+  },
+  {
+   "hunter_steps": 69784,
+   "with_partner": 8706,
+   "fawn_approaches": 335,
+   "fawn_with_partner": 27,
+   "middle_approaches": 510,
+   "middle_with_partner": 50,
+   "adult_approaches": 308,
+   "adult_with_partner": 41
+  },
+  {
+   "hunter_steps": 70892,
+   "with_partner": 8743,
+   "fawn_approaches": 363,
+   "fawn_with_partner": 36,
+   "middle_approaches": 500,
+   "middle_with_partner": 51,
+   "adult_approaches": 281,
+   "adult_with_partner": 32
+  },
+  {
+   "hunter_steps": 40263,
+   "with_partner": 2550,
+   "fawn_approaches": 182,
+   "fawn_with_partner": 5,
+   "middle_approaches": 383,
+   "middle_with_partner": 24,
+   "adult_approaches": 208,
+   "adult_with_partner": 12
+  },
+  {
+   "hunter_steps": 74630,
+   "with_partner": 8361,
+   "fawn_approaches": 380,
+   "fawn_with_partner": 26,
+   "middle_approaches": 539,
+   "middle_with_partner": 53,
+   "adult_approaches": 320,
+   "adult_with_partner": 51
+  },
+  {
+   "hunter_steps": 58817,
+   "with_partner": 4457,
+   "fawn_approaches": 322,
+   "fawn_with_partner": 9,
+   "middle_approaches": 455,
+   "middle_with_partner": 23,
+   "adult_approaches": 298,
+   "adult_with_partner": 24
+  },
+  {
+   "hunter_steps": 53295,
+   "with_partner": 4187,
+   "fawn_approaches": 283,
+   "fawn_with_partner": 16,
+   "middle_approaches": 445,
+   "middle_with_partner": 27,
+   "adult_approaches": 259,
+   "adult_with_partner": 27
+  },
+  {
+   "hunter_steps": 61140,
+   "with_partner": 6486,
+   "fawn_approaches": 311,
+   "fawn_with_partner": 19,
+   "middle_approaches": 479,
+   "middle_with_partner": 31,
+   "adult_approaches": 277,
+   "adult_with_partner": 24
+  },
+  {
+   "hunter_steps": 69950,
+   "with_partner": 8343,
+   "fawn_approaches": 342,
+   "fawn_with_partner": 27,
+   "middle_approaches": 510,
+   "middle_with_partner": 46,
+   "adult_approaches": 308,
+   "adult_with_partner": 46
+  },
+  {
+   "hunter_steps": 70491,
+   "with_partner": 7414,
+   "fawn_approaches": 334,
+   "fawn_with_partner": 16,
+   "middle_approaches": 539,
+   "middle_with_partner": 58,
+   "adult_approaches": 294,
+   "adult_with_partner": 28
+  },
+  {
+   "hunter_steps": 66187,
+   "with_partner": 6072,
+   "fawn_approaches": 338,
+   "fawn_with_partner": 16,
+   "middle_approaches": 486,
+   "middle_with_partner": 32,
+   "adult_approaches": 311,
+   "adult_with_partner": 42
+  },
+  {
+   "hunter_steps": 58052,
+   "with_partner": 5495,
+   "fawn_approaches": 287,
+   "fawn_with_partner": 20,
+   "middle_approaches": 460,
+   "middle_with_partner": 41,
+   "adult_approaches": 235,
+   "adult_with_partner": 18
+  },
+  {
+   "hunter_steps": 59352,
+   "with_partner": 5306,
+   "fawn_approaches": 310,
+   "fawn_with_partner": 21,
+   "middle_approaches": 483,
+   "middle_with_partner": 36,
+   "adult_approaches": 260,
+   "adult_with_partner": 21
+  },
+  {
+   "hunter_steps": 67773,
+   "with_partner": 7247,
+   "fawn_approaches": 344,
+   "fawn_with_partner": 33,
+   "middle_approaches": 540,
+   "middle_with_partner": 50,
+   "adult_approaches": 264,
+   "adult_with_partner": 29
+  }
+ ]
+}

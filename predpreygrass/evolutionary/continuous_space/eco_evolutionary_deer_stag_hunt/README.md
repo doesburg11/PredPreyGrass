@@ -1,6 +1,15 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-10): section 3's pilot passed; main runs next.** Sections 1 and 2 stopped after failed pilots.
+**Status (2026-11-13): section 3's main runs done, verdict not met** ([RESULTS.md](RESULTS.md) §3.8).
+With deer learning alongside, learning plus an evolving innate bias (arm B) did not
+catch more adults than learning alone (arm L) against a common panel of coevolved deer
+(panel adults per episode 14.2 against 18.6, p 0.92; per-attempt success 0.023
+against 0.020, p 0.10); both arms coexisted. In all six B runs the genes moved
+towards young deer and away from adults, and B's hunters partnered on adults below
+chance (0.83-0.93) where L's were above it (1.08-1.16): reported, not tested. The
+pre-registered bias-off analysis (§3.5) is next.
+
+Earlier: sections 1 and 2 stopped after failed pilots.
 Section 1 (2026-11-08, deer frozen at deer_stag_hunt's final policy) failed its pilot:
 hunters died out in 50 of 50 episodes in every arm, likely because naive hunters met
 trained deer ([RESULTS.md](RESULTS.md) §1.5). Section 2 ([DESIGN_2.md](DESIGN_2.md),

@@ -1,0 +1,90 @@
+per run: panel A, panel S (hunters); deer side A lost, S; own world A, S, C; coexisting sum of 150
+  main3_L1: panel A 24.34 S 0.0233 (33 cells); deer A 19.49 S 0.0250; own A 31.46 S 0.0289 C 1.156; coexisting 150
+  main3_L2: panel A 24.12 S 0.0241 (33 cells); deer A 14.39 S 0.0216; own A 21.51 S 0.0239 C 1.135; coexisting 149
+  main3_L3: panel A 16.51 S 0.0177 (33 cells); deer A 16.47 S 0.0226; own A 17.23 S 0.0186 C 1.103; coexisting 149
+  main3_L4: panel A 20.46 S 0.0219 (33 cells); deer A 17.05 S 0.0238; own A 20.85 S 0.0232 C 1.128; coexisting 150
+  main3_L5: panel A 17.93 S 0.0196 (33 cells); deer A 20.00 S 0.0253; own A 22.91 S 0.0228 C 1.134; coexisting 150
+  main3_L6: panel A 8.14 S 0.0126 (33 cells); deer A 21.91 S 0.0252; own A 13.27 S 0.0150 C 1.171; coexisting 142
+  main3_B1: panel A 20.40 S 0.0305 (33 cells); deer A 15.09 S 0.0192; own A 20.41 S 0.0280 C 0.911; coexisting 150
+  main3_B2: panel A 11.13 S 0.0198 (33 cells); deer A 12.00 S 0.0179; own A 9.31 S 0.0171 C 0.852; coexisting 150
+  main3_B3: panel A 13.62 S 0.0219 (33 cells); deer A 12.73 S 0.0186; own A 11.73 S 0.0199 C 0.847; coexisting 150
+  main3_B4: panel A 11.20 S 0.0205 (33 cells); deer A 15.31 S 0.0195; own A 10.96 S 0.0185 C 0.857; coexisting 149
+  main3_B5: panel A 14.79 S 0.0234 (33 cells); deer A 16.66 S 0.0202; own A 14.67 S 0.0211 C 0.947; coexisting 150
+  main3_B6: panel A 14.28 S 0.0232 (33 cells); deer A 15.84 S 0.0195; own A 14.14 S 0.0213 C 0.907; coexisting 150
+test 1, panel A: B - L -4.3435, permutation p 0.9232 (not met); bootstrap 95% [-9.0059, 0.9216]
+test 1, panel S: B - L +0.0034, permutation p 0.1017 (not met); bootstrap 95% [-0.0005, 0.0078]
+test 2: 6 of 6 B runs with coexisting sum >= 135 (met)
+test 3, a_hunter: B - L +0.00330, permutation p 0.1439 (not met)
+test 3, a_adult: B - L -0.00814, permutation p 0.9935 (not met)
+not tests:
+  own world A: B - L -7.6678 (p 0.9881, reported)
+  deer side A (adults lost / attempts against them): B's deer - L's -3.6132 (p 0.9859, reported)
+  own world S: B - L -0.0011 (p 0.6699, reported)
+  deer side S (adults lost / attempts against them): B's deer - L's -0.0048 (p 1.0000, reported)
+  main3_L1 selection: a_hunter +0.00175 (150 defined, 0 undefined); a_young -0.00232 (150 defined, 0 undefined); a_adult -0.00374 (150 defined, 0 undefined); neutral +0.00289 (150 defined, 0 undefined)
+  main3_L2 selection: a_hunter -0.00290 (149 defined, 1 undefined); a_young +0.00004 (149 defined, 1 undefined); a_adult +0.00206 (149 defined, 1 undefined); neutral +0.00148 (149 defined, 1 undefined)
+  main3_L3 selection: a_hunter -0.00511 (150 defined, 0 undefined); a_young -0.00792 (150 defined, 0 undefined); a_adult +0.00026 (150 defined, 0 undefined); neutral -0.00412 (150 defined, 0 undefined)
+  main3_L4 selection: a_hunter -0.00937 (150 defined, 0 undefined); a_young -0.00604 (150 defined, 0 undefined); a_adult +0.01042 (150 defined, 0 undefined); neutral -0.00202 (150 defined, 0 undefined)
+  main3_L5 selection: a_hunter +0.00525 (150 defined, 0 undefined); a_young +0.00431 (150 defined, 0 undefined); a_adult +0.00406 (150 defined, 0 undefined); neutral -0.00160 (150 defined, 0 undefined)
+  main3_L6 selection: a_hunter -0.00018 (147 defined, 3 undefined); a_young +0.01114 (147 defined, 3 undefined); a_adult -0.00710 (147 defined, 3 undefined); neutral +0.00050 (147 defined, 3 undefined)
+  main3_B1 selection: a_hunter -0.00264 (150 defined, 0 undefined); a_young +0.00652 (150 defined, 0 undefined); a_adult -0.00774 (150 defined, 0 undefined); neutral +0.00297 (150 defined, 0 undefined)
+  main3_B2 selection: a_hunter +0.00093 (150 defined, 0 undefined); a_young +0.00607 (150 defined, 0 undefined); a_adult -0.01273 (150 defined, 0 undefined); neutral +0.01164 (150 defined, 0 undefined)
+  main3_B3 selection: a_hunter +0.00347 (150 defined, 0 undefined); a_young +0.00812 (150 defined, 0 undefined); a_adult -0.00378 (150 defined, 0 undefined); neutral -0.00094 (150 defined, 0 undefined)
+  main3_B4 selection: a_hunter -0.00320 (149 defined, 1 undefined); a_young +0.00546 (149 defined, 1 undefined); a_adult -0.00491 (149 defined, 1 undefined); neutral +0.00471 (149 defined, 1 undefined)
+  main3_B5 selection: a_hunter +0.00081 (150 defined, 0 undefined); a_young +0.00590 (150 defined, 0 undefined); a_adult -0.00568 (150 defined, 0 undefined); neutral +0.00180 (150 defined, 0 undefined)
+  main3_B6 selection: a_hunter +0.00989 (150 defined, 0 undefined); a_young +0.00634 (150 defined, 0 undefined); a_adult -0.00801 (150 defined, 0 undefined); neutral +0.00319 (150 defined, 0 undefined)
+  panel C, arm L: 1.158 1.101 1.095 1.156 1.145 1.077 (mean 1.122)
+  panel C, arm B: 0.934 0.829 0.884 0.842 0.913 0.906 (mean 0.885)
+  own world (the panel's diagonal) per checkpoint: coexisting, A, S, hunter births per episode, gene pool means
+    main3_L1 iter 250: coexisting 50, A 23.20, S 0.0183, births 21.22; a_hunter +0.035 a_young +0.046 a_adult +0.059 neutral +0.121
+    main3_L1 iter 500: coexisting 50, A 38.66, S 0.0291, births 22.90; a_hunter +0.008 a_young -0.171 a_adult +0.041 neutral +0.308
+    main3_L1 iter 750: coexisting 50, A 28.52, S 0.0283, births 19.68; a_hunter +0.154 a_young -0.275 a_adult +0.150 neutral +0.235
+    main3_L1 iter 1000: coexisting 50, A 27.20, S 0.0291, births 19.70; a_hunter +0.181 a_young -0.181 a_adult +0.140 neutral +0.219
+    main3_L2 iter 250: coexisting 50, A 25.84, S 0.0209, births 22.98; a_hunter -0.120 a_young +0.070 a_adult +0.002 neutral +0.145
+    main3_L2 iter 500: coexisting 50, A 28.10, S 0.0261, births 21.52; a_hunter -0.289 a_young -0.003 a_adult +0.001 neutral +0.010
+    main3_L2 iter 750: coexisting 50, A 22.72, S 0.0252, births 18.94; a_hunter -0.258 a_young +0.066 a_adult +0.008 neutral +0.129
+    main3_L2 iter 1000: coexisting 49, A 13.70, S 0.0191, births 16.34; a_hunter -0.227 a_young -0.019 a_adult -0.033 neutral +0.155
+    main3_L3 iter 250: coexisting 50, A 21.72, S 0.0184, births 22.62; a_hunter +0.009 a_young -0.250 a_adult -0.009 neutral -0.065
+    main3_L3 iter 500: coexisting 50, A 21.92, S 0.0207, births 21.86; a_hunter -0.041 a_young -0.442 a_adult -0.056 neutral -0.109
+    main3_L3 iter 750: coexisting 49, A 17.44, S 0.0179, births 19.58; a_hunter +0.006 a_young -0.453 a_adult -0.129 neutral +0.012
+    main3_L3 iter 1000: coexisting 50, A 12.32, S 0.0167, births 15.84; a_hunter -0.122 a_young -0.527 a_adult -0.153 neutral -0.081
+    main3_L4 iter 250: coexisting 50, A 27.12, S 0.0223, births 21.82; a_hunter -0.018 a_young +0.047 a_adult +0.241 neutral +0.065
+    main3_L4 iter 500: coexisting 50, A 29.44, S 0.027, births 19.38; a_hunter -0.100 a_young -0.014 a_adult +0.411 neutral -0.246
+    main3_L4 iter 750: coexisting 50, A 20.86, S 0.0243, births 17.94; a_hunter -0.044 a_young -0.068 a_adult +0.455 neutral -0.262
+    main3_L4 iter 1000: coexisting 50, A 12.26, S 0.0164, births 15.96; a_hunter -0.123 a_young -0.088 a_adult +0.312 neutral -0.242
+    main3_L5 iter 250: coexisting 50, A 19.84, S 0.0161, births 22.38; a_hunter +0.029 a_young -0.147 a_adult +0.160 neutral -0.219
+    main3_L5 iter 500: coexisting 50, A 23.66, S 0.0213, births 21.74; a_hunter +0.124 a_young -0.183 a_adult +0.160 neutral -0.291
+    main3_L5 iter 750: coexisting 50, A 24.44, S 0.0235, births 20.70; a_hunter +0.225 a_young -0.158 a_adult +0.071 neutral -0.260
+    main3_L5 iter 1000: coexisting 50, A 20.62, S 0.024, births 19.00; a_hunter +0.191 a_young -0.252 a_adult +0.003 neutral -0.427
+    main3_L6 iter 250: coexisting 49, A 24.22, S 0.0205, births 20.26; a_hunter +0.171 a_young +0.031 a_adult +0.011 neutral +0.099
+    main3_L6 iter 500: coexisting 49, A 15.56, S 0.0157, births 18.44; a_hunter +0.148 a_young +0.066 a_adult -0.004 neutral +0.090
+    main3_L6 iter 750: coexisting 48, A 13.90, S 0.0153, births 18.06; a_hunter +0.131 a_young -0.008 a_adult +0.036 neutral +0.256
+    main3_L6 iter 1000: coexisting 45, A 10.34, S 0.0135, births 15.44; a_hunter +0.123 a_young +0.078 a_adult -0.058 neutral +0.280
+    main3_B1 iter 250: coexisting 50, A 20.14, S 0.0331, births 21.64; a_hunter +0.103 a_young +0.936 a_adult -0.501 neutral +0.094
+    main3_B1 iter 500: coexisting 50, A 25.14, S 0.0344, births 20.88; a_hunter +0.317 a_young +0.879 a_adult -0.582 neutral +0.097
+    main3_B1 iter 750: coexisting 50, A 20.02, S 0.0277, births 20.70; a_hunter +0.341 a_young +0.898 a_adult -0.718 neutral +0.140
+    main3_B1 iter 1000: coexisting 50, A 16.08, S 0.0218, births 20.82; a_hunter +0.194 a_young +0.854 a_adult -0.886 neutral +0.239
+    main3_B2 iter 250: coexisting 50, A 13.24, S 0.0232, births 20.84; a_hunter -0.035 a_young +0.924 a_adult -0.429 neutral -0.011
+    main3_B2 iter 500: coexisting 50, A 11.44, S 0.0206, births 18.82; a_hunter +0.144 a_young +0.895 a_adult -0.724 neutral -0.126
+    main3_B2 iter 750: coexisting 50, A 9.98, S 0.0164, births 18.18; a_hunter +0.024 a_young +0.916 a_adult -0.816 neutral -0.015
+    main3_B2 iter 1000: coexisting 50, A 6.50, S 0.0138, births 16.62; a_hunter -0.074 a_young +0.933 a_adult -0.877 neutral -0.053
+    main3_B3 iter 250: coexisting 50, A 17.28, S 0.0262, births 20.20; a_hunter -0.085 a_young +0.943 a_adult -0.274 neutral -0.001
+    main3_B3 iter 500: coexisting 50, A 14.08, S 0.022, births 19.64; a_hunter -0.073 a_young +0.894 a_adult -0.525 neutral -0.104
+    main3_B3 iter 750: coexisting 50, A 13.90, S 0.0218, births 19.34; a_hunter -0.008 a_young +0.893 a_adult -0.664 neutral +0.142
+    main3_B3 iter 1000: coexisting 50, A 7.20, S 0.0145, births 17.14; a_hunter -0.089 a_young +0.857 a_adult -0.827 neutral +0.359
+    main3_B4 iter 250: coexisting 50, A 13.38, S 0.0235, births 18.92; a_hunter -0.054 a_young +0.914 a_adult -0.294 neutral +0.064
+    main3_B4 iter 500: coexisting 50, A 13.40, S 0.021, births 20.46; a_hunter -0.021 a_young +0.883 a_adult -0.584 neutral +0.036
+    main3_B4 iter 750: coexisting 50, A 10.66, S 0.018, births 20.44; a_hunter +0.036 a_young +0.887 a_adult -0.803 neutral +0.244
+    main3_B4 iter 1000: coexisting 49, A 8.82, S 0.0162, births 17.94; a_hunter +0.024 a_young +0.923 a_adult -0.787 neutral +0.314
+    main3_B5 iter 250: coexisting 50, A 14.18, S 0.027, births 20.18; a_hunter +0.095 a_young +0.927 a_adult -0.509 neutral +0.229
+    main3_B5 iter 500: coexisting 50, A 17.64, S 0.0252, births 21.72; a_hunter +0.110 a_young +0.886 a_adult -0.672 neutral +0.316
+    main3_B5 iter 750: coexisting 50, A 13.26, S 0.0195, births 19.32; a_hunter +0.015 a_young +0.926 a_adult -0.745 neutral +0.318
+    main3_B5 iter 1000: coexisting 50, A 13.10, S 0.0186, births 19.78; a_hunter -0.018 a_young +0.912 a_adult -0.765 neutral +0.203
+    main3_B6 iter 250: coexisting 50, A 14.10, S 0.0239, births 19.84; a_hunter -0.036 a_young +0.912 a_adult -0.405 neutral +0.043
+    main3_B6 iter 500: coexisting 50, A 17.42, S 0.026, births 19.62; a_hunter +0.112 a_young +0.897 a_adult -0.562 neutral -0.011
+    main3_B6 iter 750: coexisting 50, A 12.78, S 0.0201, births 19.28; a_hunter +0.136 a_young +0.908 a_adult -0.737 neutral +0.058
+    main3_B6 iter 1000: coexisting 50, A 12.22, S 0.0178, births 19.90; a_hunter +0.032 a_young +0.882 a_adult -0.800 neutral -0.025
+tests: {'1_panel_B_over_L': False, '2_B_coexists': True, '3_selection_a_hunter': False, '3_selection_a_adult': False}
+verdict (tests 1 and 2): not met
+secondary claim, a_hunter: not met
+secondary claim, a_adult: not met

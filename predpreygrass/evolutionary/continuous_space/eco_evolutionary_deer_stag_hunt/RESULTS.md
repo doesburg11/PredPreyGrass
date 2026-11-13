@@ -472,3 +472,77 @@ the same seed, as section 3.3 sets for a hardware failure; this uses their one r
 No code changed: the module's code and tests are still those of the pilot commit
 f98825da (a CI skip for two tests that need deer_stag_hunt's local run touch_1 was
 moved outside the module, to `continuous_space/conftest.py`, b8d81070).
+
+### 3.8 Main runs: result (2026-11-13): tests 1 and 3 not met, test 2 met
+
+All 12 main runs reached 1000 iterations (pair 6 rerun once from scratch, section
+3.7; no other rerun). Own-world evaluations at 250-1000 and the cross-play panel at
+500, 750 and 1000 (396 evaluations) ran unattended; the launcher wrote
+`results/verdict_3.txt` at 16:01.
+
+**Per run** (panel values: mean over the 33 off-diagonal cells; C is reported, not
+tested):
+
+| Run | Panel A | Panel S | Panel C | Own-world coexisting (of 150) |
+|---|---|---|---|---|
+| L1 | 24.34 | 0.0233 | 1.158 | 150 |
+| L2 | 24.12 | 0.0241 | 1.101 | 149 |
+| L3 | 16.51 | 0.0177 | 1.095 | 149 |
+| L4 | 20.46 | 0.0219 | 1.156 | 150 |
+| L5 | 17.93 | 0.0196 | 1.145 | 150 |
+| L6 | 8.14 | 0.0126 | 1.077 | 142 |
+| **L mean** | **18.58** | **0.0199** | **1.122** | |
+| B1 | 20.40 | 0.0305 | 0.934 | 150 |
+| B2 | 11.13 | 0.0198 | 0.829 | 150 |
+| B3 | 13.62 | 0.0219 | 0.884 | 150 |
+| B4 | 11.20 | 0.0205 | 0.842 | 149 |
+| B5 | 14.79 | 0.0234 | 0.913 | 150 |
+| B6 | 14.28 | 0.0232 | 0.906 | 150 |
+| **B mean** | **14.24** | **0.0232** | **0.885** | |
+
+**Tests (section 3.4):**
+
+- **Test 1 (primary): not met.** Panel A, B − L = −4.34 (p 0.92; bootstrap 95%
+  [−9.01, +0.92]); panel S, B − L = +0.0034 (p 0.10; [−0.0005, +0.0078]). Both had to
+  hold; neither did. B caught fewer adults against the common deer panel, with a
+  non-significant lean towards more success per attempt.
+- **Test 2 (condition): met.** 6 of 6 B runs coexisted in at least 135 of 150.
+- **Test 3 (secondary): not met** for `a_hunter` (B − L +0.0033, p 0.14) or `a_adult`
+  (B − L −0.0081, p 0.99).
+
+**Verdict, in the pre-registered wording:** not met. In this world, with deer learning
+alongside, arm B's hunter systems (shared PPO learning plus an evolving innate bias)
+did not catch more adults, or more per attempt, than arm L's (learning alone) against
+a common panel of coevolved deer.
+
+**Reported, not tested:**
+
+- **The genes in B moved the same way in all six runs:** `a_young` to about +0.86 to
+  +0.94 (the range is [−1, 1]) and `a_adult` to about −0.77 to −0.89 by iteration
+  1000; `a_hunter` stayed near 0 (−0.09 to +0.19). In L, where the genes are
+  unexpressed, the gene means wandered in both directions (for example `a_young`
+  −0.53 to +0.08, `a_adult` −0.15 to +0.31 at 1000), as drift would.
+- **Partnering on adults:** B's panel C was below chance in every run (0.83-0.93), L's
+  above it in every run (1.08-1.16); the two ranges do not overlap. This is the
+  pattern pilot3_B1 showed (section 3.6).
+- **Own world:** B − L adults per episode −7.67 (p 0.99).
+- **Deer side:** against the panel's hunters, B's coevolved deer lost fewer adults per
+  episode than L's (B − L −3.61) and fewer per attempt (−0.0048): B's deer were harder
+  to catch, not easier. Off the diagonal, each B hunter run met 5 B and 6 L deer runs,
+  each L hunter run 6 B and 5 L, so this tilts the panel slightly against L, not B.
+- **Over training:** adults caught per episode fell from 500 to 1000 in most runs of
+  both arms, as the deer kept learning.
+
+**A reading, not a tested claim.** In B, the evolving bias went to the safe option
+(young deer, caught alone) and away from the risky joint one (adults, which need two
+hunters), and B's hunters partnered on adults less than chance; L's learned policy,
+without an expressed bias, partnered above chance. That fits a stag-hunt pattern in
+which selection on individual hunters favours the payoff-safe choice, and is
+consistent with the bias steering behaviour away from what learning alone found. It
+is not shown that the bias caused B's lower partnering: arms differ in their whole
+coevolutionary history, and the deer differ too. Section 3.5's bias-off analysis is
+the pre-registered next step; its premise (`a_young` > 0 and `a_adult` < 0 at 500,
+750 and 1000) holds in 6 of 6 B runs at every checkpoint, so P1 and P2 will be
+interpreted.
+
+Per section 3.3's hard stop, no further main runs follow in this stage.
