@@ -6,16 +6,35 @@ tracks the sequence of attempts against that goal: what was tried, why each pivo
 happened, and the current state of the search. Each module below (`eco_evolutionary_*`)
 also has its own detailed RESULTS.md with full data. Read top to bottom.
 
-## Where things stand (2026-10-24)
+## Where things stand (documentation update 2026-11-13)
 
-**New (Trial 15, 2026-10-24): learning steers body evolution, replicated.** In
-`eco_evolutionary_continuous_traits` (heritable speed, view distance and field of view
-with shared PPO, in the continuous world), predator speed rose in all six branch runs
-where the predator policy kept learning and fell in all six where it was frozen
-(+0.18, 95% CI +0.14 to +0.22, exact p = 0.005, pre-specified). It is the first
-replicated learning → evolution leg in this project's continuous world; its mechanism and
-generality across branch points are open, and there is no arms race in bodies. Details
-under Trial 15 below.
+**Trial 15: learning steers body evolution, reproduced within one trajectory.**
+The predator-learning contrast on predator-speed genes is +0.18 at CT-05 iteration
+1,500 (95% CI +0.14 to +0.22) and +0.19 at iteration 2,500 (95% CI +0.09 to +0.28),
+exact p = 0.005 at each branch, three seeds per arm. Both branch points come from
+one training run, so this is not independent replication across training histories.
+Learning is shared PPO per species, not private lifetime learning. The mechanism is
+partly tested; the decline when only predators were frozen remains unexplained.
+No body arms race is shown. See
+[continuous_traits/RESULTS.md §§5–8](continuous_space/eco_evolutionary_continuous_traits/RESULTS.md).
+
+**Visual-field follow-up: divergence without demonstrated body coevolution.**
+Species' eyes diverged, but freezing late-adapted prey preserved coexistence in
+200/200 checks at each of two branches. This weakens the interpretation of earlier
+frozen-prey collapse as evidence that prey must keep evolving; the mirror
+follow-up was stopped and has no verdict. See
+[continuous_fov/RESULTS.md §§5–7](continuous_space/eco_evolutionary_continuous_fov/RESULTS.md).
+
+**Evolutionary deer hunting: no final comparative verdict recorded.**
+Two pilot designs failed; a third, with deer learning alongside hunters, passed.
+The latest entry records interrupted/restarted main runs on 2026-11-12.
+The innate-bias versus learned-strategy reading remains exploratory. See
+[deer_stag_hunt/RESULTS.md §§1.5, 2.5, 3.6–3.7](continuous_space/eco_evolutionary_deer_stag_hunt/RESULTS.md).
+
+The dated historical account below is retained. Current results do not establish
+open-ended evolution or continuing novelty; the root [README](../../README.md#main-findings)
+also separates the fixed-body learning arms race and cooperative-hunting evidence
+from these evolutionary claims.
 
 ### As of 2026-10-03
 

@@ -383,13 +383,11 @@ the same one:
   attribution noise without ever pointing the policy in a wrong direction
   (mis-attribution, not misdirection).
 
-Both cost something relative to sparse, through different channels — which
-is why sparse remains the ceiling: it is the only one of the three with
-neither problem. It also explains, structurally, why kickback can approach
-sparse but never exceed it: kickback's reward is literally sparse's reward
-plus an extra noisy, weakly-attributable term, and adding noise to an
-already-maximally-tight objective has no mechanism to help, only to cost a
-little within a fixed training budget.
+These are candidate explanations for the observed shortfalls, not established
+mechanisms. Sparse was the best tested baseline, but that does not make it a
+performance ceiling: a shaping signal could help under other training conditions.
+Independent training replication and interventions on reward magnitude,
+observability and credit assignment are needed to distinguish these accounts.
 
 This is the same underlying principle as the credit-assignment argument
 against a *learned* nuptial-gift-donation action in the
@@ -414,8 +412,8 @@ of this argument — kin-blindness in the observation space as the likely
 
 This whole investigation started as groundwork for the project's evolutionary
 trials (see `project_darwin_baldwin_experiment_goal` in memory). The
-motivating hypothesis for that groundwork (fix sparsity, then retry) is now
-falsified — reward density is not the fix worth pursuing.
+motivating hypothesis for that groundwork (fix sparsity, then retry) was not supported by these runs. Reward density alone did not improve the tested
+conditions; independent training replication is needed before generalizing.
 
 ## 7. Open questions and caveats
 
@@ -477,48 +475,22 @@ prey%, both against `base_environment_sparse_rewards` = 100%/100%):
 5. **Dense (pure)** (per-step delta only, no reproduction bonus) — 42% / 53%,
    the only variant with an observed extinction event
 
-**The headline result stands, refined rather than overturned.** The
-original motivating hypothesis — that the sparse reward was starving
-training of signal and that a dense, biologically literal per-step reward
-would fix it — is not just unsupported but backwards: every dense variant
-underperforms every sparse-family variant, on every axis measured, and pure
-dense is the only design to produce an extinction event at a fully-trained
-checkpoint. Reward density hurt, it didn't help.
+**Observed finding:** sparse reproduction-only rewards gave the highest
+reproduction rates in this comparison. Every tested dense variant underperformed
+every sparse-family variant on the reported measures; pure dense was the only
+variant with an observed extinction at a fully trained checkpoint.
 
-**The refinement kickback adds**: it's not simply "sparse beats dense" or
-even "discrete beats continuous" as flatly as section 5 first suggested —
-magnitude alone doesn't predict the damage a secondary reward does; firing
-*frequency relative to the true objective* does. A shaping term is only
-guaranteed policy-invariant if it's potential-based (Ng, Harada & Russell,
-1999); a flat per-event bonus for a frequently-occurring intermediate
-behavior (eating: ~4-60 times per reproduction cycle) has no such guarantee
-and can contribute a large, non-negligible share of total return (up to
-~38% for prey) without that share necessarily tracking progress toward the
-true objective. Kickback's bonus, though ten times larger per event, only
-ever fires on the same rare event class it's meant to reinforce
-(reproduction, one hop removed via kinship) — so it costs the least of the
-four shaping variants despite being the *largest* in magnitude; eating
-(smaller, but far more frequent, and not tied to the terminal event) costs
-a bit more; dense (a continuous per-step signal, effectively firing on
-every single step) costs the most.
+**Evidence limit:** each condition has one training run. The three evaluation
+seeds are not independent training replications. This supports retaining sparse
+as the working baseline here, not a universal claim that density harms learning
+or that no shaping design can outperform it.
 
-Kickback still trails pure sparse, though (86%/96%, not 100%/100%), and
-that gap is a *second*, distinct cost, not a smaller dose of eating's
-problem. Eating pays the acting agent, but for a behavior not tightly
-coupled to the objective's rate (misdirection). Kickback pays out only on
-genuinely on-target events, but to a *different* agent than the one whose
-action caused it — the grandparent, for the child's reproduction, an event
-the grandparent doesn't control in the moment (mis-attribution, not
-misdirection). That distinction is why sparse is the ceiling every variant
-approaches from below but none exceeds: kickback's reward is structurally
-sparse's reward plus an extra noisy, weakly-attributable term, and noise
-added to an already-maximally-tight objective has no mechanism to help,
-only to cost a little. The same principle — reward paid to one agent for a
-different agent's action being a credit-assignment gap regardless of
-topical relevance — is what ruled out a *learned* nuptial-gift-donation
-action (as opposed to a heritable, mechanically-executed trait) in the
-`eco_evolutionary_nuptial_gift` line of the Darwin/Baldwin project; see
-section 5 for the full argument.
+**Mechanism remains open.** Reward frequency, magnitude, objective alignment,
+kin observability and credit assignment are candidate explanations for the ranking.
+The potential-based-shaping guarantee discussed in section 5 does not establish
+which mechanism caused these differences. Kickback's event type alone does not
+guarantee policy invariance, and its observed shortfall is not proof of an
+unavoidable cost. These explanations require controlled tests.
 
 **Practical takeaway for this codebase**: when adding a new reward-shaping
 mechanism to a `PredPreyGrass` variant (here or in the Darwin/Baldwin

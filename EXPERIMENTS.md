@@ -51,7 +51,7 @@ These environments hold every agent trait fixed and instead vary the interaction
 
 * **[Base environment, seasonal](predpreygrass/non_evolutionary/discrete_space/base_environment_seasonal)**: same mechanics as the base environment, plus a seasonal grass-regrowth cycle (a square wave alternating "abundant" and "scarce" phases over the episode) instead of a flat regrowth rate.
 
-* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design — see the [README headline result](README.md#headline-result-sparse-rewards-beat-dense-rewards) for the summary finding. See **[predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/README.md](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
+* **Reward shaping**: five sibling environments comparing sparse vs. dense reward design — see the [README main findings](README.md#main-findings) for the summary and the one-training-run-per-condition limitation. See **[predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/README.md](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping)** for the shared methodology and full results log — start there before any individual module below.
 
   * **[Sparse rewards](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/base_environment_sparse_rewards)**: same sparse, reproduction-only reward as the base environment. The fair baseline for every other variant below.
 
@@ -90,6 +90,17 @@ These environments hold every agent trait fixed and instead vary the interaction
 * **[Drive-conditioned environment](predpreygrass/non_evolutionary/discrete_space/drive_conditioned_environment)**: starts as a copy of the base environment, adding biologically-motivated internal-state signals (hunger, reproductive readiness, local threat/opportunity) as extra observation channels — reward and action space stay unchanged, only what the agent can see is enriched. See that folder's README for the full rationale and predicted effects.
 
 * **[Red Queen](predpreygrass/non_evolutionary/discrete_space/red_queen)**: independently configurable competing prey types under a shared, non-mutating predator policy, testing coevolutionary arms-race dynamics between learned policies rather than genomes.
+
+## Continuous-space experiments
+
+These results distinguish learned co-adaptation, evolution of bodies, and cooperative
+hunting; none establishes open-ended evolution or continuing novelty.
+
+* **[Continuous base environment](predpreygrass/non_evolutionary/continuous_space/base_environment_continuous)**: five training runs support reciprocal policy improvement against fixed opponents, including two with inherited environment quirks corrected. Bodies are fixed. See [RESULTS.md §§2–3](predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/RESULTS.md).
+* **[Continuous heritable traits](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits)**: predator learning increases the change in predator-speed genes by +0.18 and +0.19 (exact p = 0.005 each), reproduced at two branch points of one CT-05 trajectory, with three seeds per arm. Shared species learning, no body arms race; the predator-only-frozen speed decline remains unexplained. See [RESULTS.md §§5–8](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/RESULTS.md).
+* **[Continuous field of view](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov)**: species' visual fields diverge, but the freeze tests do not establish body coevolution. Late-adapted frozen prey coexist in 200/200 checks at both branches; the mirror follow-up was stopped. See [RESULTS.md §§5–7](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/RESULTS.md).
+* **[Deer stag hunt](predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt)** *(closed, positive)*: replicated coexistence and above-chance partnering near adults; a payoff control supports a conditional cooperation interpretation. Proximity does not prove partner seeking, and ecological confounds and late declines remain. See [RESULTS.md, closed conclusion](predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/RESULTS.md#closed-2026-11-10).
+* **[Evolutionary deer stag hunt](predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt)** *(ongoing; no final comparative verdict recorded)*: two pilot designs failed; the learning-deer pilot passed. The latest record (2026-11-12) documents interrupted/restarted main runs. The innate-bias versus learned-strategy interpretation is exploratory. See [RESULTS.md §§1.5, 2.5, 3.6–3.7](predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/RESULTS.md).
 
 ## Experiments
 

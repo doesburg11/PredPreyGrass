@@ -15,7 +15,7 @@
 
 - **Darwinian evolution** of inherited traits (speed, cooperation rate, metabolic rate, and more) via reproduction and mutation
 - **Baldwinian interaction** between evolution and learning tested directly — do genetic selection and learned behavior actually shape each other, or just coexist?
-- **Emergent cooperation, defection, reciprocity and coevolution**, studied under both evolving and fixed-trait agent populations
+- **Cooperation, defection, reciprocity and coevolution as research questions**, with evidence and limits reported separately for evolving and fixed-trait populations
 - Built with Python, Gymnasium and RLlib 2.59's new API stack (`RLModule` / `Learner` / `EnvRunner`), with dynamic, lifecycle-changing agent populations
 
 **Start here:** [Quick start](#quick-start-run-a-demo-in-under-five-minutes) to run a demo in under five minutes, or [EXPERIMENTS.md](EXPERIMENTS.md) for the full catalogue of experiments.
@@ -40,6 +40,28 @@ The repo splits into two structurally different families of experiment, matching
 The full catalogue of environments and experiments — evolutionary trials, reward-shaping
 variants, cooperation/game-theory environments, and the Red Queen evaluations — lives in
 **[EXPERIMENTS.md](EXPERIMENTS.md)**.
+
+## Main findings
+
+These are results in specific worlds and finite training/evaluation budgets. Persistent
+ecology and reciprocal improvement do not by themselves establish open-ended evolution
+or continuing novelty.
+
+| Experiment | Supported finding | Main limit |
+| --- | --- | --- |
+| [Continuous policy co-adaptation](predpreygrass/non_evolutionary/continuous_space/base_environment_continuous/RESULTS.md#2-arms-race-in-three-runs-be-01-be-02-be-03) | In five training runs, newer predators catch fixed prey better and newer prey evade fixed predators better, including two runs with the inherited environment quirks corrected. | Shared-policy learning with fixed bodies; a finite-horizon learning arms race. |
+| [Evolution plus lifetime learning](predpreygrass/evolutionary/discrete_space/eco_evolutionary_erl_baldwin/RESULTS.md#9-final-comparative-study-result-2026-08-16--erl-significantly-beats-every-other-condition) | ERL reaches the 1M-step survival cap in 83/100 runs, versus 37/100 for learning alone and 33/100 for evolution alone; p < 0.00001 against each control. | Population survival in retuned World AL; not proof of genetic assimilation or a body arms race. |
+| [Prey-regulated ecology](predpreygrass/evolutionary/discrete_space/eco_evolutionary_erl_coevolution/RESULTS.md#summary) | The advantage over evolution alone persists; against learning alone it appears as prey survival in a harsh world and lower carnivore loss in an easier one. | Conditional advantage; no evolutionary arms race demonstrated. |
+| [Learning steers body evolution](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_traits/RESULTS.md) | Predator learning increases the change in predator-speed genes by +0.18 and +0.19 at two branch points (exact p = 0.005 each). | Both branch points come from CT-05, one training trajectory; shared species learning, no body arms race, mechanism partly unresolved. |
+| [Visual-field evolution](predpreygrass/evolutionary/continuous_space/eco_evolutionary_continuous_fov/RESULTS.md#7-follow-up-to-test-2-freezing-at-a-late-adapted-pool-2026-10-30-to-2026-10-31) | Species' visual fields diverge, but late-adapted frozen prey coexist in 200/200 checks at each of two branches. | No evidence of body coevolution in these tests; the mirror follow-up was not completed. |
+| [Cooperative deer hunting](predpreygrass/non_evolutionary/continuous_space/deer_stag_hunt/RESULTS.md#closed-2026-11-10) | Coexistence and above-chance adult approaches with a partner replicate; a payoff control is consistent with more partnering where it pays. | Partner proximity is not proof of partner seeking; modest effects, ecological confounds and unexplained late declines. |
+| [Reward shaping](predpreygrass/non_evolutionary/discrete_space/project_reward_shaping/README.md#8-conclusion) | Sparse reproduction-only rewards outperform the four tested shaping variants on reproduction rates. | One training run per condition; proposed mechanisms remain hypotheses. |
+| [Discrete Red Queen](predpreygrass/non_evolutionary/discrete_space/red_queen/README.md) | A multi-seed, multi-checkpoint evaluation harness is implemented. | The original single-seed result was retracted; no replacement result is recorded. |
+
+The [evolutionary deer-hunting extension](predpreygrass/evolutionary/continuous_space/eco_evolutionary_deer_stag_hunt/RESULTS.md)
+has no final comparative verdict recorded: two pilot designs failed, a third passed,
+and the latest record documents interrupted/restarted main runs. Its proposed division
+between innate attraction and learned hunting remains exploratory.
 
 ## Quick start: run a demo in under five minutes
 

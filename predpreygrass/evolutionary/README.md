@@ -6,12 +6,13 @@ Demonstrate a **sustainable Darwin/Baldwin evolutionary loop** in a predator-pre
 coevolution simulation: genetic evolution (Darwinian) and within-lifetime RL learning
 (Baldwinian) feeding back into each other, not just coexisting side by side.
 
-Each module below layers a genuine evolutionary algorithm — founder genome, mutation,
-inheritance — on top of shared-policy PPO. A scalar trait is passed from parent to
-offspring with mutation at each reproduction event; PPO policy weights are never
-inherited, only shared per species. Learned behavior (Baldwinian) determines which trait
-values survive to reproduce, closing a genome → phenotype → learned behavior → fitness →
-genome-frequency loop across generations.
+The modules use two distinct architectures. The shared-policy PPO family evolves
+inherited body or other traits; policy weights are shared per species, not inherited.
+The ERL family instead gives each agent private genome-initialized networks and
+within-lifetime learning; offspring inherit the genome, not the learned changes.
+Both combine reproduction, mutation and inheritance with learning, but a functioning
+implementation alone does not establish that learning steers genetic evolution.
+That requires the controlled comparisons reported below.
 
 **Success requires all three of these together, not just one:**
 
@@ -46,7 +47,9 @@ evolutionary/
 │   ├── eco_evolutionary_metabolic_rate_positive_control/
 │   └── stag_hunt_forward_view_nature_nurture/
 ├── continuous_space/
-│   └── eco_evolutionary_continuous_traits/
+│   ├── eco_evolutionary_continuous_traits/
+│   ├── eco_evolutionary_continuous_fov/
+│   └── eco_evolutionary_deer_stag_hunt/
 ├── legacy_paths.py
 ├── model_selection.py
 ├── README.md
@@ -128,12 +131,25 @@ checkpoint loaders use.
   heritability → spatial-refuge mechanism. See its
   [RESULTS.md](discrete_space/eco_evolutionary_erl_coevolution/RESULTS.md).
 * **[eco_evolutionary_continuous_traits](continuous_space/eco_evolutionary_continuous_traits)** (Trial 15) —
-  *replication complete 2026-10-24, POSITIVE; stays in this repo.* Heritable top speed,
+  *positive learning-to-body result, reproduced within one trajectory; stays in this repo.* Heritable top speed,
   view distance and field of view with shared PPO in the continuous world. **Key message:
-  learning changes how bodies evolve, and the effect replicates**: predator speed rose in
-  all six branch runs where predators kept learning and fell in all six where they were
-  frozen (+0.18, 95% CI +0.14 to +0.22, exact p = 0.005). Mechanism and other branch points
-  open; no arms race in bodies. See its [RESULTS.md](continuous_space/eco_evolutionary_continuous_traits/RESULTS.md).
+  learning changes how bodies evolve**: the predator-learning contrast on predator
+  speed is +0.18 at iteration 1,500 (95% CI +0.14 to +0.22) and +0.19 at iteration
+  2,500 (95% CI +0.09 to +0.28), exact p = 0.005 each, three seeds per arm.
+  Both branch points come from CT-05, one training trajectory, not independent
+  training replications. Learning is shared per species; no body arms race is shown.
+  Mechanism is partly tested; the fall when only predators were frozen remains
+  unexplained. See its [RESULTS.md](continuous_space/eco_evolutionary_continuous_traits/RESULTS.md).
+
+* **[eco_evolutionary_continuous_fov](continuous_space/eco_evolutionary_continuous_fov)** —
+  species' visual fields diverge, but body coevolution is not demonstrated. Freezing
+  late-adapted prey preserves coexistence in 200/200 checks at both branches; the
+  mirror follow-up was stopped. See [RESULTS.md §§5–7](continuous_space/eco_evolutionary_continuous_fov/RESULTS.md).
+* **[eco_evolutionary_deer_stag_hunt](continuous_space/eco_evolutionary_deer_stag_hunt)** —
+  ongoing, with no final comparative verdict recorded. Two pilot designs failed; a
+  third, with deer learning alongside hunters, passed. The latest record documents
+  interrupted/restarted main runs (2026-11-12). Innate-bias versus learned-strategy
+  interpretations remain exploratory. See [RESULTS.md](continuous_space/eco_evolutionary_deer_stag_hunt/RESULTS.md).
 
 See **[RESULTS.md](RESULTS.md)** for the full cross-module trial log — the sequence of
 attempts, why each pivot happened, and the current state of the search.
