@@ -109,6 +109,8 @@ then jump to whichever iteration number you need.
   grass regrowth raised with it; 50 and 80 iterations).
 - **FORAGING_CHECK aborted run** (Iteration 2): `PPO_PREDATOR_SEXUAL_REPRODUCTION_FORAGING_CHECK_SEED42_ABORTED_PARTIAL`.
 - **SMOKE** (Iteration 11): `PPO_FIXED_PREY_DENSITY_SMOKE_SEED42`, the 20-iteration smoke test of the fixed prey-density environment.
+- **MATE / BLANK** (Iteration 18): `PPO_PREDATOR_SEXUAL_REPRODUCTION_MATE_K05_MB1024_SEED{42,43,44}` and
+  `..._BLANK_K05_MB1024_SEED{42,43,44}`: PROP k=0.5 with `--mate-obs-channel mate` / `blank` (trial folders `LocalPPO_*`).
 - **Density-target sweep** (designed in Iteration 15, reported in Iteration 16): `PPO_FIXED_PREY_DENSITY_<CELL>_DENS13_SEED42`
   (CONTROL, SUCCESSONLY) and `..._<CELL>_DENS52_SEED<n>` (CONTROL seeds 42 and a partial 43, EQUALODDS and SUCCESSONLY seed 42);
   stopped early when the module was closed.
@@ -141,6 +143,7 @@ All runs and analysis outputs are kept in this module's `runs/` folder (gitignor
 | 15 | `density_pilot/` |
 | 16 | `reanalysis/`, `density_sweep/` |
 | 17 | `counterfactual/` |
+| 18 | `mate_channel/` |
 
 Launcher scripts in these folders (`chain.sh` and others) still contain the paths of the time
 (`~/simulation_results/...`); they record how the runs were made and are not meant to be re-run as is.
@@ -1653,6 +1656,69 @@ conditional on mate history, on seeing a target, and on 12 episodes per run; the
 establishes coordination or mate recognition. It makes generic-neighbor sensitivity a plausible contributor to the observed pattern (the policies are sensitive to inserted anonymous predators),
 but does not show it produces that pattern or that a partner-specific component is absent. Whether a partner-specific component exists
 on top would need a design in which sex or mate bond is observable (an identity channel), retrained with and without it.
+
+### Iteration 18 — Mate observation channel: a direct cooperation test (pre-registered 2026-11-15, before any training)
+
+**Why.** Iteration 17 ended on a design limit: the predator layer is shared by both sexes and holds only energy, so a
+policy cannot tell its mate from any other predator, and no analysis could separate partner-specific behaviour from a
+response to nearby predators in general. This iteration removes that limit and retrains.
+
+**What changed in the code** (config `mate_obs_channel`, default off, so every earlier run and test is unchanged):
+
+- `"mate"`: predators get a sixth observation channel with 1.0 on the cell of their recorded mate (`env.agent_mate`, the
+  partner of their most recent successful reproduction) when that mate is alive and inside the 7x7 window, 0 elsewhere.
+  Nothing else about the mate is exposed (its energy was already visible in the predator layer). Mates out of view are
+  not shown; virgins never see a mark. Prey observations are unchanged.
+- `"blank"`: the same sixth channel, always zero. This is the control arm, so both arms train the same network shape
+  (Codex review: comparing 6 channels against 5 would mix information with input capacity).
+- `analyze_mate_tag.py` (new): Part A edits the mark in trained MATE policies; Part B measures pair outcomes in both arms.
+  `analyze_counterfactual_crowding.py` now also clears the mark when it removes neighbours. The analysis scripts find the new
+  `LocalPPO_*` trial folders. 135 module tests pass (35 new, including analysis tests with synthetic
+  tag-following / tag-avoiding / tag-blind policies).
+
+**Note on what "cooperation" can mean here.** The energy transfers (male gift to mate, parental care) are mechanical, not
+learned actions. The only learnable cooperative act is staying near, or seeking out, the partner; its benefit runs through
+those fixed transfers and repeated mating. A male pays 30% of every hunt to a mate within 3 cells (his reward is unaffected,
+his energy is not), so the mark could equally well be used to avoid the mate. The tests below therefore ask about direction.
+
+**Design.** Two arms x three seeds (42, 43, 44): `MATE_K05_MB1024` (`--mate-obs-channel mate`) and `BLANK_K05_MB1024`
+(`--mate-obs-channel blank`). Otherwise the PROP k = 0.5 configuration of Iteration 7: flat rewards 0, `reward_predator_per_energy`
+0.5, combat-death penalty 0.2, default odds (males 90%/5%, females 20%/10%), base environment (no prey floor, no population
+control), minibatch 1024, 30 epochs, 300 iterations. Three runs train at a time (GPU fraction 0.33, 4 env runners x 2 CPUs,
+2 main CPUs), so the resources differ from Iteration 7; the comparison is MATE against BLANK, never against the old runs.
+Analysis at checkpoint 29 (iteration 300), 20 episodes, `--seed 7000`, sampling every 2nd step for Part A.
+
+**Pre-registered tests.**
+
+- **H1, recognition (Part A, MATE runs).** A sex "uses the mark" when, in at least 2 of the 3 seeds, the pooled mate-tag
+  effect (approach bias to the mate with the mark minus without it) has |effect| >= 0.02 with a 95% interval excluding zero,
+  all such seeds have the same sign, and in each of them the decoy-tag effect (mark moved to another visible predator) has
+  the same sign with its interval excluding zero. The 0.02 floor is there because a 2-iteration smoke checkpoint already
+  gave intervals excluding zero at about 0.003; the partner and crowding effects of Iterations 14-17 were 0.02-0.09.
+- **H2, pair bonding (Part B).** `post_birth_near_frac` (the share of the 50 steps after each birth in which the two parents
+  are still bonded, both alive and within 3 cells; death counts as not near; births less than 50 steps before the episode
+  end are left out as censored, and their number is reported) is higher in all three MATE runs than in all three
+  BLANK runs (complete separation; exact one-sided permutation p = 1/20 = 0.05).
+- **H3, payoff (Part B).** `births_per_1000_pred_steps` is higher in all three MATE runs than in all three BLANK runs (same rule).
+- **Verdict rules.** "Cooperation supported" (to be worded as: partner-directed proximity with a reproductive benefit) only if H1
+  holds with a positive sign (approach) for at least one sex, AND H2 AND H3. H1 positive + H2 without H3: pair bonding without
+  a shown payoff. H1 only: recognition without a change in pair outcomes. H1 negative (avoidance) for males with H2 failing:
+  recognition used for conflict, not cooperation. H2 or H3 without H1: not attributable to the mark. Anything else: not met.
+- **Reported descriptively, not tested:** the food-tag effects (does a male's prey approach, or a female's fruit approach,
+  change when the mate is marked in view, i.e. a division of labour inside the pair), per-episode estimands, gifts per 1000
+  male-steps, repeat-pair births, pair distance, paired-step coverage, episode length, and a BLANK sanity check that the
+  male-prey / female-fruit split of Iteration 7 is still there (`analyze_energy_sources.py`).
+
+**Hard stop.** One round: these six runs and the analyses above. No change to rewards, odds, the channel's content (for example
+a compass to an out-of-view mate), training length or seeds after seeing results. If the verdict is not met, the module
+closes again with that result; any follow-up needs a new, separately agreed plan.
+
+**Caveats fixed in advance.** Three seeds per arm is the minimum for the separation rule and gives no power for small
+effects. Part B's `pair_near_frac` conditions on having a living mate (post-treatment selection), so the event-aligned
+`post_birth_near_frac` is the tested quantity. The intervals in Part A cover evaluation episodes of one checkpoint, not
+training seeds.
+
+**Results.** (not yet run)
 
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 

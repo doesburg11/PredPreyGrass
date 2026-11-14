@@ -223,7 +223,7 @@ def main():
 
     for label, path in runs:
         config = json.load(open(os.path.join(path, "run_config.json")))["config_env"]
-        trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
+        trial = sorted(glob.glob(os.path.join(path, "*PPO_*/")))[0]
         checkpoint = os.path.join(trial, f"checkpoint_{args.checkpoint:06d}")
         modules = load_modules(checkpoint)
         pairs = run_episodes(config, modules, args.episodes, args.seed)

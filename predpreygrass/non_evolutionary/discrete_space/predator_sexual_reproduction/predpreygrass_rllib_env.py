@@ -219,6 +219,22 @@ class PredPreyGrass(MultiAgentEnv):
         self.num_obs_channels = config.get("num_obs_channels", 5)
         self.predator_obs_range = config.get("predator_obs_range", 7)
         self.prey_obs_range = config.get("prey_obs_range", 9)
+        # Mate observation channel (see config_env.py "mate_obs_channel"): one extra, agent-specific
+        # predator channel (index num_obs_channels) marking the observer's recorded mate with 1.0 when
+        # that mate is alive and inside the window. Predators only; prey observations are unchanged.
+        # "blank" adds the same sixth channel but never writes to it: the matched-capacity control (same network
+        # shape as the mate arm, no partner information).
+        mode = config.get("mate_obs_channel", False)
+        if mode is False:
+            mode = "off"
+        elif mode is True:
+            mode = "mate"
+        if mode not in ("off", "mate", "blank"):
+            raise ValueError(f"mate_obs_channel must be False, True, 'mate' or 'blank' (got {mode!r})")
+        self.mate_obs_channel_mode = mode
+        self.mate_obs_channel = mode == "mate"  # True only when mates are actually marked
+        self.mate_channel_index = self.num_obs_channels if mode != "off" else None
+        self.num_predator_obs_channels = self.num_obs_channels + (0 if mode == "off" else 1)
 
         # Grass settings (prey food only)
         self.initial_num_grass = config.get("initial_num_grass", 100)
@@ -280,7 +296,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.fruit_agents: List[str] = [f"fruit_{k}" for k in range(self.initial_num_fruit)]
 
         # Gymnasium Spaces
-        predator_obs_shape = (self.num_obs_channels, self.predator_obs_range, self.predator_obs_range)
+        predator_obs_shape = (self.num_predator_obs_channels, self.predator_obs_range, self.predator_obs_range)
         prey_obs_shape = (self.num_obs_channels, self.prey_obs_range, self.prey_obs_range)
 
         predator_obs_space = gymnasium.spaces.Box(low=0.0, high=100.0, shape=predator_obs_shape, dtype=np.float64)
@@ -1183,18 +1199,41 @@ class PredPreyGrass(MultiAgentEnv):
         return new_position
 
     def _get_observation(self, agent):
-        observation_range = self.predator_obs_range if "predator" in agent else self.prey_obs_range
+        is_predator = "predator" in agent
+        observation_range = self.predator_obs_range if is_predator else self.prey_obs_range
+        n_channels = self.num_predator_obs_channels if is_predator else self.num_obs_channels
         xp, yp = self.agent_positions[agent]
         xlo, xhi, ylo, yhi, xolo, xohi, yolo, yohi = self._obs_clip(xp, yp, observation_range)
         observation = np.zeros(
-            (self.num_obs_channels, observation_range, observation_range),
+            (n_channels, observation_range, observation_range),
             dtype=np.float64,
         )
         observation[0].fill(1)
         observation[0, xolo:xohi, yolo:yohi] = 0
-        observation[1:, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+        observation[1 : self.num_obs_channels, xolo:xohi, yolo:yohi] = self.grid_world_state[1:, xlo:xhi, ylo:yhi]
+
+        if is_predator and self.mate_obs_channel:
+            mate_cell = self._visible_mate_cell(agent)
+            if mate_cell is not None:
+                observation[self.mate_channel_index, mate_cell[0], mate_cell[1]] = 1.0
 
         return observation
+
+    def _visible_mate_cell(self, agent):
+        """Window coordinates of agent's recorded mate (self.agent_mate), or None if it has no current mate,
+        the mate is no longer alive (dead predators are deleted from predator_positions at once), or the
+        mate is outside the observation window. Only the bond (who reproduced with whom most recently) is
+        exposed; nothing about the mate's state beyond what the predator layer already shows at that cell."""
+        mate = self.agent_mate.get(agent)
+        if mate is None or mate not in self.predator_positions:
+            return None
+        offset = (self.predator_obs_range - 1) // 2
+        xp, yp = self.agent_positions[agent]
+        xm, ym = self.predator_positions[mate]
+        dx, dy = xm - xp, ym - yp
+        if max(abs(dx), abs(dy)) > offset:
+            return None
+        return offset + dx, offset + dy
 
     def _obs_clip(self, x, y, observation_range):
         observation_offset = (observation_range - 1) // 2

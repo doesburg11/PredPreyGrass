@@ -5,6 +5,16 @@ config_env = {
     "num_obs_channels": 5,  # Border, Predator, Prey, Grass, Fruit
     "predator_obs_range": 7,
     "prey_obs_range": 9,
+    # Mate observation channel (Iteration 18, cooperation test). False (default) = the original 5-channel
+    # observation for everyone; all earlier runs are unaffected. True = predators get ONE extra channel
+    # (index 5, after fruit) holding 1.0 at the cell of their recorded mate (env.agent_mate: the partner of
+    # their most recent successful reproduction) when that mate is alive and inside the 7x7 window, 0
+    # elsewhere. Before it, the predator layer was shared by both sexes, so a predator could not tell its
+    # mate from any other predator (RESULTS.md Iteration 17). Prey observations keep 5 channels. Only
+    # mated predators ever see a mark; out-of-window mates are not shown (no direction/compass cue).
+    # "blank" = the matched control: the same sixth channel, always zero (same network shape, no information).
+    # Accepted values: False/"off", True/"mate", "blank".
+    "mate_obs_channel": False,
     # Rewards
     "reward_predator_catch_prey": 0.0,
     "reward_predator_gather_fruit": 0.0,

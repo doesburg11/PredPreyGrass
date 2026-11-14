@@ -1,5 +1,12 @@
 # predator_sexual_reproduction
 
+> ## STATUS: REOPENED 2026-11-15 for one pre-registered round (Iteration 18, mate observation channel)
+>
+> Predators can now optionally see which predator is their mate (`mate_obs_channel`, config_env.py), which removes the design
+> limit that stopped the coordination question below. Six runs (MATE vs a matched BLANK channel, three seeds each), tests and a
+> hard stop are fixed in [`RESULTS.md`](RESULTS.md) Iteration 18 before any training. The box below is the state as closed on
+> 2026-09-25.
+>
 > ## STATUS: CLOSED (2026-09-25). Read this before anything else
 >
 > **This module is stopped, not finished.** It produced one solid descriptive result and two questions it could not answer. Details and

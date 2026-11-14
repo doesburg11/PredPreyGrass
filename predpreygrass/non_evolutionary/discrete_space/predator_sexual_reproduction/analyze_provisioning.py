@@ -219,7 +219,7 @@ def main():
         label, path = spec.split("=", 1)
         path = os.path.expanduser(path)
         config = json.load(open(os.path.join(path, "run_config.json")))["config_env"]
-        trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
+        trial = sorted(glob.glob(os.path.join(path, "*PPO_*/")))[0]
         modules = load_modules(os.path.join(trial, f"checkpoint_{args.checkpoint:06d}"))
         per_episode = run_episodes(config, modules, args.episodes, args.seed, args.near_radius, args.gift_window)
         for line in summarize(f"{label} ckpt{args.checkpoint}", per_episode, rng):

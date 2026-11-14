@@ -63,6 +63,7 @@ from predpreygrass.non_evolutionary.discrete_space.predator_sexual_reproduction.
 )
 
 PRED_CH, PREY_CH, GRASS_CH, FRUIT_CH = 1, 2, 3, 4
+MATE_CH = 5  # only present when the run used mate_obs_channel=True
 TARGETS = ("prey", "fruit")
 
 
@@ -72,6 +73,8 @@ def remove_neighbors(obs, offset):
     own = out[PRED_CH, offset, offset]
     out[PRED_CH] = 0.0
     out[PRED_CH, offset, offset] = own
+    if out.shape[0] > MATE_CH:  # mate_obs_channel runs: the removed mate must not stay marked
+        out[MATE_CH] = 0.0
     return out
 
 
@@ -303,7 +306,7 @@ def main():
         label, path = spec.split("=", 1)
         path = os.path.expanduser(path)
         config = json.load(open(os.path.join(path, "run_config.json")))["config_env"]
-        trial = sorted(glob.glob(os.path.join(path, "PPO_*/")))[0]
+        trial = sorted(glob.glob(os.path.join(path, "*PPO_*/")))[0]
         modules = load_modules(os.path.join(trial, f"checkpoint_{args.checkpoint:06d}"))
         for sex in args.sexes:
             pid = f"predator_{sex}_policy"

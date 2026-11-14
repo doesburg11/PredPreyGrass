@@ -131,6 +131,12 @@ def parse_args():
              "config_env.py's shipped value (0.0, i.e. no penalty).",
     )
     parser.add_argument(
+        "--mate-obs-channel", choices=["off", "mate", "blank"], default=None,
+        help="Predator mate observation channel (RESULTS.md Iteration 18): 'mate' adds a sixth channel marking "
+             "the recorded mate, 'blank' adds the same channel always zero (matched-capacity control), 'off' the "
+             "original 5 channels. Default: config_env.py's shipped value (off).",
+    )
+    parser.add_argument(
         "--minibatch-size", type=int, default=128,
         help="PPO minibatch_size (default 128, the value all earlier runs used).",
     )
@@ -321,6 +327,8 @@ if __name__ == "__main__":
         env_config["initial_num_grass"] = args.initial_num_grass
     if args.energy_gain_per_step_grass is not None:
         env_config["energy_gain_per_step_grass"] = args.energy_gain_per_step_grass
+    if args.mate_obs_channel is not None:
+        env_config["mate_obs_channel"] = {"off": False, "mate": True, "blank": "blank"}[args.mate_obs_channel]
     if args.penalty_combat_death is not None:
         if args.penalty_combat_death < 0:
             raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")
