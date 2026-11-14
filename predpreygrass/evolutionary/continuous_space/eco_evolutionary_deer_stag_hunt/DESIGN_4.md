@@ -1,7 +1,8 @@
-# Design note 4: selection between groups (draft 2, 2026-11-14)
+# Design note 4: selection between groups (draft 3, 2026-11-14)
 
-Status: **draft 2, not approved.** Draft 1 was revised after a Codex review
-("Revisions after review", end). Nothing here is pre-registered yet; once the
+Status: **draft 3, not approved.** Draft 1 was revised after a Codex review
+("Revisions after review", end); draft 3 adds the fission rule after the user
+asked whether replacement is ecologically realistic. Nothing here is pre-registered yet; once the
 decisions below are made it goes into RESULTS.md as section 4, before any code.
 This is a new stage, prompted by a user decision after section 3 closed. It does
 not continue or rerun sections 1-3. Everything not named here stays as in
@@ -35,10 +36,18 @@ shows only that the mechanism is plausible at these payoffs, and failing is a
 reason to stop.
 
 - **Model:** EvolvedCooperation `ecological_models/stag_hunt_sharing`, sharing off,
-  the grid split into **14 groups** (as the training stage), **no migration**
-  between groups beyond the replacement itself, and, every **T = 10** generations,
-  the lowest-fitness group replaced by a copy of the highest (ties: random among
-  the tied). Group fitness = mean individual fitness in the group over the window.
+  the grid split into **14 groups** (as the training stage) on a ring (each group
+  has two neighbours), **no migration** between groups beyond the rules below.
+- **Two group rules, compared** (see "Group rules" below):
+  - **R (referee):** every **T = 10** generations the lowest-fitness group is
+    replaced by a copy of the highest (ties random). Group fitness = mean individual
+    fitness in the group over the window.
+  - **F (fission):** each group accumulates its reproductive surplus (the sum over
+    its members and generations of fitness above 1); when it reaches **K**, the group
+    splits: its copy refounds the weaker of its two ring neighbours (lower surplus
+    since its own last founding), and only if that neighbour is weaker than the
+    splitter; the splitter's accumulator resets. K is set so that with all hunters on
+    hare a group splits on average every 10 generations, matching R's pace.
 - **Fixed settings, no search:** diminishing fitness; q ∈ {0.3, 0.45, 0.6};
   ratio ∈ {1, 1.1, 1.2, 1.3, 1.5, 1.75}; start 5% and 50% stag hunters; **20
   seeds** (0-19) per cell, with and without group selection. Ratio is the expected
@@ -46,11 +55,33 @@ reason to stop.
   world's energy ratio.
 - **Outcome per seed:** final stag share = mean over the last 100 generations.
   Takeover = final share > 0.5.
-- **Pre-registered rule:** continue to training only if, at ratio 1.2 (the lowest
-  ratio sharing needed anywhere), for **every q and both starts**, group selection
-  gives takeover in at least 15 of 20 seeds **and** at least 10 more seeds than
-  without group selection. Otherwise this line stops at step 0, as sharing did.
-  The full sweep is reported either way.
+- **Pre-registered rule, per group rule:** a rule passes if, at ratio 1.2 (the
+  lowest ratio sharing needed anywhere), for **every q and both starts**, it gives
+  takeover in at least 15 of 20 seeds **and** at least 10 more seeds than without
+  group selection.
+- **Which rule goes to training:** F if F passes (the more realistic rule); else R
+  if R passes, and every write-up then says plainly that any result depends on an
+  idealised rule; if neither passes, this line stops at step 0, as sharing did.
+  The full sweep for both rules is reported either way.
+
+## Group rules and ecological realism
+
+- **R (referee) is the textbook abstraction** (the Moran model): an outside rule
+  scores every group on a fixed schedule and replaces the worst, whatever the
+  distance and even when the worst is doing fine. It is the strongest test of
+  whether the mechanism can work at all, not a picture of nature.
+- **F (fission) is closer to how human groups spread:** a group that grows splits,
+  and its daughter group takes ground from a weaker neighbour (as estimated for
+  New Guinea groups by Soltis, Boyd & Richerson 1995, and for warfare by Bowles
+  2006). No schedule, no ranking of all groups: a group spreads as often as it
+  grows, and only next door.
+- **Still not realistic in F:** a daughter group replaces the neighbour's whole gene
+  pool at once (real takeovers are mixed, with survivors absorbed), and the ring of
+  14 worlds is a stand-in for geography.
+- **Considered and not used:** refounding only worlds whose hunters die out (fully
+  ecological, but in section 3 B coexisted in 149-150 of 150 episodes, so it would
+  almost never act), and emigration from thriving groups (realistic, but mixing wears
+  down the between-group differences selection needs, with only 14 groups).
 
 ## The training stage (only if step 0 passes)
 
@@ -78,11 +109,25 @@ episode-length confounds of raw births. A world needs at least 2 completed
 episodes since the last event to take part; worlds below that are neither source
 nor sink in that event.
 
-### The replacement rule (new code)
+### The group rule (new code)
 
-Every T = 10 iterations, after training results: read every world's fitness and
-pool (all reads before any write); sink = lowest fitness, source = highest; ties
-random (seeded). The source's pool is copied by value (genomes and generations) and
+The rule chosen by step 0, checked after every training iteration's results
+(all reads before any write; ties random, seeded):
+
+- **F:** the 14 worlds sit on a fixed ring by world identity. Each world counts its
+  hunter births since its own last founding. When a world reaches **K = 60 births**,
+  it splits: sink = the weaker of its two ring neighbours (lower births per
+  hunter-step since its own last founding, with at least 2 completed episodes), and
+  only if the sink is weaker than the splitter; the splitter's count resets either
+  way. K is fixed from section 3, not calibrated: there a world ran about 2,400
+  physics steps per iteration (about 34,000 over 14 worlds), an 8,000-step episode had
+  about 20 hunter births, so about 6 births per world per iteration, and K = 60 means a
+  typical world splits about every 10 iterations, R's pace. If several worlds split
+  after one iteration, they are handled in ring order, and a world that is a sink
+  in that iteration is not a source in it.
+- **R:** every T = 10 iterations, sink = lowest fitness, source = highest.
+
+Either way, the source's pool is copied by value (genomes and generations) and
 **queued** in the sink: it becomes the founder pool at the sink's next reset, and
 the sink's end-of-episode pool update is skipped for that episode, so the hunters
 alive at the event cannot overwrite it. No new mutation (mutation stays at births).
@@ -96,7 +141,7 @@ fitness accumulator) after.
 
 ### Arms
 
-- **G:** arm B of section 3 (genes expressed, β = β₀) plus the replacement rule.
+- **G:** arm B of section 3 (genes expressed, β = β₀) plus the group rule.
 - **B:** the same code with the rule off (fitness still computed and logged, never
   acted on), on RLlib 2.60.0.
 
@@ -115,7 +160,7 @@ deer evolution between G and B cannot tilt the panel.
 One G and one B run, 500 iterations. Bars:
 
 - coexistence as section 3 (at least 40 of 50 at 250 and at 500, own world);
-- every scheduled event completed with 14 identities, no abort;
+- every group event completed with 14 identities, no abort;
 - every queued pool used at the sink's next reset (acknowledgements match events);
 - **a reliable signal between worlds:** in the B pilot (rule off), the split-half
   correlation of world fitness ranks (odd vs even windows) is positive (Spearman
@@ -151,9 +196,9 @@ worlds are not treated as interchangeable: the run is the unit.
 1. **Group fitness:** hunter births per hunter-step *(recommended; removes size and
    duration confounds)*, or population growth rate. Adults caught is excluded: it
    would reward the target behaviour directly.
-2. **Replacement:** best replaces worst every 10 iterations *(recommended: the
-   Moran rule, strongest test of the mechanism)*, or a gentler rule: source drawn
-   with probability proportional to fitness rank (less noise-driven, weaker).
+2. **Group rule:** decided by step 0 as above, F (fission into a weaker
+   neighbour) if it passes, else R (best replaces worst), else stop *(recommended)*;
+   or fix one rule now.
 3. **Runs per arm:** 6 *(recommended: as section 3; one G/B pair took about 7-10
    hours there, so about 2 days, plus about 10 hours for the panel's 432
    evaluations)*, or 10 (power for +6 adults rises to about 85%; about 3.5 days plus
@@ -167,8 +212,8 @@ worlds are not treated as interchangeable: the run is the unit.
   so behaviour learned in winning groups spreads to all groups anyway.
 - **14 groups is few,** and they share PPO and selection events: not 14 independent
   replicates. Q_ST is reported to show whether groups differ enough to select on.
-- **Copying a pool is not group fission.** It is the simplest stand-in (the Moran
-  model's rule); wording will say so.
+- **Copying a pool is a simplified takeover** (see "Group rules and ecological
+  realism"); wording will say so, and more plainly if R is the rule used.
 - **Group fitness may favour young deer.** If young deer feed groups better, group
   selection will push the genes the same way as individual selection; that would be
   a real negative answer, not a failure of the design.
@@ -191,3 +236,11 @@ worlds are not treated as interchangeable: the run is the unit.
 - Primary test: adults caught alone, with a manipulation check on the selected
   fitness first; `a_adult` moved to secondary.
 - Power simulation added.
+
+## Revisions in draft 3 (2026-11-14, user question on realism)
+
+- Added the fission rule F (a group that grows splits into its weaker ring
+  neighbour) beside the referee rule R; step 0 compares both and the most realistic
+  passing rule goes to training. New section "Group rules and ecological realism".
+- K = 60 births fixed from section 3's logged rates, so F runs at R's pace without a
+  calibration round.
