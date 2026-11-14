@@ -1,13 +1,19 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-13): section 3's main runs done, verdict not met** ([RESULTS.md](RESULTS.md) §3.8).
+**Status (2026-11-14): section 3 closed; main verdict not met, bias-off analysis did not support H_nn** ([RESULTS.md](RESULTS.md) §3.8, §3.9).
 With deer learning alongside, learning plus an evolving innate bias (arm B) did not
 catch more adults than learning alone (arm L) against a common panel of coevolved deer
 (panel adults per episode 14.2 against 18.6, p 0.92; per-attempt success 0.023
 against 0.020, p 0.10); both arms coexisted. In all six B runs the genes moved
 towards young deer and away from adults, and B's hunters partnered on adults below
-chance (0.83-0.93) where L's were above it (1.08-1.16): reported, not tested. The
-pre-registered bias-off analysis (§3.5) is next.
+chance (0.83-0.93) where L's were above it (1.08-1.16): reported, not tested.
+The pre-registered bias-off analysis (§3.9): with the bias switched off at
+evaluation, B's hunters partnered on adults above chance in all six runs (C +0.37,
+p 0.016; above every L run on the panel) but caught fewer adults (−3.7 per episode),
+fed and bred less and often died out, so H_nn (needing both) is not supported. A
+hedged reading: the bias and the learned policy pulled partnering in opposite
+directions, but the policy leans on the bias to feed, so no better cooperative
+strategy was revealed beneath it.
 
 Earlier: sections 1 and 2 stopped after failed pilots.
 Section 1 (2026-11-08, deer frozen at deer_stag_hunt's final policy) failed its pilot:

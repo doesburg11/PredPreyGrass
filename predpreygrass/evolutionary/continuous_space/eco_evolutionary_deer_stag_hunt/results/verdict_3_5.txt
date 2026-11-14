@@ -1,0 +1,56 @@
+premise (a_young > 0 and a_adult < 0, bias on): 500: 6 of 6, 750: 6 of 6, 1000: 6 of 6 -> interpreted
+  main3_B1 iter 500: a_young +0.888, a_adult -0.594 -> meets
+  main3_B2 iter 500: a_young +0.901, a_adult -0.763 -> meets
+  main3_B3 iter 500: a_young +0.899, a_adult -0.516 -> meets
+  main3_B4 iter 500: a_young +0.882, a_adult -0.574 -> meets
+  main3_B5 iter 500: a_young +0.896, a_adult -0.677 -> meets
+  main3_B6 iter 500: a_young +0.891, a_adult -0.574 -> meets
+  main3_B1 iter 750: a_young +0.902, a_adult -0.747 -> meets
+  main3_B2 iter 750: a_young +0.913, a_adult -0.824 -> meets
+  main3_B3 iter 750: a_young +0.891, a_adult -0.661 -> meets
+  main3_B4 iter 750: a_young +0.892, a_adult -0.815 -> meets
+  main3_B5 iter 750: a_young +0.921, a_adult -0.736 -> meets
+  main3_B6 iter 750: a_young +0.906, a_adult -0.749 -> meets
+  main3_B1 iter 1000: a_young +0.854, a_adult -0.879 -> meets
+  main3_B2 iter 1000: a_young +0.925, a_adult -0.883 -> meets
+  main3_B3 iter 1000: a_young +0.878, a_adult -0.825 -> meets
+  main3_B4 iter 1000: a_young +0.924, a_adult -0.799 -> meets
+  main3_B5 iter 1000: a_young +0.917, a_adult -0.772 -> meets
+  main3_B6 iter 1000: a_young +0.898, a_adult -0.799 -> meets
+P1 A (bias off - bias on, own world, mean of 500/750/1000): main3_B1 -5.667; main3_B2 -5.353; main3_B3 -3.100; main3_B4 -4.700; main3_B5 -0.167; main3_B6 -3.060; mean -3.6744, sign-flip p 1.0000 (not met)
+P1 C (bias off - bias on, own world, mean of 500/750/1000): main3_B1 +0.407; main3_B2 +0.336; main3_B3 +0.352; main3_B4 +0.335; main3_B5 +0.406; main3_B6 +0.370; mean +0.3676, sign-flip p 0.0156 (met)
+P2 A (B bias off - L, panel): -6.7209, permutation p 0.9859 (not met)
+P2 C (B bias off - L, panel): +0.1347, permutation p 0.0011 (met)
+panel values per B run (bias on -> off), and L:
+  main3_B1: A 20.40 -> 13.83; S 0.0305 -> 0.0131; C 0.934 -> 1.279
+  main3_B2: A 11.13 -> 9.68; S 0.0198 -> 0.0112; C 0.829 -> 1.195
+  main3_B3: A 13.62 -> 14.18; S 0.0219 -> 0.0158; C 0.884 -> 1.276
+  main3_B4: A 11.20 -> 9.94; S 0.0205 -> 0.0121; C 0.842 -> 1.245
+  main3_B5: A 14.79 -> 12.75; S 0.0234 -> 0.0135; C 0.913 -> 1.284
+  main3_B6: A 14.28 -> 10.79; S 0.0232 -> 0.0120; C 0.906 -> 1.260
+  main3_L1: A 24.34; S 0.0233; C 1.158
+  main3_L2: A 24.12; S 0.0241; C 1.101
+  main3_L3: A 16.51; S 0.0177; C 1.095
+  main3_L4: A 20.46; S 0.0219; C 1.156
+  main3_L5: A 17.93; S 0.0196; C 1.145
+  main3_L6: A 8.14; S 0.0126; C 1.077
+own world per checkpoint (bias on -> off): A, C, S, young solo, young with partner, adult share of catches, births, mean hunters and deer (time-weighted), coexisting
+  main3_B1 iter 500: A 25.14 -> 18.48 (off - on -6.66); C 0.940 -> 1.314 (off - on 0.373); S 0.0344 -> 0.0145; young solo 643.58 -> 606.68; young party 61.76 -> 12.36; adult share 0.034 -> 0.029; births 20.88 -> 19.88; mean hunters 10.7 -> 9.4; mean deer 27.5 -> 44.2; coexisting 50 -> 50
+  main3_B1 iter 750: A 20.02 -> 12.70 (off - on -7.32); C 0.881 -> 1.366 (off - on 0.485); S 0.0277 -> 0.0110; young solo 638.28 -> 492.94; young party 48.74 -> 8.82; adult share 0.028 -> 0.025; births 20.70 -> 16.28; mean hunters 10.4 -> 8.1; mean deer 31.9 -> 52.6; coexisting 50 -> 47
+  main3_B1 iter 1000: A 16.08 -> 13.06 (off - on -3.02); C 0.912 -> 1.274 (off - on 0.362); S 0.0218 -> 0.0109; young solo 630.20 -> 451.20; young party 41.02 -> 8.16; adult share 0.023 -> 0.028; births 20.82 -> 15.78; mean hunters 10.4 -> 7.5; mean deer 34.5 -> 56.5; coexisting 50 -> 49
+  main3_B2 iter 500: A 11.44 -> 5.50 (off - on -5.94); C 0.767 -> 1.119 (off - on 0.352); S 0.0206 -> 0.0077; young solo 650.64 -> 390.52; young party 37.56 -> 4.38; adult share 0.016 -> 0.014; births 18.82 -> 11.16; mean hunters 9.8 -> 6.0; mean deer 34.8 -> 61.9; coexisting 50 -> 45
+  main3_B2 iter 750: A 9.98 -> 4.88 (off - on -5.10); C 0.883 -> 1.375 (off - on 0.492); S 0.0164 -> 0.0076; young solo 627.76 -> 269.24; young party 30.36 -> 3.14; adult share 0.015 -> 0.018; births 18.18 -> 7.68; mean hunters 9.6 -> 5.1; mean deer 39.5 -> 69.8; coexisting 50 -> 38
+  main3_B2 iter 1000: A 6.50 -> 1.48 (off - on -5.02); C 0.907 -> 1.071 (off - on 0.163); S 0.0138 -> 0.0045; young solo 550.66 -> 113.28; young party 20.16 -> 1.00; adult share 0.011 -> 0.013; births 16.62 -> 2.34; mean hunters 8.3 -> 3.6; mean deer 47.8 -> 76.9; coexisting 50 -> 15
+  main3_B3 iter 500: A 14.08 -> 13.56 (off - on -0.52); C 0.923 -> 1.160 (off - on 0.237); S 0.0220 -> 0.0155; young solo 660.86 -> 466.34; young party 44.06 -> 10.30; adult share 0.020 -> 0.028; births 19.64 -> 15.04; mean hunters 10.3 -> 7.5; mean deer 32.3 -> 56.1; coexisting 50 -> 47
+  main3_B3 iter 750: A 13.90 -> 9.52 (off - on -4.38); C 0.829 -> 1.280 (off - on 0.451); S 0.0218 -> 0.0121; young solo 640.84 -> 360.34; young party 38.10 -> 6.50; adult share 0.020 -> 0.025; births 19.34 -> 11.36; mean hunters 10.0 -> 6.2; mean deer 35.6 -> 62.8; coexisting 50 -> 43
+  main3_B3 iter 1000: A 7.20 -> 2.80 (off - on -4.40); C 0.788 -> 1.156 (off - on 0.367); S 0.0145 -> 0.0063; young solo 575.42 -> 172.08; young party 21.80 -> 1.74; adult share 0.012 -> 0.016; births 17.14 -> 4.04; mean hunters 8.3 -> 3.9; mean deer 44.8 -> 73.6; coexisting 50 -> 27
+  main3_B4 iter 500: A 13.40 -> 9.92 (off - on -3.48); C 0.942 -> 1.201 (off - on 0.259); S 0.0210 -> 0.0118; young solo 656.02 -> 401.12; young party 39.82 -> 6.46; adult share 0.019 -> 0.024; births 20.46 -> 12.50; mean hunters 10.2 -> 6.6; mean deer 34.7 -> 62.8; coexisting 50 -> 45
+  main3_B4 iter 750: A 10.66 -> 5.70 (off - on -4.96); C 0.801 -> 1.187 (off - on 0.386); S 0.0180 -> 0.0086; young solo 637.14 -> 282.34; young party 35.86 -> 4.08; adult share 0.016 -> 0.020; births 20.44 -> 8.50; mean hunters 10.1 -> 5.5; mean deer 37.3 -> 67.6; coexisting 50 -> 34
+  main3_B4 iter 1000: A 8.82 -> 3.16 (off - on -5.66); C 0.828 -> 1.189 (off - on 0.361); S 0.0162 -> 0.0058; young solo 603.00 -> 211.12; young party 25.02 -> 2.14; adult share 0.014 -> 0.015; births 17.94 -> 5.48; mean hunters 9.3 -> 4.6; mean deer 41.7 -> 75.0; coexisting 49 -> 26
+  main3_B5 iter 500: A 17.64 -> 18.50 (off - on +0.86); C 0.956 -> 1.311 (off - on 0.354); S 0.0252 -> 0.0146; young solo 660.42 -> 567.82; young party 50.92 -> 11.50; adult share 0.024 -> 0.031; births 21.72 -> 19.12; mean hunters 10.7 -> 8.8; mean deer 30.1 -> 49.2; coexisting 50 -> 50
+  main3_B5 iter 750: A 13.26 -> 16.26 (off - on +3.00); C 0.877 -> 1.405 (off - on 0.527); S 0.0195 -> 0.0141; young solo 653.02 -> 507.34; young party 40.36 -> 10.18; adult share 0.019 -> 0.030; births 19.32 -> 17.46; mean hunters 10.2 -> 8.1; mean deer 34.0 -> 53.2; coexisting 50 -> 50
+  main3_B5 iter 1000: A 13.10 -> 8.74 (off - on -4.36); C 1.007 -> 1.345 (off - on 0.338); S 0.0186 -> 0.0097; young solo 627.44 -> 344.12; young party 32.58 -> 4.50; adult share 0.019 -> 0.024; births 19.78 -> 10.74; mean hunters 9.7 -> 6.0; mean deer 37.8 -> 64.9; coexisting 50 -> 44
+  main3_B6 iter 500: A 17.42 -> 15.76 (off - on -1.66); C 0.897 -> 1.246 (off - on 0.349); S 0.0260 -> 0.0135; young solo 661.40 -> 566.96; young party 47.18 -> 10.20; adult share 0.024 -> 0.027; births 19.62 -> 18.04; mean hunters 10.3 -> 8.7; mean deer 31.3 -> 49.6; coexisting 50 -> 49
+  main3_B6 iter 750: A 12.78 -> 7.92 (off - on -4.86); C 0.891 -> 1.352 (off - on 0.461); S 0.0201 -> 0.0083; young solo 631.52 -> 417.74; young party 35.40 -> 4.92; adult share 0.019 -> 0.018; births 19.28 -> 12.88; mean hunters 9.7 -> 6.7; mean deer 36.8 -> 60.4; coexisting 50 -> 45
+  main3_B6 iter 1000: A 12.22 -> 9.56 (off - on -2.66); C 0.933 -> 1.231 (off - on 0.299); S 0.0178 -> 0.0100; young solo 628.08 -> 375.44; young party 32.04 -> 5.32; adult share 0.018 -> 0.024; births 19.90 -> 12.04; mean hunters 9.8 -> 6.5; mean deer 37.9 -> 62.4; coexisting 50 -> 43
+H_nn: not supported (P1 not met on both A and C)

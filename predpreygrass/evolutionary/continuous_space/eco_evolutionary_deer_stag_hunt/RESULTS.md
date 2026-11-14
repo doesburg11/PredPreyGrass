@@ -546,3 +546,69 @@ the pre-registered next step; its premise (`a_young` > 0 and `a_adult` < 0 at 50
 interpreted.
 
 Per section 3.3's hard stop, no further main runs follow in this stage.
+
+### 3.9 Bias-off analysis (section 3.5): result (2026-11-14): H_nn not supported; C up, A down
+
+Run by `launchers/bias_off.py` (216 evaluations, 2026-11-13 22:21 to 2026-11-14 about
+04:30), judged by `launchers/verdict_3_5.py`, output in `results/verdict_3_5.txt`.
+Before the run, `bias_off.py --check main3_B1 500` (bias left on, same code path)
+reproduced section 3.3's evaluation exactly.
+
+**Premise:** met in 6 of 6 B runs at 500, 750 and 1000 (`a_young` +0.85 to +0.93,
+`a_adult` −0.52 to −0.88), so P1 and P2 are interpreted.
+
+**Per B run** (P1: own world, mean over 500/750/1000; panel: 33 off-diagonal cells):
+
+| Run | Own A on → off | Own C on → off | Panel A on → off | Panel C on → off | Own coexisting off (of 150) |
+|---|---|---|---|---|---|
+| B1 | 20.41 → 14.75 | 0.911 → 1.318 | 20.40 → 13.83 | 0.934 → 1.279 | 146 |
+| B2 | 9.31 → 3.95 | 0.852 → 1.188 | 11.13 → 9.68 | 0.829 → 1.195 | 98 |
+| B3 | 11.73 → 8.63 | 0.847 → 1.199 | 13.62 → 14.18 | 0.884 → 1.276 | 117 |
+| B4 | 10.96 → 6.26 | 0.857 → 1.192 | 11.20 → 9.94 | 0.842 → 1.245 | 105 |
+| B5 | 14.67 → 14.50 | 0.947 → 1.354 | 14.79 → 12.75 | 0.913 → 1.284 | 144 |
+| B6 | 14.14 → 11.08 | 0.907 → 1.276 | 14.28 → 10.79 | 0.906 → 1.260 | 137 |
+| **B mean** | | | **14.24 → 11.86** | **0.885 → 1.257** | |
+| **L mean** (§3.8) | | | **18.58** | **1.122** | |
+
+With the bias on, own-world coexistence was 150 of 150 in five B runs and 149 in B4.
+
+**Tests:**
+
+- **P1 A: not met.** Bias off − on, adults per episode: −5.67, −5.35, −3.10, −4.70,
+  −0.17, −3.06 (mean −3.67, sign-flip p 1.00). All six runs caught fewer adults
+  with the bias off.
+- **P1 C: met.** +0.407, +0.336, +0.352, +0.335, +0.406, +0.370 (mean +0.368, p
+  0.016 = 1/64, the smallest possible). All six went from below chance to above it,
+  at every checkpoint (per-checkpoint differences +0.16 to +0.53).
+- **P2 A: not met.** B off − L, panel, −6.72 (p 0.99).
+- **P2 C: met.** B off − L, panel, +0.135 (p 0.001). With the bias off, every B run's
+  panel C (1.20-1.28) was above every L run's (1.08-1.16).
+
+**Verdict, in the pre-registered wording:** H_nn not supported, since P1 had to hold on
+both A and C and held on C only.
+
+**Reported, not tested (own world, bias on → off):**
+
+- **The hunters fed and bred much less.** Young deer caught alone per episode fell in
+  every run and checkpoint (e.g. B2 at 1000: 551 → 113), young caught with a partner
+  fell about five- to twentyfold (e.g. 37.6 → 4.4), births fell (about 20 → 2-19), mean
+  hunters fell (8.3-10.7 → 3.6-9.4) and deer rose (28-48 → 44-77). Coexistence fell
+  most at 1000 (15-49 of 50).
+- **Adult success per attempt (S) fell** in every cell (e.g. 0.0344 → 0.0145), while the
+  adult share of catches changed little (0.011-0.034 → 0.013-0.031).
+
+**A reading, not a tested claim.** Without the bias, B's trained policy approached
+adults with a partner near above chance, more so than L's against the same deer, but
+caught fewer adults, fed worse and often died out. That fits section 3.5's first
+limit: the policy was trained with the bias on and leans on it to find food (young
+deer), so taking it away leaves hunters that are worse at hunting in general, not
+hunters that reveal a better adult strategy. The rise in C is consistent with the
+bias having pulled hunters away from partnered adult approaches, but it may also be
+ecological: with fewer hunters and more deer, chance levels and encounters change
+(section 3.5's limits), and C is a ratio over chance. What the run does show,
+hedged: in these six runs the evolved bias and the learned policy pulled partnering
+on adults in opposite directions, and the bias won at the level of behaviour; it did
+not show that learning had built a more successful cooperative strategy beneath it.
+
+This closes section 3.5; per section 3.3's hard stop, no further runs follow in this
+stage.
