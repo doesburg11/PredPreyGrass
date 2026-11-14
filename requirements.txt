@@ -2,7 +2,7 @@
 --extra-index-url https://download.pytorch.org/whl/cu132
 torch==2.14.1
 
-ray[rllib]==2.59.0
+ray[rllib]==2.60.0
 tensorboard==2.20.0
 
 numpy==2.4.6
