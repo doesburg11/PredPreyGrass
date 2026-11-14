@@ -1,6 +1,11 @@
 # eco_evolutionary_deer_stag_hunt
 
-**Status (2026-11-14): section 3 closed; main verdict not met, bias-off analysis did not support H_nn** ([RESULTS.md](RESULTS.md) §3.8, §3.9).
+**Status (2026-11-14): sections 3 and 4 closed.** Section 4 (selection between
+groups, [DESIGN_4.md](DESIGN_4.md)) stopped at its theory screen: in the stag hunt
+model, neither best-replaces-worst nor fission let stag hunting take over at any
+ratio up to 1.75, because with risky hunts and diminishing returns an all-stag group
+is never fitter than an all-hare one ([RESULTS.md](RESULTS.md) §4.4).
+Section 3: main verdict not met, bias-off analysis did not support H_nn ([RESULTS.md](RESULTS.md) §3.8, §3.9).
 With deer learning alongside, learning plus an evolving innate bias (arm B) did not
 catch more adults than learning alone (arm L) against a common panel of coevolved deer
 (panel adults per episode 14.2 against 18.6, p 0.92; per-attempt success 0.023

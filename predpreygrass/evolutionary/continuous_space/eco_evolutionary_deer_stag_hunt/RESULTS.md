@@ -668,3 +668,37 @@ where DESIGN_4.md's step 0 text had to be read, decided before the sweep:
 
 Seen before the sweep: one timing run (ratio 1.2, q 0.45, start 0.5, seed 0), in which
 stag hunting died out under all three rules. No setting was changed after it.
+
+### 4.4 Step 0 result (2026-11-14): neither rule passes; the line stops
+
+Sweep: 2160 runs (36 settings × 3 rules × 20 seeds), 23:24-23:27, output
+EvolvedCooperation `ecological_models/stag_hunt_sharing/data/sweep_groups.csv` and
+`judge_groups.txt`.
+
+- **Rule R: fails. Rule F: fails.** At ratio 1.2, stag hunting took over in 0 of 20
+  seeds for every q and start, under none, R and F alike.
+- **The full sweep:** 0 of 20 in every cell, ratios 1 to 1.75, all three rules.
+
+**Why, by arithmetic (not a tested claim about the deer world):** with diminishing
+fitness, a stag hunter with a partner succeeds with chance q and otherwise eats
+nothing, so even a group of only stag hunters has mean fitness q × (1.1 −
+e^(−ratio/q)) + (1 − q) × 0.1. That is at most q × 1.1 + (1 − q) × 0.1 however large
+the stag: 0.40 at q = 0.3, 0.70 at q = 0.6, below a hare hunter's 0.732. An all-stag
+group therefore never does better as a group than an all-hare group at these q, and
+selection between groups has nothing to favour. The cost is the risk itself (a missed
+hunt costs more than a lucky one gains), which individual hunters bear alone.
+
+**Check that the code can show group selection working (outside the rule, 3 seeds):**
+with linear fitness at q 0.6, ratio 1.75, from 5% stag hunters, stag hunting reached
+0.57-0.73 without group selection and 0.997 under both R and F in all three seeds. So
+the null above comes from the payoffs, not from the code.
+
+**Verdict, in the pre-registered wording:** neither rule passes; per section 4.1 the
+training stage is not built and this line stops at step 0.
+
+**A reading, hedged.** In this model, selection between groups can pick the joint hunt
+only where it pays more on average to a group that adopts it. Under risk with
+diminishing returns and q at most 0.6 (the deer world's adult hunts are riskier
+still, S ≈ 0.02 per attempt), it does not, at any ratio. What would remove the risk
+cost is pooling within the group (sharing among stag hunters), so the two mechanisms
+may need each other; that combination was not tested here.
