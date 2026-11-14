@@ -644,3 +644,27 @@ no migration, 20 seeds (0-19) per cell: a group rule passes if, for every q in {
 the last 100 generations > 0.5) in at least 15 of 20 seeds and in at least 10 more
 seeds than without group selection. The full sweep (ratios 1-1.75) is reported for
 both rules either way.
+
+### 4.3 Step 0: implementation notes (2026-11-14, before the sweep)
+
+Code: EvolvedCooperation `ecological_models/stag_hunt_sharing/groups.py` (14
+separate 16 × 16 tori on a ring, hunting and local reproduction within each group,
+no sharing), verdict `utils/judge_groups.py`; Codex-reviewed, 73 tests. Three points
+where DESIGN_4.md's step 0 text had to be read, decided before the sweep:
+
+- **F's trigger.** DESIGN_4.md says a group accumulates "fitness above 1". With
+  diminishing fitness, fitness lies in [0.1, 1.1) and a hare hunter's is 0.732, so
+  that sum would be about zero and could not give the stated pace (an all-hare group
+  splitting every 10 generations). Implemented as summed fitness (the births
+  stand-in), with K = 10 × 256 × hare fitness, which gives that pace exactly.
+- **F's neighbour comparison.** Implemented as mean fitness per hunter-generation
+  since each group's own last founding, the same exposure-normalised measure as the
+  training rule (births per hunter-step), rather than accumulated surplus, which
+  would favour groups founded longer ago.
+- **"R's pace."** DESIGN_4.md says K makes F run at R's pace. That holds per group
+  (each group splits about every 10 generations), not for the population: R makes one
+  replacement per 10 generations, F up to one per group. K is kept as pre-registered;
+  F is therefore the more frequent rule, and the write-up will say so.
+
+Seen before the sweep: one timing run (ratio 1.2, q 0.45, start 0.5, seed 0), in which
+stag hunting died out under all three rules. No setting was changed after it.
