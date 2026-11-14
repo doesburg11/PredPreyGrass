@@ -612,3 +612,35 @@ not show that learning had built a more successful cooperative strategy beneath 
 
 This closes section 3.5; per section 3.3's hard stop, no further runs follow in this
 stage.
+
+## 4. Selection between groups (pre-registered 2026-11-14, before any code)
+
+A new stage, prompted by the user's decision after section 3 closed, not a rerun of
+sections 1-3. Design and reasons: DESIGN_4.md (draft 3, approved 2026-11-14 with
+every recommended option). DESIGN_4.md is the full pre-registration; this section
+fixes its decisions and adds nothing to it.
+
+### 4.1 Decisions
+
+- **Order:** step 0 (theory screen) first; training code is written only if step 0
+  passes for at least one group rule.
+- **Group rule:** F (fission into the weaker ring neighbour at K = 60 births) if it
+  passes step 0, else R (best replaces worst every 10 iterations), else the line stops.
+- **Group fitness:** hunter births per hunter-step over completed episodes since the
+  world's last founding (at least 2 completed episodes).
+- **Arms and runs:** G (B plus the group rule) and B (rule off, fitness logged), 6
+  runs each, 1000 iterations, RLlib 2.60.0; panel = section 3's 12 main runs' deer.
+- **Tests:** as DESIGN_4.md ("Measures and tests"): manipulation check on group
+  fitness first; test 1 panel A; test 2 coexistence; test 3 panel C, `a_adult`,
+  `a_hunter`. Power as stated there (about 40% for +4 adults per episode).
+- **Hard stop:** one pilot (one G, one B, 500 iterations, DESIGN_4.md's bars); if it
+  fails, the stage stops with no recalibration; after the main runs, no further runs.
+
+### 4.2 Step 0 rule, restated
+
+At stag-to-hare expected-payoff ratio 1.2, diminishing fitness, 14 groups on a ring,
+no migration, 20 seeds (0-19) per cell: a group rule passes if, for every q in {0.3,
+0.45, 0.6} and both starts (5% and 50% stag), it gives takeover (mean stag share over
+the last 100 generations > 0.5) in at least 15 of 20 seeds and in at least 10 more
+seeds than without group selection. The full sweep (ratios 1-1.75) is reported for
+both rules either way.

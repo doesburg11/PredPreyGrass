@@ -1,9 +1,9 @@
 # Design note 4: selection between groups (draft 3, 2026-11-14)
 
-Status: **draft 3, not approved.** Draft 1 was revised after a Codex review
-("Revisions after review", end); draft 3 adds the fission rule after the user
-asked whether replacement is ecologically realistic. Nothing here is pre-registered yet; once the
-decisions below are made it goes into RESULTS.md as section 4, before any code.
+Status: **draft 3 approved 2026-11-14 with every recommended option (decisions
+1-5 below); pre-registered in RESULTS.md section 4.** Draft 1 was revised after a
+Codex review ("Revisions after review", end); draft 3 adds the fission rule after
+the user asked whether replacement is ecologically realistic.
 This is a new stage, prompted by a user decision after section 3 closed. It does
 not continue or rerun sections 1-3. Everything not named here stays as in
 DESIGN_3.md (approved 2026-11-10): the touch world, deer learning alongside, the
