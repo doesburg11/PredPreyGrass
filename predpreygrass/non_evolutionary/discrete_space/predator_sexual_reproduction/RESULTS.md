@@ -1718,7 +1718,55 @@ effects. Part B's `pair_near_frac` conditions on having a living mate (post-trea
 `post_birth_near_frac` is the tested quantity. The intervals in Part A cover evaluation episodes of one checkpoint, not
 training seeds.
 
-**Results.** (not yet run)
+**Results (stopped early, 2026-11-15; verdict: not met).** Training ran three at a time (MATE 42, MATE 43, BLANK 42). At
+about iteration 160 of 300 the user asked for an interim read to decide whether to continue. The pre-registration had no interim
+check, so this check was added after launch. `analyze_mate_tag.py` ran on **checkpoint 15** (not 29), with **10 episodes**
+(not 20), `--seed 7000`, every 2nd step, on the three runs that had one. On this read the user stopped the job at 02:09
+(MATE 42 at iteration 184, MATE 43 at 192, BLANK 42 at 198). BLANK 43/44 and MATE 44 never started, and the energy-source
+sanity check did not run. **None of the pre-registered tests can therefore be decided as written.** What follows is a
+halfway, partial-sample read; it is the basis for stopping, not a final result. Raw logs: `runs/analysis/mate_channel/mt_*`.
+
+Part A, mate-tag effects (approach bias to the marked predator, with the mark minus without it; pooled, 95% episode-cluster
+bootstrap interval):
+
+| Run, sex | mate-tag effect | decoy-tag effect | food_prey-tag | food_fruit-tag |
+|---|---|---|---|---|
+| MATE 42, male | **+0.023** [+0.016, +0.032] | +0.018 [+0.010, +0.025] | -0.006 [-0.017, +0.003] | -0.009 [-0.012, -0.005] |
+| MATE 43, male | +0.015 [+0.007, +0.023] | +0.006 [-0.002, +0.013] | -0.008 [-0.014, -0.003] | -0.009 [-0.014, -0.004] |
+| MATE 42, female | +0.004 [-0.000, +0.009] | +0.012 [+0.007, +0.016] | +0.001 [-0.002, +0.005] | +0.001 [-0.003, +0.004] |
+| MATE 43, female | +0.006 [+0.002, +0.010] | +0.013 [+0.006, +0.022] | +0.002 [-0.008, +0.012] | -0.006 [-0.011, +0.001] |
+
+Part B, pair outcomes (episode means, 10 episodes):
+
+| Run | post_birth_near_frac | births / 1000 pred-steps | pair_dist | paired_step_frac | repeat_birth_frac | gifts / 1000 male-steps |
+|---|---|---|---|---|---|---|
+| MATE 42 | 0.174 | 2.94 | 7.9 | 0.26 | 0.32 | 0.67 |
+| MATE 43 | 0.195 | 2.72 | 8.0 | 0.25 | 0.28 | 0.84 |
+| BLANK 42 | 0.196 | 2.73 | 7.6 | 0.27 | 0.26 | 0.86 |
+
+Reading, at the halfway checkpoint:
+
+- **H1 (recognition): males partly, females no.** Male MATE 42 meets the H1 seed criterion (+0.023, interval excludes zero,
+  same-sign decoy effect excluding zero). Male MATE 43 is below the 0.02 floor, and its decoy interval includes zero. So
+  1 of the 2 available seeds meets it, while H1 needs 2 of 3. The sign is approach, not avoidance. Female mate-tag effects are
+  below the floor; their decoy effects are larger than the mate effects, which fits a response to the mark itself rather
+  than to the partner. The male mark slightly lowers approach to fruit (and to prey in seed 43). That is descriptive only
+  and could just mean attention shifts to the mate.
+- **H2 (pair bonding): no sign of it.** Post-birth proximity in MATE (0.174, 0.195) is not above BLANK (0.196); MATE 42 is
+  below it. Mean pair distance is about 8 cells in all three runs.
+- **H3 (payoff): no sign of it.** Birth rate in MATE (2.94, 2.72) brackets BLANK (2.73).
+- **Interpretation (hedged).** The pattern is a small behavioural response to the mark in males, with no detectable change in
+  pair proximity or reproduction. That is the same "behaviour effect, no fitness benefit" pattern the social-preference module
+  closed on. A plausible structural reason, not tested: only about a quarter of predator-steps have a living mate, mates are
+  usually outside the 7x7 window (mean distance about 8 cells), so the mark is rarely present, and the cooperative transfers
+  (gift, care) are mechanical, leaving nearness as the only learnable cooperative act. Later training could in principle have
+  changed the picture; with pair distances indistinguishable between arms at iteration 160 this was judged unlikely, but it is
+  untested.
+
+**Verdict: not met (stopped early on an interim read).** Per the hard stop, the module closes again. No re-tuning of this design.
+A follow-up that makes the cooperative act itself learnable (for example a male *choosing* to transfer food rather than an
+automatic gift) would be a new design and needs its own plan. Future launches should pre-register an interim check with a
+kill rule rather than adding one after launch.
 
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 

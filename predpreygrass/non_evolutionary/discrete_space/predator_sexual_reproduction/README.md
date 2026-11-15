@@ -1,11 +1,13 @@
 # predator_sexual_reproduction
 
-> ## STATUS: REOPENED 2026-11-15 for one pre-registered round (Iteration 18, mate observation channel)
+> ## STATUS: CLOSED AGAIN 2026-11-15 (Iteration 18, mate observation channel: not met, stopped early)
 >
-> Predators can now optionally see which predator is their mate (`mate_obs_channel`, config_env.py), which removes the design
-> limit that stopped the coordination question below. Six runs (MATE vs a matched BLANK channel, three seeds each), tests and a
-> hard stop are fixed in [`RESULTS.md`](RESULTS.md) Iteration 18 before any training. The box below is the state as closed on
-> 2026-09-25.
+> Predators can optionally see which predator is their mate (`mate_obs_channel`, config_env.py). One pre-registered round
+> (MATE vs a matched BLANK channel) was stopped at the halfway point on an interim read: 2 MATE seeds and 1 BLANK seed,
+> checkpoint 15. Males react weakly to the mark: they approach it, by +0.023 and +0.015, against a 0.02 floor. Females don't.
+> Pairs do not stay closer after births (0.17/0.19 vs 0.20 in BLANK), and births don't go up (2.94/2.72 vs 2.73). That is a
+> behaviour effect with no pair payoff, so no cooperation shown. Details and caveats are in [`RESULTS.md`](RESULTS.md) Iteration 18.
+> The box below is the state as closed on 2026-09-25.
 >
 > ## STATUS: CLOSED (2026-09-25). Read this before anything else
 >
