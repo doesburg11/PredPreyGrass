@@ -322,7 +322,37 @@ class PredPreyGrass(MultiAgentEnv):
         }
         self.noop_action_id = next(a for a, move in self.action_to_move_tuple.items() if move == (0, 0))
         action_space = gymnasium.spaces.Discrete(len(self.action_to_move_tuple))
-        self.action_spaces = {agent: action_space for agent in self.possible_agents}
+
+        # Learned gift (Iteration 19): an optional extra predator action "give"
+        # (both sexes). The giver stays in place (no move cost) and hands
+        # learned_gift_amount energy to its recorded mate (self.agent_mate) if
+        # that mate is alive, has energy > 0, and is within predator_gift_range
+        # (Chebyshev), and the giver keeps energy > 0 afterwards. Otherwise the
+        # action is a wasted turn (stay in place). Modes:
+        #   "off"   (default, also False): 9 actions, no give action.
+        #   "on"    (also True): 10 actions, give transfers energy.
+        #   "inert": 10 actions, give never transfers (the control arm, so both
+        #            arms have the same action space and the same "stay" option).
+        # Independent of the mechanical male gift (male_gift_donation_rate);
+        # experiments with a learned gift set that rate to 0.
+        gift_mode = config.get("learned_gift", False)
+        if gift_mode is False:
+            gift_mode = "off"
+        elif gift_mode is True:
+            gift_mode = "on"
+        if gift_mode not in ("off", "on", "inert"):
+            raise ValueError(f"learned_gift must be False/True/'off'/'on'/'inert' (got {gift_mode!r})")
+        self.learned_gift_mode = gift_mode
+        self.learned_gift_amount = float(config.get("learned_gift_amount", 2.0))
+        if not (0.0 < self.learned_gift_amount < float("inf")):
+            raise ValueError(f"learned_gift_amount must be finite and > 0 (got {self.learned_gift_amount})")
+        self.give_action_id = len(self.action_to_move_tuple) if gift_mode != "off" else None
+        predator_action_space = (
+            gymnasium.spaces.Discrete(len(self.action_to_move_tuple) + 1) if gift_mode != "off" else action_space
+        )
+        self.action_spaces = {
+            agent: predator_action_space if "predator" in agent else action_space for agent in self.possible_agents
+        }
 
         # Initialize grid_world_state and agent positions
         self.agent_positions: Dict[str, Tuple[int, int]] = {}
@@ -342,6 +372,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.initial_grid_world_state: NDArray[np.float64] = np.zeros(self.grid_world_state_shape, dtype=np.float64)
         self.grid_world_state: NDArray[np.float64] = self.initial_grid_world_state.copy()
         self.num_actions = len(self.action_to_move_tuple)
+        self.num_predator_actions = self.num_actions + (1 if self.give_action_id is not None else 0)
         self.agents_just_ate = set()  # agent_id → shows green ring this step
 
     def reset(self, *, seed=None, options=None):
@@ -403,6 +434,11 @@ class PredPreyGrass(MultiAgentEnv):
         self.mate_gift_energy_total = 0.0
         self.parental_care_events = 0
         self.parental_care_energy_total = 0.0
+        self.learned_gift_attempts = 0
+        self.learned_gift_events = 0
+        self.learned_gift_energy_total = 0.0
+        self.learned_gift_events_by_sex = {"predator_male": 0, "predator_female": 0}
+        self.learned_gifts_this_step = []
 
         def generate_random_positions(grid_size: int, num_positions: int):
             if num_positions > grid_size * grid_size:
@@ -540,6 +576,15 @@ class PredPreyGrass(MultiAgentEnv):
 
                 if self.verbose_movement:
                     print(f"[MOVE] Agent {agent} moved: {old_position} -> {new_position}.")
+
+        # Step 2b: learned gifts, after all movement (distance uses post-move
+        # positions), before starvation removals. Same guards as the mechanical
+        # gift: a mate already at <= 0 energy is not rescued. Gifts are
+        # simultaneous: eligibility is decided from one energy snapshot, then
+        # all valid transfers are applied, so agent order cannot matter.
+        if self.give_action_id is not None:
+            givers = [a for a, act in action_dict.items() if a in self.agent_positions and self._is_give(a, act)]
+            self._apply_learned_gifts(givers)
 
         # Step 3: removals (starvation) and engagements (hunting/foraging/grazing)
         for agent in self.agents:
@@ -984,6 +1029,11 @@ class PredPreyGrass(MultiAgentEnv):
             "mate_gift_energy_total": float(self.mate_gift_energy_total),
             "parental_care_events": float(self.parental_care_events),
             "parental_care_energy_total": float(self.parental_care_energy_total),
+            "learned_gift_attempts": float(self.learned_gift_attempts),
+            "learned_gift_events": float(self.learned_gift_events),
+            "learned_gift_energy_total": float(self.learned_gift_energy_total),
+            "learned_gift_events_male": float(self.learned_gift_events_by_sex["predator_male"]),
+            "learned_gift_events_female": float(self.learned_gift_events_by_sex["predator_female"]),
         }
 
     def _resolve_hunting_attempt(
@@ -1182,14 +1232,55 @@ class PredPreyGrass(MultiAgentEnv):
         self.parental_care_events += 1
         self.parental_care_energy_total += donation_total
 
+    def _is_give(self, agent, action) -> bool:
+        return self.give_action_id is not None and "predator" in agent and action == self.give_action_id
+
+    def _learned_gift_valid(self, agent, energies) -> bool:
+        mate = self.agent_mate.get(agent)
+        if mate is None or mate not in self.predator_positions or energies[mate] <= 0.0:
+            return False
+        if energies[agent] - self.learned_gift_amount <= 0.0:
+            return False
+        position = self.agent_positions[agent]
+        mate_position = self.agent_positions[mate]
+        return max(abs(mate_position[0] - position[0]), abs(mate_position[1] - position[1])) <= self.predator_gift_range
+
+    def _apply_learned_gifts(self, givers):
+        """Execute this step's chosen "give" actions (see learned_gift in __init__)
+        simultaneously: validity is checked against the post-movement energy
+        snapshot, then every valid transfer is applied. Returns the givers whose
+        gift transferred energy."""
+        self.learned_gift_attempts += len(givers)
+        self.learned_gifts_this_step = []
+        if self.learned_gift_mode != "on" or not givers:
+            return []
+        snapshot = dict(self.agent_energies)
+        valid = [a for a in givers if self._learned_gift_valid(a, snapshot)]
+        amount = self.learned_gift_amount
+        for agent in valid:
+            mate = self.agent_mate[agent]
+            self.agent_energies[agent] -= amount
+            self.agent_energies[mate] += amount
+            self.learned_gift_events += 1
+            self.learned_gift_energy_total += amount
+            sex = "predator_male" if "predator_male" in agent else "predator_female"
+            self.learned_gift_events_by_sex[sex] += 1
+        for agent in valid:
+            for a in (agent, self.agent_mate[agent]):
+                self.grid_world_state[1, *self.agent_positions[a]] = self.agent_energies[a]
+        self.learned_gifts_this_step = valid
+        return valid
+
     def _get_movement_energy_cost(self, agent, action):
-        if action == self.noop_action_id:
+        if action == self.noop_action_id or self._is_give(agent, action):
             return 0.0
         return self.move_energy_cost_per_step_predator if "predator" in agent else self.move_energy_cost_per_step_prey
 
     def _get_move(self, agent: str, action: int) -> Tuple[int, int]:
         agent_type_nr = 1 if "predator" in agent else 2
         current_position = self.agent_positions[agent]
+        if self._is_give(agent, action):
+            return current_position
         move_vector = self.action_to_move_tuple[action]
         new_position = (current_position[0] + move_vector[0], current_position[1] + move_vector[1])
         new_position = tuple(np.clip(new_position, 0, self.grid_size - 1))

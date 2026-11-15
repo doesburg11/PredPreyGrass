@@ -137,6 +137,16 @@ def parse_args():
              "original 5 channels. Default: config_env.py's shipped value (off).",
     )
     parser.add_argument(
+        "--learned-gift", choices=["off", "on", "inert"], default=None,
+        help="Learned gift action (RESULTS.md Iteration 19): 'on' gives predators a 10th action that hands "
+             "--learned-gift-amount energy to their mate within predator_gift_range, 'inert' the same action "
+             "that never transfers (control), 'off' no such action. Default: config_env.py's value (off).",
+    )
+    parser.add_argument("--learned-gift-amount", type=float, default=None,
+                        help="Energy handed over per give action. Default: config_env.py's value (2.0).")
+    parser.add_argument("--male-gift-donation-rate", type=float, default=None,
+                        help="Mechanical male gift rate. Default: config_env.py's value (0.3).")
+    parser.add_argument(
         "--minibatch-size", type=int, default=128,
         help="PPO minibatch_size (default 128, the value all earlier runs used).",
     )
@@ -329,6 +339,12 @@ if __name__ == "__main__":
         env_config["energy_gain_per_step_grass"] = args.energy_gain_per_step_grass
     if args.mate_obs_channel is not None:
         env_config["mate_obs_channel"] = {"off": False, "mate": True, "blank": "blank"}[args.mate_obs_channel]
+    if args.learned_gift is not None:
+        env_config["learned_gift"] = args.learned_gift
+    if args.learned_gift_amount is not None:
+        env_config["learned_gift_amount"] = args.learned_gift_amount
+    if args.male_gift_donation_rate is not None:
+        env_config["male_gift_donation_rate"] = args.male_gift_donation_rate
     if args.penalty_combat_death is not None:
         if args.penalty_combat_death < 0:
             raise SystemExit("--penalty-combat-death must be >= 0 (it is a magnitude, stored as a negative reward)")

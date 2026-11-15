@@ -15,6 +15,11 @@ config_env = {
     # "blank" = the matched control: the same sixth channel, always zero (same network shape, no information).
     # Accepted values: False/"off", True/"mate", "blank".
     "mate_obs_channel": False,
+    # Learned gift (Iteration 19): False/"off" = no give action (default); True/"on" = predators get a 10th
+    # action "give" that hands learned_gift_amount energy to their mate within predator_gift_range;
+    # "inert" = the same 10th action that never transfers (control arm). See predpreygrass_rllib_env.py.
+    "learned_gift": False,
+    "learned_gift_amount": 2.0,
     # Rewards
     "reward_predator_catch_prey": 0.0,
     "reward_predator_gather_fruit": 0.0,

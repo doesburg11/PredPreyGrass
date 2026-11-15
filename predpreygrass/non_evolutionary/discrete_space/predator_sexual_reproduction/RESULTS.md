@@ -144,6 +144,7 @@ All runs and analysis outputs are kept in this module's `runs/` folder (gitignor
 | 16 | `reanalysis/`, `density_sweep/` |
 | 17 | `counterfactual/` |
 | 18 | `mate_channel/` |
+| 19 | `learned_gift_screen/` (step 0) |
 
 Launcher scripts in these folders (`chain.sh` and others) still contain the paths of the time
 (`~/simulation_results/...`); they record how the runs were made and are not meant to be re-run as is.
@@ -1767,6 +1768,52 @@ Reading, at the halfway checkpoint:
 A follow-up that makes the cooperative act itself learnable (for example a male *choosing* to transfer food rather than an
 automatic gift) would be a new design and needs its own plan. Future launches should pre-register an interim check with a
 kill rule rather than adding one after launch.
+
+### Iteration 19 — Learned gift: step 0 screen (2026-11-15, before any training)
+
+**Why.** Iteration 18 found a small male response to the mate mark but no pair payoff. One design reason: the energy
+transfers (male gift, parental care) are mechanical, so the only learnable cooperative act was standing near the mate.
+This iteration makes the gift itself an action. The screen asks first whether giving pays the GIVER, because PPO only
+learns an action that raises the actor's own return, and a gift earns no reward directly. Its only payback runs
+through the mate reaching the 12-energy mating threshold sooner, and a birth pays each parent +10.
+
+**Code** (config `learned_gift`, default off, so every earlier run and test is unchanged): `"on"` gives both predator
+sexes a 10th action, "give". The giver stays in place (no move cost) and hands `learned_gift_amount` (default 2.0) energy
+to its recorded mate if she or he is alive with energy > 0 and within `predator_gift_range` (3), and the giver keeps
+energy > 0. Otherwise the action is a wasted turn. `"inert"` is the same 10th action that never transfers (control arm).
+Gifts in a step are resolved simultaneously from one post-movement energy snapshot (Codex review: sequential
+resolution made a both-partners-give step order dependent). The mechanical gift is independent; learned-gift
+experiments set `male_gift_donation_rate` to 0. 35 new tests, 170 module tests pass.
+
+**Screen** (`screen_gift_payoff.py`). The trained Iteration 7 policies (PROP k = 0.5, seeds 42/43/44, checkpoint 29)
+are rolled out with `learned_gift="on"` and the mechanical gift off. A scripted rule replaces a male's action with
+"give" when his mate is within 3 cells, his energy is at least a reserve (6 or 10), and hers is below 12. Arms, on the
+same 20 episode seeds: NONE (nobody gives), HALF (a random half of males give; labels drawn per male per episode),
+ALL (every male gives). The first version assigned givers by id parity; Codex flagged that parity follows birth order.
+The random-label rerun is the result below (the parity version gave the same direction: `v1_parity/`).
+
+| PROP seed, reserve | HALF: giver minus non-giver return / male-step | births / 1000 male-steps, giver minus non-giver | NONE placebo | births / 1000 pred-steps NONE -> ALL | mean predators NONE -> ALL |
+|---|---|---|---|---|---|
+| 42, 6 | +0.018 [+0.013, +0.024] | +1.95 [+1.36, +2.50] | -0.001 [-0.007, +0.006] | 3.10 -> 4.73 | 24.0 -> 32.8 |
+| 42, 10 | +0.021 [+0.011, +0.031] | +2.27 [+1.43, +3.17] | -0.001 [-0.007, +0.006] | 3.10 -> 4.42 | 24.0 -> 32.3 |
+| 43, 6 | +0.016 [+0.009, +0.024] | +1.49 [+0.90, +2.08] | -0.001 [-0.009, +0.006] | 3.07 -> 4.49 | 25.2 -> 32.1 |
+| 43, 10 | +0.021 [+0.016, +0.027] | +2.11 [+1.47, +2.73] | -0.001 [-0.009, +0.006] | 3.07 -> 4.29 | 25.2 -> 31.1 |
+| 44, 6 | +0.029 [+0.019, +0.038] | +2.62 [+1.92, +3.37] | -0.005 [-0.009, +0.000] | 2.94 -> 5.01 | 26.1 -> 34.9 |
+| 44, 10 | +0.028 [+0.022, +0.033] | +2.83 [+2.32, +3.31] | -0.005 [-0.009, +0.000] | 2.94 -> 4.63 | 26.1 -> 33.7 |
+
+Giver return is about 0.19 per male-step against about 0.17 for non-givers (+9 to +17%). Assigned givers make 10 to 13
+successful transfers per 1000 male-steps; non-givers make none.
+
+**Reading (hedged).** In all six cases assigned givers earn more own return and father more births than assigned
+non-givers in the same episodes, and the label placebo in NONE is near zero. Giving everywhere (ALL) raises births by
+roughly 40-70% and the predator population by about a third over NONE. So, on these policies, a mate-directed gift pays
+the giver, not only the pair. Limits: HALF is an intention-to-treat contrast under interference (givers' gifts change
+the ecology non-givers live in), not a clean individual counterfactual. The policies were trained with the mechanical
+gift, which is off here in every arm. The rule is checked before movement and the transfer after it, so some firings
+transfer nothing. Whether PPO finds the action (it is useful only in narrow states) is what training must show.
+
+**Screen verdict: passed** (the payoff a learned gift needs exists). Training design and tests: to be pre-registered
+before any run.
 
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 
