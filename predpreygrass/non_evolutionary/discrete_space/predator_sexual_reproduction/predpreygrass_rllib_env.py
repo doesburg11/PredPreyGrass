@@ -583,7 +583,7 @@ class PredPreyGrass(MultiAgentEnv):
         # simultaneous: eligibility is decided from one energy snapshot, then
         # all valid transfers are applied, so agent order cannot matter.
         if self.give_action_id is not None:
-            givers = [a for a, act in action_dict.items() if a in self.agent_positions and self._is_give(a, act)]
+            givers = self._gift_givers(action_dict)
             self._apply_learned_gifts(givers)
 
         # Step 3: removals (starvation) and engagements (hunting/foraging/grazing)
@@ -1234,6 +1234,15 @@ class PredPreyGrass(MultiAgentEnv):
 
     def _is_give(self, agent, action) -> bool:
         return self.give_action_id is not None and "predator" in agent and action == self.give_action_id
+
+    def _gift_givers(self, action_dict):
+        """Predators that requested a learned gift this step.
+
+        The ordinary learned-gift environment has one dedicated ``give`` action.
+        Compound-action subclasses may override this while retaining the shared,
+        simultaneous transfer resolution in ``_apply_learned_gifts``.
+        """
+        return [a for a, act in action_dict.items() if a in self.agent_positions and self._is_give(a, act)]
 
     def _learned_gift_valid(self, agent, energies) -> bool:
         mate = self.agent_mate.get(agent)

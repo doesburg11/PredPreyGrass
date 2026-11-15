@@ -310,7 +310,7 @@ def policy_mapping_fn(agent_id: object, episode: EpisodeType) -> PolicyID:
     raise ValueError(f"No policy mapping defined for agent id: {agent_id!r}")
 
 
-if __name__ == "__main__":
+def main():
     args = parse_args()
 
     env_config = dict(config_env)
@@ -498,3 +498,7 @@ if __name__ == "__main__":
     )
     results = tuner.fit()
     ray.shutdown()
+
+
+if __name__ == "__main__":
+    main()
