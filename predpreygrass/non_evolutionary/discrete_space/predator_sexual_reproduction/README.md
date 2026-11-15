@@ -1,11 +1,12 @@
 # predator_sexual_reproduction
 
-> ## STATUS: REOPENED 2026-11-15 for Iteration 19 (learned gift action)
+> ## STATUS: CLOSED AGAIN 2026-11-15 (Iteration 19, learned gift: near miss, not met)
 >
-> A gift is now a learned, optional action, not an automatic transfer. A randomized step-0 screen found it increases the
-> giver's own return and births across three earlier policy seeds. GIVE vs matched-action INERT, three seeds each, plus a
-> checkpoint-14 kill rule are pre-registered in [`RESULTS.md`](RESULTS.md) Iteration 19 before training. The Iteration 18
-> mate-channel result below remains closed: recognition alone did not show cooperation.
+> A gift is now a learned, optional action, not an automatic transfer. GIVE made real gifts in every seed and had a higher
+> birth rate than matched-action INERT in all three seed pairs. But the pre-registered state-selective choice test passed
+> for males in only two of three seeds (seed 44 was +0.007, below the +0.02 floor), so the result cannot attribute the
+> birth difference to learned provisioning. The registered verdict is not met; details in [`RESULTS.md`](RESULTS.md)
+> Iteration 19. The Iteration 18 mate-channel result below remains closed too.
 >
 > ## STATUS: CLOSED AGAIN 2026-11-15 (Iteration 18, mate observation channel: not met, stopped early)
 >

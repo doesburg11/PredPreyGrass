@@ -1847,7 +1847,36 @@ This is a pre-registered efficiency rule, not a result test; the scripted screen
 male-steps. If it passes, training continues unchanged. No reward, action, odds, seed, duration, threshold or analysis
 change after that read. One round only.
 
-**Results.** Not yet run.
+**Results (completed 2026-11-15).** The halfway rule passed: at checkpoint 14, GIVE-42 and GIVE-43 made 3.76 and
+4.35 successful gifts per 1000 predator-steps, respectively, above the 1.0 kill threshold. All six runs completed 300
+iterations; final analysis used the registered 20 evaluation episodes per run.
+
+| Seed | realised gifts / 1000 predator steps, GIVE [95% CI] | male action-9 gap in eligible vs other states: GIVE [95% CI] | matched INERT male gap | births / 1000 predator steps: GIVE vs INERT |
+|---|---:|---:|---:|---:|
+| 42 | 4.00 [3.65, 4.31] | +0.0313 [+0.0255, +0.0367] | -0.0136 | 2.956 vs 2.783 |
+| 43 | 5.29 [5.01, 5.62] | +0.0527 [+0.0462, +0.0594] | -0.0101 | 3.163 vs 2.803 |
+| 44 | 2.92 [2.62, 3.21] | +0.0074 [+0.0029, +0.0116] | -0.0129 | 2.933 vs 2.751 |
+
+The male GIVE-minus-INERT gap difference is +0.0449, +0.0629 and +0.0202 across the three seeds. Females do not meet the
+directional condition: their GIVE eligible-minus-other gaps are -0.0223, -0.0447 and -0.0041. Action 9 is common in both
+arms (GIVE attempts 63.7--100.7; INERT attempts 54.4--77.1 per 1000 predator-steps), so much of its use is a generic
+extra no-move action; only 2.9--5.3 per 1000 attempts result in an actual transfer.
+
+**H1 (learned mate provisioning): not met.** The realised-rate component passes in all three seeds. Male response passes
+in seeds 42 and 43, but seed 44's +0.0074 eligible-state gap misses the pre-registered >=0.02 floor despite its interval
+excluding zero. No female response passes. The strict all-three-seed, one-sex criterion therefore fails.
+
+**H2 (benefit): met.** Births per 1000 predator-steps are higher in all three matched GIVE/INERT pairs: +0.173, +0.360
+and +0.182. This is the registered complete directional separation (one-sided exact sign-test p=0.125, as pre-specified;
+it is not conventional significance with three training seeds). Post-birth proximity is descriptively also higher in GIVE
+in all three seeds (0.205/0.217/0.190 vs 0.192/0.191/0.182), but it was not a registered test.
+
+**Verdict: not met under the pre-registered rule.** This is the H2-without-H1 outcome: the treatment arm has the promised
+birth-rate direction, and real transfers occur, but the experiment does not establish that agents learned to select the
+transfer specifically when it was useful in every training replicate. We therefore cannot attribute the birth difference
+to learned mate provisioning rather than incidental transfers from a frequently chosen extra stay action. It is a near
+miss, not a null: seed 44 alone blocks H1, while its GIVE-minus-INERT male gap still reaches +0.0202. Per the hard stop,
+no post-hoc threshold, reward, action, seed, or training change follows from this result. The module closes again.
 
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 
