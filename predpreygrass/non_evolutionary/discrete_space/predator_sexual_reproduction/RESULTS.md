@@ -1783,7 +1783,7 @@ to its recorded mate if she or he is alive with energy > 0 and within `predator_
 energy > 0. Otherwise the action is a wasted turn. `"inert"` is the same 10th action that never transfers (control arm).
 Gifts in a step are resolved simultaneously from one post-movement energy snapshot (Codex review: sequential
 resolution made a both-partners-give step order dependent). The mechanical gift is independent; learned-gift
-experiments set `male_gift_donation_rate` to 0. 35 new tests, 170 module tests pass.
+experiments set `male_gift_donation_rate` to 0. 40 new tests, 175 module tests pass.
 
 **Screen** (`screen_gift_payoff.py`). The trained Iteration 7 policies (PROP k = 0.5, seeds 42/43/44, checkpoint 29)
 are rolled out with `learned_gift="on"` and the mechanical gift off. A scripted rule replaces a male's action with
@@ -1812,8 +1812,42 @@ the ecology non-givers live in), not a clean individual counterfactual. The poli
 gift, which is off here in every arm. The rule is checked before movement and the transfer after it, so some firings
 transfer nothing. Whether PPO finds the action (it is useful only in narrow states) is what training must show.
 
-**Screen verdict: passed** (the payoff a learned gift needs exists). Training design and tests: to be pre-registered
-before any run.
+**Screen verdict: passed** (the payoff a learned gift needs exists).
+
+#### Iteration 19 training — pre-registered 2026-11-15, before training
+
+**Design.** Six runs, three seeds each: `GIVE_K05_MB1024_SEED{42,43,44}` (`learned_gift=on`) and
+`INERT_K05_MB1024_SEED{42,43,44}` (`learned_gift=inert`). Both arms have the sixth mate channel on, the same 10-action
+predator policy, and `male_gift_donation_rate=0`; hence the sole treatment difference is whether a selected give action
+transfers 2 energy to the visible recorded mate. Parental care stays as shipped and is equal in both arms. Otherwise this is
+PROP k=0.5: flat forage rewards 0, energy reward 0.5, combat-death penalty 0.2, default hunting odds, base environment,
+minibatch 1024, 30 epochs and 300 iterations. Seeds 42/43 of GIVE and seed 42 of INERT launch first.
+
+**Primary analysis** (`analyze_learned_gift.py`, checkpoint 29, 20 episodes, evaluation seeds 7000--7019). At each predator
+decision, an *eligible* state means its recorded mate is alive and within 3 cells, has positive energy below the 12-energy
+reproduction threshold, and the giver would retain positive energy after transferring 2. The analysis records (i) realised
+successful gifts per 1000 predator-steps, and (ii) the policy probability of action 9 in eligible states minus all other
+predator states, separately by sex. Intervals are episode-cluster bootstraps.
+
+**Tests.**
+
+- **H1, learned mate provisioning.** In all three GIVE seeds, realised gift rate is >1 per 1000 predator-steps, and for at
+  least one sex, the eligible-minus-other action-9 probability is >=0.02 with its 95% interval excluding zero, and exceeds
+  the matched-seed INERT gap by >=0.02 in all three seeds.
+- **H2, benefit.** Births per 1000 predator-steps are higher in all three GIVE runs than in all three matched-seed INERT
+  runs (complete paired separation; exact sign-test p=0.125 with three pairs, explicitly a stringent directional criterion,
+  not a conventional significance result).
+- **Verdict.** H1 + H2: learned mate provisioning with a population-level reproductive benefit. H1 without H2: learned
+  giving but no shown population payoff. H2 without H1: arm difference not attributable to learned giving. Otherwise: not
+  met. Sex of giver, gift amount, pair proximity, population size and sex differentiation are descriptive only.
+
+**Halfway kill rule.** At checkpoint 14 (about iteration 150), analyse 10 episodes for GIVE seeds 42 and 43. If BOTH have
+fewer than 1 successful gift per 1000 predator-steps, terminate the whole batch and do not start the remaining three runs.
+This is a pre-registered efficiency rule, not a result test; the scripted screen made 10--13 successful transfers per 1000
+male-steps. If it passes, training continues unchanged. No reward, action, odds, seed, duration, threshold or analysis
+change after that read. One round only.
+
+**Results.** Not yet run.
 
 ## Summary: is there a sex differentiation in foraging ("division of labor")?
 

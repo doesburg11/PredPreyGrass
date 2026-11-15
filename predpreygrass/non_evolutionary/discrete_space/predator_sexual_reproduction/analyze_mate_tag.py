@@ -250,7 +250,9 @@ def rollout(env_config, modules, n_episodes, seed0, every, max_states, collect_b
                                     "geo": geo,
                                 }
                             )
-                    actions[agent] = int(rng.choice(env.num_actions, p=rows[i]))
+                    # Predator learned-gift runs have a 10th action while prey
+                    # retains nine; sample the policy's actual action support.
+                    actions[agent] = int(rng.choice(len(rows[i]), p=rows[i]))
             observations, _, terminations, truncations, _ = env.step(actions)
             step += 1
             tracker.after_step(env)

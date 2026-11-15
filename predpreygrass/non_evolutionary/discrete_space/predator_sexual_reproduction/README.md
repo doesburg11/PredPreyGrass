@@ -1,5 +1,12 @@
 # predator_sexual_reproduction
 
+> ## STATUS: REOPENED 2026-11-15 for Iteration 19 (learned gift action)
+>
+> A gift is now a learned, optional action, not an automatic transfer. A randomized step-0 screen found it increases the
+> giver's own return and births across three earlier policy seeds. GIVE vs matched-action INERT, three seeds each, plus a
+> checkpoint-14 kill rule are pre-registered in [`RESULTS.md`](RESULTS.md) Iteration 19 before training. The Iteration 18
+> mate-channel result below remains closed: recognition alone did not show cooperation.
+>
 > ## STATUS: CLOSED AGAIN 2026-11-15 (Iteration 18, mate observation channel: not met, stopped early)
 >
 > Predators can optionally see which predator is their mate (`mate_obs_channel`, config_env.py). One pre-registered round

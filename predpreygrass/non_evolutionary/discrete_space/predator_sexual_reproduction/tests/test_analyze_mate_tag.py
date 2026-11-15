@@ -111,6 +111,22 @@ def test_part_b_runs_on_a_five_channel_run():
     assert len(outcomes) == 2 and all(o["steps"] > 0 for o in outcomes)
 
 
+def test_part_b_samples_ten_action_predator_policies():
+    """Part B must not use env.num_actions (nine movement actions) for a learned-gift policy."""
+    c = _config(True)
+    c["learned_gift"] = "on"
+    c["male_gift_donation_rate"] = 0.0
+    class TenActionUniform:
+        def _forward_inference(self, batch):
+            return {"action_dist_inputs": torch.zeros((len(batch["obs"]), 10))}
+    bank, outcomes = amt.rollout(
+        c,
+        {"predator_male_policy": TenActionUniform(), "predator_female_policy": TenActionUniform(), "prey_policy": Uniform()},
+        2, 3, 1, 100, False,
+    )
+    assert bank == [] and len(outcomes) == 2 and all(o["steps"] > 0 for o in outcomes)
+
+
 class _FakeEnv:
     def __init__(self):
         self.predator_positions = {}
