@@ -118,3 +118,43 @@ explain a GIVE-minus-INERT gap of at most +0.001, and it doesn't touch the main 
 50% everywhere. It is recorded here and not re-analysed, under the hard stop. Its other points (per-sex request rates
 and the full pair outcomes not reported, no automated verdict, launcher failure handling on the wave-2 and final paths)
 don't affect the halfway read. The kill path did stop all training processes.
+
+## Iteration 22 — INERT control to 300 iterations (pre-registered 2026-11-16, before any training)
+
+**Why.** Iteration 21 ([`predator_mate_regard`](../predator_mate_regard/RESULTS.md)) trained fresh w = 0 runs,
+which are this module's GIVE arm (compound gift on, no mate-regard reward), to 300 iterations. Their males developed a
+gift-bit gap of +0.087, +0.060 and +0.140 (seeds 42-44) without any motivation. Iteration 20 asked whether GIVE beats
+INERT, but its halfway kill rule stopped it before INERT reached 300 iterations. That rule rested on one reference run,
+and Iteration 21 showed a run like that can be off by about 0.05. This iteration reopens that line once, at the user's
+request, to train the missing control. The male focus and this test come from Iteration 21's result, so they are a
+data-informed follow-up, not an independent prediction.
+
+**Design.** Three runs `COMPOUND_INERT300_K05_MB1024_SEED{42,43,44}` (`compound_gift=inert`, otherwise Iteration 20/21's
+configuration, 300 iterations, three at a time). Same code version as the Iteration 21 W0 runs (a1854b09; env and
+analysis unchanged since). The comparison arm is Iteration 21's `MATEREGARD_W0_K05_MB1024_SEED{42,43,44}`, whose final
+numbers already exist (`predator_mate_regard/runs/analysis/final.json`). Final analysis: checkpoint 29, 20 episodes,
+seeds 7000-7019, the amended `analyze_compound_gift.py` (same settings as the W0 numbers). Launcher:
+`run_iteration22.sh`, output `runs/analysis22/`.
+
+**Pre-registered tests.**
+
+- **H1, learned selective provisioning (males).** In all three seeds, the GIVE (w = 0) male gap exceeds the matched INERT
+  male gap by >= 0.02. The GIVE male gaps already have 95% intervals excluding zero.
+- **H2, births.** GIVE births per 1000 predator-steps exceed INERT's in all three matched pairs. GIVE values:
+  3.45, 3.14, 4.40.
+- **Verdict.** H1 + H2: males learn selective mate provisioning without a motivation, with a reproductive benefit.
+  H1 alone: learned selective provisioning, no shown benefit. Otherwise: not met. Female gaps and gift rates are
+  descriptive.
+
+**Halfway kill rule.** At checkpoint 14, analyse the three INERT runs (10 episodes, seed 7000) and compare with the
+fresh W0 runs at checkpoint 14 under the same settings (`exploratory_w0fresh_ckpt14.json`: male gaps +0.058, +0.031,
++0.060). Continue only if, in at least one seed, the W0 male gap exceeds the INERT male gap by >= 0.02. The reference
+comes from the same code version, and this rule is deliberately lenient given about +/-0.05 run-to-run noise.
+
+**Hard stop.** One round, no changes after seeing any result. If not met, the mate-provisioning line stays closed.
+
+**Caveats.** The INERT runs train in a later batch than the GIVE runs, though with the same code and seeds; run-to-run
+variance at equal seeds is about 0.05 on this gap, as Iteration 21 showed. Three seeds give no power for small
+effects.
+
+**Results.** (not yet run)
