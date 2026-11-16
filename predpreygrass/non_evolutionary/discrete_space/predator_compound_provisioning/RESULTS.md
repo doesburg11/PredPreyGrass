@@ -73,4 +73,38 @@ the verdict, and H1 requires the gap to exceed INERT's. The gap compares eligibl
 that the policy's gift choice depends on whether a gift can help the mate, not why. Eligibility is read before movement
 and the transfer after it, so some eligible-state requests transfer nothing and some other-state requests do.
 
-**Results.** (not yet run)
+**Results (2026-11-16): stopped by the halfway kill rule. Verdict: not met. The mate-provisioning line closes.**
+
+Wave 1 reached checkpoint 14 at 01:37. The analysis ran on 10 episodes (seeds 7000-7009) and the rule fired at 01:42.
+All three runs were stopped, and wave 2 (INERT 43, GIVE 44, INERT 44) was never started. Source:
+`runs/analysis/halfway.json`, `halfway.log`, `run_all.log`.
+
+Gift-bit gap (eligible minus other states), with 95% episode-cluster bootstrap intervals:
+
+| run | male gap | female gap | gift-bit requests / 1000 predator-steps | realised gifts / 1000 predator-steps | births / 1000 predator-steps |
+| --- | --- | --- | --- | --- | --- |
+| GIVE 42 | -0.0025 [-0.010, 0.006] | -0.0251 [-0.049, -0.004] | 502 | 20.4 | 3.16 [2.83, 3.56] |
+| GIVE 43 | +0.0157 [0.008, 0.024] | -0.0210 [-0.038, -0.005] | 466 | 20.3 | 3.26 [3.00, 3.59] |
+| INERT 42 | +0.0149 [0.006, 0.022] | -0.0158 [-0.041, 0.011] | 530 | 0 | 2.82 [2.63, 3.01] |
+
+GIVE minus INERT 42 gap: male -0.017 (GIVE 42) and +0.001 (GIVE 43); female -0.009 and -0.005. The kill rule needed
+at least one value >= 0.02, and the largest was +0.001.
+
+Reading (descriptive; the pre-registered H1/H2 were never tested, because the runs stopped at the halfway rule):
+
+- At iteration 150 the gift bit is still close to a coin flip: requests are 47-53% of predator steps in both arms.
+  PPO has not made the bit depend on the mate's state in GIVE any more than in INERT, where the bit does nothing.
+- The gaps that are there show up in INERT too. Females request slightly *less* in eligible states in all three runs, and
+  the INERT male gap (+0.015) matches GIVE 43's. These are state-correlated patterns in an arbitrary action half, not
+  provisioning learned because it pays.
+- GIVE had more births than INERT 42 (3.16 and 3.26 vs 2.82), and females gave about twice as often as males (28-31 vs
+  16-17 realised gifts per 1000 sex-steps). This matches what the Iteration 19 step-0 screen showed for untrained
+  giving: random transfers alone raise births. It says nothing about learned selectivity, and it is the "H2 without H1"
+  pattern that the pre-registration ruled out as evidence.
+- Caveat: one INERT seed at the halfway checkpoint, 10 episodes. A late-emerging gap after iteration 150 can't be
+  excluded. The rule was set in advance to trade that risk for compute.
+
+**Line closed.** Under the hard stop, the mate-provisioning line (Iterations 17-20 across this module and
+`predator_sexual_reproduction`) closes. In three rounds, from a fixed gift to a learned action to the compound gift
+bit, a transfer to the mate raised births whenever it happened, and PPO never learned to target it to states where it
+helps.

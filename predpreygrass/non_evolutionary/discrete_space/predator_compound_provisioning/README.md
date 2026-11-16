@@ -1,6 +1,13 @@
 # predator_compound_provisioning
 
-> ## STATUS: PRE-REGISTERED 2026-11-15 (Iteration 20), training not yet run
+> ## STATUS: CLOSED 2026-11-16, NOT MET (Iteration 20 stopped by its halfway kill rule)
+>
+> At iteration 150 the gift bit was still about a coin flip (47-53% of steps) in both arms. GIVE's selectivity gap was
+> never more than 0.001 above INERT's (the rule needed 0.02), so wave 2 was never started. GIVE had more births, but that
+> comes from random transfers, as in Iteration 19. The mate-provisioning line is closed. Details are in
+> [`RESULTS.md`](RESULTS.md).
+>
+> **Original question:**
 >
 > Do sexed predators learn to feed their mate selectively when the gift can help her or him reach the
 > reproduction threshold? This follows Iteration 19 of
