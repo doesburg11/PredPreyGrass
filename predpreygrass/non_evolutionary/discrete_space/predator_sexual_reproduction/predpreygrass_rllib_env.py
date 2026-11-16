@@ -439,6 +439,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.learned_gift_energy_total = 0.0
         self.learned_gift_events_by_sex = {"predator_male": 0, "predator_female": 0}
         self.learned_gifts_this_step = []
+        self.predator_energy_intake = {}
 
         def generate_random_positions(grid_size: int, num_positions: int):
             if num_positions > grid_size * grid_size:
@@ -512,6 +513,10 @@ class PredPreyGrass(MultiAgentEnv):
 
     def step(self, action_dict: dict[str, Any]):
         observations, rewards, terminations, truncations, infos = {}, {}, {}, {}, {}
+        # Energy each predator took in this step (food eaten, gifts received); read by subclasses
+        # such as predator_mate_regard. Bookkeeping only: never changes dynamics or rewards here.
+        # Cleared before the truncation return, so a truncation call never reports stale intake.
+        self.predator_energy_intake = {}
 
         for agent in self._pending_removal:
             if agent in self.agents:
@@ -662,6 +667,7 @@ class PredPreyGrass(MultiAgentEnv):
                     fruit_gain = self.fruit_energies[caught_fruit]
                     reward += self.reward_predator_gather_fruit + self.reward_predator_per_energy * fruit_gain
                     self.agent_energies[agent] += fruit_gain
+                    self._note_predator_intake(agent, fruit_gain)
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
                     self.grid_world_state[4, *self.fruit_positions[caught_fruit]] = 0
                     self.fruit_energies[caught_fruit] = 0
@@ -723,6 +729,7 @@ class PredPreyGrass(MultiAgentEnv):
                     fruit_gain = self.fruit_energies[caught_fruit]
                     reward += self.reward_predator_gather_fruit + self.reward_predator_per_energy * fruit_gain
                     self.agent_energies[agent] += fruit_gain
+                    self._note_predator_intake(agent, fruit_gain)
                     self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
                     self.grid_world_state[4, *self.fruit_positions[caught_fruit]] = 0
                     self.fruit_energies[caught_fruit] = 0
@@ -1080,6 +1087,7 @@ class PredPreyGrass(MultiAgentEnv):
             # from the predator nor pay a negative energy-proportional reward.
             energy_gained = max(self.agent_energies[caught_prey], 0.0)
             self.agent_energies[agent] += energy_gained
+            self._note_predator_intake(agent, energy_gained)
             self.grid_world_state[1, *predator_position] = self.agent_energies[agent]
 
             observations[caught_prey] = self._get_observation(caught_prey)
@@ -1176,6 +1184,7 @@ class PredPreyGrass(MultiAgentEnv):
         self.agent_energies[agent] -= donation
         self.grid_world_state[1, *position] = self.agent_energies[agent]
         self.agent_energies[mate] += donation
+        self._note_predator_intake(mate, donation)
         self.grid_world_state[1, *mate_position] = self.agent_energies[mate]
         self.mate_gift_events += 1
         self.mate_gift_energy_total += donation
@@ -1232,6 +1241,9 @@ class PredPreyGrass(MultiAgentEnv):
         self.parental_care_events += 1
         self.parental_care_energy_total += donation_total
 
+    def _note_predator_intake(self, agent, amount):
+        self.predator_energy_intake[agent] = self.predator_energy_intake.get(agent, 0.0) + float(amount)
+
     def _is_give(self, agent, action) -> bool:
         return self.give_action_id is not None and "predator" in agent and action == self.give_action_id
 
@@ -1270,6 +1282,7 @@ class PredPreyGrass(MultiAgentEnv):
             mate = self.agent_mate[agent]
             self.agent_energies[agent] -= amount
             self.agent_energies[mate] += amount
+            self._note_predator_intake(mate, amount)
             self.learned_gift_events += 1
             self.learned_gift_energy_total += amount
             sex = "predator_male" if "predator_male" in agent else "predator_female"

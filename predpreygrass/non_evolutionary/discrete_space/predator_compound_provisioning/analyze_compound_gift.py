@@ -3,8 +3,10 @@
 Per episode: realised successful gifts and gift-bit requests per 1000 predator-steps (also per sex); the policy
 probability of the gift bit (sum over actions 9..17) in eligible states minus all other predator states, by sex;
 and the pair outcomes of Iteration 18's PairTracker (births per 1000 predator-steps, post-birth proximity).
-An eligible state: recorded mate alive within predator_gift_range, mate energy in (0, reproduction threshold),
-and the giver would keep positive energy after the transfer. Eligibility is read before the step (the state the
+An eligible state: recorded mate alive within predator_gift_range, mate energy in (0, reproduction threshold)
+and still positive after its homeostatic cost, and the giver would keep positive energy after its homeostatic cost
+and the transfer when using the stay-put gift variant (Iteration 21 amendment, from the Iteration 20 Codex review:
+the environment charges these costs before it validates a gift). Eligibility is read before the step (the state the
 policy acts on); the transfer is resolved after movement, as in the environment."""
 import argparse
 import glob
@@ -36,9 +38,10 @@ def eligible(env, agent):
     mate = env.agent_mate.get(agent)
     if mate is None or mate not in env.predator_positions:
         return False
-    if env.agent_energies[mate] <= 0 or env.agent_energies[mate] >= env.predator_creation_energy_threshold:
+    cost = env.homeostatic_energy_cost_per_step_predator
+    if env.agent_energies[mate] - cost <= 0 or env.agent_energies[mate] >= env.predator_creation_energy_threshold:
         return False
-    if env.agent_energies[agent] - env.learned_gift_amount <= 0:
+    if env.agent_energies[agent] - cost - env.learned_gift_amount <= 0:
         return False
     a, b = env.predator_positions[agent], env.predator_positions[mate]
     return max(abs(a[0] - b[0]), abs(a[1] - b[1])) <= env.predator_gift_range
@@ -66,6 +69,7 @@ def rollout(config, modules, episodes, seed0, window=50):
         pred_steps = successful = attempts = 0
         sex_steps = {sex: 0 for sex in SEXES}
         sex_gifts = {sex: 0 for sex in SEXES}
+        sex_requests = {sex: 0 for sex in SEXES}
         tracker = PairTracker(env.predator_gift_range, window)
         while True:
             tracker.on_decision(env)
@@ -85,7 +89,10 @@ def rollout(config, modules, episodes, seed0, window=50):
                     actions[agent] = int(rng.choice(len(probs[i]), p=probs[i]))
             observations, _, terminations, truncations, _ = env.step(actions)
             tracker.after_step(env)
-            attempts += sum(act >= env.num_actions for a, act in actions.items() if "predator" in a)
+            for a, act in actions.items():
+                if "predator" in a and act >= env.num_actions:
+                    attempts += 1
+                    sex_requests[sex_of(a)] += 1
             successful += len(env.learned_gifts_this_step)
             for giver in env.learned_gifts_this_step:
                 sex_gifts[sex_of(giver)] += 1
@@ -103,6 +110,9 @@ def rollout(config, modules, episodes, seed0, window=50):
         }
         for sex in SEXES:
             row[f"{sex}_gifts_per1000_sex_steps"] = 1000 * sex_gifts[sex] / sex_steps[sex] if sex_steps[sex] else np.nan
+            row[f"{sex}_requests_per1000_sex_steps"] = (
+                1000 * sex_requests[sex] / sex_steps[sex] if sex_steps[sex] else np.nan
+            )
         for sex in SEXES:
             e_sum, e_n = stats[sex]["eligible"]
             o_sum, o_n = stats[sex]["other"]
@@ -117,7 +127,8 @@ def render(label, rows, rng):
     keys = ["gift_events_per1000_pred_steps", "gift_bit_attempts_per1000_pred_steps", "births_per_1000_pred_steps",
             "post_birth_near_frac", "post_birth_windows_censored", "mean_predators"]
     for sex in SEXES:
-        keys += [f"{sex}_p_eligible", f"{sex}_p_other", f"{sex}_gap", f"{sex}_gifts_per1000_sex_steps"]
+        keys += [f"{sex}_p_eligible", f"{sex}_p_other", f"{sex}_gap", f"{sex}_gifts_per1000_sex_steps",
+                 f"{sex}_requests_per1000_sex_steps"]
     out, lines = {}, [f"{label}: {len(rows)} episodes"]
     for key in keys:
         out[key] = summarize([r[key] for r in rows], rng)
