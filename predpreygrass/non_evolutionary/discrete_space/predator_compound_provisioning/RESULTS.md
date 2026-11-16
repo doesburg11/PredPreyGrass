@@ -108,3 +108,13 @@ Reading (descriptive; the pre-registered H1/H2 were never tested, because the ru
 `predator_sexual_reproduction`) closes. In three rounds, from a fixed gift to a learned action to the compound gift
 bit, a transfer to the mate raised births whenever it happened, and PPO never learned to target it to states where it
 helps.
+
+**Codex review (queued before launch; ran 01:55, after the kill).** It found no environment or training bug. The remote
+env creator, the `give_action_id=0` sentinel, movement decoding (`a % 9`), and arm parity were all checked and judged
+sound. Analysis finding: "eligible" checks the giver's energy before the step. The environment charges homeostatic
+and movement costs before it validates a gift, so a giver with just over 2 energy counts as eligible but can't give.
+This affects only near-starving givers, a small share of states, and it is identical in GIVE and INERT. It can't
+explain a GIVE-minus-INERT gap of at most +0.001, and it doesn't touch the main reading: the gift bit stayed close to
+50% everywhere. It is recorded here and not re-analysed, under the hard stop. Its other points (per-sex request rates
+and the full pair outcomes not reported, no automated verdict, launcher failure handling on the wave-2 and final paths)
+don't affect the halfway read. The kill path did stop all training processes.
