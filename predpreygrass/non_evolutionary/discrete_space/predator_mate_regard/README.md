@@ -1,6 +1,12 @@
 # predator_mate_regard
 
-> ## STATUS: PRE-REGISTERED 2026-11-16 (Iteration 21), training not yet run
+> ## STATUS: CLOSED 2026-11-16, NOT MET (Iteration 21)
+>
+> With w = 0.5, males became more selective than matched w = 0 runs in only 1 of 3 seeds, and births were higher in only
+> 1 of 3 pairs. Fresh w = 0 runs develop a similar male gap (+0.06 to +0.14) without any motivation. The halfway pass
+> came from an unusually low reused reference run. Steps 2-3 not built. Details are in [`RESULTS.md`](RESULTS.md).
+>
+> **Original question:**
 >
 > Can a motivation to value the mate's energy intake make PPO predators learn to feed their mate selectively?
 > Iteration 20 ([`predator_compound_provisioning`](../predator_compound_provisioning/RESULTS.md)) showed that gifts raise

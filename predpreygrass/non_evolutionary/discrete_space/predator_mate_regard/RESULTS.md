@@ -89,4 +89,47 @@ near the mate or hunt near it. That is descriptive and may itself raise the elig
 with all other states, so it can come mostly from range (mate within 3 cells), not from the mate's energy need.
 Eligibility is read before movement, the transfer after it.
 
-**Results.** (not yet run)
+**Results (2026-11-16): verdict not met (neither H1 nor H2). The mate-regard line closes at step 1.**
+
+All six runs completed 300 iterations. Halfway check passed at 13:28 (wave 1); final analysis 18:08. Sources:
+`runs/analysis/final.json`, `final.log`, `halfway.json`, `run_all.log`.
+
+Final, checkpoint 29, 20 episodes. Gift-bit gap = request probability in eligible minus other states, with 95%
+episode-cluster bootstrap intervals:
+
+| seed | W05 male gap | W0 male gap | male diff | W05 female gap | W0 female gap | births W05 | births W0 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 42 | +0.059 [0.049, 0.068] | +0.087 | -0.028 | -0.054 | -0.107 | 3.06 | 3.45 |
+| 43 | +0.121 [0.112, 0.131] | +0.060 | +0.061 | -0.158 | -0.150 | 3.79 | 3.14 |
+| 44 | +0.116 [0.110, 0.122] | +0.140 | -0.024 | -0.121 | -0.359 | 3.90 | 4.40 |
+
+- **H1 not met.** The W05 male gap is >= 0.02 with an interval excluding zero in all three seeds, but it exceeds the
+  matched W0 gap by >= 0.02 only in seed 43. Female gaps are negative in every run.
+- **H2 not met.** W05 had more births in one pair of three (43). Seeds 42 and 44 went the other way.
+
+**What the halfway pass meant (exploratory, read after the verdict).** The halfway rule used Iteration 20's GIVE
+runs as the w = 0 reference: male gap -0.003 (seed 42) and +0.016 (seed 43) at checkpoint 14. The fresh W0 runs of
+this iteration, read at the same checkpoint with the same settings (10 episodes, seed 7000;
+`runs/analysis/exploratory_w0fresh_ckpt14.json`), already had male gaps of +0.058, +0.031 and +0.060. That is about
+W05's halfway values (+0.034, +0.064, +0.057). So the pass came from an unusually low reference, not from the weight.
+The two configurations are reward-identical by test, so this is run-to-run training variance (GPU nondeterminism) at
+equal seeds. One reused reference run per seed was too noisy for a 0.02 rule.
+
+**Reading.**
+
+- A male gift-bit gap develops in this environment without any mate-regard motivation. Fresh w = 0 runs reach
+  +0.06 to +0.14 by iteration 300. Adding w = 0.5 did not raise it detectably. Realised gift rates hardly differ
+  either: 14-21 per 1000 predator-steps in both arms.
+- Whether that male gap is learned provisioning has not been tested. No INERT control was trained to 300 iterations:
+  Iteration 20, which had that control, was stopped at its halfway check. At checkpoint 14, Iteration 20's INERT male
+  gap (+0.015) was as large as GIVE's. So the gap may be a state-correlated pattern in an arbitrary action half, as
+  Iteration 20 read it. Iteration 20's kill read rested on the same kind of single reference, and this iteration shows
+  that such a reference can be off by about 0.04-0.06.
+- Female gaps are strongly negative in both arms, as low as -0.36 in W0 seed 44, where eligible female states are only
+  4% of female steps. Females request less in eligible states whether or not they are motivated. Why is open.
+
+**Line closed** under the hard stop. A within-step mate-regard reward of w = 0.5 did not make PPO's gift choice more
+selective than no motivation, and it did not raise births. Step 2 (payoff) and step 3 (heritable w) are not built.
+
+**Lesson for future kill rules.** Compare against a reference trained in the same batch and code version. Treat a
+single reference run per seed as noise of at least +/-0.05 on this gap.
