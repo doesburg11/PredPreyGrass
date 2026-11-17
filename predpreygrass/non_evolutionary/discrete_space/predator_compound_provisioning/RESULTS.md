@@ -221,3 +221,38 @@ associated with gift eligibility, with no added mate-regard reward (the predator
 non-transferring control. What drives the learning has not been tested. The open next steps,
 none of them pre-registered, are: a replication with new seeds, trained GIVE and INERT in one batch; a decomposition
 of the gap by range versus mate energy; and the female sign reversal.
+
+## Iteration 23 — Same-batch replication with new seeds (pre-registered 2026-11-17, before any training)
+
+**Why.** Iteration 22's positive result (H1 + H2) was a data-informed follow-up, with the two arms trained in different
+batches. This iteration replicates it confirmatorily: new seeds, both arms trained in one batch, tests fixed before
+any of these runs exist.
+
+**Design.** Six runs `REP23_{GIVE,INERT}_K05_MB1024_SEED{45,46,47}` (`compound_gift=on|inert`), both trained by this
+module's tune script. Configuration as in Iterations 20-22: mate channel on, gift amount 2.0, no mechanical gift,
+PROP k = 0.5, minibatch 1024, 30 epochs, 300 iterations. The GIVE arm is identical to Iteration 22's GIVE runs
+(Iteration 21's w = 0 env, which is reward-identical by test). Code version: 76295b4e (env and analysis unchanged since
+a1854b09). Waves of three, interleaved so each wave has both arms: wave 1 GIVE 45, INERT 45, GIVE 46; wave 2 INERT 46,
+GIVE 47, INERT 47. Final analysis: checkpoint 29, 20 episodes, seeds 7000-7019, `analyze_compound_gift.py`. Launcher:
+`run_iteration23.sh`, output `runs/analysis23/`.
+
+**Pre-registered tests** (as in Iteration 22):
+
+- **H1 (males).** In all three seeds, the GIVE male gift-bit gap is >= 0.02 with its 95% interval excluding zero, AND
+  exceeds the matched-seed INERT male gap by >= 0.02.
+- **H2.** GIVE births per 1000 predator-steps exceed INERT's in all three matched pairs.
+- **Verdict.** H1 + H2: Iteration 22 replicated. H1 alone: the male eligibility association replicated, the birth
+  difference did not. H2 alone, or neither: not replicated. Female gaps (Iteration 22: opposite sign), gift and request
+  rates, eligibility shares and predator counts are descriptive. The interpretation limits of Iteration 22 still apply
+  (observational state contrast, ecology differs between arms, birth gain not attributable to the selectivity).
+
+**Halfway kill rule** (lenient on purpose: Iteration 22 showed the gap grows between checkpoints 14 and 29). At
+checkpoint 14 of wave 1, analyse GIVE 45, GIVE 46 and INERT 45 (10 episodes, seed 7000). Continue unless neither GIVE
+run's male gap exceeds INERT 45's (difference > 0).
+
+**Hard stop.** One round, no changes after seeing any result.
+
+**Planned next, after this iteration (not part of its tests).** Split the male gap into its parts: mate within
+range versus mate's energy need. CPU only, on existing checkpoints. Requested by the user on 2026-11-17.
+
+**Results.** (not yet run)
