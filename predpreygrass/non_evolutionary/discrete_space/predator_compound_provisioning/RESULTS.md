@@ -157,4 +157,67 @@ comes from the same code version, and this rule is deliberately lenient given ab
 variance at equal seeds is about 0.05 on this gap, as Iteration 21 showed. Three seeds give no power for small
 effects.
 
-**Results.** (not yet run)
+**Results (2026-11-17): H1 and H2 met their pre-registered rules.** In the registered wording, the verdict is
+"males learn selective mate provisioning, with a reproductive benefit". What the design supports is narrower. Trained
+GIVE males' gift requests are associated with pre-movement gift eligibility far more strongly than INERT males'
+requests, at w = 0 (no added mate-regard reward). GIVE runs also have more births. This is a data-informed follow-up,
+and the birth gain can't be attributed to the selectivity (caveats below).
+
+All three INERT runs completed 300 iterations. The halfway check passed at 01:45 (W0-minus-INERT male gaps +0.069,
++0.009, +0.064); the final analysis finished at 03:16. Sources: `runs/analysis22/final.json`, `final.log`,
+`halfway.json`, `run_all.log`. GIVE numbers: `predator_mate_regard/runs/analysis/final.json` (W0 arm).
+
+Checkpoint 29, 20 episodes, 95% episode-cluster bootstrap intervals:
+
+| seed | GIVE male gap | INERT male gap | male diff | GIVE female gap | INERT female gap | births GIVE | births INERT |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 42 | +0.087 [0.076, 0.097] | -0.020 [-0.025, -0.013] | +0.107 | -0.107 | +0.004 | 3.45 | 2.87 [2.72, 3.03] |
+| 43 | +0.060 [0.054, 0.066] | +0.016 [0.008, 0.024] | +0.044 | -0.150 | +0.005 | 3.14 | 2.59 [2.34, 2.81] |
+| 44 | +0.140 [0.129, 0.150] | -0.010 [-0.016, -0.003] | +0.149 | -0.359 | -0.038 | 4.40 | 2.88 [2.74, 3.02] |
+
+- **H1 met.** The male gap exceeds INERT's by >= 0.02 in all three seeds (+0.044 to +0.149), and the GIVE intervals
+  exclude zero. INERT male gaps stay near zero (-0.020 to +0.016). GIVE males request the gift bit more in eligible
+  states than in other states; INERT males, with the identical but non-transferring action, do not. This is an
+  observational contrast, not a manipulation of eligibility. GIVE also changes the ecology: energy, births,
+  predator numbers, spatial arrangement and how often states are eligible differ between arms. The "other" category
+  is a mixed set of states whose composition can differ between arms. So part of the cross-arm difference could
+  come from different state distributions, not from a different response to eligibility.
+- **H2 met.** GIVE births exceed INERT's in all three pairs (one-sided exact sign test p = 0.125 with three pairs; a
+  stringent directional criterion, not conventional significance).
+
+**Descriptive.**
+
+- The estimated GIVE male gap was larger at checkpoint 29 than at checkpoint 14 in all three runs: +0.058, +0.031,
+  +0.060 rose to +0.087, +0.060, +0.140. Checkpoint 14 used 10 episodes and checkpoint 29 used 20, and there is no
+  uncertainty analysis of the change and no intermediate trajectory. INERT was near zero at both checkpoints.
+  Iteration 20's halfway rule correctly failed on its own runs (GIVE seed 42/43 gaps -0.003 and +0.016 at checkpoint
+  14). The Iteration 22 trajectories show that such a rule could miss gaps that appear later. They don't reveal what
+  the stopped Iteration 20 runs would have reached.
+- Females go the other way. GIVE female gaps are negative (-0.11 to -0.36), INERT female gaps are about zero: females
+  learn to request the gift bit *less* when a gift could reach their mate. Why is open. Female eligible states are rare
+  in GIVE (as low as 4% of female steps in seed 44), so the female gap rests on few states.
+- GIVE males are eligible more often (p_eligible 0.55-0.66 vs 0.45-0.51 for INERT). That may mean they stay closer to
+  the mate, or that mates need energy more often. The gap itself is a within-arm contrast, so it is not just this share.
+- Mean predator counts are higher in GIVE (24.4-26.9 vs 19.1-22.3).
+
+**Caveats.**
+
+- Data-informed follow-up: the male focus and this comparison were chosen after Iteration 21 showed the w = 0 male
+  gap, and this line had been closed under Iteration 20's hard stop. The user explicitly reopened it for this one
+  control round. An independent replication with new seeds would make it a confirmatory result.
+- The arms were trained in different batches (GIVE 2026-11-16 afternoon, INERT that night), with the same code version
+  (a1854b09) and seeds. Iteration 21 showed about 0.05 run-to-run variance on this gap at equal seeds. The smallest
+  male difference here (+0.044, seed 43) is within that range; the other two are well outside it.
+- H2 does not show that the selectivity causes the birth gain. Untargeted transfers alone raise births (Iteration 19
+  step-0 screen), and GIVE transfers energy in every state where a gift is valid, selective or not. The birth difference
+  is consistent with provisioning paying, but this design cannot separate the targeted part from the transfers as such.
+- Eligibility bundles mate within 3 cells, mate's energy below the reproduction threshold, and both able to afford
+  the gift. The gap does not say which part the requests track, and each part may correlate with other policy inputs. Range alone may carry much of it.
+  Eligibility is read before movement, the transfer after it.
+- Three seeds.
+
+**Status.** The mate-provisioning line has its first positive result on its registered test: male gift requests
+associated with gift eligibility, with no added mate-regard reward (the predators' rewards are those of Iteration 20), against a matched
+non-transferring control. What drives the learning has not been tested. The open next steps,
+none of them pre-registered, are: a replication with new seeds, trained GIVE and INERT in one batch; a decomposition
+of the gap by range versus mate energy; and the female sign reversal.

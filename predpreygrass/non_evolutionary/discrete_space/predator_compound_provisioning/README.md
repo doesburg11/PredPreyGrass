@@ -1,6 +1,15 @@
 # predator_compound_provisioning
 
-> ## STATUS: CLOSED 2026-11-16, NOT MET (Iteration 20 stopped by its halfway kill rule)
+> ## STATUS: Iteration 22 (2026-11-17): H1 + H2 MET, data-informed follow-up
+>
+> With the INERT control trained to 300 iterations, GIVE males' gift requests are associated with gift eligibility far
+> more strongly than INERT's (gap +0.044 to +0.149 above INERT, 3/3 seeds), and GIVE runs have more births (3/3 pairs).
+> The gap was larger at iteration 300 than at 150 in all three runs, so Iteration 20's halfway rule could miss
+> late-appearing gaps. Females show the opposite sign. Caveats are in [`RESULTS.md`](RESULTS.md): data-informed, two
+> training batches, an observational state contrast with ecology differing between arms, and a birth gain that can't
+> be attributed to the selectivity. Open next steps are there too.
+>
+> ## Earlier status: CLOSED 2026-11-16, NOT MET (Iteration 20 stopped by its halfway kill rule)
 >
 > At iteration 150 the gift bit was still about a coin flip (47-53% of steps) in both arms. GIVE's selectivity gap was
 > never more than 0.001 above INERT's (the rule needed 0.02), so wave 2 was never started. GIVE had more births, but that
