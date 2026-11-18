@@ -1,6 +1,16 @@
 # predator_compound_provisioning
 
-> ## STATUS: Iteration 22 (2026-11-17): H1 + H2 MET, data-informed follow-up
+> ## STATUS: Iteration 23 (2026-11-18): REPLICATED (H1 + H2 met, confirmatory)
+>
+> New seeds 45-47, GIVE and INERT in one interleaved two-wave launch. H1/H2 were fixed before training; a wave-2
+> futility stop added after wave 1 passed (before any wave-2 halfway data) could only stop early. GIVE males' gift requests are again
+> associated with gift eligibility far more strongly than INERT's (+0.068 to +0.121 above INERT, 3/3 seeds), and
+> GIVE runs again have more births (3/3 pairs). Across Iterations 22-23 the male difference is positive in 6/6 seed
+> pairs. Females again show the opposite sign. Same interpretation limits as Iteration 22: observational state
+> contrast, ecology differs between arms, birth gain not attributable to the selectivity. Next: range-versus-mate-energy
+> decomposition on existing checkpoints. Details in [`RESULTS.md`](RESULTS.md).
+>
+> ## Earlier status: Iteration 22 (2026-11-17): H1 + H2 MET, data-informed follow-up
 >
 > With the INERT control trained to 300 iterations, GIVE males' gift requests are associated with gift eligibility far
 > more strongly than INERT's (gap +0.044 to +0.149 above INERT, 3/3 seeds), and GIVE runs have more births (3/3 pairs).
@@ -33,6 +43,7 @@
 - `tune_ppo_compound_provisioning.py`: training entry point; reuses `predator_sexual_reproduction`'s PPO script
   (`--compound-gift on|inert` plus that script's options). Runs land in `runs/` (gitignored).
 - `analyze_compound_gift.py`: gift-bit selectivity, gift rates and pair outcomes from a checkpoint.
-- `run_iteration20.sh`: staged launcher for the pre-registered six runs, with the halfway kill check.
+- `run_iteration20.sh`, `run_iteration22.sh`, `run_iteration23.sh`: staged launchers with halfway kill checks;
+  `futility_iteration23_wave2.sh`: Iteration 23's added wave-2 futility check.
 - `tests/`: environment and analysis tests. Run with
   `pytest predpreygrass/non_evolutionary/discrete_space/predator_compound_provisioning/tests`.

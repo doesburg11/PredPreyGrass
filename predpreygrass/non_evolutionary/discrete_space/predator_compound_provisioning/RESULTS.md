@@ -266,4 +266,59 @@ wave-2 data exist:
 - **Hard stop for the mate-provisioning line.** If Iteration 23 does not replicate (verdict other than H1 + H2), run
   the planned range-versus-energy decomposition on existing checkpoints and then close the line: no Iteration 24.
 
-**Results.** (not yet run)
+**Results (2026-11-18): H1 and H2 met; by the registered verdict, Iteration 22 replicated.** With new seeds and both
+arms in one interleaved two-wave launch, trained GIVE males' gift requests are again associated with pre-movement gift eligibility
+far more strongly than INERT males' requests, and GIVE runs again have more births. The interpretation limits of
+Iteration 22 still apply (below).
+
+All six runs completed 300 iterations (exit 0). Wave 1's halfway check passed at 00:18 (GIVE minus INERT 45 male gaps
++0.034, +0.019); the wave-2 futility check passed at 03:37 (pairs 46, 47: +0.015, +0.048); the final analysis
+finished at 05:19. Sources: `runs/analysis23/final.json`, `final.log`, `halfway.json`, `futility_wave2.json`,
+`run_all.log`.
+
+Checkpoint 29, 20 episodes, 95% episode-cluster bootstrap intervals:
+
+| seed | GIVE male gap | INERT male gap | male diff | GIVE female gap | INERT female gap | births GIVE | births INERT |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 45 | +0.061 [0.054, 0.069] | -0.013 [-0.019, -0.007] | +0.074 | -0.062 | +0.013 | 3.13 [2.89, 3.34] | 2.92 [2.77, 3.06] |
+| 46 | +0.057 [0.050, 0.062] | -0.012 [-0.018, -0.005] | +0.068 | -0.087 | -0.002 | 3.26 [3.06, 3.44] | 2.88 [2.69, 3.06] |
+| 47 | +0.112 [0.102, 0.121] | -0.009 [-0.015, -0.003] | +0.121 | -0.122 | -0.048 | 3.49 [3.26, 3.74] | 2.82 [2.61, 3.01] |
+
+- **H1 met.** Each GIVE male gap is >= 0.02 with its interval excluding zero, and exceeds the matched INERT gap by
+  >= 0.02 (+0.068 to +0.121). INERT male gaps are slightly negative (-0.013 to -0.009). As in Iteration 22, this is an
+  observational state contrast between arms whose ecology differs, not a manipulation of eligibility.
+- **H2 met.** GIVE births exceed INERT's in all three pairs (one-sided exact sign test p = 0.125; a directional
+  criterion, not conventional significance). In seed 45 the two intervals overlap.
+
+**Descriptive.**
+
+- Across Iterations 22 and 23, the male difference is positive in 6 of 6 seed pairs (+0.044 to +0.149), and the
+  smallest difference here (+0.068) is above the ~0.05 run-to-run variance seen at equal seeds in Iteration 21.
+- The GIVE male gap again grew from checkpoint 14 to 29 in every run (checkpoint 14: +0.030, +0.015, +0.045 for seeds
+  45, 46, 47); checkpoint 14 used 10 episodes, with no uncertainty
+  analysis of the change.
+- Females again go the other way: GIVE female gaps -0.06 to -0.12, INERT -0.05 to +0.01. Smaller than Iteration 22's
+  (-0.11 to -0.36). Why is open.
+- GIVE males are eligible more often (p_eligible 0.59-0.68 vs 0.47-0.51) and request the gift bit somewhat more
+  overall (527-568 vs 476-518 per 1000 male steps). Completed gifts: 19.2-19.6 per 1000 predator-steps.
+- Mean predator counts are *not* higher in GIVE this time (21.6, 25.5, 21.6 vs INERT 25.2, 22.2, 24.3), unlike
+  Iteration 22 (24.4-26.9 vs 19.1-22.3). Births are per 1000 predator-steps, so the contrast is not merely GIVE accumulating more
+  predator-steps. That doesn't rule out population composition, density or other ecological differences as
+  explanations for the rate difference; why population size differs between iterations is open.
+
+**Caveats.**
+
+- The H2 caveat of Iteration 22 is unchanged: GIVE transfers energy in every state where a gift is valid, and
+  untargeted transfers alone raise births (Iteration 19 step-0 screen), so the birth gain can't be attributed to the
+  selectivity.
+- Eligibility still bundles mate within 3 cells, mate's energy below the reproduction threshold, and both able to
+  afford the gift. Which part the requests track is untested; range alone may carry much of it. This is the planned
+  decomposition below.
+- Three seeds per iteration; six pairs in total, from two batches.
+
+**Status.** Iteration 22 met the pre-registered replication verdict, with new seeds and GIVE and INERT in one
+interleaved two-wave launch. The H1/H2 criteria were fixed before training. After wave 1 passed, a wave-2 futility
+stop was added before any wave-2 checkpoint-14 data existed; it could only stop early, not make a pass easier.
+The hard stop agreed on 2026-11-18 (close the line if this failed) did not trigger. Next is the
+planned range-versus-energy decomposition (CPU only, existing checkpoints); any further training needs a new,
+separately agreed plan with its own budget.
