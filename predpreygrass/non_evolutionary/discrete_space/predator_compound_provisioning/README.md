@@ -10,6 +10,10 @@
 > contrast, ecology differs between arms, birth gain not attributable to the selectivity. Next: range-versus-mate-energy
 > decomposition on existing checkpoints. Details in [`RESULTS.md`](RESULTS.md).
 >
+> **Decomposition (2026-11-18, pre-registered):** the male gap aligns with the range/visibility contrast in 6/6
+> pairs; the registered test found no consistent additional association with the mate's energy need (1/6 pairs).
+> Observed requests are more frequent when the mate is near; these data did not establish selectivity by her need.
+>
 > ## Earlier status: Iteration 22 (2026-11-17): H1 + H2 MET, data-informed follow-up
 >
 > With the INERT control trained to 300 iterations, GIVE males' gift requests are associated with gift eligibility far

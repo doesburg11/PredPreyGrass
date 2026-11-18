@@ -365,4 +365,44 @@ pre-registration, before any decomposition output existed. Boundary tests for th
 **Hard stop.** One analysis run, no changes after seeing results. If neither D1 nor D2 passes, no further
 decomposition. Any further training needs a separately agreed plan.
 
-**Results.** (not yet run)
+**Results (2026-11-18): D2 met (6/6 pairs), D1 not met (1/6). Verdict (registered label: "explained by range"): the gap is
+statistically accounted for by the range/visibility contrast, with no registered evidence of an additional mate-need
+association.** As predicted. Run 05:26-05:31, all 12 runs
+exit 0. Sources: `runs/analysis_decomp/*.json`, `verdict.json`, `status`. All contrasts had both cells in 20/20
+episodes, so the minimum-episode rule never bound.
+
+Males, checkpoint 29, 20 episodes, 95% episode-bootstrap intervals:
+
+| pair | GIVE `range_need` | INERT | diff [95%] | GIVE `need_in` | INERT | diff [95%] |
+| --- | --- | --- | --- | --- | --- | --- |
+| 42 | +0.071 [0.062, 0.081] | -0.005 | +0.077 [0.064, 0.089] | +0.031 [-0.003, 0.062] | -0.046 | +0.077 [0.023, 0.128] |
+| 43 | +0.064 [0.056, 0.071] | +0.016 | +0.048 [0.036, 0.058] | -0.019 [-0.050, 0.010] | +0.022 | -0.041 [-0.125, 0.042] |
+| 44 | +0.106 [0.098, 0.114] | -0.004 | +0.111 [0.101, 0.121] | +0.112 [0.093, 0.130] | +0.010 | +0.102 [0.041, 0.160] |
+| 45 | +0.056 [0.048, 0.064] | -0.012 | +0.068 [0.057, 0.078] | +0.048 [0.012, 0.090] | +0.015 | +0.033 [-0.014, 0.085] |
+| 46 | +0.046 [0.040, 0.054] | -0.012 | +0.058 [0.048, 0.068] | +0.010 [-0.034, 0.053] | +0.037 | -0.027 [-0.087, 0.036] |
+| 47 | +0.094 [0.082, 0.106] | -0.003 | +0.097 [0.084, 0.110] | +0.026 [-0.026, 0.073] | -0.022 | +0.048 [-0.014, 0.105] |
+
+- **D2 met.** In every pair, GIVE males request the gift bit more when a needy mate is within 3 cells than when she
+  is farther away (+0.046 to +0.106), while INERT contrasts are small (-0.012 to +0.016). As registered, this can't separate
+  range from seeing the mate: within 3 cells the mate is always tagged and visible, beyond it never.
+- **D1 not met.** Only pair 44 passes. Within range, GIVE males' requests barely differ between a needy and a full
+  mate (-0.019 to +0.112, interval excluding zero in 2 of 6), and the GIVE-minus-INERT difference interval excludes
+  zero in 2 of 6 (42, 44). "Mate full" states within range are very rare (0.2-0.6% of male steps), so `need_in` is
+  noisy; the result is absence of evidence for need tracking, not evidence of its absence.
+
+**Descriptive.**
+
+- The registered gap lives in few states: GIVE males have a needy mate within range in 2.2-2.7% of their steps and
+  no living mate in 86-91% (INERT: 3.3-4.0% and 78-83%).
+- GIVE males request the gift bit more than INERT males even with the mate out of range (P = 0.48-0.58 vs
+  0.45-0.52), on top of the range contrast.
+- Females: `range_need` is negative in all six GIVE runs (-0.011 to -0.146) and near zero in INERT (-0.054 to
+  +0.007), matching their negative eligibility gap: females request the gift bit less when the mate is in range.
+  `need_in` is near zero in both arms.
+
+**Status.** The male result of Iterations 22-23 is best described as: GIVE males' gift-bit requests are more frequent
+in observed states where a needy mate is near and visible than where she is farther away. These data did not
+establish additional selectivity by her energy need. That's a weaker form of
+provisioning than the line's original question (selective feeding when the gift helps the mate reproduce). Further
+work on this line needs a separately agreed plan and budget.
+
