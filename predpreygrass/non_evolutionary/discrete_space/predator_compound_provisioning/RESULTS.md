@@ -255,4 +255,15 @@ run's male gap exceeds INERT 45's (difference > 0).
 **Planned next, after this iteration (not part of its tests).** Split the male gap into its parts: mate within
 range versus mate's energy need. CPU only, on existing checkpoints. Requested by the user on 2026-11-17.
 
+**Amendment, 2026-11-18 02:05 (wave 2 running, no wave-2 checkpoint 14 yet).** Wave 1 passed its halfway rule at
+00:18 (GIVE minus INERT 45 male gaps +0.034 and +0.019 at checkpoint 14). Two decisions added with the user, before any
+wave-2 data exist:
+
+- **Wave-2 futility check** (`futility_iteration23_wave2.sh`, runs beside the launcher). At checkpoint 14 of INERT 46,
+  GIVE 47 and INERT 47, analyse the pairs 46 and 47 (10 episodes, seed 7000; GIVE 46 uses its existing checkpoint 14).
+  If either pair's GIVE male gap is not above its INERT gap, stop training: H1 needs all three seeds, so the iteration
+  is scored H1 not met. This can only end the run early, never make a pass easier.
+- **Hard stop for the mate-provisioning line.** If Iteration 23 does not replicate (verdict other than H1 + H2), run
+  the planned range-versus-energy decomposition on existing checkpoints and then close the line: no Iteration 24.
+
 **Results.** (not yet run)
