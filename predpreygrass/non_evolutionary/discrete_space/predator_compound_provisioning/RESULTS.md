@@ -322,3 +322,47 @@ stop was added before any wave-2 checkpoint-14 data existed; it could only stop 
 The hard stop agreed on 2026-11-18 (close the line if this failed) did not trigger. Next is the
 planned range-versus-energy decomposition (CPU only, existing checkpoints); any further training needs a new,
 separately agreed plan with its own budget.
+
+## Decomposition: range versus mate need (pre-registered 2026-11-18, before running)
+
+**Why.** The eligibility gap bundles three conditions: mate within 3 cells, mate's energy below the reproduction
+threshold, and both able to afford the gift. A male could produce the gap by tracking range alone, which needs no
+regard for the mate's state. This analysis asks which part the requests track. Requested by the user on 2026-11-17.
+It uses existing checkpoints only, no training.
+
+**Design.** `analyze_gift_decomposition.py`, checkpoint 29, 20 episodes, seeds 7000-7019, on the six GIVE/INERT
+pairs: Iteration 22 (GIVE = `predator_mate_regard/runs/MATEREGARD_W0_*_SEED42-44`, INERT =
+`COMPOUND_INERT300_*_SEED42-44`) and Iteration 23 (`REP23_*_SEED45-47`). Each predator decision state (read before
+the step) goes into one bucket: no mate; mate dying (energy minus homeostatic cost <= 0); giver can't afford; or a
+2 x 2 cell of range (within 3 cells) x need (mate energy below the threshold). `in_need` is exactly the eligible
+state (tested). The mate's energy is observable: the predator layer holds energy values and the mate channel marks
+the mate's cell, and a mate within 3 cells is always inside the 7 x 7 window. Contrasts, per episode and sex:
+
+- `need_in` = P(gift bit | in range, mate needs) - P(gift bit | in range, mate full)
+- `range_need` = P(gift bit | in range, mate needs) - P(gift bit | out of range, mate needs)
+
+**Pre-registered tests (males).**
+
+- **D1, need tracking.** In at least 5 of 6 pairs: the GIVE `need_in` is >= 0.02 with its 95% episode-bootstrap
+  interval excluding zero; GIVE minus matched INERT is >= 0.02 with the 95% interval of that difference (independent
+  episode bootstraps) excluding zero; and both runs have the contrast defined (both cells present) in >= 10 of the
+  20 episodes, else the pair fails. Scored by `score()` in the script.
+- **D2, range tracking.** The same rule for `range_need`.
+- **Verdict.** D1 + D2: requests track both. D2 only: the gap is explained by the mate being in range, with no
+  evidence of regard for the mate's need. The gift range equals the observation radius (3), so an in-range mate is
+  always tagged and visible and an out-of-range mate never is: D2 can't separate range from seeing the mate. D1 only: need, not range. Neither: the gap comes from the combination or from states these cells
+  don't separate. Females, bucket shares and the other cells are descriptive.
+- **My prediction:** D2 met, D1 not met (range carries the gap).
+
+**Limits.** Same observational caveats as Iterations 22-23: the arms differ in ecology, and "mate full" states
+within range are a selected set (a mate above the threshold may be about to reproduce, or may just have received
+a gift). A pass on D1 shows the requests are associated with the mate's energy, not that males perceive or value it.
+
+**Amendment before running (Codex review, 2026-11-18).** The minimum-episode rule, the interval on the GIVE-minus-INERT
+difference and the range/visibility qualification above were added after a Codex review of the script and this
+pre-registration, before any decomposition output existed. Boundary tests for the buckets were added at the same time.
+
+**Hard stop.** One analysis run, no changes after seeing results. If neither D1 nor D2 passes, no further
+decomposition. Any further training needs a separately agreed plan.
+
+**Results.** (not yet run)
