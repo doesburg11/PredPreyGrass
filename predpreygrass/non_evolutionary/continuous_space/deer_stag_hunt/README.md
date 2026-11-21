@@ -1,7 +1,7 @@
 # Hunting Together: A Stag Hunt with Deer
 
 <p align="center">
-  <img src="../../../../assets/images/gifs/deer_stag_hunt.gif" alt="Trained hunters with spears among deer of three sizes on a light blue torus: adults with antlers, small fawns with white spots, plain middle deer; shaded cones show what one deer and one hunter see" width="550">
+  <img src="../../../../assets/images/gifs/deer_stag_hunt.gif" alt="Trained hunters with spears among deer of three sizes on a light blue torus: adults with antlers, small fawns with white spots, plain middle deer; shaded cones show what   one deer and one hunter see" width="550">
 </p>
 <p align="center">
   Trained hunters and deer (run_2, seed 0): adults have antlers and can only be caught by two hunters together; fawns are small with white spots.
@@ -12,7 +12,7 @@ Hunters learned to cooperate on big game without being told to. With the touch r
 (two hunters must touch a deer together), all three runs kept hunters and deer
 coexisting in 50 of 50 episodes, and hunters approached adult deer with a partner
 near above chance. They also teamed up more on large middle deer, where a partner
-pays, than on small ones (2 of 3 runs), and a control world in which a partner
+pys, than on small ones (2 of 3 runs), and a control world in whaich a partner
 never pays for a young deer showed no such step (3 of 3): consistent with hunters
 partnering where it pays. Margins are small and the hedges are in
 [RESULTS.md](RESULTS.md). The one thread left unexplored is the late decline in
